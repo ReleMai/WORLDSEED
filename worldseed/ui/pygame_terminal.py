@@ -66,6 +66,8 @@ class PygameTerminal(PointerUI):
         self._base_scroll_state: tuple[Any, ...] | None = None
         self._resource_view_cache: dict[tuple[Any, ...], dict[tuple[int,int,int], tuple[Any, Any]]] = {}
         self._resource_cell_cache: dict[tuple[Any, ...], tuple[Any, Any] | None] = {}
+        self._entity_spatial_cache_key = None
+        self._entity_spatial_cache = None
         self._hover_context: dict[str, Any] | None = None
         self._hover_map_snapshot = None
         self._hover_rect = None
@@ -1465,6 +1467,39 @@ class PygameTerminal(PointerUI):
         self._base_scroll_state=(stable,left,top,surf,rendered_known)
         return surf
 
+    def _spatial_state_views(self, sim, left:int, top:int, right:int, bottom:int, z:int):
+        """Return only state objects in viewport-adjacent spatial buckets.
+
+        Previously every game-frame scanned every realized NPC, creature,
+        structure, crop, pile and fire in the whole explored world. The cost
+        therefore rose permanently as exploration materialized more regions.
+        Rebuild this presentation-only index only when hourly movers/counts can
+        change, then query the few chunks intersecting the viewport.
+        """
+        state=sim.state
+        collections=(
+            ('creatures',state.creatures),('npcs',state.npcs),('structures',state.structures),
+            ('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
+            ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
+        )
+        key=(id(sim),sim.clock.minute//60)+tuple(len(v) for _,v in collections)
+        if key!=self._entity_spatial_cache_key or self._entity_spatial_cache is None:
+            index={name:{} for name,_ in collections}
+            for name,mapping in collections:
+                buckets=index[name]
+                for obj in mapping.values():
+                    ox=int(getattr(obj,'x',0));oy=int(getattr(obj,'y',0));oz=int(getattr(obj,'z',0))
+                    buckets.setdefault((ox//32,oy//32,oz),[]).append(obj)
+            self._entity_spatial_cache_key=key;self._entity_spatial_cache=index
+        index=self._entity_spatial_cache
+        out={name:[] for name,_ in collections}
+        for cy in range(top//32,bottom//32+1):
+            for cx in range(left//32,right//32+1):
+                bucket=(cx,cy,z)
+                for name,_ in collections:
+                    out[name].extend(index[name].get(bucket,()))
+        return out
+
     def _resource_view(self, sim, known, z:int, left:int, top:int, cols:int, rows:int):
         # Cache resource projection by absolute world cell rather than viewport.
         # A one-tile camera move therefore resolves only the new edge instead of
@@ -1632,14 +1667,15 @@ class PygameTerminal(PointerUI):
         bottom = top + rows - 1
         def _onscreen(x:int,y:int,z:int)->bool:
             return z == pos.z and left <= x <= right and top <= y <= bottom
-        creature_by={(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp>0 and _onscreen(c.x,c.y,c.z)}
-        npc_by={(n.x,n.y,n.z):n for n in sim.state.npcs.values() if n.alive and _onscreen(n.x,n.y,n.z)}
-        structure_by={(s.x,s.y,s.z):s for s in sim.state.structures.values() if _onscreen(s.x,s.y,s.z)}
-        crop_by={(c.x,c.y,c.z):c for c in sim.state.crops.values() if _onscreen(c.x,c.y,c.z)}
-        fire_by={(f.x,f.y,f.z):f for f in sim.state.fires.values() if _onscreen(f.x,f.y,f.z)}
-        fluid_by={(f.x,f.y,f.z):f for f in sim.state.fluids.values() if f.amount>20 and _onscreen(f.x,f.y,f.z)}
-        pile_by={(p.x,p.y,p.z):p for p in sim.state.ground_piles.values() if p.items and _onscreen(p.x,p.y,p.z)}
-        carcass_by={(c.x,c.y,c.z):c for c in sim.state.carcasses.values() if _onscreen(c.x,c.y,c.z)}
+        nearby=self._spatial_state_views(sim,left,top,right,bottom,pos.z)
+        creature_by={(c.x,c.y,c.z):c for c in nearby['creatures'] if c.hp>0 and _onscreen(c.x,c.y,c.z)}
+        npc_by={(n.x,n.y,n.z):n for n in nearby['npcs'] if n.alive and _onscreen(n.x,n.y,n.z)}
+        structure_by={(s.x,s.y,s.z):s for s in nearby['structures'] if _onscreen(s.x,s.y,s.z)}
+        crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}
+        fire_by={(f.x,f.y,f.z):f for f in nearby['fires'] if _onscreen(f.x,f.y,f.z)}
+        fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
+        pile_by={(p.x,p.y,p.z):p for p in nearby['ground_piles'] if p.items and _onscreen(p.x,p.y,p.z)}
+        carcass_by={(q.x,q.y,q.z):q for q in nearby['carcasses'] if _onscreen(q.x,q.y,q.z)}
         resource_by=self._resource_view(sim,known,pos.z,left,top,cols,rows)
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
