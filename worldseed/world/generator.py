@@ -54,9 +54,13 @@ class WorldGenerator:
         # for v8 worlds (the current new-world default); v1-v7 keep frozen fields.
         from worldseed.world.landforms import LandformSampler
         from worldseed.world.topography import TopographySampler
+        from worldseed.world.climate_v8 import ClimateV8Sampler
         self.landforms_v8 = LandformSampler(self.world_seed)
         self.topography_v8 = TopographySampler(
             lambda x,y: self.landforms_v8.sample(x,y).elevation
+        )
+        self.climate_v8 = ClimateV8Sampler(
+            self.world_seed, self.landforms_v8, self.topography_v8
         )
         # RC14 Phase 3 attaches a HydrologyGenerator after database/opening state
         # exists. Keeping the dependency injected avoids making rendering or
@@ -124,14 +128,13 @@ class WorldGenerator:
             moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
             climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
         else:
-            # WORLDGEN v8 authority path. Geological elevation is active in
-            # Dev27; moisture and the broad temperature driver stay on the
-            # frozen v4 climate fields until Phase 3 introduces circulation,
-            # maritime influence and rain shadows. Altitude cooling and fertility
-            # naturally respond to the new physical elevation.
+            # WORLDGEN v8 Phase 3: geography now drives climate. Geological
+            # elevation, latitude bands, maritime influence, prevailing winds,
+            # orographic lift and leeward rain shadows feed these fields.
             elevation=self.landforms_v8.sample(pos.x,pos.y).elevation
-            moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
-            climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
+            physical_climate=self.climate_v8.sample(pos.x,pos.y)
+            moisture=physical_climate.precipitation_potential
+            climate=physical_climate.mean_temperature
         if self.version>=8:
             # ClimateV8 already applies elevation lapse cooling.
             seasonal_base=max(0,min(Q,climate))
@@ -155,6 +158,12 @@ class WorldGenerator:
         if self.version < 8 or pos.z != 0:
             return None
         return self.topography_v8.sample(pos)
+
+    def climate_at(self,pos:WorldPos):
+        """Return authoritative v8 physical climate, or None for legacy worlds."""
+        if self.version < 8 or pos.z != 0:
+            return None
+        return self.climate_v8.sample(pos.x,pos.y)
 
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.
