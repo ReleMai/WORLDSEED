@@ -1,3 +1,17 @@
+## RC14 Dev31 — playtest correction pass
+
+- Reduced ordinary movement time from 5 minutes to 1 minute while keeping authored action durations intact.
+- Replaced rectangular discovery with a true circular LOS radius driven by Perception, Survival, Keen Senses, weather visibility/fog and ambient light.
+- Split persistent exploration memory from current visibility; out-of-sight known terrain is dimmed while entities/resources remain hidden.
+- Reworked atlas discovery to load only actually discovered cells through the versioned surface cache, eliminating large square reveals and reducing long-exploration map cost.
+- Added mouse-drag atlas panning, wheel zoom and a single Center on player control; removed directional/zoom button clutter.
+- Replaced distant atlas RGB averaging with categorical LOD to reduce thick riverbank/floodplain intestine-like river outlines.
+- Rebuilt cloud shadows as world-anchored, multi-lobed cloud banks that drift continuously with wind instead of following the player/camera.
+- Warmed and lengthened dawn/dusk presentation with lighter amber/orange transitions.
+- Added viewport spatial buckets so local rendering no longer scans all realized world entities as exploration grows.
+- Routine autosaves no longer create rotating full-database backups; explicit saves still do, reducing large-world autosave freezes.
+- Added Dev31 regression tests, playtest checklist and deterministic mountain-test location generation.
+
 ## RC14 Dev30 — Hydrology v2 morphology materialization
 
 - Added `HYDROLOGY_MORPHOLOGY_VERSION = 2` so river projection can evolve without rewriting Dev29 hydrology-v2 saves.
