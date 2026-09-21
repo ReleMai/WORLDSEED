@@ -49,41 +49,83 @@ class AtlasArt:
         return tuple(self.styles['fallback'])
 
     def raster(self, view, registry):
-        # Each local tile contributes to a single atlas pixel. Averaging at
-        # distant LOD preserves thin water as a color contribution; no random
-        # biome artwork, interpolated regional boundaries or invented rivers.
+        # At native scale terrain remains exact. At distant LOD, categorical
+        # reduction replaces raw color averaging: thin rivers stay coherent
+        # without acquiring thick floodplain/riverbank "intestine" halos.
         size = min(512, view.span)
-        step = view.span // size
-        sums = {}
+        step = max(1, view.span // size)
+        buckets = {}
         palette = {}
+        transition_ids = {'core:riverbank','core:floodplain'}
         for key, values in view.chunks.items():
             for i, tid in enumerate(values):
                 x = key.x*CHUNK_SIZE+i % CHUNK_SIZE-view.left
                 y = key.y*CHUNK_SIZE+i // CHUNK_SIZE-view.top
                 if tid is None or not (0 <= x < view.span and 0 <= y < view.span):
                     continue
+                pixel=(x//step,y//step)
+                buckets.setdefault(pixel,[]).append(tid)
                 if tid not in palette:
-                    palette[tid] = self.color(tid, registry)
-                color = palette[tid]
-                pixel = (x//step, y//step)
-                if step == 1:
-                    sums[pixel] = (*color, 1)
+                    palette[tid]=self.color(tid,registry)
+
+        surface=self.pg.Surface((size,size));surface.fill(UNKNOWN)
+        for pixel,tids in buckets.items():
+            if step==1:
+                chosen=tids[-1]
+            else:
+                counts={}
+                water=[]
+                for tid in tids:
+                    counts[tid]=counts.get(tid,0)+1
+                    definition=registry.terrains.get(tid)
+                    if definition and 'water' in definition.tags:
+                        water.append(tid)
+                if water and len(water)*4>=len(tids):
+                    # Water wins once it occupies at least a quarter of the
+                    # sample bucket; pick the dominant water class only.
+                    wc={}
+                    for tid in water:wc[tid]=wc.get(tid,0)+1
+                    chosen=max(wc,key=lambda t:(wc[t],t))
                 else:
-                    r, g, b, n = sums.get(pixel, (0, 0, 0, 0))
-                    sums[pixel] = (r+color[0], g+color[1], b+color[2], n+1)
-        surface = self.pg.Surface((size, size))
-        surface.fill(UNKNOWN)
-        for pixel, (r, g, b, n) in sums.items():
-            surface.set_at(pixel, (r//n, g//n, b//n))
+                    # Narrow bank/floodplain ribbons should not dominate a
+                    # distant pixel when ordinary land is also present.
+                    land=[tid for tid in tids if tid not in transition_ids]
+                    pool=land or tids
+                    pc={}
+                    for tid in pool:pc[tid]=pc.get(tid,0)+1
+                    chosen=max(pc,key=lambda t:(pc[t],t))
+            surface.set_at(pixel,palette[chosen])
         return surface
 
 
 def begin_atlas(term, sim):
     term._atlas_controls = AtlasControls((sim.player_pos.x, sim.player_pos.y))
+    term._atlas_dragging = False
+    term._atlas_drag_moved = False
 
 
 def atlas_input(term, sim, token):
     state = term._atlas_controls
+    if token == 'ATLAS:drag_start':
+        term._atlas_dragging=True
+        term._atlas_drag_moved=False
+        return True
+    if token.startswith('ATLAS:drag:'):
+        _,_,sx,sy=token.split(':',3)
+        dx,dy=int(sx),int(sy)
+        rect=term._atlas_rect
+        if dx or dy:
+            term._atlas_drag_moved=True
+            state.center=(
+                state.center[0]-dx*state.span//max(1,rect.width),
+                state.center[1]-dy*state.span//max(1,rect.height),
+            )
+            state.snapshot=state.raster=None
+            state.inspected=None;state.selected=''
+        return True
+    if token == 'ATLAS:drag_end':
+        term._atlas_dragging=False
+        return True
     if token == 'ATLAS_INSPECT':
         rect = term._atlas_rect
         mx, my = term._last_mouse
@@ -144,7 +186,7 @@ def draw_atlas(term, sim):
     size = max(1, min(area.width-16, area.height-116))
     map_rect = pg.Rect(area.centerx-size//2, area.y+36, size, size)
     term._atlas_rect = map_rect
-    term._ui_target(map_rect, 'ATLAS_INSPECT')
+    term._ui_target(map_rect, 'ATLAS_DRAG_ZONE')
     screen.blit(pg.transform.scale(state.raster, map_rect.size), map_rect)
     pg.draw.rect(screen, term._theme['edge_hi'], map_rect, 1)
 
@@ -189,17 +231,16 @@ def draw_atlas(term, sim):
             pg.draw.line(screen, (245,218,131), (px,py-9), (px,py+9))
     finally:
         screen.set_clip(old_clip)
-    controls = [('Zoom +','in'), ('Zoom -','out'), ('Center','home'),
-                ('North','north'), ('South','south'), ('West','west'), ('East','east')]
-    bw = max(40, (area.width-24)//4)
-    for i, (text, action) in enumerate(controls):
-        term._button((area.x+8+(i%4)*(bw+2), map_rect.bottom+10+(i//4)*32, bw, 28), text, 'ATLAS:'+action)
+    # Mouse-first navigation: drag the map, wheel to zoom. Keep only a small
+    # recenter affordance instead of seven directional buttons.
+    label('Drag map  •  Mouse wheel zooms  •  Click to inspect', area.x+8, map_rect.bottom+12, term._theme['muted'])
+    term._button((area.right-170,map_rect.bottom+8,160,28),'Center on player','ATLAS:home')
 
     sx, sy = side.x+12, side.y+12
     width = side.width-24
     label('KNOWN PLACES', sx, sy, term._theme['accent'])
     label(f'Center: {state.center[0]}, {state.center[1]}', sx, sy+24)
-    label('Wheel: zoom  |  Arrows: pan', sx, sy+46, term._theme['muted'])
+    label('Drag: pan  |  Wheel: zoom', sx, sy+46, term._theme['muted'])
     line_h = term.small_font.get_linesize()+3
     capacity = max(1, (side.height-245)//44)
     pages = max(1, (len(view.markers)+capacity-1)//capacity)
