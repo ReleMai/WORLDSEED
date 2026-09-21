@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev30 continues **Hydrology v2** with a separately versioned morphology layer. New worlds use multi-point river centerlines, split/rejoining braided channels with natural land islands, materialized shallow oxbow scars, and rock-confined gorge banks. Surface caches are keyed by worldgen + hydrology + morphology so older Dev29 river projection remains stable.
+> **Development status:** RC14 Dev31 is a playtest-correction build. Movement now advances 1 minute, current visibility is a weather/light/stat-driven circular radius, atlas discovery is cell-exact and mouse-draggable, distant atlas rivers use cleaner categorical LOD, cloud shadows are world-anchored organic banks that drift independently, twilight uses warmer amber/orange transitions, and local rendering/autosaves have been bounded to prevent exploration cost from growing unchecked.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 
