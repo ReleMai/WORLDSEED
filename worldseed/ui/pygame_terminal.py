@@ -1663,6 +1663,7 @@ class PygameTerminal(PointerUI):
         self._camera=(cx,cy,cz)
         left=cx-cols//2; top=cy-rows//2
         known=sim.discovered_tiles_set
+        visible=getattr(sim,'visible_tiles_set',known)
         right = left + cols - 1
         bottom = top + rows - 1
         def _onscreen(x:int,y:int,z:int)->bool:
@@ -1676,7 +1677,7 @@ class PygameTerminal(PointerUI):
         fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
         pile_by={(p.x,p.y,p.z):p for p in nearby['ground_piles'] if p.items and _onscreen(p.x,p.y,p.z)}
         carcass_by={(q.x,q.y,q.z):q for q in nearby['carcasses'] if _onscreen(q.x,q.y,q.z)}
-        resource_by=self._resource_view(sim,known,pos.z,left,top,cols,rows)
+        resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
         else:
@@ -1731,7 +1732,7 @@ class PygameTerminal(PointerUI):
             wy=top+sy
             for sx in range(cols):
                 wx=left+sx
-                if pos_key(wx,wy,pos.z) not in known:continue
+                if pos_key(wx,wy,pos.z) not in visible:continue
                 tile=world.tile_at(WorldPos(wx,wy,pos.z))
                 display_id=display_id_for(wx,wy,tile.terrain_id)
                 rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
@@ -1759,7 +1760,7 @@ class PygameTerminal(PointerUI):
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
             if wz!=pos.z or not (left<=wx<=right and top<=wy<=bottom):continue
-            if pos_key(wx,wy,pos.z) not in known:continue
+            if pos_key(wx,wy,pos.z) not in visible:continue
             k=(wx,wy,pos.z);sx=wx-left;sy=wy-top
             rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
             if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
@@ -1792,6 +1793,20 @@ class PygameTerminal(PointerUI):
             if cursor is not None and (wx,wy,pos.z)==(cursor.x,cursor.y,cursor.z):
                 cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
                 if cp:screen.blit(cp,rect.topleft)
+        # Previously explored terrain remains as map memory, but anything
+        # outside the current condition-driven sight circle is visibly subdued.
+        # Entities/resources are never rendered through this memory fog.
+        memory_fog=pg.Surface((cols*tile_px,rows*tile_px),pg.SRCALPHA)
+        memory_dirty=False
+        for sy in range(rows):
+            wy=top+sy
+            for sx in range(cols):
+                wx=left+sx;pk=pos_key(wx,wy,pos.z)
+                if pk in known and pk not in visible:
+                    pg.draw.rect(memory_fog,(4,8,13,138),(sx*tile_px,sy*tile_px,tile_px,tile_px))
+                    memory_dirty=True
+        if memory_dirty:screen.blit(memory_fog,map_rect.topleft)
+
         # Weather/light presentation is observational and applies only to the
         # local world viewport. UI chrome remains fully readable at night.
         used=pg.Rect(map_rect.x,map_rect.y,cols*tile_px,rows*tile_px)
@@ -1874,7 +1889,7 @@ class PygameTerminal(PointerUI):
         self._draw_scanlines((ox,oy,ow,oh))
         self._hover_context={
             'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
-            'known':known,'registry':registry,'world':world,'sim':sim,
+            'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
         }
