@@ -59,6 +59,41 @@ New physical-world work must add deterministic tests and the relevant audits. At
 - legacy saves retain recorded geography;
 - ordinary movement/render latency does not invoke regional planning.
 
+
+
+## Canonical GitHub repository and cross-chat synchronization rule
+
+The canonical WORLDSEED repository is:
+
+`https://github.com/ReleMai/WORLDSEED`
+
+Repository full name: `ReleMai/WORLDSEED`  
+Canonical branch: `main`
+
+This rule applies to every WORLDSEED development chat, Codex session, coding agent, and handoff.
+
+1. **GitHub `main` is the default source of truth.** At the start of a WORLDSEED coding task, read/fetch the latest repository state before editing. Do not assume an older chat attachment or local archive is newer.
+2. **A user-supplied newer build may supersede the repository only when the user explicitly asks to work from it.** In that case, reconcile/import that build into the repository before allowing the project to diverge into a separate long-lived branch of history.
+3. **Every validated WORLDSEED change must be synchronized back to GitHub in the same work session.** This includes code, game data, authored assets, tests, migration files, documentation, changelogs, and agent handoff notes that are part of the completed change.
+4. **Do not wait for a separate “push it” request.** Repository synchronization is part of the Definition of Done for any task that changes project files.
+5. **Never push a knowingly broken or unvalidated intermediate state to `main`.** Run the relevant targeted tests/audits first. If a task is incomplete, keep the incomplete work out of `main` or clearly isolate it on an explicit work branch when branch tooling is available.
+6. **Do not overwrite newer remote work.** Re-read the remote branch/ref before final synchronization when another chat/agent could have changed it. Reconcile conflicts deliberately; never force-update `main` simply to make a push succeed.
+7. **Commits must be descriptive.** Use concise messages that identify the subsystem and completed result, for example: `Fix crafting crash and pointer input regression` or `Rebuild atlas terrain projection for Dev23`.
+8. **Substantive commits must leave a handoff trail.** Update the relevant changelog/release/handoff notes so the next WORLDSEED chat can determine what changed, what was validated, and what remains.
+9. **If GitHub synchronization cannot be completed because the connector, permissions, or service is unavailable, say so explicitly in the final response.** Never claim the repository is current unless the write actually succeeded. Preserve a clean patch/archive so the change can be synchronized later.
+10. **Do not create a second canonical WORLDSEED repository.** Forks, temporary branches, archives, and generated ZIPs are secondary working artifacts unless the user explicitly changes this rule.
+
+For WORLDSEED work performed through ChatGPT, completion therefore means:
+
+```text
+fetch latest WORLDSEED main
+-> implement requested change
+-> validate relevant behavior
+-> update handoff/changelog when substantive
+-> commit/synchronize to ReleMai/WORLDSEED
+-> report the commit/result to the user
+```
+
 ## Product rule
 
 > **Model causes, not scripted outcomes.**
