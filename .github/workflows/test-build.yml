@@ -1,0 +1,81 @@
+name: WORLDSEED Dev30 Test Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/test-build.yml"
+      - "worldseed/**"
+      - "tests/**"
+      - "tools/**"
+      - "run_worldseed.py"
+      - "RUN_WORLDSEED.bat"
+      - "RUN_WORLDSEED_TERMINAL.bat"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "TEST_BUILD_CHECKLIST_DEV30.md"
+  workflow_dispatch:
+
+jobs:
+  validate-and-package:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install WORLDSEED
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Compile Python
+        shell: pwsh
+        run: python -m compileall worldseed
+
+      - name: Run v8 worldgen and hydrology regression suite
+        shell: pwsh
+        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
+
+      - name: Run content and visual audits
+        shell: pwsh
+        run: |
+          python tools/audit_content.py
+          python tools/audit_visuals.py
+
+      - name: Run Hydrology v2 morphology audit
+        shell: pwsh
+        run: |
+          python tools/audit_hydrology.py --seed v8-dev30-test-build
+          python tools/audit_hydrology_morphology.py --seed v8-dev30-test-build --domain-x 0 --domain-y 0
+
+      - name: Build clean test package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          $exclude = @(".git", ".github", "package", "__pycache__", ".pytest_cache", ".mypy_cache", "saves", "backups")
+          Get-ChildItem -Force | Where-Object { $exclude -notcontains $_.Name } | ForEach-Object {
+            Copy-Item $_.FullName -Destination package -Recurse -Force
+          }
+          Get-ChildItem package -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
+          Get-ChildItem package -Recurse -File -Include "*.pyc","*.pyo" | Remove-Item -Force
+
+      - name: Upload playable test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED_RC14_DEV30_TEST_BUILD
+          path: package/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
