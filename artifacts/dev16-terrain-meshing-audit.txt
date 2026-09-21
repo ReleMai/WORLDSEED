@@ -1,0 +1,4 @@
+blendable terrain ids: 30
+validated pair profiles: 435
+grass <-> floodplain: blend
+terrain meshing audit: PASS

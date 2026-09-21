@@ -1,0 +1,23 @@
+{
+  "core_nodes": 4096,
+  "csv": "artifacts/hydrology/rc14-golden-00_d0_0.csv",
+  "domain": [
+    0,
+    0
+  ],
+  "fingerprint": "ac6646d16d370a193ab217765c693ea0689698f1",
+  "hydrology_version": 1,
+  "issues": [],
+  "nodes": 6400,
+  "outlets": 316,
+  "png": "artifacts/hydrology/rc14-golden-00_d0_0.png",
+  "river_cells_core": 470,
+  "river_class_core": {
+    "0": 3626,
+    "1": 227,
+    "2": 102,
+    "3": 141
+  },
+  "seed": "rc14-golden-00",
+  "worldgen_version": 4
+}

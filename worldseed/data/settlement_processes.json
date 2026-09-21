@@ -1,0 +1,160 @@
+[
+  {
+    "id": "core:field_wheat",
+    "name": "Wheat field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:wheat": 4
+    },
+    "priority_good": "core:wheat"
+  },
+  {
+    "id": "core:field_turnip",
+    "name": "Turnip field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:turnip": 3
+    },
+    "priority_good": "core:turnip"
+  },
+  {
+    "id": "core:logging",
+    "name": "Logging",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:wood": 3
+    },
+    "priority_good": "core:wood"
+  },
+  {
+    "id": "core:quarrying",
+    "name": "Quarrying",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:stone": 2
+    },
+    "priority_good": "core:stone"
+  },
+  {
+    "id": "core:iron_mining",
+    "name": "Iron mining",
+    "occupation": "miner",
+    "workers": 2,
+    "inputs": {},
+    "outputs": {
+      "core:iron_ore": 2
+    },
+    "priority_good": "core:iron_ore"
+  },
+  {
+    "id": "core:coal_mining",
+    "name": "Coal mining",
+    "occupation": "miner",
+    "workers": 2,
+    "inputs": {},
+    "outputs": {
+      "core:coal": 2
+    },
+    "priority_good": "core:coal"
+  },
+  {
+    "id": "core:iron_smelt",
+    "name": "Bloomery smelting",
+    "occupation": "smith",
+    "workers": 2,
+    "inputs": {
+      "core:iron_ore": 2,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:iron_bloom": 1
+    },
+    "priority_good": "core:iron_bloom",
+    "knowledge": "tech:smelting"
+  },
+  {
+    "id": "core:hunting",
+    "name": "Hunting parties",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:meat": 2,
+      "core:hide": 1
+    },
+    "priority_good": "core:meat"
+  },
+  {
+    "id": "core:seed_saving",
+    "name": "Seed saving",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:wheat": 4
+    },
+    "outputs": {
+      "core:wheat_seed": 2
+    },
+    "priority_good": "core:wheat_seed"
+  },
+  {
+    "id": "core:parchment_making",
+    "name": "Parchment making",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:parchment": 3
+    },
+    "priority_good": "core:parchment",
+    "knowledge": "knowledge:literacy"
+  },
+  {
+    "id": "core:herbalism",
+    "name": "Gather medicinal herbs",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:medicinal_herb": 2
+    },
+    "priority_good": "core:medicinal_herb"
+  },
+  {
+    "id": "core:town_tonic",
+    "name": "Brew medicinal tonic",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:medicinal_herb": 2
+    },
+    "outputs": {
+      "core:herbal_tonic": 1
+    },
+    "priority_good": "core:herbal_tonic",
+    "knowledge": "knowledge:herbalism"
+  },
+  {
+    "id": "core:town_soap",
+    "name": "Make sanitation soap",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:soap": 1
+    },
+    "priority_good": "core:soap"
+  }
+]

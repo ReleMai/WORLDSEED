@@ -1,0 +1,55 @@
+test_blocking_natural_features_never_share_cardinal_edge (test_rc10_worldgen.RC10WorldgenTests.test_blocking_natural_features_never_share_cardinal_edge) ... ERROR
+test_new_world_uses_current_versioned_terrain_and_v3_resources (test_rc10_worldgen.RC10WorldgenTests.test_new_world_uses_current_versioned_terrain_and_v3_resources) ... ERROR
+test_old_save_keeps_terrain_version_but_adopts_safe_resource_version (test_rc10_worldgen.RC10WorldgenTests.test_old_save_keeps_terrain_version_but_adopts_safe_resource_version) ... ok
+test_pygame_source_does_not_translate_mouse_clicks_to_menu_keys (test_rc10_worldgen.RC10WorldgenTests.test_pygame_source_does_not_translate_mouse_clicks_to_menu_keys) ... ok
+test_spawn_has_large_connected_walkable_neighborhood (test_rc10_worldgen.RC10WorldgenTests.test_spawn_has_large_connected_walkable_neighborhood) ... ERROR
+
+======================================================================
+ERROR: test_blocking_natural_features_never_share_cardinal_edge (test_rc10_worldgen.RC10WorldgenTests.test_blocking_natural_features_never_share_cardinal_edge)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 55, in test_blocking_natural_features_never_share_cardinal_edge
+    ctx=self._new_context(Path(td),'rc10-spacing')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 27, in _new_context
+    return _load_context(sel,prepare_world=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/worldseed/app.py", line 237, in _load_context
+    state.player_name=(player_name or 'Wanderer').strip() or 'Wanderer';state.player_origin='custom';state.player_sex=(selection.player_sex or 'male').lower();state.player_sprite_index=int(selection.player_sprite_index or 0)
+                                                                                                                       ^^^^^^^^^
+NameError: name 'selection' is not defined
+
+======================================================================
+ERROR: test_new_world_uses_current_versioned_terrain_and_v3_resources (test_rc10_worldgen.RC10WorldgenTests.test_new_world_uses_current_versioned_terrain_and_v3_resources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 31, in test_new_world_uses_current_versioned_terrain_and_v3_resources
+    ctx=self._new_context(Path(td),'rc10-version')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 27, in _new_context
+    return _load_context(sel,prepare_world=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/worldseed/app.py", line 237, in _load_context
+    state.player_name=(player_name or 'Wanderer').strip() or 'Wanderer';state.player_origin='custom';state.player_sex=(selection.player_sex or 'male').lower();state.player_sprite_index=int(selection.player_sprite_index or 0)
+                                                                                                                       ^^^^^^^^^
+NameError: name 'selection' is not defined
+
+======================================================================
+ERROR: test_spawn_has_large_connected_walkable_neighborhood (test_rc10_worldgen.RC10WorldgenTests.test_spawn_has_large_connected_walkable_neighborhood)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 69, in test_spawn_has_large_connected_walkable_neighborhood
+    ctx=self._new_context(Path(td),'rc10-connected-start')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/tests/test_rc10_worldgen.py", line 27, in _new_context
+    return _load_context(sel,prepare_world=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9785f3202347/baseline/WORLDSEED_LivingWorld_v1.0_RC14_Embodied_World_Dev19/worldseed/app.py", line 237, in _load_context
+    state.player_name=(player_name or 'Wanderer').strip() or 'Wanderer';state.player_origin='custom';state.player_sex=(selection.player_sex or 'male').lower();state.player_sprite_index=int(selection.player_sprite_index or 0)
+                                                                                                                       ^^^^^^^^^
+NameError: name 'selection' is not defined
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.975s
+
+FAILED (errors=3)

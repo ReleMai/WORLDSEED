@@ -1,0 +1,1013 @@
+[
+  {
+    "id": "core:cordage",
+    "name": "Twist Cordage",
+    "inputs": {
+      "core:brush": 2
+    },
+    "outputs": {
+      "core:fiber": 2
+    },
+    "minutes": 15,
+    "description": "Use available materials and time to produce twist cordage.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:waterskin",
+    "name": "Waterskin",
+    "inputs": {
+      "core:hide": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:waterskin": 1
+    },
+    "minutes": 45,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce waterskin.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:cooked_meat",
+    "name": "Cook Meat",
+    "inputs": {
+      "core:meat": 1
+    },
+    "outputs": {
+      "core:cooked_meat": 1
+    },
+    "minutes": 20,
+    "station": "core:campfire",
+    "description": "Use available materials and time to produce cook meat.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:iron_bloom",
+    "name": "Smelt Iron Bloom",
+    "inputs": {
+      "core:iron_ore": 2,
+      "core:coal": 2
+    },
+    "outputs": {
+      "core:iron_bloom": 1
+    },
+    "minutes": 180,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "smelt_iron",
+    "description": "Use available materials and time to produce smelt iron bloom.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:steel_billet",
+    "name": "Carburize Steel",
+    "inputs": {
+      "core:iron_bloom": 1,
+      "core:coal": 2
+    },
+    "outputs": {
+      "core:steel_billet": 1
+    },
+    "minutes": 240,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "carburize_steel",
+    "description": "Use available materials and time to produce carburize steel.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:iron_pick",
+    "name": "Forge Iron Pick",
+    "inputs": {
+      "core:iron_bloom": 1,
+      "core:wood": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:iron_pick": 1
+    },
+    "minutes": 150,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge iron pick.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:iron_sword",
+    "name": "Forge Iron Sword",
+    "inputs": {
+      "core:iron_bloom": 1,
+      "core:wood": 1,
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:iron_sword": 1
+    },
+    "minutes": 210,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge iron sword.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:leather_hood",
+    "name": "Stitch Leather Hood",
+    "inputs": {
+      "core:hide": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:leather_hood": 1
+    },
+    "minutes": 50,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce stitch leather hood.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:leather_vest",
+    "name": "Stitch Leather Vest",
+    "inputs": {
+      "core:hide": 2,
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:leather_vest": 1
+    },
+    "minutes": 90,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce stitch leather vest.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:leather_bracers",
+    "name": "Stitch Leather Bracers",
+    "inputs": {
+      "core:hide": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:leather_bracers": 1
+    },
+    "minutes": 45,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce stitch leather bracers.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:leather_leggings",
+    "name": "Stitch Leather Leggings",
+    "inputs": {
+      "core:hide": 2,
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:leather_leggings": 1
+    },
+    "minutes": 85,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce stitch leather leggings.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:iron_helmet",
+    "name": "Forge Iron Helmet",
+    "inputs": {
+      "core:iron_bloom": 1,
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:iron_helmet": 1
+    },
+    "minutes": 180,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge iron helmet.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:bandage",
+    "name": "Prepare Bandages",
+    "inputs": {
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:bandage": 2
+    },
+    "minutes": 15,
+    "knowledge": "craft:leatherwork",
+    "description": "Use available materials and time to produce prepare bandages.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:splint",
+    "name": "Make Splint",
+    "inputs": {
+      "core:wood": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:splint": 1
+    },
+    "minutes": 20,
+    "knowledge": "craft:stoneworking",
+    "description": "Use available materials and time to produce make splint.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:normalize_steel",
+    "name": "Normalize Steel Billet",
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:steel_billet": 1
+    },
+    "minutes": 90,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "normalize_steel",
+    "description": "Use available materials and time to produce normalize steel billet.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:quench_steel",
+    "name": "Quench Steel Billet",
+    "inputs": {
+      "core:steel_billet": 1
+    },
+    "catalysts": {
+      "core:waterskin": 1
+    },
+    "outputs": {
+      "core:steel_billet": 1
+    },
+    "minutes": 30,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "quench_steel",
+    "description": "Use available materials and time to produce quench steel billet.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:temper_steel",
+    "name": "Temper Steel Billet",
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:steel_billet": 1
+    },
+    "minutes": 75,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "temper_steel",
+    "description": "Use available materials and time to produce temper steel billet.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:steel_sword",
+    "name": "Forge Steel Sword",
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:wood": 1,
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:steel_sword": 1
+    },
+    "minutes": 240,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge steel sword.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:steel_pick",
+    "name": "Forge Steel Pick",
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:wood": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:steel_pick": 1
+    },
+    "minutes": 190,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge steel pick.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:steel_helmet",
+    "name": "Forge Steel Helmet",
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:steel_helmet": 1
+    },
+    "minutes": 210,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge steel helmet.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:bone_meal",
+    "name": "Crush Bone Meal",
+    "inputs": {
+      "core:bone": 1
+    },
+    "outputs": {
+      "core:bone_meal": 2
+    },
+    "minutes": 20,
+    "station": "core:workbench",
+    "knowledge": "craft:stoneworking",
+    "description": "Use available materials and time to produce crush bone meal.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:lockpick",
+    "name": "Forge Lockpicks",
+    "inputs": {
+      "core:iron_bloom": 1
+    },
+    "outputs": {
+      "core:lockpick": 4
+    },
+    "minutes": 50,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "forge_metal_item",
+    "description": "Use available materials and time to produce forge lockpicks.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:parchment",
+    "name": "Prepare Parchment",
+    "inputs": {
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:parchment": 4
+    },
+    "minutes": 90,
+    "station": "core:workbench",
+    "knowledge": "knowledge:literacy",
+    "description": "Use available materials and time to produce prepare parchment.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:herbal_tonic",
+    "name": "Brew Herbal Tonic",
+    "inputs": {
+      "core:medicinal_herb": 2,
+      "core:berries": 1
+    },
+    "outputs": {
+      "core:herbal_tonic": 1
+    },
+    "minutes": 45,
+    "station": "core:campfire",
+    "knowledge": "knowledge:herbalism",
+    "description": "Use available materials and time to produce brew herbal tonic.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:soap",
+    "name": "Make Lye Soap",
+    "inputs": {
+      "core:wood": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:soap": 2
+    },
+    "minutes": 60,
+    "station": "core:campfire",
+    "knowledge": null,
+    "description": "Use available materials and time to produce make lye soap.",
+    "category": "general",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:stone_flake",
+    "name": "Strike Stone Flake",
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:stone_flake": 2
+    },
+    "minutes": 8,
+    "station": null,
+    "knowledge": null,
+    "description": "Knock a sharp flake from a suitable stone. The edge is fragile, but it can cut fiber, skin small game, and start better tools.",
+    "category": "primitive",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:plant_cordage",
+    "name": "Twist Plant Cordage",
+    "inputs": {
+      "core:brush": 2
+    },
+    "outputs": {
+      "core:plant_cordage": 1
+    },
+    "minutes": 12,
+    "station": null,
+    "knowledge": null,
+    "description": "Twist dry fibers and bark strands into binding cord.",
+    "category": "primitive",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:bark_cordage",
+    "name": "Twist Bark Cordage",
+    "inputs": {
+      "core:bark": 2
+    },
+    "outputs": {
+      "core:plant_cordage": 1
+    },
+    "minutes": 18,
+    "station": null,
+    "knowledge": null,
+    "description": "Pound and twist inner bark fibers into rough cord.",
+    "category": "primitive",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:stone_knife",
+    "name": "Make Stone Knife",
+    "inputs": {
+      "core:stone_flake": 1,
+      "core:stout_branch": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:stone_knife": 1
+    },
+    "minutes": 25,
+    "station": null,
+    "knowledge": null,
+    "description": "Lash a sharp flake to a short haft for the first serious cutting tool.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:stone_axe",
+    "name": "Make Stone Axe",
+    "inputs": {
+      "core:stone_flake": 2,
+      "core:stout_branch": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:stone_axe": 1
+    },
+    "minutes": 35,
+    "station": null,
+    "knowledge": null,
+    "description": "Bind a heavy cutting edge to a branch so mature timber can be felled.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 0
+    }
+  },
+  {
+    "id": "core:stone_pick",
+    "name": "Make Stone Pick",
+    "inputs": {
+      "core:stone": 2,
+      "core:stout_branch": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:stone_pick": 1
+    },
+    "minutes": 45,
+    "station": null,
+    "knowledge": null,
+    "description": "Build a crude pick capable of breaking cave rock and surface boulders.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:stone_hammer",
+    "name": "Make Stone Hammer",
+    "inputs": {
+      "core:stone": 1,
+      "core:stout_branch": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:stone_hammer": 1
+    },
+    "minutes": 30,
+    "station": null,
+    "knowledge": null,
+    "description": "Lash a rounded hammerstone to a branch for building and processing.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:digging_stick",
+    "name": "Fire-Harden Digging Stick",
+    "inputs": {
+      "core:stout_branch": 1
+    },
+    "outputs": {
+      "core:digging_stick": 1
+    },
+    "minutes": 15,
+    "station": "core:campfire",
+    "knowledge": null,
+    "description": "Harden and shape a branch into a basic soil-working tool.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:crude_hoe",
+    "name": "Make Crude Hoe",
+    "inputs": {
+      "core:stone_flake": 1,
+      "core:stout_branch": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:crude_hoe": 1
+    },
+    "minutes": 30,
+    "station": null,
+    "knowledge": null,
+    "description": "Bind a broad stone edge for more efficient cultivation.",
+    "category": "primitive_tools",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:wooden_spear",
+    "name": "Make Fire-Hardened Spear",
+    "inputs": {
+      "core:stout_branch": 1
+    },
+    "outputs": {
+      "core:wooden_spear": 1
+    },
+    "minutes": 20,
+    "station": "core:campfire",
+    "knowledge": null,
+    "description": "Sharpen and harden a long branch for defense and hunting.",
+    "category": "hunting",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:club",
+    "name": "Shape Heavy Club",
+    "inputs": {
+      "core:stout_branch": 1
+    },
+    "outputs": {
+      "core:club": 1
+    },
+    "minutes": 12,
+    "station": null,
+    "knowledge": null,
+    "description": "Trim a dense branch into a simple striking weapon.",
+    "category": "weapons",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:sling",
+    "name": "Braid Sling",
+    "inputs": {
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:sling": 1
+    },
+    "minutes": 20,
+    "station": null,
+    "knowledge": null,
+    "description": "Braid a compact sling for small-game hunting at range.",
+    "category": "hunting",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:sling_stone",
+    "name": "Select Sling Stones",
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:sling_stone": 8
+    },
+    "minutes": 5,
+    "station": null,
+    "knowledge": null,
+    "description": "Sort and shape small smooth stones for consistent sling flight.",
+    "category": "hunting",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:short_bow",
+    "name": "Make Short Hunting Bow",
+    "inputs": {
+      "core:wood": 1,
+      "core:sinew_cord": 2
+    },
+    "outputs": {
+      "core:short_bow": 1
+    },
+    "minutes": 90,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Shape a short stave and back it with sinew for a compact hunting bow.",
+    "category": "hunting",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 2
+    }
+  },
+  {
+    "id": "core:wood_arrow",
+    "name": "Make Stone-Tipped Arrows",
+    "inputs": {
+      "core:stout_branch": 1,
+      "core:stone_flake": 1,
+      "core:feather": 2,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:wood_arrow": 4
+    },
+    "minutes": 35,
+    "station": null,
+    "knowledge": null,
+    "description": "Straighten short shafts, bind stone points, and fletch them with feathers.",
+    "category": "hunting",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
+  },
+  {
+    "id": "core:bone_awl",
+    "name": "Shape Bone Awl",
+    "inputs": {
+      "core:bone": 1
+    },
+    "outputs": {
+      "core:bone_awl": 1
+    },
+    "minutes": 25,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Polish bone into a strong piercing awl.",
+    "category": "bonecraft",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "scrape": 1
+    }
+  },
+  {
+    "id": "core:bone_needle",
+    "name": "Carve Bone Needle",
+    "inputs": {
+      "core:bone": 1
+    },
+    "outputs": {
+      "core:bone_needle": 2
+    },
+    "minutes": 40,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Shape and drill fine bone needles for stitching.",
+    "category": "bonecraft",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 2
+    }
+  },
+  {
+    "id": "core:sinew_cord",
+    "name": "Twist Sinew Cord",
+    "inputs": {
+      "core:sinew": 2
+    },
+    "outputs": {
+      "core:sinew_cord": 1
+    },
+    "minutes": 20,
+    "station": null,
+    "knowledge": null,
+    "description": "Twist cleaned sinew into a compact strong cord.",
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:rawhide_buckler",
+    "name": "Build Rawhide Buckler",
+    "inputs": {
+      "core:rawhide": 1,
+      "core:wood": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:rawhide_buckler": 1
+    },
+    "minutes": 60,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Stretch stiff rawhide across a light wooden frame.",
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
+  },
+  {
+    "id": "core:clay_pot",
+    "name": "Shape and Fire Clay Pot",
+    "inputs": {
+      "core:clay_lump": 2
+    },
+    "outputs": {
+      "core:clay_pot": 1
+    },
+    "minutes": 120,
+    "station": "core:campfire",
+    "knowledge": null,
+    "description": "Shape a thick cooking pot and fire it slowly beside the coals.",
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:wooden_bowl",
+    "name": "Carve Wooden Bowl",
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:wooden_bowl": 1
+    },
+    "minutes": 45,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Hollow a small bowl from seasoned wood.",
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 2
+    }
+  },
+  {
+    "id": "core:scrape_hide",
+    "name": "Scrape Fresh Hide",
+    "inputs": {
+      "core:fresh_hide": 1
+    },
+    "outputs": {
+      "core:scraped_hide": 1
+    },
+    "minutes": 35,
+    "station": null,
+    "knowledge": null,
+    "description": "Remove membrane and clinging tissue before drying or tanning.",
+    "category": "hide_processing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "scrape": 2
+    }
+  },
+  {
+    "id": "core:sinew_from_offcuts",
+    "name": "Clean Sinew",
+    "inputs": {
+      "core:sinew": 1
+    },
+    "outputs": {
+      "core:sinew": 1
+    },
+    "minutes": 10,
+    "station": null,
+    "knowledge": null,
+    "description": "Clean and separate tendon fibers for cordage.",
+    "category": "hide_processing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
+  },
+  {
+    "id": "core:soap_fat",
+    "name": "Make Fat-and-Ash Soap",
+    "inputs": {
+      "core:animal_fat": 1,
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:soap": 2
+    },
+    "minutes": 75,
+    "station": "core:campfire",
+    "knowledge": null,
+    "description": "Render fat with alkaline wood ash into rough cleansing soap.",
+    "category": "household",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:save_seed_wild_onion",
+    "name": "Save Onion Seed",
+    "inputs": {
+      "core:wild_onion": 1
+    },
+    "outputs": {
+      "core:onion_seed": 2
+    },
+    "minutes": 8,
+    "description": "Select and dry viable seed instead of eating the entire find.",
+    "category": "farming",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:save_seed_wild_carrot",
+    "name": "Save Carrot Seed",
+    "inputs": {
+      "core:wild_carrot": 1
+    },
+    "outputs": {
+      "core:carrot_seed": 2
+    },
+    "minutes": 8,
+    "description": "Select and dry viable seed instead of eating the entire find.",
+    "category": "farming",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:save_seed_wild_grain",
+    "name": "Save Wheat Seed",
+    "inputs": {
+      "core:wild_grain": 1
+    },
+    "outputs": {
+      "core:wheat_seed": 2
+    },
+    "minutes": 8,
+    "description": "Select and dry viable seed instead of eating the entire find.",
+    "category": "farming",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:copper_ingot",
+    "name": "Smelt Copper Ingot",
+    "inputs": {
+      "core:copper_ore": 2,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:copper_ingot": 1
+    },
+    "minutes": 80,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "smelt_copper",
+    "description": "Roast and reduce copper-bearing ore, then consolidate the metal into an ingot.",
+    "category": "advanced",
+    "skill": "smithing",
+    "difficulty": 3
+  }
+]

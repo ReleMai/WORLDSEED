@@ -1,0 +1,58 @@
+[
+  {
+    "id": "core:red_fever",
+    "name": "Red Fever",
+    "transmissions": ["airborne", "contact"],
+    "incubation_hours": 36,
+    "illness_hours": 168,
+    "contagiousness": 68,
+    "severity": 58,
+    "mortality_permille": 32,
+    "immunity_days": 240,
+    "environmental_survival_hours": 8,
+    "symptoms": ["fever", "fatigue", "cough"],
+    "season_bias": ["winter", "spring"]
+  },
+  {
+    "id": "core:grey_flux",
+    "name": "Grey Flux",
+    "transmissions": ["waterborne", "foodborne"],
+    "incubation_hours": 18,
+    "illness_hours": 96,
+    "contagiousness": 52,
+    "severity": 64,
+    "mortality_permille": 45,
+    "immunity_days": 90,
+    "environmental_survival_hours": 72,
+    "symptoms": ["vomiting", "dehydration", "cramps"],
+    "season_bias": ["summer"]
+  },
+  {
+    "id": "core:marsh_ague",
+    "name": "Marsh Ague",
+    "transmissions": ["vector"],
+    "incubation_hours": 72,
+    "illness_hours": 240,
+    "contagiousness": 35,
+    "severity": 48,
+    "mortality_permille": 18,
+    "immunity_days": 120,
+    "environmental_survival_hours": 24,
+    "symptoms": ["chills", "fever", "weakness"],
+    "season_bias": ["summer", "autumn"]
+  },
+  {
+    "id": "core:ashen_pox",
+    "name": "Ashen Pox",
+    "transmissions": ["contact", "airborne"],
+    "incubation_hours": 96,
+    "illness_hours": 336,
+    "contagiousness": 44,
+    "severity": 78,
+    "mortality_permille": 70,
+    "immunity_days": 9999,
+    "environmental_survival_hours": 36,
+    "symptoms": ["rash", "fever", "scarring"],
+    "season_bias": ["winter"]
+  }
+]

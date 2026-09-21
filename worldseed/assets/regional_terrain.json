@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "biomes": {
+    "core:grassland": {"base": [88, 112, 65], "dry": [139, 125, 73], "cold": [139, 150, 132], "ink": [47, 66, 38], "light": [170, 182, 108], "symbol": "grass", "density": 70},
+    "core:forest": {"base": [57, 89, 61], "dry": [99, 103, 62], "cold": [100, 127, 112], "ink": [24, 49, 38], "light": [127, 160, 99], "symbol": "tree", "density": 64},
+    "core:highland": {"base": [111, 112, 98], "dry": [136, 116, 84], "cold": [170, 181, 179], "ink": [54, 65, 66], "light": [194, 190, 155], "symbol": "stone", "density": 35},
+    "core:tundra": {"base": [151, 164, 153], "dry": [155, 146, 117], "cold": [199, 213, 211], "ink": [91, 116, 116], "light": [223, 231, 217], "symbol": "snow", "density": 42},
+    "core:scrub": {"base": [142, 121, 76], "dry": [170, 142, 86], "cold": [151, 152, 125], "ink": [91, 83, 43], "light": [202, 179, 106], "symbol": "scrub", "density": 48},
+    "core:coast": {"base": [171, 160, 108], "dry": [188, 165, 107], "cold": [170, 182, 171], "ink": [112, 108, 71], "light": [225, 210, 159], "symbol": "sand", "density": 55},
+    "core:water": {"base": [48, 89, 111], "dry": [48, 89, 111], "cold": [107, 145, 158], "ink": [29, 63, 85], "light": [117, 171, 186], "symbol": "wave", "density": 55}
+  }
+}

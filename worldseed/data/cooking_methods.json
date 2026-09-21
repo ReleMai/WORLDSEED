@@ -1,0 +1,85 @@
+[
+  {
+    "id": "core:roast",
+    "name": "Roast",
+    "station": "core:campfire",
+    "cookware": null,
+    "min_ingredients": 1,
+    "max_ingredients": 2,
+    "allowed_tags": [
+      "raw_meat",
+      "vegetable",
+      "mushroom",
+      "root"
+    ],
+    "minutes": 25,
+    "satiety_percent": 115,
+    "hydration_bonus": 0,
+    "description": "Cook one or two solid ingredients directly over controlled heat.",
+    "effect": "warming",
+    "requires_water": false
+  },
+  {
+    "id": "core:stew",
+    "name": "Stew",
+    "station": "core:campfire",
+    "cookware": "core:clay_pot",
+    "min_ingredients": 2,
+    "max_ingredients": 4,
+    "allowed_tags": [
+      "raw_meat",
+      "vegetable",
+      "mushroom",
+      "root",
+      "grain",
+      "fat",
+      "herb"
+    ],
+    "minutes": 50,
+    "satiety_percent": 135,
+    "hydration_bonus": 12,
+    "description": "Simmer mixed ingredients in water for a filling balanced meal.",
+    "effect": "recovery",
+    "requires_water": true
+  },
+  {
+    "id": "core:porridge",
+    "name": "Porridge",
+    "station": "core:campfire",
+    "cookware": "core:clay_pot",
+    "min_ingredients": 2,
+    "max_ingredients": 4,
+    "allowed_tags": [
+      "grain",
+      "fruit",
+      "fat"
+    ],
+    "minutes": 40,
+    "satiety_percent": 130,
+    "hydration_bonus": 8,
+    "description": "Boil grain with water and optional fruit or fat into durable energy food.",
+    "effect": "stamina",
+    "requires_water": true
+  },
+  {
+    "id": "core:broth",
+    "name": "Broth",
+    "station": "core:campfire",
+    "cookware": "core:clay_pot",
+    "min_ingredients": 1,
+    "max_ingredients": 4,
+    "allowed_tags": [
+      "offal",
+      "bone",
+      "herb",
+      "vegetable",
+      "mushroom"
+    ],
+    "minutes": 60,
+    "satiety_percent": 105,
+    "hydration_bonus": 20,
+    "description": "Slowly simmer bones, organs, herbs, or vegetables into a hydrating broth.",
+    "effect": "recovery",
+    "requires_water": true
+  }
+]

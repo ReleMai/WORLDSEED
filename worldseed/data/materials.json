@@ -1,0 +1,12 @@
+[
+  {"id":"core:wood","name":"Wood","density":650,"hardness":28,"toughness":48,"edge":12,"corrosion":0,"flammability":90,"value":2},
+  {"id":"core:stone","name":"Stone","density":2600,"hardness":72,"toughness":55,"edge":30,"corrosion":0,"flammability":0,"value":2},
+  {"id":"core:fiber","name":"Plant Fiber","density":250,"hardness":5,"toughness":25,"edge":1,"corrosion":5,"flammability":80,"value":1},
+  {"id":"core:iron","name":"Iron","density":7870,"hardness":60,"toughness":62,"edge":58,"corrosion":65,"flammability":0,"value":9},
+  {"id":"core:steel","name":"Steel","density":7850,"hardness":82,"toughness":78,"edge":88,"corrosion":32,"flammability":0,"value":20},
+  {"id":"core:leather","name":"Leather","density":860,"hardness":15,"toughness":58,"edge":2,"corrosion":10,"flammability":55,"value":5},
+  {"id":"core:bone","name":"Bone","density":1900,"hardness":48,"toughness":35,"edge":25,"corrosion":0,"flammability":5,"value":3},
+  {"id":"core:organic","name":"Organic Matter","density":1000,"hardness":4,"toughness":8,"edge":0,"corrosion":20,"flammability":35,"value":1},
+  {"id":"core:clay","name":"Clay","density":1700,"hardness":20,"toughness":25,"edge":5,"corrosion":0,"flammability":0,"value":2},
+  {"id":"core:copper","name":"Copper","density":8960,"hardness":42,"toughness":60,"edge":45,"corrosion":35,"flammability":0,"value":12}
+]

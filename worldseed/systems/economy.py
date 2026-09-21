@@ -1,0 +1,342 @@
+from __future__ import annotations
+
+from collections import defaultdict
+
+from worldseed.content.registry import ContentRegistry, SettlementProcessDef
+from worldseed.core.rng import hash_u64
+from worldseed.systems.history import HistorySystem
+from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, TradeRouteState
+from worldseed.systems.pathfinding import HierarchicalPathfinder
+
+BASE_PRICE = {
+    "core:wheat": 4, "core:turnip": 5, "core:meat": 9, "core:hide": 12,
+    "core:wood": 5, "core:stone": 4, "core:iron_ore": 14, "core:coal": 10,
+    "core:wheat_seed": 3, "core:turnip_seed": 3, "core:relic": 120,
+    "core:iron_bloom": 28, "core:steel_billet": 55,
+    "core:medicinal_herb": 5, "core:herbal_tonic": 18, "core:soap": 10,
+}
+TARGET = {
+    "core:wheat": 120, "core:turnip": 80, "core:meat": 35, "core:hide": 20,
+    "core:wood": 70, "core:stone": 70, "core:iron_ore": 30, "core:coal": 30,
+    "core:wheat_seed": 25, "core:turnip_seed": 20, "core:iron_bloom": 15,
+    "core:medicinal_herb": 20, "core:herbal_tonic": 16, "core:soap": 24,
+}
+
+# Aggregate labor composition. Named NPCs are representatives; this pool models the rest of a town.
+MAX_TRADE_PARTNERS = 6
+
+LABOR_SHARES = {
+    "farmer": 32, "miner": 12, "carpenter": 8, "hunter": 7, "smith": 5,
+    "merchant": 7, "guard": 8, "healer": 4, "scholar": 4, "herder": 5,
+}
+
+
+class EconomySystem:
+    def __init__(self, state: LivingWorldState, registry: ContentRegistry, world_seed: bytes, history: HistorySystem):
+        self.state = state
+        self.registry = registry
+        self.seed = world_seed
+        self.history = history
+        self.pathfinder = HierarchicalPathfinder(state, world_seed)
+        self._route_town_ids: set[str] = set()
+
+    def _price(self, item: str, stock: int) -> int:
+        base = BASE_PRICE.get(item, self.registry.items.get(item).base_value if item in self.registry.items else 5)
+        target = TARGET.get(item, 30)
+        scarcity = max(25, min(400, (target * 100) // max(1, stock)))
+        return max(1, (base * scarcity) // 100)
+
+    def update_prices(self) -> None:
+        for s in self.state.settlements.values():
+            goods = set(BASE_PRICE) | set(s.stocks)
+            s.prices = {g: self._price(g, s.stocks.get(g, 0)) for g in goods}
+
+    def _build_labor_pool(self, town) -> None:
+        working = max(1, town.population * 55 // 100)
+        # Disease removes some labor from production without requiring every
+        # anonymous resident to become an entity. Quarantine also suppresses
+        # merchant activity while shifting capacity toward care.
+        active_cases=sum(d.infected for d in self.state.diseases.values() if d.settlement_id==town.uid and d.infected>0)
+        prevalence=min(100,active_cases*100//max(1,town.population))
+        working=max(1,working*(100-min(45,prevalence//2))//100)
+        pool = {occ: working * pct // 100 for occ, pct in LABOR_SHARES.items()}
+        if town.quarantine_level>0:
+            merchant_loss=pool.get("merchant",0)*town.quarantine_level//120
+            pool["merchant"]=max(0,pool.get("merchant",0)-merchant_loss)
+            pool["healer"]=pool.get("healer",0)+merchant_loss//2
+        used = sum(pool.values())
+        pool["general"] = max(0, working - used)
+        # Local conditions shift labor rather than conjuring output.
+        if town.food_stress > 45:
+            shift = min(pool.get("general", 0), max(1, working // 20))
+            pool["general"] -= shift
+            pool["farmer"] += shift
+        faction = self.state.factions.get(town.faction_id)
+        if faction and faction.at_war:
+            shift = min(pool.get("general", 0) + pool.get("merchant", 0) // 3, max(1, working // 15))
+            from_general = min(pool.get("general", 0), shift)
+            pool["general"] -= from_general
+            pool["guard"] += from_general
+        town.labor_pool = pool
+        town.unemployment = pool.get("general", 0)
+
+    def _shortage_score(self, town, proc: SettlementProcessDef) -> int:
+        good = proc.priority_good
+        target = TARGET.get(good, 30)
+        stock = town.stocks.get(good, 0)
+        score = max(1, target - stock)
+        # Inputs that cannot be supplied strongly suppress the process.
+        for iid, qty in proc.inputs.items():
+            if town.stocks.get(iid, 0) < qty:
+                score //= 4
+        if proc.knowledge and proc.knowledge not in town.knowledge:
+            return 0
+        return score
+
+    def _reserve_labor(self, town, day: int) -> list[tuple[SettlementProcessDef, int]]:
+        self._build_labor_pool(town)
+        by_occ: dict[str, list[SettlementProcessDef]] = defaultdict(list)
+        for proc in self.registry.settlement_processes.values():
+            by_occ[proc.occupation].append(proc)
+        assignments: list[tuple[SettlementProcessDef, int]] = []
+        for occ, processes in sorted(by_occ.items()):
+            available = town.labor_pool.get(occ, 0)
+            if available <= 0:
+                continue
+            scores = [(self._shortage_score(town, p), p) for p in processes]
+            scores = [(score, p) for score, p in scores if score > 0]
+            if not scores:
+                continue
+            scores.sort(key=lambda pair: (-pair[0], pair[1].id))
+            total = sum(score for score, _ in scores)
+            left = available
+            for idx, (score, proc) in enumerate(scores):
+                if idx == len(scores) - 1:
+                    workers = left
+                else:
+                    workers = min(left, max(proc.workers, available * score // max(1, total)))
+                workers -= workers % proc.workers
+                if workers <= 0 and left >= proc.workers:
+                    workers = proc.workers
+                workers = min(workers, left)
+                left -= workers
+                uid = f"labor:{town.uid}:{proc.id}"
+                self.state.labor_reservations[uid] = LaborReservationState(uid, town.uid, proc.id, occ, workers, day, workers > 0)
+                if workers:
+                    assignments.append((proc, workers))
+                if left < min((p.workers for _, p in scores), default=1):
+                    break
+        return assignments
+
+    def _run_process(self, town, proc: SettlementProcessDef, workers: int) -> int:
+        batches = workers // max(1, proc.workers)
+        if batches <= 0:
+            return 0
+        for iid, qty in proc.inputs.items():
+            batches = min(batches, town.stocks.get(iid, 0) // max(1, qty))
+        if batches <= 0:
+            return 0
+        for iid, qty in proc.inputs.items():
+            town.stocks[iid] = town.stocks.get(iid, 0) - qty * batches
+        culture = self.state.cultures.get(town.culture_id)
+        religion = self.state.religions.get(town.religion_id)
+        bonus = 100
+        if proc.occupation == "farmer" and religion and "harvest" in religion.domains:
+            bonus += 15
+        if proc.occupation in ("smith", "carpenter") and culture and "craft" in culture.values:
+            bonus += 10
+        for iid, qty in proc.outputs.items():
+            amount = max(1, qty * batches * bonus // 100)
+            town.stocks[iid] = town.stocks.get(iid, 0) + amount
+        return batches
+
+    def daily_update(self, minute: int) -> None:
+        day = minute // 1440
+        for town in self.state.settlements.values():
+            if town.population <= 0:
+                continue
+            assignments = self._reserve_labor(town, day)
+            for proc, workers in assignments:
+                self._run_process(town, proc, workers)
+            # Food is physically consumed after production, so bad harvests propagate immediately.
+            food_need = max(1, town.population // 3)
+            eaten = min(food_need, town.stocks.get("core:wheat", 0))
+            town.stocks["core:wheat"] = town.stocks.get("core:wheat", 0) - eaten
+            remain = food_need - eaten
+            eaten2 = min(remain, town.stocks.get("core:turnip", 0))
+            town.stocks["core:turnip"] = town.stocks.get("core:turnip", 0) - eaten2
+            remain -= eaten2
+            eaten3 = min(remain, town.stocks.get("core:meat", 0))
+            town.stocks["core:meat"] = town.stocks.get("core:meat", 0) - eaten3
+            shortage = food_need - eaten - eaten2 - eaten3
+            old_stress = town.food_stress
+            town.food_stress = max(0, min(100, town.food_stress + shortage * 3 - (2 if shortage == 0 else 0)))
+            if old_stress < 60 <= town.food_stress:
+                self.history.record("famine", f"Food scarcity grips {town.name}.", minute, town.region_x, town.region_y, [town.uid], salience=55)
+        self.update_prices()
+        self._record_market_history(minute)
+        self._ensure_routes(minute)
+        self._create_caravans(minute)
+
+    def _record_market_history(self, minute: int) -> None:
+        # Daily samples are intentionally bounded to roughly one in-game year.
+        # This supports terminal trend graphs and economic diagnosis without
+        # allowing time-series state to grow forever.
+        for town in self.state.settlements.values():
+            for good,price in sorted(town.prices.items()):
+                rows=town.market_history.setdefault(good,[])
+                rows.append([int(minute),int(price),int(town.stocks.get(good,0))])
+                if len(rows)>120:del rows[:-120]
+
+    def monthly_update(self, minute: int) -> None:
+        for s in self.state.settlements.values():
+            if s.food_stress < 20 and s.population < 600:
+                s.population += max(1, s.population // 50)
+            elif s.food_stress > 80:
+                s.population = max(5, s.population - max(1, s.population // 40))
+
+    def _route_opportunity(self, a, b) -> int:
+        """Cheap deterministic estimate used before expensive route planning.
+
+        A settlement should not maintain a complete directed graph to every
+        other realized settlement. Nearby partners are preferred, but severe
+        price/stock complementarity can pull one or two more distant markets
+        into the bounded partner set.
+        """
+        opportunity=0
+        goods=set(a.stocks)|set(b.stocks)|set(TARGET)
+        for good in goods:
+            surplus=max(0,a.stocks.get(good,0)-TARGET.get(good,30))
+            if surplus<=0:continue
+            pa=a.prices.get(good,self._price(good,a.stocks.get(good,0)))
+            pb=b.prices.get(good,self._price(good,b.stocks.get(good,0)))
+            opportunity=max(opportunity,surplus*max(0,pb-pa))
+        return min(1000,opportunity)
+
+    def _ensure_routes(self, minute: int) -> None:
+        towns = sorted(self.state.settlements.values(), key=lambda t:t.uid)
+        town_ids={t.uid for t in towns}
+        full_refresh=(town_ids!=self._route_town_ids) or not self.state.trade_routes or ((minute//1440)%30==0)
+        if not full_refresh:
+            # Daily scarcity/war changes route danger, but expensive macro path
+            # geometry only rebuilds monthly or when the settlement graph changes.
+            for route in self.state.trade_routes.values():
+                a=self.state.settlements.get(route.origin);b=self.state.settlements.get(route.destination)
+                if not a or not b:continue
+                faction_a=self.state.factions.get(a.faction_id);hostile=bool(faction_a and b.faction_id in faction_a.at_war)
+                route.danger=min(95,max(0,route.distance*3+a.food_stress//5+b.food_stress//6+(45 if hostile else 0)))
+            return
+        self._route_town_ids=town_ids
+        valid:set[str]=set()
+        for a in towns:
+            ranked=[]
+            for b in towns:
+                if a.uid==b.uid:continue
+                rough=abs(a.region_x-b.region_x)+abs(a.region_y-b.region_y)
+                if rough>12:continue
+                faction_a=self.state.factions.get(a.faction_id)
+                hostile=bool(faction_a and b.faction_id in faction_a.at_war)
+                opportunity=self._route_opportunity(a,b)
+                # Distance remains the dominant cost; opportunity may promote a
+                # complementary market, while active war strongly demotes it.
+                rank=rough*100 + (500 if hostile else 0) - min(450,opportunity//4)
+                ranked.append((rank,rough,b.uid,b))
+            ranked.sort(key=lambda row:(row[0],row[1],row[2]))
+            for _,_,_,b in ranked[:MAX_TRADE_PARTNERS]:
+                route_plan=self.pathfinder.regional_path((a.region_x,a.region_y),(b.region_x,b.region_y))
+                dist=route_plan.distance
+                if dist>12:continue
+                uid=f"route:{a.uid}>{b.uid}";valid.add(uid)
+                faction_a=self.state.factions.get(a.faction_id)
+                hostile=bool(faction_a and b.faction_id in faction_a.at_war)
+                danger=min(95,route_plan.danger+a.food_stress//5+b.food_stress//6+(45 if hostile else 0)+a.quarantine_level//5+b.quarantine_level//8)
+                merchants=a.labor_pool.get("merchant",max(1,a.population//20))
+                capacity=max(2,(20+merchants*3)*(100-a.quarantine_level)//100)
+                waypoints=[f"{rx},{ry}" for rx,ry in route_plan.regions]
+                chunk_waypoints=[f"{cx},{cy}" for cx,cy in self.pathfinder.chunk_corridor((a.x,a.y),(b.x,b.y))]
+                if uid in self.state.trade_routes:
+                    r=self.state.trade_routes[uid]
+                    r.distance,r.danger,r.capacity=dist,danger,capacity
+                    r.waypoints=waypoints;r.travel_minutes=route_plan.travel_minutes;r.chunk_waypoints=chunk_waypoints
+                else:
+                    self.state.trade_routes[uid]=TradeRouteState(uid,a.uid,b.uid,dist,danger,capacity,minute,0,waypoints,route_plan.travel_minutes,chunk_waypoints)
+        for uid in [uid for uid in self.state.trade_routes if uid not in valid]:
+            self.state.trade_routes.pop(uid,None)
+
+    def _create_caravans(self, minute: int) -> None:
+        for route in sorted(self.state.trade_routes.values(), key=lambda r: r.uid):
+            a = self.state.settlements.get(route.origin)
+            b = self.state.settlements.get(route.destination)
+            if not a or not b or route.danger >= 90 or a.quarantine_level >= 90 or b.quarantine_level >= 95:
+                continue
+            if any(c.origin == a.uid and c.status == "traveling" for c in self.state.caravans.values()):
+                continue
+            best: tuple[str, int, int] | None = None
+            best_score = 0
+            for good, stock in sorted(a.stocks.items()):
+                surplus = stock - TARGET.get(good, 30)
+                diff = b.prices.get(good, self._price(good, b.stocks.get(good, 0))) - a.prices.get(good, self._price(good, stock))
+                score = surplus * diff
+                if surplus > 10 and diff > 0 and score > best_score:
+                    qty = min(route.capacity, max(1, surplus // 2))
+                    best = (good, qty, score)
+                    best_score = score
+            if not best or best_score <= 20:
+                continue
+            good, qty, _ = best
+            a.stocks[good] -= qty
+            travel = route.travel_minutes or max(360, route.distance * 720)
+            cargo_value = qty * a.prices.get(good, BASE_PRICE.get(good, 5))
+            guards = max(0, a.labor_pool.get("guard", 0) // 3)
+            uid = self.state.uid("caravan")
+            self.state.caravans[uid] = CaravanState(uid=uid, origin=a.uid, destination=b.uid, goods={good:qty}, wealth=0,
+                                                     depart_minute=minute, arrive_minute=minute+travel, status="traveling",
+                                                     route_id=route.uid, cargo_value=cargo_value, guards=guards)
+            route.last_used_minute = minute
+            self.history.record("caravan_departure", f"A caravan left {a.name} for {b.name} carrying {qty} {good}.", minute, a.region_x, a.region_y, [uid,a.uid,b.uid], salience=8)
+            # At most one outbound caravan per settlement per daily update.
+
+    def process_caravans(self, minute: int) -> None:
+        for c in list(self.state.caravans.values()):
+            if c.status != "traveling" or c.arrive_minute > minute:
+                continue
+            dest = self.state.settlements.get(c.destination)
+            origin = self.state.settlements.get(c.origin)
+            if not dest:
+                c.status = "lost"
+                continue
+            route = self.state.trade_routes.get(c.route_id)
+            danger = route.danger if route else 20
+            effective_danger = max(0, danger - c.guards * 4)
+            roll = hash_u64(self.seed, "caravan-risk", c.uid) % 100
+            if roll < effective_danger:
+                c.status = "lost"
+                if route:
+                    route.danger = min(100, route.danger + 4)
+                self.history.record("caravan_lost", f"A caravan from {origin.name if origin else c.origin} was lost on the road to {dest.name}.", minute, dest.region_x, dest.region_y, [c.uid], salience=45)
+                continue
+            revenue = 0
+            for good, qty in c.goods.items():
+                dest.stocks[good] = dest.stocks.get(good, 0) + qty
+                revenue += qty * max(1, dest.prices.get(good, BASE_PRICE.get(good, 5)))
+            paid = min(dest.wealth, revenue)
+            dest.wealth -= paid
+            if origin:
+                origin.wealth += paid
+            c.wealth = paid
+            c.status = "arrived"
+            if route:
+                route.traffic += 1
+                route.danger = max(0, route.danger - 1)
+            self.history.record("trade", f"A caravan reached {dest.name}; cargo sold for {paid}c.", minute, dest.region_x, dest.region_y, [c.uid,dest.uid], salience=12)
+        # Completed caravan objects are transient logistics state. Their causal
+        # outcome already lives in route traffic, settlement ledgers and history.
+        cutoff=minute-30*1440
+        for uid,c in list(self.state.caravans.items()):
+            if c.status!="traveling" and c.arrive_minute<cutoff:self.state.caravans.pop(uid,None)
+        self.update_prices()
+
+    def trade_price(self, settlement_id: str, item_id: str, buy: bool) -> int:
+        s = self.state.settlements[settlement_id]
+        p = s.prices.get(item_id, self._price(item_id, s.stocks.get(item_id, 0)))
+        return max(1, (p * 115)//100 if buy else (p * 85)//100)

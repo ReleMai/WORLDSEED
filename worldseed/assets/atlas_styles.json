@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "icons": ["village", "city", "camp", "cave", "fortress", "temple", "mine", "archive", "crypt"],
+  "terrain": {
+    "core:grass": [106,132,76], "core:forest": [47,82,58],
+    "core:berry_thicket": [70,103,60], "core:rock": [132,128,113],
+    "core:water": [30,65,94], "core:river_shallow": [85,145,154],
+    "core:river": [41,91,119], "core:wetland": [83,111,87],
+    "core:floodplain": [161,148,105], "core:sand": [206,184,132],
+    "core:scrub": [154,144,87], "core:tundra": [181,194,178],
+    "core:cave_mouth": [83,77,66], "core:shore": [181,162,119],
+    "core:riverbank": [169,154,122], "core:ocean_wade": [112,170,165],
+    "core:ocean_shallow": [59,125,146], "core:ocean_shelf": [36,87,121],
+    "core:ocean_deep": [24,52,83], "core:estuary_shallow": [116,156,142],
+    "core:estuary_deep": [67,112,115], "core:lake_shallow": [79,147,151],
+    "core:lake_deep": [43,96,123], "core:stream": [105,167,174],
+    "core:river_rapids": [159,201,199], "core:tilled_soil": [117,84,56]
+  },
+  "tag_fallback": {"water": [55,111,143], "sand": [198,177,125], "rock": [131,128,118], "vegetation": [72,110,66], "soil": [127,134,88], "underground": [97,93,87]},
+  "fallback": [156,132,154]
+}

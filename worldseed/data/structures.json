@@ -1,0 +1,539 @@
+[
+  {
+    "id": "core:wood_wall",
+    "name": "Wood Wall",
+    "glyph": "#",
+    "passable": false,
+    "blocks_sight": true,
+    "cost": {
+      "core:wood": 2
+    },
+    "tags": [
+      "wall",
+      "flammable"
+    ],
+    "support_strength": 45,
+    "description": "Wood Wall has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "wall",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:stone_wall",
+    "name": "Stone Wall",
+    "glyph": "#",
+    "passable": false,
+    "blocks_sight": true,
+    "cost": {
+      "core:stone": 3
+    },
+    "tags": [
+      "wall"
+    ],
+    "support_strength": 80,
+    "description": "Stone Wall has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "wall"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:wood_floor",
+    "name": "Wood Floor",
+    "glyph": "=",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 1
+    },
+    "tags": [
+      "floor",
+      "flammable"
+    ],
+    "description": "Wood Floor has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "floor",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:door",
+    "name": "Wood Door",
+    "glyph": "+",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:fiber": 1
+    },
+    "tags": [
+      "door",
+      "flammable"
+    ],
+    "support_strength": 20,
+    "description": "Wood Door has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "door",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:campfire",
+    "name": "Campfire",
+    "glyph": "*",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 2,
+      "core:stout_branch": 2,
+      "core:brush": 1
+    },
+    "tags": [
+      "station",
+      "fire"
+    ],
+    "description": "A ring of stones around a controlled fire for warmth, roasting, boiling, hardening wood, and light.",
+    "uses": [
+      "cooking",
+      "warmth",
+      "fire_hardening",
+      "light"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 12,
+    "shelter": 0
+  },
+  {
+    "id": "core:workbench",
+    "name": "Workbench",
+    "glyph": "W",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 3
+    },
+    "tags": [
+      "station"
+    ],
+    "description": "Workbench has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "crafting",
+      "toolmaking"
+    ],
+    "comfort": 0,
+    "work_bonus": 15,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:forge",
+    "name": "Forge",
+    "glyph": "F",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 6,
+      "core:coal": 2
+    },
+    "tags": [
+      "station",
+      "fire"
+    ],
+    "description": "Forge has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "station",
+      "fire"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:bed",
+    "name": "Bed",
+    "glyph": "b",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:fiber": 3
+    },
+    "tags": [
+      "furniture",
+      "bed"
+    ],
+    "description": "Bed has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "sleep",
+      "recovery"
+    ],
+    "comfort": 30,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:bridge",
+    "name": "Wood Bridge",
+    "glyph": "=",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 4,
+      "core:fiber": 1
+    },
+    "tags": [
+      "bridge",
+      "flammable"
+    ],
+    "description": "Wood Bridge has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "bridge",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:support_beam",
+    "name": "Support Beam",
+    "glyph": "|",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2
+    },
+    "tags": [
+      "support",
+      "flammable"
+    ],
+    "support_strength": 75,
+    "description": "Support Beam has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "support",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:stone_pillar",
+    "name": "Stone Pillar",
+    "glyph": "O",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 4
+    },
+    "tags": [
+      "support"
+    ],
+    "support_strength": 110,
+    "description": "Stone Pillar has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "support"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:wood_chest",
+    "name": "Wooden Chest",
+    "glyph": "C",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 4,
+      "core:fiber": 1
+    },
+    "tags": [
+      "container",
+      "furniture",
+      "flammable"
+    ],
+    "capacity_mass_g": 120000,
+    "capacity_volume_ml": 180000,
+    "description": "Wooden Chest has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "container",
+      "furniture",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:wood_roof",
+    "name": "Wood Roof",
+    "glyph": "^",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:fiber": 1
+    },
+    "tags": [
+      "roof",
+      "flammable"
+    ],
+    "load": 28,
+    "description": "Wood Roof has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "roof",
+      "flammable"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:stone_roof",
+    "name": "Stone Roof",
+    "glyph": "^",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 3
+    },
+    "tags": [
+      "roof"
+    ],
+    "load": 62,
+    "description": "Stone Roof has a specific practical role in shelter, storage, work, or defense.",
+    "uses": [
+      "roof"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:brush_lean_to",
+    "name": "Brush Lean-To",
+    "glyph": "/",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:stout_branch": 4,
+      "core:brush": 5,
+      "core:plant_cordage": 2
+    },
+    "tags": [
+      "shelter",
+      "flammable"
+    ],
+    "description": "A sloped frame packed with brush that cuts wind and sheds light rain.",
+    "uses": [
+      "shelter",
+      "rest"
+    ],
+    "comfort": 8,
+    "shelter": 18
+  },
+  {
+    "id": "core:sleeping_mat",
+    "name": "Reed Sleeping Mat",
+    "glyph": "_",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:reed_bundle": 2,
+      "core:plant_cordage": 1
+    },
+    "tags": [
+      "furniture",
+      "bed",
+      "flammable"
+    ],
+    "description": "A woven mat that keeps the body off cold damp ground.",
+    "uses": [
+      "sleep",
+      "recovery"
+    ],
+    "comfort": 12
+  },
+  {
+    "id": "core:storage_basket",
+    "name": "Woven Storage Basket",
+    "glyph": "u",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:reed_bundle": 2,
+      "core:plant_cordage": 1
+    },
+    "tags": [
+      "container",
+      "furniture",
+      "flammable"
+    ],
+    "description": "A large woven basket for keeping food, tools, fibers, and camp clutter together.",
+    "uses": [
+      "storage"
+    ],
+    "capacity_mass_g": 35000,
+    "capacity_volume_ml": 70000
+  },
+  {
+    "id": "core:crude_work_surface",
+    "name": "Crude Work Surface",
+    "glyph": "w",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stout_branch": 3,
+      "core:plant_cordage": 2
+    },
+    "tags": [
+      "station",
+      "furniture",
+      "flammable"
+    ],
+    "description": "A lashed frame that raises cutting and assembly work off the ground.",
+    "uses": [
+      "crafting",
+      "toolmaking"
+    ],
+    "work_bonus": 8
+  },
+  {
+    "id": "core:butcher_table",
+    "name": "Butcher Table",
+    "glyph": "B",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:stout_branch": 2,
+      "core:plant_cordage": 1
+    },
+    "tags": [
+      "station",
+      "furniture",
+      "flammable"
+    ],
+    "description": "A washable work surface for cleaner, more efficient carcass processing.",
+    "uses": [
+      "butchery",
+      "skinning",
+      "deboning"
+    ],
+    "work_bonus": 18
+  },
+  {
+    "id": "core:drying_rack",
+    "name": "Drying Rack",
+    "glyph": "H",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:stout_branch": 4,
+      "core:plant_cordage": 2
+    },
+    "tags": [
+      "station",
+      "flammable"
+    ],
+    "description": "An elevated rack that lets air move around meat, herbs, and scraped hides.",
+    "uses": [
+      "drying",
+      "preservation"
+    ],
+    "work_bonus": 10
+  },
+  {
+    "id": "core:tanning_frame",
+    "name": "Tanning Frame",
+    "glyph": "A",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stout_branch": 4,
+      "core:plant_cordage": 3
+    },
+    "tags": [
+      "station",
+      "flammable"
+    ],
+    "description": "A stretched frame for working tannin solution through a prepared hide.",
+    "uses": [
+      "tanning",
+      "leatherwork"
+    ],
+    "work_bonus": 12
+  },
+  {
+    "id": "core:stone_hearth",
+    "name": "Stone Hearth",
+    "glyph": "*",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 6,
+      "core:clay_lump": 2
+    },
+    "tags": [
+      "station",
+      "fire"
+    ],
+    "description": "A durable hearth that holds heat more evenly than an open campfire.",
+    "uses": [
+      "cooking",
+      "warmth",
+      "preservation"
+    ],
+    "warmth": 18,
+    "work_bonus": 8
+  },
+  {
+    "id": "core:reed_screen",
+    "name": "Reed Windbreak",
+    "glyph": ":",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:reed_bundle": 3,
+      "core:plant_cordage": 2
+    },
+    "tags": [
+      "wall",
+      "flammable",
+      "shelter"
+    ],
+    "description": "A woven panel that blocks wind without becoming a permanent wall.",
+    "uses": [
+      "windbreak",
+      "shelter"
+    ],
+    "shelter": 8,
+    "support_strength": 12
+  }
+]

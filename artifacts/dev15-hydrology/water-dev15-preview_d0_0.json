@@ -1,0 +1,23 @@
+{
+  "core_nodes": 4096,
+  "csv": "artifacts/dev15-hydrology/water-dev15-preview_d0_0.csv",
+  "domain": [
+    0,
+    0
+  ],
+  "fingerprint": "e5cf86e7bbde29219e8fb7a56e0020bdc0d5ead8",
+  "hydrology_version": 1,
+  "issues": [],
+  "nodes": 6400,
+  "outlets": 316,
+  "png": "artifacts/dev15-hydrology/water-dev15-preview_d0_0.png",
+  "river_cells_core": 496,
+  "river_class_core": {
+    "0": 3600,
+    "1": 254,
+    "2": 118,
+    "3": 124
+  },
+  "seed": "water-dev15-preview",
+  "worldgen_version": 6
+}

@@ -1,0 +1,11 @@
+test_long_footer_does_not_paint_outside_its_panel (test_rc14_pygame_behavior.PygameBehaviorTests.test_long_footer_does_not_paint_outside_its_panel) ... ok
+test_mousewheel_zoom_bounds_and_keyboard_reset (test_rc14_pygame_behavior.PygameBehaviorTests.test_mousewheel_zoom_bounds_and_keyboard_reset) ... ok
+test_render_at_all_zoom_limits_is_observational_and_centered (test_rc14_pygame_behavior.PygameBehaviorTests.test_render_at_all_zoom_limits_is_observational_and_centered) ... ok
+test_startup_flush_drops_stale_escape_but_accepts_fresh_input (test_rc14_pygame_behavior.PygameBehaviorTests.test_startup_flush_drops_stale_escape_but_accepts_fresh_input) ... ok
+test_startup_flush_preserves_window_close (test_rc14_pygame_behavior.PygameBehaviorTests.test_startup_flush_preserves_window_close) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.008s
+
+OK
+pygame-ce 2.5.8 (SDL 2.32.10, Python 3.12.14)

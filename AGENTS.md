@@ -1,0 +1,363 @@
+# WORLDSEED v1.0 RC14 — coding-agent contract
+
+This file is binding guidance for Codex and other coding agents working in this repository.
+
+
+## UI / UX contract (RC6)
+
+- New player verbs go through the Enter Action Hub unless a direct shortcut is demonstrably necessary.
+- New information/management screens go through the TAB World Console hierarchy.
+- `ui/router.py` is the only global key table. Never bind W/A/S/D to anything except movement.
+- Use `ui/widgets.py` for menus, panels and paging; do not create bespoke number-only menus.
+- Use `ui/layout.py` for viewport geometry. Never force a minimum screen larger than the real terminal.
+- Every gameplay frame must fit within reported terminal width/height without relying on shell wrapping.
+- UI/report code is observational. Opening a screen cannot realize regions, advance time or mutate simulation state.
+- Long records must be pageable/reflowable. Do not truncate historical depth merely to fit one terminal screen.
+- Update `tests/test_ui_rc2.py` when modifying HUD geometry, global key routing or primary navigation.
+
+## RC14 Embodied World physicalization contract
+
+RC14 introduces a binding spatial authority chain:
+
+```text
+SIMULATION / LEDGER -> REGIONAL PHYSICAL PLAN -> LOCAL MATERIALIZATION
+```
+
+Never create an unrelated decorative village, road, river, building list, or local economy beside authoritative simulation state.
+
+- Simulation/ledger owns population, stocks, occupations, prices, health, faction state and events.
+- Regional physical plans own stable roads, parcels, structure IDs, land use, crossings, capacities and ownership links.
+- Local materialization owns exact nearby footprints, doors, containers and actor positions/tasks as a projection of those stable plan IDs.
+- `SettlementState.buildings` may only remain as a compatibility/derived summary while RC14 migration is underway; it must not become a second building authority.
+- Destroying a materialized structure/bridge must update authoritative plan state/deltas so distant simulation notices.
+- Distant history damage must alter the same plan object so the next materialization shows the consequence.
+- Never re-roll settlement layout merely because the player approaches.
+
+### RC14 generation/version boundaries
+
+- `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
+- New worlds use `WORLDGEN_VERSION = 7`; v7 retains the v6 prepared hydrology/coast contract and adds terrain-aware cave entrances plus stratified underground cave/geology generation. Existing v1-v6 geography remains frozen.
+- Ground-terrain meshing is data-driven from terrain tags. New/modded `surface` or `underground` ground terrain must enter the presentation mesher automatically unless it is a hard feature (`shaft`, `ore`, `loot`). Do not add pair-by-pair renderer exceptions for ordinary biome ecotones.
+- Cave mouths are contextual terrain overlays: placement belongs to world generation; presentation may choose neighboring ground only as a visual base and must never alter terrain authority.
+- Recipe discovery is authoritative simulation state. UI browsing is observational; item/material discovery and trial-and-error unlocks happen on command/simulation paths, never because a crafting panel was opened.
+- Adjacent prepared hydrology domains must be solved through the seam-safe multi-domain window contract; never return to independent per-chunk/per-domain river authority.
+- Existing v4 saves must never be rewritten into v5 geography by normal loading.
+- Generated hydrology/plan/route rows are rebuildable caches. Player/history mutations belong in authoritative state or `physical_plan_deltas` and must survive cache deletion.
+- Stable plan IDs derive from stable parent identity + deterministic slot/geometry fingerprint, never transient iteration order or process hashing.
+- No movement, hover, renderer, or inspection path may perform hydrology, settlement planning, or route generation. Preparation belongs in startup/background planning phases.
+
+### RC14 release gates
+
+New physical-world work must add deterministic tests and the relevant audits. At minimum preserve:
+
+- same seed + same versions -> identical hydrology/plan/route fingerprints;
+- generated-cache reload skips raw generation;
+- generated-cache deletion/rebuild reproduces base data without erasing authoritative deltas;
+- hydrology has no unintentional prepared-core sinks/cycles and downstream accumulation does not decrease;
+- settlement plans have legal footprints/access/capacity and no duplicate economic authority;
+- strategic route graphs remain sparse and crossings reference real hydrology;
+- legacy saves retain recorded geography;
+- ordinary movement/render latency does not invoke regional planning.
+
+## Product rule
+
+> **Model causes, not scripted outcomes.**
+
+A feature is mature only when it participates in existing state transitions.
+
+Bad:
+
+```text
+if day == 40: spawn famine quest
+```
+
+Good:
+
+```text
+crop yield ↓
+food stock ↓
+price ↑
+hunger ↑
+labor efficiency ↓
+crime/migration pressure ↑
+```
+
+The player may experience that as a famine story, but the engine should not have needed a "famine quest" to create it.
+
+## Architectural invariants
+
+1. Authoritative simulation state lives outside UI/rendering.
+2. Rendering, dashboards, alerts and ledgers are observational.
+3. No global `random` in procedural/simulation code.
+4. Every random domain uses a stable named deterministic namespace.
+5. Unvisited Tier-E space remains deterministic potential.
+6. Do not make a new feature realize the infinite world merely by iterating coordinates.
+7. Ordinary distant populations are aggregates; preserve individuals only when named/notable/relevant.
+8. Promotion/demotion must conserve authoritative quantities.
+9. Save growth should follow realized/mutated state, not total theoretically generated world size.
+10. Never silently change save schema or worldgen version.
+11. Never use `pickle` for saves or mods.
+12. New data IDs are namespaced (`core:`, mod namespace, etc.).
+13. Avoid god modules and cross-domain direct mutation.
+14. UI complexity should expose causality, not hide it.
+15. New long-lived collections need a compaction/pruning/bounded-history policy.
+
+## System ownership examples
+
+- AI chooses/request actions; combat owns wound resolution.
+- Economy owns stocks/prices/production; factions do not directly invent goods.
+- Epidemiology owns human infections; weather can influence disease pressure but does not mutate cases itself.
+- History records consequences; it does not cause the battle/discovery merely because an event is desired.
+- Renderer does not call realization methods.
+
+## Time ordering
+
+Simulation ordering is part of determinism. Do not reorder mature cadence blocks casually.
+
+Typical order:
+
+```text
+command validation
+command effect
+clock advance
+scheduled/hourly systems as crossed
+scheduled arrivals
+daily aggregate systems
+monthly systems
+local post-action consequences
+history/maintenance
+checkpoint when due
+renderer reads snapshot/state
+```
+
+Offline advancement must process meaningful boundaries and dynamically created arrivals. Never loop one minute at a time for a month-long catch-up.
+
+## LOD rules
+
+- A: immediate exact simulation.
+- B: nearby persistent individuals at reduced cadence.
+- C: regional cohorts/ledgers.
+- D: distant realized aggregate events.
+- E: deterministic potential only.
+
+Before adding a persistent distant object, ask: **does this need to exist individually while unobserved?** If no, store an aggregate or deterministic potential instead.
+
+## Data/content rules
+
+Prefer JSON definitions for:
+
+- materials;
+- items;
+- recipes/processes;
+- structures;
+- crops;
+- species templates;
+- diseases;
+- future compatible content.
+
+Code should implement rules/algorithms, not giant content switch statements.
+
+Data validation must reject malformed IDs, negative physical values, invalid references and protected-ID collisions.
+
+## Persistence rules
+
+Current save schema: 3.
+
+For any persistent-state change:
+
+- ensure old missing fields have safe defaults;
+- update `to_dict/from_dict` as needed;
+- add round-trip tests;
+- decide whether schema migration is required;
+- update verifier invariants;
+- do not change `WORLDGEN_VERSION` unless base generated geography intentionally changes.
+
+If changing worldgen, create an explicit generation-version strategy. Never let an update invisibly move a mountain under an existing settlement.
+
+## Performance rules
+
+Prefer fixing complexity, not only micro-optimizing loops.
+
+Prohibited patterns without justification:
+
+```text
+for every entity in world: ...
+for every settlement × every settlement: persistent complete graph
+advance every offline minute
+instantiate daughter civilizations into unrealized infinity
+retain every transient event forever
+```
+
+Preferred:
+
+```text
+spatial indexes
+bounded partner sets
+scheduled boundaries
+cohorts
+sparse deltas
+history archives
+pruned completed logistics
+bounded time-series histories
+```
+
+Use `tools/soak_matrix.py`, `tools/profile_state.py` and profiling before introducing native dependencies.
+
+## UI rules
+
+Complexity is allowed; unusable complexity is not.
+
+When adding a persistent system, normally add at least one of:
+
+- main-view symbol/status;
+- alert condition;
+- World Console summary;
+- World Ledger drill-down;
+- interactive look/context action;
+- explanatory causal text.
+
+Large screens must be pageable. Do not assume a 200-line terminal.
+
+Add observational tests for new dashboards where feasible:
+
+```python
+before = sim.state.to_dict()
+text = screen(sim)
+after = sim.state.to_dict()
+assert before == after
+```
+
+## Input rules
+
+`W`, `A`, `S`, `D` are reserved movement controls.
+
+Do not reuse them as global menu hotkeys. `D` was previously shadowed by dismantle and has a regression test; dismantle is `U`.
+
+Prefer the World Console/context menus over consuming every remaining keyboard letter.
+
+## Testing contract
+
+Minimum branch gate:
+
+```bash
+python -m compileall worldseed
+python -m unittest discover -s tests -v
+python tools/replay.py tests/fixtures/golden_replay.json
+```
+
+Persistence change:
+
+```bash
+python tools/verify_save.py <representative-save>
+```
+
+Simulation/aggregate change:
+
+```bash
+python tools/soak_matrix.py --years 25 --seeds 4 --policy full --json
+```
+
+Performance/LOD change should also run a century-scale seed during development/nightly validation.
+
+## Required new tests by change type
+
+Procedural generation:
+- same inputs identical;
+- generation order independent;
+- unrelated RNG namespace isolation where relevant.
+
+Persistent state:
+- round-trip;
+- migration if schema changed;
+- verifier invariants.
+
+Economy/ecology/disease:
+- conservation/bounds;
+- no negative populations/stocks;
+- long soak.
+
+UI:
+- observational/read-only;
+- narrow/large record paging behavior where relevant.
+
+## Definition of Done
+
+A feature is not done because one button works.
+
+It should have:
+
+- a clear state owner;
+- deterministic behavior;
+- persistence policy;
+- LOD policy if spatial/population based;
+- interaction with existing systems;
+- discoverable UI/read model;
+- tests;
+- bounded growth strategy for long worlds;
+- updated documentation when public behavior changes.
+
+## Agent handoff note
+
+Every substantial agent task should leave a short handoff containing:
+
+```text
+Scope / modules changed
+Public APIs/contracts
+Persistent fields / migration
+RNG namespaces
+Tests added/changed
+Performance implications
+UI exposure
+Known limitations
+Next dependency
+```
+
+## Navigation invariant
+
+All nested UI routes must use `NavigationStack`. ESC must pop one route, preserve the parent's selected row/scroll, and never mutate simulation state. Add a simulated-key regression test for every new multi-layer UI.
+
+## RC6 gameplay/discovery invariants
+
+- Simulation state is not player knowledge. New screens must filter NPC/town/faction/site/event names through discovery state.
+- Surface biome terrain and harvestable features are separate. Do not reintroduce `tree == terrain`.
+- Harvesting vegetation must not rewrite the underlying biome.
+- Solid underground terrain must be interactable from adjacent cardinal cells; never require the actor to occupy an impassable wall.
+- Worldgen v2 is a compatibility boundary. New cave topology belongs to v3+ only. Never silently migrate an old world's generator version.
+- Natural connector shafts/landing chambers are protected topology and site overlays may not sever them.
+- Player-authored structures/farms/containers suppress deterministic wild features on the same tile.
+- Mouse reports and paste payloads are UI tokens, never gameplay commands.
+
+## RC7 early-game invariants
+
+1. New characters start with an empty inventory. Never add a starter kit without changing the product design explicitly.
+2. Primitive progression must be reachable from generated natural resources; avoid circular recipe dependencies.
+3. Processes ask for tool qualities where possible, not a single hard-coded tool ID.
+4. An item needs direct utility or a downstream sink. Run `python tools/audit_content.py` after content changes.
+5. Furniture must implement a gameplay use before it is added to the core set.
+6. Animal kills create carcasses; do not bypass the processing loop with direct generic loot unless the species intentionally disintegrates/has a special rule.
+7. Cooking nutrition derives from ingredients. Do not duplicate every ingredient combination into fixed recipes.
+8. Crops own their N/P/K/disease/climate data; do not hard-code crop IDs in growth logic.
+9. New forage/species content must have habitat constraints and deterministic generation.
+10. Release changes to primitive resources must run `bootstrap_smoke.py` and `balance_early_game.py` across multiple seeds.
+
+## Visual/presentation contract (RC8+)
+- Never import pygame from simulation, worldgen, persistence, ecology, economy or content rules.
+- Reference visuals by stable content/visual ID, not hard-coded absolute paths.
+- Every new item/terrain/resource/structure/crop/authored species must receive visual coverage or intentionally defined fallback before merge.
+- Rendering, resizing, hovering and animation are observational and may not advance simulation/RNG.
+- Preserve `--terminal` as a regression/debug backend until the graphical renderer has equivalent accessibility and tooling.
+
+## Dev21 pointer/input contract
+- WASD is world movement only; do not restore W/S selection or A/D back/confirm mappings.
+- Pointer hit regions are presentation-only and rebuilt each frame. Never dispatch simulation commands from hit tests or hover.
+- Shared widgets interpret UI_SELECT/UI_HOVER page-relative tokens and retain route state.
+- Menu paging must use backend capacity so every row is visible and clickable.
+- Mouse wheel pages UI; only world mode changes camera zoom. Text input accepts ordinary letters.
+- Entering modal UI and focus loss clear held movement; window close unwinds to the save/exit boundary.
+
+## Dev22 atlas contract
+- Graphical maps consume world.atlas snapshots, never illustrative regional art as geographic truth.
+- Atlas reads may not generate/load world chunks, plan hydrology/routes, realize sites, or write state/database.
+- Missing base cache is unknown. Never approximate it using a dominant biome or silently reroll old geography.
+- Known POIs derive from discovery-filtered records or observed terrain/structures; artwork creates no simulation objects.
+- Base generated chunk retention happens during normal materialization, before deltas, not on atlas inspection.

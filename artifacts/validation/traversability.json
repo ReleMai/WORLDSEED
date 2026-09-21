@@ -1,0 +1,163 @@
+{
+  "rows": [
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.04421376393694733,
+      "blockers": 115,
+      "reachable": 2486,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        -96,
+        48,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2486,
+      "walkable_retention": 0.9557862360630527
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.041138023836985775,
+      "blockers": 107,
+      "reachable": 2494,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        0,
+        -48,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2494,
+      "walkable_retention": 0.9588619761630143
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.03690888119953864,
+      "blockers": 96,
+      "reachable": 2505,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        0,
+        24,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2505,
+      "walkable_retention": 0.9630911188004614
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.0265282583621684,
+      "blockers": 69,
+      "reachable": 2532,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        -312,
+        264,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2532,
+      "walkable_retention": 0.9734717416378316
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.04421376393694733,
+      "blockers": 115,
+      "reachable": 2486,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        24,
+        0,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2486,
+      "walkable_retention": 0.9557862360630527
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.09688581314878893,
+      "blockers": 252,
+      "reachable": 2348,
+      "resource_connectivity": 0.9995742869306088,
+      "spawn": [
+        0,
+        -24,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2349,
+      "walkable_retention": 0.903114186851211
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.04794816414686825,
+      "blockers": 111,
+      "reachable": 2204,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        -48,
+        120,
+        0
+      ],
+      "terrain_open": 2315,
+      "walkable": 2204,
+      "walkable_retention": 0.9520518358531318
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.07343329488658208,
+      "blockers": 191,
+      "reachable": 2409,
+      "resource_connectivity": 0.9995850622406639,
+      "spawn": [
+        0,
+        0,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2410,
+      "walkable_retention": 0.9265667051134179
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.03652441368704344,
+      "blockers": 95,
+      "reachable": 2506,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        -144,
+        96,
+        0
+      ],
+      "terrain_open": 2601,
+      "walkable": 2506,
+      "walkable_retention": 0.9634755863129566
+    },
+    {
+      "adjacent_blocker_pairs": 0,
+      "blocker_occupancy": 0.0336734693877551,
+      "blockers": 66,
+      "reachable": 1894,
+      "resource_connectivity": 1.0,
+      "spawn": [
+        -217,
+        120,
+        0
+      ],
+      "terrain_open": 1960,
+      "walkable": 1894,
+      "walkable_retention": 0.9663265306122449
+    }
+  ],
+  "summary": {
+    "adjacent_blocker_pairs": 0,
+    "max_blocker_occupancy": 0.09688581314878893,
+    "median_resource_connectivity": 1.0,
+    "min_resource_connectivity": 0.9995742869306088,
+    "min_walkable_retention": 0.903114186851211,
+    "radius": 25,
+    "seeds": 10
+  }
+}

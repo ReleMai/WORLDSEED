@@ -1,0 +1,188 @@
+## RC14 Dev22 — Authoritative terrain atlas
+
+- Replaced the gameplay map's illustrative biome blocks and schematic river spokes with actual prepared/local terrain tiles, saved deltas and live edits.
+- Added bounded read-only atlas snapshots, exact negative-coordinate mapping, generator-version isolation and future terrain tag/color fallback.
+- Added nine illustrated POI assets: village, city, camp, cave, fortress, temple, mine, archive and crypt. Markers use known world records; no invented settlements or sites.
+- Added mouse zoom/pan/recenter, exact terrain inspection, clickable POIs and pageable place lists, preserving WASD movement-only controls.
+- Newly materialized base chunks are retained in the existing generated cache, so atlas coverage survives LRU eviction. Missing/uncharted data remains unknown.
+- No save-schema, worldgen-version or simulation RNG changes.
+
+## RC14 Dev21 — Mouse-driven interfaces
+
+- Added a persistent ten-button HUD for all primary routes; World and Actions expose remaining systems.
+- Removed WASD menu navigation, added hit-tested card selection/hover, paging and Back controls.
+- Separated gameplay, UI, text and targeting input: menu wheel cannot zoom the world; entering menus and losing focus clear held movement.
+- Added mouse character appearance, point allocation, talent selection, direction prompts and map targeting.
+- Added modal window-close handling that saves through the application boundary.
+- Preserved arrow/Enter/Esc terminal support and existing save/gameplay contracts.
+
+## RC14 Dev20 — Character art and crash fixes
+
+- Recreated 10 male and 10 female player appearances; replaced NPC variants with 24 clean survivor sprites.
+- Added smooth cached character scaling and centered appearance preview.
+- Fixed ten keyword-only icon-scale call errors across crafting and inventory renderers.
+- Fixed undefined selection variable during new character creation; preserved legacy tuple startup support.
+- Added real SDL renderer and character-selection regression coverage.
+
+# RC14 Dev16 - terrain meshing, caves, and discovery crafting UI
+
+## RC14 Dev19 — Graphical Inventory & Discovery Crafting UI
+
+- Replaced generic pygame inventory/crafting cards with icon-rich pack, item, recipe, experiment, material, tech-tree, and component-design presentations.
+- Added structured presentation hooks to shared widgets while preserving terminal fallback and simulation authority.
+- Added graphical item details, recipe readiness/material views, discovery progress, and a dependency-derived crafting tech tree.
+
+
+- Replaced pair-specific local terrain transitions with a tag-driven meshing catalog. Grassland/floodplain now feather as a soft same-family ecotone, and future surface/underground ground terrain automatically participates unless marked as a hard feature such as ore, shaft or loot.
+- Promoted new worlds to worldgen v7. Cave mouths are selected from terrain relief/upland candidates instead of sparse flat RNG columns; connector depth and nearby chambers are deterministic and reciprocal. Legacy v1-v6 geography remains frozen.
+- Added vertically correlated cave topology with shallow/sedimentary/fracture/crystalline depth bands, depth-sensitive coal/aquifer/copper/iron placement, a complete copper ore -> ingot chain, and cave geology information for skilled inspection.
+- Rebuilt cave-mouth presentation as eight transparent contextual overlays so entrances inherit their surrounding biome instead of appearing as square black/gray tiles. Added new cave wall, coal, iron, aquifer and copper textures.
+- Added persisted discovery crafting for new worlds: handling new material types reveals simple techniques, compound techniques become trial-and-error experiments, and a derived discovery tree exposes known/testable/locked branches without mutating state from the UI.
+- Added native graphical menu/document rendering to the pygame client. Inventory and crafting now present as card-based panels with contextual tabs while retaining the same keyboard navigation and authoritative command boundary.
+- Added terrain-meshing and cave-v7 audit tools plus Dev16 regression coverage.
+
+# RC14 Dev15 - oceans, rivers and swimming
+
+- New-world generator v6: physical shore, wading, shallow, shelf and deep-ocean zones.
+- Prepared rivers gain sandy gravel banks, streams and slope-driven rapids; lakes and brackish mouths have separate water types.
+- New smooth water materials, depth blending and idle animation; swimming sprite/wake and water hover/status information.
+- Swimming spends stamina, improves a persisted skill, scales with Endurance, carried mass and current direction. Exhaustion damages health; bridges and shallows provide safety.
+- Existing saves preserve geography; use a new world for v6 terrain.
+
+# Changelog
+
+- RC14 dev5: replaced SDL/OS movement repeat with held-key state and paced simulation input so slow frames cannot queue catch-up movement after key release; added scroll-reuse terrain rendering and absolute-cell resource overlay caching. Added deterministic 512×512 regional block plans, causally scored settlement anchors, exact directional region entry, symmetric road exits, authoritative prepared river exits, and a discovery-gated graphical region map. Regional plans persist as rebuildable generated data while simulation/economy authority remains unchanged.
+
+- RC14 dev4: added deterministic environmental read models and per-resource opportunity scores, bounded fingerprint-keyed caching, skill-gated Look ground signs, and a three-seed map audit. Preserved continental/climate fields, physical hydrology and resource density. Fixed in-memory hydrology plans failing to persist on a later save request; centered the graphical camera at every zoom; wrapped footer controls inside small windows. Added behavioral SDL startup/zoom/render checks and environmental determinism/persistence tests.
+
+- RC14 dev3: fixed stale/held pygame startup key-repeat so new games no longer open directly into PAUSED; promoted new worlds to worldgen v5; added seam-safe multi-domain hydrology preparation, physical shallow/deep rivers, contiguous lake basins, wetlands, floodplains, crossing-cost/water-access/flood-risk read values, deterministic ford candidates, startup watershed preparation, v5 spawn repair, Phase-3 geography audit tooling and resource compatibility for new wet terrains. Legacy v1-v4 geography remains frozen.
+
+- RC14 dev1: froze RC13 v4 golden terrain fingerprints; added hydrology/settlement-plan/route version contracts; added stable regional physical-plan dataclasses/IDs; added SQLite generated hydrology/regional/settlement/route caches and authoritative physical-plan deltas; added deterministic Priority-Flood-style hydrology prototype, basin/flow/accumulation/river/floodplain fields, persistence, audits, debug PNG/CSV exports, benchmark and regression tests. Live geography remains v4 until Phase 3.
+
+- RC13: added startup seed-world preparation, persistent generated terrain/resource chunk caches, a pygame world-generation progress screen, larger bounded chunk caches, fast load-time neighborhood warming, scratch-cache release after preparation, and pregeneration benchmarks/tests.
+
+- RC12: moved mouse hover to a renderer-side partial-damage fast path; added incremental terrain/discovery and resource-view caches; changed the graphical overlay pass to visit only occupied cells; disabled full-window alpha scanlines by default; added per-discovery LOS occlusion caching and renderer regression tests.
+
+- RC11: immediate mouse-hover redraw in the pygame client, viewport-local render lookups, cached terrain base layer redraws, and a first-pass overhaul of 10 individual item sprites (stone, wood, brush, fiber, berries, stone flake, plant cordage, stone knife, stone axe, wooden spear).
+
+## 1.0.0-rc6 — Sandbox Character & Exploration
+- Replaced preset new-character origins with attribute/skill/talent point-buy and equal-budget random generation.
+- Removed automatic starting leads/objectives.
+- Fixed held-arrow → ESC behavior on Windows by separating native and VT input paths.
+- Cached natural resources and made tile discovery incremental to remove movement lag.
+- Added stable camera dead-zone.
+- Tightened settlement, route, wildlife and record knowledge gating.
+- Reworked multi-target gathering into adjacent map targeting.
+- Added player price bargaining, medical skill treatment and survival exposure effects.
+- Simplified player-facing item and world information.
+- Added RC6 regression and movement benchmark coverage.
+
+
+## 1.0.0-rc5 — Gameplay & Discovery
+
+- Added proper Continue/New/Load/Help/Quit main menu and pause/save-return flow.
+- Added save summaries and origin-aware new-character setup/spawn scoring.
+- Added player-knowledge discovery state for NPC identities, settlements, factions, sites and historical events.
+- Added line-of-sight exploration and rumor/conversation-based information discovery.
+- Split surface biome ground from deterministic harvestable feature overlays.
+- Added clustered tree stands, physical mature vegetation/boulders, and stump/sapling/mature regrowth.
+- Added adjacent-target gathering/mining so impassable cave walls/ore can be worked correctly.
+- Added worldgen v3 reciprocal natural cave columns and protected landing chambers for new worlds.
+- Preserved legacy v2 worldgen behavior for existing saves.
+- Added persistent player-excavated vertical shafts with support timber and aquifer interaction.
+- Added Windows Quick Edit/mouse suppression plus mouse/paste input-token filtering.
+- Added upgrade guards so RC4 characters/buildings cannot be trapped by newly introduced natural features.
+- Added RC5-specific discovery/resource/cave/startup compatibility regression tests.
+
+## 1.0.0-rc4 — Input Normalization & WASD Menus
+
+- Fixed physical Escape on Windows: `msvcrt.getwch()` returns `\x1b`, which is now normalized to the canonical `ESC` token before UI dispatch.
+- Added defensive widget-level Escape normalization for alternate/fake terminal adapters.
+- Menus now support `W/S` for previous/next, `A` for Back, and `D`/Enter for Select/Forward.
+- Pagers use `W/S` for scrolling, `A`/Esc for Back, and `D`/PageDown for forward paging.
+- Updated in-game help and UI documentation to teach the same navigation model everywhere.
+- Added literal-Windows-ESC and WASD-only nested-flow regression tests.
+
+## 1.0.0-rc3 — Navigation Stack
+
+- Added retained `NavigationStack` / `RouteState` UI architecture.
+- Fixed ESC so one press pops one UI layer instead of jumping to a root or gameplay unexpectedly.
+- Preserved menu selection and pager scroll across child screens.
+- Refactored World Console, World Ledger, settings, action hub, inventory and storage onto stack semantics.
+- Refactored crafting, component selection, building, equipment/health, magic and market cancellation paths to return to their immediate parent.
+- Added breadcrumbs and explicit `Esc back` copy.
+- Added simulated-key navigation regression tests.
+
+
+## 1.0.0-rc2 — Interface Overhaul
+
+- Rebuilt terminal presentation around strict responsive layout modes.
+- Fixed stale-screen/modal overlap by clearing unused alternate-screen content after every presentation.
+- Added arrow/Enter menus with paging, Home/End, Esc/Q back and optional numeric quick selection.
+- Reorganized the World Console into eight semantic categories instead of one long flat list.
+- Added the Enter-driven Action Hub so core play no longer requires memorizing dozens of hotkeys.
+- Centralized global key routing and permanently protected WASD from feature-key collisions.
+- Added a navigable Inventory Hub with item details, storage, equipment and books.
+- Routed legacy shortcut screens through the same responsive pager.
+- Reduced HUD clutter by showing only severe alerts and actors genuinely near the player.
+- Added terminal-size regression tests and UI observational tests.
+- Added `UI_GUIDE.md` with architecture and future-agent rules.
+- Save schema remains 3 and worldgen remains 2; RC1 worlds are compatible.
+
+## 1.0.0-rc1 — Living World release candidate
+
+- Fixed `D` movement shadowing; moved dismantle to `U` and reserved WASD structurally.
+- Added formal simulation LOD tiers and unrealized-world boundary.
+- Added offline event-boundary fast-forward and SAFE/FULL policies.
+- Added hierarchical region/chunk/local routing and sparse trade networks.
+- Added century-scale archival/pruning maintenance.
+- Added robust World Console, World Ledger, alerts, pagers and UI settings.
+- Added save schema 3 metadata boundary, rotating backups, recovery and cross-record validation.
+- Added deterministic data-mod manifests/dependencies/content hashing.
+- Expanded anatomy, armor, wounds, treatment and individual durable equipment.
+- Expanded metallurgy and component-selected craft designs.
+- Added storage capacity, soil nutrients/rotation/disease pressure and structural roofs.
+- Added persistent interactive dungeon locks/traps/occupants/clearance state.
+- Expanded labor/production, property/rent, migration/refugees and military supply.
+- Added rulers, dynasties, succession, claims, graves/tombs and artifact provenance.
+- Added libraries, languages, knowledge prerequisites, religious institutions and schisms.
+- Expanded generated magic with constraints, rituals, contamination and myths.
+- Added hybrid epidemiology, named infections, immunity, sanitation, medicine, quarantine and pathogen transport.
+
+## 0.40 alpha
+
+- Broad first living-world implementation across ecology, settlements, NPCs, trade, history, cultures, knowledge, magic, underground exploration and persistent character succession.
+
+## 0.001
+
+- Deterministic infinite terrain, chunk streaming, movement, basic gathering and SQLite persistence foundation.
+
+## 1.0.0-rc8 — Hybrid Renderer Foundation
+- Added pygame-ce custom window backend while preserving ANSI fallback.
+- Local world now supports layered terrain/resource/structure/item/carcass/crop/creature/NPC sprites.
+- Added complete data-driven visual registry and sprite coverage audit.
+- Added 296 generated sprite PNGs, 4 variants per authored animal, 32 NPC variants, crop growth stages and sprite atlases.
+- Renderer remains observational; simulation/save/worldgen contracts are unchanged.
+
+
+## RC14 Embodied World Dev2
+- Decluttered generated ground resources while preserving ecological pockets and pickup opportunities.
+- Replaced dead-zone camera scrolling with player-centered local camera behavior.
+- Added mouse-wheel local zoom; `+`/`-` and `0` remain available.
+- Added RC14 world-presentation regression tests.
+
+## RC14 Dev7 - local terrain integration and readability
+- Added eight-direction local terrain autotiling with discovery-safe neighbor blending.
+- Integrated generated high-detail surface terrain textures into gameplay rendering.
+- Improved resource and ground-loot differentiation and fixed transparent tint artifacts.
+- Added project-relative source-art import tools and visual-readability tests.
+
+## RC14 Dev13
+- Reauthored all major water terrain families with smoother, less pixelated 128x128 tiles across ocean, river, freshwater, estuary, and generic water variants.
+- Updated fallback base water textures (`water_hd.png`, `river_hd.png`, `river_shallow_hd.png`) to match the smoother art direction.
+- Reauthored `nettles.png` and `resources/nettle_patch.png` to remove stray dark line artifacts and improve readability.
+
+## RC14 Dev14
+- Fixed gameplay Q/Q crash-like termination: Q was incorrectly routed to the same immediate quit path as the OS window-close event.
+- Pygame window close now emits a dedicated `QUIT` token; ordinary Q/q is inert in gameplay.
+- Quit remains available through Esc -> Pause -> Save & quit, preserving safe save behavior.

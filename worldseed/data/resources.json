@@ -1,0 +1,901 @@
+[
+  {
+    "id": "core:oak_tree",
+    "name": "Mature Oak",
+    "glyph": "T",
+    "ascii_glyph": "T",
+    "ansi_color": 92,
+    "tags": [
+      "tree",
+      "wood",
+      "living"
+    ],
+    "required_tool_tag": "axe",
+    "required_tool_power": 1,
+    "minutes": 35,
+    "regrow_days": 240,
+    "yields": {
+      "core:wood": [
+        4,
+        7
+      ],
+      "core:bark": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": true,
+    "blocks_sight": true,
+    "description": "A mature broadleaf tree providing heavy timber and tannin-rich bark.",
+    "flavor": "\"Old wood keeps a long memory of weather.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass"
+    ],
+    "min_temp": 18000,
+    "max_temp": 56000,
+    "min_moisture": 25000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 420,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:pine_tree",
+    "name": "Mature Pine",
+    "glyph": "Y",
+    "ascii_glyph": "Y",
+    "ansi_color": 32,
+    "tags": [
+      "tree",
+      "wood",
+      "living",
+      "conifer"
+    ],
+    "required_tool_tag": "axe",
+    "required_tool_power": 1,
+    "minutes": 30,
+    "regrow_days": 210,
+    "yields": {
+      "core:wood": [
+        3,
+        6
+      ],
+      "core:bark": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": true,
+    "blocks_sight": true,
+    "description": "A straight conifer yielding useful timber and fibrous bark.",
+    "flavor": "\"Needles whisper even when the forest is still.\"",
+    "terrains": [
+      "core:forest",
+      "core:tundra"
+    ],
+    "min_temp": 5000,
+    "max_temp": 36000,
+    "min_moisture": 18000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 380,
+    "patch_scale": 5
+  },
+  {
+    "id": "core:birch_tree",
+    "name": "Mature Birch",
+    "glyph": "T",
+    "ascii_glyph": "T",
+    "ansi_color": 97,
+    "tags": [
+      "tree",
+      "wood",
+      "living"
+    ],
+    "required_tool_tag": "axe",
+    "required_tool_power": 1,
+    "minutes": 28,
+    "regrow_days": 180,
+    "yields": {
+      "core:wood": [
+        2,
+        5
+      ],
+      "core:bark": [
+        2,
+        3
+      ]
+    },
+    "blocks_movement": true,
+    "blocks_sight": true,
+    "description": "A pale-barked tree whose wood is light and bark readily worked.",
+    "flavor": "\"White bark marks the edge of younger woods.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass"
+    ],
+    "min_temp": 14000,
+    "max_temp": 48000,
+    "min_moisture": 25000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 180,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:willow_tree",
+    "name": "Mature Willow",
+    "glyph": "T",
+    "ascii_glyph": "T",
+    "ansi_color": 92,
+    "tags": [
+      "tree",
+      "wood",
+      "living",
+      "wetland"
+    ],
+    "required_tool_tag": "axe",
+    "required_tool_power": 1,
+    "minutes": 26,
+    "regrow_days": 170,
+    "yields": {
+      "core:wood": [
+        2,
+        4
+      ],
+      "core:bark": [
+        2,
+        4
+      ],
+      "core:stout_branch": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": true,
+    "blocks_sight": true,
+    "description": "A water-loving tree with flexible branches and useful bark.",
+    "flavor": "\"Willow follows water where stone will not.\"",
+    "terrains": [
+      "core:grass",
+      "core:forest",
+      "core:wetland",
+      "core:floodplain"
+    ],
+    "min_temp": 18000,
+    "max_temp": 54000,
+    "min_moisture": 43000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 120,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:blueberry_bush",
+    "name": "Blueberry Bush",
+    "glyph": "%",
+    "ascii_glyph": "%",
+    "ansi_color": 35,
+    "tags": [
+      "bush",
+      "food",
+      "fruit",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 18,
+    "yields": {
+      "core:blueberries": [
+        2,
+        5
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A low shrub bearing dark edible berries in warm seasons.",
+    "flavor": "\"Blue stains on the fingers are proof enough.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass"
+    ],
+    "min_temp": 16000,
+    "max_temp": 52000,
+    "min_moisture": 30000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 120,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:raspberry_cane",
+    "name": "Raspberry Cane",
+    "glyph": "%",
+    "ascii_glyph": "%",
+    "ansi_color": 31,
+    "tags": [
+      "bush",
+      "food",
+      "fruit",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 16,
+    "yields": {
+      "core:raspberries": [
+        2,
+        4
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Thorny canes carrying soft red berries.",
+    "flavor": "\"The thorns collect their share before you do.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass"
+    ],
+    "min_temp": 18000,
+    "max_temp": 54000,
+    "min_moisture": 28000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer"
+    ],
+    "density": 90,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:strawberry_patch",
+    "name": "Wild Strawberry Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 91,
+    "tags": [
+      "food",
+      "fruit",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 14,
+    "yields": {
+      "core:wild_strawberries": [
+        1,
+        4
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Low plants bearing small fragrant berries near sunny clearings.",
+    "flavor": "\"Small enough to miss, sweet enough to remember.\"",
+    "terrains": [
+      "core:grass",
+      "core:forest"
+    ],
+    "min_temp": 20000,
+    "max_temp": 56000,
+    "min_moisture": 24000,
+    "max_moisture": 52000,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "density": 70,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:dandelion_patch",
+    "name": "Dandelion Patch",
+    "glyph": ";",
+    "ascii_glyph": ";",
+    "ansi_color": 93,
+    "tags": [
+      "food",
+      "vegetable",
+      "herb",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 6,
+    "regrow_days": 20,
+    "yields": {
+      "core:dandelion_greens": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Common hardy greens useful raw or cooked.",
+    "flavor": "\"The common plant survives because nobody can truly own the ground.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub"
+    ],
+    "min_temp": 16000,
+    "max_temp": 58000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 110,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:nettle_patch",
+    "name": "Nettle Patch",
+    "glyph": "!",
+    "ascii_glyph": "!",
+    "ansi_color": 92,
+    "tags": [
+      "food",
+      "vegetable",
+      "fiber",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 24,
+    "yields": {
+      "core:nettles": [
+        1,
+        3
+      ],
+      "core:brush": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Stinging plants offering food after cooking and coarse fiber after processing.",
+    "flavor": "\"It punishes bare hands but rewards preparation.\"",
+    "terrains": [
+      "core:grass",
+      "core:forest",
+      "core:wetland",
+      "core:floodplain"
+    ],
+    "min_temp": 16000,
+    "max_temp": 54000,
+    "min_moisture": 30000,
+    "max_moisture": 62000,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "density": 80,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:wild_onion_patch",
+    "name": "Wild Onion",
+    "glyph": "i",
+    "ascii_glyph": "i",
+    "ansi_color": 97,
+    "tags": [
+      "food",
+      "vegetable",
+      "root",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 45,
+    "yields": {
+      "core:wild_onion": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Sharp-smelling wild bulbs hidden among grasses.",
+    "flavor": "\"Smell finds it before sight does.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub"
+    ],
+    "min_temp": 18000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 65,
+    "patch_scale": 2
+  },
+  {
+    "id": "core:wild_carrot_patch",
+    "name": "Wild Carrot",
+    "glyph": "i",
+    "ascii_glyph": "i",
+    "ansi_color": 37,
+    "tags": [
+      "food",
+      "vegetable",
+      "root",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 9,
+    "regrow_days": 50,
+    "yields": {
+      "core:wild_carrot": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A tough wild root that hints at the potential of cultivation.",
+    "flavor": "\"A pale root under ordinary leaves.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub"
+    ],
+    "min_temp": 16000,
+    "max_temp": 54000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 55,
+    "patch_scale": 2
+  },
+  {
+    "id": "core:yarrow_patch",
+    "name": "Yarrow",
+    "glyph": "+",
+    "ascii_glyph": "+",
+    "ansi_color": 97,
+    "tags": [
+      "herb",
+      "medical",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 35,
+    "yields": {
+      "core:yarrow": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A hardy flowering herb useful in simple medicine and bitter infusions.",
+    "flavor": "\"Fieldcraft remembers plants long before books do.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub"
+    ],
+    "min_temp": 12000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 50,
+    "patch_scale": 2
+  },
+  {
+    "id": "core:plantain_patch",
+    "name": "Broadleaf Plantain",
+    "glyph": "+",
+    "ascii_glyph": "+",
+    "ansi_color": 32,
+    "tags": [
+      "herb",
+      "medical",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 6,
+    "regrow_days": 28,
+    "yields": {
+      "core:plantain_leaf": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Low broad leaves common on disturbed ground.",
+    "flavor": "\"It grows where people walk, as if following them.\"",
+    "terrains": [
+      "core:grass"
+    ],
+    "min_temp": 16000,
+    "max_temp": 56000,
+    "min_moisture": 18000,
+    "max_moisture": 56000,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 55,
+    "patch_scale": 2
+  },
+  {
+    "id": "core:morel_patch",
+    "name": "Morel Cluster",
+    "glyph": "m",
+    "ascii_glyph": "m",
+    "ansi_color": 33,
+    "tags": [
+      "food",
+      "mushroom",
+      "vegetable",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 6,
+    "regrow_days": 60,
+    "yields": {
+      "core:morel": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A seasonal cluster of edible woodland mushrooms.",
+    "flavor": "\"Honeycombed caps after wet weather.\"",
+    "terrains": [
+      "core:forest"
+    ],
+    "min_temp": 14000,
+    "max_temp": 42000,
+    "min_moisture": 36000,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring"
+    ],
+    "density": 35,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:bolete_patch",
+    "name": "Bolete Cluster",
+    "glyph": "m",
+    "ascii_glyph": "m",
+    "ansi_color": 33,
+    "tags": [
+      "food",
+      "mushroom",
+      "vegetable",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 6,
+    "regrow_days": 50,
+    "yields": {
+      "core:bolete": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Firm mushrooms appearing beneath mature forest cover.",
+    "flavor": "\"A stout cap pushing through old leaves.\"",
+    "terrains": [
+      "core:forest"
+    ],
+    "min_temp": 18000,
+    "max_temp": 50000,
+    "min_moisture": 32000,
+    "max_moisture": 62000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 45,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:reed_bed",
+    "name": "Reed Bed",
+    "glyph": "|",
+    "ascii_glyph": "|",
+    "ansi_color": 92,
+    "tags": [
+      "fiber",
+      "wetland",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 10,
+    "regrow_days": 30,
+    "yields": {
+      "core:reed_bundle": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Tall reeds rooted in saturated soil near water.",
+    "flavor": "\"Wet ground grows its own building material.\"",
+    "terrains": [
+      "core:grass",
+      "core:wetland",
+      "core:floodplain"
+    ],
+    "min_temp": 16000,
+    "max_temp": 56000,
+    "min_moisture": 50000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 120,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:wild_grain_patch",
+    "name": "Wild Grain",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 93,
+    "tags": [
+      "food",
+      "grain",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 10,
+    "regrow_days": 90,
+    "yields": {
+      "core:wild_grain": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Sparse stands of wild cereal grass with collectable seed heads.",
+    "flavor": "\"The first field begins as something nobody planted.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub",
+      "core:floodplain"
+    ],
+    "min_temp": 20000,
+    "max_temp": 58000,
+    "min_moisture": 16000,
+    "max_moisture": 48000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 80,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:cattail_bed",
+    "name": "Cattails",
+    "glyph": "|",
+    "ascii_glyph": "|",
+    "ansi_color": 32,
+    "tags": [
+      "food",
+      "wetland",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 50,
+    "yields": {
+      "core:cattail_root": [
+        1,
+        2
+      ],
+      "core:reed_bundle": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Wetland plants with edible roots and useful fibrous leaves.",
+    "flavor": "\"Food and fiber standing ankle-deep in water.\"",
+    "terrains": [
+      "core:grass",
+      "core:wetland"
+    ],
+    "min_temp": 18000,
+    "max_temp": 56000,
+    "min_moisture": 54000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 70,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:clay_bank",
+    "name": "Clay Bank",
+    "glyph": "~",
+    "ascii_glyph": "~",
+    "ansi_color": 33,
+    "tags": [
+      "clay",
+      "soil"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 0,
+    "yields": {
+      "core:clay_lump": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Exposed sticky clay in damp low ground.",
+    "flavor": "\"Earth that keeps the shape of your hand.\"",
+    "terrains": [
+      "core:grass",
+      "core:sand",
+      "core:wetland",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 60000,
+    "min_moisture": 44000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:fallen_branches",
+    "name": "Fallen Branches",
+    "glyph": "/",
+    "ascii_glyph": "/",
+    "ansi_color": 33,
+    "tags": [
+      "wood",
+      "branch",
+      "fuel"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 25,
+    "yields": {
+      "core:stout_branch": [
+        1,
+        2
+      ],
+      "core:brush": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Deadfall branches that can be gathered without an axe.",
+    "flavor": "\"Storms do some cutting for free.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass",
+      "core:scrub"
+    ],
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 170,
+    "patch_scale": 3
+  },
+  {
+    "id": "core:loose_stone",
+    "name": "Loose Stone",
+    "glyph": "#",
+    "ascii_glyph": "#",
+    "ansi_color": 37,
+    "tags": [
+      "rock",
+      "stone"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 5,
+    "regrow_days": 0,
+    "yields": {
+      "core:stone": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Loose fist-sized stone available without mining tools.",
+    "flavor": "\"The first tool is often simply the right rock.\"",
+    "terrains": [
+      "core:grass",
+      "core:scrub",
+      "core:rock",
+      "core:tundra",
+      "core:forest"
+    ],
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 160,
+    "patch_scale": 2
+  },
+  {
+    "id": "core:surface_boulder",
+    "name": "Surface Boulder",
+    "glyph": "o",
+    "ascii_glyph": "o",
+    "ansi_color": 37,
+    "tags": [
+      "rock",
+      "stone"
+    ],
+    "required_tool_tag": "pick",
+    "required_tool_power": 1,
+    "minutes": 25,
+    "regrow_days": 0,
+    "yields": {
+      "core:stone": [
+        2,
+        5
+      ]
+    },
+    "blocks_movement": true,
+    "blocks_sight": false,
+    "description": "A large exposed boulder requiring a pick to break efficiently.",
+    "flavor": "\"Too large to carry, useful once broken.\"",
+    "terrains": [
+      "core:rock",
+      "core:grass"
+    ],
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 140,
+    "patch_scale": 3
+  }
+]

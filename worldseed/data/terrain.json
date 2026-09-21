@@ -1,0 +1,478 @@
+[
+  {
+    "id": "core:grass",
+    "name": "Grassland",
+    "glyph": ".",
+    "ansi_color": 32,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil"
+    ]
+  },
+  {
+    "id": "core:forest",
+    "name": "Forest",
+    "glyph": "T",
+    "ansi_color": 92,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "vegetation"
+    ],
+    "blocks_sight": false
+  },
+  {
+    "id": "core:berry_thicket",
+    "name": "Berry Thicket",
+    "glyph": "%",
+    "ansi_color": 35,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "food"
+    ]
+  },
+  {
+    "id": "core:rock",
+    "name": "Rocky Ground",
+    "glyph": "^",
+    "ansi_color": 37,
+    "passable": true,
+    "tags": [
+      "surface",
+      "rock"
+    ]
+  },
+  {
+    "id": "core:water",
+    "name": "Deep Water",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water"
+    ]
+  },
+  {
+    "id": "core:river_shallow",
+    "name": "Shallow River",
+    "glyph": "\u2248",
+    "ascii_glyph": "~",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "river",
+      "shallow"
+    ]
+  },
+  {
+    "id": "core:river",
+    "name": "Deep River",
+    "glyph": "~",
+    "ascii_glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "river",
+      "deep"
+    ]
+  },
+  {
+    "id": "core:wetland",
+    "name": "Wetland",
+    "glyph": ";",
+    "ascii_glyph": ";",
+    "ansi_color": 36,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "wetland",
+      "water_source"
+    ]
+  },
+  {
+    "id": "core:floodplain",
+    "name": "Floodplain",
+    "glyph": ".",
+    "ascii_glyph": ".",
+    "ansi_color": 32,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "floodplain"
+    ]
+  },
+  {
+    "id": "core:sand",
+    "name": "Sand",
+    "glyph": ":",
+    "ansi_color": 93,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil"
+    ]
+  },
+  {
+    "id": "core:scrub",
+    "name": "Dry Scrub",
+    "glyph": ",",
+    "ansi_color": 33,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "vegetation"
+    ]
+  },
+  {
+    "id": "core:tundra",
+    "name": "Tundra",
+    "glyph": "*",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil"
+    ]
+  },
+  {
+    "id": "core:cave_mouth",
+    "name": "Cave Mouth",
+    "glyph": ">",
+    "ansi_color": 90,
+    "passable": true,
+    "tags": [
+      "surface",
+      "shaft"
+    ]
+  },
+  {
+    "id": "core:cave_floor",
+    "name": "Cave Floor",
+    "glyph": ".",
+    "ansi_color": 90,
+    "passable": true,
+    "tags": [
+      "underground"
+    ]
+  },
+  {
+    "id": "core:cave_wall",
+    "name": "Cave Wall",
+    "glyph": "#",
+    "ansi_color": 90,
+    "passable": false,
+    "gather_item": "core:stone",
+    "gather_amount": 2,
+    "depleted_to": "core:cave_floor",
+    "tags": [
+      "underground",
+      "rock"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:iron_vein",
+    "name": "Iron Vein",
+    "glyph": "I",
+    "ansi_color": 91,
+    "passable": false,
+    "gather_item": "core:iron_ore",
+    "gather_amount": 2,
+    "depleted_to": "core:cave_floor",
+    "tags": [
+      "underground",
+      "ore"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:coal_seam",
+    "name": "Coal Seam",
+    "glyph": "c",
+    "ansi_color": 30,
+    "passable": false,
+    "gather_item": "core:coal",
+    "gather_amount": 3,
+    "depleted_to": "core:cave_floor",
+    "tags": [
+      "underground",
+      "ore"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:shaft",
+    "name": "Natural Shaft",
+    "glyph": ">",
+    "ansi_color": 95,
+    "passable": true,
+    "tags": [
+      "underground",
+      "shaft"
+    ]
+  },
+  {
+    "id": "core:tilled_soil",
+    "name": "Tilled Soil",
+    "glyph": ";",
+    "ansi_color": 33,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "farm"
+    ]
+  },
+  {
+    "id": "core:ruin_floor",
+    "name": "Ancient Masonry",
+    "glyph": "_",
+    "ansi_color": 36,
+    "passable": true,
+    "tags": [
+      "underground",
+      "ruin"
+    ]
+  },
+  {
+    "id": "core:ruin_wall",
+    "name": "Ancient Wall",
+    "glyph": "#",
+    "ansi_color": 36,
+    "passable": false,
+    "gather_item": "core:stone",
+    "gather_amount": 3,
+    "depleted_to": "core:ruin_floor",
+    "tags": [
+      "underground",
+      "ruin",
+      "rock"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:relic_cache",
+    "name": "Relic Cache",
+    "glyph": "?",
+    "ansi_color": 95,
+    "passable": true,
+    "gather_item": "core:relic",
+    "gather_amount": 1,
+    "depleted_to": "core:ruin_floor",
+    "tags": [
+      "underground",
+      "ruin",
+      "loot"
+    ]
+  },
+  {
+    "id": "core:aquifer",
+    "name": "Water-Bearing Rock",
+    "glyph": "A",
+    "ansi_color": 94,
+    "passable": false,
+    "gather_item": "core:stone",
+    "gather_amount": 2,
+    "depleted_to": "core:cave_floor",
+    "tags": [
+      "underground",
+      "rock",
+      "water_source"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:ocean_wade",
+    "name": "Coastal Wading Water",
+    "glyph": "~",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "water",
+      "saltwater",
+      "shallow"
+    ]
+  },
+  {
+    "id": "core:ocean_shallow",
+    "name": "Shallow Ocean",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "saltwater",
+      "swim"
+    ]
+  },
+  {
+    "id": "core:ocean_shelf",
+    "name": "Ocean Shelf",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "saltwater",
+      "deep",
+      "swim"
+    ]
+  },
+  {
+    "id": "core:ocean_deep",
+    "name": "Deep Ocean",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "saltwater",
+      "deep",
+      "swim"
+    ]
+  },
+  {
+    "id": "core:estuary_shallow",
+    "name": "Brackish Estuary Shallows",
+    "glyph": "~",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "water",
+      "brackish",
+      "shallow"
+    ]
+  },
+  {
+    "id": "core:estuary_deep",
+    "name": "Brackish Estuary Channel",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "brackish",
+      "deep",
+      "swim"
+    ]
+  },
+  {
+    "id": "core:lake_shallow",
+    "name": "Freshwater Lake Shallows",
+    "glyph": "~",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "freshwater",
+      "shallow"
+    ]
+  },
+  {
+    "id": "core:lake_deep",
+    "name": "Deep Freshwater Lake",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "freshwater",
+      "deep",
+      "swim"
+    ]
+  },
+  {
+    "id": "core:stream",
+    "name": "Shallow Stream",
+    "glyph": "~",
+    "ansi_color": 96,
+    "passable": true,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "river",
+      "shallow"
+    ]
+  },
+  {
+    "id": "core:river_rapids",
+    "name": "River Rapids",
+    "glyph": "~",
+    "ansi_color": 94,
+    "passable": false,
+    "tags": [
+      "surface",
+      "water",
+      "water_source",
+      "river",
+      "swim",
+      "rapids"
+    ]
+  },
+  {
+    "id": "core:shore",
+    "name": "Wet Sandy Shore",
+    "glyph": ":",
+    "ansi_color": 33,
+    "passable": true,
+    "tags": [
+      "surface",
+      "sand",
+      "shore"
+    ]
+  },
+  {
+    "id": "core:riverbank",
+    "name": "Sandy Gravel Riverbank",
+    "glyph": ":",
+    "ansi_color": 33,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "riverbank"
+    ]
+  },
+  {
+    "id": "core:copper_vein",
+    "name": "Copper Vein",
+    "glyph": "C",
+    "ascii_glyph": "C",
+    "ansi_color": 33,
+    "passable": false,
+    "gather_item": "core:copper_ore",
+    "gather_amount": 2,
+    "depleted_to": "core:cave_floor",
+    "tags": [
+      "underground",
+      "ore",
+      "copper"
+    ],
+    "blocks_sight": true
+  }
+]

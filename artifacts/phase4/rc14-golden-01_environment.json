@@ -1,0 +1,52 @@
+{
+  "seed": "rc14-golden-01",
+  "environment_version": 1,
+  "samples": 4096,
+  "domains": 4,
+  "issues": [],
+  "fingerprint": "fa0d6c970444a3dfa742eededeaff78e",
+  "sample_and_terrain_ms": 0.2685035585937301,
+  "cached_read_us": 1.394072265625823,
+  "fields": {
+    "slope": {
+      "min": 0,
+      "max": 52,
+      "mean": 23.04
+    },
+    "relief": {
+      "min": 7,
+      "max": 100,
+      "mean": 44.16
+    },
+    "soil_fertility": {
+      "min": 0,
+      "max": 59,
+      "mean": 4.96
+    },
+    "wetness": {
+      "min": 19,
+      "max": 100,
+      "mean": 91.89
+    },
+    "drainage": {
+      "min": 0,
+      "max": 88,
+      "mean": 8.57
+    },
+    "flood_risk": {
+      "min": 0,
+      "max": 100,
+      "mean": 89.67
+    },
+    "resource_opportunity": {
+      "min": 0,
+      "max": 42,
+      "mean": 2.25
+    },
+    "farmland": {
+      "min": 0,
+      "max": 47,
+      "mean": 2.35
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"seed":"golden-alpha","commands":[["move",1,0],["move",0,1],["wait",60],["move",-1,0],["gather"]]}

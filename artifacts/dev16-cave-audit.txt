@@ -1,0 +1,7 @@
+entrances in 11x11 cave macro-cells: 27
+entrance depth range: 3..10
+z=-1: cave_floor=6015, cave_wall=2819, aquifer=290, coal_seam=284, shaft=1
+z=-3: cave_floor=5839, cave_wall=2893, coal_seam=351, aquifer=248, copper_vein=47, iron_vein=30, shaft=1
+z=-6: cave_floor=4603, cave_wall=4231, iron_vein=382, aquifer=192, shaft=1
+z=-10: cave_wall=5635, cave_floor=3346, iron_vein=428
+cave v7 audit: PASS

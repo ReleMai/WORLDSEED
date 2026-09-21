@@ -1,0 +1,31 @@
+.F.                                                                      [100%]
+=================================== FAILURES ===================================
+______ RC7BootstrapTests.test_zero_supply_bootstrap_reaches_food_and_fire ______
+
+self = <test_rc7_bootstrap.RC7BootstrapTests testMethod=test_zero_supply_bootstrap_reaches_food_and_fire>
+
+    def test_zero_supply_bootstrap_reaches_food_and_fire(self):
+>       row = run_bootstrap('rc7-release-bootstrap')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_rc7_bootstrap.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/bootstrap_smoke.py:80: in run_bootstrap
+    _craft(sim, ctx.player_id, "core:stone_flake", 2)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sim = <worldseed.sim.engine.Simulation object at 0x7f9aa32692b0>, actor = 1
+recipe_id = 'core:stone_flake', times = 2
+
+    def _craft(sim, actor: int, recipe_id: str, times: int = 1) -> None:
+        for _ in range(times):
+            before = len(sim.log)
+            sim.execute(CraftCommand(actor, recipe_id))
+            if len(sim.log) == before or "complete" not in sim.log[-1].message.lower():
+>               raise AssertionError(f"failed to craft {recipe_id}: {sim.log[-1].message if sim.log else 'no message'}")
+E               AssertionError: failed to craft core:stone_flake: You have not discovered that recipe yet.
+
+tools/bootstrap_smoke.py:61: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_rc7_bootstrap.py::RC7BootstrapTests::test_zero_supply_bootstrap_reaches_food_and_fire
+1 failed, 2 passed in 21.69s

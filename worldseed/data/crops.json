@@ -1,0 +1,171 @@
+[
+  {
+    "id": "core:wheat",
+    "name": "Wheat",
+    "seed_item": "core:wheat_seed",
+    "harvest_item": "core:wheat",
+    "growth_hours": 96,
+    "min_temp": 18,
+    "max_temp": 80,
+    "water_use": 4,
+    "yield_min": 3,
+    "yield_max": 7,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "nitrogen": 4,
+    "phosphorus": 2,
+    "potassium": 2,
+    "disease_family": "cereal",
+    "description": "A cultivated wheat crop with its own soil and season demands."
+  },
+  {
+    "id": "core:turnip",
+    "name": "Turnip",
+    "seed_item": "core:turnip_seed",
+    "harvest_item": "core:turnip",
+    "growth_hours": 72,
+    "min_temp": 10,
+    "max_temp": 70,
+    "water_use": 3,
+    "yield_min": 2,
+    "yield_max": 5,
+    "seasons": [
+      "spring",
+      "autumn"
+    ],
+    "nitrogen": 2,
+    "phosphorus": 2,
+    "potassium": 2,
+    "disease_family": "root",
+    "description": "A cultivated turnip crop with its own soil and season demands."
+  },
+  {
+    "id": "core:barley",
+    "name": "Barley",
+    "seed_item": "core:barley_seed",
+    "harvest_item": "core:barley",
+    "growth_hours": 88,
+    "min_temp": 14,
+    "max_temp": 78,
+    "water_use": 3,
+    "yield_min": 3,
+    "yield_max": 7,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "nitrogen": 4,
+    "phosphorus": 2,
+    "potassium": 2,
+    "disease_family": "cereal",
+    "description": "A hardy cereal that matures quickly and tolerates cooler weather."
+  },
+  {
+    "id": "core:beans",
+    "name": "Field Beans",
+    "seed_item": "core:beans_seed",
+    "harvest_item": "core:beans",
+    "growth_hours": 82,
+    "min_temp": 18,
+    "max_temp": 82,
+    "water_use": 4,
+    "yield_min": 3,
+    "yield_max": 6,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "nitrogen": 1,
+    "phosphorus": 3,
+    "potassium": 3,
+    "disease_family": "legume",
+    "description": "A protein-rich legume that draws modest nitrogen and helps diversify rotations."
+  },
+  {
+    "id": "core:cabbage",
+    "name": "Cabbage",
+    "seed_item": "core:cabbage_seed",
+    "harvest_item": "core:cabbage",
+    "growth_hours": 90,
+    "min_temp": 12,
+    "max_temp": 72,
+    "water_use": 5,
+    "yield_min": 2,
+    "yield_max": 5,
+    "seasons": [
+      "spring",
+      "autumn"
+    ],
+    "nitrogen": 3,
+    "phosphorus": 2,
+    "potassium": 4,
+    "disease_family": "brassica",
+    "description": "A leafy vegetable that likes steady water and potassium-rich soil."
+  },
+  {
+    "id": "core:carrot",
+    "name": "Carrot",
+    "seed_item": "core:carrot_seed",
+    "harvest_item": "core:carrot",
+    "growth_hours": 76,
+    "min_temp": 12,
+    "max_temp": 78,
+    "water_use": 3,
+    "yield_min": 3,
+    "yield_max": 6,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "nitrogen": 2,
+    "phosphorus": 3,
+    "potassium": 4,
+    "disease_family": "root",
+    "description": "A root crop that rewards loose soil and steady moisture."
+  },
+  {
+    "id": "core:onion",
+    "name": "Onion",
+    "seed_item": "core:onion_seed",
+    "harvest_item": "core:onion",
+    "growth_hours": 80,
+    "min_temp": 14,
+    "max_temp": 82,
+    "water_use": 3,
+    "yield_min": 3,
+    "yield_max": 6,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "nitrogen": 2,
+    "phosphorus": 3,
+    "potassium": 3,
+    "disease_family": "allium",
+    "description": "A compact bulb crop useful raw, cooked, and as a reliable flavor base."
+  },
+  {
+    "id": "core:flax",
+    "name": "Flax",
+    "seed_item": "core:flax_seed",
+    "harvest_item": "core:flax",
+    "growth_hours": 92,
+    "min_temp": 16,
+    "max_temp": 80,
+    "water_use": 4,
+    "yield_min": 3,
+    "yield_max": 6,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "nitrogen": 3,
+    "phosphorus": 2,
+    "potassium": 3,
+    "disease_family": "fiber",
+    "description": "A dual-purpose seed and fiber crop valuable beyond food alone."
+  }
+]

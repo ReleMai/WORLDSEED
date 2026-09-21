@@ -1,0 +1,46 @@
+{
+  "cells": 147456,
+  "crossing_cost_counts": {
+    "1": 5321,
+    "1000": 8163,
+    "2": 1083,
+    "4": 1353,
+    "5": 885,
+    "80": 521
+  },
+  "physical_hydrology_cells": 9348,
+  "physical_hydrology_fraction": 0.06339518229166667,
+  "png": "artifacts/phase3/rc14-golden-00_v5.png",
+  "seam_issues": [],
+  "seed": "rc14-golden-00",
+  "terrain_counts": {
+    "core:cave_mouth": 163,
+    "core:floodplain": 5319,
+    "core:forest": 6303,
+    "core:grass": 46260,
+    "core:river": 711,
+    "core:river_shallow": 1967,
+    "core:rock": 57790,
+    "core:tundra": 19627,
+    "core:water": 7965,
+    "core:wetland": 1351
+  },
+  "window_domains": [
+    [
+      -1,
+      -1
+    ],
+    [
+      0,
+      -1
+    ],
+    [
+      -1,
+      0
+    ],
+    [
+      0,
+      0
+    ]
+  ]
+}

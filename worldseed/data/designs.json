@@ -1,0 +1,52 @@
+[
+  {
+    "id":"core:modular_sword","name":"Modular Sword","output_item":"core:crafted_sword","minutes":210,"station":"core:forge","knowledge":"tech:smelting","primary_component":"blade",
+    "components":{
+      "blade":{
+        "core:iron_bloom":{"material":"core:iron","qty":1},
+        "core:steel_billet":{"material":"core:steel","qty":1},
+        "core:stone":{"material":"core:stone","qty":4}
+      },
+      "grip":{
+        "core:wood":{"material":"core:wood","qty":1},
+        "core:bone":{"material":"core:bone","qty":2}
+      },
+      "wrapping":{
+        "core:hide":{"material":"core:leather","qty":1},
+        "core:fiber":{"material":"core:fiber","qty":2}
+      }
+    }
+  },
+  {
+    "id":"core:modular_pick","name":"Modular Mining Pick","output_item":"core:crafted_pick","minutes":180,"station":"core:forge","knowledge":"tech:smelting","primary_component":"head",
+    "components":{
+      "head":{
+        "core:iron_bloom":{"material":"core:iron","qty":1},
+        "core:steel_billet":{"material":"core:steel","qty":1},
+        "core:stone":{"material":"core:stone","qty":4}
+      },
+      "haft":{
+        "core:wood":{"material":"core:wood","qty":2},
+        "core:bone":{"material":"core:bone","qty":3}
+      },
+      "binding":{
+        "core:fiber":{"material":"core:fiber","qty":2},
+        "core:hide":{"material":"core:leather","qty":1}
+      }
+    }
+  },
+  {
+    "id":"core:modular_helmet","name":"Modular Helmet","output_item":"core:crafted_helmet","minutes":190,"station":"core:forge","knowledge":"tech:smelting","primary_component":"shell",
+    "components":{
+      "shell":{
+        "core:iron_bloom":{"material":"core:iron","qty":1},
+        "core:steel_billet":{"material":"core:steel","qty":1},
+        "core:hide":{"material":"core:leather","qty":3}
+      },
+      "lining":{
+        "core:hide":{"material":"core:leather","qty":1},
+        "core:fiber":{"material":"core:fiber","qty":2}
+      }
+    }
+  }
+]

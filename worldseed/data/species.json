@@ -1,0 +1,876 @@
+[
+  {
+    "id": "core:rabbit",
+    "name": "Cottontail Rabbit",
+    "glyph": "r",
+    "diet": "herbivore",
+    "mass_kg": 2,
+    "max_hp": 10,
+    "damage": 1,
+    "aggression": 0,
+    "speed": 3,
+    "reproduction": 48,
+    "mortality": 13,
+    "carrying_capacity": 380,
+    "habitats": [
+      "grass",
+      "forest",
+      "scrub"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A small fast herbivore that relies on cover, speed, and prolific breeding.",
+    "flavor": "\"A flash of white tail, then grass moving where nothing seems to be.\"",
+    "min_temp": 12000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 3,
+    "attacks": [
+      {
+        "name": "panicked kick",
+        "damage": 1,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 1,
+      "core:fresh_hide": 1,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:snowshoe_hare",
+    "name": "Snowshoe Hare",
+    "glyph": "h",
+    "diet": "herbivore",
+    "mass_kg": 3,
+    "max_hp": 12,
+    "damage": 2,
+    "aggression": 0,
+    "speed": 3,
+    "reproduction": 40,
+    "mortality": 12,
+    "carrying_capacity": 220,
+    "habitats": [
+      "forest",
+      "tundra"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A cold-country hare whose large feet carry it over soft ground.",
+    "flavor": "\"Long legs, pale fur, and a habit of vanishing uphill.\"",
+    "min_temp": 0,
+    "max_temp": 32000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "desperate kick",
+        "damage": 2,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 1,
+      "core:fresh_hide": 1,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:deer",
+    "name": "White-Tailed Deer",
+    "glyph": "d",
+    "diet": "herbivore",
+    "mass_kg": 85,
+    "max_hp": 38,
+    "damage": 4,
+    "aggression": 3,
+    "speed": 3,
+    "reproduction": 18,
+    "mortality": 8,
+    "carrying_capacity": 100,
+    "habitats": [
+      "grass",
+      "forest"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A wary browser moving between woodland cover and open feeding ground.",
+    "flavor": "\"It watches the wind before it watches you.\"",
+    "min_temp": 8000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 5,
+    "attacks": [
+      {
+        "name": "defensive kick",
+        "damage": 5,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 10
+      },
+      {
+        "name": "antler jab",
+        "damage": 4,
+        "type": "pierce",
+        "bleeding": 2,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 6,
+      "core:fresh_hide": 2,
+      "core:bone": 3,
+      "core:animal_fat": 1,
+      "core:sinew": 2
+    }
+  },
+  {
+    "id": "core:elk",
+    "name": "Elk",
+    "glyph": "E",
+    "diet": "herbivore",
+    "mass_kg": 280,
+    "max_hp": 70,
+    "damage": 8,
+    "aggression": 8,
+    "speed": 3,
+    "reproduction": 12,
+    "mortality": 7,
+    "carrying_capacity": 65,
+    "habitats": [
+      "grass",
+      "forest"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A massive grazing deer moving in loose herds near meadow and forest edge.",
+    "flavor": "\"A herd sounds like weather when it decides to run.\"",
+    "min_temp": 5000,
+    "max_temp": 48000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 2,
+    "group_max": 8,
+    "attacks": [
+      {
+        "name": "goring rush",
+        "damage": 9,
+        "type": "pierce",
+        "bleeding": 3,
+        "fracture": 8
+      },
+      {
+        "name": "heavy kick",
+        "damage": 8,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 18
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 14,
+      "core:fresh_hide": 4,
+      "core:bone": 6,
+      "core:animal_fat": 3,
+      "core:sinew": 4
+    }
+  },
+  {
+    "id": "core:moose",
+    "name": "Moose",
+    "glyph": "M",
+    "diet": "herbivore",
+    "mass_kg": 430,
+    "max_hp": 90,
+    "damage": 11,
+    "aggression": 15,
+    "speed": 2,
+    "reproduction": 8,
+    "mortality": 6,
+    "carrying_capacity": 35,
+    "habitats": [
+      "forest",
+      "grass"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A huge solitary browser, usually calm until crowded or threatened.",
+    "flavor": "\"Too large to mistake for harmless once it turns toward you.\"",
+    "min_temp": 0,
+    "max_temp": 40000,
+    "min_moisture": 25000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "antler sweep",
+        "damage": 12,
+        "type": "blunt",
+        "bleeding": 2,
+        "fracture": 15
+      },
+      {
+        "name": "trampling charge",
+        "damage": 14,
+        "type": "blunt",
+        "bleeding": 1,
+        "fracture": 25
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 20,
+      "core:fresh_hide": 5,
+      "core:bone": 8,
+      "core:animal_fat": 4,
+      "core:sinew": 5
+    }
+  },
+  {
+    "id": "core:boar",
+    "name": "Wild Boar",
+    "glyph": "b",
+    "diet": "omnivore",
+    "mass_kg": 95,
+    "max_hp": 50,
+    "damage": 8,
+    "aggression": 35,
+    "speed": 3,
+    "reproduction": 22,
+    "mortality": 9,
+    "carrying_capacity": 80,
+    "habitats": [
+      "forest",
+      "scrub",
+      "grass"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A tough rooting omnivore with poor manners and dangerous tusks.",
+    "flavor": "\"Brush shakes first. Then the tusks arrive.\"",
+    "min_temp": 12000,
+    "max_temp": 58000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 5,
+    "attacks": [
+      {
+        "name": "tusk slash",
+        "damage": 9,
+        "type": "cut",
+        "bleeding": 4,
+        "fracture": 0
+      },
+      {
+        "name": "body charge",
+        "damage": 7,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 12
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 7,
+      "core:fresh_hide": 2,
+      "core:bone": 3,
+      "core:animal_fat": 2,
+      "core:sinew": 1
+    }
+  },
+  {
+    "id": "core:turkey",
+    "name": "Wild Turkey",
+    "glyph": "t",
+    "diet": "omnivore",
+    "mass_kg": 7,
+    "max_hp": 18,
+    "damage": 3,
+    "aggression": 5,
+    "speed": 3,
+    "reproduction": 30,
+    "mortality": 12,
+    "carrying_capacity": 160,
+    "habitats": [
+      "forest",
+      "grass"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A large ground bird that feeds in flocks and bursts noisily into flight.",
+    "flavor": "\"A sudden thunder of wings from brush that looked empty.\"",
+    "min_temp": 14000,
+    "max_temp": 58000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 2,
+    "group_max": 8,
+    "attacks": [
+      {
+        "name": "spur rake",
+        "damage": 3,
+        "type": "cut",
+        "bleeding": 1,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_poultry": 2,
+      "core:feather": 4,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:grouse",
+    "name": "Grouse",
+    "glyph": "g",
+    "diet": "omnivore",
+    "mass_kg": 1,
+    "max_hp": 8,
+    "damage": 1,
+    "aggression": 0,
+    "speed": 3,
+    "reproduction": 38,
+    "mortality": 14,
+    "carrying_capacity": 220,
+    "habitats": [
+      "forest",
+      "scrub"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A compact ground bird relying on camouflage and explosive escape.",
+    "flavor": "\"You notice it exactly one heartbeat before it leaves.\"",
+    "min_temp": 5000,
+    "max_temp": 50000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 5,
+    "attacks": [
+      {
+        "name": "wing buffet",
+        "damage": 1,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_poultry": 1,
+      "core:feather": 2
+    }
+  },
+  {
+    "id": "core:mountain_goat",
+    "name": "Mountain Goat",
+    "glyph": "G",
+    "diet": "herbivore",
+    "mass_kg": 75,
+    "max_hp": 42,
+    "damage": 6,
+    "aggression": 12,
+    "speed": 3,
+    "reproduction": 16,
+    "mortality": 8,
+    "carrying_capacity": 50,
+    "habitats": [
+      "rock",
+      "tundra"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A sure-footed grazer of rocky high country, defensive when cornered.",
+    "flavor": "\"Cliffs are roads to it.\"",
+    "min_temp": 0,
+    "max_temp": 35000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 2,
+    "group_max": 6,
+    "attacks": [
+      {
+        "name": "horn jab",
+        "damage": 7,
+        "type": "pierce",
+        "bleeding": 2,
+        "fracture": 0
+      },
+      {
+        "name": "shove",
+        "damage": 5,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 12
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 5,
+      "core:fresh_hide": 2,
+      "core:bone": 2,
+      "core:sinew": 2
+    }
+  },
+  {
+    "id": "core:red_fox",
+    "name": "Red Fox",
+    "glyph": "f",
+    "diet": "carnivore",
+    "mass_kg": 7,
+    "max_hp": 16,
+    "damage": 4,
+    "aggression": 12,
+    "speed": 3,
+    "reproduction": 28,
+    "mortality": 12,
+    "carrying_capacity": 55,
+    "habitats": [
+      "forest",
+      "grass",
+      "scrub"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A small adaptable predator hunting rodents, birds, and carrion.",
+    "flavor": "\"A bright tail passing through dusk grass.\"",
+    "min_temp": 8000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "snapping bite",
+        "damage": 4,
+        "type": "bite",
+        "bleeding": 2,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 1,
+      "core:fresh_hide": 1,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:wolf",
+    "name": "Grey Wolf",
+    "glyph": "w",
+    "diet": "carnivore",
+    "mass_kg": 45,
+    "max_hp": 32,
+    "damage": 7,
+    "aggression": 62,
+    "speed": 3,
+    "reproduction": 13,
+    "mortality": 10,
+    "carrying_capacity": 28,
+    "habitats": [
+      "forest",
+      "grass",
+      "tundra"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A social endurance predator that becomes far more dangerous in a pack.",
+    "flavor": "\"One wolf watches. The others use the watching.\"",
+    "min_temp": 0,
+    "max_temp": 52000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 2,
+    "group_max": 7,
+    "attacks": [
+      {
+        "name": "raking bite",
+        "damage": 8,
+        "type": "bite",
+        "bleeding": 4,
+        "fracture": 0
+      },
+      {
+        "name": "hamstring bite",
+        "damage": 6,
+        "type": "bite",
+        "bleeding": 5,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 3,
+      "core:fresh_hide": 2,
+      "core:bone": 2,
+      "core:sinew": 1
+    }
+  },
+  {
+    "id": "core:brown_bear",
+    "name": "Brown Bear",
+    "glyph": "B",
+    "diet": "omnivore",
+    "mass_kg": 320,
+    "max_hp": 105,
+    "damage": 14,
+    "aggression": 55,
+    "speed": 2,
+    "reproduction": 7,
+    "mortality": 5,
+    "carrying_capacity": 16,
+    "habitats": [
+      "forest",
+      "grass"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A huge omnivore with enormous strength and little need to bluff.",
+    "flavor": "\"The forest becomes smaller when a bear stands up.\"",
+    "min_temp": 2000,
+    "max_temp": 46000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 1,
+    "attacks": [
+      {
+        "name": "clawing rush",
+        "damage": 15,
+        "type": "cut",
+        "bleeding": 6,
+        "fracture": 0
+      },
+      {
+        "name": "crushing bite",
+        "damage": 14,
+        "type": "bite",
+        "bleeding": 5,
+        "fracture": 18
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 15,
+      "core:fresh_hide": 5,
+      "core:bone": 7,
+      "core:animal_fat": 5,
+      "core:sinew": 3
+    }
+  },
+  {
+    "id": "core:badger",
+    "name": "Badger",
+    "glyph": "q",
+    "diet": "omnivore",
+    "mass_kg": 12,
+    "max_hp": 24,
+    "damage": 6,
+    "aggression": 45,
+    "speed": 2,
+    "reproduction": 20,
+    "mortality": 11,
+    "carrying_capacity": 45,
+    "habitats": [
+      "grass",
+      "forest",
+      "scrub"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A low powerful digger that reacts to close threats with disproportionate confidence.",
+    "flavor": "\"Small enough to underestimate exactly once.\"",
+    "min_temp": 8000,
+    "max_temp": 54000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "mauling bite",
+        "damage": 7,
+        "type": "bite",
+        "bleeding": 4,
+        "fracture": 0
+      },
+      {
+        "name": "claw rake",
+        "damage": 5,
+        "type": "cut",
+        "bleeding": 3,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 2,
+      "core:fresh_hide": 1,
+      "core:bone": 1,
+      "core:animal_fat": 1
+    }
+  },
+  {
+    "id": "core:cave_crawler",
+    "name": "Cave Crawler",
+    "glyph": "c",
+    "diet": "omnivore",
+    "mass_kg": 18,
+    "max_hp": 24,
+    "damage": 6,
+    "aggression": 55,
+    "speed": 2,
+    "reproduction": 20,
+    "mortality": 12,
+    "carrying_capacity": 45,
+    "habitats": [
+      "underground"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A pale many-limbed cave scavenger drawn to carrion and vibration.",
+    "flavor": "\"Its feet click before its body clears the dark.\"",
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 4,
+    "attacks": [
+      {
+        "name": "hooking bite",
+        "damage": 6,
+        "type": "bite",
+        "bleeding": 3,
+        "fracture": 0
+      },
+      {
+        "name": "limb rake",
+        "damage": 5,
+        "type": "cut",
+        "bleeding": 2,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 2,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:cave_grazer",
+    "name": "Cave Grazer",
+    "glyph": "v",
+    "diet": "herbivore",
+    "mass_kg": 55,
+    "max_hp": 34,
+    "damage": 4,
+    "aggression": 2,
+    "speed": 2,
+    "reproduction": 18,
+    "mortality": 9,
+    "carrying_capacity": 70,
+    "habitats": [
+      "underground"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A blind subterranean grazer feeding on cave growths and mineral films.",
+    "flavor": "\"It noses stone as if stone were grass.\"",
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 2,
+    "group_max": 5,
+    "attacks": [
+      {
+        "name": "defensive shove",
+        "damage": 4,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 8
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 4,
+      "core:fresh_hide": 1,
+      "core:bone": 2
+    }
+  },
+  {
+    "id": "core:cave_stalker",
+    "name": "Cave Stalker",
+    "glyph": "s",
+    "diet": "carnivore",
+    "mass_kg": 38,
+    "max_hp": 36,
+    "damage": 9,
+    "aggression": 75,
+    "speed": 3,
+    "reproduction": 10,
+    "mortality": 11,
+    "carrying_capacity": 22,
+    "habitats": [
+      "underground"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A vibration-hunting cave predator that waits near narrow passages.",
+    "flavor": "\"Silence in a cave can be something holding still.\"",
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "ambush bite",
+        "damage": 10,
+        "type": "bite",
+        "bleeding": 5,
+        "fracture": 0
+      },
+      {
+        "name": "rending claw",
+        "damage": 8,
+        "type": "cut",
+        "bleeding": 4,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 2,
+      "core:fresh_hide": 2,
+      "core:bone": 2,
+      "core:sinew": 1
+    }
+  },
+  {
+    "id": "core:marsh_boar",
+    "name": "Marsh Boar",
+    "glyph": "j",
+    "diet": "omnivore",
+    "mass_kg": 110,
+    "max_hp": 55,
+    "damage": 9,
+    "aggression": 42,
+    "speed": 2,
+    "reproduction": 18,
+    "mortality": 9,
+    "carrying_capacity": 45,
+    "habitats": [
+      "grass",
+      "scrub"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A heavy wetland-adapted boar feeding among reeds and muddy banks.",
+    "flavor": "\"Mud hides the feet, not the tusks.\"",
+    "min_temp": 16000,
+    "max_temp": 58000,
+    "min_moisture": 43000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 4,
+    "attacks": [
+      {
+        "name": "tusk hook",
+        "damage": 10,
+        "type": "cut",
+        "bleeding": 4,
+        "fracture": 0
+      },
+      {
+        "name": "muddy charge",
+        "damage": 8,
+        "type": "blunt",
+        "bleeding": 0,
+        "fracture": 15
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 8,
+      "core:fresh_hide": 2,
+      "core:bone": 3,
+      "core:animal_fat": 3
+    }
+  }
+]
