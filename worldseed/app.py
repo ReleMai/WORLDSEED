@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass
 from pathlib import Path
-import secrets,sys,time
+import secrets,sys,time,traceback
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
@@ -1463,6 +1463,28 @@ def main()->int:
                 outcome=run_game(ctx,term)
             except WindowCloseRequested:
                 _save(ctx);return 0
+            except Exception:
+                # Preserve an actionable traceback instead of leaving a playtest
+                # with only a transient window freeze/close. Do not claim
+                # recovery of corrupted state; return to the world selector
+                # after recording diagnostics.
+                report=Path.cwd()/'WORLDSEED_CRASH.log'
+                report.write_text(
+                    f'WORLDSEED {ENGINE_VERSION} crash at {time.ctime()}\n'
+                    f'world={ctx.db.path}\nturn={ctx.sim.turn}\n'
+                    f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n\n'
+                    +traceback.format_exc(),
+                    encoding='utf-8',
+                )
+                try:
+                    _view_text(term,box('WORLDSEED ERROR',[
+                        'The current session stopped because of an unexpected error.',
+                        f'Crash details were written to {report.name}.',
+                        'Please keep that file with the seed/coordinates when reporting the issue.'
+                    ],min(96,term.size()[0]-2)))
+                except Exception:
+                    pass
+                outcome='menu'
             finally:
                 ctx.db.close()
             if outcome=='quit':return 0
