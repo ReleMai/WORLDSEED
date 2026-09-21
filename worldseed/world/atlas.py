@@ -40,54 +40,82 @@ class AtlasSnapshot:
         return values[ly*CHUNK_SIZE+lx] if values else None
 
 
-def discovered_regions(sim):
-    regions = set()
+def _discovered_cells_in_view(sim, view: AtlasSnapshot):
+    """Group only actually discovered surface cells by chunk.
+
+    The older atlas promoted one discovered tile into an entire 512x512 region.
+    That both exposed large square blocks and caused increasingly expensive
+    database scans as exploration grew. Keep discovery cell-exact instead.
+    """
+    grouped = {}
     for token in sim.discovered_tiles_set:
         try:
             x, y, z = map(int, token.split(','))
         except (ValueError, TypeError, AttributeError):
             continue
-        if z == 0:
-            regions.add(region_coords(x, y))
-    if sim.player_pos.z == 0:
-        regions.add(region_coords(sim.player_pos.x, sim.player_pos.y))
-    return regions
+        if z != 0 or not view.contains(x, y):
+            continue
+        key, lx, ly = split_world(WorldPos(x, y, 0))
+        grouped.setdefault(key, set()).add(ly*CHUNK_SIZE+lx)
+    p=sim.player_pos
+    if p.z==0 and view.contains(p.x,p.y):
+        key,lx,ly=split_world(p)
+        grouped.setdefault(key,set()).add(ly*CHUNK_SIZE+lx)
+    return grouped
+
+
+def _stored_surface_chunk(world, key):
+    """Read the persisted base under the same version contract as local terrain."""
+    chunk = world.cache.peek(key)
+    if chunk is not None:
+        return [world.registry.terrain_id(i) for i in chunk.terrain]
+
+    contract = getattr(world, '_surface_cache_contract', lambda _k: None)(key)
+    if contract is not None:
+        loader = getattr(world.delta_source, 'load_generated_surface_chunk', None)
+        base = loader(key, *contract) if callable(loader) else None
+        if base is not None:
+            return list(base)
+
+    loader = getattr(world.delta_source, 'load_generated_chunk', None)
+    base = loader(key, world.generator.version) if callable(loader) else None
+    return list(base) if base is not None else None
 
 
 def read_atlas(sim, center=None, span=512):
-    """At most 65x65 chunk probes; no cache loads, writes, RNG or planner calls.
+    """Exact bounded map of discovered cells only; never generates terrain.
 
-    All generator versions use their stored tiles. New/modded terrain IDs are
-    retained verbatim. The atlas intentionally never reconstructs missing base
-    on an inspection path (important for legacy hydrology compatibility).
+    Local tiles and atlas pixels now share the same versioned surface-cache
+    authority. Panning cost scales with explored cells in view rather than with
+    every chunk of an entire discovered 512-cell region.
     """
     span = max(128, min(2048, int(span)))
     cx, cy = center or (sim.player_pos.x, sim.player_pos.y)
     view = AtlasSnapshot(int(cx)-span//2, int(cy)-span//2, span)
     world = sim.world
-    regions = discovered_regions(sim)
-    for ky in range(view.top//CHUNK_SIZE, (view.top+span-1)//CHUNK_SIZE+1):
-        for kx in range(view.left//CHUNK_SIZE, (view.left+span-1)//CHUNK_SIZE+1):
-            if region_coords(kx*CHUNK_SIZE, ky*CHUNK_SIZE) not in regions:
-                continue
-            key = ChunkKey(kx, ky, 0)
-            chunk = world.cache.peek(key)
-            if chunk is not None:
-                values = [world.registry.terrain_id(i) for i in chunk.terrain]
-            else:
-                loader = getattr(world.delta_source, 'load_generated_chunk', None)
-                base = loader(key, world.generator.version) if callable(loader) else None
-                if base is None or len(base) != CHUNK_SIZE*CHUNK_SIZE:
-                    continue
-                values = list(base)
-                for (lx, ly), tid in world.delta_source.load_chunk_deltas(key).items():
-                    if 0 <= lx < CHUNK_SIZE and 0 <= ly < CHUNK_SIZE:
-                        values[ly*CHUNK_SIZE+lx] = tid
-            view.chunks[key] = values
+    discovered = _discovered_cells_in_view(sim, view)
+
+    for key, indices in discovered.items():
+        base = _stored_surface_chunk(world, key)
+        if base is None or len(base) != CHUNK_SIZE*CHUNK_SIZE:
+            continue
+        values = [None]*(CHUNK_SIZE*CHUNK_SIZE)
+        for i in indices:
+            values[i]=base[i]
+        deltas=world.delta_source.load_chunk_deltas(key)
+        for (lx,ly),tid in deltas.items():
+            idx=ly*CHUNK_SIZE+lx
+            if idx in indices:
+                values[idx]=tid
+        view.chunks[key]=values
+
     for pos, tid in world.dirty_tiles.items():
         key, lx, ly = split_world(pos)
         if pos.z == 0 and key in view.chunks:
-            view.chunks[key][ly*CHUNK_SIZE+lx] = tid
+            idx=ly*CHUNK_SIZE+lx
+            if idx in discovered.get(key,()):
+                view.chunks[key][idx] = tid
+
     markers = []
     for town in sim.known_settlements():
         if view.contains(town.x, town.y):
