@@ -14,8 +14,14 @@ transparent_bad=[]
 for p in vis.iter_asset_paths():
     try:
         with Image.open(p) as im:
-            if im.mode != 'RGBA': transparent_bad.append(f'{p}: mode={im.mode}')
-            if im.width < 24 or im.height < 24: transparent_bad.append(f'{p}: too small {im.size}')
+            # Ground/terrain tiles are opaque by design and may be RGB. Entity,
+            # resource, structure and decoration sprites are composited over
+            # terrain and therefore must retain alpha.
+            is_terrain = 'terrain' in {part.lower() for part in p.parts}
+            if not is_terrain and im.mode != 'RGBA':
+                transparent_bad.append(f'{p}: mode={im.mode} (overlay sprite requires RGBA)')
+            if im.width < 24 or im.height < 24:
+                transparent_bad.append(f'{p}: too small {im.size}')
     except Exception as exc:
         transparent_bad.append(f'{p}: {exc}')
 issues.extend(transparent_bad)
