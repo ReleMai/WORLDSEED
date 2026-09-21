@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass, field
-from worldseed.config import MINUTES_PER_ACTION
+from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
@@ -59,6 +59,13 @@ class Simulation:
         # Runtime discovery index. Persisted state remains an ordered list for
         # stable saves, but membership checks and per-step updates use a set.
         self._discovered_tile_set=set(self.state.discovered_tiles)
+        self._discovered_surface_chunks=set()
+        for token in self._discovered_tile_set:
+            try:
+                x,y,z=(int(v) for v in token.split(','))
+            except (TypeError,ValueError,AttributeError):
+                continue
+            if z==0:self._discovered_surface_chunks.add((x//32,y//32))
         install_procedural_species(self.registry,self.seed)
 
         self.clock=GameClock(self.state.clock_minute)
@@ -115,6 +122,10 @@ class Simulation:
     def discovered_tiles_set(self)->set[str]:
         return self._discovered_tile_set
 
+    @property
+    def discovered_surface_chunks(self)->set[tuple[int,int]]:
+        return self._discovered_surface_chunks
+
     def is_discovered(self,pos:WorldPos)->bool:
         return pos_key(pos.x,pos.y,pos.z) in self._discovered_tile_set
 
@@ -122,12 +133,25 @@ class Simulation:
         new=keys-self._discovered_tile_set
         if not new:return
         self._discovered_tile_set.update(new)
+        for token in new:
+            try:
+                x,y,z=(int(v) for v in token.split(','))
+            except (TypeError,ValueError,AttributeError):
+                continue
+            if z==0:self._discovered_surface_chunks.add((x//32,y//32))
         # Append deterministically; avoid sorting the entire potentially 120k
         # entry exploration history on every movement step.
         self.state.discovered_tiles.extend(sorted(new))
         if len(self.state.discovered_tiles)>120000:
             self.state.discovered_tiles=self.state.discovered_tiles[-120000:]
             self._discovered_tile_set=set(self.state.discovered_tiles)
+            self._discovered_surface_chunks=set()
+            for token in self._discovered_tile_set:
+                try:
+                    x,y,z=(int(v) for v in token.split(','))
+                except (TypeError,ValueError,AttributeError):
+                    continue
+                if z==0:self._discovered_surface_chunks.add((x//32,y//32))
 
     @property
     def player_id(self)->int:
@@ -146,7 +170,8 @@ class Simulation:
 
     def execute(self,command:object)->TickResult:
         result=TickResult();minutes=MINUTES_PER_ACTION
-        if isinstance(command,MoveCommand):self._move(command,result)
+        if isinstance(command,MoveCommand):
+            self._move(command,result);minutes=MOVE_MINUTES
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,ExcavateShaftCommand):minutes=self._excavate_shaft(command)
@@ -454,17 +479,38 @@ class Simulation:
             if blocked:return False
         return True
 
+    def visibility_radius(self,pos:WorldPos)->int:
+        """Current circular sight radius from ability, weather and available light."""
+        perception=self.player_attribute('perception')
+        survival=self.player_skill('survival')
+        keen=2 if self.has_talent('keen_senses') else 0
+        base=6+perception//2+survival//4+keen
+        if pos.z!=0:
+            return max(3,min(9,base-3))
+        weather,lighting=self.environment.visual_conditions(self.clock.minute,pos)
+        visibility=max(3,min(8,int(weather.get('visibility',8))))
+        # Weather visibility scales range before illumination. Clear daylight is
+        # close to full range; fog/storm and darkness contract it naturally.
+        radius=base*visibility//8
+        ambient=int(getattr(lighting,'ambient_light',65535))
+        if ambient<11000:radius=radius*48//100
+        elif ambient<22000:radius=radius*62//100
+        elif ambient<36000:radius=radius*78//100
+        elif ambient<50000:radius=radius*90//100
+        if int(weather.get('fog',0))>=55:radius-=1
+        return max(3,min(16,radius))
+
     def _discover(self,pos:WorldPos)->None:
-        # Sight is local and obstructed. Only newly visible cells are appended
-        # to persistent discovery; membership is handled by a runtime set.
-        perception=self.player_attribute('perception');keen=2 if self.has_talent('keen_senses') else 0
-        if pos.z==0:
-            rx=max(7,min(14,7+perception//2+keen));ry=max(5,min(10,5+perception//3+keen//2))
-        else:
-            rx=max(6,min(11,5+perception//2+keen));ry=max(4,min(8,4+perception//3+keen//2))
+        # Discovery is a real circular sight radius, not a rectangular reveal.
+        # Conditions shrink/grow the circle before line-of-sight obstruction.
+        radius=self.visibility_radius(pos)
+        radius2=radius*radius
         newly=set(); opaque_cache={}
-        for y in range(pos.y-ry,pos.y+ry+1):
-            for x in range(pos.x-rx,pos.x+rx+1):
+        for y in range(pos.y-radius,pos.y+radius+1):
+            dy=y-pos.y
+            for x in range(pos.x-radius,pos.x+radius+1):
+                dx=x-pos.x
+                if dx*dx+dy*dy>radius2:continue
                 key=pos_key(x,y,pos.z)
                 if key in self._discovered_tile_set:continue
                 target=WorldPos(x,y,pos.z)
