@@ -8,6 +8,7 @@ from worldseed.config import HYDROLOGY_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
+from worldseed.world.landforms import SEA_LEVEL_REFERENCE
 
 if TYPE_CHECKING:  # avoids generator <-> hydrology runtime import cycles
     from worldseed.world.generator import WorldGenerator
@@ -19,7 +20,14 @@ if TYPE_CHECKING:  # avoids generator <-> hydrology runtime import cycles
 HYDROLOGY_LATTICE_SPACING = 16
 HYDROLOGY_DOMAIN_NODES = 64
 HYDROLOGY_HALO_NODES = 8
-HYDROLOGY_ALGORITHM = "rc14-phase3-window-v1"
+HYDROLOGY_ALGORITHM_V1 = "rc14-phase3-window-v1"
+HYDROLOGY_ALGORITHM_V2 = "worldgen-v8-hydrology-v2"
+HYDROLOGY_ALGORITHM = HYDROLOGY_ALGORITHM_V2
+
+
+def hydrology_algorithm(version: int) -> str:
+    return HYDROLOGY_ALGORITHM_V1 if int(version) <= 1 else HYDROLOGY_ALGORITHM_V2
+
 
 D8 = ((-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1))
 
@@ -44,6 +52,12 @@ class HydrologySurface:
     crossing_cost: int = 0
     lake: bool = False
     ford: bool = False
+    rapid: bool = False
+    gorge: bool = False
+    braided: bool = False
+    delta: bool = False
+    oxbow_probability: int = 0
+    channel_style: str = "none"
     terrain_override: str | None = None
 
 
@@ -69,6 +83,8 @@ class HydrologyDomain:
     outlets: tuple[tuple[int, int, int], ...]
     fingerprint: str
     algorithm: str = HYDROLOGY_ALGORITHM
+    runoff: tuple[int, ...] = ()
+    channel_gradient: tuple[int, ...] = ()
 
     @property
     def uid(self) -> str:
@@ -106,7 +122,7 @@ class HydrologyDomain:
                 yield base + x
 
     def to_payload(self) -> dict[str, Any]:
-        return {
+        payload = {
             "algorithm": self.algorithm,
             "domain_x": self.domain_x,
             "domain_y": self.domain_y,
@@ -126,22 +142,30 @@ class HydrologyDomain:
             "river_class": list(self.river_class),
             "floodplain_strength": list(self.floodplain_strength),
             "outlets": [list(v) for v in self.outlets],
-            "fingerprint": self.fingerprint,
         }
+        if self.version >= 2:
+            payload["runoff"] = list(self.runoff)
+            payload["channel_gradient"] = list(self.channel_gradient)
+        payload["fingerprint"] = self.fingerprint
+        return payload
 
     @classmethod
     def from_payload(cls, raw: dict[str, Any]) -> "HydrologyDomain":
-        if str(raw.get("algorithm", "")) != HYDROLOGY_ALGORITHM:
+        version = int(raw["version"])
+        algorithm = str(raw.get("algorithm", ""))
+        if algorithm != hydrology_algorithm(version):
             raise ValueError("stale hydrology algorithm")
+        runoff = tuple(map(int, raw.get("runoff", ())))
+        gradient = tuple(map(int, raw.get("channel_gradient", ())))
         return cls(
-            int(raw["domain_x"]), int(raw["domain_y"]), int(raw["version"]), int(raw["lattice_spacing"]),
+            int(raw["domain_x"]), int(raw["domain_y"]), version, int(raw["lattice_spacing"]),
             int(raw["core_nodes"]), int(raw["halo_nodes"]), int(raw["origin_node_x"]), int(raw["origin_node_y"]),
             int(raw["width"]), int(raw["height"]), tuple(map(int, raw["elevation"])),
             tuple(map(int, raw["filled_elevation"])), tuple(map(int, raw["flow_to"])),
             tuple(map(int, raw["accumulation"])), tuple(map(int, raw["watershed_id"])),
             tuple(map(int, raw["river_class"])), tuple(map(int, raw["floodplain_strength"])),
             tuple(tuple(map(int, v)) for v in raw.get("outlets", [])), str(raw["fingerprint"]),
-            str(raw.get("algorithm", HYDROLOGY_ALGORITHM)),
+            algorithm, runoff, gradient,
         )
 
 
@@ -163,6 +187,7 @@ class HydrologyGenerator:
         self.seed = world_generator.world_seed
         self.cache_source = cache_source
         self.version = int(version)
+        self.algorithm = hydrology_algorithm(self.version)
         self._domain_cache: dict[tuple[int, int], HydrologyDomain] = {}
 
     @staticmethod
@@ -256,18 +281,19 @@ class HydrologyGenerator:
 
         if progress:
             progress(0, 5, f"sampling {domain_count_x}x{domain_count_y} hydrology domains")
-        elevation, moisture = self._sample_grid(width, height, origin_node_x, origin_node_y, spacing)
+        elevation, moisture, runoff = self._sample_grid(width, height, origin_node_x, origin_node_y, spacing)
         if progress:
             progress(1, 5, "resolving depressions")
         filled, flood_parent, flood_rank = self._priority_flood(elevation, width, height, origin_node_x, origin_node_y)
         if progress:
-            progress(2, 5, "deriving drainage and accumulation")
+            progress(2, 5, "deriving drainage and climate-driven discharge")
         flow_to = self._assign_flow(elevation, filled, flood_parent, width, height, origin_node_x, origin_node_y)
-        accumulation = self._accumulate(flow_to, filled, flood_rank, moisture)
+        accumulation = self._accumulate(flow_to, filled, flood_rank, runoff)
+        channel_gradient = self._channel_gradients(flow_to, filled)
         if progress:
-            progress(3, 5, "labeling watersheds and river hierarchy")
+            progress(3, 5, "labeling watersheds, headwaters and river hierarchy")
         watersheds, outlets = self._watersheds(flow_to, filled, flood_rank, width, height, origin_node_x, origin_node_y)
-        river_class = self._classify_rivers(accumulation, moisture)
+        river_class = self._classify_rivers(accumulation, moisture, runoff, elevation, channel_gradient)
         floodplain = self._floodplains(river_class, accumulation, elevation, width, height)
 
         domains: list[HydrologyDomain] = []
@@ -278,7 +304,7 @@ class HydrologyGenerator:
                 domains.append(self._slice_domain(
                     dx, dy, width, height, origin_node_x, origin_node_y,
                     elevation, filled, flow_to, accumulation, watersheds, river_class, floodplain, outlets,
-                    slice_x, slice_y,
+                    runoff, channel_gradient, slice_x, slice_y,
                 ))
         if progress:
             progress(4, 5, "persisting hydrology base plan")
@@ -303,43 +329,52 @@ class HydrologyGenerator:
         width = height = core + halo * 2
         origin_node_x = int(domain_x) * core - halo
         origin_node_y = int(domain_y) * core - halo
-        elevation, moisture = self._sample_grid(width, height, origin_node_x, origin_node_y, spacing)
+        elevation, moisture, runoff = self._sample_grid(width, height, origin_node_x, origin_node_y, spacing)
         filled, flood_parent, flood_rank = self._priority_flood(elevation, width, height, origin_node_x, origin_node_y)
         flow_to = self._assign_flow(elevation, filled, flood_parent, width, height, origin_node_x, origin_node_y)
-        accumulation = self._accumulate(flow_to, filled, flood_rank, moisture)
+        accumulation = self._accumulate(flow_to, filled, flood_rank, runoff)
+        channel_gradient = self._channel_gradients(flow_to, filled)
         watersheds, outlets = self._watersheds(flow_to, filled, flood_rank, width, height, origin_node_x, origin_node_y)
-        river_class = self._classify_rivers(accumulation, moisture)
+        river_class = self._classify_rivers(accumulation, moisture, runoff, elevation, channel_gradient)
         floodplain = self._floodplains(river_class, accumulation, elevation, width, height)
         payload = self._payload(
             int(domain_x), int(domain_y), origin_node_x, origin_node_y, width, height,
             elevation, filled, flow_to, accumulation, watersheds, river_class, floodplain, outlets,
+            runoff, channel_gradient,
         )
         fingerprint = canonical_hash(payload)
         return HydrologyDomain(
             int(domain_x), int(domain_y), self.version, spacing, core, halo, origin_node_x, origin_node_y,
             width, height, tuple(elevation), tuple(filled), tuple(flow_to), tuple(accumulation),
             tuple(watersheds), tuple(river_class), tuple(floodplain), tuple(outlets), fingerprint,
-            HYDROLOGY_ALGORITHM,
+            self.algorithm, tuple(runoff) if self.version >= 2 else (), tuple(channel_gradient) if self.version >= 2 else (),
         )
 
     def _sample_grid(self, width: int, height: int, ox: int, oy: int, spacing: int):
         total = width * height
         elevation = [0] * total
         moisture = [0] * total
+        runoff = [1] * total
         for ly in range(height):
             gy = oy + ly
             wy = gy * spacing
             row = ly * width
             for lx in range(width):
                 gx = ox + lx
-                fields = self.world_generator.sample_fields(WorldPos(gx * spacing, wy, 0))
-                elevation[row + lx] = int(fields.elevation)
-                moisture[row + lx] = int(fields.moisture)
-        return elevation, moisture
+                pos = WorldPos(gx * spacing, wy, 0)
+                fields = self.world_generator.sample_fields(pos)
+                idx = row + lx
+                elevation[idx] = int(fields.elevation)
+                moisture[idx] = int(fields.moisture)
+                if self.version <= 1:
+                    runoff[idx] = self._runoff_v1(fields.moisture)
+                else:
+                    runoff[idx] = self._runoff_v2(pos, fields)
+        return elevation, moisture, runoff
 
     def _slice_domain(self, dx: int, dy: int, mega_width: int, mega_height: int, mega_ox: int, mega_oy: int,
                       elevation, filled, flow_to, accumulation, watersheds, river_class, floodplain, outlets,
-                      slice_x: int, slice_y: int) -> HydrologyDomain:
+                      runoff, channel_gradient, slice_x: int, slice_y: int) -> HydrologyDomain:
         core = HYDROLOGY_DOMAIN_NODES
         halo = HYDROLOGY_HALO_NODES
         width = height = core + halo * 2
@@ -385,6 +420,7 @@ class HydrologyGenerator:
             dx, dy, origin_node_x, origin_node_y, width, height,
             values(elevation), values(filled), local_flow, values(accumulation), values(watersheds),
             values(river_class), values(floodplain), sorted(domain_outlets),
+            values(runoff), values(channel_gradient),
         )
         fingerprint = canonical_hash(payload)
         return HydrologyDomain(
@@ -392,13 +428,14 @@ class HydrologyGenerator:
             width, height, tuple(payload["elevation"]), tuple(payload["filled_elevation"]),
             tuple(payload["flow_to"]), tuple(payload["accumulation"]), tuple(payload["watershed_id"]),
             tuple(payload["river_class"]), tuple(payload["floodplain_strength"]),
-            tuple(tuple(v) for v in payload["outlets"]), fingerprint, HYDROLOGY_ALGORITHM,
+            tuple(tuple(v) for v in payload["outlets"]), fingerprint, self.algorithm,
+            tuple(payload.get("runoff", ())), tuple(payload.get("channel_gradient", ())),
         )
 
     def _payload(self, dx, dy, ox, oy, width, height, elevation, filled, flow_to, accumulation, watersheds,
-                 river_class, floodplain, outlets) -> dict[str, Any]:
-        return {
-            "algorithm": HYDROLOGY_ALGORITHM,
+                 river_class, floodplain, outlets, runoff=None, channel_gradient=None) -> dict[str, Any]:
+        payload = {
+            "algorithm": self.algorithm,
             "domain_x": int(dx), "domain_y": int(dy), "version": self.version,
             "lattice_spacing": HYDROLOGY_LATTICE_SPACING,
             "core_nodes": HYDROLOGY_DOMAIN_NODES, "halo_nodes": HYDROLOGY_HALO_NODES,
@@ -410,6 +447,10 @@ class HydrologyGenerator:
             "floodplain_strength": list(map(int, floodplain)),
             "outlets": [list(map(int, v)) for v in outlets],
         }
+        if self.version >= 2:
+            payload["runoff"] = list(map(int, runoff or ()))
+            payload["channel_gradient"] = list(map(int, channel_gradient or ()))
+        return payload
 
     def _store_domains(self, domains) -> None:
         storer = getattr(self.cache_source, "store_generated_hydrology_domain", None)
@@ -481,17 +522,44 @@ class HydrologyGenerator:
         return flow
 
     @staticmethod
-    def _runoff(moisture: int) -> int:
+    def _runoff_v1(moisture: int) -> int:
         return 1 + max(0, min(7, int(moisture) // 8192))
 
-    def _accumulate(self, flow, filled, rank, moisture):
-        acc = [self._runoff(m) for m in moisture]
+    def _runoff_v2(self, pos: WorldPos, fields) -> int:
+        """Convert Phase-3 precipitation into local discharge contribution.
+
+        Rain shadows and maritime exposure already shape the authoritative v8
+        precipitation field, so hydrology consumes that result instead of
+        recomputing climate. Wet uplands receive a modest headwater bonus while
+        arid cells contribute little even when drainage area is large.
+        """
+        precipitation = max(0, min(65535, int(fields.moisture)))
+        value = 1 + min(9, precipitation // 7000)
+        elevation = int(fields.elevation)
+        if elevation >= 35000 and precipitation >= 26000:
+            value += 1
+        if elevation >= 43000 and precipitation >= 32000:
+            value += 1
+        if precipitation < 18000:
+            value -= 1
+        return max(1, min(12, value))
+
+    def _accumulate(self, flow, filled, rank, runoff):
+        acc = [max(1, int(v)) for v in runoff]
         order = sorted(range(len(flow)), key=lambda i: (filled[i], rank[i]), reverse=True)
         for i in order:
             target = flow[i]
             if target >= 0:
                 acc[target] += acc[i]
         return acc
+
+    @staticmethod
+    def _channel_gradients(flow, filled):
+        gradient = [0] * len(flow)
+        for i, target in enumerate(flow):
+            if target >= 0:
+                gradient[i] = max(0, int(filled[i]) - int(filled[target]))
+        return gradient
 
     def _watersheds(self, flow, filled, rank, width, height, ox, oy):
         basins = [0] * len(flow)
@@ -508,14 +576,26 @@ class HydrologyGenerator:
                 basins[i] = basins[target]
         return basins, sorted(outlets)
 
-    @staticmethod
-    def _classify_rivers(accumulation, moisture):
+    def _classify_rivers(self, accumulation, moisture, runoff, elevation, channel_gradient):
         out = [0] * len(accumulation)
         for i, value in enumerate(accumulation):
-            dry = max(0, (65535 - int(moisture[i])) // 2048)
-            minor = 72 + dry
-            river = minor * 4
-            major = minor * 12
+            if self.version <= 1:
+                dry = max(0, (65535 - int(moisture[i])) // 2048)
+                minor = 72 + dry
+                river = minor * 4
+                major = minor * 12
+            else:
+                # V2 explicitly rewards wet upland source cells and lets large
+                # drainage area dominate farther downstream. Dry rain-shadow
+                # regions require substantially more contributing area.
+                rain = max(0, min(65535, int(moisture[i])))
+                source = max(1, int(runoff[i]))
+                dry_penalty = max(0, (30000 - rain) // 1800)
+                upland_bonus = 16 if int(elevation[i]) >= 35000 and source >= 6 else 0
+                steep_bonus = 8 if int(channel_gradient[i]) >= 450 and source >= 6 else 0
+                minor = max(38, 78 + dry_penalty - source * 4 - upland_bonus - steep_bonus)
+                river = max(190, minor * 5)
+                major = max(720, minor * 17)
             out[i] = 3 if value >= major else 2 if value >= river else 1 if value >= minor else 0
         return out
 
@@ -558,12 +638,25 @@ class HydrologyGenerator:
         cross = wx * vy - wy * vx
         return cross * cross <= rr * vv
 
-    def _meander_midpoint(self, gx: int, gy: int, tx: int, ty: int) -> tuple[int, int]:
+    def _meander_midpoint(self, gx: int, gy: int, tx: int, ty: int,
+                           gradient: int = 0, river_class: int = 1) -> tuple[int, int]:
         spacing = HYDROLOGY_LATTICE_SPACING
         ax, ay = gx * spacing, gy * spacing
         bx, by = tx * spacing, ty * spacing
         mx, my = (ax + bx) // 2, (ay + by) // 2
-        jitter = int(hash_u64(self.seed, "hydrology-meander-v1", self.version, gx, gy, tx, ty) % 5) - 2
+        if self.version <= 1:
+            amplitude = 2
+            namespace = "hydrology-meander-v1"
+        else:
+            # Mature low-gradient rivers wander farther across their floodplain;
+            # steep headwaters stay comparatively direct through confined relief.
+            flatness = max(0, 1000 - max(0, int(gradient)))
+            amplitude = 1 + min(6, flatness // 150)
+            if int(river_class) >= 2:
+                amplitude += 1
+            amplitude = min(8, amplitude)
+            namespace = "hydrology-meander-v2"
+        jitter = int(hash_u64(self.seed, namespace, self.version, gx, gy, tx, ty) % (amplitude * 2 + 1)) - amplitude
         dx, dy = bx - ax, by - ay
         if dx == 0:
             mx += jitter
@@ -573,6 +666,14 @@ class HydrologyGenerator:
             mx += (-1 if dy > 0 else 1) * jitter
             my += (1 if dx > 0 else -1) * jitter
         return mx, my
+
+    @staticmethod
+    def _upstream_river_count(domain: HydrologyDomain, index: int) -> int:
+        count = 0
+        for neighbor in HydrologyGenerator._neighbors(index, domain.width, domain.height):
+            if int(domain.flow_to[neighbor]) == int(index) and int(domain.river_class[neighbor]) > 0:
+                count += 1
+        return count
 
     @staticmethod
     def _interpolate_field(domain: HydrologyDomain, field, x: int, y: int) -> int:
@@ -657,6 +758,7 @@ class HydrologyGenerator:
         best_acc = 0
         best_slope = 0
         best_fp = fp
+        best_upstream = 0
         # A two-node neighborhood is enough because the longest D8 segment is
         # ~23 cells and the widest major channel is under 10 cells in this pass.
         for gy in range(node_y - 2, node_y + 3):
@@ -671,8 +773,18 @@ class HydrologyGenerator:
                 tx, ty = domain.global_node_xy(target)
                 ax, ay = gx * spacing, gy * spacing
                 bx, by = tx * spacing, ty * spacing
-                mx, my = self._meander_midpoint(gx, gy, tx, ty)
+                gradient = (
+                    int(domain.channel_gradient[idx])
+                    if domain.version >= 2 and len(domain.channel_gradient) == domain.width * domain.height
+                    else max(0, int(domain.filled_elevation[idx]) - int(domain.filled_elevation[target]))
+                )
+                upstream = self._upstream_river_count(domain, idx) if domain.version >= 2 else 0
+                mx, my = self._meander_midpoint(gx, gy, tx, ty, gradient, cls)
                 width = 2 if cls == 1 else 4 if cls == 2 else 7
+                if domain.version >= 2 and upstream >= 2:
+                    # Tributary junctions widen naturally rather than snapping
+                    # several same-width centerlines into one narrow cell.
+                    width += min(2, upstream - 1)
                 on_channel = (
                     self._segment_contains(pos.x, pos.y, ax, ay, mx, my, width)
                     or self._segment_contains(pos.x, pos.y, mx, my, bx, by, width)
@@ -687,31 +799,86 @@ class HydrologyGenerator:
                     self._segment_contains(pos.x, pos.y, ax, ay, mx, my, inner_radius)
                     or self._segment_contains(pos.x, pos.y, mx, my, bx, by, inner_radius)
                 )
-                seg_hash = hash_u64(self.seed, "hydrology-ford-v1", self.version, gx, gy, tx, ty)
-                ford_mod = 6 if cls == 1 else 11 if cls == 2 else 23
-                ford = (seg_hash % ford_mod) == 0
+                if domain.version <= 1:
+                    seg_hash = hash_u64(self.seed, "hydrology-ford-v1", self.version, gx, gy, tx, ty)
+                    ford_mod = 6 if cls == 1 else 11 if cls == 2 else 23
+                    ford = (seg_hash % ford_mod) == 0
+                else:
+                    midpoint = WorldPos(mx, my, 0)
+                    topo_getter = getattr(self.world_generator, "topography_at", None)
+                    topo = topo_getter(midpoint) if callable(topo_getter) else None
+                    bank_slope = int(getattr(topo, "slope", 0)) if topo is not None else 0
+                    suitability = 104 - cls * 13
+                    suitability -= min(48, gradient // 22)
+                    suitability -= min(24, acc // 180)
+                    suitability += 10 if bank_slope < 22000 else 0
+                    suitability += 8 if int(domain.floodplain_strength[idx]) >= 28 else 0
+                    physical = cls <= 2 and gradient <= 900 and bank_slope < 39000 and suitability >= 48
+                    tie = int(hash_u64(self.seed, "hydrology-ford-v2", gx, gy, tx, ty) % 100)
+                    ford = physical and tie < max(10, min(72, suitability - 24))
                 if cls > best_cls or (cls == best_cls and acc > best_acc):
                     best_cls, best_width, best_inner, best_ford, best_acc = cls, width, inner, ford, acc
-                    best_slope = max(0,domain.filled_elevation[idx]-domain.filled_elevation[target])
+                    best_slope = gradient
                     best_fp = max(best_fp, int(domain.floodplain_strength[idx]))
+                    best_upstream = upstream
                     watershed = int(domain.watershed_id[idx])
 
         if best_cls:
-            # Minor streams and explicit ford segments are wadeable. Medium and
-            # major channels have a deep core but retain shallow banks.
+            # Minor streams and physically suitable ford segments are wadeable.
+            # Medium/major channels keep deep cores except where local geometry
+            # supports a crossing.
             shallow = best_cls == 1 or best_ford or not best_inner
             depth = 1 if shallow else 2 if best_cls == 2 else 3
             crossing = 2 if best_cls == 1 else 5 if shallow else 80 if best_cls == 2 else 1000
             terrain = "core:river_shallow" if shallow else "core:river"
+            rapid = False
+            gorge = False
+            braided = False
+            delta = False
+            oxbow = 0
+            channel_style = "stream" if best_cls == 1 else "river"
             if self.world_generator.version>=6:
-                if best_cls==1:terrain='core:stream'
-                elif not shallow and best_slope>750:terrain='core:river_rapids' 
+                if best_cls==1:
+                    terrain='core:stream'
+                elif domain.version <= 1 and not shallow and best_slope>750:
+                    terrain='core:river_rapids'
+                    rapid=True
+            if domain.version >= 2:
+                topo_getter = getattr(self.world_generator, "topography_at", None)
+                topo = topo_getter(pos) if callable(topo_getter) else None
+                ruggedness = int(getattr(topo, "ruggedness", 0)) if topo is not None else 0
+                rapid = not shallow and best_slope >= 520
+                gorge = rapid and best_slope >= 1050 and ruggedness >= 30000
+                braided = (
+                    best_cls >= 2 and 120 <= best_slope <= 520
+                    and best_fp >= 42 and best_acc >= 320 and best_upstream >= 1
+                )
+                if best_cls >= 2 and best_slope <= 260 and best_fp >= 36:
+                    oxbow = max(0, min(100, 18 + best_fp // 2 + best_acc // 220 - best_slope // 8))
+                delta = (
+                    best_cls >= 2 and best_slope <= 180 and best_acc >= 650
+                    and int(fields.elevation) <= SEA_LEVEL_REFERENCE + 2600
+                )
+                if gorge:
+                    channel_style="gorge"
+                elif delta:
+                    channel_style="delta"
+                elif braided:
+                    channel_style="braided"
+                elif oxbow >= 35:
+                    channel_style="meandering"
+                elif rapid:
+                    channel_style="rapid"
+                if rapid or gorge:
+                    terrain='core:river_rapids'
             return HydrologySurface(
                 watershed_id=watershed, river_class=best_cls, river_width=best_width,
                 river_depth_class=depth, floodplain_strength=max(best_fp, 20 + best_cls * 15),
                 wetland_probability=max(0, min(100, best_fp // 2 + fields.moisture // 1800)),
                 water_access_score=100, flood_risk=min(100, 45 + best_cls * 16 + best_fp // 3),
-                crossing_cost=crossing, lake=False, ford=best_ford, terrain_override=terrain,
+                crossing_cost=crossing, lake=False, ford=best_ford, rapid=rapid, gorge=gorge,
+                braided=braided, delta=delta, oxbow_probability=oxbow,
+                channel_style=channel_style, terrain_override=terrain,
             )
 
         if bank and fields.elevation>=23800:
@@ -740,13 +907,21 @@ def audit_domain(domain: HydrologyDomain) -> list[str]:
     """Return invariant violations for one generated hydrology domain."""
     issues: list[str] = []
     n = domain.width * domain.height
-    if domain.algorithm != HYDROLOGY_ALGORITHM:
+    if domain.algorithm != hydrology_algorithm(domain.version):
         issues.append("stale hydrology algorithm")
-    if not all(len(v) == n for v in (
+    arrays = (
         domain.elevation, domain.filled_elevation, domain.flow_to, domain.accumulation,
         domain.watershed_id, domain.river_class, domain.floodplain_strength,
-    )):
+    )
+    if not all(len(v) == n for v in arrays):
         return issues + ["array length mismatch"]
+    if domain.version >= 2:
+        if len(domain.runoff) != n or len(domain.channel_gradient) != n:
+            return issues + ["v2 derived array length mismatch"]
+        if any(v < 1 or v > 12 for v in domain.runoff):
+            issues.append("v2 runoff outside 1..12")
+        if any(v < 0 for v in domain.channel_gradient):
+            issues.append("negative channel gradient")
 
     for i in domain.core_indices():
         if domain.flow_to[i] < 0:
@@ -785,7 +960,9 @@ def audit_window_seams(domains: tuple[HydrologyDomain, ...] | list[HydrologyDoma
     """Verify overlapping prepared domains agree on shared base fields."""
     issues: list[str] = []
     by_key = {(d.domain_x, d.domain_y): d for d in domains}
-    attrs = ("elevation", "filled_elevation", "accumulation", "watershed_id", "river_class", "floodplain_strength")
+    attrs = ["elevation", "filled_elevation", "accumulation", "watershed_id", "river_class", "floodplain_strength"]
+    if domains and all(d.version >= 2 for d in domains):
+        attrs.extend(("runoff", "channel_gradient"))
     for (dx, dy), a in sorted(by_key.items()):
         for nk in ((dx + 1, dy), (dx, dy + 1)):
             b = by_key.get(nk)

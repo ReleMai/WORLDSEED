@@ -79,10 +79,12 @@ def main() -> int:
     csv_path = args.out_dir / f'{stem}.csv'
     with csv_path.open('w', newline='', encoding='utf-8') as fh:
         writer = csv.writer(fh)
-        writer.writerow(['global_node_x','global_node_y','world_x','world_y','elevation','filled_elevation','flow_to','accumulation','watershed_id','river_class','floodplain_strength'])
+        writer.writerow(['global_node_x','global_node_y','world_x','world_y','elevation','filled_elevation','flow_to','accumulation','runoff','channel_gradient','watershed_id','river_class','floodplain_strength'])
         for i in range(domain.width * domain.height):
             gx, gy = domain.global_node_xy(i); wx, wy = domain.world_xy(i)
-            writer.writerow([gx, gy, wx, wy, domain.elevation[i], domain.filled_elevation[i], domain.flow_to[i], domain.accumulation[i], domain.watershed_id[i], domain.river_class[i], domain.floodplain_strength[i]])
+            runoff = domain.runoff[i] if domain.runoff else ''
+            gradient = domain.channel_gradient[i] if domain.channel_gradient else ''
+            writer.writerow([gx, gy, wx, wy, domain.elevation[i], domain.filled_elevation[i], domain.flow_to[i], domain.accumulation[i], runoff, gradient, domain.watershed_id[i], domain.river_class[i], domain.floodplain_strength[i]])
 
     png_path = args.out_dir / f'{stem}.png'
     write_png(png_path, domain.width, domain.height, render_domain(domain))
@@ -97,6 +99,21 @@ def main() -> int:
         'outlets': len(domain.outlets),
         'river_cells_core': sum(1 for i in domain.core_indices() if domain.river_class[i] > 0),
         'river_class_core': {str(c): sum(1 for i in domain.core_indices() if domain.river_class[i] == c) for c in range(4)},
+        'runoff_core': {
+            'min': min((domain.runoff[i] for i in domain.core_indices()), default=0) if domain.runoff else 0,
+            'max': max((domain.runoff[i] for i in domain.core_indices()), default=0) if domain.runoff else 0,
+            'mean': (
+                sum(domain.runoff[i] for i in domain.core_indices()) //
+                max(1, domain.core_nodes * domain.core_nodes)
+            ) if domain.runoff else 0,
+        },
+        'channel_gradient_core': {
+            'max': max((domain.channel_gradient[i] for i in domain.core_indices()), default=0) if domain.channel_gradient else 0,
+            'mean': (
+                sum(domain.channel_gradient[i] for i in domain.core_indices()) //
+                max(1, domain.core_nodes * domain.core_nodes)
+            ) if domain.channel_gradient else 0,
+        },
         'issues': issues,
         'csv': str(csv_path),
         'png': str(png_path),

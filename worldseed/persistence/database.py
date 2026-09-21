@@ -74,8 +74,11 @@ class WorldDatabase:
 
     def _ensure_rc14_generation_meta(self)->None:
         """Add RC14 generator-contract metadata without rewriting legacy geography."""
+        # A save missing RC14 metadata necessarily predates the current
+        # hydrology-v2 promotion. Preserve its old river/coast contract instead
+        # of silently assigning the newest generated-geography algorithm.
         defaults={
-            "hydrology_version":HYDROLOGY_VERSION,
+            "hydrology_version":1,
             "settlement_plan_version":SETTLEMENT_PLAN_VERSION,
             "routegen_version":ROUTEGEN_VERSION,
         }

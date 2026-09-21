@@ -1,3 +1,16 @@
+## RC14 Dev29 — Hydrology v2 foundation
+
+- Promoted new saves to `HYDROLOGY_VERSION = 2` while preserving existing saves at their recorded hydrology version.
+- Added version-aware hydrology algorithm IDs so cached v1 river plans remain loadable beside v2 plans.
+- Added persisted v2 runoff and channel-gradient fields; runoff now derives from authoritative Phase-3 precipitation with wet-upland headwater support.
+- Updated river classification to use climate-driven discharge accumulation.
+- Added gradient-sensitive meanders and tributary/confluence widening.
+- Replaced hash-first ford placement with physical suitability gates based on river class, channel gradient, bank slope, discharge and floodplain context.
+- Added rapid/gorge, braided-reach, oxbow/meander and near-sea delta candidate read fields.
+- Updated World/startup hydrology construction to honor save-pinned hydrology metadata.
+- Expanded hydrology audit output and regression coverage for v1/v2 compatibility and seam continuity.
+- Full braided islands, oxbow terrain and delta distributaries remain later Phase-4/Phase-5 work.
+
 ## RC14 Dev28 — WORLDGEN v8 physical climate and living weather
 
 - Replaced v8's temporary inherited moisture/temperature fields with physical climate circulation driven by climate belts, maritime influence, continentality, prevailing wind, altitude, orographic lift and rain shadows.

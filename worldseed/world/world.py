@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, Callable
-from worldseed.config import DEFAULT_CACHE_CHUNKS, CHUNK_SIZE
+from worldseed.config import DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION
 from worldseed.content.registry import ContentRegistry, TerrainDef
 from worldseed.core.coords import ChunkKey, WorldPos, split_world
 from worldseed.world.cache import ChunkCache
@@ -18,7 +18,12 @@ class World:
         self.generator=generator; self.registry=registry; self.delta_source=delta_source; self.dirty_tiles:dict[WorldPos,str]={}; self.revision=0
         if auto_hydrology and self.generator.version>=5 and getattr(self.generator,'hydrology',None) is None:
             from worldseed.world.hydrology import HydrologyGenerator
-            self.generator.attach_hydrology(HydrologyGenerator(self.generator,delta_source))
+            hydrology_version=HYDROLOGY_VERSION
+            getter=getattr(delta_source,'get_meta',None)
+            if callable(getter):
+                try:hydrology_version=int(getter('hydrology_version'))
+                except (KeyError,TypeError,ValueError):hydrology_version=1
+            self.generator.attach_hydrology(HydrologyGenerator(self.generator,delta_source,version=hydrology_version))
         self.cache=ChunkCache(cache_chunks,self._load_chunk)
     def _chunk_from_ids(self,key:ChunkKey,terrain_ids)->Chunk|None:
         if terrain_ids is None or len(terrain_ids)!=(CHUNK_SIZE*CHUNK_SIZE):return None

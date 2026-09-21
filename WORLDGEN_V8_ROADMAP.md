@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 is active for new worlds. Dev28 implements Phase 3 physical climate circulation plus climate-driven weather, cloud shadows, wet-ground response, rain animation and day/night lighting. Phase 4 hydrology v2 is next after validation.**
+Status: **WORLDGEN v8 is active for new worlds. Dev29 starts Phase 4 Hydrology v2: new worlds now use climate-driven runoff/headwaters, slope-aware channel morphology and physically screened crossings while old saves remain pinned to hydrology v1.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -220,21 +220,34 @@ validation is still required before declaring the Phase-3 release gate closed.
 Rebuild the proven Priority-Flood pipeline on v8 geography and improve local
 river morphology.
 
+**Dev29 implementation start:** `HYDROLOGY_VERSION = 2` is now the new-save
+contract. Hydrology v2 keeps the seam-safe Priority-Flood window solver, but
+runoff comes from Phase-3 precipitation, wet uplands receive headwater support,
+and persisted domains now record runoff plus downstream channel gradient.
+Existing saves retain their stored hydrology version; missing metadata is
+treated as legacy v1 rather than silently upgrading river geography.
+
+Local channel projection now uses gradient-sensitive meander amplitude,
+confluence widening, physically screened ford candidates, and first-pass
+channel morphology labels for rapids/gorges, braided reaches, meandering/oxbow
+potential and low-gradient delta candidates. The latter are read-model signals
+for later terrain/art refinement, not a separate river authority.
+
 ### Work
-- Introduce `HYDROLOGY_VERSION = 2`.
-- Preserve seam-safe multi-domain window solving.
-- Re-run depression handling on v8 elevation.
-- Derive runoff from Phase-3 precipitation rather than moisture noise alone.
-- Improve source/headwater logic in wet uplands.
-- Preserve river hierarchy from accumulation/discharge.
-- Refine channel centerlines with terrain-aware splines/polyline segments.
-- Make meander amplitude increase as valley slope decreases.
-- Create confluences, tributary junction widening, and natural river islands.
-- Add braided-channel candidates where sediment/discharge/slope fit.
-- Add oxbow/meander-scar potential in mature floodplains.
-- Make rapids/gorges correlate with steep channel gradients.
-- Replace hash-first ford placement with width/depth/slope/substrate suitability.
-- Generate delta candidates at low-gradient high-discharge mouths.
+- **DONE Dev29:** introduce `HYDROLOGY_VERSION = 2` for new saves while preserving stored v1 contracts.
+- **DONE Dev29:** preserve seam-safe multi-domain window solving, including v2 runoff/gradient overlap checks.
+- **DONE Dev29:** run the existing Priority-Flood depression solver directly on authoritative v8 elevation.
+- **DONE Dev29:** derive local runoff from authoritative Phase-3 precipitation; rain shadows therefore reduce discharge through the climate field itself.
+- **DONE Dev29:** wet high terrain receives bounded headwater runoff/classification support.
+- **DONE Dev29:** preserve class hierarchy from accumulated discharge with v2 thresholds.
+- **IN PROGRESS Dev29:** midpoint channel refinement now reacts to channel gradient; full multi-point spline refinement remains.
+- **DONE Dev29:** meander amplitude increases as channel gradient falls and remains tight in steep headwaters.
+- **PARTIAL Dev29:** confluences/tributary junctions widen from upstream count; river-island materialization remains.
+- **PARTIAL Dev29:** v2 exposes braided-reach candidates from discharge, gradient and floodplain context; dedicated braid terrain materialization remains.
+- **PARTIAL Dev29:** v2 exposes oxbow probability on low-gradient mature reaches; scars/lakes remain.
+- **DONE Dev29:** rapids and gorge labels now derive from channel gradient plus ruggedness.
+- **PARTIAL Dev29:** ford selection is now physically gated by class, gradient, bank slope, discharge and floodplain; deterministic hashing only breaks ties among suitable reaches.
+- **PARTIAL Dev29:** low-gradient, high-discharge near-sea reaches expose deterministic delta candidates; delta morphology remains Phase 5 work.
 
 ### Exit gates
 - Every core drainage node terminates correctly.

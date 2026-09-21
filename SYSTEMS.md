@@ -66,13 +66,15 @@ Local materialization
 
 The physical plan is persistent identity, not a renderer-owned decorative copy. Generated base hydrology/plans/routes are rebuildable from seed + generator versions and may be cached in SQLite. Player/history mutations are not rebuildable and therefore belong in authoritative simulation state or `physical_plan_deltas`.
 
-### Hydrology / physical geography — Phase 3
+### Hydrology / physical geography — Hydrology v2
 
-RC14 worldgen v5 turns the deterministic hydrology plan into physical surface geography. Prepared adjacent domains are solved together in one larger Priority-Flood lattice and sliced back into cache records, preventing independent-domain disagreement inside the prepared envelope. The same plan provides watershed IDs, flow accumulation, river hierarchy, floodplain strength and stable physical read values.
+WORLDGEN v8 new saves use hydrology contract v2. Prepared adjacent domains are still solved together in one larger Priority-Flood lattice and sliced back into cache records, preserving the proven seam-safe window authority. V2 samples authoritative v8 elevation plus Phase-3 precipitation, converts precipitation into bounded local runoff, accumulates discharge downstream, and persists both runoff and channel gradient beside watershed IDs, river hierarchy and floodplain strength.
 
-Surface projection refines coarse flow edges into deterministic centerlines and maps them to shallow/deep river terrain, contiguous lake basins, wetlands and floodplains. Crossing cost, river depth class, water access and flood risk are read from this same authority for future route and settlement consumers. Existing v1-v4 saves always retain their recorded worldgen version and are not retroactively rewritten.
+Wet uplands receive bounded headwater support, while rain-shadow/arid regions contribute less runoff because the physical climate field already reduces precipitation there. Local channel projection uses gradient-sensitive meanders, tributary/confluence widening, gradient/ruggedness-driven rapid and gorge labels, physically screened ford candidates, and first-pass braided/meandering/oxbow/delta read signals. Dedicated braided islands, oxbow scars and delta terrain remain later materialization work; they do not exist as renderer-invented features.
 
-Regional hydrology is prepared during startup pregeneration. The renderer only observes the projected terrain/read model and never owns river placement. Future expansion-ring work must preserve the same rule outside the opening prepared envelope.
+Hydrology is independently versioned from worldgen. New saves record hydrology v2. Existing saves continue using the `hydrology_version` in their metadata; saves missing that metadata are inferred as legacy v1 rather than silently changing rivers. Generated hydrology remains rebuildable cache data, while bridges/crossing damage and other historical mutations stay in authoritative plan deltas.
+
+Regional hydrology is prepared during startup pregeneration. Movement, hover, rendering and map inspection may read prepared hydrology but never solve it.
 
 ---
 

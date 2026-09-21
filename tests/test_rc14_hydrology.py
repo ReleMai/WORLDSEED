@@ -12,7 +12,11 @@ from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.persistence.database import WorldDatabase
 from worldseed.world.generator import WorldGenerator
-from worldseed.world.hydrology import HydrologyGenerator, audit_domain, audit_window_seams, HYDROLOGY_ALGORITHM
+from worldseed.world.world import World
+from worldseed.world.hydrology import (
+    HydrologyGenerator, audit_domain, audit_window_seams, HYDROLOGY_ALGORITHM,
+    HYDROLOGY_ALGORITHM_V1, HYDROLOGY_ALGORITHM_V2, hydrology_algorithm,
+)
 from worldseed.world.regional_plan import stable_plan_uid
 
 
@@ -25,12 +29,14 @@ class RC14HydrologyTests(unittest.TestCase):
     def _hydro(self):
         return HydrologyGenerator(WorldGenerator(self.seed, self.registry, version=WORLDGEN_VERSION))
 
-    def test_phase3_contract_versions_activate_worldgen_v5(self):
-        self.assertEqual(HYDROLOGY_VERSION, 1)
+    def test_phase4_contract_versions_activate_hydrology_v2(self):
+        self.assertEqual(HYDROLOGY_VERSION, 2)
         self.assertEqual(SETTLEMENT_PLAN_VERSION, 1)
         self.assertEqual(ROUTEGEN_VERSION, 1)
         self.assertEqual(WORLDGEN_VERSION, 8)
-        self.assertTrue(HYDROLOGY_ALGORITHM.startswith('rc14-phase3'))
+        self.assertEqual(HYDROLOGY_ALGORITHM, HYDROLOGY_ALGORITHM_V2)
+        self.assertEqual(hydrology_algorithm(1), HYDROLOGY_ALGORITHM_V1)
+        self.assertEqual(hydrology_algorithm(2), HYDROLOGY_ALGORITHM_V2)
 
     def test_frozen_rc13_golden_terrain_fingerprints(self):
         expected = {
@@ -75,10 +81,52 @@ class RC14HydrologyTests(unittest.TestCase):
         domain = self._hydro().generate(0, 0)
         self.assertEqual(audit_domain(domain), [])
 
+    def test_v2_persists_climate_runoff_and_channel_gradients(self):
+        domain = self._hydro().generate(0, 0)
+        n = domain.width * domain.height
+        self.assertEqual(domain.version, 2)
+        self.assertEqual(domain.algorithm, HYDROLOGY_ALGORITHM_V2)
+        self.assertEqual(len(domain.runoff), n)
+        self.assertEqual(len(domain.channel_gradient), n)
+        self.assertTrue(all(1 <= v <= 12 for v in domain.runoff))
+        self.assertTrue(all(v >= 0 for v in domain.channel_gradient))
+        self.assertGreater(sum(domain.runoff), n)
+
+    def test_hydrology_v1_contract_remains_loadable_and_distinct(self):
+        gen = WorldGenerator(self.seed, self.registry, version=7)
+        old = HydrologyGenerator(gen, version=1).generate(0, 0)
+        new = HydrologyGenerator(WorldGenerator(self.seed, self.registry, version=8), version=2).generate(0, 0)
+        self.assertEqual(old.algorithm, HYDROLOGY_ALGORITHM_V1)
+        self.assertEqual(old.runoff, ())
+        self.assertEqual(old.channel_gradient, ())
+        self.assertNotEqual(old.fingerprint, new.fingerprint)
+        self.assertEqual(audit_domain(old), [])
+        self.assertEqual(audit_domain(new), [])
+
+    def test_v2_surface_exposes_physical_channel_morphology(self):
+        gen = WorldGenerator(b'v8-hydro-morphology', self.registry, version=8)
+        planner = HydrologyGenerator(gen, version=2)
+        planner.prepare_window(-1, 0, -1, 0, persist=False)
+        gen.attach_hydrology(planner)
+        styles=set();river_cells=0;physical_fords=0
+        for y in range(-384,385,4):
+            for x in range(-384,385,4):
+                surface=planner.surface_at(WorldPos(x,y,0),prepared_only=True)
+                if not surface or surface.river_class<=0:continue
+                river_cells+=1;styles.add(surface.channel_style)
+                if surface.ford:
+                    physical_fords+=1
+                    self.assertLessEqual(surface.river_class,2)
+                    self.assertLess(surface.crossing_cost,80)
+                if surface.gorge:self.assertTrue(surface.rapid)
+                if surface.delta:self.assertGreaterEqual(surface.river_class,2)
+        self.assertGreater(river_cells,0)
+        self.assertTrue(styles-{'none'})
+
     def test_legacy_v4_terrain_remains_hydrology_free(self):
         gen = WorldGenerator(self.seed, self.registry, version=4)
         before = [gen.terrain_at(WorldPos(x, y, 0)) for x, y in ((0,0),(64,64),(-37,91),(511,-220))]
-        planner = HydrologyGenerator(gen)
+        planner = HydrologyGenerator(gen, version=1)
         planner.prepare_window(-1, 0, -1, 0, persist=False)
         gen.attach_hydrology(planner)
         after = [gen.terrain_at(WorldPos(x, y, 0)) for x, y in ((0,0),(64,64),(-37,91),(511,-220))]
@@ -86,13 +134,19 @@ class RC14HydrologyTests(unittest.TestCase):
 
     def test_prepared_multi_domain_window_has_no_interior_seams(self):
         gen = WorldGenerator(self.seed, self.registry, version=5)
-        planner = HydrologyGenerator(gen)
+        planner = HydrologyGenerator(gen, version=1)
+        domains = planner.prepare_window(-1, 0, -1, 0, persist=False)
+        self.assertEqual(audit_window_seams(domains), [])
+
+    def test_v2_prepared_multi_domain_window_has_no_interior_seams(self):
+        gen = WorldGenerator(self.seed, self.registry, version=8)
+        planner = HydrologyGenerator(gen, version=2)
         domains = planner.prepare_window(-1, 0, -1, 0, persist=False)
         self.assertEqual(audit_window_seams(domains), [])
 
     def test_worldgen_v5_projects_physical_hydrology_and_crossing_cost(self):
         gen = WorldGenerator(b'rc14-golden-00', self.registry, version=5)
-        planner = HydrologyGenerator(gen)
+        planner = HydrologyGenerator(gen, version=1)
         planner.prepare_window(-1, 0, -1, 0, persist=False)
         gen.attach_hydrology(planner)
         seen=set(); costly=False
@@ -167,10 +221,44 @@ class RC14HydrologyTests(unittest.TestCase):
             db.connection.commit(); db.close()
             db2 = WorldDatabase.open(path)
             self.assertEqual(db2.get_meta('worldgen_version'), 3)
+            # Missing metadata belongs to a pre-v2 save and must infer v1,
+            # never the newest hydrology algorithm.
             self.assertEqual(db2.get_meta('hydrology_version'), 1)
             self.assertEqual(db2.get_meta('settlement_plan_version'), 1)
             self.assertEqual(db2.get_meta('routegen_version'), 1)
             db2.close()
+
+    def test_new_save_records_hydrology_v2_but_existing_v1_stays_pinned(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / 'hydro-contract.db'
+            db = WorldDatabase.create(path, 'new-v8', self.seed.hex())
+            self.assertEqual(db.get_meta('hydrology_version'), 2)
+            db.set_meta('hydrology_version',1);db.connection.commit();db.close()
+            reopened = WorldDatabase.open(path)
+            self.assertEqual(reopened.get_meta('hydrology_version'), 1)
+            reopened.close()
+
+    def test_world_auto_hydrology_uses_save_pinned_version(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / 'hydro-world-contract.db'
+            db = WorldDatabase.create(path, 'legacy-v8', self.seed.hex())
+            db.set_meta('hydrology_version',1);db.connection.commit()
+            gen = WorldGenerator(self.seed, self.registry, version=8)
+            world = World(gen, self.registry, db)
+            self.assertIsNotNone(world.generator.hydrology)
+            self.assertEqual(world.generator.hydrology.version, 1)
+            db.close()
+
+    def test_v1_and_v2_generated_hydrology_caches_can_coexist(self):
+        with tempfile.TemporaryDirectory() as td:
+            db = WorldDatabase.create(Path(td) / 'hydro-cache-versions.db', 'test', self.seed.hex())
+            gen = WorldGenerator(self.seed, self.registry, version=8)
+            v1 = HydrologyGenerator(gen, db, version=1).load_or_generate(0,0,persist=True)
+            v2 = HydrologyGenerator(gen, db, version=2).load_or_generate(0,0,persist=True)
+            self.assertIsNotNone(db.load_generated_hydrology_domain(0,0,1))
+            self.assertIsNotNone(db.load_generated_hydrology_domain(0,0,2))
+            self.assertNotEqual(v1.fingerprint,v2.fingerprint)
+            db.close()
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev28"
+ENGINE_VERSION = "1.0.0-rc14-dev29"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -12,9 +12,10 @@ WORLDGEN_VERSION = 8
 # during the staged promotion period.
 WORLDGEN_PREVIEW_VERSION = WORLDGEN_VERSION
 
-# RC14 hydrology/plan/resource contracts remain independently versioned.
-# Hydrology v2 and physical climate arrive in later WORLDGEN v8 phases.
-HYDROLOGY_VERSION = 1
+# RC14 geography subsystems remain independently versioned. Hydrology v2 is
+# the current new-world drainage contract; existing saves remain pinned to the
+# hydrology_version recorded in their metadata.
+HYDROLOGY_VERSION = 2
 ENVIRONMENT_VERSION = 1
 CLIMATE_VERSION = 1
 WEATHER_VERSION = 2

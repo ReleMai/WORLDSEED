@@ -36,6 +36,9 @@ Never create an unrelated decorative village, road, river, building list, or loc
 ### RC14 generation/version boundaries
 
 - `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
+- New saves use `HYDROLOGY_VERSION = 2`. Existing saves must instantiate hydrology from their stored `hydrology_version`; missing metadata is legacy v1. Never let a global version bump silently regenerate an existing river network.
+- Hydrology v2 consumes authoritative v8 precipitation/runoff. Do not create a second rainfall/noise authority inside drainage code.
+- V2 ford/braid/gorge/delta/oxbow signals must derive from physical channel context; deterministic hashing may break ties only after physical suitability gates.
 - New worlds use `WORLDGEN_VERSION = 8`; v8 replaces new-world elevation with the geological landform/topography system and uses v8-specific cave-mouth siting while retaining the existing prepared hydrology/coast projection until later v8 phases. Existing v1-v7 geography remains frozen by each save's recorded `worldgen_version`.
 - V8 climate is physical and authoritative for v8 worlds: climate belts, maritime influence, continentality, prevailing wind, orographic lift and rain shadow feed temperature/precipitation. Do not reintroduce an unrelated moisture/temperature noise sheet for v8.
 - Weather/time presentation is observational. Cloud shadows, wet-ground shading, rain/splash animation, fog and day/night grading may read simulation weather/time but must never mutate weather, clock, discovery, terrain or lighting authority.
