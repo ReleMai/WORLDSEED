@@ -47,6 +47,9 @@ class AtlasTests(unittest.TestCase):
                     key = ChunkKey(-1,-1,0)
                     chunk = world.generator.generate_chunk(key)
                     world.cache.put(key, chunk)
+                    sim.discovered_tiles_set.update(
+                        f'{x},{y},0' for y in range(-32,0) for x in range(-32,0)
+                    )
                     view = read_atlas(sim, (-16,-16),128)
                     for y in range(-32,0):
                         for x in range(-32,0):
@@ -57,6 +60,7 @@ class AtlasTests(unittest.TestCase):
     def test_persisted_dirty_and_saved_delta_precedence(self):
         key = ChunkKey(-1,-1,0)
         self.seed_chunk(key)
+        self.sim.discovered_tiles_set.add('-2,-2,0')
         self.db.connection.execute('INSERT INTO tile_deltas VALUES(-2,-2,0,?)', ('core:sand',))
         self.assertEqual(read_atlas(self.sim,span=128).terrain_at(-2,-2),'core:sand')
         self.world.set_terrain(WorldPos(-2,-2,0),'core:tilled_soil')
@@ -104,6 +108,7 @@ class AtlasTests(unittest.TestCase):
         td, db, world, sim = fixture(7,b'prepared-atlas',True)
         try:
             world.pre_generate(WorldPos(0,0,0),0)
+            sim.discovered_tiles_set.update({'0,0,0','15,15,0','31,31,0'})
             expected = read_atlas(sim,span=128)
             world.cache._chunks.clear()
             with patch.object(world.generator,'generate_chunk',side_effect=AssertionError('no regen')):
@@ -117,6 +122,7 @@ class AtlasTests(unittest.TestCase):
     def test_explored_chunks_survive_lru_eviction_and_reopen(self):
         pos = WorldPos(-10,-10,0)
         expected = self.world.tile_at(pos).terrain_id
+        self.sim.discovered_tiles_set.add(f'{pos.x},{pos.y},0')
         self.db.commit_generated()
         self.world.cache._chunks.clear()
         self.assertEqual(read_atlas(self.sim,span=128).terrain_at(pos.x,pos.y),expected)
@@ -159,12 +165,24 @@ class AtlasRenderTests(unittest.TestCase):
                 term.pg.event.post(term.pg.event.Event(term.pg.KEYDOWN,key=term.pg.K_ESCAPE,unicode='\x1b'))
                 self.assertEqual(term.read_key(),'ESC')
                 self.assertEqual(pixels,term.pg.image.tobytes(term.screen,'RGB'))
-            for token in ('ATLAS:in','ATLAS:out','ATLAS:north','ATLAS:south','ATLAS:home','ATLAS:next','ATLAS:prev'):
+            for token in ('ATLAS:in','ATLAS:out','ATLAS:home','ATLAS:next','ATLAS:prev'):
                 self.assertTrue(atlas_input(term,self.sim,token));term.present_region_map(self.sim)
+            self.assertTrue(any(k=='ATLAS_DRAG_ZONE' for _,k in term._pointer_targets))
             term.pg.event.clear()
-            rect=next(r for r,k in term._pointer_targets if k=='ATLAS:in')
-            term.pg.event.post(term.pg.event.Event(term.pg.MOUSEBUTTONDOWN,button=1,pos=rect.center))
-            self.assertEqual(term.read_key(),'ATLAS:in')
+            rect=term._atlas_rect
+            start=rect.center
+            end=(start[0]+40,start[1]+25)
+            term.pg.event.post(term.pg.event.Event(term.pg.MOUSEBUTTONDOWN,button=1,pos=start))
+            self.assertEqual(term.read_key(),'ATLAS:drag_start')
+            self.assertTrue(atlas_input(term,self.sim,'ATLAS:drag_start'))
+            term.pg.event.post(term.pg.event.Event(term.pg.MOUSEMOTION,pos=end,rel=(40,25),buttons=(1,0,0)))
+            drag=term.read_key();self.assertTrue(drag.startswith('ATLAS:drag:'))
+            old_center=term._atlas_controls.center
+            self.assertTrue(atlas_input(term,self.sim,drag))
+            self.assertNotEqual(old_center,term._atlas_controls.center)
+            term.pg.event.post(term.pg.event.Event(term.pg.MOUSEBUTTONUP,button=1,pos=end))
+            self.assertEqual(term.read_key(),'ATLAS:drag_end')
+            self.assertTrue(atlas_input(term,self.sim,'ATLAS:drag_end'))
             self.assertFalse(atlas_input(term,self.sim,'w'))
             term._last_mouse = term._atlas_rect.center
             self.assertTrue(atlas_input(term,self.sim,'ATLAS_INSPECT'))
