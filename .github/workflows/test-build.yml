@@ -1,5 +1,9 @@
 name: WORLDSEED Dev31 Test Build
 
+concurrency:
+  group: worldseed-test-build-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -13,7 +17,7 @@ on:
       - "RUN_WORLDSEED_TERMINAL.bat"
       - "requirements.txt"
       - "pyproject.toml"
-      - "TEST_BUILD_CHECKLIST_DEV30.md"
+      - "TEST_BUILD_CHECKLIST_DEV31.md"
   workflow_dispatch:
 
 jobs:
@@ -60,6 +64,10 @@ jobs:
         run: |
           python tools/audit_hydrology.py --seed v8-dev30-test-build
           python tools/audit_hydrology_morphology.py --seed v8-dev30-test-build --domain-x 0 --domain-y 0
+
+      - name: Generate Dev31 mountain test locations
+        shell: pwsh
+        run: python tools/find_dev31_test_locations.py --seed dev31-mountain-test --out DEV31_TEST_LOCATIONS.json
 
       - name: Build clean test package
         shell: pwsh
