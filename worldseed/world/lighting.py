@@ -55,18 +55,19 @@ class LightingSystem:
 
         sunrise = 360 - seasonal // 2
         sunset = 1080 + seasonal // 2
-        dawn_start = sunrise - 60
-        dusk_end = sunset + 60
+        dawn_start = sunrise - 90
+        dusk_end = sunset + 90
 
         if tod < dawn_start or tod >= dusk_end:
             phase = "night"
             daylight = 6500
-            tint = (24, 35, 58)
+            tint = (18, 28, 52)
         elif tod < sunrise:
             phase = "dawn"
             t = (tod - dawn_start) * Q // max(1, sunrise - dawn_start)
             daylight = 6500 + t * 46000 // Q
-            tint = (74, 61, 72)
+            # Warm pre-sunrise amber instead of purple-gray.
+            tint = (132, 82, 45)
         elif tod < sunset:
             phase = "day"
             # Midday is brightest; edges of the day stay slightly subdued.
@@ -79,7 +80,8 @@ class LightingSystem:
             phase = "dusk"
             t = (tod - sunset) * Q // max(1, dusk_end - sunset)
             daylight = 52500 - t * 46000 // Q
-            tint = (79, 58, 75)
+            # Lighter orange-gold dusk that cools gradually toward night.
+            tint = (150, 84, 42)
 
         cloud_cover = max(0, min(100, int(cloud_cover)))
         storm_intensity = max(0, min(100, int(storm_intensity)))
