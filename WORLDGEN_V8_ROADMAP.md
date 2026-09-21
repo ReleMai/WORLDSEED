@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **Phase 2 authority integration is active behind explicit preview version 8. Geological elevation, derived topography, and v8-specific cave-mouth siting are now wired; ordinary new worlds remain v7 until promotion gates pass.**
+Status: **WORLDGEN v8 is promoted for newly created worlds as of Dev27. Existing v1-v7 saves remain pinned to their recorded generators. Phase 3 physical climate circulation is next.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -28,9 +28,8 @@ seed + versions
 ## Non-negotiable compatibility rules
 
 - Existing worldgen v1-v7 saves never receive v8 geography during normal load.
-- Do not increment `WORLDGEN_VERSION` until Phase 2 release gates pass.
-- Phase 1 landforms are debug/read-model data only and must not alter live v7
-  `sample_fields()`, hydrology, terrain IDs, spawn selection, resources, or saves.
+- `WORLDGEN_VERSION = 8` applies to newly created worlds only; never rewrite the `worldgen_version` stored in an existing v1-v7 save.
+- v8 landforms/topography are authoritative only for v8 worlds. The explicit `version <= 7` generator path remains the compatibility contract for legacy saves.
 - Every v8 random domain uses stable named namespaces and fixed version inputs.
 - No renderer, hover, movement, or inspection path may generate regional data.
 - Generated base geography may be rebuilt; player/history mutations may not.
@@ -119,14 +118,20 @@ worlds now use these geological/topographic fields instead of the legacy v7
 siting rule, while v7 cave placement and underground generation remain frozen.
 A dedicated topography/cave audit was added for calibration before promotion.
 
+**Dev27 promotion:** `WORLDGEN_VERSION` is now 8. New save databases record v8
+at creation and therefore use geological elevation, v8 topography, v8 cave-mouth
+siting and the existing prepared hydrology/coast projection. Existing saves keep
+their recorded version and are not migrated. The former
+`WORLDGEN_PREVIEW_VERSION` name remains as an alias to 8 for audit tooling.
+
 ### Work
-- Set `WORLDGEN_VERSION = 8` only for new worlds.
-- Freeze the exact v7 field path behind `version <= 7`.
-- Replace v8 elevation with the Phase-1 landform compositor.
+- **DONE Dev27:** set `WORLDGEN_VERSION = 8` for newly created worlds; persisted older versions remain immutable.
+- **DONE:** freeze the exact v7 field path behind `version <= 7`.
+- **DONE:** v8 elevation uses the Phase-1 landform compositor.
 - Calibrate sea-level/reference elevation and continental/ocean proportions.
 - Add broad valley and intermontane-lowland shaping between ranges.
 - Add subregional relief without destroying large forms.
-- Re-run cave-mouth suitability against new slopes.
+- **DONE Dev26:** v8 cave-mouth suitability uses geological topography.
 - Add v8 elevation fingerprint fixtures.
 
 ### Validation

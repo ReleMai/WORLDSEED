@@ -29,7 +29,7 @@ class RC14HydrologyTests(unittest.TestCase):
         self.assertEqual(HYDROLOGY_VERSION, 1)
         self.assertEqual(SETTLEMENT_PLAN_VERSION, 1)
         self.assertEqual(ROUTEGEN_VERSION, 1)
-        self.assertEqual(WORLDGEN_VERSION, 7)
+        self.assertEqual(WORLDGEN_VERSION, 8)
         self.assertTrue(HYDROLOGY_ALGORITHM.startswith('rc14-phase3'))
 
     def test_frozen_rc13_golden_terrain_fingerprints(self):

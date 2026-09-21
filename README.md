@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev16 adds **data-driven terrain meshing, worldgen-v7 caves/geology, discovery-driven crafting, and native graphical retained menus** on top of the existing embodied-world/hydrology foundation. Existing v1-v6 worlds retain their recorded geography. See `RC14_DEV16_HANDOFF.md` for contracts, validation and continuation points.
+> **Development status:** RC14 Dev27 promotes **WORLDGEN v8** for newly created worlds: geological landforms now own new-world elevation, derived topography drives v8 cave-mouth siting, and the existing prepared hydrology/coast pipeline projects onto that terrain. Existing v1-v7 saves retain their recorded geography.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 
@@ -85,7 +85,7 @@ There are no starting objectives or revealed routes. Exploration, observation, s
 
 ## RC10 traversable-world generation
 
-New worlds use **worldgen v4** and **natural-resource generation v3**. Worldgen v4 separates broad climate fields from local relief so moisture and temperature form coherent regions rather than cell-scale noise. Natural-resource generation v3 then places ecology on top of those biomes using biome density budgets and deterministic spacing.
+New worlds use **worldgen v8** and **natural-resource generation v3**. Worldgen v8 replaces new-world elevation with deterministic geological landforms and exposes derived slope/relief/ridge/valley topography; during the current transition it still consumes the established broad v4 moisture/temperature fields until Phase 3 replaces them with physical climate circulation. Natural-resource generation remains separately versioned so ecology fixes do not rewrite terrain.
 
 Important rules:
 

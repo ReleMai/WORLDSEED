@@ -14,8 +14,8 @@ class WorldgenV8Phase2Tests(unittest.TestCase):
         cls.registry = ContentRegistry.load(DATA_DIR)
         cls.seed = b"v8-authority-fixture"
 
-    def test_v8_is_explicit_preview_until_promotion_gate(self):
-        self.assertEqual(WORLDGEN_VERSION, 7)
+    def test_v8_is_promoted_for_new_worlds(self):
+        self.assertEqual(WORLDGEN_VERSION, 8)
         self.assertEqual(WORLDGEN_PREVIEW_VERSION, 8)
 
     def test_v7_field_contract_is_frozen_at_representative_coordinates(self):
@@ -35,15 +35,16 @@ class WorldgenV8Phase2Tests(unittest.TestCase):
                 (x, y),
             )
 
-    def test_explicit_v8_promotes_geological_elevation_only(self):
+    def test_default_v8_promotes_geological_elevation_only(self):
         gen7 = WorldGenerator(self.seed, self.registry, version=7)
-        gen8 = WorldGenerator(self.seed, self.registry, version=WORLDGEN_PREVIEW_VERSION)
+        gen8 = WorldGenerator(self.seed, self.registry)
         changed = 0
         for x, y in ((-4097,-2049),(-1,-1),(0,0),(913,-1441),(4096,2048)):
             pos = WorldPos(x, y, 0)
             legacy = gen7.sample_fields(pos)
             fields = gen8.sample_fields(pos)
             geology = gen8.prototype_landform_at(x, y)
+            self.assertEqual(gen8.version, 8)
             self.assertEqual(fields.elevation, geology.elevation)
             self.assertEqual(fields.moisture, legacy.moisture)
             self.assertEqual(gen8.landform_at(pos), geology)

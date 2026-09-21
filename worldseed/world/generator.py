@@ -51,7 +51,7 @@ class WorldGenerator:
         self.world_seed=world_seed; self.registry=registry; self.version=int(WORLDGEN_VERSION if version is None else version); self.sites=SiteGenerator(world_seed)
         self._lattice_cache={}
         # WORLDGEN v8 geological/topographic read models. They are authoritative
-        # only for explicit v8 worlds; v1-v7 keep their frozen field contracts.
+        # for v8 worlds (the current new-world default); v1-v7 keep frozen fields.
         from worldseed.world.landforms import LandformSampler
         from worldseed.world.topography import TopographySampler
         self.landforms_v8 = LandformSampler(self.world_seed)
@@ -124,8 +124,8 @@ class WorldGenerator:
             moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
             climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
         else:
-            # WORLDGEN v8 Phase 2 authority path. Only elevation is promoted in
-            # this phase; moisture and the broad temperature driver stay on the
+            # WORLDGEN v8 authority path. Geological elevation is active in
+            # Dev27; moisture and the broad temperature driver stay on the
             # frozen v4 climate fields until Phase 3 introduces circulation,
             # maritime influence and rain shadows. Altitude cooling and fertility
             # naturally respond to the new physical elevation.

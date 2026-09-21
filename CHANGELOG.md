@@ -1,3 +1,14 @@
+## RC14 Dev27 — WORLDGEN v8 promoted for new worlds
+
+- Promoted `WORLDGEN_VERSION` from 7 to 8. Newly created save databases now use the geological v8 elevation/topography contract by default.
+- Preserved v1-v7 geography through each save's recorded `worldgen_version`; opening a legacy save does not migrate or regenerate its terrain.
+- Kept `WORLDGEN_PREVIEW_VERSION` as a compatibility alias for the v8 audit tools created during staging.
+- Updated Phase-2 and RC14 hydrology regression contracts for the v8 default while retaining hard-coded v7 field fixtures and frozen RC13/v4 terrain fingerprints.
+- Added a dedicated v8 promotion regression covering new-save metadata, legacy-v7 reopen behavior, and default-v8 versus explicit-v7 generator selection.
+- Added a real-stack v8 startup audit covering spawn selection, prepared hydrology relocation, dryness/passability, local connectivity and landform context.
+- Updated README, SYSTEMS and AGENTS contracts so future development treats v8 as current for new worlds and v1-v7 as immutable legacy geography.
+- Phase 3 physical climate circulation is now the next world-generation development target.
+
 ## RC14 Dev26 — WORLDGEN v8 topography and cave siting
 
 - Added a deterministic v8 topography read model exposing slope vectors, normalized slope, raw/normalized relief, ridge exposure, valley depth and ruggedness from authoritative geological elevation.
