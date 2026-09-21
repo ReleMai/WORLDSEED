@@ -2,6 +2,8 @@
 
 Build target: **WORLDGEN v8 / Hydrology v2 / Hydrology Morphology v2**
 
+Build source commit: **67b2d3d0c7c5279f9a59c959f2cfb0916c5cd864**
+
 This checklist is the manual acceptance gate before WORLDSEED moves deeper into
 Phase 4 and then Phase 5. Test on a **new world first** so the build uses the
 current v8/v2/v2 generation contracts.
