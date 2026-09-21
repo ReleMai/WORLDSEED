@@ -684,3 +684,15 @@ Graphics are downstream of simulation. `worldseed/presentation/visuals.py` resol
 ## Seeded world preparation (RC13)
 
 New worlds pre-generate and persist a bounded opening envelope before the simulation begins. The database stores deterministic base terrain chunks keyed by generator version and deterministic natural-resource chunks keyed by resource-generator version plus season. Runtime tile deltas, depletion, crops, structures and other authored state remain separate overlays. If a prepared terrain ID no longer resolves because content changed, the engine safely falls back to deterministic regeneration.
+
+## Dev31 exploration presentation/performance contract
+
+Ordinary movement advances **1 game minute**. Other actions retain authored durations; simulation time remains command-owned rather than tied to render frames.
+
+Surface visibility has two layers: persistent **discovery memory** and transient **current visibility**. Current visibility is a circular, line-of-sight-limited radius derived from Perception, Survival, talents, weather visibility/fog, and ambient light. Previously discovered but currently unseen terrain may be shown dimly, but entities/resources must not be rendered outside current visibility.
+
+The terrain atlas reads only actually discovered cells. Discovery of one cell never promotes a whole 512-cell region. Atlas reads use the same versioned surface-cache contract as local terrain, remain generation-free, and use a runtime per-chunk discovery index so panning cost is bounded by the requested view. Atlas LOD is categorical rather than raw RGB averaging so thin rivers do not acquire thick floodplain/riverbank halos.
+
+Cloud shadows are presentation-only world-space fields. Their absolute positions derive from seed/world coordinates and their drift from weather wind plus visual elapsed time, so moving the camera cannot drag clouds with the player. Visual elapsed time never advances simulation weather or the game clock.
+
+Local pygame entity lookup is spatially bucketed; a frame must not scan every realized NPC/creature/structure in the explored world. Routine autosaves persist authoritative state without making a full rotating SQLite backup; explicit manual/menu/quit saves retain rotating backups.
