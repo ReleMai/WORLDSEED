@@ -43,24 +43,28 @@ class AtlasSnapshot:
 def _discovered_cells_in_view(sim, view: AtlasSnapshot):
     """Group only actually discovered surface cells by chunk.
 
-    The older atlas promoted one discovered tile into an entire 512x512 region.
-    That both exposed large square blocks and caused increasingly expensive
-    database scans as exploration grew. Keep discovery cell-exact instead.
+    Simulation keeps a runtime per-chunk discovery index, so atlas panning cost
+    grows with chunks in the requested view rather than with the entire lifetime
+    exploration history.
     """
-    grouped = {}
-    for token in sim.discovered_tiles_set:
-        try:
-            x, y, z = map(int, token.split(','))
-        except (ValueError, TypeError, AttributeError):
-            continue
-        if z != 0 or not view.contains(x, y):
-            continue
-        key, lx, ly = split_world(WorldPos(x, y, 0))
-        grouped.setdefault(key, set()).add(ly*CHUNK_SIZE+lx)
+    grouped={}
+    indexed=getattr(sim,'discovered_surface_cells_by_chunk',None)
+    if indexed is not None:
+        min_cx,max_cx=view.left//CHUNK_SIZE,(view.left+view.span-1)//CHUNK_SIZE
+        min_cy,max_cy=view.top//CHUNK_SIZE,(view.top+view.span-1)//CHUNK_SIZE
+        for (cx,cy),indices in indexed.items():
+            if min_cx<=cx<=max_cx and min_cy<=cy<=max_cy:
+                grouped[ChunkKey(cx,cy,0)]=set(indices)
+    else:
+        for token in sim.discovered_tiles_set:
+            try:x,y,z=map(int,token.split(','))
+            except (ValueError,TypeError,AttributeError):continue
+            if z!=0 or not view.contains(x,y):continue
+            key,lx,ly=split_world(WorldPos(x,y,0))
+            grouped.setdefault(key,set()).add(ly*CHUNK_SIZE+lx)
     p=sim.player_pos
     if p.z==0 and view.contains(p.x,p.y):
-        key,lx,ly=split_world(p)
-        grouped.setdefault(key,set()).add(ly*CHUNK_SIZE+lx)
+        key,lx,ly=split_world(p);grouped.setdefault(key,set()).add(ly*CHUNK_SIZE+lx)
     return grouped
 
 
