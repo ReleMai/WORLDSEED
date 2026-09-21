@@ -338,9 +338,13 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
         else:sim._message('You return to the same persistent world.')
     emit('World ready',1.0,f'Spawn {pos.x}, {pos.y}  •  prepared exploration area loaded')
     sim.state.last_offline_wall_time=time.time();return GameContext(db,reg,world,entities,sim,player)
-def _save(ctx:GameContext)->None:
+def _save(ctx:GameContext, *, backup:bool=True)->None:
     p=ctx.entities.get(ctx.player_id,Position).value;inv=ctx.entities.get(ctx.player_id,Inventory);v=ctx.entities.get(ctx.player_id,Vitals);ctx.sim.state.last_offline_wall_time=time.time()
-    if ctx.db.path.exists() and ctx.db.path.stat().st_size>0:
+    # Rotating full-database backups are intentionally reserved for explicit
+    # save/menu/quit checkpoints. Copying an ever-growing generated-world DB on
+    # every routine autosave caused increasingly long apparent freezes during
+    # exploration. Autosave still commits all authoritative state atomically.
+    if backup and ctx.db.path.exists() and ctx.db.path.stat().st_size>0:
         ctx.db.backup(3)
     ctx.db.set_meta('last_saved_at',time.time());ctx.db.set_meta('player_name',ctx.sim.state.player_name);ctx.db.set_meta('player_origin',ctx.sim.state.player_origin);ctx.db.set_meta('player_sex',ctx.sim.state.player_sex);ctx.db.set_meta('player_sprite_index',int(ctx.sim.state.player_sprite_index))
     ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=ctx.world.drain_dirty_tiles(),player_id=ctx.player_id,position=p,inventory=inv.items,vitals=asdict(v),sim_state=ctx.sim.state.to_dict())
@@ -1407,7 +1411,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             continue
         last=ctx.sim.log[-1].message if ctx.sim.log else ''
         if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
-            _save(ctx);autosave=ctx.sim.turn;last='Autosaved.'
+            _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
 def _make_display_backend():
     force_terminal='--terminal' in sys.argv
     force_window='--window' in sys.argv
