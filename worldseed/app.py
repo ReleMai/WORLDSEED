@@ -474,7 +474,8 @@ def _cooking_menu(ctx:GameContext,term:Terminal)->str:
         if m.station not in stations:note.append(station)
         if m.cookware and inv.count(m.cookware)<=0:note.append(reg.items[m.cookware].name)
         if m.requires_water and not water:note.append('water')
-        methods.append((m.id,f'[{'READY' if ready else 'NEEDS'}] {m.name} — {m.min_ingredients}-{m.max_ingredients} ingredients — {m.minutes}m'+(f' — needs {", ".join(note)}' if note else '')))
+        status='READY' if ready else 'NEEDS'
+        methods.append((m.id,f'[{status}] {m.name} — {m.min_ingredients}-{m.max_ingredients} ingredients — {m.minutes}m'+(f' — needs {", ".join(note)}' if note else '')))
     mid=_select(term,'COOKING METHOD',methods)
     if not mid:return UI_BACK
     method=reg.cooking_methods[mid];selected=[]
