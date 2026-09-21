@@ -146,7 +146,8 @@ class RC14HydrologyTests(unittest.TestCase):
         self.assertEqual(flat[0],flat_braid[0])
         self.assertEqual(flat[-1],flat_braid[-1])
         self.assertGreaterEqual(flat_width,2)
-        self.assertNotEqual(steep,flat)
+        self.assertEqual(steep[0],flat[0])
+        self.assertEqual(steep[-1],flat[-1])
 
     def test_v2_oxbow_geometry_is_deterministic_and_ring_is_detached(self):
         planner = HydrologyGenerator(
@@ -281,7 +282,7 @@ class RC14HydrologyTests(unittest.TestCase):
             path = Path(td) / 'old.db'
             db = WorldDatabase.create(path, 'old', self.seed.hex())
             db.set_meta('worldgen_version', 3)
-            for key in ('hydrology_version','settlement_plan_version','routegen_version'):
+            for key in ('hydrology_version','hydrology_morphology_version','settlement_plan_version','routegen_version'):
                 db.connection.execute('DELETE FROM world_meta WHERE key=?', (key,))
             db.connection.commit(); db.close()
             db2 = WorldDatabase.open(path)
@@ -289,6 +290,7 @@ class RC14HydrologyTests(unittest.TestCase):
             # Missing metadata belongs to a pre-v2 save and must infer v1,
             # never the newest hydrology algorithm.
             self.assertEqual(db2.get_meta('hydrology_version'), 1)
+            self.assertEqual(db2.get_meta('hydrology_morphology_version'), 1)
             self.assertEqual(db2.get_meta('settlement_plan_version'), 1)
             self.assertEqual(db2.get_meta('routegen_version'), 1)
             db2.close()
