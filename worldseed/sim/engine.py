@@ -59,6 +59,7 @@ class Simulation:
         # Runtime discovery index. Persisted state remains an ordered list for
         # stable saves, but membership checks and per-step updates use a set.
         self._discovered_tile_set=set(self.state.discovered_tiles)
+        self._visible_tile_set=set()
         self._discovered_surface_chunks=set()
         self._discovered_surface_cells_by_chunk={}
         for token in self._discovered_tile_set:
@@ -124,6 +125,10 @@ class Simulation:
     @property
     def discovered_tiles_set(self)->set[str]:
         return self._discovered_tile_set
+
+    @property
+    def visible_tiles_set(self)->set[str]:
+        return self._visible_tile_set
 
     @property
     def discovered_surface_chunks(self)->set[tuple[int,int]]:
@@ -517,16 +522,18 @@ class Simulation:
         # Conditions shrink/grow the circle before line-of-sight obstruction.
         radius=self.visibility_radius(pos)
         radius2=radius*radius
-        newly=set(); opaque_cache={}
+        newly=set();visible=set();opaque_cache={}
         for y in range(pos.y-radius,pos.y+radius+1):
             dy=y-pos.y
             for x in range(pos.x-radius,pos.x+radius+1):
                 dx=x-pos.x
                 if dx*dx+dy*dy>radius2:continue
-                key=pos_key(x,y,pos.z)
-                if key in self._discovered_tile_set:continue
-                target=WorldPos(x,y,pos.z)
-                if self._visible_from(pos,target,opaque_cache):newly.add(key)
+                key=pos_key(x,y,pos.z);target=WorldPos(x,y,pos.z)
+                if self._visible_from(pos,target,opaque_cache):
+                    visible.add(key)
+                    if key not in self._discovered_tile_set:newly.add(key)
+        visible.add(pos_key(pos.x,pos.y,pos.z))
+        self._visible_tile_set=visible
         self._record_discovered_tiles(newly)
         settlements=set(self.state.discovered_settlements);factions=set(self.state.discovered_factions)
         npcs=set(self.state.discovered_npcs);sites=set(self.state.discovered_sites);species=set(self.state.discovered_species)
