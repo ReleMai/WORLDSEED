@@ -1,9 +1,12 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev24"
+ENGINE_VERSION = "1.0.0-rc14-dev25"
 SAVE_SCHEMA_VERSION = 3
 WORLDGEN_VERSION = 7
+# Dev25 Phase-2 staging: explicit WorldGenerator(version=8) uses geological
+# elevation, while ordinary new games remain v7 until compatibility gates pass.
+WORLDGEN_PREVIEW_VERSION = 8
 # RC14 Dev16: v7 keeps v6 hydrology/coasts and adds terrain-aware cave
 # entrances plus stratified cave/ore generation. Existing v1-v6 worlds retain
 # their recorded geography. Loading never silently upgrades terrain.

@@ -81,23 +81,45 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
     def open_cell(q:WorldPos)->bool:
         return world.is_passable(q) and (resources is None or not resources.blocks_movement(q))
 
-    # Sparse direct-generator sampling. 24-cell spacing means every point in the
-    # search square is within roughly 12 cells of a sampled center, while avoiding
-    # the catastrophic sparse chunk materialization RC9 incurred.
     coarse=[]
-    step=24;limit=576
-    for y in range(-limit,limit+1,step):
-        for x in range(-limit,limit+1,step):
-            tid=terrain_id(x,y)
-            if tid in preferred:
-                # Empty-hands progression needs eventual timber. Strongly favor
-                # climate/terrain combinations that can naturally support trees.
-                tree_penalty=0 if tree_climate_possible(x,y,tid) else 240
-                biome_bonus=0 if tid in {'core:grass','core:forest'} else 8
-                coarse.append((max(abs(x),abs(y))+biome_bonus+tree_penalty,abs(x)+abs(y),x,y))
+    if world.generator.version>=8:
+        # v8 continents and structural basins operate on multi-thousand-cell
+        # scales, so the old 576-cell terrain probe can legitimately sit inside
+        # a large ocean. Search broad fields first without realizing chunks.
+        def v8_coarse(limit:int,step:int):
+            rows=[]
+            for y in range(-limit,limit+1,step):
+                for x in range(-limit,limit+1,step):
+                    f=world.generator.sample_fields(WorldPos(x,y,0))
+                    if not (26500<=f.elevation<=51500):
+                        continue
+                    climate_penalty=0
+                    if f.moisture<22000:climate_penalty+=220
+                    if not (17000<=f.temperature<=56500):climate_penalty+=220
+                    relief_penalty=abs(f.elevation-35000)//180
+                    rows.append((max(abs(x),abs(y))+climate_penalty+relief_penalty,abs(x)+abs(y),x,y))
+            return rows
+        coarse=v8_coarse(6144,192)
+        if not coarse:
+            coarse=v8_coarse(12288,384)
+        # Refine only around promising broad-field samples. This avoids invoking
+        # cave-site planning or chunk realization across the full search square.
+        offsets=sorted(
+            (abs(dx)+abs(dy),dx,dy)
+            for dy in range(-96,97,8) for dx in range(-96,97,8)
+        )
+    else:
+        # Frozen v4-v7 startup search.
+        step=24;limit=576
+        for y in range(-limit,limit+1,step):
+            for x in range(-limit,limit+1,step):
+                tid=terrain_id(x,y)
+                if tid in preferred:
+                    tree_penalty=0 if tree_climate_possible(x,y,tid) else 240
+                    biome_bonus=0 if tid in {'core:grass','core:forest'} else 8
+                    coarse.append((max(abs(x),abs(y))+biome_bonus+tree_penalty,abs(x)+abs(y),x,y))
+        offsets=sorted(((abs(dx)+abs(dy),dx,dy) for dy in range(-12,13) for dx in range(-12,13)))
     if not coarse:return WorldPos(0,0,0)
-
-    offsets=sorted(((abs(dx)+abs(dy),dx,dy) for dy in range(-12,13) for dx in range(-12,13)))
 
     def refine(cx:int,cy:int)->WorldPos|None:
         fallback=None

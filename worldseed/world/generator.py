@@ -106,12 +106,20 @@ class WorldGenerator:
             elevation=self._fractal("elevation",pos.x,pos.y)
             moisture=self._fractal("moisture",pos.x+14037,pos.y-8811)
             climate=self._fractal("temperature",pos.x-41003,pos.y+9237)
-        else:
-            # Elevation keeps more local relief than climate, while moisture and
-            # temperature form regions hundreds of cells across.  The offsets
-            # isolate namespaces so matching coast/climate edges are accidental,
-            # not artifacts of shared lattice coordinates.
+        elif self.version <= 7:
+            # Frozen v4-v7 field contract. Hydrology, oceans and caves were added
+            # in later versions without re-rolling these continental/climate
+            # fields, so legacy saves keep their exact established geography.
             elevation=self._regional_field("elevation4",pos.x,pos.y,384,128,40,(6,3,1))
+            moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
+            climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
+        else:
+            # WORLDGEN v8 Phase 2 authority path. Only elevation is promoted in
+            # this phase; moisture and the broad temperature driver stay on the
+            # frozen v4 climate fields until Phase 3 introduces circulation,
+            # maritime influence and rain shadows. Altitude cooling and fertility
+            # naturally respond to the new physical elevation.
+            elevation=self.landforms_v8.sample(pos.x,pos.y).elevation
             moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
             climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
         seasonal_base=max(0,min(Q,climate-max(0,elevation-42000)//2))
@@ -119,8 +127,14 @@ class WorldGenerator:
         return WorldFields(elevation,moisture,seasonal_base,fertility)
 
     def prototype_landform_at(self, x:int, y:int):
-        """Read the non-authoritative WORLDGEN v8 Phase-1 geology prototype."""
+        """Read WORLDGEN v8 geology without requiring a v8 authoritative world."""
         return self.landforms_v8.sample(int(x), int(y))
+
+    def landform_at(self,pos:WorldPos):
+        """Return authoritative v8 landform context, or None for legacy worlds."""
+        if self.version < 8 or pos.z != 0:
+            return None
+        return self.landforms_v8.sample(pos.x,pos.y)
 
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.

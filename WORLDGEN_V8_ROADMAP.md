@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **Phase 0 comparison tooling is in progress; Phase 1 geological prototype is on iteration 2. v1-v7 geography remains authoritative and frozen.**
+Status: **Phase 1 structural prototype is complete enough for authority integration. Phase 2 is active behind explicit preview version 8; ordinary new worlds remain v7 until promotion gates pass.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -103,6 +103,14 @@ landforms while keeping the prototype non-authoritative.
 
 ### Goal
 Promote approved geological landforms into the authoritative elevation field.
+
+**Dev25 progress:** the authority boundary is implemented for explicit
+`WorldGenerator(version=8)` contexts. v8 now uses the geological elevation
+compositor while retaining the frozen v4 moisture/temperature driver until
+Phase 3. The default `WORLDGEN_VERSION` remains 7, with
+`WORLDGEN_PREVIEW_VERSION = 8`, so this code can be exercised by audits/tests
+without silently changing newly created player worlds. A v8-aware large-scale
+spawn search and multi-seed calibration tool were added before promotion.
 
 ### Work
 - Set `WORLDGEN_VERSION = 8` only for new worlds.

@@ -1,3 +1,12 @@
+## RC14 Dev25 — WORLDGEN v8 Phase-2 authority staging
+
+- Implemented the v8 elevation authority boundary for explicit preview worlds while keeping ordinary new worlds on frozen worldgen v7.
+- Added `WORLDGEN_PREVIEW_VERSION = 8`; v8 sample fields now take elevation from the geological landform compositor while retaining v4 moisture/temperature drivers until the climate-circulation phase.
+- Added an authoritative v8 `landform_at()` read model and hard-coded v7 field fixtures to guard the legacy generation contract.
+- Added a multi-thousand-cell v8 spawn search so large v8 oceans/continents cannot strand startup inside the old 576-cell search envelope; v4-v7 spawn behavior is unchanged.
+- Added an eight-seed Phase-2 calibration tool reporting ocean coverage, start-like land availability, elevation deltas, gradients, province distribution and deterministic fingerprints.
+- WORLDGEN_VERSION remains 7 until executable integration, golden-seed and spawn-fairness gates pass.
+
 ## RC14 Dev24 — WORLDGEN v8 geological systems iteration 2
 
 - Reworked the v8 prototype around slowly varying tectonic stress: long major mountain belts now share regional orientation, smaller branch ranges inherit that stress, and major belts use deterministic bends instead of perfectly straight segments.
