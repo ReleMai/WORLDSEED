@@ -24,22 +24,46 @@ class WorldgenV8LandformPrototypeTests(unittest.TestCase):
             self.assertEqual(row.algorithm, LANDFORM_ALGORITHM)
             for value in (
                 row.continentalness, row.tectonic_uplift, row.mountain_chain,
-                row.basin, row.plateau, row.roughness, row.elevation,
+                row.structural_valley, row.basin, row.plateau,
+                row.roughness, row.elevation,
             ):
                 self.assertGreaterEqual(value, 0)
                 self.assertLessEqual(value, Q)
 
-    def test_prototype_contains_multiple_large_scale_landform_types(self):
+    def test_prototype_contains_large_scale_landform_diversity(self):
         sampler = LandformSampler(b"v8-province-diversity")
-        provinces = {
-            sampler.sample(x, y).province
-            for y in range(-6144, 6145, 256)
-            for x in range(-6144, 6145, 256)
+        samples = {
+            (x, y): sampler.sample(x, y)
+            for y in range(-12288, 12289, 256)
+            for x in range(-12288, 12289, 256)
         }
-        self.assertIn("oceanic_plain", provinces)
-        self.assertIn("lowland", provinces)
-        self.assertTrue({"upland", "mountain_chain"} & provinces)
-        self.assertTrue({"basin", "plateau"} & provinces)
+        provinces = {row.province for row in samples.values()}
+        self.assertTrue({
+            "oceanic_plain", "lowland", "upland", "mountain_chain",
+            "basin", "plateau",
+        }.issubset(provinces))
+        ocean_fraction = sum(row.ocean for row in samples.values()) / len(samples)
+        self.assertGreaterEqual(ocean_fraction, 0.08)
+        self.assertLessEqual(ocean_fraction, 0.65)
+
+    def test_major_mountain_strength_forms_connected_belts(self):
+        sampler = LandformSampler(b"v8-range-coherence")
+        step = 128
+        values = {
+            (x, y): sampler.sample(x, y).mountain_chain
+            for y in range(-8192, 8193, step)
+            for x in range(-8192, 8193, step)
+        }
+        high = [point for point, value in values.items() if value >= 32000]
+        connected = 0
+        for x, y in high:
+            if any(
+                values.get((x + dx, y + dy), 0) >= 32000
+                for dx, dy in ((step, 0), (-step, 0), (0, step), (0, -step))
+            ):
+                connected += 1
+        self.assertGreater(len(high), 20)
+        self.assertGreaterEqual(connected * 100, len(high) * 85)
 
     def test_world_generator_exposes_prototype_without_changing_v7_fields(self):
         registry = ContentRegistry.load(DATA_DIR)

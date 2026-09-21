@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev23"
+ENGINE_VERSION = "1.0.0-rc14-dev24"
 SAVE_SCHEMA_VERSION = 3
 WORLDGEN_VERSION = 7
 # RC14 Dev16: v7 keeps v6 hydrology/coasts and adds terrain-aware cave

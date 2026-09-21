@@ -1,3 +1,12 @@
+## RC14 Dev24 — WORLDGEN v8 geological systems iteration 2
+
+- Reworked the v8 prototype around slowly varying tectonic stress: long major mountain belts now share regional orientation, smaller branch ranges inherit that stress, and major belts use deterministic bends instead of perfectly straight segments.
+- Added structural/rift-valley corridors and incorporated them into prototype elevation/province classification for future drainage and settlement corridors.
+- Restricted shoreline roughening to the continental threshold and attenuated uplift over deep-ocean continentalness so mountain generation does not routinely create artificial ruler-like ocean bars.
+- Expanded the landform audit with separate province, elevation, mountain-strength and valley-strength PPMs plus gradient and coastline-edge metrics.
+- Added a direct v7-versus-v8 elevation comparison tool for Phase-0 golden-seed analysis.
+- WORLDGEN_VERSION remains 7; the v8 work is still observational and cannot alter current saves, terrain, hydrology, resources or spawn behavior.
+
 ## RC14 Dev23 — WORLDGEN v8 geological prototype
 
 - Added the detailed WORLDGEN v8 Geological Living World roadmap with 16 staged phases from baseline freeze through release hardening.

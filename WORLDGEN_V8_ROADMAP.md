@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **Phase 1 started; v1-v7 geography remains authoritative and frozen.**
+Status: **Phase 0 comparison tooling is in progress; Phase 1 geological prototype is on iteration 2. v1-v7 geography remains authoritative and frozen.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -75,7 +75,7 @@ landforms while keeping the prototype non-authoritative.
 - Generate inland basins and broad plateaus.
 - Add fine roughness only after large-scale structure exists.
 - Classify sampled points into prototype provinces:
-  oceanic plain, lowland, basin, upland, plateau, mountain chain.
+  oceanic plain, lowland, basin, rift valley, upland, plateau, mountain chain.
 - Keep all math integer-based where it enters the generation contract.
 - Add a bounded debug sampler cache.
 - Add a standard-library audit exporter for field CSV + PPM preview.
