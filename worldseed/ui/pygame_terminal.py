@@ -1082,16 +1082,25 @@ class PygameTerminal(PointerUI):
     def _animate_idle_effects(self, now):
         ctx=getattr(self,'_weather_animation_context',None)
         static=getattr(self,'_weather_static_snapshot',None)
-        active=bool(ctx and static is not None and self._hover_context and (int(ctx.get('rain',0))>0 or int(ctx.get('cloud_cover',0))>=12))
+        # Include the previous sample so a completed fade paints its final frame.
+        transitioning = (self._weather_fx.lighting_transition_active(now) or
+                         self._weather_fx.lighting_transition_active(
+                             getattr(self, '_weather_last_frame_ms', now)))
+        active = bool(ctx and static is not None and self._hover_context and
+                      (int(ctx.get('rain', 0)) > 0 or
+                       int(ctx.get('cloud_cover', 0)) >= 12 or transitioning))
         if active:
-            phase=(int(now)//110)%16
-            cloud_phase=int(now)//180
-            stamp=(phase,cloud_phase)
-            if stamp==getattr(self,'_weather_animation_phase',None):return
-            self._weather_animation_phase=stamp
+            phase = int(now) // 33
+            if phase == getattr(self, '_weather_animation_phase', None):
+                return
+            self._weather_animation_phase = phase
+            self._weather_last_frame_ms = now
             self._restore_hover_damage()
             used=self._hover_context['used']
             self.screen.blit(static,used.topleft)
+            self._weather_fx.draw_lighting(self.screen,used,ctx['lighting'],elapsed_ms=now)
+            self._weather_fx.draw_fire_glows(self.screen,used,ctx['fire_rects'],ctx['lighting'])
+            self._weather_fx.draw_fog(self.screen,used,ctx)
             self._weather_fx.draw_cloud_shadows(
                 self.screen,used,ctx['seed'],ctx,world_left=int(ctx.get('left',0)),
                 world_top=int(ctx.get('top',0)),tile_px=int(ctx.get('tile_px',28)),elapsed_ms=int(now),
@@ -1101,6 +1110,7 @@ class PygameTerminal(PointerUI):
                 int(ctx.get('wind_dx',0)),int(ctx.get('wind_dy',0)),bool(ctx.get('night',False)),
             )
             if rain is not None:self.screen.blit(rain,used.topleft)
+            self.pg.draw.rect(self.screen,(78,91,91),used,1)
             self._hover_map_snapshot=self.screen.subsurface(used).copy()
             self._hover_rect=None;self._hover_tile_rect=None
             self._refresh_hover_only(force=True,update_display=False)
@@ -1811,7 +1821,11 @@ class PygameTerminal(PointerUI):
         # local world viewport. UI chrome remains fully readable at night.
         used=pg.Rect(map_rect.x,map_rect.y,cols*tile_px,rows*tile_px)
         if pos.z==0 and lighting is not None:
-            self._weather_fx.draw_lighting(screen,used,lighting)
+            now_ms=pg.time.get_ticks()
+            previous=getattr(self,'_weather_animation_context',None)
+            self._weather_fx.set_lighting(lighting,now_ms,reset=not previous or previous.get('seed')!=sim.seed or previous.get('lighting') is None)
+            self._weather_static_snapshot=screen.subsurface(used).copy()
+            self._weather_fx.draw_lighting(screen,used,lighting,elapsed_ms=now_ms)
             fire_rects=[]
             for (fx,fy,fz),fire in fire_by.items():
                 if fz!=pos.z:continue
@@ -1820,18 +1834,14 @@ class PygameTerminal(PointerUI):
                 ),int(getattr(fire,'intensity',60))))
             self._weather_fx.draw_fire_glows(screen,used,fire_rects,lighting)
             self._weather_fx.draw_fog(screen,used,weather)
-            # Snapshot the fully lit world before moving cloud/rain overlays.
-            # Idle presentation can restore this image and animate weather
-            # without regenerating terrain or moving simulation time.
-            self._weather_static_snapshot=screen.subsurface(used).copy()
-            now_ms=pg.time.get_ticks()
+            # Idle effects restore the ungraded snapshot and read frozen samples.
             self._weather_fx.draw_cloud_shadows(
                 screen,used,sim.seed,weather,world_left=left,world_top=top,
                 tile_px=tile_px,elapsed_ms=now_ms,
             )
             if int(weather.get('rain',0))>0:
                 rain=self._weather_fx.rain_surface(
-                    used.width,used.height,sim.seed,(now_ms//110)%16,
+                    used.width,used.height,sim.seed,now_ms//33,
                     int(weather.get('rain',0)),int(weather.get('wind_dx',0)),
                     int(weather.get('wind_dy',0)),bool(lighting.phase=='night'),
                 )
@@ -1905,6 +1915,9 @@ class PygameTerminal(PointerUI):
             self._water_animation_cells.append((wr,base.subsurface(local).copy(),display,dx,dy,speed))
         self._water_animation_phase=water_phase
         self._weather_animation_context={
+            'lighting':lighting if pos.z==0 else None,
+            'fire_rects':fire_rects if pos.z==0 and lighting is not None else [],
+            'fog':int(weather.get('fog',0)) if pos.z==0 else 0,
             'seed':sim.seed,'rain':int(weather.get('rain',0)) if pos.z==0 else 0,
             'wind_dx':int(weather.get('wind_dx',0)) if pos.z==0 else 0,
             'wind_dy':int(weather.get('wind_dy',0)) if pos.z==0 else 0,
@@ -1913,7 +1926,7 @@ class PygameTerminal(PointerUI):
             'night':bool(lighting is not None and lighting.phase=='night'),
             'left':left,'top':top,'tile_px':tile_px,
         }
-        self._weather_animation_phase=(pg.time.get_ticks()//110)%16
+        self._weather_animation_phase=None
         self._hover_map_snapshot=screen.subsurface(used).copy()
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
         self._refresh_hover_only(force=True,update_display=False)
