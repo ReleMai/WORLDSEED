@@ -8,6 +8,7 @@ from typing import Any
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.presentation.visuals import VisualRegistry
+from worldseed.presentation.weather_fx import WeatherFxRenderer
 from worldseed.presentation.local_terrain import (
     CONTEXTUAL_WATER_DISPLAY_IDS, DIRECTIONS_8, contextual_display_id,
     configure_terrain_catalog, edge_overlay_signature, is_blendable_land,
@@ -40,6 +41,10 @@ class PygameTerminal(PointerUI):
             raise RuntimeError("pygame-ce is not installed. Install with: pip install pygame-ce")
         import pygame
         self.pg = pygame
+        self._weather_fx = WeatherFxRenderer(pygame)
+        self._weather_animation_context = None
+        self._weather_animation_phase = None
+        self._weather_static_snapshot = None
         self.width = width
         self.height = height
         self.screen = None
@@ -201,7 +206,7 @@ class PygameTerminal(PointerUI):
 
         while True:
             now = pg.time.get_ticks()
-            self._animate_idle_water(now)
+            self._animate_idle_effects(now)
             wait_ms = 50
             if self._active_movement_key is not None:
                 wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
@@ -1051,6 +1056,38 @@ class PygameTerminal(PointerUI):
         self._refresh_hover_only(force=True,update_display=False)
         self.pg.display.update(dirty+([self._hover_rect] if self._hover_rect else []))
 
+    def _animate_idle_effects(self, now):
+        ctx=getattr(self,'_weather_animation_context',None)
+        static=getattr(self,'_weather_static_snapshot',None)
+        if ctx and static is not None and int(ctx.get('rain',0))>0 and self._hover_context:
+            phase=(int(now)//110)%16
+            if phase==getattr(self,'_weather_animation_phase',None):return
+            self._weather_animation_phase=phase
+            self._restore_hover_damage()
+            used=self._hover_context['used']
+            self.screen.blit(static,used.topleft)
+            rain=self._weather_fx.rain_surface(
+                used.width,used.height,ctx['seed'],phase,int(ctx.get('rain',0)),
+                int(ctx.get('wind_dx',0)),int(ctx.get('wind_dy',0)),
+                bool(ctx.get('night',False)),
+            )
+            if rain is not None:self.screen.blit(rain,used.topleft)
+            self._hover_map_snapshot=self.screen.subsurface(used).copy()
+            self._hover_rect=None;self._hover_tile_rect=None
+            self._refresh_hover_only(force=True,update_display=False)
+            self.pg.display.update([used]+([self._hover_rect] if self._hover_rect else []))
+            return
+        # Static wet/cloud/night grading is already baked into the clean map.
+        # Avoid the legacy water-only redraw path while those effects are active,
+        # because it would brighten isolated water cells through the grading.
+        if ctx and (
+            bool(ctx.get('night',False))
+            or int(ctx.get('cloud_cover',0))>=12
+            or int(ctx.get('wetness',0))>=8
+        ):
+            return
+        self._animate_idle_water(now)
+
     def _fluid_overlay(self,tile_px:int):
         key=("water",tile_px);overlay=self._overlay_cache.get(key)
         if overlay is None:
@@ -1586,6 +1623,11 @@ class PygameTerminal(PointerUI):
         pile_by={(p.x,p.y,p.z):p for p in sim.state.ground_piles.values() if p.items and _onscreen(p.x,p.y,p.z)}
         carcass_by={(c.x,c.y,c.z):c for c in sim.state.carcasses.values() if _onscreen(c.x,c.y,c.z)}
         resource_by=self._resource_view(sim,known,pos.z,left,top,cols,rows)
+        if pos.z==0:
+            weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
+        else:
+            weather={'kind':'underground','cloud_cover':0,'rain':0,'wetness':0,'fog':0,'wind_dx':0,'wind_dy':0,'storm_intensity':0}
+            lighting=None
         known_npcs=sim.known_npc_ids()
         neighbor_cache={}
         display_cache={}
@@ -1630,6 +1672,7 @@ class PygameTerminal(PointerUI):
         screen.blit(terrain_base, map_rect.topleft)
         water_phase=(pg.time.get_ticks()//160)%8
         water_cells=[]
+        weather_cells=[]
         for sy in range(rows):
             wy=top+sy
             for sx in range(cols):
@@ -1637,14 +1680,19 @@ class PygameTerminal(PointerUI):
                 if pos_key(wx,wy,pos.z) not in known:continue
                 tile=world.tile_at(WorldPos(wx,wy,pos.z))
                 display_id=display_id_for(wx,wy,tile.terrain_id)
-                if display_id not in CONTEXTUAL_WATER_DISPLAY_IDS:continue
                 rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
+                if display_id not in CONTEXTUAL_WATER_DISPLAY_IDS:
+                    weather_cells.append((rect.copy(),tile.terrain_id))
+                    continue
                 current=current_for(wx,wy)
                 flow_dx=int(getattr(current,'dx',0) or 0) if current is not None else 0
                 flow_dy=int(getattr(current,'dy',0) or 0) if current is not None else 0
                 flow_speed=int(getattr(current,'speed',0) or 0) if current is not None else 0
                 water_cells.append((rect.copy(),display_id,flow_dx,flow_dy,flow_speed))
                 screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
+        if pos.z==0:
+            self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
+            self._weather_fx.draw_cloud_shadows(screen,map_rect,sim.seed,sim.clock.minute,weather)
         npc_paths = self._visuals.npc_paths()
         proc_species = self._visuals.procedural_species_paths()
         player_sprite = self._visuals.player_path(getattr(sim.state, 'player_sex', 'male'), getattr(sim.state, 'player_sprite_index', 0))
@@ -1691,8 +1739,21 @@ class PygameTerminal(PointerUI):
             if cursor is not None and (wx,wy,pos.z)==(cursor.x,cursor.y,cursor.z):
                 cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
                 if cp:screen.blit(cp,rect.topleft)
+        # Weather/light presentation is observational and applies only to the
+        # local world viewport. UI chrome remains fully readable at night.
+        used=pg.Rect(map_rect.x,map_rect.y,cols*tile_px,rows*tile_px)
+        if pos.z==0 and lighting is not None:
+            self._weather_fx.draw_lighting(screen,used,lighting)
+            fire_rects=[]
+            for (fx,fy,fz),fire in fire_by.items():
+                if fz!=pos.z:continue
+                fire_rects.append((pg.Rect(
+                    map_rect.x+(fx-left)*tile_px,map_rect.y+(fy-top)*tile_px,tile_px,tile_px
+                ),int(getattr(fire,'intensity',60))))
+            self._weather_fx.draw_fire_glows(screen,used,fire_rects,lighting)
+            self._weather_fx.draw_fog(screen,used,weather)
         # frame map exactly to drawn cells
-        used=pg.Rect(map_rect.x,map_rect.y,cols*tile_px,rows*tile_px); pg.draw.rect(screen,(78,91,91),used,1)
+        pg.draw.rect(screen,(78,91,91),used,1)
 
         # Hover inspection data is retained for the read_key() fast path.
         # Mouse movement no longer causes a complete game-frame rebuild.
@@ -1709,6 +1770,10 @@ class PygameTerminal(PointerUI):
             bw=side_rect.width-32; frac=max(0,min(1,val/max(1,maxv))); pg.draw.rect(screen,(45,50,52),(tx,ty-1,bw,6),border_radius=2); pg.draw.rect(screen,self._theme['good'] if frac>.35 else self._theme['danger'],(tx,ty-1,int(bw*frac),6),border_radius=2); ty+=11
         ty+=6
         terrain=world.tile_at(pos).terrain.name; text('LOCAL',self._theme['accent'],gap=19); text(terrain); text(f"Carried stacks: {len(inv.items)}",self._theme['muted'])
+        if pos.z==0 and lighting is not None:
+            text('WEATHER',self._theme['accent'],gap=19)
+            text(f"{str(weather.get('kind','clear')).title()}  Clouds {int(weather.get('cloud_cover',0))}%")
+            text(f"Wet ground {int(weather.get('wetness',0))}%  •  {lighting.phase.title()}",self._theme['muted'])
         from worldseed.systems.swimming import exposure
         water=exposure(sim,pos)
         if water.mode!='dry':
@@ -1752,6 +1817,23 @@ class PygameTerminal(PointerUI):
             local=wr.move(-map_rect.x,-map_rect.y)
             self._water_animation_cells.append((wr,base.subsurface(local).copy(),display,dx,dy,speed))
         self._water_animation_phase=water_phase
+        self._weather_static_snapshot=screen.subsurface(used).copy()
+        self._weather_animation_context={
+            'seed':sim.seed,'rain':int(weather.get('rain',0)) if pos.z==0 else 0,
+            'wind_dx':int(weather.get('wind_dx',0)) if pos.z==0 else 0,
+            'wind_dy':int(weather.get('wind_dy',0)) if pos.z==0 else 0,
+            'cloud_cover':int(weather.get('cloud_cover',0)) if pos.z==0 else 0,
+            'wetness':int(weather.get('wetness',0)) if pos.z==0 else 0,
+            'night':bool(lighting is not None and lighting.phase=='night'),
+        }
+        self._weather_animation_phase=(pg.time.get_ticks()//110)%16
+        if pos.z==0 and int(weather.get('rain',0))>0:
+            rain=self._weather_fx.rain_surface(
+                used.width,used.height,sim.seed,self._weather_animation_phase,
+                int(weather.get('rain',0)),int(weather.get('wind_dx',0)),
+                int(weather.get('wind_dy',0)),bool(lighting is not None and lighting.phase=='night'),
+            )
+            if rain is not None:screen.blit(rain,used.topleft)
         self._hover_map_snapshot=screen.subsurface(used).copy()
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
         self._refresh_hover_only(force=True,update_display=False)

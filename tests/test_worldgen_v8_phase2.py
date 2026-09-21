@@ -35,21 +35,29 @@ class WorldgenV8Phase2Tests(unittest.TestCase):
                 (x, y),
             )
 
-    def test_default_v8_promotes_geological_elevation_only(self):
+    def test_default_v8_promotes_geology_and_physical_climate(self):
         gen7 = WorldGenerator(self.seed, self.registry, version=7)
         gen8 = WorldGenerator(self.seed, self.registry)
-        changed = 0
+        elevation_changed = 0
+        climate_changed = 0
         for x, y in ((-4097,-2049),(-1,-1),(0,0),(913,-1441),(4096,2048)):
             pos = WorldPos(x, y, 0)
             legacy = gen7.sample_fields(pos)
             fields = gen8.sample_fields(pos)
             geology = gen8.prototype_landform_at(x, y)
+            climate = gen8.climate_at(pos)
             self.assertEqual(gen8.version, 8)
             self.assertEqual(fields.elevation, geology.elevation)
-            self.assertEqual(fields.moisture, legacy.moisture)
+            self.assertEqual(fields.moisture, climate.precipitation_potential)
+            self.assertEqual(fields.temperature, climate.mean_temperature)
             self.assertEqual(gen8.landform_at(pos), geology)
-            changed += fields.elevation != legacy.elevation
-        self.assertGreater(changed, 0)
+            elevation_changed += fields.elevation != legacy.elevation
+            climate_changed += (
+                fields.moisture != legacy.moisture
+                or fields.temperature != legacy.temperature
+            )
+        self.assertGreater(elevation_changed, 0)
+        self.assertGreater(climate_changed, 0)
 
     def test_legacy_worlds_do_not_expose_authoritative_v8_landforms(self):
         gen7 = WorldGenerator(self.seed, self.registry, version=7)

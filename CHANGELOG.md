@@ -1,3 +1,15 @@
+## RC14 Dev28 — WORLDGEN v8 physical climate and living weather
+
+- Replaced v8's temporary inherited moisture/temperature fields with physical climate circulation driven by climate belts, maritime influence, continentality, prevailing wind, altitude, orographic lift and rain shadows.
+- Added deterministic humidity and wind-strength climate fields and exposed authoritative `climate_at()` reads through WorldGenerator/World.
+- Reworked v8 weather into wind-advected climate-driven cells with cloud cover, rain, storms, fog, recent-rain wetness and weather temperature deltas.
+- Rain now contributes to crop moisture and suppresses realized fires.
+- Added season-aware dawn/day/dusk/night lighting.
+- Added procedural weather art and animation to the pygame local renderer: wet terrain textures, projected cloud shadows, animated rain streaks and splashes, fog haze, night/dawn/dusk grading and fire glow.
+- Added weather/time status to the local sidebar while keeping the renderer observational.
+- Added Phase-3 climate/weather/lighting tests and `tools/audit_worldgen_v8_climate.py`.
+- Hydrology v2 remains the next world-generation phase.
+
 ## RC14 Dev27 — WORLDGEN v8 promoted for new worlds
 
 - Promoted `WORLDGEN_VERSION` from 7 to 8. Newly created save databases now use the geological v8 elevation/topography contract by default.

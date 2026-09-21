@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev27 promotes **WORLDGEN v8** for newly created worlds: geological landforms now own new-world elevation, derived topography drives v8 cave-mouth siting, and the existing prepared hydrology/coast pipeline projects onto that terrain. Existing v1-v7 saves retain their recorded geography.
+> **Development status:** RC14 Dev28 extends **WORLDGEN v8** with physical climate circulation and visible weather/time response. V8 temperature and precipitation now come from climate belts, maritime influence, continentality, prevailing winds, orographic lift and rain shadows. The local pygame world now shows projected cloud shadows, rain streaks and splashes, rain-darkened wet terrain, fog, dawn/day/dusk/night lighting and local fire glow. Existing v1-v7 saves retain their recorded geography.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 

@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 is promoted for newly created worlds as of Dev27. Existing v1-v7 saves remain pinned to their recorded generators. Phase 3 physical climate circulation is next.**
+Status: **WORLDGEN v8 is active for new worlds. Dev28 implements Phase 3 physical climate circulation plus climate-driven weather, cloud shadows, wet-ground response, rain animation and day/night lighting. Phase 4 hydrology v2 is next after validation.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -152,16 +152,39 @@ their recorded version and are not migrated. The former
 ### Goal
 Make climate respond to geography instead of acting as an independent noise map.
 
+**Dev28 implementation:** `ClimateV8Sampler` now owns v8 temperature and
+precipitation fields. It combines repeating broad climate belts, maritime
+moderation, continentality, prevailing wind belts, altitude cooling, upwind
+terrain sampling, orographic lift and leeward rain shadows. V8
+`WorldGenerator.sample_fields()` now consumes these fields directly, so the
+existing hydrology/resource/environment consumers already see physical v8
+climate instead of the temporary v4 moisture/temperature sheet.
+
+The same phase now includes a deterministic weather/light presentation chain:
+
+```text
+physical climate
+-> moving weather cell / cloud cover / rain / storm / fog
+-> recent-rain surface wetness
+-> day/dawn/dusk/night light state
+-> pygame wet-ground texture + cloud-shadow mask + rain/splash animation
+-> night grading + local fire glow
+```
+
+Weather remains simulation-owned and renderer-observed. Renderer animation may
+advance visual rain frames using wall-clock time, but it cannot change the
+authoritative weather sample or simulation clock.
+
 ### Work
-- Add stable broad latitude/climate-band potential.
-- Add prevailing wind belts/directions.
-- Add oceanic/maritime moderation near coasts.
-- Add continentality for large inland regions.
-- Derive orographic rainfall from windward ascent.
-- Derive rain shadows on leeward sides of major uplifts.
-- Keep altitude temperature lapse effects.
-- Separate long-term precipitation potential from local wetness/hydrology.
-- Preserve seasonal systems as consumers rather than worldgen authority.
+- **DONE Dev28:** add stable broad latitude/climate-band potential.
+- **DONE Dev28:** add prevailing wind belts/directions.
+- **DONE Dev28:** add oceanic/maritime moderation near coasts.
+- **DONE Dev28:** add continentality for large inland regions.
+- **DONE Dev28:** derive orographic rainfall from windward ascent.
+- **DONE Dev28:** derive rain shadows on leeward sides of major uplifts.
+- **DONE Dev28:** keep altitude temperature lapse effects inside the physical climate sampler.
+- **DONE Dev28:** separate long-term precipitation potential from dynamic weather wetness.
+- **DONE Dev28:** preserve seasonal/game-time systems as consumers rather than geography authority.
 
 ### New read fields
 - mean_temperature
@@ -171,11 +194,23 @@ Make climate respond to geography instead of acting as an independent noise map.
 - prevailing_wind_dx/dy
 - orographic_lift
 - rain_shadow
+- humidity
+- wind_strength
+- dynamic cloud_cover / rain / storm / fog / wetness (weather read model)
+- daylight / ambient_light / darkness_alpha (lighting read model)
 
 ### Exit gates
 - Mountain chains produce measurable wet/dry asymmetry.
 - Coasts moderate temperature relative to continental interiors.
 - Climate fields remain continuous across chunk/domain boundaries.
+- Weather is deterministic from seed + game time + coordinates and does not mutate from rendering.
+- Rain visibly wets surface terrain and produces animated streak/splash presentation.
+- Cloud cover projects soft terrain shadows without revealing undiscovered geography.
+- Surface gameplay visibly transitions through dawn/day/dusk/night; UI remains readable.
+- Night/local-fire presentation remains observational and does not create simulation light sources.
+
+**Implementation status:** code landed in Dev28; executable multi-seed/pygame
+validation is still required before declaring the Phase-3 release gate closed.
 
 ---
 

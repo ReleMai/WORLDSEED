@@ -79,7 +79,7 @@ class Simulation:
         self.processing=ProcessingSystem(self.state,registry,self.building)
         self.ecology=EcologySystem(self.state,registry,self.seed,self.world)
         self.economy=EconomySystem(self.state,registry,self.seed,self.history)
-        self.environment=EnvironmentSystem(self.state,registry,self.seed,self.history)
+        self.environment=EnvironmentSystem(self.state,registry,self.seed,self.history,self.world)
         self.disease=EpidemiologySystem(self.state,registry,self.seed,self.history)
         self.npcs=NPCSystem(self.state,self.seed,self.history,self.world,self.building,self.lod)
         self.factions=FactionSystem(self.state,self.seed,self.history)

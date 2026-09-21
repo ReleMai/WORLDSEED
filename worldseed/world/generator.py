@@ -132,7 +132,11 @@ class WorldGenerator:
             elevation=self.landforms_v8.sample(pos.x,pos.y).elevation
             moisture=self._regional_field("moisture4",pos.x+14037,pos.y-8811,640,224,72,(7,2,1))
             climate=self._regional_field("temperature4",pos.x-41003,pos.y+9237,768,256,96,(7,2,1))
-        seasonal_base=max(0,min(Q,climate-max(0,elevation-42000)//2))
+        if self.version>=8:
+            # ClimateV8 already applies elevation lapse cooling.
+            seasonal_base=max(0,min(Q,climate))
+        else:
+            seasonal_base=max(0,min(Q,climate-max(0,elevation-42000)//2))
         fertility=max(0,min(Q,(moisture*3+(Q-abs(seasonal_base-36000))*2)//5))
         return WorldFields(elevation,moisture,seasonal_base,fertility)
 

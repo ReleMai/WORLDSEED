@@ -228,13 +228,20 @@ It does **not** need a serialized copy of every untouched generated tile.
 
 Worldgen v4 keeps terrain deterministic but separates spatial scales: elevation retains local relief while moisture and temperature vary across much broader regions. Biome classification is climate-first, so forests/grasslands/scrub form coherent regions instead of depending on decoration rolls. The v3 reciprocal cave-column rules remain part of the underground contract. Recorded terrain-generation version is immutable per world; legacy saves continue to use their original generator. Natural-resource generation is versioned separately so resource-placement fixes do not require rewriting old geography.
 
-WORLDGEN v8 is the current new-world elevation contract. It composes deterministic continentalness, aligned major/branch mountain belts, basins, plateaus, structural valleys, coastal detail and local roughness into one geological elevation field. A derived topography read model exposes slope, relief, ridge exposure, valley depth and ruggedness without realizing chunks. New v8 cave entrances use those physical fields; v1-v7 saves remain pinned to their recorded generators and are never retroactively rewritten. During the current v8 transition, moisture/temperature and hydrology retain their existing independently versioned contracts until the dedicated climate and hydrology-v2 phases replace them.
+WORLDGEN v8 is the current new-world geography/climate contract. It composes deterministic continentalness, aligned major/branch mountain belts, basins, plateaus, structural valleys, coastal detail and local roughness into one geological elevation field. A derived topography read model exposes slope, relief, ridge exposure, valley depth and ruggedness without realizing chunks. V8 physical climate then derives mean temperature, precipitation potential, humidity, maritime influence, continentality, prevailing wind, orographic lift and leeward rain shadow from that geography. `WorldGenerator.sample_fields()` consumes those physical climate values for v8, while explicit v1-v7 worlds keep their frozen field contract. New v8 cave entrances use geological/topographic fields; v1-v7 saves remain pinned to their recorded generators and are never retroactively rewritten. Hydrology remains independently versioned until the dedicated hydrology-v2 phase.
 
 Players may also create persistent supported shafts through simulation commands. These mutations are stored as world deltas rather than changing the base generator.
 
 Historical-site base layouts are deterministic; runtime overlays persist locks/traps/loot/occupants/clearance.
 
 ---
+
+
+## Climate, weather and lighting
+
+V8 separates long-term climate from short-term weather. Climate is reconstructable from seed + coordinates + climate version; weather is reconstructable from seed + game-time slot + weather cell + climate. The simulation owns cloud cover, precipitation, storm/fog state, recent-rain wetness and weather temperature deltas. Rain affects crops and suppresses fire through the environment system.
+
+The pygame renderer is observational. It may render wet-ground material overlays, soft projected cloud-shadow masks, animated rain streaks/splashes, fog haze, dawn/day/dusk/night grading and local fire glow, but these effects never create or alter weather, time, terrain, discovery, or light-source simulation state. Visual animation time may move rain frames while input waits; authoritative weather remains fixed until simulation time changes.
 
 # Ecology
 

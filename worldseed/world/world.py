@@ -119,6 +119,11 @@ class World:
         getter=getattr(self.generator,'topography_at',None)
         return getter(pos) if callable(getter) else None
 
+    def climate_at(self,pos:WorldPos):
+        """Read authoritative v8 physical climate without realizing terrain."""
+        getter=getattr(self.generator,'climate_at',None)
+        return getter(pos) if callable(getter) else None
+
     def hydrology_at(self,pos:WorldPos):
         getter=getattr(self.generator,'hydrology_at',None)
         return getter(pos) if callable(getter) else None

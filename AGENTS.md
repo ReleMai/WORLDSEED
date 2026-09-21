@@ -37,6 +37,9 @@ Never create an unrelated decorative village, road, river, building list, or loc
 
 - `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
 - New worlds use `WORLDGEN_VERSION = 8`; v8 replaces new-world elevation with the geological landform/topography system and uses v8-specific cave-mouth siting while retaining the existing prepared hydrology/coast projection until later v8 phases. Existing v1-v7 geography remains frozen by each save's recorded `worldgen_version`.
+- V8 climate is physical and authoritative for v8 worlds: climate belts, maritime influence, continentality, prevailing wind, orographic lift and rain shadow feed temperature/precipitation. Do not reintroduce an unrelated moisture/temperature noise sheet for v8.
+- Weather/time presentation is observational. Cloud shadows, wet-ground shading, rain/splash animation, fog and day/night grading may read simulation weather/time but must never mutate weather, clock, discovery, terrain or lighting authority.
+- Wall-clock animation is allowed only for visual phase (for example rain streak movement). The sampled weather state remains fixed until simulation game time changes.
 - Ground-terrain meshing is data-driven from terrain tags. New/modded `surface` or `underground` ground terrain must enter the presentation mesher automatically unless it is a hard feature (`shaft`, `ore`, `loot`). Do not add pair-by-pair renderer exceptions for ordinary biome ecotones.
 - Cave mouths are contextual terrain overlays: placement belongs to world generation; presentation may choose neighboring ground only as a visual base and must never alter terrain authority.
 - Recipe discovery is authoritative simulation state. UI browsing is observational; item/material discovery and trial-and-error unlocks happen on command/simulation paths, never because a crafting panel was opened.

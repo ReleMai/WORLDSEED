@@ -4,19 +4,85 @@ from worldseed.core.coords import WorldPos
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.systems.state import LivingWorldState, FireCell, FluidCell, DiseaseState, pos_key
 from worldseed.systems.history import HistorySystem
+from worldseed.world.lighting import LightingSystem
+
+Q=65535
 
 class WeatherSystem:
-    def __init__(self,seed:bytes):self.seed=seed
-    def at(self,minute:int,x:int,y:int)->dict:
+    """Legacy-compatible weather plus v8 climate-driven moving fronts."""
+
+    def __init__(self,seed:bytes,generator=None):
+        self.seed=seed;self.generator=generator
+
+    def _legacy_at(self,minute:int,x:int,y:int)->dict:
         day=minute//1440;cellx=x//128;celly=y//128;rng=PCG32(derive_seed(self.seed,"weather",day,cellx,celly))
         kinds=["clear","clear","cloudy","rain","rain","wind","storm","fog"]
         kind=rng.choice(kinds);temp_delta={"clear":5,"cloudy":0,"rain":-4,"wind":-2,"storm":-6,"fog":-3}[kind]
         wind=rng.randbelow(5);rain=0 if kind not in ("rain","storm") else 3+rng.randbelow(7)
-        return {"kind":kind,"temp_delta":temp_delta,"wind":wind,"rain":rain,"visibility":4 if kind=="fog" else 6 if kind=="storm" else 8}
+        return {"kind":kind,"temp_delta":temp_delta,"wind":wind,"rain":rain,"visibility":4 if kind=="fog" else 6 if kind=="storm" else 8,
+                "cloud_cover":65 if kind=="cloudy" else 85 if kind in ("rain","storm") else 45 if kind=="fog" else 15,
+                "storm_intensity":80 if kind=="storm" else 0,"humidity":75 if kind in ("rain","storm","fog") else 45,
+                "wetness":min(100,rain*10),"fog":75 if kind=="fog" else 0,"wind_dx":0,"wind_dy":0,"wind_speed":wind*20}
+
+    def _v8_slot(self,slot:int,x:int,y:int,climate)->dict:
+        # Two-hour weather cells advect along the physical prevailing wind.
+        phase=slot%84
+        advx=int(x)-(int(climate.prevailing_wind_dx)*phase)//24
+        advy=int(y)-(int(climate.prevailing_wind_dy)*phase)//24
+        cellx=advx//192;celly=advy//192
+        token=hash_u64(self.seed,"weather-v8",slot,cellx,celly)
+        precip=int(climate.precipitation_potential)*100//Q
+        humidity=int(climate.humidity)*100//Q
+        jitter=int(token%51)-25
+        cloud=max(0,min(100,(humidity*3+precip)//4+jitter))
+        rain_chance=max(0,min(92,precip+cloud//3-40))
+        rain_roll=int((token>>11)%100)
+        rain=0
+        if cloud>=45 and rain_roll<rain_chance:
+            rain=max(1,min(10,2+(cloud-45)//9+precip//24+int((token>>23)%3)))
+        storm_roll=int((token>>31)%100)
+        storm=max(0,min(100,(rain-6)*22+max(0,cloud-80)*2)) if rain>=7 and storm_roll<max(12,rain_chance//2) else 0
+        wind_speed=max(5,min(100,int(climate.wind_strength)*100//Q+int((token>>41)%25)-8))
+        fog=0
+        if rain==0 and humidity>=72 and wind_speed<42 and int((token>>52)%100)<humidity-45:
+            fog=max(15,min(90,humidity-5))
+        if storm>0:kind="storm"
+        elif rain>0:kind="rain"
+        elif fog>0:kind="fog"
+        elif cloud>=58:kind="cloudy"
+        elif wind_speed>=62:kind="wind"
+        else:kind="clear"
+        temp_delta=2 if kind=="clear" else 0 if kind=="cloudy" else -3 if kind=="rain" else -6 if kind=="storm" else -2
+        visibility=4 if fog>=55 else 5 if storm>=55 else 6 if rain>=6 else 8
+        return {"kind":kind,"temp_delta":temp_delta,"wind":wind_speed//20,"rain":rain,"visibility":visibility,
+                "cloud_cover":cloud,"storm_intensity":storm,"humidity":humidity,"fog":fog,
+                "wind_dx":int(climate.prevailing_wind_dx),"wind_dy":int(climate.prevailing_wind_dy),"wind_speed":wind_speed}
+
+    def at(self,minute:int,x:int,y:int)->dict:
+        generator=self.generator
+        climate_getter=getattr(generator,"climate_at",None) if generator is not None else None
+        if generator is None or int(getattr(generator,"version",0))<8 or not callable(climate_getter):
+            return self._legacy_at(minute,x,y)
+        climate=climate_getter(WorldPos(int(x),int(y),0))
+        if climate is None:return self._legacy_at(minute,x,y)
+        slot=max(0,int(minute))//120
+        current=self._v8_slot(slot,x,y,climate)
+        recent=[current["rain"]]
+        for age in range(1,4):
+            recent.append(self._v8_slot(max(0,slot-age),x,y,climate)["rain"])
+        wetness=min(100,recent[0]*10+recent[1]*7+recent[2]*4+recent[3]*2+current["humidity"]//10)
+        current["wetness"]=wetness
+        return current
 
 class EnvironmentSystem:
-    def __init__(self,state:LivingWorldState,registry:ContentRegistry,seed:bytes,history:HistorySystem):
-        self.state=state;self.registry=registry;self.seed=seed;self.history=history;self.weather=WeatherSystem(seed)
+    def __init__(self,state:LivingWorldState,registry:ContentRegistry,seed:bytes,history:HistorySystem,world=None):
+        self.state=state;self.registry=registry;self.seed=seed;self.history=history;self.world=world
+        self.weather=WeatherSystem(seed,getattr(world,"generator",None));self.lighting=LightingSystem()
+
+    def visual_conditions(self,minute:int,pos:WorldPos):
+        weather=self.weather.at(minute,pos.x,pos.y)
+        lighting=self.lighting.at(minute,weather.get("cloud_cover",0),weather.get("storm_intensity",0))
+        return weather,lighting
     def hourly_update(self,minute:int)->None:
         # crop simulation
         for key,c in list(self.state.crops.items()):
@@ -24,7 +90,11 @@ class EnvironmentSystem:
             if not crop:continue
             w=self.weather.at(minute,c.x,c.y);c.moisture=min(100,c.moisture+w["rain"]*3);c.moisture=max(0,c.moisture-crop.water_use)
             day=minute//1440;season=("spring","summer","autumn","winter")[(day//30)%4]
-            climate=(hash_u64(self.seed,"temp",c.x//64,c.y//64)%60)+15+w["temp_delta"]
+            if self.world is not None and int(getattr(self.world.generator,"version",0))>=8:
+                fields=self.world.generator.sample_fields(WorldPos(c.x,c.y,0))
+                climate=-18+(int(fields.temperature)*63)//Q+int(w["temp_delta"])
+            else:
+                climate=(hash_u64(self.seed,"temp",c.x//64,c.y//64)%60)+15+w["temp_delta"]
             good_temp=crop.min_temp<=climate<=crop.max_temp
             if c.moisture<15 or not good_temp:c.health=max(0,c.health-4)
             elif c.moisture>90:c.health=max(0,c.health-1)
@@ -64,7 +134,11 @@ class EnvironmentSystem:
             rain_hours=min(hours,24)
             c.moisture=max(0,min(100,c.moisture+w["rain"]*rain_hours-crop.water_use*hours))
             day=minute//1440;season=("spring","summer","autumn","winter")[(day//30)%4]
-            climate=(hash_u64(self.seed,"temp",c.x//64,c.y//64)%60)+15+w["temp_delta"]
+            if self.world is not None and int(getattr(self.world.generator,"version",0))>=8:
+                fields=self.world.generator.sample_fields(WorldPos(c.x,c.y,0))
+                climate=-18+(int(fields.temperature)*63)//Q+int(w["temp_delta"])
+            else:
+                climate=(hash_u64(self.seed,"temp",c.x//64,c.y//64)%60)+15+w["temp_delta"]
             soil=self.state.soils.get(key)
             stress=0
             if not (crop.min_temp<=climate<=crop.max_temp):stress+=hours//2
@@ -101,6 +175,11 @@ class EnvironmentSystem:
     def _spread_fire(self,minute:int)->None:
         additions={};removals=[]
         for key,f in list(self.state.fires.items()):
+            weather=self.weather.at(minute,f.x,f.y)
+            rain=int(weather.get("rain",0) or 0)
+            if rain:
+                f.intensity=max(0,f.intensity-rain*2)
+                f.fuel=max(0,f.fuel-rain)
             f.fuel-=max(1,f.intensity//10);f.intensity=max(0,f.intensity-2)
             struct=self.state.structures.get(key)
             if struct and "flammable" in self.registry.structures[struct.structure_id].tags:
