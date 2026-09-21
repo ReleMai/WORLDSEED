@@ -68,65 +68,49 @@ class WeatherFxRenderer:
                 screen.blit(overlay, rect.topleft)
 
     def cloud_shadow_surface(
-        self,
-        width: int,
-        height: int,
-        seed: bytes,
-        minute: int,
-        cloud_cover: int,
-        wind_dx: int,
-        wind_dy: int,
+        self, width: int, height: int, seed: bytes, cloud_cover: int,
+        wind_dx: int, wind_dy: int, world_left: int, world_top: int,
+        tile_px: int, elapsed_ms: int,
     ):
-        cover = max(0, min(100, int(cloud_cover)))
-        if cover < 12:
-            return None
-        # Game-time phase makes projected shadows advance when simulation time
-        # advances. The low-resolution mask is smoothed on upscale.
-        phase = max(0, int(minute)) // 12
-        key = (int(width), int(height), phase, cover // 10, int(wind_dx) // 256, int(wind_dy) // 256, bytes(seed))
-        cached = self._cloud_cache.get(key)
-        if cached is not None:
-            return cached
+        """World-anchored moving cloud-shadow field."""
+        cover=max(0,min(100,int(cloud_cover)))
+        if cover<12:return None
+        pg=self.pg;tile_px=max(1,int(tile_px));phase=max(0,int(elapsed_ms))//180
+        key=(int(width),int(height),int(world_left),int(world_top),tile_px,phase,cover//10,int(wind_dx)//256,int(wind_dy)//256,bytes(seed))
+        cached=self._cloud_cache.get(key)
+        if cached is not None:return cached
+        surf=pg.Surface((width,height),pg.SRCALPHA)
+        cell_w,cell_h=36,28
+        drift_tiles_x=(int(wind_dx)*phase)//26000;drift_tiles_y=(int(wind_dy)*phase)//26000
+        min_x=world_left-drift_tiles_x-48;max_x=world_left+width//tile_px-drift_tiles_x+48
+        min_y=world_top-drift_tiles_y-36;max_y=world_top+height//tile_px-drift_tiles_y+36
+        gx0,gx1=min_x//cell_w,max_x//cell_w;gy0,gy1=min_y//cell_h,max_y//cell_h
+        alpha=10+cover//6
+        for gy in range(gy0,gy1+1):
+            for gx in range(gx0,gx1+1):
+                token=hash_u64(seed,'weather-art:cloud-field',gx,gy)
+                if int(token%100)>=cover:continue
+                wx=gx*cell_w+6+int((token>>9)%max(1,cell_w-12))+drift_tiles_x
+                wy=gy*cell_h+5+int((token>>21)%max(1,cell_h-10))+drift_tiles_y
+                cx=(wx-world_left)*tile_px;cy=(wy-world_top)*tile_px
+                base_w=(18+int((token>>33)%20))*tile_px;base_h=(8+int((token>>45)%11))*tile_px
+                lobes=4+int((token>>55)%4)
+                body=pg.Rect(cx-base_w//2,cy-base_h//2,base_w,base_h)
+                pg.draw.ellipse(surf,(7,11,16,max(3,alpha//3)),body.inflate(tile_px*3,tile_px*2))
+                for i in range(lobes):
+                    lt=hash_u64(seed,'weather-art:cloud-lobe',gx,gy,i)
+                    ox=(int(lt%1000)-500)*base_w//1800;oy=(int((lt>>12)%1000)-500)*base_h//2200
+                    rw=max(tile_px*5,base_w*(34+int((lt>>24)%36))//100)
+                    rh=max(tile_px*3,base_h*(42+int((lt>>36)%34))//100)
+                    rect=pg.Rect(cx+ox-rw//2,cy+oy-rh//2,rw,rh)
+                    for grow,a_div in ((tile_px*2,4),(tile_px,3),(0,1)):
+                        rr=rect.inflate(grow,grow);pg.draw.ellipse(surf,(6,10,15,max(2,alpha//a_div)),rr)
+        if len(self._cloud_cache)>64:self._cloud_cache.clear()
+        self._cloud_cache[key]=surf;return surf
 
-        pg = self.pg
-        scale = 4
-        lw, lh = max(8, width // scale), max(8, height // scale)
-        low = pg.Surface((lw, lh), pg.SRCALPHA)
-        count = 3 + cover // 12
-        drift_x = (wind_dx * (phase % 64)) // 1536
-        drift_y = (wind_dy * (phase % 64)) // 1536
-        alpha = 9 + cover // 5
-        for i in range(count):
-            token = hash_u64(seed, "weather-art:cloud", phase // 8, i)
-            cx = int(token % max(1, lw + 60)) - 30 + drift_x // scale
-            cy = int((token >> 13) % max(1, lh + 50)) - 25 + drift_y // scale
-            rw = 16 + int((token >> 27) % 34)
-            rh = 9 + int((token >> 39) % 22)
-            # Layered ellipses create feathered, irregular cloud footprints.
-            for ring in range(4, 0, -1):
-                grow = ring * 3
-                a = max(2, alpha // (ring + 1))
-                rect = pg.Rect(cx - rw // 2 - grow, cy - rh // 2 - grow, rw + grow * 2, rh + grow * 2)
-                pg.draw.ellipse(low, (8, 13, 18, a), rect)
-            lobe = pg.Rect(cx - rw // 3, cy - rh // 2, rw, rh)
-            pg.draw.ellipse(low, (7, 11, 16, alpha), lobe)
-
-        surface = pg.transform.smoothscale(low, (width, height))
-        if len(self._cloud_cache) > 48:
-            self._cloud_cache.clear()
-        self._cloud_cache[key] = surface
-        return surface
-
-    def draw_cloud_shadows(self, screen, rect, seed: bytes, minute: int, weather: dict) -> None:
-        surf = self.cloud_shadow_surface(
-            rect.width, rect.height, seed, minute,
-            int(weather.get("cloud_cover", 0)),
-            int(weather.get("wind_dx", 0)),
-            int(weather.get("wind_dy", 0)),
-        )
-        if surf is not None:
-            screen.blit(surf, rect.topleft)
-
+    def draw_cloud_shadows(self, screen, rect, seed: bytes, weather: dict, *, world_left: int, world_top: int, tile_px: int, elapsed_ms: int) -> None:
+        surf=self.cloud_shadow_surface(rect.width,rect.height,seed,int(weather.get('cloud_cover',0)),int(weather.get('wind_dx',0)),int(weather.get('wind_dy',0)),world_left,world_top,tile_px,elapsed_ms)
+        if surf is not None:screen.blit(surf,rect.topleft)
     def draw_fog(self, screen, rect, weather: dict) -> None:
         fog = max(0, min(100, int(weather.get("fog", 0))))
         if fog <= 4:
@@ -136,21 +120,18 @@ class WeatherFxRenderer:
         screen.blit(overlay, rect.topleft)
 
     def draw_lighting(self, screen, rect, lighting) -> None:
-        alpha = max(0, min(230, int(getattr(lighting, "darkness_alpha", 0))))
-        if alpha <= 0:
-            return
-        phase = str(getattr(lighting, "phase", "day"))
-        if phase == "dawn":
-            color = (41, 25, 42, alpha)
-        elif phase == "dusk":
-            color = (43, 23, 48, alpha)
-        elif phase == "night":
-            color = (5, 12, 28, alpha)
-        else:
-            color = (15, 20, 26, alpha)
-        overlay = self.pg.Surface((rect.width, rect.height), self.pg.SRCALPHA)
-        overlay.fill(color)
-        screen.blit(overlay, rect.topleft)
+        alpha=max(0,min(230,int(getattr(lighting,'darkness_alpha',0))))
+        if alpha<=0:return
+        phase=str(getattr(lighting,'phase','day'))
+        tr=int(getattr(lighting,'tint_r',255));tg=int(getattr(lighting,'tint_g',255));tb=int(getattr(lighting,'tint_b',255))
+        if phase in ('dawn','dusk'):
+            warm=self.pg.Surface((rect.width,rect.height),self.pg.SRCALPHA)
+            warm.fill((tr,tg,tb,min(62,max(12,alpha//2))))
+            screen.blit(warm,rect.topleft);dark=(18,17,20,alpha)
+        elif phase=='night':dark=(5,12,28,alpha)
+        else:dark=(15,20,26,alpha)
+        overlay=self.pg.Surface((rect.width,rect.height),self.pg.SRCALPHA)
+        overlay.fill(dark);screen.blit(overlay,rect.topleft)
 
     def _glow_surface(self, radius: int, strength: int):
         radius = max(8, int(radius))
