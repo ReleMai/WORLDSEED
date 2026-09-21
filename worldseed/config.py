@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev25"
+ENGINE_VERSION = "1.0.0-rc14-dev26"
 SAVE_SCHEMA_VERSION = 3
 WORLDGEN_VERSION = 7
 # Dev25 Phase-2 staging: explicit WorldGenerator(version=8) uses geological

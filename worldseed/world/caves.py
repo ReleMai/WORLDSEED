@@ -192,3 +192,83 @@ class CaveGeneratorV7:
         if self.near_entrance_chamber(pos):
             return "core:cave_floor"
         return "core:cave_floor" if self._open_cave(pos) else self._wall_material(pos)
+
+
+class CaveGeneratorV8(CaveGeneratorV7):
+    """Phase-2 v8 entrance planner over geological/topographic fields.
+
+    Underground chamber/ore generation intentionally inherits the v7 contract
+    until the later underground-geology phase. Only natural entrance siting and
+    entrance depth are replaced here, so v7 saves remain untouched.
+    """
+
+    ENTRANCE_CELL = 48
+
+    def __init__(
+        self,
+        seed: bytes,
+        sample_fields: Callable[[WorldPos], object],
+        noise: Callable[[str, int, int, int], int],
+        landform_at: Callable[[int, int], object],
+        topography_at: Callable[[WorldPos], object],
+    ) -> None:
+        super().__init__(seed, sample_fields, noise)
+        self.landform_at = landform_at
+        self.topography_at = topography_at
+
+    @lru_cache(maxsize=8192)
+    def _entrance_for_cell(self, cx: int, cy: int) -> CaveEntrance | None:
+        if hash_u64(self.seed, "cave-v8-cell", cx, cy) % 100 >= 20:
+            return None
+        base_x, base_y = cx * self.ENTRANCE_CELL, cy * self.ENTRANCE_CELL
+        best: tuple[int, int, int, int, int] | None = None
+        for i in range(16):
+            x = base_x + 4 + hash_u64(self.seed, "cave-v8-x", cx, cy, i) % (self.ENTRANCE_CELL - 8)
+            y = base_y + 4 + hash_u64(self.seed, "cave-v8-y", cx, cy, i) % (self.ENTRANCE_CELL - 8)
+            pos = WorldPos(x, y, 0)
+            fields = self.sample_fields(pos)
+            elevation = int(fields.elevation)
+            if elevation < 28200:
+                continue
+            topo = self.topography_at(pos)
+            geology = self.landform_at(x, y)
+            if topo is None or geology is None:
+                continue
+
+            # Mouths should read as exposed geological openings, not random holes
+            # in flat plains. Relief and actual slope dominate; mountain/upland
+            # structure breaks ties and deep valley floors are mildly penalized.
+            if (
+                int(topo.relief_raw) < 360
+                and int(topo.slope) < 10500
+                and int(geology.mountain_chain) < 18000
+                and int(geology.plateau) < 25000
+            ):
+                continue
+            score = int(topo.relief_raw) * 8
+            score += int(topo.slope) // 18
+            score += int(topo.ridge_exposure) // 28
+            score += int(geology.mountain_chain) // 24
+            score += int(geology.tectonic_uplift) // 42
+            score += int(geology.plateau) // 70
+            score -= int(topo.valley_depth) // 42
+            score += int(hash_u64(self.seed, "cave-v8-site-jitter", x, y) % 700)
+
+            row = (score, int(topo.relief_raw), elevation, x, y)
+            if best is None or row > best:
+                best = row
+
+        if best is None:
+            return None
+        _, relief, elevation, x, y = best
+        topo = self.topography_at(WorldPos(x, y, 0))
+        geology = self.landform_at(x, y)
+        depth = 3 + int(hash_u64(self.seed, "cave-v8-depth", x, y) % 7)
+        if topo is not None and (
+            int(topo.ruggedness) > 36000 or int(topo.relief_raw) > 1800
+        ):
+            depth += 2
+        if geology is not None and int(geology.tectonic_uplift) > 42000:
+            depth += 1
+        depth = min(self.MAX_NATURAL_DEPTH, depth)
+        return CaveEntrance(x, y, depth, relief, elevation)

@@ -114,6 +114,11 @@ class World:
         """Read natural site potential without realizing terrain or populations."""
         return self.generator.environment_at(pos)
 
+    def topography_at(self,pos:WorldPos):
+        """Read authoritative v8 slope/relief fields without realizing terrain."""
+        getter=getattr(self.generator,'topography_at',None)
+        return getter(pos) if callable(getter) else None
+
     def hydrology_at(self,pos:WorldPos):
         getter=getattr(self.generator,'hydrology_at',None)
         return getter(pos) if callable(getter) else None

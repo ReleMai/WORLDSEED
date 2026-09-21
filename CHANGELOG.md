@@ -1,3 +1,12 @@
+## RC14 Dev26 — WORLDGEN v8 topography and cave siting
+
+- Added a deterministic v8 topography read model exposing slope vectors, normalized slope, raw/normalized relief, ridge exposure, valley depth and ruggedness from authoritative geological elevation.
+- Added `WorldGenerator.topography_at()` and `World.topography_at()`; legacy v1-v7 worlds do not expose v8 topography.
+- Added a v8-specific cave entrance planner that prefers exposed geological relief, slopes, ridges, mountain belts and plateaus while preserving the entire v7 cave-placement contract for old worlds.
+- Added topography-aware cave-depth adjustments for rugged/tectonically uplifted v8 sites without yet changing underground chamber or ore generation.
+- Added targeted topography/cave regression tests and a calibration audit for slope, relief, ruggedness, valleys, ridges and cave-mouth characteristics.
+- WORLDGEN_VERSION remains 7 and WORLDGEN_PREVIEW_VERSION remains 8 pending full promotion gates.
+
 ## RC14 Dev25 — WORLDGEN v8 Phase-2 authority staging
 
 - Implemented the v8 elevation authority boundary for explicit preview worlds while keeping ordinary new worlds on frozen worldgen v7.

@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **Phase 1 structural prototype is complete enough for authority integration. Phase 2 is active behind explicit preview version 8; ordinary new worlds remain v7 until promotion gates pass.**
+Status: **Phase 2 authority integration is active behind explicit preview version 8. Geological elevation, derived topography, and v8-specific cave-mouth siting are now wired; ordinary new worlds remain v7 until promotion gates pass.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -111,6 +111,13 @@ Phase 3. The default `WORLDGEN_VERSION` remains 7, with
 `WORLDGEN_PREVIEW_VERSION = 8`, so this code can be exercised by audits/tests
 without silently changing newly created player worlds. A v8-aware large-scale
 spawn search and multi-seed calibration tool were added before promotion.
+
+**Dev26 progress:** Phase 2 now exposes a deterministic topographic derivative
+layer over v8 elevation (slope vector, normalized slope, raw/normalized relief,
+ridge exposure, valley depth and ruggedness). Cave entrances for explicit v8
+worlds now use these geological/topographic fields instead of the legacy v7
+siting rule, while v7 cave placement and underground generation remain frozen.
+A dedicated topography/cave audit was added for calibration before promotion.
 
 ### Work
 - Set `WORLDGEN_VERSION = 8` only for new worlds.

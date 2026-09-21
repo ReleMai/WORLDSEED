@@ -50,10 +50,14 @@ class WorldGenerator:
     def __init__(self,world_seed:bytes,registry:ContentRegistry,version:int|None=None)->None:
         self.world_seed=world_seed; self.registry=registry; self.version=int(WORLDGEN_VERSION if version is None else version); self.sites=SiteGenerator(world_seed)
         self._lattice_cache={}
-        # WORLDGEN v8 Phase 1 prototype. This sampler is observational only;
-        # v1-v7 authoritative terrain remains on sample_fields()/terrain_at().
+        # WORLDGEN v8 geological/topographic read models. They are authoritative
+        # only for explicit v8 worlds; v1-v7 keep their frozen field contracts.
         from worldseed.world.landforms import LandformSampler
+        from worldseed.world.topography import TopographySampler
         self.landforms_v8 = LandformSampler(self.world_seed)
+        self.topography_v8 = TopographySampler(
+            lambda x,y: self.landforms_v8.sample(x,y).elevation
+        )
         # RC14 Phase 3 attaches a HydrologyGenerator after database/opening state
         # exists. Keeping the dependency injected avoids making rendering or
         # content code an authority over physical geography.
@@ -61,7 +65,13 @@ class WorldGenerator:
         from worldseed.world.environmental_fields import EnvironmentalFieldSampler
         self.environmental_fields = EnvironmentalFieldSampler(self)
         self.caves = None
-        if self.version >= 7:
+        if self.version >= 8:
+            from worldseed.world.caves import CaveGeneratorV8
+            self.caves = CaveGeneratorV8(
+                self.world_seed, self.sample_fields, self._value_noise,
+                self.landforms_v8.sample, self.topography_v8.sample,
+            )
+        elif self.version >= 7:
             from worldseed.world.caves import CaveGeneratorV7
             self.caves = CaveGeneratorV7(self.world_seed, self.sample_fields, self._value_noise)
     def _lattice_value(self,namespace:str,ix:int,iy:int)->int:
@@ -135,6 +145,12 @@ class WorldGenerator:
         if self.version < 8 or pos.z != 0:
             return None
         return self.landforms_v8.sample(pos.x,pos.y)
+
+    def topography_at(self,pos:WorldPos):
+        """Return v8 slope/relief derivatives without realizing a chunk."""
+        if self.version < 8 or pos.z != 0:
+            return None
+        return self.topography_v8.sample(pos)
 
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.
