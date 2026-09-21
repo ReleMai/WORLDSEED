@@ -121,6 +121,9 @@ class Simulation:
         self._ensure_nearby_world(start,force=True)
         self.magic.ensure_traditions()
         self.magic.ensure_rituals()
+        # Reconstruct current visibility immediately on load. Persistent map
+        # memory already exists, but current LOS depends on present weather/time.
+        self._discover(start)
 
     @property
     def discovered_tiles_set(self)->set[str]:
