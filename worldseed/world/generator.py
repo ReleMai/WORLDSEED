@@ -50,6 +50,10 @@ class WorldGenerator:
     def __init__(self,world_seed:bytes,registry:ContentRegistry,version:int|None=None)->None:
         self.world_seed=world_seed; self.registry=registry; self.version=int(WORLDGEN_VERSION if version is None else version); self.sites=SiteGenerator(world_seed)
         self._lattice_cache={}
+        # WORLDGEN v8 Phase 1 prototype. This sampler is observational only;
+        # v1-v7 authoritative terrain remains on sample_fields()/terrain_at().
+        from worldseed.world.landforms import LandformSampler
+        self.landforms_v8 = LandformSampler(self.world_seed)
         # RC14 Phase 3 attaches a HydrologyGenerator after database/opening state
         # exists. Keeping the dependency injected avoids making rendering or
         # content code an authority over physical geography.
@@ -113,6 +117,11 @@ class WorldGenerator:
         seasonal_base=max(0,min(Q,climate-max(0,elevation-42000)//2))
         fertility=max(0,min(Q,(moisture*3+(Q-abs(seasonal_base-36000))*2)//5))
         return WorldFields(elevation,moisture,seasonal_base,fertility)
+
+    def prototype_landform_at(self, x:int, y:int):
+        """Read the non-authoritative WORLDGEN v8 Phase-1 geology prototype."""
+        return self.landforms_v8.sample(int(x), int(y))
+
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.
 

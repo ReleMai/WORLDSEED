@@ -1,3 +1,11 @@
+## RC14 Dev23 — WORLDGEN v8 geological prototype
+
+- Added the detailed WORLDGEN v8 Geological Living World roadmap with 16 staged phases from baseline freeze through release hardening.
+- Started Phase 1 with a non-authoritative geological landform sampler: continental swells, elongated deterministic mountain/orogeny systems, basins, plateaus, local roughness and province classification.
+- Added a standard-library audit exporter that writes field CSV, PPM preview and deterministic summary fingerprints.
+- Added v8 prototype determinism/integration tests and exposed read-only prototype sampling through WorldGenerator.
+- Kept WORLDGEN_VERSION at 7: current/legacy terrain, hydrology, saves, spawn, resources and rendering are unchanged until the v8 elevation promotion gate is explicitly passed.
+
 ## RC14 Dev22 — Authoritative terrain atlas
 
 - Replaced the gameplay map's illustrative biome blocks and schematic river spokes with actual prepared/local terrain tiles, saved deltas and live edits.
