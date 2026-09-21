@@ -2,7 +2,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from worldseed.config import DATA_DIR, WORLDGEN_VERSION, RESOURCEGEN_VERSION
+from worldseed.config import (
+    DATA_DIR, WORLDGEN_VERSION, RESOURCEGEN_VERSION,
+    HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION,
+)
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import ChunkKey, WorldPos
 from worldseed.persistence.database import WorldDatabase
@@ -24,7 +27,10 @@ class RC13PregenerationTests(unittest.TestCase):
             world = World(WorldGenerator(self.seed, self.registry), self.registry, db)
             stats = world.pre_generate(WorldPos(0, 0, 0), 1)
             self.assertEqual(stats['total'], 9)
-            self.assertIsNotNone(db.load_generated_chunk(ChunkKey(0, 0, 0), WORLDGEN_VERSION))
+            self.assertIsNotNone(db.load_generated_surface_chunk(
+                ChunkKey(0, 0, 0), WORLDGEN_VERSION,
+                HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION,
+            ))
             expected = world.tile_at(WorldPos(4, 7, 0)).terrain_id
             db.close()
 
