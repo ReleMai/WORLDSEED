@@ -60,12 +60,15 @@ class Simulation:
         # stable saves, but membership checks and per-step updates use a set.
         self._discovered_tile_set=set(self.state.discovered_tiles)
         self._discovered_surface_chunks=set()
+        self._discovered_surface_cells_by_chunk={}
         for token in self._discovered_tile_set:
             try:
                 x,y,z=(int(v) for v in token.split(','))
             except (TypeError,ValueError,AttributeError):
                 continue
-            if z==0:self._discovered_surface_chunks.add((x//32,y//32))
+            if z==0:
+                ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
+                self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
         install_procedural_species(self.registry,self.seed)
 
         self.clock=GameClock(self.state.clock_minute)
@@ -126,6 +129,10 @@ class Simulation:
     def discovered_surface_chunks(self)->set[tuple[int,int]]:
         return self._discovered_surface_chunks
 
+    @property
+    def discovered_surface_cells_by_chunk(self)->dict[tuple[int,int],set[int]]:
+        return self._discovered_surface_cells_by_chunk
+
     def is_discovered(self,pos:WorldPos)->bool:
         return pos_key(pos.x,pos.y,pos.z) in self._discovered_tile_set
 
@@ -138,7 +145,9 @@ class Simulation:
                 x,y,z=(int(v) for v in token.split(','))
             except (TypeError,ValueError,AttributeError):
                 continue
-            if z==0:self._discovered_surface_chunks.add((x//32,y//32))
+            if z==0:
+                ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
+                self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
         # Append deterministically; avoid sorting the entire potentially 120k
         # entry exploration history on every movement step.
         self.state.discovered_tiles.extend(sorted(new))
@@ -146,12 +155,15 @@ class Simulation:
             self.state.discovered_tiles=self.state.discovered_tiles[-120000:]
             self._discovered_tile_set=set(self.state.discovered_tiles)
             self._discovered_surface_chunks=set()
+            self._discovered_surface_cells_by_chunk={}
             for token in self._discovered_tile_set:
                 try:
                     x,y,z=(int(v) for v in token.split(','))
                 except (TypeError,ValueError,AttributeError):
                     continue
-                if z==0:self._discovered_surface_chunks.add((x//32,y//32))
+                if z==0:
+                    ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
+                    self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
 
     @property
     def player_id(self)->int:
