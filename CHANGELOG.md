@@ -1,3 +1,15 @@
+## RC14 Dev30 — Hydrology v2 morphology materialization
+
+- Added `HYDROLOGY_MORPHOLOGY_VERSION = 2` so river projection can evolve without rewriting Dev29 hydrology-v2 saves.
+- Added versioned surface chunk caching keyed by worldgen + hydrology + morphology, fixing the old worldgen-only surface-cache ambiguity.
+- Replaced morphology-v2 single-midpoint channels with deterministic multi-point centerlines.
+- Materialized suitable braided reaches as split/rejoining water threads with natural underlying-terrain islands between them.
+- Materialized deterministic shallow oxbow/meander-scar water in mature low-gradient floodplains.
+- Added rocky gorge-bank projection beside steep rugged reaches.
+- Updated river-current lookup to use the same multi-point/braided geometry as terrain.
+- Added bounded geometry caches plus morphology regression/audit tooling.
+- Dev29 saves missing morphology metadata remain pinned to morphology v1.
+
 ## RC14 Dev29 — Hydrology v2 foundation
 
 - Promoted new saves to `HYDROLOGY_VERSION = 2` while preserving existing saves at their recorded hydrology version.

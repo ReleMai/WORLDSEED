@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import heapq
 from typing import Any, TYPE_CHECKING
 
-from worldseed.config import HYDROLOGY_VERSION
+from worldseed.config import HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
@@ -56,6 +57,7 @@ class HydrologySurface:
     gorge: bool = False
     braided: bool = False
     delta: bool = False
+    oxbow_lake: bool = False
     oxbow_probability: int = 0
     channel_style: str = "none"
     terrain_override: str | None = None
@@ -182,11 +184,13 @@ class HydrologyGenerator:
     """
 
     def __init__(self, world_generator: "WorldGenerator", cache_source: Any | None = None,
-                 version: int = HYDROLOGY_VERSION):
+                 version: int = HYDROLOGY_VERSION,
+                 morphology_version: int = HYDROLOGY_MORPHOLOGY_VERSION):
         self.world_generator = world_generator
         self.seed = world_generator.world_seed
         self.cache_source = cache_source
         self.version = int(version)
+        self.morphology_version = int(morphology_version)
         self.algorithm = hydrology_algorithm(self.version)
         self._domain_cache: dict[tuple[int, int], HydrologyDomain] = {}
 
@@ -668,6 +672,155 @@ class HydrologyGenerator:
         return mx, my
 
     @staticmethod
+    def _polyline_contains(px: int, py: int, points: tuple[tuple[int, int], ...], radius: int) -> bool:
+        if len(points) < 2:
+            return False
+        return any(
+            HydrologyGenerator._segment_contains(
+                px, py, points[i][0], points[i][1], points[i + 1][0], points[i + 1][1], radius
+            )
+            for i in range(len(points) - 1)
+        )
+
+    @lru_cache(maxsize=32768)
+    def _channel_paths(
+        self,
+        gx: int,
+        gy: int,
+        tx: int,
+        ty: int,
+        gradient: int,
+        river_class: int,
+        accumulation: int,
+        floodplain: int,
+        upstream: int,
+    ) -> tuple[tuple[tuple[int, int], ...], tuple[tuple[int, int], ...] | None, int, bool]:
+        """Return deterministic primary/secondary v2 channel centerlines.
+
+        V1 keeps its exact two-segment midpoint contract. V2 uses two interior
+        control points, producing smoother S-curves at low gradient while steep
+        confined channels remain comparatively straight. Suitable medium/major
+        reaches can split into a secondary braid and rejoin at the next drainage
+        node; the dry space between paths becomes a natural river island.
+        """
+        spacing = HYDROLOGY_LATTICE_SPACING
+        ax, ay = gx * spacing, gy * spacing
+        bx, by = tx * spacing, ty * spacing
+        base_width = 2 if river_class == 1 else 4 if river_class == 2 else 7
+        if self.version >= 2 and upstream >= 2:
+            base_width += min(2, upstream - 1)
+        if self.version <= 1 or self.morphology_version <= 1:
+            mx, my = self._meander_midpoint(gx, gy, tx, ty, gradient, river_class)
+            old_braid_signal = (
+                self.version >= 2 and river_class >= 2
+                and 120 <= int(gradient) <= 520
+                and int(floodplain) >= 42
+                and int(accumulation) >= 320
+                and int(upstream) >= 1
+            )
+            return ((ax, ay), (mx, my), (bx, by)), None, base_width, old_braid_signal
+
+        dx, dy = bx - ax, by - ay
+        norm = max(1, abs(dx), abs(dy))
+        px, py = -dy, dx
+        flatness = max(0, 1100 - max(0, int(gradient)))
+        amplitude = 1 + min(7, flatness // 140)
+        if river_class >= 2:
+            amplitude += 1
+        if gradient >= 900:
+            amplitude = min(amplitude, 2)
+        amplitude = max(1, min(9, amplitude))
+
+        def control(frac_num: int, frac_den: int, slot: int, invert: bool = False) -> tuple[int, int]:
+            cx = ax + dx * frac_num // frac_den
+            cy = ay + dy * frac_num // frac_den
+            token = hash_u64(self.seed, "hydrology-curve-v2", gx, gy, tx, ty, slot)
+            offset = int(token % (amplitude * 2 + 1)) - amplitude
+            if invert:
+                offset = -offset
+            return cx + px * offset // norm, cy + py * offset // norm
+
+        c1 = control(1, 3, 1)
+        c2 = control(2, 3, 2, invert=(gradient < 520))
+        primary = ((ax, ay), c1, c2, (bx, by))
+
+        braid = (
+            river_class >= 2
+            and 90 <= int(gradient) <= 520
+            and int(floodplain) >= 40
+            and int(accumulation) >= 300
+        )
+        secondary = None
+        channel_radius = base_width
+        if braid:
+            # Split the total width between two stable threads, leaving a dry
+            # island corridor between them where geometry allows.
+            channel_radius = max(2, base_width // 2)
+            separation = max(3, min(7, base_width + 1))
+            side = -1 if (hash_u64(self.seed, "hydrology-braid-side-v2", gx, gy, tx, ty) & 1) else 1
+            b1 = (
+                c1[0] + px * separation * side // norm,
+                c1[1] + py * separation * side // norm,
+            )
+            b2 = (
+                c2[0] + px * separation * side // norm,
+                c2[1] + py * separation * side // norm,
+            )
+            secondary = ((ax, ay), b1, b2, (bx, by))
+        return primary, secondary, channel_radius, braid
+
+    @lru_cache(maxsize=32768)
+    def _oxbow_geometry(
+        self,
+        gx: int,
+        gy: int,
+        tx: int,
+        ty: int,
+        gradient: int,
+        river_class: int,
+        accumulation: int,
+        floodplain: int,
+    ) -> tuple[int, int, int, int] | None:
+        """Return a deterministic detached meander-scar ellipse when mature."""
+        if self.version < 2 or self.morphology_version < 2 or river_class < 2:
+            return None
+        if gradient > 240 or floodplain < 40 or accumulation < 340:
+            return None
+        token = hash_u64(self.seed, "hydrology-oxbow-v2", gx, gy, tx, ty)
+        chance = min(72, 18 + floodplain // 2 + accumulation // 260 - gradient // 10)
+        if int(token % 100) >= chance:
+            return None
+        spacing = HYDROLOGY_LATTICE_SPACING
+        ax, ay = gx * spacing, gy * spacing
+        bx, by = tx * spacing, ty * spacing
+        dx, dy = bx - ax, by - ay
+        norm = max(1, abs(dx), abs(dy))
+        px, py = -dy, dx
+        side = -1 if ((token >> 8) & 1) else 1
+        shift = 7 + int((token >> 12) % 5)
+        cx = (ax + bx) // 2 + px * shift * side // norm
+        cy = (ay + by) // 2 + py * shift * side // norm
+        long_radius = 6 + int((token >> 19) % 5)
+        short_radius = 3 + int((token >> 25) % 3)
+        if abs(dx) >= abs(dy):
+            rx, ry = long_radius, short_radius
+        else:
+            rx, ry = short_radius, long_radius
+        return cx, cy, rx, ry
+
+    @staticmethod
+    def _ellipse_ring_contains(px: int, py: int, ellipse: tuple[int, int, int, int], thickness: int = 2) -> bool:
+        cx, cy, rx, ry = ellipse
+        dx, dy = px - cx, py - cy
+        rx2, ry2 = max(1, rx * rx), max(1, ry * ry)
+        outer = dx * dx * ry2 + dy * dy * rx2
+        outer_limit = rx2 * ry2
+        irx, iry = max(1, rx - thickness), max(1, ry - thickness)
+        inner = dx * dx * (iry * iry) + dy * dy * (irx * irx)
+        inner_limit = (irx * irx) * (iry * iry)
+        return outer <= outer_limit and inner >= inner_limit
+
+    @staticmethod
     def _upstream_river_count(domain: HydrologyDomain, index: int) -> int:
         count = 0
         for neighbor in HydrologyGenerator._neighbors(index, domain.width, domain.height):
@@ -759,6 +912,8 @@ class HydrologyGenerator:
         best_slope = 0
         best_fp = fp
         best_upstream = 0
+        best_braided = False
+        gorge_bank = False
         # A two-node neighborhood is enough because the longest D8 segment is
         # ~23 cells and the widest major channel is under 10 cells in this pass.
         for gy in range(node_y - 2, node_y + 3):
@@ -779,32 +934,51 @@ class HydrologyGenerator:
                     else max(0, int(domain.filled_elevation[idx]) - int(domain.filled_elevation[target]))
                 )
                 upstream = self._upstream_river_count(domain, idx) if domain.version >= 2 else 0
-                mx, my = self._meander_midpoint(gx, gy, tx, ty, gradient, cls)
-                width = 2 if cls == 1 else 4 if cls == 2 else 7
-                if domain.version >= 2 and upstream >= 2:
-                    # Tributary junctions widen naturally rather than snapping
-                    # several same-width centerlines into one narrow cell.
-                    width += min(2, upstream - 1)
-                on_channel = (
-                    self._segment_contains(pos.x, pos.y, ax, ay, mx, my, width)
-                    or self._segment_contains(pos.x, pos.y, mx, my, bx, by, width)
-                )
-                if not on_channel:
-                    if self.world_generator.version>=6:
-                        bank = bank or self._segment_contains(pos.x,pos.y,ax,ay,mx,my,width+2) or self._segment_contains(pos.x,pos.y,mx,my,bx,by,width+2)
-                    continue
                 acc = int(domain.accumulation[idx])
-                inner_radius = 1 if cls == 1 else 2 if cls == 2 else 4
-                inner = (
-                    self._segment_contains(pos.x, pos.y, ax, ay, mx, my, inner_radius)
-                    or self._segment_contains(pos.x, pos.y, mx, my, bx, by, inner_radius)
+                local_fp = int(domain.floodplain_strength[idx])
+                primary, secondary, width, braid_candidate = self._channel_paths(
+                    gx, gy, tx, ty, gradient, cls, acc, local_fp, upstream
                 )
+                on_primary = self._polyline_contains(pos.x, pos.y, primary, width)
+                on_secondary = bool(secondary and self._polyline_contains(pos.x, pos.y, secondary, width))
+                on_channel = on_primary or on_secondary
+                if not on_channel:
+                    if domain.version >= 2 and self.morphology_version >= 2:
+                        oxbow_geom = self._oxbow_geometry(
+                            gx, gy, tx, ty, gradient, cls, acc, local_fp
+                        )
+                        if oxbow_geom and self._ellipse_ring_contains(pos.x, pos.y, oxbow_geom, 2):
+                            return HydrologySurface(
+                                watershed_id=int(domain.watershed_id[idx]), river_class=0,
+                                river_width=2, river_depth_class=1,
+                                floodplain_strength=max(fp, local_fp),
+                                wetland_probability=max(60, local_fp),
+                                water_access_score=95, flood_risk=min(95, 55 + local_fp // 2),
+                                crossing_cost=4, lake=True, oxbow_lake=True,
+                                oxbow_probability=100, channel_style="oxbow",
+                                terrain_override="core:lake_shallow",
+                            )
+                    if self.world_generator.version>=6:
+                        near_primary = self._polyline_contains(pos.x,pos.y,primary,width+2)
+                        near_secondary = bool(secondary and self._polyline_contains(pos.x,pos.y,secondary,width+2))
+                        bank = bank or near_primary or near_secondary
+                        if domain.version >= 2 and self.morphology_version >= 2 and gradient >= 1050 and (near_primary or near_secondary):
+                            topo_getter = getattr(self.world_generator, "topography_at", None)
+                            topo = topo_getter(pos) if callable(topo_getter) else None
+                            gorge_bank = int(getattr(topo, "ruggedness", 0)) >= 30000 if topo is not None else False
+                    continue
+                inner_radius = 1 if cls == 1 else max(1, width - 2)
+                inner = self._polyline_contains(pos.x, pos.y, primary, inner_radius)
+                if secondary:
+                    inner = inner or self._polyline_contains(pos.x, pos.y, secondary, inner_radius)
                 if domain.version <= 1:
                     seg_hash = hash_u64(self.seed, "hydrology-ford-v1", self.version, gx, gy, tx, ty)
                     ford_mod = 6 if cls == 1 else 11 if cls == 2 else 23
                     ford = (seg_hash % ford_mod) == 0
                 else:
-                    midpoint = WorldPos(mx, my, 0)
+                    mid_a = primary[len(primary)//2 - 1]
+                    mid_b = primary[len(primary)//2]
+                    midpoint = WorldPos((mid_a[0]+mid_b[0])//2, (mid_a[1]+mid_b[1])//2, 0)
                     topo_getter = getattr(self.world_generator, "topography_at", None)
                     topo = topo_getter(midpoint) if callable(topo_getter) else None
                     bank_slope = int(getattr(topo, "slope", 0)) if topo is not None else 0
@@ -821,6 +995,7 @@ class HydrologyGenerator:
                     best_slope = gradient
                     best_fp = max(best_fp, int(domain.floodplain_strength[idx]))
                     best_upstream = upstream
+                    best_braided = bool(braid_candidate)
                     watershed = int(domain.watershed_id[idx])
 
         if best_cls:
@@ -849,10 +1024,7 @@ class HydrologyGenerator:
                 ruggedness = int(getattr(topo, "ruggedness", 0)) if topo is not None else 0
                 rapid = not shallow and best_slope >= 520
                 gorge = rapid and best_slope >= 1050 and ruggedness >= 30000
-                braided = (
-                    best_cls >= 2 and 120 <= best_slope <= 520
-                    and best_fp >= 42 and best_acc >= 320 and best_upstream >= 1
-                )
+                braided = bool(best_braided)
                 if best_cls >= 2 and best_slope <= 260 and best_fp >= 36:
                     oxbow = max(0, min(100, 18 + best_fp // 2 + best_acc // 220 - best_slope // 8))
                 delta = (
@@ -882,6 +1054,12 @@ class HydrologyGenerator:
             )
 
         if bank and fields.elevation>=23800:
+            if gorge_bank:
+                return HydrologySurface(
+                    watershed_id=watershed, floodplain_strength=fp,
+                    water_access_score=65, flood_risk=45, crossing_cost=30,
+                    gorge=True, channel_style="gorge_bank", terrain_override="core:rock",
+                )
             return HydrologySurface(watershed_id=watershed, floodplain_strength=fp,
                 water_access_score=80, flood_risk=55, terrain_override='core:riverbank')
         wetland = max(0, min(100, fp + (fields.moisture - 33000) // 600))

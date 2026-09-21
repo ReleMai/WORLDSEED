@@ -74,6 +74,8 @@ Wet uplands receive bounded headwater support, while rain-shadow/arid regions co
 
 Hydrology is independently versioned from worldgen. New saves record hydrology v2. Existing saves continue using the `hydrology_version` in their metadata; saves missing that metadata are inferred as legacy v1 rather than silently changing rivers. Generated hydrology remains rebuildable cache data, while bridges/crossing damage and other historical mutations stay in authoritative plan deltas.
 
+River projection/morphology is independently pinned as `HYDROLOGY_MORPHOLOGY_VERSION`. Morphology v2 uses deterministic four-point centerlines, physically suitable braid splits that rejoin at drainage nodes, detached oxbow-scar water, and rocky banks around steep rugged gorge reaches. Saves missing morphology metadata infer Dev29 morphology v1. Surface chunk caches therefore use the tuple `(worldgen_version, hydrology_version, morphology_version)`; never reuse a worldgen-only surface cache for v5+ terrain.
+
 Regional hydrology is prepared during startup pregeneration. Movement, hover, rendering and map inspection may read prepared hydrology but never solve it.
 
 ---

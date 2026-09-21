@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from worldseed.config import DATA_DIR, WORLDGEN_VERSION
+from worldseed.config import DATA_DIR, HYDROLOGY_MORPHOLOGY_VERSION, WORLDGEN_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.world.generator import WorldGenerator
 from worldseed.world.hydrology import HydrologyGenerator, audit_domain
@@ -92,6 +92,7 @@ def main() -> int:
         'seed': args.seed,
         'worldgen_version': WORLDGEN_VERSION,
         'hydrology_version': domain.version,
+        'morphology_version': HYDROLOGY_MORPHOLOGY_VERSION,
         'domain': [domain.domain_x, domain.domain_y],
         'fingerprint': domain.fingerprint,
         'nodes': domain.width * domain.height,

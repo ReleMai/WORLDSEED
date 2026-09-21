@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev29 starts **Hydrology v2** on WORLDGEN v8. New worlds now convert Phase-3 precipitation into runoff/discharge, favor wet upland headwaters, preserve seam-safe Priority-Flood drainage, vary meanders with channel gradient, widen confluences, screen fords by physical terrain, and expose rapid/gorge/braided/meander/delta channel morphology. Existing saves stay pinned to their recorded hydrology version, so older rivers are not silently regenerated.
+> **Development status:** RC14 Dev30 continues **Hydrology v2** with a separately versioned morphology layer. New worlds use multi-point river centerlines, split/rejoining braided channels with natural land islands, materialized shallow oxbow scars, and rock-confined gorge banks. Surface caches are keyed by worldgen + hydrology + morphology so older Dev29 river projection remains stable.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 

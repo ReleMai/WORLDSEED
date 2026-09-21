@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 is active for new worlds. Dev29 starts Phase 4 Hydrology v2: new worlds now use climate-driven runoff/headwaters, slope-aware channel morphology and physically screened crossings while old saves remain pinned to hydrology v1.**
+Status: **WORLDGEN v8 Phase 4 continues in Dev30. Hydrology v2 drainage stays fixed, while morphology v2 adds multi-point channels, materialized braids/islands, oxbow scars and rock-confined gorge banks behind its own save-pinned projection contract.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -233,6 +233,14 @@ channel morphology labels for rapids/gorges, braided reaches, meandering/oxbow
 potential and low-gradient delta candidates. The latter are read-model signals
 for later terrain/art refinement, not a separate river authority.
 
+**Dev30 continuation:** the projection layer now has its own
+`HYDROLOGY_MORPHOLOGY_VERSION = 2`. This lets new worlds use multi-point
+centerlines, split braided threads, detached oxbow scars and rocky gorge banks
+without rewriting Dev29 hydrology-v2 saves, which infer morphology v1 when the
+new metadata is absent. Surface chunk caches are now keyed by worldgen +
+hydrology + morphology version so independently versioned river projection
+cannot reuse an incompatible cached chunk.
+
 ### Work
 - **DONE Dev29:** introduce `HYDROLOGY_VERSION = 2` for new saves while preserving stored v1 contracts.
 - **DONE Dev29:** preserve seam-safe multi-domain window solving, including v2 runoff/gradient overlap checks.
@@ -240,12 +248,12 @@ for later terrain/art refinement, not a separate river authority.
 - **DONE Dev29:** derive local runoff from authoritative Phase-3 precipitation; rain shadows therefore reduce discharge through the climate field itself.
 - **DONE Dev29:** wet high terrain receives bounded headwater runoff/classification support.
 - **DONE Dev29:** preserve class hierarchy from accumulated discharge with v2 thresholds.
-- **IN PROGRESS Dev29:** midpoint channel refinement now reacts to channel gradient; full multi-point spline refinement remains.
+- **DONE Dev30:** replace single-midpoint v2 projection with deterministic multi-point channel centerlines; morphology v1 preserves Dev29 midpoint geometry.
 - **DONE Dev29:** meander amplitude increases as channel gradient falls and remains tight in steep headwaters.
-- **PARTIAL Dev29:** confluences/tributary junctions widen from upstream count; river-island materialization remains.
-- **PARTIAL Dev29:** v2 exposes braided-reach candidates from discharge, gradient and floodplain context; dedicated braid terrain materialization remains.
-- **PARTIAL Dev29:** v2 exposes oxbow probability on low-gradient mature reaches; scars/lakes remain.
-- **DONE Dev29:** rapids and gorge labels now derive from channel gradient plus ruggedness.
+- **DONE Dev30:** confluences/tributary junctions widen from upstream count and braided reaches physically split/rejoin, leaving base-terrain river islands between threads.
+- **DONE Dev30:** suitable braided reaches materialize as two deterministic channel threads using the existing freshwater terrain family.
+- **DONE Dev30:** mature low-gradient reaches can materialize detached shallow-water oxbow/meander-scar rings in their floodplains.
+- **DONE Dev30:** rapids/gorge labels remain gradient/ruggedness-driven and steep confined banks can materialize as rocky gorge margins.
 - **PARTIAL Dev29:** ford selection is now physically gated by class, gradient, bank slope, discharge and floodplain; deterministic hashing only breaks ties among suitable reaches.
 - **PARTIAL Dev29:** low-gradient, high-discharge near-sea reaches expose deterministic delta candidates; delta morphology remains Phase 5 work.
 

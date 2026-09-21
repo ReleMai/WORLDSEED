@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, Callable
-from worldseed.config import DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION
+from worldseed.config import DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION
 from worldseed.content.registry import ContentRegistry, TerrainDef
 from worldseed.core.coords import ChunkKey, WorldPos, split_world
 from worldseed.world.cache import ChunkCache
@@ -19,11 +19,17 @@ class World:
         if auto_hydrology and self.generator.version>=5 and getattr(self.generator,'hydrology',None) is None:
             from worldseed.world.hydrology import HydrologyGenerator
             hydrology_version=HYDROLOGY_VERSION
+            morphology_version=HYDROLOGY_MORPHOLOGY_VERSION
             getter=getattr(delta_source,'get_meta',None)
             if callable(getter):
                 try:hydrology_version=int(getter('hydrology_version'))
                 except (KeyError,TypeError,ValueError):hydrology_version=1
-            self.generator.attach_hydrology(HydrologyGenerator(self.generator,delta_source,version=hydrology_version))
+                try:morphology_version=int(getter('hydrology_morphology_version'))
+                except (KeyError,TypeError,ValueError):morphology_version=1
+            self.generator.attach_hydrology(HydrologyGenerator(
+                self.generator,delta_source,version=hydrology_version,
+                morphology_version=morphology_version,
+            ))
         self.cache=ChunkCache(cache_chunks,self._load_chunk)
     def _chunk_from_ids(self,key:ChunkKey,terrain_ids)->Chunk|None:
         if terrain_ids is None or len(terrain_ids)!=(CHUNK_SIZE*CHUNK_SIZE):return None
@@ -35,20 +41,38 @@ class World:
             return chunk
         except Exception:
             return None
+    def _surface_cache_contract(self,key:ChunkKey):
+        hydro=getattr(self.generator,'hydrology',None)
+        if key.z==0 and self.generator.version>=5 and hydro is not None:
+            return (
+                int(self.generator.version),
+                int(getattr(hydro,'version',1)),
+                int(getattr(hydro,'morphology_version',1)),
+            )
+        return None
     def _load_chunk(self,key:ChunkKey)->Chunk:
         chunk=None
-        loader=getattr(self.delta_source,'load_generated_chunk',None)
-        if callable(loader):
-            chunk=self._chunk_from_ids(key,loader(key,self.generator.version))
+        surface_contract=self._surface_cache_contract(key)
+        if surface_contract is not None:
+            loader=getattr(self.delta_source,'load_generated_surface_chunk',None)
+            if callable(loader):
+                chunk=self._chunk_from_ids(key,loader(key,*surface_contract))
+        else:
+            loader=getattr(self.delta_source,'load_generated_chunk',None)
+            if callable(loader):
+                chunk=self._chunk_from_ids(key,loader(key,self.generator.version))
         if chunk is None:
             chunk=self.generator.generate_chunk(key)
-            # Retain already-generated base tiles as a rebuildable cache so
-            # the atlas cannot lose explored geography after LRU eviction.
-            # Do this on materialization, never from map inspection; deltas
-            # below remain separate authoritative edits.
-            storer=getattr(self.delta_source,'store_generated_chunk',None)
-            if callable(storer):
-                storer(key,self.generator.version,[self.registry.terrain_id(v) for v in chunk.terrain])
+            # Surface terrain depends on both drainage and morphology contracts,
+            # so v5+ surface caches are keyed by all three versions. Underground
+            # and pre-hydrology geography retain the older worldgen-only cache.
+            terrain_ids=[self.registry.terrain_id(v) for v in chunk.terrain]
+            if surface_contract is not None:
+                storer=getattr(self.delta_source,'store_generated_surface_chunk',None)
+                if callable(storer):storer(key,*surface_contract,terrain_ids)
+            else:
+                storer=getattr(self.delta_source,'store_generated_chunk',None)
+                if callable(storer):storer(key,self.generator.version,terrain_ids)
         for (lx,ly),tid in self.delta_source.load_chunk_deltas(key).items(): chunk.set(lx,ly,self.registry.terrain_index(tid))
         return chunk
     @staticmethod
@@ -81,13 +105,22 @@ class World:
         for idx,(dx,dy) in enumerate(offsets,1):
             key=ChunkKey(center_key.x+dx,center_key.y+dy,center.z)
             chunk=None
-            if callable(loader):
+            surface_contract=self._surface_cache_contract(key)
+            if surface_contract is not None:
+                surface_loader=getattr(self.delta_source,'load_generated_surface_chunk',None)
+                if callable(surface_loader):
+                    chunk=self._chunk_from_ids(key,surface_loader(key,*surface_contract))
+            elif callable(loader):
                 chunk=self._chunk_from_ids(key,loader(key,self.generator.version))
             if chunk is None:
                 chunk=self.generator.generate_chunk(key);generated+=1
-                if persist and callable(storer):
+                if persist:
                     terrain_ids=[self.registry.terrain_id(v) for v in chunk.terrain]
-                    storer(key,self.generator.version,terrain_ids)
+                    if surface_contract is not None:
+                        surface_storer=getattr(self.delta_source,'store_generated_surface_chunk',None)
+                        if callable(surface_storer):surface_storer(key,*surface_contract,terrain_ids)
+                    elif callable(storer):
+                        storer(key,self.generator.version,terrain_ids)
             else:reused+=1
             # New-world pregeneration has no deltas, but applying them here keeps
             # this method correct if it is reused for an existing world later.

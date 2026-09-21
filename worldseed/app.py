@@ -245,7 +245,12 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     world=World(WorldGenerator(seed,reg,version=gen_version),reg,db,auto_hydrology=False)
     try:hydrology_version=int(db.get_meta('hydrology_version'))
     except KeyError:hydrology_version=1
-    hydrology=HydrologyGenerator(world.generator,db,version=hydrology_version) if gen_version>=5 else None
+    try:hydrology_morphology_version=int(db.get_meta('hydrology_morphology_version'))
+    except KeyError:hydrology_morphology_version=1
+    hydrology=HydrologyGenerator(
+        world.generator,db,version=hydrology_version,
+        morphology_version=hydrology_morphology_version,
+    ) if gen_version>=5 else None
     # Resource generation is versioned separately from terrain. RC10 intentionally
     # migrates pre-versioned RC9 saves to the safer v3 placement model while
     # keeping their terrain/worldgen version pinned, so coastlines and biomes do

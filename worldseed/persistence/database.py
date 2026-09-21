@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from worldseed.config import (
     ENGINE_VERSION, SAVE_SCHEMA_VERSION, WORLDGEN_VERSION, RESOURCEGEN_VERSION,
-    HYDROLOGY_VERSION, SETTLEMENT_PLAN_VERSION, ROUTEGEN_VERSION,
+    HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION, SETTLEMENT_PLAN_VERSION, ROUTEGEN_VERSION,
 )
 from worldseed.core.coords import ChunkKey,WorldPos
 from worldseed.persistence.validation import validate_sim_state
@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS generated_chunks(
     chunk_x INTEGER NOT NULL, chunk_y INTEGER NOT NULL, z INTEGER NOT NULL,
     worldgen_version INTEGER NOT NULL, payload BLOB NOT NULL,
     PRIMARY KEY(chunk_x,chunk_y,z,worldgen_version)
+);
+CREATE TABLE IF NOT EXISTS generated_surface_chunks(
+    chunk_x INTEGER NOT NULL, chunk_y INTEGER NOT NULL, z INTEGER NOT NULL,
+    worldgen_version INTEGER NOT NULL, hydrology_version INTEGER NOT NULL,
+    morphology_version INTEGER NOT NULL, payload BLOB NOT NULL,
+    PRIMARY KEY(chunk_x,chunk_y,z,worldgen_version,hydrology_version,morphology_version)
 );
 CREATE TABLE IF NOT EXISTS generated_resource_chunks(
     chunk_x INTEGER NOT NULL, chunk_y INTEGER NOT NULL, z INTEGER NOT NULL,
@@ -57,7 +63,7 @@ class WorldDatabase:
     @classmethod
     def create(cls,path:Path,world_name:str,world_seed_hex:str)->"WorldDatabase":
         path.parent.mkdir(parents=True,exist_ok=True);db=cls(path,sqlite3.connect(path));db.connection.executescript(SCHEMA)
-        now=time.time();db.set_meta("save_schema",SAVE_SCHEMA_VERSION);db.set_meta("engine_version",ENGINE_VERSION);db.set_meta("worldgen_version",WORLDGEN_VERSION);db.set_meta("resourcegen_version",RESOURCEGEN_VERSION);db.set_meta("hydrology_version",HYDROLOGY_VERSION);db.set_meta("settlement_plan_version",SETTLEMENT_PLAN_VERSION);db.set_meta("routegen_version",ROUTEGEN_VERSION);db.set_meta("world_name",world_name);db.set_meta("world_seed",world_seed_hex);db.set_meta("turn",0);db.set_meta("created_at",now);db.set_meta("last_saved_at",now);db.connection.commit();return db
+        now=time.time();db.set_meta("save_schema",SAVE_SCHEMA_VERSION);db.set_meta("engine_version",ENGINE_VERSION);db.set_meta("worldgen_version",WORLDGEN_VERSION);db.set_meta("resourcegen_version",RESOURCEGEN_VERSION);db.set_meta("hydrology_version",HYDROLOGY_VERSION);db.set_meta("hydrology_morphology_version",HYDROLOGY_MORPHOLOGY_VERSION);db.set_meta("settlement_plan_version",SETTLEMENT_PLAN_VERSION);db.set_meta("routegen_version",ROUTEGEN_VERSION);db.set_meta("world_name",world_name);db.set_meta("world_seed",world_seed_hex);db.set_meta("turn",0);db.set_meta("created_at",now);db.set_meta("last_saved_at",now);db.connection.commit();return db
     @classmethod
     def open(cls,path:Path)->"WorldDatabase":
         db=cls(path,sqlite3.connect(path));db.connection.executescript(SCHEMA)
@@ -79,6 +85,9 @@ class WorldDatabase:
         # of silently assigning the newest generated-geography algorithm.
         defaults={
             "hydrology_version":1,
+            # Dev29 introduced hydrology v2 before projection morphology had its
+            # own save contract. Missing metadata therefore means morphology v1.
+            "hydrology_morphology_version":1,
             "settlement_plan_version":SETTLEMENT_PLAN_VERSION,
             "routegen_version":ROUTEGEN_VERSION,
         }
@@ -143,6 +152,21 @@ class WorldDatabase:
             "INSERT INTO generated_chunks(chunk_x,chunk_y,z,worldgen_version,payload) VALUES(?,?,?,?,?) "
             "ON CONFLICT(chunk_x,chunk_y,z,worldgen_version) DO UPDATE SET payload=excluded.payload",
             (key.x,key.y,key.z,int(worldgen_version),sqlite3.Binary(payload))
+        )
+    def load_generated_surface_chunk(self,key:ChunkKey,worldgen_version:int,hydrology_version:int,morphology_version:int)->tuple[str|None,...]|None:
+        row=self.connection.execute(
+            "SELECT payload FROM generated_surface_chunks WHERE chunk_x=? AND chunk_y=? AND z=? AND worldgen_version=? AND hydrology_version=? AND morphology_version=?",
+            (key.x,key.y,key.z,int(worldgen_version),int(hydrology_version),int(morphology_version))
+        ).fetchone()
+        if row is None:return None
+        try:return self._unpack_generated(bytes(row[0]))
+        except Exception:return None
+    def store_generated_surface_chunk(self,key:ChunkKey,worldgen_version:int,hydrology_version:int,morphology_version:int,terrain_ids:list[str]|tuple[str,...])->None:
+        payload=self._pack_generated(tuple(terrain_ids))
+        self.connection.execute(
+            "INSERT INTO generated_surface_chunks(chunk_x,chunk_y,z,worldgen_version,hydrology_version,morphology_version,payload) VALUES(?,?,?,?,?,?,?) "
+            "ON CONFLICT(chunk_x,chunk_y,z,worldgen_version,hydrology_version,morphology_version) DO UPDATE SET payload=excluded.payload",
+            (key.x,key.y,key.z,int(worldgen_version),int(hydrology_version),int(morphology_version),sqlite3.Binary(payload))
         )
     def load_generated_resource_chunk(self,key:ChunkKey,resourcegen_version:int,season:str)->tuple[str|None,...]|None:
         row=self.connection.execute(

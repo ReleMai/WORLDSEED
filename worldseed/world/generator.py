@@ -270,12 +270,25 @@ class WorldGenerator:
                 cls=int(domain.river_class[idx]); target=int(domain.flow_to[idx])
                 if cls<=0 or target<0: continue
                 tx,ty=domain.global_node_xy(target)
-                ax,ay=gx*spacing,gy*spacing; bx,by=tx*spacing,ty*spacing
-                mx,my=hydro._meander_midpoint(gx,gy,tx,ty)
-                width=2 if cls==1 else 4 if cls==2 else 7
-                if not (hydro._segment_contains(pos.x,pos.y,ax,ay,mx,my,width) or hydro._segment_contains(pos.x,pos.y,mx,my,bx,by,width)):
-                    continue
                 acc=int(domain.accumulation[idx])
+                if int(getattr(domain,'version',1))>=2 and len(getattr(domain,'channel_gradient',()))==domain.width*domain.height:
+                    gradient=int(domain.channel_gradient[idx])
+                    upstream=hydro._upstream_river_count(domain,idx)
+                    fp=int(domain.floodplain_strength[idx])
+                    primary,secondary,width,_=hydro._channel_paths(
+                        gx,gy,tx,ty,gradient,cls,acc,fp,upstream
+                    )
+                    if not (
+                        hydro._polyline_contains(pos.x,pos.y,primary,width)
+                        or (secondary and hydro._polyline_contains(pos.x,pos.y,secondary,width))
+                    ):
+                        continue
+                else:
+                    ax,ay=gx*spacing,gy*spacing; bx,by=tx*spacing,ty*spacing
+                    mx,my=hydro._meander_midpoint(gx,gy,tx,ty)
+                    width=2 if cls==1 else 4 if cls==2 else 7
+                    if not (hydro._segment_contains(pos.x,pos.y,ax,ay,mx,my,width) or hydro._segment_contains(pos.x,pos.y,mx,my,bx,by,width)):
+                        continue
                 row=(cls,acc,idx,gx,gy,tx,ty)
                 if best is None or row[:2]>best[:2]: best=row
         if best is None:return None

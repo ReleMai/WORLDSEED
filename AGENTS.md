@@ -37,6 +37,8 @@ Never create an unrelated decorative village, road, river, building list, or loc
 
 - `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
 - New saves use `HYDROLOGY_VERSION = 2`. Existing saves must instantiate hydrology from their stored `hydrology_version`; missing metadata is legacy v1. Never let a global version bump silently regenerate an existing river network.
+- New saves use `HYDROLOGY_MORPHOLOGY_VERSION = 2`. Missing morphology metadata means Dev29 morphology v1. Any future change to river projection geometry must preserve or bump this contract instead of changing unexplored terrain in existing saves.
+- V5+ surface chunk caches must be keyed by worldgen + hydrology + morphology version; underground and pre-hydrology caches may remain worldgen-only.
 - Hydrology v2 consumes authoritative v8 precipitation/runoff. Do not create a second rainfall/noise authority inside drainage code.
 - V2 ford/braid/gorge/delta/oxbow signals must derive from physical channel context; deterministic hashing may break ties only after physical suitability gates.
 - New worlds use `WORLDGEN_VERSION = 8`; v8 replaces new-world elevation with the geological landform/topography system and uses v8-specific cave-mouth siting while retaining the existing prepared hydrology/coast projection until later v8 phases. Existing v1-v7 geography remains frozen by each save's recorded `worldgen_version`.
