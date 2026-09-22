@@ -187,7 +187,7 @@ class WorldGenerator:
         """
         if self.version<8 or self.coast_morphology_version<=0:
             return None
-        coast=self.coast_at(pos,prepared_only=True)
+        coast=self.coast_v8.materialization_at(pos,fields)
         if coast is None:
             return None
         if coast.ocean:
