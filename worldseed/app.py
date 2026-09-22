@@ -945,30 +945,47 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation)->dict:
     total_volume=sum(reg.items[iid].volume_ml*n for iid,n in inv.items.items() if iid in reg.items and n>0)
     categories={}
     items={}
+    artifacts_by_item={}
+    for artifact in sim.state.artifacts.values():
+        if artifact.owner=='player':
+            artifacts_by_item.setdefault(artifact.base_item,[]).append(artifact)
     for iid,n in inv.items.items():
         item=reg.items.get(iid)
         if not item or n<=0:continue
         cat=item.category or 'misc';categories[cat]=categories.get(cat,0)+n
-        material_name=reg.materials[item.material].name if item.material and item.material in reg.materials else ''
+        material=reg.materials.get(item.material) if item.material else None
+        material_name=material.name if material else ''
         detail=[]
-        if material_name:detail.append(f'Material: {material_name}')
+        if material:
+            detail.append(f'Material: {material.name} | hardness {material.hardness} | toughness {material.toughness}')
         if item.nutrition>0 or item.calories or item.hydration:
-            food=f'Food: satiety {item.nutrition} | hydration {item.hydration}'
-            if item.calories:food+=f' | {item.calories} kcal'
-            detail.append(food)
+            detail.append(f'Food: satiety {item.nutrition} | hydration {item.hydration} | {item.calories} kcal')
+            if item.protein or item.carbs or item.fat or item.fiber:
+                detail.append(f'Nutrition: protein {item.protein} | carbs {item.carbs} | fat {item.fat} | fiber {item.fiber}')
+            if item.food_groups:detail.append('Diet: '+', '.join(x.title() for x in item.food_groups))
         if item.tool_qualities:
             detail.append('Tool: '+', '.join(f'{k.replace("_"," ")} {v}' for k,v in sorted(item.tool_qualities.items())))
         elif item.tool_power:
             detail.append(f'Tool effectiveness {item.tool_power}')
         if item.weapon_damage:
-            detail.append(f'Weapon: {item.damage_type} {item.weapon_damage}' + (f' | range {item.range}' if item.range>1 else ''))
+            weapon=f'Weapon: {item.damage_type} {item.weapon_damage}'
+            if item.range>1:weapon+=f' | range {item.range}'
+            if item.ammo_item:weapon+=f' | ammo {reg.items[item.ammo_item].name if item.ammo_item in reg.items else item.ammo_item}'
+            detail.append(weapon)
         if item.equip_slot:
             equip=f'Equipment: {item.equip_slot.replace("_"," ")}'
             if item.armor:equip+=f' | armor {item.armor}'
             if item.insulation:equip+=f' | warmth {item.insulation}'
             detail.append(equip)
+            if item.coverage:detail.append('Covers: '+', '.join(x.replace('_',' ') for x in item.coverage))
         if item.spoilage_hours:detail.append(f'Keeps about {max(1,item.spoilage_hours//24)} day(s)')
         if item.utility_roles:detail.append('Roles: '+', '.join(x.replace('_',' ') for x in item.utility_roles))
+        durable=sorted(artifacts_by_item.get(iid,()),key=lambda a:(a.condition,a.quality),reverse=True)
+        if durable:
+            detail.append(f'Individual durable items: {len(durable)}')
+            for artifact in durable[:3]:
+                detail.append(f'{artifact.name or item.name}: condition {artifact.condition}% | quality {artifact.quality}%')
+        if item.flavor and item.description:detail.append(item.flavor)
         use_kind=''
         use_label='Use'
         if item.nutrition>0:use_kind='eat';use_label='Use · Eat'
@@ -984,7 +1001,7 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation)->dict:
             'armor':item.armor,'insulation':item.insulation,'weapon_damage':item.weapon_damage,
             'damage_type':item.damage_type,'tool_power':item.tool_power,
             'tags':list(item.tags),'roles':list(item.utility_roles),
-            'detail_lines':detail[:5],
+            'detail_lines':detail,
             'can_use':bool(use_kind),'use_kind':use_kind,'use_label':use_label,
         }
     equipped={slot:iid for slot,iid in sim.state.player_equipment.items() if iid in reg.items}
