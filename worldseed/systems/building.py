@@ -52,7 +52,8 @@ class BuildingSystem:
     def materialize_natural_containers(self,positions)->int:
         made=0
         for pos in positions:
-            if self.materialize_natural_container_at(pos):made+=1
+            key=pos_key(pos.x,pos.y,pos.z);existed=key in self.state.containers
+            if self.materialize_natural_container_at(pos) and not existed:made+=1
         return made
     def structure_at(self,pos:WorldPos)->StructureInstance|None:return self.state.structures.get(pos_key(pos.x,pos.y,pos.z))
     def roof_at(self,pos:WorldPos)->RoofState|None:return self.state.roofs.get(pos_key(pos.x,pos.y,pos.z))
