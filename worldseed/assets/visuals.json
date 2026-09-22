@@ -612,6 +612,66 @@
       "assets/sprites/terrain/v7_copper_vein_03.png",
       "assets/sprites/terrain/v7_copper_vein_04.png",
       "assets/sprites/terrain/v7_copper_vein_05.png"
+    ],
+    "core:rocky_shore": [
+      "assets/sprites/terrain/rock_hd_v00.png",
+      "assets/sprites/terrain/rock_hd_v01.png",
+      "assets/sprites/terrain/rock_hd_v02.png",
+      "assets/sprites/terrain/rock_hd_v03.png",
+      "assets/sprites/terrain/rock_hd_v04.png",
+      "assets/sprites/terrain/rock_hd_v05.png",
+      "assets/sprites/terrain/rock_hd_v06.png",
+      "assets/sprites/terrain/rock_hd_v07.png",
+      "assets/sprites/terrain/rock_hd_v08.png",
+      "assets/sprites/terrain/rock_hd_v09.png"
+    ],
+    "core:coastal_cliff": [
+      "assets/sprites/terrain/rock_hd_v00.png",
+      "assets/sprites/terrain/rock_hd_v01.png",
+      "assets/sprites/terrain/rock_hd_v02.png",
+      "assets/sprites/terrain/rock_hd_v03.png",
+      "assets/sprites/terrain/rock_hd_v04.png",
+      "assets/sprites/terrain/rock_hd_v05.png",
+      "assets/sprites/terrain/rock_hd_v06.png",
+      "assets/sprites/terrain/rock_hd_v07.png",
+      "assets/sprites/terrain/rock_hd_v08.png",
+      "assets/sprites/terrain/rock_hd_v09.png"
+    ],
+    "core:coastal_gravel": [
+      "assets/sprites/terrain/v6_riverbank_00.png",
+      "assets/sprites/terrain/v6_riverbank_01.png",
+      "assets/sprites/terrain/v6_riverbank_02.png",
+      "assets/sprites/terrain/v6_riverbank_03.png",
+      "assets/sprites/terrain/v6_riverbank_04.png",
+      "assets/sprites/terrain/v6_riverbank_05.png",
+      "assets/sprites/terrain/v6_riverbank_06.png",
+      "assets/sprites/terrain/v6_riverbank_07.png",
+      "assets/sprites/terrain/v6_riverbank_08.png",
+      "assets/sprites/terrain/v6_riverbank_09.png"
+    ],
+    "core:tidal_flat": [
+      "assets/sprites/terrain/floodplain_hd_v00.png",
+      "assets/sprites/terrain/floodplain_hd_v01.png",
+      "assets/sprites/terrain/floodplain_hd_v02.png",
+      "assets/sprites/terrain/floodplain_hd_v03.png",
+      "assets/sprites/terrain/floodplain_hd_v04.png",
+      "assets/sprites/terrain/floodplain_hd_v05.png",
+      "assets/sprites/terrain/floodplain_hd_v06.png",
+      "assets/sprites/terrain/floodplain_hd_v07.png",
+      "assets/sprites/terrain/floodplain_hd_v08.png",
+      "assets/sprites/terrain/floodplain_hd_v09.png"
+    ],
+    "core:salt_marsh": [
+      "assets/sprites/terrain/wetland_hd_v00.png",
+      "assets/sprites/terrain/wetland_hd_v01.png",
+      "assets/sprites/terrain/wetland_hd_v02.png",
+      "assets/sprites/terrain/wetland_hd_v03.png",
+      "assets/sprites/terrain/wetland_hd_v04.png",
+      "assets/sprites/terrain/wetland_hd_v05.png",
+      "assets/sprites/terrain/wetland_hd_v06.png",
+      "assets/sprites/terrain/wetland_hd_v07.png",
+      "assets/sprites/terrain/wetland_hd_v08.png",
+      "assets/sprites/terrain/wetland_hd_v09.png"
     ]
   },
   "resources": {
