@@ -958,10 +958,14 @@ def _storage_menu(ctx:GameContext,term:Terminal)->str:
         pack_data=_inventory_ui_data(reg,inv,sim)
         container_data=_inventory_ui_data(reg,Inventory(dict(container.items)),sim,False)
         entries={};rows=[]
+        pack_rows=[];container_rows=[]
         for iid,meta in sorted(pack_data['items'].items(),key=lambda kv:kv[1]['name']):
-            key=f'pack|{iid}';entries[key]={**meta,'side':'pack','iid':iid};rows.append((key,f"{meta['name']} x{meta['count']}"))
+            key=f'pack|{iid}';entries[key]={**meta,'side':'pack','iid':iid};pack_rows.append((key,f"{meta['name']} x{meta['count']}"))
         for iid,meta in sorted(container_data['items'].items(),key=lambda kv:kv[1]['name']):
-            key=f'container|{iid}';entries[key]={**meta,'side':'container','iid':iid};rows.append((key,f"{meta['name']} x{meta['count']}"))
+            key=f'container|{iid}';entries[key]={**meta,'side':'container','iid':iid};container_rows.append((key,f"{meta['name']} x{meta['count']}"))
+        for i in range(max(len(pack_rows),len(container_rows))):
+            if i<len(pack_rows):rows.append(pack_rows[i])
+            if i<len(container_rows):rows.append(container_rows[i])
         if not rows:rows=[('__empty__','Both inventories are empty')]
         route=nav.current;route.selected=max(0,min(route.selected,len(rows)-1))
         selected_key=rows[route.selected][0]
