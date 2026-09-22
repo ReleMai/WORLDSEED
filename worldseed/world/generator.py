@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from worldseed.config import CHUNK_SIZE, WORLDGEN_VERSION
+from worldseed.config import CHUNK_SIZE, WORLDGEN_VERSION, COAST_MORPHOLOGY_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import ChunkKey, WorldPos, chunk_origin
 from worldseed.core.rng import hash_u64
@@ -49,6 +49,7 @@ def _lerp_q(a:int,b:int,t:int)->int: return a+((b-a)*t)//Q
 class WorldGenerator:
     def __init__(self,world_seed:bytes,registry:ContentRegistry,version:int|None=None)->None:
         self.world_seed=world_seed; self.registry=registry; self.version=int(WORLDGEN_VERSION if version is None else version); self.sites=SiteGenerator(world_seed)
+        self.coast_morphology_version=int(COAST_MORPHOLOGY_VERSION if self.version>=8 else 0)
         self._lattice_cache={}
         # WORLDGEN v8 geological/topographic read models. They are authoritative
         # for v8 worlds (the current new-world default); v1-v7 keep frozen fields.
@@ -173,6 +174,48 @@ class WorldGenerator:
             return None
         return self.coast_v8.sample(pos,prepared_only=prepared_only)
 
+    def set_coast_morphology_version(self,version:int)->None:
+        """Pin shoreline materialization to the save's recorded contract."""
+        self.coast_morphology_version=max(0,int(version))
+
+    def _phase5_coast_terrain(self,pos:WorldPos,fields:WorldFields)->str|None:
+        """Project Phase-5 coast fields into terrain for coast version 1+.
+
+        Version 0 is the Dev32/legacy v8 shoreline contract.  New worlds use
+        version 1, while old saves remain visually stable until explicitly
+        migrated by a future migration tool.
+        """
+        if self.version<8 or self.coast_morphology_version<=0:
+            return None
+        coast=self.coast_at(pos,prepared_only=True)
+        if coast is None:
+            return None
+        if coast.ocean:
+            return {
+                'intertidal':'core:ocean_wade',
+                'shallow':'core:ocean_shallow',
+                'shelf':'core:ocean_shelf',
+                'deep':'core:ocean_deep',
+            }.get(coast.shelf_class,'core:ocean_deep')
+
+        # Do not paint the entire 64-cell analysis band as shoreline.  Hard
+        # shore materials occupy the immediate edge; depositional flats/marsh
+        # can extend somewhat farther inland where the physical fields support it.
+        d=int(coast.coast_distance)
+        if d<=20 and coast.marsh_potential>=76:
+            return 'core:salt_marsh'
+        if d<=14 and coast.tidal_flat_potential>=70:
+            return 'core:tidal_flat'
+        if d<=8:
+            if coast.coast_kind=='cliff':
+                return 'core:coastal_cliff'
+            if coast.coast_kind in {'headland','rocky'} or coast.shore_material=='rock':
+                return 'core:rocky_shore'
+            if coast.shore_material=='gravel':
+                return 'core:coastal_gravel'
+            return 'core:shore'
+        return None
+
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.
 
@@ -213,6 +256,10 @@ class WorldGenerator:
             if e>=26500 and (hash_u64(self.world_seed,"cave-mouth",pos.x//3,pos.y//3)%997)==0:return "core:cave_mouth"
         elif e>=26500 and self._connector_span(pos.x,pos.y)>0:
             return "core:cave_mouth"
+        if self.version>=8 and self.coast_morphology_version>0:
+            coast_terrain=self._phase5_coast_terrain(pos,f)
+            if coast_terrain is not None:
+                return coast_terrain
         if self.version >= 6 and e < 26500:
             # Local slope converts the sea-level height difference to an
             # approximate horizontal shelf distance, preserving continents.
