@@ -527,6 +527,7 @@ class PygameTerminal(PointerUI):
         handlers={
             'inventory_home':self._present_inventory_home,
             'inventory_items':self._present_inventory_items,
+            'inventory_unified':self._present_inventory_unified,
             'inventory_item_actions':self._present_inventory_item_actions,
             'crafting_home':self._present_crafting_home,
             'crafting_categories':self._present_crafting_categories,
@@ -552,6 +553,114 @@ class PygameTerminal(PointerUI):
         if presentation=='crafting_tree':
             return self._present_crafting_tree(title,footer=footer,breadcrumb=breadcrumb,data=data,scroll_offset=scroll_offset)
         return self.present_document(title,lines,footer=footer,breadcrumb=breadcrumb)
+
+    def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """Render one graphical inventory surface with inline item actions."""
+        data=data or {};pg=self.pg;screen=self.screen;items=data.get('items',{})
+        x,y,w,h,cx,cy,cw=self._feature_shell('INVENTORY','INVENTORY',subtitle)
+        gap=9;summary_h=50
+        metric_gap=8;metric_w=max(90,(cw-metric_gap*3)//4)
+        metrics=[
+            ('Mass',f"{data.get('total_mass_kg',0):.1f} kg"),
+            ('Volume',f"{data.get('total_volume_l',0):.1f} L"),
+            ('Stacks',str(data.get('stack_count',0))),
+            ('Items',str(data.get('item_count',0))),
+        ]
+        for i,(lab,val) in enumerate(metrics):
+            mx=cx+i*(metric_w+metric_gap)
+            self._draw_metric(pg.Rect(mx,cy,metric_w,summary_h),lab,val)
+        body_y=cy+summary_h+gap
+        body_bottom=y+h-48
+        panel_h=max(120,body_bottom-body_y)
+        detail_w=max(292,min(378,cw//3))
+        grid=pg.Rect(cx,body_y,max(180,cw-detail_w-16),panel_h)
+        detail=pg.Rect(grid.right+16,body_y,cw-grid.width-16,panel_h)
+        for panel_rect in (grid,detail):
+            pg.draw.rect(screen,self._theme['panel'],panel_rect,border_radius=7)
+            pg.draw.rect(screen,self._theme['edge'],panel_rect,1,border_radius=7)
+
+        if not rows:
+            msg=self.font.render('Your pack is empty.',True,self._theme['muted'])
+            screen.blit(msg,msg.get_rect(center=grid.center))
+        else:
+            cols=4 if grid.width>=570 else (3 if grid.width>=390 else 2)
+            card_gap=8;card_w=max(78,(grid.width-24-card_gap*(cols-1))//cols);card_h=112
+            for i,row in enumerate(rows):
+                gx=i%cols;gy=i//cols
+                rect=pg.Rect(grid.x+12+gx*(card_w+card_gap),grid.y+12+gy*(card_h+card_gap),card_w,card_h)
+                if rect.bottom>grid.bottom-10:break
+                iid=getattr(row,'key','');meta=items.get(iid,{})
+                self._ui_target(rect,f'UI_SELECT:{i}')
+                active=i==selected
+                pg.draw.rect(screen,(40,43,41) if active else self._theme['panel2'],rect,border_radius=6)
+                pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=6)
+                if active:pg.draw.rect(screen,self._theme['accent'],(rect.x,rect.y,4,rect.h),border_radius=3)
+                count=int(meta.get('count',0))
+                if iid!='__empty__':
+                    icon=pg.Rect(rect.x+7,rect.y+7,rect.width-14,58);self._draw_item_icon(iid,icon,scale=.9)
+                name=str(meta.get('name',getattr(row,'label',iid)))
+                name_s=self.small_font.render(self._fit_ui_text(name,self.small_font,rect.width-14),True,self._theme['text'])
+                screen.blit(name_s,(rect.x+7,rect.y+70))
+                if iid!='__empty__':
+                    qty=self.small_font.render(f'x{count}',True,self._theme['accent']);screen.blit(qty,(rect.x+7,rect.bottom-19))
+                    cat=self.small_font.render(self._fit_ui_text(str(meta.get('category','misc')).replace('_',' '),self.small_font,max(20,rect.width-52)),True,self._theme['muted'])
+                    screen.blit(cat,(rect.right-cat.get_width()-7,rect.bottom-19))
+            if total is not None and total>len(rows):
+                page=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted'])
+                screen.blit(page,(grid.right-page.get_width()-10,grid.bottom-20))
+
+        if rows:
+            row=rows[max(0,min(selected,len(rows)-1))]
+            iid=getattr(row,'key','');meta=items.get(iid,{})
+        else:
+            iid='';meta={}
+        if iid in items:
+            shown_amount=data.get('action_amount',1) if iid==data.get('selected_item_id') else 1
+            action_amount=max(1,min(int(shown_amount),int(meta.get('count',1))))
+            action_area_h=118
+            action_top=detail.bottom-action_area_h-12
+            icon_h=max(64,min(96,max(64,(action_top-detail.y)//3)))
+            icon=pg.Rect(detail.x+14,detail.y+12,detail.width-28,icon_h)
+            pg.draw.rect(screen,(17,20,21),icon,border_radius=6);self._draw_item_icon(iid,icon,scale=.78)
+            yy=icon.bottom+8
+            name=self.title_font.render(self._fit_ui_text(str(meta.get('name',iid)),self.title_font,detail.width-28),True,self._theme['accent']);screen.blit(name,(detail.x+14,yy));yy+=name.get_height()+2
+            cat=self.small_font.render(str(meta.get('category','misc')).replace('_',' ').upper(),True,self._theme['muted']);screen.blit(cat,(detail.x+14,yy));yy+=19
+            stat=f"x{meta.get('count',0)}  •  {meta.get('unit_mass_kg',0):.2f} kg ea  •  {meta.get('unit_volume_l',0):.2f} L ea"
+            stat_s=self.small_font.render(self._fit_ui_text(stat,self.small_font,detail.width-28),True,self._theme['text']);screen.blit(stat_s,(detail.x+14,yy));yy+=20
+            desc=str(meta.get('description','')).strip()
+            desc_lines=self._wrap_pixel_text(desc,self.small_font,detail.width-28) if desc else []
+            detail_lines=[str(v) for v in meta.get('detail_lines',[]) if v]
+            for line in (desc_lines[:2]+detail_lines):
+                if yy+16>action_top:break
+                line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-28),True,self._theme['muted']);screen.blit(line_s,(detail.x+14,yy));yy+=17
+
+            qty_y=action_top
+            qlab=self.small_font.render(f'ACTION AMOUNT  {action_amount} / {meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))
+            bw=38;bh=28;bx=detail.right-14-(bw*3+6*2)
+            self._button((bx,qty_y+2,bw,bh),'−','UI_ACTION:qty_down')
+            self._button((bx+bw+6,qty_y+2,bw,bh),'+','UI_ACTION:qty_up')
+            self._button((bx+(bw+6)*2,qty_y+2,bw,bh),'ALL','UI_ACTION:qty_all')
+
+            def action_button(rect,label,token,enabled=True):
+                rect=pg.Rect(rect);hover=enabled and rect.collidepoint(self._last_mouse)
+                fill=(43,48,48) if hover else self._theme['panel2']
+                edge=self._theme['accent'] if hover else (self._theme['edge_hi'] if enabled else self._theme['edge'])
+                fg=self._theme['text'] if enabled else self._theme['muted']
+                pg.draw.rect(screen,fill,rect,border_radius=5);pg.draw.rect(screen,edge,rect,1,border_radius=5)
+                txt=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-10),True,fg);screen.blit(txt,txt.get_rect(center=rect.center))
+                if enabled:self._ui_target(rect,token)
+            ay=qty_y+36;ag=7;ah=32;aw=(detail.width-28-ag)//2
+            action_button((detail.x+14,ay,aw,ah),str(meta.get('use_label','Use'))+' [U]','UI_ACTION:use',bool(meta.get('can_use')))
+            action_button((detail.x+14+aw+ag,ay,aw,ah),f'Drop x{action_amount} [X]','UI_ACTION:drop',True)
+            ay+=ah+7
+            action_button((detail.x+14,ay,aw,ah),'Split ½ [H]','UI_ACTION:split',int(meta.get('count',0))>1)
+            storage=bool(data.get('near_storage'))
+            action_button((detail.x+14+aw+ag,ay,aw,ah),f'Store x{action_amount} [E]' if storage else 'Store — no container','UI_ACTION:store',storage)
+        else:
+            msg=self.font.render('Select an item to inspect it.',True,self._theme['muted'])
+            screen.blit(msg,msg.get_rect(center=detail.center))
+
+        self._draw_feature_footer(x,y,w,h,footer);self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_home(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
