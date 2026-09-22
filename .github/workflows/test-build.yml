@@ -15,7 +15,7 @@ permissions:
 jobs:
   validate-and-package:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
