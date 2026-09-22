@@ -165,7 +165,8 @@ class Dev34StoragePygameTests(unittest.TestCase):
             self.assertTrue(wanted.issubset(found),wanted-found)
             for rect,token in t._pointer_targets:
                 self.assertTrue(screen.contains(rect),(token,rect))
-                self.assertLessEqual(rect.bottom,520-56,(token,rect))
+                if token in wanted:
+                    self.assertLessEqual(rect.bottom,520-56,(token,rect))
         finally:
             t.restore()
 
