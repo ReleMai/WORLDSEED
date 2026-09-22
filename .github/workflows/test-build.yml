@@ -49,9 +49,13 @@ jobs:
         shell: pwsh
         run: python -m compileall worldseed
 
+      - name: Run Phase 5 coast regression tests
+        shell: pwsh
+        run: python -m unittest tests.test_worldgen_v8_coast
+
       - name: Run v8 worldgen and hydrology regression suite
         shell: pwsh
-        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration tests.test_dev22_atlas tests.test_dev31_playtest_fixes tests.test_worldgen_v8_coast
+        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration tests.test_dev22_atlas tests.test_dev31_playtest_fixes
 
       - name: Run content and visual audits
         shell: pwsh
