@@ -162,6 +162,11 @@ class World:
         getter=getattr(self.generator,'climate_at',None)
         return getter(pos) if callable(getter) else None
 
+    def coast_at(self,pos:WorldPos,*,prepared_only:bool=True):
+        """Read Phase-5 coastal morphology without generating missing plans."""
+        getter=getattr(self.generator,'coast_at',None)
+        return getter(pos,prepared_only=prepared_only) if callable(getter) else None
+
     def hydrology_at(self,pos:WorldPos):
         getter=getattr(self.generator,'hydrology_at',None)
         return getter(pos) if callable(getter) else None
