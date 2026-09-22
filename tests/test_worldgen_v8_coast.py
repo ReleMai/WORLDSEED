@@ -144,8 +144,9 @@ class WorldgenV8CoastTests(unittest.TestCase):
         # sand/shore/ocean depth projection, then verify version 0 does not use it.
         candidate=None
         new_ids={'core:rocky_shore','core:coastal_cliff','core:coastal_gravel','core:tidal_flat','core:salt_marsh'}
-        for y in range(-2048,2049,32):
-            for x in range(-2048,2049,32):
+        coast=self._find_coast()
+        for y in range(coast.y-160,coast.y+161,8):
+            for x in range(coast.x-160,coast.x+161,8):
                 tid=gen._surface_terrain_base(WorldPos(x,y,0))
                 if tid in new_ids:
                     candidate=WorldPos(x,y,0);break
