@@ -630,7 +630,7 @@ class PygameTerminal(PointerUI):
             desc=str(meta.get('description','')).strip()
             desc_lines=self._wrap_pixel_text(desc,self.small_font,detail.width-28) if desc else []
             detail_lines=[str(v) for v in meta.get('detail_lines',[]) if v]
-            for line in (desc_lines[:2]+detail_lines[:3]):
+            for line in (desc_lines[:2]+detail_lines):
                 if yy+16>action_top:break
                 line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-28),True,self._theme['muted']);screen.blit(line_s,(detail.x+14,yy));yy+=17
 
