@@ -1,3 +1,17 @@
+## RC14 Dev33 — Phase 5 coastline materialization
+
+- Added `COAST_MORPHOLOGY_VERSION = 1` as an independent save-pinned shoreline contract.
+- New worlds now materialize continental-geometry bathymetry into actual wading, shallow, shelf and deep-ocean terrain rather than relying only on the older local-slope distance approximation.
+- Added real coast terrain classes for rocky shore, coastal cliff, coastal gravel, tidal flat and salt marsh while retaining sandy shore.
+- Coastal cliffs are physically impassable/vision-blocking terrain; the other new shore classes remain traversable for now.
+- Reused existing approved rock/riverbank/floodplain/wetland art families so the new geography works immediately without overwriting the newly updated rain/cloud/tree/morel/cave graphics.
+- Added distinct atlas colors so the new shore types remain visible in cartography.
+- Existing v8 saves without coast metadata infer coast version 0 and preserve their old shoreline instead of silently changing geography.
+- Surface generated-cache identity now includes coast version. A new additive cache table preserves compatibility with Dev30/Dev32 cache rows.
+- Bounded coast materialization cost with an absolute 8-cell classification lattice while retaining exact per-cell geological land/ocean authority.
+- Fixed stale atlas drag regression fixtures discovered by the expanded validation gate.
+- Full delta distributaries, barrier islands/spits and dedicated coast art remain later Phase-5 work.
+
 ## RC14 Dev32 — WORLDGEN v8 Phase 5 coast foundation
 
 - Resumed the staged WORLDGEN v8 roadmap after the Dev31 playtest and visual correction work.
