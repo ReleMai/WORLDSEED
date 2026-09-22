@@ -1,7 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, Callable
-from worldseed.config import DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION
+from worldseed.config import (
+    DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION,
+    HYDROLOGY_MORPHOLOGY_VERSION, COAST_MORPHOLOGY_VERSION,
+)
 from worldseed.content.registry import ContentRegistry, TerrainDef
 from worldseed.core.coords import ChunkKey, WorldPos, split_world
 from worldseed.world.cache import ChunkCache
@@ -16,11 +19,17 @@ class TileView:
 class World:
     def __init__(self,generator:WorldGenerator,registry:ContentRegistry,delta_source:DeltaSource,cache_chunks:int=DEFAULT_CACHE_CHUNKS,auto_hydrology:bool=True)->None:
         self.generator=generator; self.registry=registry; self.delta_source=delta_source; self.dirty_tiles:dict[WorldPos,str]={}; self.revision=0
+        coast_version=COAST_MORPHOLOGY_VERSION if self.generator.version>=8 else 0
+        getter=getattr(delta_source,'get_meta',None)
+        if callable(getter) and self.generator.version>=8:
+            try:coast_version=int(getter('coast_morphology_version'))
+            except (KeyError,TypeError,ValueError):coast_version=0
+        setter=getattr(self.generator,'set_coast_morphology_version',None)
+        if callable(setter):setter(coast_version)
         if auto_hydrology and self.generator.version>=5 and getattr(self.generator,'hydrology',None) is None:
             from worldseed.world.hydrology import HydrologyGenerator
             hydrology_version=HYDROLOGY_VERSION
             morphology_version=HYDROLOGY_MORPHOLOGY_VERSION
-            getter=getattr(delta_source,'get_meta',None)
             if callable(getter):
                 try:hydrology_version=int(getter('hydrology_version'))
                 except (KeyError,TypeError,ValueError):hydrology_version=1
@@ -48,6 +57,7 @@ class World:
                 int(self.generator.version),
                 int(getattr(hydro,'version',1)),
                 int(getattr(hydro,'morphology_version',1)),
+                int(getattr(self.generator,'coast_morphology_version',0)),
             )
         return None
     def _load_chunk(self,key:ChunkKey)->Chunk:
@@ -63,9 +73,10 @@ class World:
                 chunk=self._chunk_from_ids(key,loader(key,self.generator.version))
         if chunk is None:
             chunk=self.generator.generate_chunk(key)
-            # Surface terrain depends on both drainage and morphology contracts,
-            # so v5+ surface caches are keyed by all three versions. Underground
-            # and pre-hydrology geography retain the older worldgen-only cache.
+            # Surface terrain depends on drainage, river morphology and Phase-5
+            # coast materialization. V5+ surface caches are keyed by every
+            # active projection contract; underground/pre-hydrology caches keep
+            # the older worldgen-only key.
             terrain_ids=[self.registry.terrain_id(v) for v in chunk.terrain]
             if surface_contract is not None:
                 storer=getattr(self.delta_source,'store_generated_surface_chunk',None)
