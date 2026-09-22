@@ -190,6 +190,9 @@ class AtlasRenderTests(unittest.TestCase):
             term.pg.event.post(term.pg.event.Event(term.pg.MOUSEBUTTONUP,button=1,pos=end))
             self.assertEqual(term.read_key(),'ATLAS:drag_end')
             self.assertTrue(atlas_input(term,self.sim,'ATLAS:drag_end'))
+            # The real app redraws after panning before the next pointer action;
+            # refresh the invalidated snapshot before testing inspection.
+            term.present_region_map(self.sim)
             self.assertFalse(atlas_input(term,self.sim,'w'))
             term._last_mouse = term._atlas_rect.center
             self.assertTrue(atlas_input(term,self.sim,'ATLAS_INSPECT'))
