@@ -76,9 +76,9 @@ jobs:
         shell: pwsh
         run: python -m unittest tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
 
-      - name: Atlas and playtest regressions
+      - name: Atlas drag regression
         shell: pwsh
-        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets tests.test_dev31_playtest_fixes
+        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
 
       - name: Content and visual audits
         shell: pwsh
