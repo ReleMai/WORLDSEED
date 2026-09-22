@@ -6,6 +6,17 @@
 - Correct obsolete validation fixtures (offshore resource searches, no-op corruption, stale discovery cache, bootstrap discovery bypass). Assertions remain active.
 - Add mouth/seam/cache/version tests, real multi-seed audit, visual comparison and local-play benchmark. Details and validation limits: DEV34_VALIDATION.md.
 
+## RC14 Parallel UI Track 1 — unified graphical inventory
+
+- Replaced the pygame inventory's duplicate Pack Overview -> Browse Items -> Item Actions chain with one retained visual inventory surface.
+- Pressing I now opens the carried-item icon grid directly; clicking an item updates its description, physical stats and gameplay traits without leaving the grid.
+- Added inline contextual Use, Drop, Split and Store controls plus quantity selection (- / + / All). Split selects a portion of the existing count for transfer/drop rather than creating a conflicting second stack model.
+- Use resolves to existing authoritative commands for food, equipment and carried books; Drop and Store preserve their command boundary and support selected quantities.
+- Inventory actions keep the inventory open after execution so repeated organization no longer requires reopening nested menus.
+- Added mouse and keyboard parity (U/X/H/E, [ ], M, arrows, Esc) and retained the legacy terminal inventory flow as a fallback.
+- Expanded the inventory presentation data with per-item mass/volume, material and relevant food/tool/weapon/equipment facts.
+- Added focused widget and real pygame pointer regression coverage for unified selection, split quantity and drop behavior.
+
 ## RC14 Dev33 — Phase 5 coastline materialization
 
 - Added `COAST_MORPHOLOGY_VERSION = 1` as an independent save-pinned shoreline contract.

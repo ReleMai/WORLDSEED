@@ -105,6 +105,15 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         k = _ui_key(term.read_key())
         if state is not None:
             state.selected = selected
+        if k.startswith('UI_ACTION:'):
+            return k
+        if presentation=='inventory_unified':
+            inventory_keys={
+                'u':'UI_ACTION:use','x':'UI_ACTION:drop','h':'UI_ACTION:split',
+                '[':'UI_ACTION:qty_down',']':'UI_ACTION:qty_up','m':'UI_ACTION:qty_all',
+                'e':'UI_ACTION:store',
+            }
+            if k in inventory_keys:return inventory_keys[k]
         if k.startswith(('UI_SELECT:','UI_HOVER:')):
             try:idx=page_start+int(k.split(':',1)[1])
             except ValueError:continue

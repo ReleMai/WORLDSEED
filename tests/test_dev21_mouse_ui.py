@@ -63,7 +63,7 @@ class MouseUITests(unittest.TestCase):
     def test_feature_hit_targets_fit_small_and_large_windows(self):
         for size in ((800,520),(1600,900)):
             self.t._resize(*size)
-            for kind in ('inventory_items','crafting_categories','crafting_recipes','crafting_designs','crafting_component_choices','crafting_home'):
+            for kind in ('inventory_items','inventory_unified','crafting_categories','crafting_recipes','crafting_designs','crafting_component_choices','crafting_home'):
                 count=self.t.menu_page_size(kind)
                 rows=[MenuRow(str(i),f'Row {i}') for i in range(count)]
                 self.t.present_feature_menu(kind,'Test',rows,0)
@@ -72,6 +72,23 @@ class MouseUITests(unittest.TestCase):
                 for rect in targets:
                     self.assertTrue(self.t.screen.get_rect().contains(rect),(kind,size,rect))
                     self.assertLessEqual(rect.bottom,size[1]-56,(kind,size,rect))
+    def test_unified_inventory_inline_split_and_drop(self):
+        from test_ui_rc2 import UIRC3FlowTests
+        from worldseed.app import _inventory_menu
+        from worldseed.entities.components import Inventory
+        f=UIRC3FlowTests();f.setUp()
+        try:
+            read=self.t.read_key
+            sequence=iter(['UI_SELECT:1','UI_ACTION:split','UI_ACTION:drop','ESC'])
+            def input_event():
+                token=next(sequence);self.click(token);return read()
+            self.t.read_key=input_event
+            before=f.entities.get(f.pid,Inventory).count('core:wood')
+            self.assertEqual(before,4)
+            _inventory_menu(f.ctx,self.t)
+            self.assertEqual(f.entities.get(f.pid,Inventory).count('core:wood'),2)
+        finally:f.tearDown()
+
     def test_hud_and_nested_crafting_inventory_are_clickable_and_observational(self):
         from test_ui_rc2 import UIRC3FlowTests
         from worldseed.app import _crafting_menu,_inventory_menu

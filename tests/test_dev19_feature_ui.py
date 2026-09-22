@@ -36,3 +36,14 @@ def test_feature_document_hook_receives_structured_data():
     kind,title,lines,data=term.feature_doc_calls[0]
     assert kind=='crafting_tree'
     assert data['nodes'][0]['id']=='r1'
+
+
+def test_unified_inventory_keyboard_actions_are_returned_to_owner():
+    term=FeatureTerm(['u'])
+    choice=select_menu(
+        term,'INVENTORY',[('core:wood','Wood x4')],
+        presentation='inventory_unified',
+        presentation_data={'items':{'core:wood':{'count':4}}},
+    )
+    assert choice=='UI_ACTION:use'
+    assert term.feature_menu_calls[-1][0]=='inventory_unified'
