@@ -7,16 +7,16 @@ state is created or mutated here.
 """
 from __future__ import annotations
 
-from math import floor
-
 from worldseed.core.rng import hash_u64
+from worldseed.presentation.clouds import CloudRenderer
 
 
 class WeatherFxRenderer:
     def __init__(self, pygame_module) -> None:
         self.pg = pygame_module
         self._wet_cache = {}
-        self._cloud_cache = {}
+        self._clouds = CloudRenderer(pygame_module)
+        self._cloud_cache = self._clouds.frames
         self._rain_cache = {}
         self._glow_cache = {}
         self._lighting_target = None
@@ -77,47 +77,26 @@ class WeatherFxRenderer:
         wind_dx: int, wind_dy: int, world_left: int, world_top: int,
         tile_px: int, elapsed_ms: int,
     ):
-        """World-anchored moving cloud-shadow field."""
-        cover=max(0,min(100,int(cloud_cover)))
-        if cover<12:return None
-        pg=self.pg;tile_px=max(1,int(tile_px));phase=max(0,int(elapsed_ms))//33
-        key=(int(width),int(height),int(world_left),int(world_top),tile_px,phase,cover,int(wind_dx),int(wind_dy),bytes(seed))
-        cached=self._cloud_cache.get(key)
-        if cached is not None:return cached
-        surf=pg.Surface((width,height),pg.SRCALPHA)
-        cell_w,cell_h=36,28
-        drift_tiles_x=int(wind_dx)*phase*33/4680000;drift_tiles_y=int(wind_dy)*phase*33/4680000
-        min_x=world_left-drift_tiles_x-48;max_x=world_left+width//tile_px-drift_tiles_x+48
-        min_y=world_top-drift_tiles_y-36;max_y=world_top+height//tile_px-drift_tiles_y+36
-        gx0,gx1=int(min_x//cell_w),int(max_x//cell_w);gy0,gy1=int(min_y//cell_h),int(max_y//cell_h)
-        alpha=10+cover//6
-        for gy in range(gy0,gy1+1):
-            for gx in range(gx0,gx1+1):
-                token=hash_u64(seed,'weather-art:cloud-field',gx,gy)
-                if int(token%100)>=cover:continue
-                wx=gx*cell_w+6+int((token>>9)%max(1,cell_w-12))+drift_tiles_x
-                wy=gy*cell_h+5+int((token>>21)%max(1,cell_h-10))+drift_tiles_y
-                cx=floor((wx-world_left)*tile_px);cy=floor((wy-world_top)*tile_px)
-                base_w=(18+int((token>>33)%20))*tile_px;base_h=(8+int((token>>45)%11))*tile_px
-                lobes=4+int((token>>55)%4)
-                body=pg.Rect(cx-base_w//2,cy-base_h//2,base_w,base_h)
-                pg.draw.ellipse(surf,(7,11,16,max(3,alpha//3)),body.inflate(tile_px*3,tile_px*2))
-                for i in range(lobes):
-                    lt=hash_u64(seed,'weather-art:cloud-lobe',gx,gy,i)
-                    ox=(int(lt%1000)-500)*base_w//1800;oy=(int((lt>>12)%1000)-500)*base_h//2200
-                    rw=max(tile_px*5,base_w*(34+int((lt>>24)%36))//100)
-                    rh=max(tile_px*3,base_h*(42+int((lt>>36)%34))//100)
-                    rect=pg.Rect(cx+ox-rw//2,cy+oy-rh//2,rw,rh)
-                    for ring in range(12, -1, -1):
-                        grow = tile_px * ring // 5
-                        opacity = max(1, round(alpha * (1 - ring / 13) ** 2))
-                        pg.draw.ellipse(surf, (6,10,15,opacity), rect.inflate(grow,grow))
-        if len(self._cloud_cache)>=2:self._cloud_cache.pop(next(iter(self._cloud_cache)))
-        self._cloud_cache[key]=surf;return surf
+        shadows, _ = self._clouds.layers(width, height, seed, cloud_cover,
+                                        wind_dx, wind_dy, world_left, world_top,
+                                        tile_px, elapsed_ms)
+        return shadows
 
-    def draw_cloud_shadows(self, screen, rect, seed: bytes, weather: dict, *, world_left: int, world_top: int, tile_px: int, elapsed_ms: int) -> None:
-        surf=self.cloud_shadow_surface(rect.width,rect.height,seed,int(weather.get('cloud_cover',0)),int(weather.get('wind_dx',0)),int(weather.get('wind_dy',0)),world_left,world_top,tile_px,elapsed_ms)
-        if surf is not None:screen.blit(surf,rect.topleft)
+    def draw_cloud_shadows(self, screen, rect, seed: bytes, weather: dict, *,
+                           world_left: int, world_top: int, tile_px: int,
+                           elapsed_ms: int, game_minute=720, lighting=None) -> None:
+        layers = self._clouds.layers(
+            rect.width, rect.height, seed, int(weather.get('cloud_cover', 0)),
+            int(weather.get('wind_dx', 0)), int(weather.get('wind_dy', 0)),
+            world_left, world_top, tile_px, elapsed_ms,
+            storm=int(weather.get('storm_intensity', 0)), minute=game_minute,
+            daylight=getattr(lighting, 'daylight', 65535),
+            sunrise=getattr(lighting, 'sunrise_minute', 360),
+            sunset=getattr(lighting, 'sunset_minute', 1080))
+        for layer in layers:
+            if layer is not None:
+                screen.blit(layer, rect.topleft)
+
     def draw_fog(self, screen, rect, weather: dict) -> None:
         fog = max(0, min(100, int(weather.get("fog", 0))))
         if fog <= 4:

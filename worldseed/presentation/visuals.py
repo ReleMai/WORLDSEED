@@ -48,6 +48,9 @@ class VisualRegistry:
         raw = self.manifest.get("special", {}).get(name)
         return self.base_dir / raw if raw else None
 
+    def resource_style(self, content_id: str) -> dict:
+        return self.manifest.get('resource_rendering', {}).get(content_id, {})
+
     def player_paths(self, sex: str = 'male') -> tuple[Path, ...]:
         groups = self.manifest.get('player_variants', {})
         raw = groups.get((sex or 'male').lower()) or groups.get('male') or []

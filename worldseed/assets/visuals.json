@@ -234,22 +234,6 @@
       "assets/sprites/terrain/v7_cave_mouth_07.png"
     ],
     "core:cave_floor": [
-      "assets/sprites/terrain/dev17_cave_floor_00.png",
-      "assets/sprites/terrain/dev17_cave_floor_01.png",
-      "assets/sprites/terrain/dev17_cave_floor_02.png",
-      "assets/sprites/terrain/dev17_cave_floor_03.png",
-      "assets/sprites/terrain/dev17_cave_floor_04.png",
-      "assets/sprites/terrain/dev17_cave_floor_05.png",
-      "assets/sprites/terrain/dev17_cave_floor_06.png",
-      "assets/sprites/terrain/dev17_cave_floor_07.png",
-      "assets/sprites/terrain/dev17_cave_floor_08.png",
-      "assets/sprites/terrain/dev17_cave_floor_09.png",
-      "assets/sprites/terrain/dev17_cave_floor_10.png",
-      "assets/sprites/terrain/dev17_cave_floor_11.png",
-      "assets/sprites/terrain/dev17_cave_floor_12.png",
-      "assets/sprites/terrain/dev17_cave_floor_13.png",
-      "assets/sprites/terrain/dev17_cave_floor_14.png",
-      "assets/sprites/terrain/dev17_cave_floor_15.png",
       "assets/sprites/terrain/cave_floor_v00.png",
       "assets/sprites/terrain/cave_floor_v01.png",
       "assets/sprites/terrain/cave_floor_v02.png",
@@ -262,12 +246,6 @@
       "assets/sprites/terrain/cave_floor_v09.png"
     ],
     "core:cave_wall": [
-      "assets/sprites/terrain/dev17_cave_wall_00.png",
-      "assets/sprites/terrain/dev17_cave_wall_01.png",
-      "assets/sprites/terrain/dev17_cave_wall_02.png",
-      "assets/sprites/terrain/dev17_cave_wall_03.png",
-      "assets/sprites/terrain/dev17_cave_wall_04.png",
-      "assets/sprites/terrain/dev17_cave_wall_05.png",
       "assets/sprites/terrain/v7_cave_wall_00.png",
       "assets/sprites/terrain/v7_cave_wall_01.png",
       "assets/sprites/terrain/v7_cave_wall_02.png",
@@ -889,7 +867,8 @@
   "special": {
     "player": "assets/sprites/characters/dev20_00.png",
     "cursor": "assets/sprites/special/cursor.png",
-    "unknown": "assets/sprites/special/unknown.png"
+    "unknown": "assets/sprites/special/unknown.png",
+    "cloud_bank": "assets/sprites/weather/cloud_bank.png"
   },
   "player_variants": {
     "male": [
@@ -916,5 +895,17 @@
       "assets/sprites/characters/dev20_20.png",
       "assets/sprites/characters/dev20_21.png"
     ]
+  },
+  "resource_rendering": {
+    "core:pine_tree": {
+      "width": 1.65,
+      "height": 2.8,
+      "smooth": true
+    },
+    "core:morel_patch": {
+      "width": 0.85,
+      "height": 0.85,
+      "smooth": true
+    }
   }
 }

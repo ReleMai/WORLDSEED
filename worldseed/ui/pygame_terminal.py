@@ -1104,6 +1104,7 @@ class PygameTerminal(PointerUI):
             self._weather_fx.draw_cloud_shadows(
                 self.screen,used,ctx['seed'],ctx,world_left=int(ctx.get('left',0)),
                 world_top=int(ctx.get('top',0)),tile_px=int(ctx.get('tile_px',28)),elapsed_ms=int(now),
+                game_minute=ctx.get('minute',720),lighting=ctx['lighting'],
             )
             rain=self._weather_fx.rain_surface(
                 used.width,used.height,ctx['seed'],phase,int(ctx.get('rain',0)),
@@ -1158,16 +1159,16 @@ class PygameTerminal(PointerUI):
         self._overlay_cache[key]=overlay
         return overlay
 
-    def _load_sprite(self, path: Path | None, max_w: int, max_h: int):
+    def _load_sprite(self, path: Path | None, max_w: int, max_h: int, *, smooth: bool = False):
         if path is None or not path.exists(): return None
-        key=(str(path),max_w,max_h)
+        key=(str(path),max_w,max_h,smooth)
         if key in self._sprite_cache: return self._sprite_cache[key]
         pg=self.pg
         try:
             surf=pg.image.load(str(path)).convert_alpha()
             scale=min(max_w/max(1,surf.get_width()),max_h/max(1,surf.get_height()))
             size=(max(1,int(surf.get_width()*scale)),max(1,int(surf.get_height()*scale)))
-            surf=pg.transform.smoothscale(surf,size) if path in self._character_sprite_paths else pg.transform.scale(surf,size)
+            surf=pg.transform.smoothscale(surf,size) if smooth or path in self._character_sprite_paths else pg.transform.scale(surf,size)
             self._sprite_cache[key]=surf
             return surf
         except Exception:
@@ -1186,15 +1187,24 @@ class PygameTerminal(PointerUI):
         except Exception:
             return None
 
-    def _draw_sprite_bottom(self, path: Path | None, cell_rect, max_h_mult: float=1.45, alpha: int=255) -> None:
+    def _draw_sprite_bottom(self, path: Path | None, cell_rect, max_h_mult: float=1.45, alpha: int=255, *, width_mult: float=1.35, smooth: bool=False) -> None:
         pg=self.pg
-        max_w=int(cell_rect.width*1.35); max_h=int(cell_rect.height*max_h_mult)
-        surf=self._load_sprite(path,max_w,max_h)
+        max_w=int(cell_rect.width*width_mult); max_h=int(cell_rect.height*max_h_mult)
+        surf=self._load_sprite(path,max_w,max_h,smooth=smooth)
         if surf is None: return
         if alpha != 255:
             surf=surf.copy(); surf.set_alpha(alpha)
         x=cell_rect.centerx-surf.get_width()//2; y=cell_rect.bottom-surf.get_height()
         self.screen.blit(surf,(x,y))
+
+    def _draw_resource_feature(self, feature, path, rect):
+        style = self._visuals.resource_style(feature.feature_id)
+        growth = 0.65 if feature.stage == 'sapling' and style else 1.0
+        self._draw_sprite_bottom(
+            path, rect, float(style.get('height', 1.7)) * growth,
+            190 if feature.stage == 'sapling' else 255,
+            width_mult=float(style.get('width', 1.35)) * growth,
+            smooth=bool(style.get('smooth', False)))
 
     def _terrain_transition_mask(self, direction: str, tile_px: int, center_id: str, neighbor_id: str):
         """Feather mask for local terrain autotiling in all 8 directions."""
@@ -1776,7 +1786,8 @@ class PygameTerminal(PointerUI):
             if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
             feature=resource_by.get(k)
             if feature:
-                fv,rp=feature;self._draw_sprite_bottom(rp,rect,1.7,190 if fv.stage=='sapling' else 255)
+                fv,rp=feature
+                self._draw_resource_feature(fv,rp,rect)
             if k in crop_by:
                 crop=crop_by[k];ref=self._visuals.ref('crops',crop.crop_id);stage=2 if crop.mature else (1 if crop.growth>=45 else 0)
                 self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
@@ -1837,7 +1848,7 @@ class PygameTerminal(PointerUI):
             # Idle effects restore the ungraded snapshot and read frozen samples.
             self._weather_fx.draw_cloud_shadows(
                 screen,used,sim.seed,weather,world_left=left,world_top=top,
-                tile_px=tile_px,elapsed_ms=now_ms,
+                tile_px=tile_px,elapsed_ms=now_ms,game_minute=sim.clock.minute,lighting=lighting,
             )
             if int(weather.get('rain',0))>0:
                 rain=self._weather_fx.rain_surface(
@@ -1918,6 +1929,8 @@ class PygameTerminal(PointerUI):
             'lighting':lighting if pos.z==0 else None,
             'fire_rects':fire_rects if pos.z==0 and lighting is not None else [],
             'fog':int(weather.get('fog',0)) if pos.z==0 else 0,
+            'storm_intensity':int(weather.get('storm_intensity',0)) if pos.z==0 else 0,
+            'minute':sim.clock.minute,
             'seed':sim.seed,'rain':int(weather.get('rain',0)) if pos.z==0 else 0,
             'wind_dx':int(weather.get('wind_dx',0)) if pos.z==0 else 0,
             'wind_dy':int(weather.get('wind_dy',0)) if pos.z==0 else 0,
