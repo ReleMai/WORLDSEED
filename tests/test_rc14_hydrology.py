@@ -7,7 +7,7 @@ from pathlib import Path
 
 from worldseed.config import (
     DATA_DIR, HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION,
-    ROUTEGEN_VERSION, SETTLEMENT_PLAN_VERSION, WORLDGEN_VERSION,
+    COAST_MORPHOLOGY_VERSION, ROUTEGEN_VERSION, SETTLEMENT_PLAN_VERSION, WORLDGEN_VERSION,
 )
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import ChunkKey, WorldPos
@@ -282,7 +282,7 @@ class RC14HydrologyTests(unittest.TestCase):
             path = Path(td) / 'old.db'
             db = WorldDatabase.create(path, 'old', self.seed.hex())
             db.set_meta('worldgen_version', 3)
-            for key in ('hydrology_version','hydrology_morphology_version','settlement_plan_version','routegen_version'):
+            for key in ('hydrology_version','hydrology_morphology_version','coast_morphology_version','settlement_plan_version','routegen_version'):
                 db.connection.execute('DELETE FROM world_meta WHERE key=?', (key,))
             db.connection.commit(); db.close()
             db2 = WorldDatabase.open(path)
@@ -291,6 +291,7 @@ class RC14HydrologyTests(unittest.TestCase):
             # never the newest hydrology algorithm.
             self.assertEqual(db2.get_meta('hydrology_version'), 1)
             self.assertEqual(db2.get_meta('hydrology_morphology_version'), 1)
+            self.assertEqual(db2.get_meta('coast_morphology_version'), 0)
             self.assertEqual(db2.get_meta('settlement_plan_version'), 1)
             self.assertEqual(db2.get_meta('routegen_version'), 1)
             db2.close()
@@ -301,6 +302,7 @@ class RC14HydrologyTests(unittest.TestCase):
             db = WorldDatabase.create(path, 'new-v8', self.seed.hex())
             self.assertEqual(db.get_meta('hydrology_version'), 2)
             self.assertEqual(db.get_meta('hydrology_morphology_version'), 2)
+            self.assertEqual(db.get_meta('coast_morphology_version'), COAST_MORPHOLOGY_VERSION)
             db.set_meta('hydrology_version',1)
             db.set_meta('hydrology_morphology_version',1)
             db.connection.commit();db.close()
@@ -354,14 +356,17 @@ class RC14HydrologyTests(unittest.TestCase):
             n=32*32
             v1=tuple(['core:grass']*n)
             v2=tuple(['core:floodplain']*n)
-            db.store_generated_surface_chunk(key,8,2,1,v1)
-            db.store_generated_surface_chunk(key,8,2,2,v2)
+            coast=tuple(['core:rocky_shore']*n)
+            db.store_generated_surface_chunk(key,8,2,1,0,v1)
+            db.store_generated_surface_chunk(key,8,2,2,0,v2)
+            db.store_generated_surface_chunk(key,8,2,2,1,coast)
             db.commit_generated()
-            self.assertEqual(db.load_generated_surface_chunk(key,8,2,1),v1)
-            self.assertEqual(db.load_generated_surface_chunk(key,8,2,2),v2)
+            self.assertEqual(db.load_generated_surface_chunk(key,8,2,1,0),v1)
+            self.assertEqual(db.load_generated_surface_chunk(key,8,2,2,0),v2)
+            self.assertEqual(db.load_generated_surface_chunk(key,8,2,2,1),coast)
             self.assertNotEqual(
-                db.load_generated_surface_chunk(key,8,2,1),
-                db.load_generated_surface_chunk(key,8,2,2),
+                db.load_generated_surface_chunk(key,8,2,2,0),
+                db.load_generated_surface_chunk(key,8,2,2,1),
             )
             db.close()
 
