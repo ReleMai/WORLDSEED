@@ -41,6 +41,8 @@ class PointerUI:
 
     def menu_page_size(self, presentation=''):
         w,h=self.screen.get_size();usable=max(80,h-245)
+        if presentation=='container_inventory':
+            return max(6,2*max(3,usable//112))
         if presentation in ('inventory_items','inventory_unified'):
             grid_w=w-72-max(280,min(360,(w-72)//3))-16
             return (4 if grid_w>=560 else 3)*max(1,usable//127)
