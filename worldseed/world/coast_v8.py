@@ -63,7 +63,13 @@ class CoastV8Sampler:
         self.generator = generator
 
     def _elevation(self, x: int, y: int) -> int:
-        return int(self.generator.sample_fields(WorldPos(int(x), int(y), 0)).elevation)
+        # Coast geometry needs geological elevation only. Calling sample_fields
+        # here would also run the full physical climate sampler for every ring
+        # probe, multiplying Phase-5 cost for information we do not consume.
+        landforms=getattr(self.generator,"landforms_v8",None)
+        if landforms is not None:
+            return int(landforms.sample(int(x),int(y)).elevation)
+        return int(self.generator.sample_fields(WorldPos(int(x),int(y),0)).elevation)
 
     def _ring_land_fraction(self, x: int, y: int, radius: int) -> int:
         land=0
