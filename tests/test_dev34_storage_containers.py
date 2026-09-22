@@ -125,6 +125,19 @@ class Dev34StorageContentTests(unittest.TestCase):
         self.assertTrue(c.movable)
         self.assertEqual(c.name,"Placed Wicker Basket")
 
+    def test_portable_crafted_storage_can_be_packed_up_for_reuse(self):
+        state=LivingWorldState();building=BuildingSystem(state,self.reg)
+        inv=Inventory({"core:wicker_basket":1})
+        p=WorldPos(8,9,0)
+        ok,msg=building.place("core:storage_basket",p,inv)
+        self.assertTrue(ok,msg)
+        state.containers[pos_key(8,9,0)].items["core:bark"]=2
+        ok,msg=building.dismantle(p,inv)
+        self.assertTrue(ok,msg)
+        self.assertEqual(inv.count("core:wicker_basket"),1)
+        self.assertEqual(state.ground_piles[pos_key(8,9,0)].items["core:bark"],2)
+        self.assertNotIn(pos_key(8,9,0),state.containers)
+
     def test_container_keyboard_transfer_intent(self):
         term=_KeyTerm("t")
         choice=select_menu(
