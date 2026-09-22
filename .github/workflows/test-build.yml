@@ -1,4 +1,4 @@
-name: WORLDSEED Dev31 Test Build
+name: WORLDSEED Dev32 Test Build
 
 concurrency:
   group: worldseed-test-build-${{ github.ref }}
@@ -51,13 +51,17 @@ jobs:
 
       - name: Run v8 worldgen and hydrology regression suite
         shell: pwsh
-        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration tests.test_dev22_atlas tests.test_dev31_playtest_fixes
+        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration tests.test_dev22_atlas tests.test_dev31_playtest_fixes tests.test_worldgen_v8_coast
 
       - name: Run content and visual audits
         shell: pwsh
         run: |
           python tools/audit_content.py
           python tools/audit_visuals.py
+
+      - name: Run Phase 5 coast morphology audit
+        shell: pwsh
+        run: python tools/audit_worldgen_v8_coast.py --seeds 4 --radius 2048 --step 128
 
       - name: Run Hydrology v2 morphology audit
         shell: pwsh
@@ -83,7 +87,7 @@ jobs:
       - name: Upload playable test build
         uses: actions/upload-artifact@v4
         with:
-          name: WORLDSEED_RC14_DEV31_TEST_BUILD
+          name: WORLDSEED_RC14_DEV32_TEST_BUILD
           path: package/
           if-no-files-found: error
           compression-level: 6
