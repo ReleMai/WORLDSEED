@@ -597,7 +597,6 @@
       "container",
       "natural_only",
       "natural_container",
-      "movable",
       "flammable"
     ],
     "capacity_mass_g": 30000,
@@ -618,8 +617,7 @@
     "tags": [
       "container",
       "natural_only",
-      "natural_container",
-      "movable"
+      "natural_container"
     ],
     "capacity_mass_g": 60000,
     "capacity_volume_ml": 30000,
