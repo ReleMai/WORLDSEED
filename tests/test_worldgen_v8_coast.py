@@ -130,13 +130,13 @@ class WorldgenV8CoastTests(unittest.TestCase):
             (SimpleNamespace(ocean=False,coast_distance=10,marsh_potential=20,tidal_flat_potential=85,coast_kind='tidal_flat',shore_material='mud'), 'core:tidal_flat'),
             (SimpleNamespace(ocean=False,coast_distance=18,marsh_potential=90,tidal_flat_potential=55,coast_kind='marsh',shore_material='mud'), 'core:salt_marsh'),
         ]
-        original=gen.coast_at
+        original=gen.coast_v8.materialization_at
         try:
             for coast,expected in cases:
-                gen.coast_at=lambda *_args, _coast=coast, **_kwargs:_coast
+                gen.coast_v8.materialization_at=lambda *_args, _coast=coast, **_kwargs:_coast
                 self.assertEqual(gen._phase5_coast_terrain(WorldPos(0,0,0),fields),expected)
         finally:
-            gen.coast_at=original
+            gen.coast_v8.materialization_at=original
 
     def test_chunk_materialization_reuses_coarse_coast_samples(self):
         gen=WorldGenerator(self.seed,self.registry,version=8)
@@ -160,9 +160,9 @@ class WorldgenV8CoastTests(unittest.TestCase):
             ocean=False,coast_distance=4,marsh_potential=0,
             tidal_flat_potential=0,coast_kind='rocky',shore_material='rock',
         )
-        original=gen.coast_at
+        original=gen.coast_v8.materialization_at
         try:
-            gen.coast_at=lambda *_args,**_kwargs:coast
+            gen.coast_v8.materialization_at=lambda *_args,**_kwargs:coast
             self.assertEqual(gen._phase5_coast_terrain(pos,fields),'core:rocky_shore')
             gen.set_coast_morphology_version(0)
             self.assertIsNone(gen._phase5_coast_terrain(pos,fields))
@@ -171,7 +171,7 @@ class WorldgenV8CoastTests(unittest.TestCase):
                 {'core:rocky_shore','core:coastal_cliff','core:coastal_gravel','core:tidal_flat','core:salt_marsh'},
             )
         finally:
-            gen.coast_at=original
+            gen.coast_v8.materialization_at=original
 
 
 if __name__=='__main__':
