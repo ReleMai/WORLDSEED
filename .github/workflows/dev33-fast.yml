@@ -1,0 +1,45 @@
+name: Dev33 Phase 5 Fast Gate
+
+on:
+  push:
+    branches: [dev33-phase5-coast-materialization]
+  workflow_dispatch:
+
+concurrency:
+  group: dev33-phase5-fast
+  cancel-in-progress: true
+
+jobs:
+  phase5:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install "Pillow>=10,<12"
+      - name: Compile
+        run: python -m compileall worldseed
+      - name: Phase 5 coast tests
+        run: python -m unittest tests.test_worldgen_v8_coast
+      - name: Surface cache and pregeneration tests
+        run: python -m unittest tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
+      - name: Atlas drag regression
+        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
+      - name: Content and visual audits
+        shell: pwsh
+        run: |
+          python tools/audit_content.py
+          python tools/audit_visuals.py
+      - name: Coast audit
+        run: python tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
