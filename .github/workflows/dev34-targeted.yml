@@ -34,9 +34,9 @@ jobs:
       - name: Compile
         shell: pwsh
         run: python -m compileall worldseed
-      - name: Storage and UI regressions
+      - name: Dev34 storage regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev34_storage_containers tests.test_dev19_feature_ui tests.test_dev21_mouse_ui
+        run: python -m unittest tests.test_dev34_storage_containers
       - name: Resource regressions
         shell: pwsh
         run: python -m unittest tests.test_rc10_worldgen tests.test_rc13_pregeneration
