@@ -528,6 +528,7 @@ class PygameTerminal(PointerUI):
             'inventory_home':self._present_inventory_home,
             'inventory_items':self._present_inventory_items,
             'inventory_unified':self._present_inventory_unified,
+            'container_inventory':self._present_container_inventory,
             'inventory_item_actions':self._present_inventory_item_actions,
             'crafting_home':self._present_crafting_home,
             'crafting_categories':self._present_crafting_categories,
@@ -569,7 +570,21 @@ class PygameTerminal(PointerUI):
         for i,(lab,val) in enumerate(metrics):
             mx=cx+i*(metric_w+metric_gap)
             self._draw_metric(pg.Rect(mx,cy,metric_w,summary_h),lab,val)
-        body_y=cy+summary_h+gap
+        filter_y=cy+summary_h+7
+        active_filter=str(data.get('active_filter','all'))
+        filters=['all']+list(data.get('filter_categories') or [])
+        fx=cx
+        for cat in filters:
+            label='ALL' if cat=='all' else str(cat).replace('_',' ').upper()
+            fw=min(128,max(54,self.small_font.size(label)[0]+20))
+            if fx+fw>cx+cw:break
+            rect=pg.Rect(fx,filter_y,fw,26);active=(cat==active_filter)
+            pg.draw.rect(screen,(42,46,43) if active else self._theme['panel2'],rect,border_radius=13)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=13)
+            txt=self.small_font.render(label,True,self._theme['text'] if active else self._theme['muted']);screen.blit(txt,txt.get_rect(center=rect.center))
+            self._ui_target(rect,f'UI_ACTION:filter:{cat}')
+            fx+=fw+6
+        body_y=filter_y+33
         body_bottom=y+h-48
         panel_h=max(120,body_bottom-body_y)
         detail_w=max(292,min(378,cw//3))
@@ -660,6 +675,109 @@ class PygameTerminal(PointerUI):
             msg=self.font.render('Select an item to inspect it.',True,self._theme['muted'])
             screen.blit(msg,msg.get_rect(center=detail.center))
 
+        self._draw_feature_footer(x,y,w,h,footer);self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
+
+    def _present_container_inventory(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """Dual-pane visual storage transfer UI."""
+        data=data or {};pg=self.pg;screen=self.screen
+        entries=data.get('entries',{});container=data.get('container',{})
+        x,y,w,h,cx,cy,cw=self._feature_shell('STORAGE',str(container.get('name','CONTAINER')).upper(),subtitle)
+        head_h=58;gap=10
+        mass=float(container.get('mass_kg',0));mass_cap=max(.001,float(container.get('capacity_mass_kg',0) or .001))
+        vol=float(container.get('volume_l',0));vol_cap=max(.001,float(container.get('capacity_volume_l',0) or .001))
+        mw=(cw-gap*3)//4
+        self._draw_metric(pg.Rect(cx,cy,mw,head_h),'Container mass',f'{mass:.1f}/{mass_cap:.1f} kg')
+        self._draw_metric(pg.Rect(cx+(mw+gap),cy,mw,head_h),'Container volume',f'{vol:.1f}/{vol_cap:.1f} L')
+        self._draw_metric(pg.Rect(cx+2*(mw+gap),cy,mw,head_h),'Stacks',str(container.get('stack_count',0)))
+        kind=str(container.get('kind','built')).replace('_',' ').title()
+        self._draw_metric(pg.Rect(cx+3*(mw+gap),cy,mw,head_h),'Type',kind)
+
+        body_y=cy+head_h+10;body_bottom=y+h-48;body_h=max(180,body_bottom-body_y)
+        detail_w=max(220,min(320,cw//4))
+        grids_w=cw-detail_w-20;left_w=(grids_w-gap)//2
+        pack_rect=pg.Rect(cx,body_y,left_w,body_h)
+        cont_rect=pg.Rect(pack_rect.right+gap,body_y,grids_w-left_w-gap,body_h)
+        detail=pg.Rect(cont_rect.right+gap,body_y,detail_w,body_h)
+        for rr in (pack_rect,cont_rect,detail):
+            pg.draw.rect(screen,self._theme['panel'],rr,border_radius=7)
+            pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=7)
+
+        def pane_title(rect,label,detail_text=''):
+            t=self.font.render(label,True,self._theme['accent']);screen.blit(t,(rect.x+12,rect.y+10))
+            if detail_text:
+                s=self.small_font.render(self._fit_ui_text(detail_text,self.small_font,rect.width-24),True,self._theme['muted']);screen.blit(s,(rect.x+12,rect.y+32))
+        pane_title(pack_rect,'BACKPACK',f"{data.get('pack',{}).get('item_count',0)} items")
+        pane_title(cont_rect,'CONTAINER',f"{container.get('item_count',0)} items")
+
+        side_rows={'pack':[],'container':[]}
+        for i,row in enumerate(rows):
+            key=getattr(row,'key','');meta=entries.get(key)
+            if meta:side_rows.get(meta.get('side','pack'),side_rows['pack']).append((i,row,meta))
+
+        def draw_side(rect,side):
+            rows_here=side_rows[side]
+            top=rect.y+58;cols=2;cg=7;cw_card=max(78,(rect.width-24-cg)//2);ch=98
+            for local,(global_i,row,meta) in enumerate(rows_here):
+                gx=local%cols;gy=local//cols
+                card=pg.Rect(rect.x+12+gx*(cw_card+cg),top+gy*(ch+cg),cw_card,ch)
+                if card.bottom>rect.bottom-12:break
+                self._ui_target(card,f'UI_SELECT:{global_i}')
+                active=(global_i==selected)
+                pg.draw.rect(screen,(40,43,41) if active else self._theme['panel2'],card,border_radius=6)
+                pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],card,2 if active else 1,border_radius=6)
+                iid=str(meta.get('iid',''));icon=pg.Rect(card.x+6,card.y+5,card.width-12,48)
+                self._draw_item_icon(iid,icon,scale=.88)
+                nm=self.small_font.render(self._fit_ui_text(str(meta.get('name',iid)),self.small_font,card.width-12),True,self._theme['text']);screen.blit(nm,(card.x+6,card.y+57))
+                q=self.small_font.render(f"x{meta.get('count',0)}",True,self._theme['accent']);screen.blit(q,(card.x+6,card.bottom-18))
+            if not rows_here:
+                msg=self.small_font.render('Empty',True,self._theme['muted']);screen.blit(msg,msg.get_rect(center=(rect.centerx,rect.y+96)))
+        draw_side(pack_rect,'pack');draw_side(cont_rect,'container')
+
+        selected_meta={}
+        if rows:
+            key=getattr(rows[max(0,min(selected,len(rows)-1))],'key','');selected_meta=entries.get(key,{})
+        action_amount=max(1,int(data.get('action_amount',1)))
+        yy=detail.y+12
+        if selected_meta:
+            iid=str(selected_meta.get('iid',''))
+            icon=pg.Rect(detail.x+14,yy,detail.width-28,82);self._draw_item_icon(iid,icon,scale=.78);yy=icon.bottom+5
+            name=self.font.render(self._fit_ui_text(str(selected_meta.get('name',iid)),self.font,detail.width-28),True,self._theme['accent']);screen.blit(name,(detail.x+14,yy));yy+=22
+            side=str(selected_meta.get('side','pack'))
+            src='BACKPACK' if side=='pack' else 'CONTAINER'
+            srcs=self.small_font.render(src,True,self._theme['muted']);screen.blit(srcs,(detail.x+14,yy));yy+=19
+            stat=self.small_font.render(f"x{selected_meta.get('count',0)} • {selected_meta.get('unit_mass_kg',0):.2f} kg ea",True,self._theme['text']);screen.blit(stat,(detail.x+14,yy));yy+=20
+            for line in self._wrap_pixel_text(str(selected_meta.get('description','')),self.small_font,detail.width-28)[:2]:
+                s=self.small_font.render(line,True,self._theme['muted']);screen.blit(s,(detail.x+14,yy));yy+=16
+        else:
+            msg=self.small_font.render('Select an item',True,self._theme['muted']);screen.blit(msg,(detail.x+14,yy));yy+=22
+
+        controls_y=max(yy+8,detail.bottom-170)
+        if selected_meta:
+            count=max(1,int(selected_meta.get('count',1)));action_amount=min(action_amount,count)
+            lab=self.small_font.render(f'AMOUNT {action_amount}/{count}',True,self._theme['text']);screen.blit(lab,(detail.x+14,controls_y+5))
+            bx=detail.right-14-104
+            self._button((bx,controls_y,30,27),'−','UI_ACTION:qty_down')
+            self._button((bx+36,controls_y,30,27),'+','UI_ACTION:qty_up')
+            self._button((bx+72,controls_y,32,27),'ALL','UI_ACTION:qty_all')
+            controls_y+=34
+            direction='Store →' if selected_meta.get('side')=='pack' else '← Take'
+            self._button((detail.x+14,controls_y,detail.width-28,32),direction+' [T]','UI_ACTION:transfer')
+            controls_y+=38
+            self._button((detail.x+14,controls_y,detail.width-28,28),'Half stack [H]','UI_ACTION:split')
+            controls_y+=34
+
+        if container.get('movable'):
+            label=self.small_font.render('MOVE CONTAINER',True,self._theme['muted']);screen.blit(label,(detail.x+14,controls_y));controls_y+=19
+            mid=detail.centerx;bw=48;bh=26
+            self._button((mid-bw//2,controls_y,bw,bh),'↑','UI_ACTION:move:0:-1')
+            self._button((mid-bw-4,controls_y+30,bw,bh),'←','UI_ACTION:move:-1:0')
+            self._button((mid+4,controls_y+30,bw,bh),'→','UI_ACTION:move:1:0')
+            self._button((mid-bw//2,controls_y+60,bw,bh),'↓','UI_ACTION:move:0:1')
+        if container.get('kind')=='natural':
+            self._button((detail.x+14,detail.bottom-34,detail.width-28,25),'Break apart [X]','UI_ACTION:destroy')
+
+        if total is not None and total>len(rows):
+            p=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted']);screen.blit(p,(cont_rect.right-p.get_width()-10,cont_rect.bottom-20))
         self._draw_feature_footer(x,y,w,h,footer);self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_home(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
