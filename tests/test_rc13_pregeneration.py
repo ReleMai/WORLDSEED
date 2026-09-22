@@ -5,6 +5,7 @@ from pathlib import Path
 from worldseed.config import (
     DATA_DIR, WORLDGEN_VERSION, RESOURCEGEN_VERSION,
     HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION,
+    COAST_MORPHOLOGY_VERSION,
 )
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import ChunkKey, WorldPos
@@ -30,6 +31,7 @@ class RC13PregenerationTests(unittest.TestCase):
             self.assertIsNotNone(db.load_generated_surface_chunk(
                 ChunkKey(0, 0, 0), WORLDGEN_VERSION,
                 HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION,
+                COAST_MORPHOLOGY_VERSION,
             ))
             expected = world.tile_at(WorldPos(4, 7, 0)).terrain_id
             db.close()
