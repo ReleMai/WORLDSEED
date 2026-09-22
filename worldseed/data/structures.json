@@ -382,22 +382,23 @@
   },
   {
     "id": "core:storage_basket",
-    "name": "Woven Storage Basket",
+    "name": "Placed Wicker Basket",
     "glyph": "u",
     "passable": false,
     "blocks_sight": false,
     "cost": {
-      "core:reed_bundle": 2,
-      "core:plant_cordage": 1
+      "core:wicker_basket": 1
     },
     "tags": [
       "container",
       "furniture",
-      "flammable"
+      "flammable",
+      "movable"
     ],
-    "description": "A large woven basket for keeping food, tools, fibers, and camp clutter together.",
+    "description": "A woven basket placed as lightweight accessible storage.",
     "uses": [
-      "storage"
+      "storage",
+      "portable_container"
     ],
     "capacity_mass_g": 35000,
     "capacity_volume_ml": 70000
@@ -535,5 +536,97 @@
     ],
     "shelter": 8,
     "support_strength": 12
+  },
+  {
+    "id": "core:wood_storage_box",
+    "name": "Placed Wooden Storage Box",
+    "glyph": "C",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood_storage_box": 1
+    },
+    "tags": [
+      "container",
+      "furniture",
+      "flammable",
+      "movable"
+    ],
+    "capacity_mass_g": 80000,
+    "capacity_volume_ml": 110000,
+    "description": "A sturdy wooden storage box placed for camp or household use.",
+    "uses": [
+      "storage",
+      "portable_container"
+    ],
+    "comfort": 0,
+    "work_bonus": 0,
+    "warmth": 0,
+    "shelter": 0
+  },
+  {
+    "id": "core:natural_hollow_log",
+    "name": "Hollow Log",
+    "glyph": "=",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {},
+    "tags": [
+      "container",
+      "natural_only",
+      "natural_container",
+      "movable",
+      "flammable"
+    ],
+    "capacity_mass_g": 45000,
+    "capacity_volume_ml": 60000,
+    "description": "A fallen hollow trunk with enough dry interior space to trap or shelter useful materials.",
+    "uses": [
+      "storage",
+      "natural_container"
+    ]
+  },
+  {
+    "id": "core:natural_rotten_stump",
+    "name": "Rotten Stump",
+    "glyph": "O",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {},
+    "tags": [
+      "container",
+      "natural_only",
+      "natural_container",
+      "movable",
+      "flammable"
+    ],
+    "capacity_mass_g": 30000,
+    "capacity_volume_ml": 42000,
+    "description": "A decayed stump with cavities beneath loose bark and roots.",
+    "uses": [
+      "storage",
+      "natural_container"
+    ]
+  },
+  {
+    "id": "core:natural_rock_cache",
+    "name": "Rock Crevice",
+    "glyph": "o",
+    "passable": true,
+    "blocks_sight": false,
+    "cost": {},
+    "tags": [
+      "container",
+      "natural_only",
+      "natural_container",
+      "movable"
+    ],
+    "capacity_mass_g": 60000,
+    "capacity_volume_ml": 30000,
+    "description": "A loose rocky pocket where wind, animals, and time collect material.",
+    "uses": [
+      "storage",
+      "natural_container"
+    ]
   }
 ]
