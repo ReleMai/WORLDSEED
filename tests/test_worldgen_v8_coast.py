@@ -24,10 +24,10 @@ class WorldgenV8CoastTests(unittest.TestCase):
         # expensive and should be tested on a physically plausible candidate.
         for y in range(-3072,3073,96):
             for x in range(-3072,3073,96):
-                center=self.gen.sample_fields(WorldPos(x,y,0)).elevation
+                center=self.gen.landforms_v8.sample(x,y).elevation
                 ocean=center<SEA_LEVEL_REFERENCE
                 around=[
-                    self.gen.sample_fields(WorldPos(x+dx,y+dy,0)).elevation<SEA_LEVEL_REFERENCE
+                    self.gen.landforms_v8.sample(x+dx,y+dy).elevation<SEA_LEVEL_REFERENCE
                     for dx,dy in ((64,0),(-64,0),(0,64),(0,-64))
                 ]
                 if any(v!=ocean for v in around):
@@ -74,7 +74,7 @@ class WorldgenV8CoastTests(unittest.TestCase):
         found=[]
         for y in range(-2048,2049,128):
             for x in range(-2048,2049,128):
-                if self.gen.sample_fields(WorldPos(x,y,0)).elevation>=SEA_LEVEL_REFERENCE:
+                if self.gen.landforms_v8.sample(x,y).elevation>=SEA_LEVEL_REFERENCE:
                     continue
                 c=self.gen.coast_at(WorldPos(x,y,0))
                 if c is not None:
