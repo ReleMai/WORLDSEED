@@ -98,7 +98,7 @@ class CoastV8Sampler:
             return hydro.surface_at(pos)
 
     @lru_cache(maxsize=32768)
-    def _sample_cached(self, x: int, y: int, hydro_token: str) -> CoastMorphology:
+    def _sample_cached(self, x: int, y: int, hydro_token: str, prepared_only: bool) -> CoastMorphology:
         pos=WorldPos(int(x),int(y),0)
         fields=self.generator.sample_fields(pos)
         topo=self.generator.topography_at(pos)
@@ -139,7 +139,7 @@ class CoastV8Sampler:
         wave_exposure=_score(open_sea*3//5+wind*2//5 + headland_score//5 - bay_score//4)
         shelter=_score(100-wave_exposure + bay_score//3)
 
-        hydro=self._hydrology_context(pos,prepared_only=True)
+        hydro=self._hydrology_context(pos,prepared_only=prepared_only)
         river_class=int(getattr(hydro,"river_class",0) or 0) if hydro is not None else 0
         floodplain=int(getattr(hydro,"floodplain_strength",0) or 0) if hydro is not None else 0
         wetland=int(getattr(hydro,"wetland_probability",0) or 0) if hydro is not None else 0
@@ -214,4 +214,6 @@ class CoastV8Sampler:
                 # Coast geometry itself is still readable; river-mouth fields
                 # remain zero until prepared hydrology exists.
                 token="unprepared"
-        return self._sample_cached(int(pos.x),int(pos.y),token)
+            else:
+                token="generate"
+        return self._sample_cached(int(pos.x),int(pos.y),token,bool(prepared_only))
