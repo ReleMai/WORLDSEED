@@ -767,12 +767,13 @@ class PygameTerminal(PointerUI):
             controls_y+=34
 
         if container.get('movable'):
-            label=self.small_font.render('MOVE CONTAINER',True,self._theme['muted']);screen.blit(label,(detail.x+14,controls_y));controls_y+=19
-            mid=detail.centerx;bw=48;bh=26
-            self._button((mid-bw//2,controls_y,bw,bh),'↑','UI_ACTION:move:0:-1')
-            self._button((mid-bw-4,controls_y+30,bw,bh),'←','UI_ACTION:move:-1:0')
-            self._button((mid+4,controls_y+30,bw,bh),'→','UI_ACTION:move:1:0')
-            self._button((mid-bw//2,controls_y+60,bw,bh),'↓','UI_ACTION:move:0:1')
+            move_y=min(controls_y,detail.bottom-(62 if container.get('kind')=='natural' else 32))
+            bw=max(34,(detail.width-35)//4);bh=27;bx=detail.x+14
+            for n,(label,token) in enumerate((
+                ('←','UI_ACTION:move:-1:0'),('↑','UI_ACTION:move:0:-1'),
+                ('↓','UI_ACTION:move:0:1'),('→','UI_ACTION:move:1:0'),
+            )):
+                self._button((bx+n*(bw+3),move_y,bw,bh),label,token)
         if container.get('kind')=='natural':
             self._button((detail.x+14,detail.bottom-34,detail.width-28,25),'Break apart [X]','UI_ACTION:destroy')
 
