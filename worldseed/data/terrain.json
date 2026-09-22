@@ -60,7 +60,7 @@
   {
     "id": "core:river_shallow",
     "name": "Shallow River",
-    "glyph": "\u2248",
+    "glyph": "≈",
     "ascii_glyph": "~",
     "ansi_color": 96,
     "passable": true,
@@ -474,5 +474,72 @@
       "copper"
     ],
     "blocks_sight": true
+  },
+  {
+    "id": "core:rocky_shore",
+    "name": "Rocky Shore",
+    "glyph": "^",
+    "ansi_color": 37,
+    "passable": true,
+    "tags": [
+      "surface",
+      "rock",
+      "shore"
+    ]
+  },
+  {
+    "id": "core:coastal_cliff",
+    "name": "Coastal Cliff",
+    "glyph": "#",
+    "ansi_color": 90,
+    "passable": false,
+    "tags": [
+      "surface",
+      "rock",
+      "shore",
+      "cliff"
+    ],
+    "blocks_sight": true
+  },
+  {
+    "id": "core:coastal_gravel",
+    "name": "Coastal Gravel",
+    "glyph": ":",
+    "ansi_color": 37,
+    "passable": true,
+    "tags": [
+      "surface",
+      "rock",
+      "shore",
+      "gravel"
+    ]
+  },
+  {
+    "id": "core:tidal_flat",
+    "name": "Tidal Flat",
+    "glyph": ";",
+    "ansi_color": 33,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "shore",
+      "wetland",
+      "tidal"
+    ]
+  },
+  {
+    "id": "core:salt_marsh",
+    "name": "Salt Marsh",
+    "glyph": ";",
+    "ansi_color": 36,
+    "passable": true,
+    "tags": [
+      "surface",
+      "soil",
+      "shore",
+      "wetland",
+      "brackish"
+    ]
   }
 ]
