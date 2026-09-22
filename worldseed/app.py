@@ -949,12 +949,43 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation)->dict:
         item=reg.items.get(iid)
         if not item or n<=0:continue
         cat=item.category or 'misc';categories[cat]=categories.get(cat,0)+n
+        material_name=reg.materials[item.material].name if item.material and item.material in reg.materials else ''
+        detail=[]
+        if material_name:detail.append(f'Material: {material_name}')
+        if item.nutrition>0 or item.calories or item.hydration:
+            food=f'Food: satiety {item.nutrition} | hydration {item.hydration}'
+            if item.calories:food+=f' | {item.calories} kcal'
+            detail.append(food)
+        if item.tool_qualities:
+            detail.append('Tool: '+', '.join(f'{k.replace("_"," ")} {v}' for k,v in sorted(item.tool_qualities.items())))
+        elif item.tool_power:
+            detail.append(f'Tool effectiveness {item.tool_power}')
+        if item.weapon_damage:
+            detail.append(f'Weapon: {item.damage_type} {item.weapon_damage}' + (f' | range {item.range}' if item.range>1 else ''))
+        if item.equip_slot:
+            equip=f'Equipment: {item.equip_slot.replace("_"," ")}'
+            if item.armor:equip+=f' | armor {item.armor}'
+            if item.insulation:equip+=f' | warmth {item.insulation}'
+            detail.append(equip)
+        if item.spoilage_hours:detail.append(f'Keeps about {max(1,item.spoilage_hours//24)} day(s)')
+        if item.utility_roles:detail.append('Roles: '+', '.join(x.replace('_',' ') for x in item.utility_roles))
+        use_kind=''
+        use_label='Use'
+        if item.nutrition>0:use_kind='eat';use_label='Use · Eat'
+        elif item.equip_slot:use_kind='equip';use_label='Use · Equip'
+        elif iid=='core:book':use_kind='read';use_label='Use · Read'
         items[iid]={
             'name':item.name,'count':n,'category':cat,
             'mass_kg':item.mass_g*n/1000.0,'unit_mass_kg':item.mass_g/1000.0,
-            'volume_l':item.volume_ml*n/1000.0,'description':item.description or item.flavor or '',
-            'equip_slot':item.equip_slot or '', 'nutrition':item.nutrition,
+            'volume_l':item.volume_ml*n/1000.0,'unit_volume_l':item.volume_ml/1000.0,
+            'description':item.description or item.flavor or '',
+            'material':material_name,'equip_slot':item.equip_slot or '',
+            'nutrition':item.nutrition,'hydration':item.hydration,'calories':item.calories,
+            'armor':item.armor,'insulation':item.insulation,'weapon_damage':item.weapon_damage,
+            'damage_type':item.damage_type,'tool_power':item.tool_power,
             'tags':list(item.tags),'roles':list(item.utility_roles),
+            'detail_lines':detail[:5],
+            'can_use':bool(use_kind),'use_kind':use_kind,'use_label':use_label,
         }
     equipped={slot:iid for slot,iid in sim.state.player_equipment.items() if iid in reg.items}
     return {
@@ -966,7 +997,6 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation)->dict:
         'player_sprite_index':int(getattr(sim.state,'player_sprite_index',0)),
         'player_name':sim.state.player_name,
     }
-
 
 def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->dict:
     stations=sim.building.nearby_station_ids(sim.player_pos)
@@ -1030,7 +1060,7 @@ def _crafting_tree_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory)->di
     return {'nodes':nodes,'known':sum(1 for n in nodes if n['status']=='known'),'total':len(nodes)}
 
 
-def _inventory_menu(ctx:GameContext,term:Terminal)->str:
+def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     nav=NavigationStack(RouteState('inventory','INVENTORY // PACK'))
     while True:
@@ -1083,6 +1113,74 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             elif act=='store':sim.execute(StoreCommand(pid,iid,1))
             return sim.log[-1].message if sim.log else ''
         if not nav.back():return UI_BACK
+
+
+def _inventory_menu(ctx:GameContext,term:Terminal)->str:
+    """Unified graphical inventory with terminal fallback.
+
+    Pygame presents the carried-item grid, selected-item information and legal
+    actions on one retained surface. The UI only selects intent; all mutations
+    still travel through simulation commands. Text terminals retain the older
+    hierarchical flow for complete keyboard/fallback compatibility.
+    """
+    if not (getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None))):
+        return _inventory_menu_terminal(ctx,term)
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    nav=NavigationStack(RouteState('inventory','INVENTORY'))
+    action_amount=1;last_selected=None;status=''
+    while True:
+        inv=ctx.entities.get(pid,Inventory);route=nav.current
+        rows=[(iid,f'{reg.items[iid].name} x{n}') for iid,n in sorted(inv.items.items(),key=lambda kv:(reg.items[kv[0]].name if kv[0] in reg.items else kv[0])) if n>0 and iid in reg.items]
+        if rows:
+            route.selected=max(0,min(route.selected,len(rows)-1))
+            selected_iid=rows[route.selected][0]
+        else:
+            rows=[('__empty__','Your pack is empty')]
+            route.selected=0;selected_iid='__empty__'
+        if selected_iid!=last_selected:
+            action_amount=1;last_selected=selected_iid
+        count=inv.count(selected_iid) if selected_iid!='__empty__' else 0
+        action_amount=max(1,min(action_amount,max(1,count)))
+        data=_inventory_ui_data(reg,inv,sim)
+        data.update({'selected_item_id':selected_iid,'action_amount':action_amount})
+        subtitle=status or 'Click an item to inspect it. Use, drop, split and storage actions stay on this screen.'
+        status=''
+        choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
+        if choice is None:return UI_BACK
+        if choice=='__BACK__':continue
+        if not choice.startswith('UI_ACTION:'):
+            if choice!='__empty__':
+                action_amount=1;last_selected=choice
+            continue
+        if selected_iid=='__empty__' or selected_iid not in reg.items or count<=0:
+            continue
+        action=choice.split(':',1)[1]
+        if action=='qty_down':
+            action_amount=max(1,action_amount-1);continue
+        if action=='qty_up':
+            action_amount=min(count,action_amount+1);continue
+        if action=='qty_all':
+            action_amount=count;continue
+        if action=='split':
+            action_amount=max(1,(count+1)//2)
+            status=f'Split amount selected: {action_amount} of {count}. Drop or store will use that amount.'
+            continue
+        if action=='drop':
+            sim.execute(DropCommand(pid,selected_iid,min(action_amount,count)))
+        elif action=='store':
+            sim.execute(StoreCommand(pid,selected_iid,min(action_amount,count)))
+        elif action=='use':
+            item=reg.items[selected_iid]
+            if item.nutrition>0:sim.execute(EatCommand(pid,selected_iid))
+            elif item.equip_slot:sim.execute(EquipCommand(pid,selected_iid))
+            elif selected_iid=='core:book':sim.execute(ReadBookCommand(pid))
+            else:
+                status='That item has no direct inventory action yet.'
+                continue
+        else:
+            continue
+        status=sim.log[-1].message if sim.log else ''
+        action_amount=1;last_selected=None
 
 def _crafting_menu(ctx:GameContext,term:Terminal)->str:
     """Discovery-first crafting browser.
