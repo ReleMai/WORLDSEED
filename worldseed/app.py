@@ -1249,6 +1249,9 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             if choice!='__empty__':
                 action_amount=1;last_selected=choice
             continue
+        action=choice.split(':',1)[1]
+        if action.startswith('filter:'):
+            active_filter=action.split(':',1)[1] or 'all';route.selected=0;last_selected=None;action_amount=1;continue
         # Hover can change select_menu's retained row immediately before an
         # inline action click, so resolve the active item from the route again.
         if rows and 0<=route.selected<len(rows):
@@ -1258,9 +1261,6 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
                 action_amount=1;last_selected=selected_iid
         if selected_iid=='__empty__' or selected_iid not in reg.items or count<=0:
             continue
-        action=choice.split(':',1)[1]
-        if action.startswith('filter:'):
-            active_filter=action.split(':',1)[1] or 'all';route.selected=0;last_selected=None;action_amount=1;continue
         if action=='qty_down':
             action_amount=max(1,action_amount-1);continue
         if action=='qty_up':
