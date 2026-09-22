@@ -615,7 +615,8 @@ class PygameTerminal(PointerUI):
         else:
             iid='';meta={}
         if iid in items:
-            action_amount=max(1,min(int(data.get('action_amount',1)),int(meta.get('count',1))))
+            shown_amount=data.get('action_amount',1) if iid==data.get('selected_item_id') else 1
+            action_amount=max(1,min(int(shown_amount),int(meta.get('count',1))))
             action_area_h=118
             action_top=detail.bottom-action_area_h-12
             icon_h=max(64,min(96,max(64,(action_top-detail.y)//3)))
