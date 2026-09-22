@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 Phase 4 continues in Dev30. Hydrology v2 drainage stays fixed, while morphology v2 adds multi-point channels, materialized braids/islands, oxbow scars and rock-confined gorge banks behind its own save-pinned projection contract.**
+Status: **WORLDGEN v8 Phase 5 is active in Dev32. Phase 4 hydrology v2 / morphology v2 is the frozen drainage baseline; Dev32 begins terrain-neutral coastal morphology over the same authoritative geology, climate and prepared hydrology.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -271,14 +271,16 @@ cannot reuse an incompatible cached chunk.
 ### Goal
 Replace mostly uniform shoreline bands with varied coast types.
 
+**Dev32 implementation start:** a new `CoastV8Sampler` read model derives continental-geometry bathymetry, open-sea exposure, shelter, bay/headland scores, shore-material tendency, tidal-flat/marsh/lagoon potential and river-mouth sediment/estuary/delta potential. It is deliberately **terrain-neutral** in this first slice: no existing coast tiles, saves, surface caches or user-facing graphics are rewritten yet. The purpose is to establish and audit one causal coastal authority before materialization.
+
 ### Work
-- Derive bathymetric shelf depth from continental geometry, not only local slope.
-- Classify exposed rocky coasts, cliffs, beaches, tidal flats, marsh coasts,
-  protected bays, headlands, spits and barrier-island candidates.
-- Use substrate/slope/wave exposure to choose shore material.
-- Couple major river sediment to deltas/estuary shape.
+- **FOUNDATION Dev32:** derive bathymetric shelf depth from continental geometry, not only local slope.
+- **PARTIAL Dev32:** classify exposed rocky coasts, cliffs, beaches, tidal flats, marsh coasts,
+  protected bays and headlands; spits/barrier islands remain for the materialization pass.
+- **PARTIAL Dev32:** use slope, relief, shelter and wave exposure to derive shore-material tendency; Phase 6 substrate will later refine it.
+- **FOUNDATION Dev32:** derive river-mouth sediment, estuary and delta potential from prepared hydrology; physical distributaries remain next.
 - Expand brackish mixing zones using discharge + tidal/coastal geometry.
-- Add shallow embayment and lagoon potential.
+- **FOUNDATION Dev32:** derive shallow embayment/lagoon potential as a read field.
 - Keep ocean current presentation tied to authoritative current fields.
 
 ### Exit gates
