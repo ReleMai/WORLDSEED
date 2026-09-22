@@ -1,0 +1,47 @@
+name: Dev34 Targeted Validation
+
+on:
+  push:
+    branches:
+      - ui/container-natural-storage-20260922
+
+concurrency:
+  group: worldseed-dev34-targeted
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install "Pillow>=10,<12"
+      - name: Compile
+        shell: pwsh
+        run: python -m compileall worldseed
+      - name: Storage and UI regressions
+        shell: pwsh
+        run: python -m unittest tests.test_dev34_storage_containers tests.test_dev19_feature_ui tests.test_dev21_mouse_ui
+      - name: Resource regressions
+        shell: pwsh
+        run: python -m unittest tests.test_resources_phase2 tests.test_rc13_pregeneration
+      - name: Content and visual audits
+        shell: pwsh
+        run: |
+          python tools/audit_content.py
+          python tools/audit_visuals.py
