@@ -138,6 +138,19 @@ class WorldgenV8CoastTests(unittest.TestCase):
         finally:
             gen.coast_at=original
 
+    def test_chunk_materialization_reuses_coarse_coast_samples(self):
+        gen=WorldGenerator(self.seed,self.registry,version=8)
+        gen.coast_v8._sample_cached.cache_clear()
+        for y in range(16):
+            for x in range(16):
+                fields=gen.sample_fields(WorldPos(x,y,0))
+                gen._phase5_coast_terrain(WorldPos(x,y,0),fields)
+        info=gen.coast_v8._sample_cached.cache_info()
+        # 8-cell absolute materialization lattice -> at most 2x2 expensive
+        # coast classifications for a 16x16 tile window.
+        self.assertLessEqual(info.misses,4)
+        self.assertGreater(info.hits,200)
+
     def test_coast_version_zero_preserves_pre_phase5_surface_projection(self):
         from types import SimpleNamespace
         gen=WorldGenerator(self.seed,self.registry,version=8)
