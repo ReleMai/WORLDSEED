@@ -1,4 +1,4 @@
-name: WORLDSEED Dev32 Test Build
+name: WORLDSEED Dev33 Test Build
 
 concurrency:
   group: worldseed-test-build-${{ github.ref }}
@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev33-phase5-coast-materialization]
     paths:
       - ".github/workflows/test-build.yml"
       - "worldseed/**"
@@ -91,7 +91,7 @@ jobs:
       - name: Upload playable test build
         uses: actions/upload-artifact@v4
         with:
-          name: WORLDSEED_RC14_DEV32_TEST_BUILD
+          name: WORLDSEED_RC14_DEV33_TEST_BUILD
           path: package/
           if-no-files-found: error
           compression-level: 6
