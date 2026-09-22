@@ -68,6 +68,10 @@ jobs:
         shell: pwsh
         run: python -m compileall worldseed
 
+      - name: Dev34 inventory and storage regressions
+        shell: pwsh
+        run: python -m unittest tests.test_dev34_storage_containers
+
       - name: Phase 5 coast tests
         shell: pwsh
         run: python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants

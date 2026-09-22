@@ -1,10 +1,23 @@
-## RC14 Dev34 — Coast v2, continuous forest floor and measured performance
+## RC14 Dev35 — Coast v2, continuous forest floor and measured performance
 
 - Finish Phase-5 physical mouth projection: discharge/shelter-driven estuaries, connected delta distributaries, shallow deposits, sediment-fed barriers and lagoon pockets. Existing coast-v0/v1 saves retain their geography.
 - Replace repeated forest cells with a world-anchored continuous litter/moss material; keep pine/morel/cloud artwork intact.
 - Cache immutable geological hashes/samples, avoid cached-sprite disk stats and irrelevant land-neighbor reads, reuse rain identities, reduce large-screen cloud compositing cost.
 - Correct obsolete validation fixtures (offshore resource searches, no-op corruption, stale discovery cache, bootstrap discovery bypass). Assertions remain active.
-- Add mouth/seam/cache/version tests, real multi-seed audit, visual comparison and local-play benchmark. Details and validation limits: DEV34_VALIDATION.md.
+- Add mouth/seam/cache/version tests, real multi-seed audit, visual comparison and local-play benchmark. Details and validation limits: DEV35_VALIDATION.md.
+
+## RC14 Dev34 — inventory polish and living storage
+
+- Polished the unified graphical inventory with clickable category filters while preserving the single-screen item grid, rich inspection pane and inline quantity/action controls.
+- Replaced the pygame container submenu chain with a dual-pane backpack/container inventory. Items transfer directly in either direction with quantity, half-stack and all-stack controls while the container stays open.
+- Added explicit container targeting to store/take commands so visual transfer actions cannot accidentally act on a different nearby container.
+- Added movable-container and natural-container destruction commands; movement keeps persistent structure/container state together and natural destruction spills contents plus deterministic salvage.
+- Promoted natural-resource placement to Resourcegen v4 for new worlds and added deterministic hollow logs, rotten stumps and rock crevices as discoverable storage features with habitat rules, randomized seeded contents and save-persistent realization.
+- Hollow logs can be moved; rooted stumps and rock crevices remain fixed but can be broken apart. Generated natural containers never regrow after realization, movement or destruction.
+- Added craftable Wicker Basket and Wooden Storage Box items and recipes, then made them placeable as movable storage through the existing construction system. Existing Wooden Chests remain available.
+- Natural-only container templates are excluded from the player's construction catalog.
+- Added content validation for natural-container structure/loot/salvage references and Dev34 regression coverage for deterministic loot, movement, destruction, crafted placement, keyboard transfer intent and small-window pointer bounds.
+- Existing resourcegen-v3 saves remain pinned to their old natural-resource layout; Dev34 storage features appear in new resourcegen-v4 worlds rather than silently changing old exploration geography.
 
 ## RC14 Parallel UI Track 1 — unified graphical inventory
 

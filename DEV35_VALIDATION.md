@@ -1,4 +1,4 @@
-# RC14 Dev34 — Phase 5 coast projection and local presentation
+# RC14 Dev35 — Phase 5 coast projection and local presentation
 
 ## Scope and authority
 
@@ -31,7 +31,7 @@ Release checks in progress; final suite/package results are recorded before publ
 - Golden replay preserved: `0b369fbd04f8fab3ce6a7b295ee942ac369f000d`.
 - Century soak, one seed/full policy: 12,000 days, no invariant errors; 9 realized regions, 48 NPCs, 54 routes, 2.06 MB serialized state. Advancement took 35.224 s on this machine (not a hardware-independent gate).
 - Content and visual coverage audits passed. Python compile and diff whitespace checks passed.
-- Concurrent upstream inventory work at `8032a8f` is retained during integration; its UI regression tests are included in the final validation.
+- Concurrent upstream inventory/storage work through `b71df33` is retained during integration; its UI regression tests are included in the final validation.
 
 ## Asset provenance
 

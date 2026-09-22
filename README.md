@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev34 delivers WORLDGEN v8 Phase 5 coast morphology. New worlds add wider estuaries, connected delta distributaries, sediment flats and physically gated barrier/lagoon pockets to the existing bathymetry and varied shores. Saved coast versions remain unchanged. Forest ground now uses a continuous material, and bounded geological caches reduce repeated chunk-generation work. See [DEV34_VALIDATION.md](DEV34_VALIDATION.md) for measurements and limits; Phase 6 (Geomorphology/Substrate/Soil) is next.
+> **Development status:** RC14 Dev35 delivers WORLDGEN v8 Phase 5 coast morphology. New worlds add wider estuaries, connected delta distributaries, sediment flats and physically gated barrier/lagoon pockets to the existing bathymetry and varied shores. Saved coast versions remain unchanged. Forest ground now uses a continuous material, and bounded geological caches reduce repeated chunk-generation work. See [DEV35_VALIDATION.md](DEV35_VALIDATION.md) for measurements and limits; Phase 6 (Geomorphology/Substrate/Soil) is next.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 

@@ -91,6 +91,11 @@ class ContainerState:
     condition: int = 100
     temperature_c: int = 20
     contamination: int = 0
+    name: str = ""
+    kind: str = "built"
+    movable: bool = False
+    source_id: str = ""
+    salvage: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 @dataclass(slots=True)
 class SoilState:

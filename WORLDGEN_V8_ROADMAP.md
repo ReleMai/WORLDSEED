@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 Phase 5 physical coast implementation is delivered in Dev34 (coast morphology v2). Phase 6 — Geomorphology, Substrate and Soil — is next. Release-hardening gates and wider visual calibration remain distinct from implementation completion; see DEV34_VALIDATION.md.**
+Status: **WORLDGEN v8 Phase 5 physical coast implementation is delivered in Dev35 (coast morphology v2). Phase 6 — Geomorphology, Substrate and Soil — is next. Release-hardening gates and wider visual calibration remain distinct from implementation completion; see DEV35_VALIDATION.md.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -275,14 +275,14 @@ Replace mostly uniform shoreline bands with varied coast types.
 
 **Dev33 materialization:** new worlds now pin `COAST_MORPHOLOGY_VERSION = 1`. The approved Phase-5 fields materialize into real gameplay terrain: continental-geometry ocean depth bands plus sandy, gravel, rocky, cliff, tidal-flat and salt-marsh coast classes. Existing v8 saves without coast metadata infer coast version 0 and retain their pre-Phase-5 shoreline. Surface caches now include the coast contract. Expensive coast classification is sampled on an absolute 8-cell lattice for materialization while exact geological elevation still determines land versus water per cell.
 
-**Dev34 completion:** coast morphology v2 adds bounded river-mouth indexes derived from prepared hydrology, broader estuaries, connected delta branches, shallow lobes and wind-directed sediment barriers/lagoon pockets. V0/v1 saves keep their recorded projection. Twelve real-seed domains and exact shared-boundary samples audit the implementation; dedicated biome art/substrate refinement and release-wide acceptance remain later work.
+**Dev35 completion:** coast morphology v2 adds bounded river-mouth indexes derived from prepared hydrology, broader estuaries, connected delta branches, shallow lobes and wind-directed sediment barriers/lagoon pockets. V0/v1 saves keep their recorded projection. Twelve real-seed domains and exact shared-boundary samples audit the implementation; dedicated biome art/substrate refinement and release-wide acceptance remain later work.
 
 ### Work
 - **MATERIALIZED Dev33:** bathymetric shelf depth derives from continental geometry plus raw sea depth and now selects actual ocean depth terrain in new worlds.
-- **PARTIAL/MATERIALIZED Dev33:** beaches, gravel shores, rocky shores, coastal cliffs, tidal flats and salt marshes now become real terrain. Protected-bay/headland reads exist; Dev34 adds sediment-fed spits/barrier candidates and sheltered lagoons beside physically suitable river mouths.
+- **PARTIAL/MATERIALIZED Dev33:** beaches, gravel shores, rocky shores, coastal cliffs, tidal flats and salt marshes now become real terrain. Protected-bay/headland reads exist; Dev35 adds sediment-fed spits/barrier candidates and sheltered lagoons beside physically suitable river mouths.
 - **PARTIAL Dev32:** use slope, relief, shelter and wave exposure to derive shore-material tendency; Phase 6 substrate will later refine it.
-- **FOUNDATION Dev32:** derive river-mouth sediment, estuary and delta potential from prepared hydrology; Dev34 materializes connected distributaries and shallow depositional lobes from those prepared drainage edges.
-- **MATERIALIZED Dev34:** estuary width follows discharge class and coastal shelter; shallow/deep brackish cells, crossings and currents use the same mouth projection.
+- **FOUNDATION Dev32:** derive river-mouth sediment, estuary and delta potential from prepared hydrology; Dev35 materializes connected distributaries and shallow depositional lobes from those prepared drainage edges.
+- **MATERIALIZED Dev35:** estuary width follows discharge class and coastal shelter; shallow/deep brackish cells, crossings and currents use the same mouth projection.
 - **FOUNDATION Dev32:** derive shallow embayment/lagoon potential as a read field.
 - Keep ocean current presentation tied to authoritative current fields.
 

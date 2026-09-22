@@ -38,7 +38,7 @@ Never create an unrelated decorative village, road, river, building list, or loc
 - `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
 - New saves use `HYDROLOGY_VERSION = 2`. Existing saves must instantiate hydrology from their stored `hydrology_version`; missing metadata is legacy v1. Never let a global version bump silently regenerate an existing river network.
 - New saves use `HYDROLOGY_MORPHOLOGY_VERSION = 2`. Missing morphology metadata means Dev29 morphology v1. Any future change to river projection geometry must preserve or bump this contract instead of changing unexplored terrain in existing saves.
-- V5+ surface chunk caches must be keyed by every active physical projection contract. For Dev34 this is worldgen + hydrology + hydrology morphology + coast morphology; underground and pre-hydrology caches may remain worldgen-only.
+- V5+ surface chunk caches must be keyed by every active physical projection contract. For Dev35 this is worldgen + hydrology + hydrology morphology + coast morphology; underground and pre-hydrology caches may remain worldgen-only.
 - Hydrology v2 consumes authoritative v8 precipitation/runoff. Do not create a second rainfall/noise authority inside drainage code.
 - Phase-5 coast morphology consumes v8 geology/topography, physical climate and prepared hydrology. Do not create an unrelated coastline noise authority, and do not let atlas/renderer inspection generate missing coast or drainage plans.
 - Phase-5 coast materialization is independently pinned by `COAST_MORPHOLOGY_VERSION`. Missing coast metadata means coast version 0 (pre-materialization shoreline). Never silently upgrade an existing v8 save to the newest coastline projection.

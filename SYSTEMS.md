@@ -706,7 +706,7 @@ Dev33 introduces the first save-visible materialization contract. New v8 worlds 
 For generation performance, detailed coast geometry is reused on an absolute 8-cell materialization lattice while exact geological elevation still decides land/ocean for every tile. This is a bounded projection optimization, not a second coastline authority.
 
 
-## Dev34 coast-v2 projection
+## Dev35 coast-v2 projection
 
 `CoastalMouths` derives bounded mouth plans from the same prepared Hydrology v2 land-to-sea edges. The projection owns expanded estuary cells, distributary branches, shallow sediment lobes and physically gated wind-directed barriers/lagoon pockets. Branch discharge shares sum to the source accumulation. These are actual terrain IDs and hydrology read models, not a second rendered river network. Existing channels take precedence over deposition. Saved coast versions 0/1 retain old behavior; schema/worldgen/hydrology versions do not change. Startup prepares mouth indexes for loaded saves; current inspection cannot build them.
 
