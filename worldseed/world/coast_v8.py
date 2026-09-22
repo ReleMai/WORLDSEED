@@ -10,13 +10,13 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+from worldseed.config import COAST_MORPHOLOGY_VERSION
 from worldseed.core.coords import WorldPos
 from worldseed.world.landforms import SEA_LEVEL_REFERENCE
 
 if TYPE_CHECKING:
     from worldseed.world.generator import WorldGenerator
 
-COAST_MORPHOLOGY_VERSION = 1
 COAST_MORPHOLOGY_ALGORITHM = "worldgen-v8-coast-readmodel-v1"
 Q = 65535
 
