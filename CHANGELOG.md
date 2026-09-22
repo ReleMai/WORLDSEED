@@ -1,3 +1,16 @@
+## RC14 Dev34 — inventory polish and living storage
+
+- Polished the unified graphical inventory with clickable category filters while preserving the single-screen item grid, rich inspection pane and inline quantity/action controls.
+- Replaced the pygame container submenu chain with a dual-pane backpack/container inventory. Items transfer directly in either direction with quantity, half-stack and all-stack controls while the container stays open.
+- Added explicit container targeting to store/take commands so visual transfer actions cannot accidentally act on a different nearby container.
+- Added movable-container and natural-container destruction commands; movement keeps persistent structure/container state together and natural destruction spills contents plus deterministic salvage.
+- Promoted natural-resource placement to Resourcegen v4 for new worlds and added deterministic hollow logs, rotten stumps and rock crevices as discoverable storage features with habitat rules, randomized seeded contents and save-persistent realization.
+- Hollow logs can be moved; rooted stumps and rock crevices remain fixed but can be broken apart. Generated natural containers never regrow after realization, movement or destruction.
+- Added craftable Wicker Basket and Wooden Storage Box items and recipes, then made them placeable as movable storage through the existing construction system. Existing Wooden Chests remain available.
+- Natural-only container templates are excluded from the player's construction catalog.
+- Added content validation for natural-container structure/loot/salvage references and Dev34 regression coverage for deterministic loot, movement, destruction, crafted placement, keyboard transfer intent and small-window pointer bounds.
+- Existing resourcegen-v3 saves remain pinned to their old natural-resource layout; Dev34 storage features appear in new resourcegen-v4 worlds rather than silently changing old exploration geography.
+
 ## RC14 Parallel UI Track 1 — unified graphical inventory
 
 - Replaced the pygame inventory's duplicate Pack Overview -> Browse Items -> Item Actions chain with one retained visual inventory surface.
