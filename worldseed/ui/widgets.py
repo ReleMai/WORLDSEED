@@ -114,6 +114,13 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
                 'e':'UI_ACTION:store',
             }
             if k in inventory_keys:return inventory_keys[k]
+        if presentation=='container_inventory':
+            container_keys={
+                't':'UI_ACTION:transfer','h':'UI_ACTION:split',
+                '[':'UI_ACTION:qty_down',']':'UI_ACTION:qty_up','m':'UI_ACTION:qty_all',
+                'x':'UI_ACTION:destroy',
+            }
+            if k in container_keys:return container_keys[k]
         if k.startswith(('UI_SELECT:','UI_HOVER:')):
             try:idx=page_start+int(k.split(':',1)[1])
             except ValueError:continue

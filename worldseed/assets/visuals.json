@@ -108,7 +108,9 @@
     "core:flax_seed": "assets/sprites/items/flax_seed.png",
     "core:flax": "assets/sprites/items/flax.png",
     "core:copper_ore": "assets/sprites/items/copper_ore.png",
-    "core:copper_ingot": "assets/sprites/items/copper_ingot.png"
+    "core:copper_ingot": "assets/sprites/items/copper_ingot.png",
+    "core:wicker_basket": "assets/sprites/structures/storage_basket.png",
+    "core:wood_storage_box": "assets/sprites/structures/wood_chest.png"
   },
   "terrain": {
     "core:grass": [
@@ -696,7 +698,10 @@
     "core:clay_bank": "assets/sprites/resources/clay_bank.png",
     "core:fallen_branches": "assets/sprites/resources/fallen_branches.png",
     "core:loose_stone": "assets/sprites/resources/loose_stone.png",
-    "core:surface_boulder": "assets/sprites/resources/surface_boulder.png"
+    "core:surface_boulder": "assets/sprites/resources/surface_boulder.png",
+    "core:hollow_log_cache": "assets/sprites/resources/fallen_branches.png",
+    "core:rotten_stump_cache": "assets/sprites/resources/fallen_branches.png",
+    "core:rock_crevice_cache": "assets/sprites/resources/surface_boulder.png"
   },
   "structures": {
     "core:wood_wall": "assets/sprites/structures/wood_wall.png",
@@ -721,7 +726,11 @@
     "core:drying_rack": "assets/sprites/structures/drying_rack.png",
     "core:tanning_frame": "assets/sprites/structures/tanning_frame.png",
     "core:stone_hearth": "assets/sprites/structures/stone_hearth.png",
-    "core:reed_screen": "assets/sprites/structures/reed_screen.png"
+    "core:reed_screen": "assets/sprites/structures/reed_screen.png",
+    "core:wood_storage_box": "assets/sprites/structures/wood_chest.png",
+    "core:natural_hollow_log": "assets/sprites/resources/fallen_branches.png",
+    "core:natural_rotten_stump": "assets/sprites/resources/fallen_branches.png",
+    "core:natural_rock_cache": "assets/sprites/resources/surface_boulder.png"
   },
   "species": {
     "core:rabbit": [

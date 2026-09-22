@@ -897,5 +897,195 @@
     "seasons": [],
     "density": 140,
     "patch_scale": 3
+  },
+  {
+    "id": "core:hollow_log_cache",
+    "name": "Hollow Log",
+    "glyph": "=",
+    "ascii_glyph": "=",
+    "ansi_color": 33,
+    "tags": [
+      "natural_container",
+      "deadwood",
+      "wood"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 5,
+    "regrow_days": 0,
+    "yields": {},
+    "blocks_movement": true,
+    "blocks_sight": false,
+    "description": "A weathered fallen trunk with a hollow center where useful natural materials sometimes collect.",
+    "flavor": "\"Rot makes a cupboard before it makes soil.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass"
+    ],
+    "min_temp": 10000,
+    "max_temp": 58000,
+    "min_moisture": 24000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 26,
+    "patch_scale": 8,
+    "container_structure_id": "core:natural_hollow_log",
+    "container_capacity_mass_g": 45000,
+    "container_capacity_volume_ml": 60000,
+    "container_movable": true,
+    "container_loot": {
+      "core:bark": [
+        1,
+        4
+      ],
+      "core:stout_branch": [
+        0,
+        2
+      ],
+      "core:morel": [
+        0,
+        2
+      ],
+      "core:feather": [
+        0,
+        2
+      ]
+    },
+    "container_salvage": {
+      "core:wood": [
+        1,
+        2
+      ],
+      "core:bark": [
+        1,
+        3
+      ]
+    }
+  },
+  {
+    "id": "core:rotten_stump_cache",
+    "name": "Rotten Stump",
+    "glyph": "O",
+    "ascii_glyph": "O",
+    "ansi_color": 33,
+    "tags": [
+      "natural_container",
+      "deadwood",
+      "wood"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 5,
+    "regrow_days": 0,
+    "yields": {},
+    "blocks_movement": true,
+    "blocks_sight": false,
+    "description": "A soft decaying stump with pockets beneath loose bark and old roots.",
+    "flavor": "\"What the tree no longer needs, the forest stores.\"",
+    "terrains": [
+      "core:forest",
+      "core:grass",
+      "core:wetland",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 56000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 20,
+    "patch_scale": 7,
+    "container_structure_id": "core:natural_rotten_stump",
+    "container_capacity_mass_g": 30000,
+    "container_capacity_volume_ml": 42000,
+    "container_movable": false,
+    "container_loot": {
+      "core:bark": [
+        1,
+        3
+      ],
+      "core:morel": [
+        0,
+        3
+      ],
+      "core:medicinal_herb": [
+        0,
+        1
+      ],
+      "core:bone": [
+        0,
+        1
+      ]
+    },
+    "container_salvage": {
+      "core:wood": [
+        0,
+        1
+      ],
+      "core:bark": [
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "core:rock_crevice_cache",
+    "name": "Rock Crevice",
+    "glyph": "o",
+    "ascii_glyph": "o",
+    "ansi_color": 37,
+    "tags": [
+      "natural_container",
+      "rock_cache"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 5,
+    "regrow_days": 0,
+    "yields": {},
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A sheltered split between stones where small hard materials accumulate.",
+    "flavor": "\"A dry crack in stone can keep what rain would carry away.\"",
+    "terrains": [
+      "core:rock",
+      "core:scrub",
+      "core:grass"
+    ],
+    "min_temp": 0,
+    "max_temp": 65535,
+    "min_moisture": 0,
+    "max_moisture": 56000,
+    "seasons": [],
+    "density": 16,
+    "patch_scale": 9,
+    "container_structure_id": "core:natural_rock_cache",
+    "container_capacity_mass_g": 60000,
+    "container_capacity_volume_ml": 30000,
+    "container_movable": false,
+    "container_loot": {
+      "core:stone": [
+        0,
+        2
+      ],
+      "core:stone_flake": [
+        0,
+        2
+      ],
+      "core:bone": [
+        0,
+        2
+      ],
+      "core:feather": [
+        0,
+        2
+      ]
+    },
+    "container_salvage": {
+      "core:stone": [
+        1,
+        3
+      ]
+    }
   }
 ]

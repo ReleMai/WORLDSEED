@@ -903,7 +903,7 @@ def _settings(ctx:GameContext,term:Terminal)->None:
         elif choice=='mods':
             rows2=getattr(sim,'loaded_mods',[]) or ['No external data mods are active.'];nav.push(RouteState('mods','Data Mods'));_stack_view(term,nav,box('DATA MODS',rows2+[f'hash={getattr(sim,"mod_hash","none")}'],screen_width(term.size()[0],110)))
 
-def _storage_menu(ctx:GameContext,term:Terminal)->str:
+def _storage_menu_terminal(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     c=sim.building.nearby_container(sim.player_pos)
     if not c:
@@ -940,15 +940,94 @@ def _storage_menu(ctx:GameContext,term:Terminal)->str:
         if not nav.back():return UI_BACK
 
 
-def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation)->dict:
+def _storage_menu(ctx:GameContext,term:Terminal)->str:
+    """One-screen graphical transfer view with terminal fallback."""
+    if not (getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None))):
+        return _storage_menu_terminal(ctx,term)
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
+    container=sim.building.nearby_container(sim.player_pos)
+    if not container:
+        _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
+    uid=container.uid
+    nav=NavigationStack(RouteState('container-inventory','CONTAINER STORAGE'))
+    action_amount=1;last_selected=None;status=''
+    while True:
+        container=next((row for row in sim.state.containers.values() if row.uid==uid),None)
+        if not container:return status or UI_BACK
+        inv=ctx.entities.get(pid,Inventory)
+        pack_data=_inventory_ui_data(reg,inv,sim)
+        container_data=_inventory_ui_data(reg,Inventory(dict(container.items)),sim,False)
+        entries={};rows=[]
+        pack_rows=[];container_rows=[]
+        for iid,meta in sorted(pack_data['items'].items(),key=lambda kv:kv[1]['name']):
+            key=f'pack|{iid}';entries[key]={**meta,'side':'pack','iid':iid};pack_rows.append((key,f"{meta['name']} x{meta['count']}"))
+        for iid,meta in sorted(container_data['items'].items(),key=lambda kv:kv[1]['name']):
+            key=f'container|{iid}';entries[key]={**meta,'side':'container','iid':iid};container_rows.append((key,f"{meta['name']} x{meta['count']}"))
+        for i in range(max(len(pack_rows),len(container_rows))):
+            if i<len(pack_rows):rows.append(pack_rows[i])
+            if i<len(container_rows):rows.append(container_rows[i])
+        if not rows:rows=[('__empty__','Both inventories are empty')]
+        route=nav.current;route.selected=max(0,min(route.selected,len(rows)-1))
+        selected_key=rows[route.selected][0]
+        if selected_key!=last_selected:action_amount=1;last_selected=selected_key
+        meta=entries.get(selected_key,{})
+        count=int(meta.get('count',0));action_amount=max(1,min(action_amount,max(1,count)))
+        mass,volume=sim.building.container_load(container)
+        data={
+            'entries':entries,'selected_key':selected_key,'action_amount':action_amount,
+            'pack':pack_data,'container_items':container_data,
+            'container':{
+                'uid':container.uid,'name':container.name or 'Container','kind':container.kind,
+                'condition':container.condition,'movable':container.movable,
+                'mass_kg':mass/1000.0,'volume_l':volume/1000.0,
+                'capacity_mass_kg':container.capacity_mass_g/1000.0,
+                'capacity_volume_l':container.capacity_volume_ml/1000.0,
+                'item_count':sum(container.items.values()),'stack_count':len(container.items),
+            },
+        }
+        subtitle=status or 'Click either side, choose an amount, then transfer it. Natural containers can also be moved or broken apart.'
+        status=''
+        choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
+        if choice is None:return UI_BACK
+        if choice=='__BACK__':continue
+        if not choice.startswith('UI_ACTION:'):
+            last_selected=choice;action_amount=1;continue
+        if rows and 0<=route.selected<len(rows):
+            selected_key=rows[route.selected][0];meta=entries.get(selected_key,{})
+            count=int(meta.get('count',0))
+            if selected_key!=last_selected:action_amount=1;last_selected=selected_key
+        action=choice.split(':',1)[1]
+        if action=='qty_down':action_amount=max(1,action_amount-1);continue
+        if action=='qty_up':action_amount=min(max(1,count),action_amount+1);continue
+        if action=='qty_all':action_amount=max(1,count);continue
+        if action=='split':
+            action_amount=max(1,(count+1)//2);status=f'Half-stack selected: {action_amount} of {count}.';continue
+        if action=='transfer' and meta:
+            iid=meta['iid'];amount=min(action_amount,count)
+            if meta['side']=='pack':sim.execute(StoreCommand(pid,iid,amount,uid))
+            else:sim.execute(TakeFromContainerCommand(pid,iid,amount,uid))
+            status=sim.log[-1].message if sim.log else '';last_selected=None;action_amount=1;continue
+        if action.startswith('move:'):
+            try:_,dx,dy=action.split(':');dx=int(dx);dy=int(dy)
+            except Exception:continue
+            sim.execute(MoveContainerCommand(pid,uid,dx,dy))
+            status=sim.log[-1].message if sim.log else '';continue
+        if action=='destroy':
+            sim.execute(DestroyContainerCommand(pid,uid))
+            return sim.log[-1].message if sim.log else ''
+        continue
+
+
+def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_artifacts:bool=True)->dict:
     total_mass=sum(reg.items[iid].mass_g*n for iid,n in inv.items.items() if iid in reg.items and n>0)
     total_volume=sum(reg.items[iid].volume_ml*n for iid,n in inv.items.items() if iid in reg.items and n>0)
     categories={}
     items={}
     artifacts_by_item={}
-    for artifact in sim.state.artifacts.values():
-        if artifact.owner=='player':
-            artifacts_by_item.setdefault(artifact.base_item,[]).append(artifact)
+    if include_artifacts:
+        for artifact in sim.state.artifacts.values():
+            if artifact.owner=='player':
+                artifacts_by_item.setdefault(artifact.base_item,[]).append(artifact)
     for iid,n in inv.items.items():
         item=reg.items.get(iid)
         if not item or n<=0:continue
@@ -1144,10 +1223,12 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         return _inventory_menu_terminal(ctx,term)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     nav=NavigationStack(RouteState('inventory','INVENTORY'))
-    action_amount=1;last_selected=None;status=''
+    action_amount=1;last_selected=None;status='';active_filter='all'
     while True:
         inv=ctx.entities.get(pid,Inventory);route=nav.current
-        rows=[(iid,f'{reg.items[iid].name} x{n}') for iid,n in sorted(inv.items.items(),key=lambda kv:(reg.items[kv[0]].name if kv[0] in reg.items else kv[0])) if n>0 and iid in reg.items]
+        data=_inventory_ui_data(reg,inv,sim)
+        visible_items=[(iid,meta) for iid,meta in data['items'].items() if active_filter=='all' or meta.get('category')==active_filter]
+        rows=[(iid,f"{meta['name']} x{meta['count']}") for iid,meta in sorted(visible_items,key=lambda kv:kv[1]['name'])]
         if rows:
             route.selected=max(0,min(route.selected,len(rows)-1))
             selected_iid=rows[route.selected][0]
@@ -1158,8 +1239,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             action_amount=1;last_selected=selected_iid
         count=inv.count(selected_iid) if selected_iid!='__empty__' else 0
         action_amount=max(1,min(action_amount,max(1,count)))
-        data=_inventory_ui_data(reg,inv,sim)
-        data.update({'selected_item_id':selected_iid,'action_amount':action_amount})
+        data.update({'selected_item_id':selected_iid,'action_amount':action_amount,'active_filter':active_filter,'filter_categories':sorted(data.get('categories',{}))})
         subtitle=status or 'Click an item to inspect it. Use, drop, split and storage actions stay on this screen.'
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
@@ -1169,6 +1249,9 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             if choice!='__empty__':
                 action_amount=1;last_selected=choice
             continue
+        action=choice.split(':',1)[1]
+        if action.startswith('filter:'):
+            active_filter=action.split(':',1)[1] or 'all';route.selected=0;last_selected=None;action_amount=1;continue
         # Hover can change select_menu's retained row immediately before an
         # inline action click, so resolve the active item from the route again.
         if rows and 0<=route.selected<len(rows):
@@ -1178,7 +1261,6 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
                 action_amount=1;last_selected=selected_iid
         if selected_iid=='__empty__' or selected_iid not in reg.items or count<=0:
             continue
-        action=choice.split(':',1)[1]
         if action=='qty_down':
             action_amount=max(1,action_amount-1);continue
         if action=='qty_up':
@@ -1327,11 +1409,12 @@ def _structure_group(st)->str:
 def _building_menu(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
-        groups=sorted(set(_structure_group(st) for st in reg.structures.values()))
-        group=_select(term,'CONSTRUCTION',[(g,f'{g.title()} — {sum(1 for st in reg.structures.values() if _structure_group(st)==g)} plans') for g in groups])
+        buildable=[st for st in reg.structures.values() if 'natural_only' not in st.tags]
+        groups=sorted(set(_structure_group(st) for st in buildable))
+        group=_select(term,'CONSTRUCTION',[(g,f'{g.title()} — {sum(1 for st in buildable if _structure_group(st)==g)} plans') for g in groups])
         if not group:return UI_BACK
         rows=[]
-        structs=sorted((st for st in reg.structures.values() if _structure_group(st)==group),key=lambda s:s.name)
+        structs=sorted((st for st in buildable if _structure_group(st)==group),key=lambda s:s.name)
         for st in structs:
             missing=[f'{reg.items[i].name if i in reg.items else i} {inv.count(i)}/{n}' for i,n in st.cost.items() if inv.count(i)<n]
             uses=', '.join(x.replace('_',' ') for x in st.uses[:3]) or 'structure'

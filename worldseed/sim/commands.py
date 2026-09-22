@@ -69,9 +69,13 @@ class UnequipCommand: actor:int; slot:str
 @dataclass(frozen=True,slots=True)
 class TreatWoundCommand: actor:int; wound_index:int; item_id:str
 @dataclass(frozen=True,slots=True)
-class StoreCommand: actor:int; item_id:str; amount:int=1
+class StoreCommand: actor:int; item_id:str; amount:int=1; container_uid:str=""
 @dataclass(frozen=True,slots=True)
-class TakeFromContainerCommand: actor:int; item_id:str; amount:int=1
+class TakeFromContainerCommand: actor:int; item_id:str; amount:int=1; container_uid:str=""
+@dataclass(frozen=True,slots=True)
+class MoveContainerCommand: actor:int; container_uid:str; dx:int; dy:int
+@dataclass(frozen=True,slots=True)
+class DestroyContainerCommand: actor:int; container_uid:str
 @dataclass(frozen=True,slots=True)
 class FertilizeCommand: actor:int
 

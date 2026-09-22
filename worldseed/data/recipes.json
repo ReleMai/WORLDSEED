@@ -1009,5 +1009,45 @@
     "category": "advanced",
     "skill": "smithing",
     "difficulty": 3
+  },
+  {
+    "id": "core:wicker_basket",
+    "name": "Weave Wicker Basket",
+    "inputs": {
+      "core:reed_bundle": 3,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:wicker_basket": 1
+    },
+    "minutes": 40,
+    "station": null,
+    "knowledge": null,
+    "description": "Weave flexible reeds around a cord-bound frame to make a portable basket that can be placed as storage.",
+    "category": "camp",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:wood_storage_box",
+    "name": "Build Wooden Storage Box",
+    "inputs": {
+      "core:wood": 3,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:wood_storage_box": 1
+    },
+    "minutes": 75,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Fit rough boards into a sturdy portable box ready to place as camp or household storage.",
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
   }
 ]

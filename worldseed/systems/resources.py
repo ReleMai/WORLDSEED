@@ -124,7 +124,7 @@ class ResourceSystem:
 
     @staticmethod
     def _is_structural(f)->bool:
-        return bool(f.blocks_movement or "tree" in f.tags or "boulder" in f.tags)
+        return bool(f.blocks_movement or "tree" in f.tags or "boulder" in f.tags or "natural_container" in f.tags)
 
     def _structural_budget(self,tid:str,fields)->int:
         # Per-thousand chance before minimum-distance thinning.  The biome tile
@@ -282,7 +282,10 @@ class ResourceSystem:
 
     def is_harvestable(self,pos:WorldPos)->bool:
         fv=self.feature_at(pos)
-        if fv and fv.stage=="mature":return True
+        if fv and fv.stage=="mature":
+            f=self.registry.resources.get(fv.feature_id)
+            if f and "natural_container" in f.tags:return False
+            return True
         t=self.world.tile_at(pos).terrain
         return pos.z<0 and bool(t.gather_item and t.gather_amount>0 and t.depleted_to)
 
@@ -328,6 +331,8 @@ class ResourceSystem:
         fv=self.feature_at(pos,minute)
         if fv and fv.stage=="mature":
             f=self.registry.resources[fv.feature_id]
+            if "natural_container" in f.tags:
+                return False,f"Open, move, or break apart the {f.name.lower()} instead.",5,{}
             tool=self._best_tool(inv,self.registry,f.required_tool_tag)
             if tool < f.required_tool_power:
                 need=f.required_tool_tag or "tool"

@@ -25,6 +25,12 @@ class ResourceFeatureDef:
     description: str = ""; flavor: str = ""; terrains: tuple[str, ...] = ()
     min_temp: int = 0; max_temp: int = 65535; min_moisture: int = 0; max_moisture: int = 65535
     seasons: tuple[str, ...] = (); density: int = 100; patch_scale: int = 1
+    container_structure_id: str | None = None
+    container_capacity_mass_g: int = 0
+    container_capacity_volume_ml: int = 0
+    container_loot: dict[str, tuple[int, int]] = field(default_factory=dict)
+    container_salvage: dict[str, tuple[int, int]] = field(default_factory=dict)
+    container_movable: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,7 +174,7 @@ class ContentRegistry:
 
     def _load_resources(self,path):
         for raw in self._json(path):
-            obj=ResourceFeatureDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],ascii_glyph=raw.get("ascii_glyph",raw["glyph"]),ansi_color=int(raw.get("ansi_color",37)),tags=_tuple(raw.get("tags")),required_tool_tag=raw.get("required_tool_tag"),required_tool_power=int(raw.get("required_tool_power",0)),minutes=int(raw.get("minutes",10)),regrow_days=int(raw.get("regrow_days",0)),yields={iid:(int(v[0]),int(v[1])) for iid,v in raw.get("yields",{}).items()},blocks_movement=bool(raw.get("blocks_movement",False)),blocks_sight=bool(raw.get("blocks_sight",False)),description=raw.get("description",""),flavor=raw.get("flavor",""),terrains=_tuple(raw.get("terrains")),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),seasons=_tuple(raw.get("seasons")),density=int(raw.get("density",100)),patch_scale=max(1,int(raw.get("patch_scale",1))))
+            obj=ResourceFeatureDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],ascii_glyph=raw.get("ascii_glyph",raw["glyph"]),ansi_color=int(raw.get("ansi_color",37)),tags=_tuple(raw.get("tags")),required_tool_tag=raw.get("required_tool_tag"),required_tool_power=int(raw.get("required_tool_power",0)),minutes=int(raw.get("minutes",10)),regrow_days=int(raw.get("regrow_days",0)),yields={iid:(int(v[0]),int(v[1])) for iid,v in raw.get("yields",{}).items()},blocks_movement=bool(raw.get("blocks_movement",False)),blocks_sight=bool(raw.get("blocks_sight",False)),description=raw.get("description",""),flavor=raw.get("flavor",""),terrains=_tuple(raw.get("terrains")),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),seasons=_tuple(raw.get("seasons")),density=int(raw.get("density",100)),patch_scale=max(1,int(raw.get("patch_scale",1))),container_structure_id=raw.get("container_structure_id"),container_capacity_mass_g=int(raw.get("container_capacity_mass_g",0)),container_capacity_volume_ml=int(raw.get("container_capacity_volume_ml",0)),container_loot={iid:(int(v[0]),int(v[1])) for iid,v in raw.get("container_loot",{}).items()},container_salvage={iid:(int(v[0]),int(v[1])) for iid,v in raw.get("container_salvage",{}).items()},container_movable=bool(raw.get("container_movable",False)))
             if obj.id in self.resources: raise ValueError(f"Duplicate resource id: {obj.id}")
             self.resources[obj.id]=obj
 
@@ -236,6 +242,14 @@ class ContentRegistry:
         for feature in self.resources.values():
             for iid in feature.yields:
                 if iid not in self.items: raise ValueError(f"Unknown resource yield {iid} in {feature.id}")
+            if feature.container_structure_id and feature.container_structure_id not in self.structures:
+                raise ValueError(f"Unknown container structure {feature.container_structure_id} in {feature.id}")
+            for iid in (*feature.container_loot.keys(),*feature.container_salvage.keys()):
+                if iid not in self.items: raise ValueError(f"Unknown container item {iid} in {feature.id}")
+            if "natural_container" in feature.tags and not feature.container_structure_id:
+                raise ValueError(f"Natural container {feature.id} requires container_structure_id")
+            if feature.container_structure_id and (feature.container_capacity_mass_g<0 or feature.container_capacity_volume_ml<0):
+                raise ValueError(f"Invalid container capacity in {feature.id}")
         for recipe in self.recipes.values():
             for iid in (*recipe.inputs.keys(),*recipe.outputs.keys(),*recipe.catalysts.keys()):
                 if iid not in self.items: raise ValueError(f"Unknown recipe item {iid} in {recipe.id}")

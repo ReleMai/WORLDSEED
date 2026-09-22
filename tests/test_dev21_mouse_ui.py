@@ -73,7 +73,7 @@ class MouseUITests(unittest.TestCase):
                     self.assertTrue(self.t.screen.get_rect().contains(rect),(kind,size,rect))
                     self.assertLessEqual(rect.bottom,size[1]-56,(kind,size,rect))
     def test_unified_inventory_inline_split_and_drop(self):
-        from test_ui_rc2 import UIRC3FlowTests
+        from tests.test_ui_rc2 import UIRC3FlowTests
         from worldseed.app import _inventory_menu
         from worldseed.entities.components import Inventory
         f=UIRC3FlowTests();f.setUp()
@@ -90,7 +90,7 @@ class MouseUITests(unittest.TestCase):
         finally:f.tearDown()
 
     def test_hud_and_nested_crafting_inventory_are_clickable_and_observational(self):
-        from test_ui_rc2 import UIRC3FlowTests
+        from tests.test_ui_rc2 import UIRC3FlowTests
         from worldseed.app import _crafting_menu,_inventory_menu
         from worldseed.ui.router import HUD_BUTTONS,classify_key
         f=UIRC3FlowTests();f.setUp()

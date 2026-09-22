@@ -85,6 +85,7 @@ class Simulation:
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
         self.resources=resources_system or ResourceSystem(self.state,registry,self.seed,self.world)
+        self.building.attach_resources(self.resources,self.seed)
         self.nutrition=NutritionSystem(self.state,registry)
         self.food=CookingSystem(self.state,registry,self.nutrition)
         self.processing=ProcessingSystem(self.state,registry,self.building)
@@ -234,6 +235,8 @@ class Simulation:
         elif isinstance(command,TreatWoundCommand):self._message(self.combat.treat_player_wound(command.wound_index,command.item_id,self.entities.get(command.actor,Inventory)))
         elif isinstance(command,StoreCommand):self._store(command)
         elif isinstance(command,TakeFromContainerCommand):self._take_container(command)
+        elif isinstance(command,MoveContainerCommand):self._move_container(command)
+        elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
         elif isinstance(command,TalkCommand):self._talk(command)
         elif isinstance(command,TreatDiseaseCommand):self._message(self.disease.treat_player(self.entities.get(command.actor,Inventory),self.clock.minute,self.player_skill('medicine'),self.has_talent('field_medic')))
@@ -538,6 +541,15 @@ class Simulation:
         visible.add(pos_key(pos.x,pos.y,pos.z))
         self._visible_tile_set=visible
         self._record_discovered_tiles(newly)
+        if newly and pos.z==0:
+            positions=[]
+            for token in newly:
+                try:
+                    x,y,z=(int(v) for v in token.split(','))
+                except Exception:
+                    continue
+                positions.append(WorldPos(x,y,z))
+            self.building.materialize_natural_containers(positions)
         settlements=set(self.state.discovered_settlements);factions=set(self.state.discovered_factions)
         npcs=set(self.state.discovered_npcs);sites=set(self.state.discovered_sites);species=set(self.state.discovered_species)
         if pos.z==0:
@@ -747,14 +759,33 @@ class Simulation:
         pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.place(cmd.structure_id,pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
     def _dismantle(self,cmd:DismantleCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.dismantle(pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
+    def _command_container(self,uid:str):
+        if uid:
+            c=next((row for row in self.state.containers.values() if row.uid==uid),None)
+            if c and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
+            return None
+        return self.building.nearby_container(self.player_pos)
     def _store(self,cmd:StoreCommand)->None:
-        c=self.building.nearby_container(self.player_pos)
+        c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
         ok,msg=self.building.store(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _take_container(self,cmd:TakeFromContainerCommand)->None:
-        c=self.building.nearby_container(self.player_pos)
+        c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
         ok,msg=self.building.take(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
+    def _move_container(self,cmd:MoveContainerCommand)->None:
+        c=self._command_container(cmd.container_uid)
+        if not c:self._message("That container is no longer within reach.");return
+        dest=WorldPos(c.x+cmd.dx,c.y+cmd.dy,c.z)
+        if abs(dest.x-self.player_pos.x)+abs(dest.y-self.player_pos.y)>2:
+            self._message("You need to stay close while moving the container.");return
+        if not self.world.is_passable(dest) or self.resources.blocks_movement(dest):
+            self._message("The destination is blocked.");return
+        ok,msg=self.building.move_container(c,dest);self._message(msg)
+    def _destroy_container(self,cmd:DestroyContainerCommand)->None:
+        c=self._command_container(cmd.container_uid)
+        if not c:self._message("That container is no longer within reach.");return
+        ok,msg=self.building.destroy_container(c);self._message(msg)
     def _fertilize(self,cmd:FertilizeCommand)->None:
         pos=self.player_pos;key=pos_key(pos.x,pos.y,pos.z);soil=self.state.soils.get(key);inv=self.entities.get(cmd.actor,Inventory)
         if not soil:self._message("This tile has no cultivated soil to fertilize.");return

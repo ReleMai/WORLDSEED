@@ -43,9 +43,9 @@ jobs:
 
       # Keep cheap/high-signal regressions before the expensive worldgen suite
       # so interface or compatibility mistakes fail in seconds, not ~15 minutes.
-      - name: Run graphical inventory UI regressions
+      - name: Run graphical inventory and storage UI regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev19_feature_ui tests.test_dev21_mouse_ui
+        run: python -m unittest tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers
 
       - name: Run Phase 5 coast regression tests
         shell: pwsh
