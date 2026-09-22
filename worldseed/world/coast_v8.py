@@ -6,7 +6,7 @@ therefore be audited before any save-visible coastline projection changes.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 COAST_MORPHOLOGY_ALGORITHM = "worldgen-v8-coast-readmodel-v1"
 Q = 65535
+COAST_MATERIALIZATION_GRID = 8
 
 _DIRECTIONS_8 = (
     (-1,-1),(0,-1),(1,-1),
@@ -218,3 +219,57 @@ class CoastV8Sampler:
             else:
                 token="generate"
         return self._sample_cached(int(pos.x),int(pos.y),token,bool(prepared_only))
+
+    def materialization_at(self,pos:WorldPos,fields=None)->CoastMorphology|None:
+        """Cheap coast projection for per-tile terrain generation.
+
+        The expensive exposure/geometry classifier is sampled on an 8-cell
+        absolute lattice and reused across nearby tiles. Exact geological
+        elevation still decides land versus water for every cell, so coastline
+        position is not quantized into 8x8 blocks.
+        """
+        if self.generator.version<8 or pos.z!=0:
+            return None
+        grid=COAST_MATERIALIZATION_GRID
+        qx=(int(pos.x)//grid)*grid
+        qy=(int(pos.y)//grid)*grid
+        coarse=self.sample(WorldPos(qx,qy,0),prepared_only=True)
+        if coarse is None:
+            return None
+        if fields is None:
+            fields=self.generator.sample_fields(pos)
+        elevation=int(fields.elevation)
+        ocean=elevation<SEA_LEVEL_REFERENCE
+        if ocean:
+            depth=max(0,SEA_LEVEL_REFERENCE-elevation)
+            distance=int(coarse.coast_distance)
+            if ocean!=coarse.ocean:
+                distance=min(distance,grid)
+            geometry=min(100,distance*100//256)
+            vertical=min(100,depth*100//14000)
+            shelf_depth=_score(geometry*3//5+vertical*2//5)
+            shelf_class=("intertidal" if shelf_depth<12 else
+                         "shallow" if shelf_depth<32 else
+                         "shelf" if shelf_depth<67 else "deep")
+            kind=coarse.coast_kind if coarse.ocean else "nearshore"
+            if kind not in {"nearshore","protected_bay","tidal_flat","open_ocean"}:
+                kind="nearshore"
+            return replace(
+                coarse,ocean=True,near_coast=coarse.near_coast or ocean!=coarse.ocean,
+                depth_below_sea=depth,coast_distance=distance,
+                shelf_depth=shelf_depth,shelf_class=shelf_class,coast_kind=kind,
+            )
+
+        distance=int(coarse.coast_distance)
+        if ocean!=coarse.ocean:
+            distance=min(distance,grid)
+        kind=coarse.coast_kind if not coarse.ocean else "beach"
+        if kind not in {"beach","rocky","cliff","headland","marsh","tidal_flat","inland"}:
+            kind="beach"
+        material=coarse.shore_material if coarse.shore_material!="none" else "sand"
+        return replace(
+            coarse,ocean=False,near_coast=coarse.near_coast or ocean!=coarse.ocean,
+            depth_below_sea=0,coast_distance=distance,
+            shelf_depth=0,shelf_class="land",coast_kind=kind,
+            shore_material=material,
+        )
