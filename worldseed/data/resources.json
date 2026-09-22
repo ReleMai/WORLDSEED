@@ -998,7 +998,7 @@
     "container_structure_id": "core:natural_rotten_stump",
     "container_capacity_mass_g": 30000,
     "container_capacity_volume_ml": 42000,
-    "container_movable": true,
+    "container_movable": false,
     "container_loot": {
       "core:bark": [
         1,
@@ -1062,7 +1062,7 @@
     "container_structure_id": "core:natural_rock_cache",
     "container_capacity_mass_g": 60000,
     "container_capacity_volume_ml": 30000,
-    "container_movable": true,
+    "container_movable": false,
     "container_loot": {
       "core:stone": [
         0,
