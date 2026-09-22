@@ -270,3 +270,11 @@ The graphical inventory is a single retained surface rather than a pack-summary 
 - Mouse actions have keyboard parity: U use, X drop, H half/split, E store, [ / ] adjust quantity, M select all, arrows navigate items, and Esc closes the inventory.
 - Item selection, hover and quantity changes are presentation state only. Drop, eat, equip, read and store still execute through simulation commands.
 - The terminal backend retains the hierarchical fallback so the graphical redesign does not remove non-pygame access.
+NaN, **ALL**, and **Half stack** control the transfer amount without a quantity submenu;
+- transfer actions keep the storage view open;
+- movable containers expose directional move controls;
+- natural containers expose **Break apart**, which is an authoritative simulation action rather than a renderer mutation.
+
+Container transfer keyboard parity is T transfer, H half stack, [ / ] quantity, M all, X break apart, arrows for selection, and Esc back. Pointer targets continue to emit semantic UI tokens only; store/take/move/destroy state changes remain simulation commands.
+
+Generated natural containers are realized by simulation discovery, not by rendering. Opening an inventory or moving the pointer therefore cannot generate loot or mutate world state.
