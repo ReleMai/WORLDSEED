@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from worldseed.core.rng import hash_u64
 from worldseed.presentation.clouds import CloudRenderer
+from worldseed.presentation.atmosphere import EffectFrame, WeatherSample, EffectStack
 
 
 class WeatherFxRenderer:
@@ -22,6 +23,39 @@ class WeatherFxRenderer:
         self._lighting_target = None
         self._lighting_from = None
         self._lighting_started = 0
+        self.effects = EffectStack()
+        self.effects.register('fog',10,self._fog_layers,lambda w: False)
+        self.effects.register('clouds',20,self._cloud_layers,lambda w: w.cloud_cover >= 12)
+        self.effects.register('rain',30,self._rain_layers,lambda w: w.rain > 0)
+
+    def has_animated_effects(self, weather):
+        return self.effects.animated(WeatherSample.capture(weather))
+
+    def draw_atmosphere(self, screen, rect, seed, weather, *, world_left,
+                        world_top, tile_px, elapsed_ms, game_minute=720, lighting=None):
+        frame = EffectFrame(bytes(seed),rect.width,rect.height,world_left,world_top,
+                            tile_px,elapsed_ms,game_minute,WeatherSample.capture(weather,lighting))
+        self.effects.draw(screen,rect,frame)
+
+    def _fog_layers(self, frame):
+        fog = frame.weather.fog
+        if fog <= 4:
+            return ()
+        overlay = self.pg.Surface((frame.width,frame.height),self.pg.SRCALPHA)
+        overlay.fill((172,184,184,min(82,8+fog//2)))
+        return (overlay,)
+
+    def _cloud_layers(self, frame):
+        w = frame.weather
+        return self._clouds.layers(frame.width,frame.height,frame.seed,w.cloud_cover,
+                                   w.wind_dx,w.wind_dy,frame.left,frame.top,frame.tile_px,
+                                   frame.elapsed_ms,storm=w.storm_intensity,minute=frame.game_minute,
+                                   daylight=w.daylight,sunrise=w.sunrise,sunset=w.sunset)
+
+    def _rain_layers(self, frame):
+        w = frame.weather
+        return (self.rain_surface(frame.width,frame.height,frame.seed,frame.elapsed_ms//33,
+                                  w.rain,w.wind_dx,w.wind_dy,w.night),)
 
     @staticmethod
     def _terrain_group(terrain_id: str) -> str:
@@ -98,12 +132,9 @@ class WeatherFxRenderer:
                 screen.blit(layer, rect.topleft)
 
     def draw_fog(self, screen, rect, weather: dict) -> None:
-        fog = max(0, min(100, int(weather.get("fog", 0))))
-        if fog <= 4:
-            return
-        overlay = self.pg.Surface((rect.width, rect.height), self.pg.SRCALPHA)
-        overlay.fill((172, 184, 184, min(82, 8 + fog // 2)))
-        screen.blit(overlay, rect.topleft)
+        frame = EffectFrame(b'',rect.width,rect.height,0,0,1,0,0,WeatherSample.capture(weather))
+        for layer in self._fog_layers(frame):
+            screen.blit(layer,rect.topleft)
 
     def lighting_colors(self, lighting):
         alpha = max(0, min(230, int(getattr(lighting, 'darkness_alpha', 0))))

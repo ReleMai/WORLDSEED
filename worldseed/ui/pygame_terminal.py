@@ -1087,8 +1087,7 @@ class PygameTerminal(PointerUI):
                          self._weather_fx.lighting_transition_active(
                              getattr(self, '_weather_last_frame_ms', now)))
         active = bool(ctx and static is not None and self._hover_context and
-                      (int(ctx.get('rain', 0)) > 0 or
-                       int(ctx.get('cloud_cover', 0)) >= 12 or transitioning))
+                      (self._weather_fx.has_animated_effects(ctx) or transitioning))
         if active:
             phase = int(now) // 33
             if phase == getattr(self, '_weather_animation_phase', None):
@@ -1100,17 +1099,10 @@ class PygameTerminal(PointerUI):
             self.screen.blit(static,used.topleft)
             self._weather_fx.draw_lighting(self.screen,used,ctx['lighting'],elapsed_ms=now)
             self._weather_fx.draw_fire_glows(self.screen,used,ctx['fire_rects'],ctx['lighting'])
-            self._weather_fx.draw_fog(self.screen,used,ctx)
-            self._weather_fx.draw_cloud_shadows(
+            self._weather_fx.draw_atmosphere(
                 self.screen,used,ctx['seed'],ctx,world_left=int(ctx.get('left',0)),
                 world_top=int(ctx.get('top',0)),tile_px=int(ctx.get('tile_px',28)),elapsed_ms=int(now),
-                game_minute=ctx.get('minute',720),lighting=ctx['lighting'],
-            )
-            rain=self._weather_fx.rain_surface(
-                used.width,used.height,ctx['seed'],phase,int(ctx.get('rain',0)),
-                int(ctx.get('wind_dx',0)),int(ctx.get('wind_dy',0)),bool(ctx.get('night',False)),
-            )
-            if rain is not None:self.screen.blit(rain,used.topleft)
+                game_minute=ctx.get('minute',720),lighting=ctx['lighting'])
             self.pg.draw.rect(self.screen,(78,91,91),used,1)
             self._hover_map_snapshot=self.screen.subsurface(used).copy()
             self._hover_rect=None;self._hover_tile_rect=None
@@ -1844,19 +1836,9 @@ class PygameTerminal(PointerUI):
                     map_rect.x+(fx-left)*tile_px,map_rect.y+(fy-top)*tile_px,tile_px,tile_px
                 ),int(getattr(fire,'intensity',60))))
             self._weather_fx.draw_fire_glows(screen,used,fire_rects,lighting)
-            self._weather_fx.draw_fog(screen,used,weather)
-            # Idle effects restore the ungraded snapshot and read frozen samples.
-            self._weather_fx.draw_cloud_shadows(
+            self._weather_fx.draw_atmosphere(
                 screen,used,sim.seed,weather,world_left=left,world_top=top,
-                tile_px=tile_px,elapsed_ms=now_ms,game_minute=sim.clock.minute,lighting=lighting,
-            )
-            if int(weather.get('rain',0))>0:
-                rain=self._weather_fx.rain_surface(
-                    used.width,used.height,sim.seed,now_ms//33,
-                    int(weather.get('rain',0)),int(weather.get('wind_dx',0)),
-                    int(weather.get('wind_dy',0)),bool(lighting.phase=='night'),
-                )
-                if rain is not None:screen.blit(rain,used.topleft)
+                tile_px=tile_px,elapsed_ms=now_ms,game_minute=sim.clock.minute,lighting=lighting)
         else:
             self._weather_static_snapshot=None
         # frame map exactly to drawn cells

@@ -11,6 +11,7 @@ def main():
     parser.add_argument('--capture', type=Path)
     parser.add_argument('--cave', action='store_true')
     parser.add_argument('--storm', action='store_true')
+    parser.add_argument('--gallery', action='store_true')
     args = parser.parse_args()
     if args.capture:
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
@@ -27,6 +28,7 @@ def main():
     size = 40
     minute, cave, cover, storm = 720, args.cave, 90, 85 if args.storm else 0
     rain = 8 if storm else 0
+    gallery = args.gallery
     clock = pg.time.Clock()
     running = True
     try:
@@ -39,6 +41,8 @@ def main():
                         running = False
                     if event.key in (pg.K_1, pg.K_2, pg.K_3, pg.K_4):
                         minute = {pg.K_1:720,pg.K_2:1110,pg.K_3:0,pg.K_4:330}[event.key]
+                    if event.key == pg.K_g:
+                        gallery = not gallery
                     if event.key == pg.K_v:
                         cave = not cave
                     if event.key == pg.K_c:
@@ -68,17 +72,22 @@ def main():
                 light = LightingSystem().at(minute,cover,storm)
                 term._weather_fx.set_lighting(light,now)
                 term._weather_fx.draw_lighting(screen,rect,light,elapsed_ms=now)
-                weather = dict(cloud_cover=cover,wind_dx=750,wind_dy=160,storm_intensity=storm)
-                term._weather_fx.draw_cloud_shadows(screen,rect,b'visual-scene',weather,
-                                                   world_left=0,world_top=0,tile_px=size,
-                                                   elapsed_ms=now,game_minute=minute,lighting=light)
-                overlay = term._weather_fx.rain_surface(rect.w,rect.h,b'visual-scene',now//33,rain,750,160)
-                if overlay is not None:
-                    screen.blit(overlay,rect.topleft)
+                weather = dict(cloud_cover=cover,wind_dx=750,wind_dy=160,storm_intensity=storm,rain=rain)
+                term._weather_fx.draw_atmosphere(screen,rect,b'visual-scene',weather,
+                                                 world_left=0,world_top=0,tile_px=size,
+                                                 elapsed_ms=now,game_minute=minute,lighting=light)
             screen.set_clip(saved)
-            title = 'CAVE MATERIALS' if cave else 'CLOUDS / PINE / MOREL'
+            if gallery:
+                pg.draw.rect(screen,(32,47,60),rect)
+                for i in range(12):
+                    identity=hash_u64(b'visual-scene','gallery',i)
+                    shape,_=term._weather_fx._clouds._shape(identity,'wisp' if i%4==0 else 'bank')
+                    x=(i%4)*300+54; y=rect.y+(i//4)*210
+                    screen.blit(shape,(x,y))
+                    screen.blit(term.small_font.render('Cloud '+str(i+1),True,(224,219,197)),(x+55,y+182))
+            title = 'UNIQUE CLOUD SHAPES' if gallery else ('CAVE MATERIALS' if cave else 'DYNAMIC CLOUDS / PINE / MOREL')
             for text, y in [('WORLDSEED — '+title+' — synthetic visual test, no save',10),
-                            ('1 Day   2 Dusk   3 Night   4 Dawn   C Clouds   R Rain   S Storm   V Cave   Esc Exit',42)]:
+                            ('1 Day   2 Dusk   3 Night   4 Dawn   C Clouds   R Rain   S Storm   V Cave   G Shapes   Esc Exit',42)]:
                 screen.blit(term.small_font.render(text,True,(224,219,197)),(18,y))
             pg.display.flip()
             if args.capture:
