@@ -82,7 +82,7 @@ class RegionBlockTests(unittest.TestCase):
             self.assertEqual(reader._cache, {})
             self.assertEqual(db.connection.total_changes, before)
             corrupt = plan.to_dict()
-            corrupt['dominant_biome'] = 'water'
+            corrupt['dominant_biome'] = 'grass' if plan.dominant_biome == 'water' else 'water'
             db.store_generated_regional_plan(-1, 0, reader.version, corrupt)
             self.assertIsNone(reader.read_prepared(-1, 0))
             self.assertEqual(reader._cache, {})

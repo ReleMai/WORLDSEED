@@ -65,6 +65,8 @@ class WorldGenerator:
         )
         from worldseed.world.coast_v8 import CoastV8Sampler
         self.coast_v8 = CoastV8Sampler(self)
+        from worldseed.world.coastal_mouths import CoastalMouths
+        self.coastal_mouths = CoastalMouths(self)
         # RC14 Phase 3 attaches a HydrologyGenerator after database/opening state
         # exists. Keeping the dependency injected avoids making rendering or
         # content code an authority over physical geography.
@@ -383,6 +385,13 @@ class WorldGenerator:
 
     def current_at(self,pos:WorldPos,*,prepared_only:bool=False):
         if pos.z!=0:return None
+        if self.version>=8 and self.coast_morphology_version>=2 and self.hydrology is not None:
+            domain=self.hydrology.cached_domain(*self.hydrology.domain_for_world(pos.x,pos.y))
+            mouth=self.coastal_mouths.at(pos,domain,prepared_only=prepared_only)
+            if mouth and 'estuary' in mouth[0] and mouth[2]>=0:
+                _,plan,index=mouth
+                path=((plan.primary,)+plan.branches)[index]
+                return SurfaceCurrent('estuary',self._sign(path[-1][0]-path[0][0]),self._sign(path[-1][1]-path[0][1]),max(18,min(65,18+plan.branch_discharge[index]//80)))
         if self.version>=6 and self._surface_terrain_base(pos) in {'core:ocean_shelf','core:ocean_deep'}:
             return self._ocean_current_at(pos)
         surface=None
@@ -404,6 +413,8 @@ class WorldGenerator:
         if base in {"core:cave_mouth","core:water"}:
             return base
         surface=self.hydrology.surface_at(pos)
+        if self.version>=8 and self.coast_morphology_version>=2 and surface.terrain_override in {'core:estuary_shallow','core:estuary_deep','core:tidal_flat','core:shore'}:
+            return surface.terrain_override or base
         if self.version >= 6:
             if base.startswith('core:ocean_'):
                 # River mouths inherit drainage geometry; salinity mixing is

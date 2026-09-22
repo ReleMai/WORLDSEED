@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from worldseed.app import _find_spawn
 from worldseed.config import DATA_DIR, ENGINE_VERSION, WORLDGEN_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
@@ -34,9 +35,10 @@ class RC5GameplayTests(unittest.TestCase):
     def test_surface_tree_is_feature_not_ground_and_has_life_cycle(self):
         td,db,reg,world,e,pid,sim=self.make_sim()
         try:
+            center=_find_spawn(world,'wanderer',sim.resources)
             target=None
-            for y in range(-80,81):
-                for x in range(-80,81):
+            for y in range(center.y-80,center.y+81):
+                for x in range(center.x-80,center.x+81):
                     p=WorldPos(x,y,0);fv=sim.resources.feature_at(p)
                     if fv and 'tree' in reg.resources[fv.feature_id].tags:
                         target=p;break
@@ -56,9 +58,10 @@ class RC5GameplayTests(unittest.TestCase):
     def test_tree_blocks_movement_until_felled(self):
         td,db,reg,world,e,pid,sim=self.make_sim()
         try:
+            center=_find_spawn(world,'wanderer',sim.resources)
             target=None;origin=None
-            for y in range(-60,61):
-                for x in range(-60,61):
+            for y in range(center.y-60,center.y+61):
+                for x in range(center.x-60,center.x+61):
                     p=WorldPos(x,y,0);fv=sim.resources.feature_at(p)
                     if fv and reg.resources[fv.feature_id].blocks_movement:
                         for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)):
@@ -118,7 +121,7 @@ class RC5GameplayTests(unittest.TestCase):
         try:
             origin=WorldPos(0,0,-1);wall=WorldPos(1,0,-1);hidden=WorldPos(2,0,-1)
             e.get(pid,Position).value=origin;world.set_terrain(origin,'core:cave_floor');world.set_terrain(wall,'core:cave_wall');world.set_terrain(hidden,'core:cave_floor')
-            sim.state.discovered_tiles=[];sim._discover(origin)
+            sim.state.discovered_tiles=[];sim.discovered_tiles_set.clear();sim._discover(origin)
             self.assertIn(pos_key(wall.x,wall.y,wall.z),sim.state.discovered_tiles)
             self.assertNotIn(pos_key(hidden.x,hidden.y,hidden.z),sim.state.discovered_tiles)
         finally:db.close();td.cleanup()

@@ -70,7 +70,7 @@ jobs:
 
       - name: Phase 5 coast tests
         shell: pwsh
-        run: python -m unittest tests.test_worldgen_v8_coast
+        run: python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
 
       - name: Surface-cache and save-compatibility smoke tests
         shell: pwsh
@@ -88,4 +88,6 @@ jobs:
 
       - name: Bounded coast morphology audit
         shell: pwsh
-        run: python tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
+        run: |
+          python tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
+          python tools/audit_coastal_mouths.py --seeds 3

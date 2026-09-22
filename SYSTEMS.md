@@ -704,3 +704,10 @@ Local pygame entity lookup is spatially bucketed; a frame must not scan every re
 Dev33 introduces the first save-visible materialization contract. New v8 worlds record `coast_morphology_version = 1`; existing v8 saves missing the field infer version 0 and retain their previous shoreline. Surface cache identity is now `worldgen + hydrology + hydrology morphology + coast morphology`. Coast v1 can materialize `core:shore`, `core:coastal_gravel`, `core:rocky_shore`, `core:coastal_cliff`, `core:tidal_flat`, `core:salt_marsh`, and the existing ocean depth family. River-mouth fields are allowed to remain zero when hydrology is unprepared; inspection must never solve missing drainage merely to populate a coast read.
 
 For generation performance, detailed coast geometry is reused on an absolute 8-cell materialization lattice while exact geological elevation still decides land/ocean for every tile. This is a bounded projection optimization, not a second coastline authority.
+
+
+## Dev34 coast-v2 projection
+
+`CoastalMouths` derives bounded mouth plans from the same prepared Hydrology v2 land-to-sea edges. The projection owns expanded estuary cells, distributary branches, shallow sediment lobes and physically gated wind-directed barriers/lagoon pockets. Branch discharge shares sum to the source accumulation. These are actual terrain IDs and hydrology read models, not a second rendered river network. Existing channels take precedence over deposition. Saved coast versions 0/1 retain old behavior; schema/worldgen/hydrology versions do not change. Startup prepares mouth indexes for loaded saves; current inspection cannot build them.
+
+The forest material renderer samples a continuous world-anchored 16-cell material with overlapping edge blending. Simulation terrain and resources are unchanged. Geological caches store pure immutable results and named feature hashes within bounded instance-owned LRUs.

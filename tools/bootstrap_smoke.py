@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from worldseed.app import _load_context
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Position
-from worldseed.sim.commands import BuildCommand, CookMealCommand, CraftCommand, EatMealCommand
+from worldseed.sim.commands import BuildCommand, CookMealCommand, CraftCommand, EatMealCommand, ExperimentRecipeCommand
 from worldseed.systems.state import CarcassState, pos_key
 from worldseed.ui.startup import StartSelection
 
@@ -49,12 +49,15 @@ def _collect(sim, inv: Inventory, item_id: str, quantity: int, radius: int = 20)
         if inv.count(item_id) >= quantity:
             return
         sim.resources.harvest(q, inv, sim.clock.minute)
+        sim.crafting.sync_discoveries(inv)
     if inv.count(item_id) < quantity:
         raise AssertionError(f"bootstrap landscape could not supply {quantity} {item_id}; got {inv.count(item_id)}")
 
 
 def _craft(sim, actor: int, recipe_id: str, times: int = 1) -> None:
     for _ in range(times):
+        if not sim.crafting.recipe_is_discovered(recipe_id):
+            sim.execute(ExperimentRecipeCommand(actor,recipe_id))
         before = len(sim.log)
         sim.execute(CraftCommand(actor, recipe_id))
         if len(sim.log) == before or "complete" not in sim.log[-1].message.lower():

@@ -1,3 +1,11 @@
+## RC14 Dev34 — Coast v2, continuous forest floor and measured performance
+
+- Finish Phase-5 physical mouth projection: discharge/shelter-driven estuaries, connected delta distributaries, shallow deposits, sediment-fed barriers and lagoon pockets. Existing coast-v0/v1 saves retain their geography.
+- Replace repeated forest cells with a world-anchored continuous litter/moss material; keep pine/morel/cloud artwork intact.
+- Cache immutable geological hashes/samples, avoid cached-sprite disk stats and irrelevant land-neighbor reads, reuse rain identities, reduce large-screen cloud compositing cost.
+- Correct obsolete validation fixtures (offshore resource searches, no-op corruption, stale discovery cache, bootstrap discovery bypass). Assertions remain active.
+- Add mouth/seam/cache/version tests, real multi-seed audit, visual comparison and local-play benchmark. Details and validation limits: DEV34_VALIDATION.md.
+
 ## RC14 Dev33 — Phase 5 coastline materialization
 
 - Added `COAST_MORPHOLOGY_VERSION = 1` as an independent save-pinned shoreline contract.

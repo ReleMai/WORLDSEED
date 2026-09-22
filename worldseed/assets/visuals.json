@@ -124,16 +124,7 @@
       "assets/sprites/terrain/grass_hd_v09.png"
     ],
     "core:forest": [
-      "assets/sprites/terrain/forest_hd_v00.png",
-      "assets/sprites/terrain/forest_hd_v01.png",
-      "assets/sprites/terrain/forest_hd_v02.png",
-      "assets/sprites/terrain/forest_hd_v03.png",
-      "assets/sprites/terrain/forest_hd_v04.png",
-      "assets/sprites/terrain/forest_hd_v05.png",
-      "assets/sprites/terrain/forest_hd_v06.png",
-      "assets/sprites/terrain/forest_hd_v07.png",
-      "assets/sprites/terrain/forest_hd_v08.png",
-      "assets/sprites/terrain/forest_hd_v09.png"
+      "assets/sprites/terrain/forest_floor.png"
     ],
     "core:berry_thicket": [
       "assets/sprites/terrain/berry_thicket_v00.png",
@@ -966,6 +957,11 @@
       "width": 0.85,
       "height": 0.85,
       "smooth": true
+    }
+  },
+  "terrain_materials": {
+    "core:forest": {
+      "span_cells": 16
     }
   }
 }

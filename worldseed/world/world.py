@@ -92,6 +92,16 @@ class World:
         rows=[(dx,dy) for dy in range(-r,r+1) for dx in range(-r,r+1)]
         rows.sort(key=lambda q:(max(abs(q[0]),abs(q[1])),abs(q[0])+abs(q[1]),q[1],q[0]))
         return rows
+    def prepare_coastal_mouths(self, bounds) -> None:
+        """Build derived mouth indexes during explicit startup/preparation only."""
+        gen=self.generator;hydro=getattr(gen,'hydrology',None)
+        if gen.version<8 or gen.coast_morphology_version<2 or hydro is None:return
+        min_x,max_x,min_y,max_y=hydro.domains_for_world_bounds(*bounds)
+        for y in range(min_y,max_y+1):
+            for x in range(min_x,max_x+1):
+                domain=hydro.cached_domain(x,y)
+                if domain is not None:gen.coastal_mouths.plans(domain)
+
     def pre_generate(self,center:WorldPos,radius_chunks:int,progress:Callable[[int,int,str],None]|None=None,persist:bool=True)->dict[str,int]:
         """Generate a square surface envelope around ``center`` before play.
 
