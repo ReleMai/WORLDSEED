@@ -55,9 +55,18 @@ def main() -> int:
     print(json.dumps({'reports':reports},indent=2,sort_keys=True))
     # Audit fails only on structural absence; calibration remains a human/data
     # review rather than encoding one preferred coastline distribution.
-    if any(r['near_coast_samples']==0 for r in reports):
+    # A bounded sample window may legitimately fall entirely inland or offshore
+    # for one seed. Fail only if the whole multi-seed audit never observes the
+    # Phase-5 coast/bathymetry contract.
+    coastal=[r for r in reports if r['near_coast_samples']>0]
+    if not coastal:
         return 1
-    if any(len(r['shelf_classes'])<2 for r in reports):
+    shelf_classes=set()
+    coast_kinds=set()
+    for r in reports:
+        shelf_classes.update(r['shelf_classes'])
+        coast_kinds.update(r['coast_kinds'])
+    if len(shelf_classes)<2 or len(coast_kinds)<3:
         return 2
     return 0
 
