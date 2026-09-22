@@ -1,3 +1,14 @@
+## RC14 Dev32 — WORLDGEN v8 Phase 5 coast foundation
+
+- Resumed the staged WORLDGEN v8 roadmap after the Dev31 playtest and visual correction work.
+- Kept Hydrology v2 / morphology v2 as the frozen Phase-4 drainage baseline.
+- Added a terrain-neutral Phase-5 coastal morphology read model over authoritative v8 geology, topography, climate and prepared hydrology.
+- Added continental-geometry shelf depth, exposure/shelter, bay/headland tendency, coast classes and shore-material tendency.
+- Added tidal-flat, marsh and lagoon potential plus river-mouth sediment, estuary and delta potential.
+- Exposed coastal reads through WorldGenerator/World without changing terrain IDs, save schema or generated surface-cache contracts.
+- Added deterministic Phase-5 tests and a multi-seed coastal morphology audit.
+- Preserved the newly merged rain/cloud atmosphere work and the corrected tree, morel and cave artwork unchanged.
+
 ## RC14 Dev31 — playtest correction pass
 
 - Reduced ordinary movement time from 5 minutes to 1 minute while keeping authored action durations intact.
