@@ -2384,5 +2384,45 @@
       "metalworking",
       "trade"
     ]
+  },
+  {
+    "id": "core:wicker_basket",
+    "name": "Wicker Basket",
+    "material": "core:fiber",
+    "mass_g": 900,
+    "volume_ml": 9000,
+    "tags": [
+      "container",
+      "portable",
+      "woven"
+    ],
+    "base_value": 10,
+    "description": "A tightly woven reed basket ready to be placed as lightweight camp storage.",
+    "flavor": "\"A hundred bends turn reeds into order.\"",
+    "category": "tool",
+    "utility_roles": [
+      "storage",
+      "construction"
+    ]
+  },
+  {
+    "id": "core:wood_storage_box",
+    "name": "Wooden Storage Box",
+    "material": "core:wood",
+    "mass_g": 7500,
+    "volume_ml": 18000,
+    "tags": [
+      "container",
+      "portable",
+      "wooden"
+    ],
+    "base_value": 22,
+    "description": "A fitted wooden box that can be placed as sturdy camp or household storage.",
+    "flavor": "\"Dry boards, square corners, fewer things lost in the dark.\"",
+    "category": "tool",
+    "utility_roles": [
+      "storage",
+      "construction"
+    ]
   }
 ]
