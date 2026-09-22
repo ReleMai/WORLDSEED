@@ -242,6 +242,14 @@ class ContentRegistry:
         for feature in self.resources.values():
             for iid in feature.yields:
                 if iid not in self.items: raise ValueError(f"Unknown resource yield {iid} in {feature.id}")
+            if feature.container_structure_id and feature.container_structure_id not in self.structures:
+                raise ValueError(f"Unknown container structure {feature.container_structure_id} in {feature.id}")
+            for iid in (*feature.container_loot.keys(),*feature.container_salvage.keys()):
+                if iid not in self.items: raise ValueError(f"Unknown container item {iid} in {feature.id}")
+            if "natural_container" in feature.tags and not feature.container_structure_id:
+                raise ValueError(f"Natural container {feature.id} requires container_structure_id")
+            if feature.container_structure_id and (feature.container_capacity_mass_g<0 or feature.container_capacity_volume_ml<0):
+                raise ValueError(f"Invalid container capacity in {feature.id}")
         for recipe in self.recipes.values():
             for iid in (*recipe.inputs.keys(),*recipe.outputs.keys(),*recipe.catalysts.keys()):
                 if iid not in self.items: raise ValueError(f"Unknown recipe item {iid} in {recipe.id}")
