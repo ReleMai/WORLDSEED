@@ -139,24 +139,26 @@ class WorldgenV8CoastTests(unittest.TestCase):
             gen.coast_at=original
 
     def test_coast_version_zero_preserves_pre_phase5_surface_projection(self):
+        from types import SimpleNamespace
         gen=WorldGenerator(self.seed,self.registry,version=8)
-        # Find a v1 materialized coastal terrain distinct from the old generic
-        # sand/shore/ocean depth projection, then verify version 0 does not use it.
-        candidate=None
-        new_ids={'core:rocky_shore','core:coastal_cliff','core:coastal_gravel','core:tidal_flat','core:salt_marsh'}
-        coast=self._find_coast()
-        for y in range(coast.y-160,coast.y+161,8):
-            for x in range(coast.x-160,coast.x+161,8):
-                tid=gen._surface_terrain_base(WorldPos(x,y,0))
-                if tid in new_ids:
-                    candidate=WorldPos(x,y,0);break
-            if candidate:break
-        self.assertIsNotNone(candidate)
-        new_tid=gen._surface_terrain_base(candidate)
-        gen.set_coast_morphology_version(0)
-        old_tid=gen._surface_terrain_base(candidate)
-        self.assertIn(new_tid,new_ids)
-        self.assertNotIn(old_tid,new_ids)
+        pos=WorldPos(0,0,0)
+        fields=gen.sample_fields(pos)
+        coast=SimpleNamespace(
+            ocean=False,coast_distance=4,marsh_potential=0,
+            tidal_flat_potential=0,coast_kind='rocky',shore_material='rock',
+        )
+        original=gen.coast_at
+        try:
+            gen.coast_at=lambda *_args,**_kwargs:coast
+            self.assertEqual(gen._phase5_coast_terrain(pos,fields),'core:rocky_shore')
+            gen.set_coast_morphology_version(0)
+            self.assertIsNone(gen._phase5_coast_terrain(pos,fields))
+            self.assertNotIn(
+                gen._surface_terrain_base(pos),
+                {'core:rocky_shore','core:coastal_cliff','core:coastal_gravel','core:tidal_flat','core:salt_marsh'},
+            )
+        finally:
+            gen.coast_at=original
 
 
 if __name__=='__main__':
