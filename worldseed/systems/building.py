@@ -118,8 +118,11 @@ class BuildingSystem:
         if c and c.items:
             pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
             for iid,n in c.items.items():pile.items[iid]=pile.items.get(iid,0)+n
-        for iid,n in sdef.cost.items():inv.add(iid,max(0,n//2))
-        self.state.structures.pop(key,None);return True,f"You dismantle {sdef.name} and salvage part of it."
+        portable_container=("container" in sdef.tags and "movable" in sdef.tags)
+        for iid,n in sdef.cost.items():inv.add(iid,n if portable_container else max(0,n//2))
+        self.state.structures.pop(key,None)
+        if portable_container:return True,f"You pack up {sdef.name} for reuse."
+        return True,f"You dismantle {sdef.name} and salvage part of it."
     def move_container(self,c:ContainerState,dest:WorldPos)->tuple[bool,str]:
         if not c.movable:return False,"That container is fixed in place."
         old_key=pos_key(c.x,c.y,c.z);new_key=pos_key(dest.x,dest.y,dest.z)
