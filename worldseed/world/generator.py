@@ -62,6 +62,8 @@ class WorldGenerator:
         self.climate_v8 = ClimateV8Sampler(
             self.world_seed, self.landforms_v8, self.topography_v8
         )
+        from worldseed.world.coast_v8 import CoastV8Sampler
+        self.coast_v8 = CoastV8Sampler(self)
         # RC14 Phase 3 attaches a HydrologyGenerator after database/opening state
         # exists. Keeping the dependency injected avoids making rendering or
         # content code an authority over physical geography.
@@ -164,6 +166,12 @@ class WorldGenerator:
         if self.version < 8 or pos.z != 0:
             return None
         return self.climate_v8.sample(pos.x,pos.y)
+
+    def coast_at(self,pos:WorldPos,*,prepared_only:bool=True):
+        """Return Phase-5 coastal morphology without changing terrain authority."""
+        if self.version < 8 or pos.z != 0:
+            return None
+        return self.coast_v8.sample(pos,prepared_only=prepared_only)
 
     def _connector_span(self,x:int,y:int)->int:
         """Depth of one sparse, coherent natural vertical connector.
