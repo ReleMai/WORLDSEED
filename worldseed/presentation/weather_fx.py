@@ -8,15 +8,54 @@ state is created or mutated here.
 from __future__ import annotations
 
 from worldseed.core.rng import hash_u64
+from worldseed.presentation.clouds import CloudRenderer
+from worldseed.presentation.atmosphere import EffectFrame, WeatherSample, EffectStack
 
 
 class WeatherFxRenderer:
     def __init__(self, pygame_module) -> None:
         self.pg = pygame_module
         self._wet_cache = {}
-        self._cloud_cache = {}
+        self._clouds = CloudRenderer(pygame_module)
+        self._cloud_cache = self._clouds.frames
         self._rain_cache = {}
         self._glow_cache = {}
+        self._lighting_target = None
+        self._lighting_from = None
+        self._lighting_started = 0
+        self.effects = EffectStack()
+        self.effects.register('fog',10,self._fog_layers,lambda w: False)
+        self.effects.register('clouds',20,self._cloud_layers,lambda w: w.cloud_cover >= 12)
+        self.effects.register('rain',30,self._rain_layers,lambda w: w.rain > 0)
+
+    def has_animated_effects(self, weather):
+        return self.effects.animated(WeatherSample.capture(weather))
+
+    def draw_atmosphere(self, screen, rect, seed, weather, *, world_left,
+                        world_top, tile_px, elapsed_ms, game_minute=720, lighting=None):
+        frame = EffectFrame(bytes(seed),rect.width,rect.height,world_left,world_top,
+                            tile_px,elapsed_ms,game_minute,WeatherSample.capture(weather,lighting))
+        self.effects.draw(screen,rect,frame)
+
+    def _fog_layers(self, frame):
+        fog = frame.weather.fog
+        if fog <= 4:
+            return ()
+        overlay = self.pg.Surface((frame.width,frame.height),self.pg.SRCALPHA)
+        overlay.fill((172,184,184,min(82,8+fog//2)))
+        return (overlay,)
+
+    def _cloud_layers(self, frame):
+        w = frame.weather
+        return self._clouds.layers(frame.width,frame.height,frame.seed,w.cloud_cover,
+                                   w.wind_dx,w.wind_dy,frame.left,frame.top,frame.tile_px,
+                                   frame.elapsed_ms,storm=w.storm_intensity,minute=frame.game_minute,
+                                   daylight=w.daylight,sunrise=w.sunrise,sunset=w.sunset)
+
+    def _rain_layers(self, frame):
+        w = frame.weather
+        return (self.rain_surface(frame.width,frame.height,frame.seed,frame.elapsed_ms//33,
+                                  w.rain,w.wind_dx,w.wind_dy,w.night),)
 
     @staticmethod
     def _terrain_group(terrain_id: str) -> str:
@@ -72,66 +111,73 @@ class WeatherFxRenderer:
         wind_dx: int, wind_dy: int, world_left: int, world_top: int,
         tile_px: int, elapsed_ms: int,
     ):
-        """World-anchored moving cloud-shadow field."""
-        cover=max(0,min(100,int(cloud_cover)))
-        if cover<12:return None
-        pg=self.pg;tile_px=max(1,int(tile_px));phase=max(0,int(elapsed_ms))//180
-        key=(int(width),int(height),int(world_left),int(world_top),tile_px,phase,cover//10,int(wind_dx)//256,int(wind_dy)//256,bytes(seed))
-        cached=self._cloud_cache.get(key)
-        if cached is not None:return cached
-        surf=pg.Surface((width,height),pg.SRCALPHA)
-        cell_w,cell_h=36,28
-        drift_tiles_x=(int(wind_dx)*phase)//26000;drift_tiles_y=(int(wind_dy)*phase)//26000
-        min_x=world_left-drift_tiles_x-48;max_x=world_left+width//tile_px-drift_tiles_x+48
-        min_y=world_top-drift_tiles_y-36;max_y=world_top+height//tile_px-drift_tiles_y+36
-        gx0,gx1=min_x//cell_w,max_x//cell_w;gy0,gy1=min_y//cell_h,max_y//cell_h
-        alpha=10+cover//6
-        for gy in range(gy0,gy1+1):
-            for gx in range(gx0,gx1+1):
-                token=hash_u64(seed,'weather-art:cloud-field',gx,gy)
-                if int(token%100)>=cover:continue
-                wx=gx*cell_w+6+int((token>>9)%max(1,cell_w-12))+drift_tiles_x
-                wy=gy*cell_h+5+int((token>>21)%max(1,cell_h-10))+drift_tiles_y
-                cx=(wx-world_left)*tile_px;cy=(wy-world_top)*tile_px
-                base_w=(18+int((token>>33)%20))*tile_px;base_h=(8+int((token>>45)%11))*tile_px
-                lobes=4+int((token>>55)%4)
-                body=pg.Rect(cx-base_w//2,cy-base_h//2,base_w,base_h)
-                pg.draw.ellipse(surf,(7,11,16,max(3,alpha//3)),body.inflate(tile_px*3,tile_px*2))
-                for i in range(lobes):
-                    lt=hash_u64(seed,'weather-art:cloud-lobe',gx,gy,i)
-                    ox=(int(lt%1000)-500)*base_w//1800;oy=(int((lt>>12)%1000)-500)*base_h//2200
-                    rw=max(tile_px*5,base_w*(34+int((lt>>24)%36))//100)
-                    rh=max(tile_px*3,base_h*(42+int((lt>>36)%34))//100)
-                    rect=pg.Rect(cx+ox-rw//2,cy+oy-rh//2,rw,rh)
-                    for grow,a_div in ((tile_px*2,4),(tile_px,3),(0,1)):
-                        rr=rect.inflate(grow,grow);pg.draw.ellipse(surf,(6,10,15,max(2,alpha//a_div)),rr)
-        if len(self._cloud_cache)>64:self._cloud_cache.clear()
-        self._cloud_cache[key]=surf;return surf
+        shadows, _ = self._clouds.layers(width, height, seed, cloud_cover,
+                                        wind_dx, wind_dy, world_left, world_top,
+                                        tile_px, elapsed_ms)
+        return shadows
 
-    def draw_cloud_shadows(self, screen, rect, seed: bytes, weather: dict, *, world_left: int, world_top: int, tile_px: int, elapsed_ms: int) -> None:
-        surf=self.cloud_shadow_surface(rect.width,rect.height,seed,int(weather.get('cloud_cover',0)),int(weather.get('wind_dx',0)),int(weather.get('wind_dy',0)),world_left,world_top,tile_px,elapsed_ms)
-        if surf is not None:screen.blit(surf,rect.topleft)
+    def draw_cloud_shadows(self, screen, rect, seed: bytes, weather: dict, *,
+                           world_left: int, world_top: int, tile_px: int,
+                           elapsed_ms: int, game_minute=720, lighting=None) -> None:
+        layers = self._clouds.layers(
+            rect.width, rect.height, seed, int(weather.get('cloud_cover', 0)),
+            int(weather.get('wind_dx', 0)), int(weather.get('wind_dy', 0)),
+            world_left, world_top, tile_px, elapsed_ms,
+            storm=int(weather.get('storm_intensity', 0)), minute=game_minute,
+            daylight=getattr(lighting, 'daylight', 65535),
+            sunrise=getattr(lighting, 'sunrise_minute', 360),
+            sunset=getattr(lighting, 'sunset_minute', 1080))
+        for layer in layers:
+            if layer is not None:
+                screen.blit(layer, rect.topleft)
+
     def draw_fog(self, screen, rect, weather: dict) -> None:
-        fog = max(0, min(100, int(weather.get("fog", 0))))
-        if fog <= 4:
-            return
-        overlay = self.pg.Surface((rect.width, rect.height), self.pg.SRCALPHA)
-        overlay.fill((172, 184, 184, min(82, 8 + fog // 2)))
-        screen.blit(overlay, rect.topleft)
+        frame = EffectFrame(b'',rect.width,rect.height,0,0,1,0,0,WeatherSample.capture(weather))
+        for layer in self._fog_layers(frame):
+            screen.blit(layer,rect.topleft)
 
-    def draw_lighting(self, screen, rect, lighting) -> None:
-        alpha=max(0,min(230,int(getattr(lighting,'darkness_alpha',0))))
-        if alpha<=0:return
-        phase=str(getattr(lighting,'phase','day'))
-        tr=int(getattr(lighting,'tint_r',255));tg=int(getattr(lighting,'tint_g',255));tb=int(getattr(lighting,'tint_b',255))
-        if phase in ('dawn','dusk'):
-            warm=self.pg.Surface((rect.width,rect.height),self.pg.SRCALPHA)
-            warm.fill((tr,tg,tb,min(62,max(12,alpha//2))))
-            screen.blit(warm,rect.topleft);dark=(18,17,20,alpha)
-        elif phase=='night':dark=(5,12,28,alpha)
-        else:dark=(15,20,26,alpha)
-        overlay=self.pg.Surface((rect.width,rect.height),self.pg.SRCALPHA)
-        overlay.fill(dark);screen.blit(overlay,rect.topleft)
+    def lighting_colors(self, lighting):
+        alpha = max(0, min(230, int(getattr(lighting, 'darkness_alpha', 0))))
+        phase = str(getattr(lighting, 'phase', 'day'))
+        warm = (0, 0, 0, 0)
+        if phase in ('dawn', 'dusk'):
+            warm = (lighting.tint_r, lighting.tint_g, lighting.tint_b,
+                    min(62, max(12, alpha // 2)))
+            dark = (18, 17, 20, alpha)
+        else:
+            dark = (*((5, 12, 28) if phase == 'night' else (15, 20, 26)), alpha)
+        return warm + dark
+
+    def lighting_sample(self, now):
+        if self._lighting_target is None:
+            return (0,) * 8
+        t = max(0.0, min(1.0, (now - self._lighting_started) / 650.0))
+        t = t * t * (3 - 2 * t)
+        return tuple(round(a + (b - a) * t)
+                     for a, b in zip(self._lighting_from, self._lighting_target))
+
+    def set_lighting(self, lighting, now, *, reset=False):
+        target = self.lighting_colors(lighting)
+        if reset or self._lighting_target is None:
+            self._lighting_from = self._lighting_target = target
+            self._lighting_started = now - 650
+        elif target != self._lighting_target:
+            self._lighting_from = self.lighting_sample(now)
+            self._lighting_target = target
+            self._lighting_started = now
+
+    def lighting_transition_active(self, now):
+        return self._lighting_target is not None and now < self._lighting_started + 650
+
+    def draw_lighting(self, screen, rect, lighting, *, elapsed_ms=None) -> None:
+        colors = (self.lighting_colors(lighting) if elapsed_ms is None
+                  else self.lighting_sample(elapsed_ms))
+        overlay = self.pg.Surface((rect.width, rect.height), self.pg.SRCALPHA)
+        for offset in (0, 4):
+            color = colors[offset:offset + 4]
+            if color[3]:
+                overlay.fill(color)
+                screen.blit(overlay, rect.topleft)
 
     def _glow_surface(self, radius: int, strength: int):
         radius = max(8, int(radius))
@@ -177,36 +223,40 @@ class WeatherFxRenderer:
         rain = max(0, min(10, int(rain)))
         if rain <= 0:
             return None
-        key = (int(width), int(height), int(phase) & 15, rain, int(wind_dx) // 256, int(wind_dy) // 256, bool(night), bytes(seed))
+        # Phase is an unwrapped 33 ms presentation tick. Particle identities do
+        # not depend on phase: each drop travels to a fixed impact point.
+        key = (width, height, int(phase), rain, wind_dx, wind_dy, bool(night), bytes(seed))
         cached = self._rain_cache.get(key)
         if cached is not None:
             return cached
-
         pg = self.pg
         surf = pg.Surface((width, height), pg.SRCALPHA)
-        count = 18 + rain * 18
-        slant = max(-8, min(8, int(wind_dx) // 128))
-        drop_len = 4 + rain
-        bright = (154, 180, 205, 125 if night else 105)
+        count = max(12, min(900, round((18 + rain * 18) * width * height / (960 * 600))))
+        slant = max(-0.65, min(0.65, wind_dx / 1600.0))
         for i in range(count):
-            token = hash_u64(seed, "weather-art:rain", int(phase), i)
-            x = int(token % max(1, width + 24)) - 12
-            y = int((token >> 17) % max(1, height + 32)) - 16
-            speed_offset = ((phase * (5 + rain)) + i * 3) % max(1, height + 32)
-            y = (y + speed_offset) % max(1, height + 16) - 8
-            pg.draw.aaline(surf, bright, (x, y), (x + slant, y + drop_len))
-
-        # Animated ground splashes make rain contact the terrain instead of
-        # reading as a screen-only post-process.
-        splash_count = 2 + rain * 2
-        for i in range(splash_count):
-            token = hash_u64(seed, "weather-art:splash", int(phase), i)
+            token = hash_u64(seed, "weather-art:rain", i)
             x = int(token % max(1, width))
-            y = int((token >> 21) % max(1, height))
-            rw = 2 + int((token >> 37) % 4)
-            pg.draw.arc(surf, (184, 204, 216, 90), (x-rw, y-1, rw*2, 4), 0.2, 2.95, 1)
-
-        if len(self._rain_cache) > 96:
-            self._rain_cache.clear()
+            y = int((token >> 17) % max(1, height))
+            depth = 0.55 + ((token >> 34) % 100) / 150.0
+            fall_ticks = 18 + int((token >> 44) % 17)
+            cycle = fall_ticks + 9
+            age = (int(phase) + int((token >> 50) % cycle)) % cycle
+            if age < fall_ticks:
+                distance = (fall_ticks - age) * (7 + rain * 0.45) * depth
+                length = (5 + rain * 0.8) * depth
+                head = (x - slant * distance, y - distance)
+                tail = (head[0] - slant * length, head[1] - length)
+                alpha = round((100 if night else 82) * depth)
+                pg.draw.aaline(surf, (154, 180, 205, alpha), tail, head)
+            else:
+                # A short expanding ring fades at the same point the drop hit.
+                age -= fall_ticks
+                radius = 1 + age * 0.55 * depth
+                alpha = round(100 * (1 - age / 9) * depth)
+                pg.draw.ellipse(surf, (184, 204, 216, alpha),
+                                (x-radius, y-radius/3, radius*2+1, radius*2/3+1), 1)
+        # Keep only two full-size frames instead of retaining dozens of screens.
+        if len(self._rain_cache) >= 2:
+            self._rain_cache.pop(next(iter(self._rain_cache)))
         self._rain_cache[key] = surf
         return surf
