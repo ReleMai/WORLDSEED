@@ -196,9 +196,12 @@ class AtlasRenderTests(unittest.TestCase):
             self.assertFalse(atlas_input(term,self.sim,'w'))
             term._last_mouse = term._atlas_rect.center
             self.assertTrue(atlas_input(term,self.sim,'ATLAS_INSPECT'))
-            # Odd raster dimensions put the center pixel just west/north of
-            # the exact origin; floor mapping is intentional.
-            self.assertTrue(all(abs(v)<=1 for v in term._atlas_controls.inspected))
+            # After dragging, the center pixel should inspect the panned
+            # atlas center (within one cell for odd raster dimensions).
+            cx,cy=term._atlas_controls.center
+            ix,iy=term._atlas_controls.inspected
+            self.assertLessEqual(abs(ix-cx),1)
+            self.assertLessEqual(abs(iy-cy),1)
             term.present_region_map(self.sim)
         finally:
             term.restore()
