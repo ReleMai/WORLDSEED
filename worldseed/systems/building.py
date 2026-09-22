@@ -3,10 +3,57 @@ from collections import deque
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory
+from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, StructureInstance, RoofState, ContainerState, GroundPile, pos_key
 
 class BuildingSystem:
-    def __init__(self,state:LivingWorldState,registry:ContentRegistry):self.state=state;self.registry=registry
+    def __init__(self,state:LivingWorldState,registry:ContentRegistry):
+        self.state=state;self.registry=registry;self.resources=None;self.seed=b""
+
+    def attach_resources(self,resources,seed:bytes)->None:
+        self.resources=resources;self.seed=seed or b""
+
+    def materialize_natural_container_at(self,pos:WorldPos)->ContainerState|None:
+        """Convert a deterministic generated container feature into persistent state.
+
+        Merely rendering the world never calls this. Simulation discovery owns
+        realization, after which movement/loot/destruction can diverge from the
+        original deterministic resource placement and save normally.
+        """
+        key=pos_key(pos.x,pos.y,pos.z)
+        existing=self.state.containers.get(key)
+        if existing:return existing
+        if pos.z!=0 or self.resources is None:return None
+        fv=self.resources.feature_at(pos)
+        if not fv or fv.stage!="mature":return None
+        rdef=self.registry.resources.get(fv.feature_id)
+        if not rdef or "natural_container" not in rdef.tags or not rdef.container_structure_id:return None
+        sdef=self.registry.structures.get(rdef.container_structure_id)
+        if not sdef:return None
+        items={}
+        for iid,(lo,hi) in sorted(rdef.container_loot.items()):
+            if iid not in self.registry.items:continue
+            span=max(1,int(hi)-int(lo)+1)
+            amount=int(lo)+(hash_u64(self.seed,"natural-container-loot",fv.feature_id,pos.x,pos.y,pos.z,iid)%span)
+            if amount>0:items[iid]=amount
+        self.state.resource_depletion[key]=self.state.clock_minute
+        self.resources.revision+=1
+        self.state.structures[key]=StructureInstance(rdef.container_structure_id,pos.x,pos.y,pos.z,"world",100)
+        c=ContainerState(
+            f"natural:{fv.feature_id}:{pos.x}:{pos.y}:{pos.z}",pos.x,pos.y,pos.z,"world",
+            rdef.container_capacity_mass_g or sdef.capacity_mass_g,
+            rdef.container_capacity_volume_ml or sdef.capacity_volume_ml,
+            items,name=rdef.name,kind="natural",movable=bool(rdef.container_movable),
+            source_id=fv.feature_id,salvage=dict(rdef.container_salvage),
+        )
+        self.state.containers[key]=c
+        return c
+
+    def materialize_natural_containers(self,positions)->int:
+        made=0
+        for pos in positions:
+            if self.materialize_natural_container_at(pos):made+=1
+        return made
     def structure_at(self,pos:WorldPos)->StructureInstance|None:return self.state.structures.get(pos_key(pos.x,pos.y,pos.z))
     def roof_at(self,pos:WorldPos)->RoofState|None:return self.state.roofs.get(pos_key(pos.x,pos.y,pos.z))
     def container_at(self,pos:WorldPos)->ContainerState|None:return self.state.containers.get(pos_key(pos.x,pos.y,pos.z))
@@ -52,7 +99,10 @@ class BuildingSystem:
         if not inv.consume(sdef.cost):return False,"You lack the construction materials."
         self.state.structures[key]=StructureInstance(structure_id,pos.x,pos.y,pos.z,owner,100)
         if "container" in sdef.tags:
-            self.state.containers[key]=ContainerState(f"container:{key}",pos.x,pos.y,pos.z,owner,sdef.capacity_mass_g,sdef.capacity_volume_ml,{})
+            self.state.containers[key]=ContainerState(
+                f"container:{key}",pos.x,pos.y,pos.z,owner,sdef.capacity_mass_g,sdef.capacity_volume_ml,{},
+                name=sdef.name,kind="built",movable=("movable" in sdef.tags),source_id=structure_id,
+            )
         return True,f"You build {sdef.name}."
     def dismantle(self,pos:WorldPos,inv:Inventory)->tuple[bool,str]:
         key=pos_key(pos.x,pos.y,pos.z);roof=self.state.roofs.get(key)
@@ -69,6 +119,38 @@ class BuildingSystem:
             for iid,n in c.items.items():pile.items[iid]=pile.items.get(iid,0)+n
         for iid,n in sdef.cost.items():inv.add(iid,max(0,n//2))
         self.state.structures.pop(key,None);return True,f"You dismantle {sdef.name} and salvage part of it."
+    def move_container(self,c:ContainerState,dest:WorldPos)->tuple[bool,str]:
+        if not c.movable:return False,"That container is fixed in place."
+        old_key=pos_key(c.x,c.y,c.z);new_key=pos_key(dest.x,dest.y,dest.z)
+        if new_key==old_key:return False,"The container is already there."
+        if new_key in self.state.structures or new_key in self.state.containers:return False,"That space is already occupied."
+        structure=self.state.structures.pop(old_key,None)
+        self.state.containers.pop(old_key,None)
+        c.x,c.y,c.z=dest.x,dest.y,dest.z
+        self.state.containers[new_key]=c
+        if structure:
+            structure.x,structure.y,structure.z=dest.x,dest.y,dest.z
+            self.state.structures[new_key]=structure
+        return True,f"You move {c.name.lower() if c.name else 'the container'}."
+
+    def destroy_container(self,c:ContainerState)->tuple[bool,str]:
+        if c.kind!="natural":return False,"Built storage should be dismantled with the construction tools."
+        key=pos_key(c.x,c.y,c.z)
+        pile=self.state.ground_piles.setdefault(key,GroundPile(c.x,c.y,c.z,{}))
+        for iid,n in c.items.items():
+            if n>0:pile.items[iid]=pile.items.get(iid,0)+n
+        salvage_parts=[]
+        for iid,(lo,hi) in sorted(c.salvage.items()):
+            if iid not in self.registry.items:continue
+            span=max(1,int(hi)-int(lo)+1)
+            amount=int(lo)+(hash_u64(self.seed,"natural-container-salvage",c.uid,iid)%span)
+            if amount>0:
+                pile.items[iid]=pile.items.get(iid,0)+amount
+                salvage_parts.append(f"{amount} {self.registry.items[iid].name.lower()}")
+        self.state.containers.pop(key,None);self.state.structures.pop(key,None)
+        extra=(" Salvage: "+", ".join(salvage_parts)+".") if salvage_parts else ""
+        return True,f"You break apart {c.name.lower() if c.name else 'the container'}; its contents spill onto the ground."+extra
+
     def nearby_station_ids(self,pos:WorldPos,radius:int=2)->set[str]:
         out=set()
         for s in self.state.structures.values():
