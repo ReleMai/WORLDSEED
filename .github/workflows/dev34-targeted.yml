@@ -39,7 +39,7 @@ jobs:
         run: python -m unittest tests.test_dev34_storage_containers tests.test_dev19_feature_ui tests.test_dev21_mouse_ui
       - name: Resource regressions
         shell: pwsh
-        run: python -m unittest tests.test_resources_phase2 tests.test_rc13_pregeneration
+        run: python -m unittest tests.test_rc10_worldgen tests.test_rc13_pregeneration
       - name: Content and visual audits
         shell: pwsh
         run: |
