@@ -11,7 +11,7 @@
 
 # WORLDSEED v1.0 RC14 Development - Embodied World Foundation
 
-> **Development status:** RC14 Dev32 has returned to the staged WORLDGEN v8 roadmap. Phase 4 hydrology v2/morphology v2 remains the drainage baseline and Phase 5 is now active with a terrain-neutral coastal morphology read model for continental shelf depth, exposure/shelter, coast type, shore material tendency, tidal flats, marshes, lagoons, estuaries and delta potential. The recent rain/cloud/tree/morel/cave visual work remains intact and is not being replaced by this phase.
+> **Development status:** RC14 Dev33 continues WORLDGEN v8 Phase 5. New worlds now turn the Phase-5 coast model into real terrain: physical ocean depth bands, sandy/gravel/rocky shores, coastal cliffs, tidal flats and salt marshes. Coast materialization has its own save-pinned version and surface-cache key, so older v8 saves keep their existing shoreline. The recent rain/cloud/tree/morel/cave visual work remains intact.
 
 WORLDSEED is a deterministic, persistent fantasy sandbox with a terminal-native information model and a new dedicated graphical window. The world is the durable protagonist: terrain, ecology, settlements, history, trade, disease, knowledge, magic, structures and consequences continue beyond any single character.
 
