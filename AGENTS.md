@@ -97,6 +97,20 @@ This rule applies to every WORLDSEED development chat, Codex session, coding age
 9. **If GitHub synchronization cannot be completed because the connector, permissions, or service is unavailable, say so explicitly in the final response.** Never claim the repository is current unless the write actually succeeded. Preserve a clean patch/archive so the change can be synchronized later.
 10. **Do not create a second canonical WORLDSEED repository.** Forks, temporary branches, archives, and generated ZIPs are secondary working artifacts unless the user explicitly changes this rule.
 
+### GitHub / CI efficiency contract
+
+GitHub Actions is a verification boundary, not an edit-by-edit development loop.
+
+- **One coherent publication per work unit.** Do not push file-by-file or bookkeeping-by-bookkeeping commits to `main`. Stage the code, tests, docs, version metadata and handoff for one validated work unit, then publish them together.
+- **Batch connector writes.** When a GitHub connector can create one tree/commit containing several changed files, prefer that over repeated contents-API commits that each trigger CI.
+- **Use work branches for iteration.** Intermediate experiments may live on an explicit work branch, but do not attach temporary push-triggered full-build workflows to that branch. Run targeted validation before publishing the coherent result.
+- **Automatic CI is deliberately fast.** `.github/workflows/fast-gate.yml` is the normal automatic gate for `main` and pull requests. Keep it high-signal and bounded to roughly a few minutes.
+- **Full validation is deliberate.** `.github/workflows/test-build.yml` is a manual release/handoff gate. Run it once when a substantial phase/build is ready for comprehensive regression validation and packaging, not after every intermediate commit.
+- **Do not weaken tests to make CI green.** When the fast gate fails, inspect the failing assertion/root cause first. Update a test only when the intended contract actually changed.
+- **Avoid duplicate ref updates.** Re-read the remote ref before the final write. If the intended commit is already the branch head, do not push or move the same ref again.
+- **Open a PR only when the branch is coherent enough to test.** Once a PR is open, further pushes may legitimately retrigger the fast gate; avoid noisy micro-commits while the PR is active.
+- **Release hardening still requires the heavy gate.** A green fast gate means the change passed development smoke/regression checks; it does not replace the full RC14 release-hardening suite.
+
 For WORLDSEED work performed through ChatGPT, completion therefore means:
 
 ```text
