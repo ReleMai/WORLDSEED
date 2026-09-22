@@ -36,6 +36,7 @@ class CoastMorphology:
     ocean: bool
     near_coast: bool
     depth_below_sea: int
+    coast_distance: int
     shelf_depth: int
     shelf_class: str
     land_fraction: int
@@ -191,7 +192,7 @@ class CoastV8Sampler:
 
         return CoastMorphology(
             ocean=ocean,near_coast=near_coast,depth_below_sea=depth,
-            shelf_depth=shelf_depth,shelf_class=shelf_class,
+            coast_distance=distance,shelf_depth=shelf_depth,shelf_class=shelf_class,
             land_fraction=land_fraction,open_sea=open_sea,
             wave_exposure=wave_exposure,shelter=shelter,
             coast_kind=coast_kind,shore_material=shore_material,
