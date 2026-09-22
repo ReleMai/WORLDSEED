@@ -696,3 +696,9 @@ The terrain atlas reads only actually discovered cells. Discovery of one cell ne
 Cloud shadows are presentation-only world-space fields. Their absolute positions derive from seed/world coordinates and their drift from weather wind plus visual elapsed time, so moving the camera cannot drag clouds with the player. Visual elapsed time never advances simulation weather or the game clock.
 
 Local pygame entity lookup is spatially bucketed; a frame must not scan every realized NPC/creature/structure in the explored world. Routine autosaves persist authoritative state without making a full rotating SQLite backup; explicit manual/menu/quit saves retain rotating backups.
+
+## WORLDGEN v8 Phase 5 coastal morphology
+
+`worldseed/world/coast_v8.py` is the Phase-5 read authority over v8 coastal shape. It consumes the existing geological elevation/topography, physical climate and prepared hydrology; it does not generate a second coastline, mutate terrain, or render effects. Current fields include continental-geometry shelf depth, open-sea exposure, shelter, bay/headland tendency, coast class, shore-material tendency, tidal-flat/marsh/lagoon potential, sediment proxy, estuary strength and delta potential.
+
+The Dev32 foundation is intentionally terrain-neutral. Existing surface terrain IDs and generated-surface cache contracts remain unchanged until the coastal classification passes multi-seed calibration. River-mouth fields are allowed to remain zero when hydrology is unprepared; inspection must never solve missing drainage merely to populate a coast read.
