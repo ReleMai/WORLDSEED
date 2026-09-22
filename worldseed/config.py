@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev32"
+ENGINE_VERSION = "1.0.0-rc14-dev33"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -19,6 +19,9 @@ HYDROLOGY_VERSION = 2
 # Projection/morphology is versioned separately from the drainage-domain solve.
 # Dev29 v2 saves without this metadata infer morphology v1; new saves use v2.
 HYDROLOGY_MORPHOLOGY_VERSION = 2
+# Phase 5 coastline materialization is independently pinned. Dev32 worlds
+# missing this metadata remain on coast version 0 and keep their old shoreline.
+COAST_MORPHOLOGY_VERSION = 1
 ENVIRONMENT_VERSION = 1
 CLIMATE_VERSION = 1
 WEATHER_VERSION = 2
