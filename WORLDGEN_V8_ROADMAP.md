@@ -1,6 +1,6 @@
 # WORLDSEED WORLDGEN v8 — Geological Living World Roadmap
 
-Status: **WORLDGEN v8 Phase 5 is active in Dev32. Phase 4 hydrology v2 / morphology v2 is the frozen drainage baseline; Dev32 begins terrain-neutral coastal morphology over the same authoritative geology, climate and prepared hydrology.**
+Status: **WORLDGEN v8 Phase 5 is active in Dev33. Dev32 established the coastal read model; Dev33 begins save-pinned physical coastline materialization while Hydrology v2 / Morphology v2 remains the drainage baseline.**
 
 WORLDGEN v8 is a staged replacement for WORLDSEED's noise-first surface
 generation. It does not discard the existing RC14 architecture: deterministic
@@ -273,10 +273,11 @@ Replace mostly uniform shoreline bands with varied coast types.
 
 **Dev32 implementation start:** a new `CoastV8Sampler` read model derives continental-geometry bathymetry, open-sea exposure, shelter, bay/headland scores, shore-material tendency, tidal-flat/marsh/lagoon potential and river-mouth sediment/estuary/delta potential. It is deliberately **terrain-neutral** in this first slice: no existing coast tiles, saves, surface caches or user-facing graphics are rewritten yet. The purpose is to establish and audit one causal coastal authority before materialization.
 
+**Dev33 materialization:** new worlds now pin `COAST_MORPHOLOGY_VERSION = 1`. The approved Phase-5 fields materialize into real gameplay terrain: continental-geometry ocean depth bands plus sandy, gravel, rocky, cliff, tidal-flat and salt-marsh coast classes. Existing v8 saves without coast metadata infer coast version 0 and retain their pre-Phase-5 shoreline. Surface caches now include the coast contract. Expensive coast classification is sampled on an absolute 8-cell lattice for materialization while exact geological elevation still determines land versus water per cell.
+
 ### Work
-- **FOUNDATION Dev32:** derive bathymetric shelf depth from continental geometry, not only local slope.
-- **PARTIAL Dev32:** classify exposed rocky coasts, cliffs, beaches, tidal flats, marsh coasts,
-  protected bays and headlands; spits/barrier islands remain for the materialization pass.
+- **MATERIALIZED Dev33:** bathymetric shelf depth derives from continental geometry plus raw sea depth and now selects actual ocean depth terrain in new worlds.
+- **PARTIAL/MATERIALIZED Dev33:** beaches, gravel shores, rocky shores, coastal cliffs, tidal flats and salt marshes now become real terrain. Protected-bay/headland reads exist; spits/barrier islands remain future Phase-5 work.
 - **PARTIAL Dev32:** use slope, relief, shelter and wave exposure to derive shore-material tendency; Phase 6 substrate will later refine it.
 - **FOUNDATION Dev32:** derive river-mouth sediment, estuary and delta potential from prepared hydrology; physical distributaries remain next.
 - Expand brackish mixing zones using discharge + tidal/coastal geometry.
