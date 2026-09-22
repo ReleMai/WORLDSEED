@@ -170,7 +170,14 @@ class AtlasRenderTests(unittest.TestCase):
             self.assertTrue(any(k=='ATLAS_DRAG_ZONE' for _,k in term._pointer_targets))
             term.pg.event.clear()
             rect=term._atlas_rect
-            start=rect.center
+            poi_rects=[r for r,k in term._pointer_targets if k.startswith('ATLAS_POI:')]
+            start=None
+            for gy in range(rect.top+20,rect.bottom-20,24):
+                for gx in range(rect.left+20,rect.right-20,24):
+                    if not any(r.collidepoint(gx,gy) for r in poi_rects):
+                        start=(gx,gy);break
+                if start is not None:break
+            self.assertIsNotNone(start)
             end=(start[0]+40,start[1]+25)
             term.pg.event.post(term.pg.event.Event(term.pg.MOUSEBUTTONDOWN,button=1,pos=start))
             self.assertEqual(term.read_key(),'ATLAS:drag_start')
