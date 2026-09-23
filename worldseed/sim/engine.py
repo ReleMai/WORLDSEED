@@ -442,6 +442,9 @@ class Simulation:
             self._nearby_dungeon_key=None
 
     def _post_action(self)->None:
+        inv=self.entities.try_get(self.player_id,Inventory)
+        if inv and self.state.player_readied_weapon and inv.count(self.state.player_readied_weapon)<=0:
+            self.state.player_readied_weapon="";self.combat.clear_aim()
         self._ensure_nearby_world(self.player_pos)
         if self.turn % 32 == 0:self.ecology.dematerialize_far(self.player_pos)
         self.dungeons.update_cleared(self.clock.minute)
@@ -898,7 +901,9 @@ class Simulation:
         p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y);inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals)
         weapon=self.combat.readied_weapon(inv)
         if not weapon or weapon.range<=1:self.combat.clear_aim();self._message("Ready a ranged or throwable weapon first.");return 1
-        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self._message("You do not have a clear shot.");return 1
+        if dist>weapon.range:self._message(f"The target is beyond the useful range of your {weapon.name.lower()}.");return 1
+        if weapon.ammo_item and inv.count(weapon.ammo_item)<=0:self._message(f"You have no {self.registry.items[weapon.ammo_item].name.lower()}.");return 1
+        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self.combat.clear_aim();self._message("You do not have a clear shot.");return 1
         aim_quality=self.state.player_aim_quality if self.state.player_aim_target==c.uid else 0
         aim_zone=self.state.player_aim_zone if self.state.player_aim_target==c.uid else "center"
         cost=max(1,weapon.stamina_cost);stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost)
@@ -973,6 +978,7 @@ class Simulation:
         target=min((c for c in self.state.creatures.values() if c.z==p.z and c.x==p.x and c.y==p.y),key=lambda c:c.hp,default=None)
         if not target:self._message("There is nothing there to attack.");return
         inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);weapon=self.combat.readied_weapon(inv)
+        if weapon and "ranged" in weapon.tags and not weapon.throwable:self._message(f"The {weapon.name.lower()} is not suited to melee. Ready a melee weapon or lower it to fight unarmed.");return
         reach=weapon.reach if weapon else 1
         if distance<1 or distance>reach:self._message("That target is beyond your current melee reach.");return
         stamina_before=v.stamina;cost=max(2,weapon.stamina_cost if weapon else 4);v.stamina=max(0,v.stamina-cost)
