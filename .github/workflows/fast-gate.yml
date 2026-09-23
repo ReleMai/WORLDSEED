@@ -80,6 +80,10 @@ jobs:
         shell: pwsh
         run: python -m unittest tests.test_dev37_floating_interaction_ui
 
+      - name: Dev38 natural container visual regressions
+        shell: pwsh
+        run: python -m unittest tests.test_dev38_natural_container_visuals
+
       - name: Phase 5 coast tests
         shell: pwsh
         run: python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
