@@ -24,7 +24,7 @@ class Dev38NaturalContainerManifestTests(unittest.TestCase):
                 style = visuals.resource_style(content_id)
                 self.assertEqual(style.get("variants"), 5)
                 self.assertEqual(style.get("atlas_columns"), 5)
-                self.assertEqual(style.get("atlas_frame"), 128)
+                self.assertEqual(style.get("atlas_frame"), 64)
                 self.assertEqual(style.get("atlas_row"), row)
                 self.assertTrue(style.get("smooth"))
                 atlas = visuals.resource_atlas_path(content_id)
@@ -46,7 +46,7 @@ class Dev38NaturalContainerManifestTests(unittest.TestCase):
                 self.assertEqual(first, second)
                 self.assertEqual(first[0], "atlas")
                 self.assertEqual(first[3], row)
-                self.assertEqual(first[4], 128)
+                self.assertEqual(first[4], 64)
 
                 columns = {
                     term._resource_visual(content_id, x, y, 0)[2]
@@ -83,8 +83,8 @@ class Dev38NaturalContainerAtlasTests(unittest.TestCase):
 
             self.assertEqual(
                 source.get_size(),
-                (640, 384),
-                f"{atlas}: expected 640x384 natural-container atlas",
+                (320, 192),
+                f"{atlas}: expected 320x192 natural-container atlas",
             )
             for content_id, row in NATURAL_CONTAINERS:
                 for column in range(5):
@@ -95,7 +95,7 @@ class Dev38NaturalContainerAtlasTests(unittest.TestCase):
                         column=column,
                     ):
                         frame = term._load_atlas_frame(
-                            atlas, column, row, 128, 112, 112, smooth=True
+                            atlas, column, row, 64, 112, 112, smooth=True
                         )
                         self.assertIsNotNone(
                             frame,
