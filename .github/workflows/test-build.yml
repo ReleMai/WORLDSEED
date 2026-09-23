@@ -32,56 +32,58 @@ jobs:
 
       - name: Install WORLDSEED
         shell: pwsh
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install "Pillow>=10,<12"
+        timeout-minutes: 3
+        run: python -m pip install -e . "Pillow>=10,<12"
 
       - name: Compile Python
         shell: pwsh
-        run: python -m compileall worldseed
+        run: python -m compileall -q worldseed tools tests
 
       # Keep cheap/high-signal regressions before the expensive worldgen suite
       # so interface or compatibility mistakes fail in seconds, not ~15 minutes.
       - name: Run graphical inventory and storage UI regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers tests.test_dev37_floating_interaction_ui tests.test_dev38_natural_container_art tests.test_dev38_natural_container_visuals
+        run: python -u tools/run_ci_check.py --name "Run graphical inventory and storage UI regressions" --timeout 360 -- python -u -m unittest -v tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers tests.test_dev37_floating_interaction_ui tests.test_dev38_natural_container_art tests.test_dev38_natural_container_visuals
 
       - name: Run Phase 5 coast regression tests
         shell: pwsh
-        run: python -m unittest tests.test_worldgen_v8_coast
+        run: python -u tools/run_ci_check.py --name "Run Phase 5 coast regression tests" --timeout 600 -- python -u -m unittest -v tests.test_worldgen_v8_coast
 
       - name: Run atlas interaction regression
         shell: pwsh
-        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
+        run: python -u tools/run_ci_check.py --name "Run atlas interaction regression" --timeout 360 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
 
       - name: Run Dev31 playtest regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev31_playtest_fixes
+        run: python -u tools/run_ci_check.py --name "Run Dev31 playtest regressions" --timeout 360 -- python -u -m unittest -v tests.test_dev31_playtest_fixes
 
       - name: Run v8 worldgen and hydrology regression suite
         shell: pwsh
-        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
+        run: python -u tools/run_ci_check.py --name "Run v8 worldgen and hydrology regression suite" --timeout 1200 -- python -u -m unittest -v tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
 
-      - name: Run content and visual audits
+      - name: Run content audit
         shell: pwsh
-        run: |
-          python tools/audit_content.py
-          python tools/audit_visuals.py
+        run: python -u tools/run_ci_check.py --name content-audit --timeout 90 -- python -u tools/audit_content.py
+
+      - name: Run visual audit
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name visual-audit --timeout 90 -- python -u tools/audit_visuals.py
 
       - name: Run Phase 5 coast morphology audit
         shell: pwsh
-        run: python tools/audit_worldgen_v8_coast.py --seeds 4 --radius 2048 --step 128
+        run: python -u tools/run_ci_check.py --name coast-audit --timeout 600 -- python -u tools/audit_worldgen_v8_coast.py --seeds 4 --radius 2048 --step 128
+
+      - name: Run Hydrology v2 domain audit
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name hydrology-domain-audit --timeout 600 -- python -u tools/audit_hydrology.py --seed v8-dev30-test-build
 
       - name: Run Hydrology v2 morphology audit
         shell: pwsh
-        run: |
-          python tools/audit_hydrology.py --seed v8-dev30-test-build
-          python tools/audit_hydrology_morphology.py --seed v8-dev30-test-build --domain-x 0 --domain-y 0
+        run: python -u tools/run_ci_check.py --name hydrology-morphology-audit --timeout 600 -- python -u tools/audit_hydrology_morphology.py --seed v8-dev30-test-build --domain-x 0 --domain-y 0
 
       - name: Generate mountain test locations
         shell: pwsh
-        run: python tools/find_dev31_test_locations.py --seed dev31-mountain-test --out DEV31_TEST_LOCATIONS.json
+        run: python -u tools/run_ci_check.py --name mountain-locations --timeout 300 -- python -u tools/find_dev31_test_locations.py --seed dev31-mountain-test --out DEV31_TEST_LOCATIONS.json
 
       - name: Build clean test package
         shell: pwsh

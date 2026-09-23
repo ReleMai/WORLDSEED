@@ -61,8 +61,16 @@ def audit(seed):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--seeds',type=int,default=3);args=parser.parse_args()
-    start=time.perf_counter();rows=[audit('v8-phase5-mouth-'+str(i)) for i in range(args.seeds)]
+    start=time.perf_counter();rows=[]
+    for i in range(args.seeds):
+        seed='v8-phase5-mouth-'+str(i)
+        print(f'coastal mouths audit: seed={seed} starting',flush=True)
+        row=audit(seed);rows.append(row)
+        print(f'coastal mouths audit: seed={seed} mouths={row["mouths"]} delta_mouths={row["delta_mouths"]} elapsed={time.perf_counter()-start:.1f}s',flush=True)
     print(json.dumps({'reports':rows,'seconds':round(time.perf_counter()-start,3)},indent=2))
-    return 0 if sum(r['mouths'] for r in rows)>0 and sum(r['delta_mouths'] for r in rows)>0 else 1
+    if sum(r['mouths'] for r in rows)<=0 or sum(r['delta_mouths'] for r in rows)<=0:
+        print('coastal mouths audit FAILED: expected mouths and deltas across sampled seeds',flush=True)
+        return 1
+    return 0
 
 if __name__=='__main__':raise SystemExit(main())
