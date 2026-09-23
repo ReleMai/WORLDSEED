@@ -301,6 +301,18 @@ Prefer the World Console/context menus over consuming every remaining keyboard l
 
 ## Testing contract
 
+### CI failure-diagnostics contract
+
+Every new or modified automated test must make the failing case identifiable from the CI log without reproducing it locally.
+
+- Collection/table/variant tests must use `self.subTest(...)` (or an equivalent case label) with stable identifiers such as `content_id`, asset path, seed, coordinates, row/column, command, or fixture name.
+- Assertion messages must name the object/case being checked when the raw assertion would otherwise be ambiguous.
+- Asset/image tests must report the exact repository path and all relevant content IDs. Force full image decode during validation; opening only the image header is insufficient.
+- Do not hide case identity inside an aggregate comprehension when a per-case failure can be reported instead.
+- CI unittest invocations use verbose mode (`python -m unittest -v ...`) so test IDs are visible in Actions logs.
+- Audit tools should collect and print every failing path/ID they can safely inspect in one pass, rather than stopping at the first opaque error.
+- Never weaken a test merely to improve diagnostics. Preserve the contract being tested and add context around the failure.
+
 Minimum branch gate:
 
 ```bash

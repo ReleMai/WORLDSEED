@@ -14,6 +14,9 @@ transparent_bad=[]
 for p in vis.iter_asset_paths():
     try:
         with Image.open(p) as im:
+            # Force pixel decompression here. Image.open() alone is lazy and can
+            # miss corrupt IDAT/image payloads that pygame/libpng will reject later.
+            im.load()
             # Ground/terrain tiles are opaque by design and may be RGB. Entity,
             # resource, structure and decoration sprites are composited over
             # terrain and therefore must retain alpha.
@@ -23,7 +26,9 @@ for p in vis.iter_asset_paths():
             if im.width < 24 or im.height < 24:
                 transparent_bad.append(f'{p}: too small {im.size}')
     except Exception as exc:
-        transparent_bad.append(f'{p}: {exc}')
+        transparent_bad.append(
+            f'{p}: decode/open failed: {type(exc).__name__}: {exc}'
+        )
 issues.extend(transparent_bad)
 print(f'items={len(reg.items)} terrain={len(reg.terrains)} resources={len(reg.resources)} structures={len(reg.structures)} species={len(reg.species)} npc_variants={len(vis.manifest.get("npc_variants", []))}')
 if issues:

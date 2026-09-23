@@ -19,6 +19,7 @@ jobs:
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
     steps:
       - name: Checkout exact commit
@@ -32,42 +33,41 @@ jobs:
 
       - name: Install WORLDSEED
         shell: pwsh
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install "Pillow>=10,<12"
+        run: python -m pip install -e . "Pillow>=10,<12"
 
       - name: Compile Python
         shell: pwsh
         run: python -m compileall worldseed
 
+      - name: Validate visual asset files
+        shell: pwsh
+        run: python tools/audit_visuals.py
+
       # Keep cheap/high-signal regressions before the expensive worldgen suite
       # so interface or compatibility mistakes fail in seconds, not ~15 minutes.
       - name: Run graphical inventory and storage UI regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers tests.test_dev37_floating_interaction_ui tests.test_dev38_natural_container_art tests.test_dev38_natural_container_visuals
+        run: python -m unittest -v tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers tests.test_dev37_floating_interaction_ui tests.test_dev38_natural_container_art tests.test_dev38_natural_container_visuals
 
       - name: Run Phase 5 coast regression tests
         shell: pwsh
-        run: python -m unittest tests.test_worldgen_v8_coast
+        run: python -m unittest -v tests.test_worldgen_v8_coast
 
       - name: Run atlas interaction regression
         shell: pwsh
-        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
+        run: python -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
 
       - name: Run Dev31 playtest regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev31_playtest_fixes
+        run: python -m unittest -v tests.test_dev31_playtest_fixes
 
       - name: Run v8 worldgen and hydrology regression suite
         shell: pwsh
-        run: python -m unittest tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
+        run: python -m unittest -v tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
 
-      - name: Run content and visual audits
+      - name: Run content audit
         shell: pwsh
-        run: |
-          python tools/audit_content.py
-          python tools/audit_visuals.py
+        run: python tools/audit_content.py
 
       - name: Run Phase 5 coast morphology audit
         shell: pwsh
