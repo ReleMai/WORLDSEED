@@ -4,6 +4,18 @@ This README is the single consolidated human-facing Markdown document for WORLDS
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev38 — Natural Container Art Variety
+
+Dev38 replaces the crude single-sprite natural containers with the new realistic art set and makes visual selection deterministic per generated world cell.
+
+- Hollow Logs now draw from five realistic fallen-log variants.
+- Rotten Stumps now draw from five weathered hollow-stump variants.
+- Rock Crevices now draw from five detailed stone-crevice variants.
+- All 15 authored/generated images are packed into one transparent sprite atlas for faster loading and smaller repository/package size.
+- World generation still owns resource placement. The renderer hashes the generated resource ID plus world coordinates to choose a stable visual frame, so a container keeps the same appearance when revisited or after reloading a save.
+- Natural-container sprites use smooth scaling and per-type dimensions so logs stay broad and low, stumps read vertically, and rock crevices stay close to the ground.
+- The atlas is presentation-only and does not change loot, storage capacity, movement rules, resource density, or save compatibility.
+
 ## RC14 Dev37 — Floating Interaction Panels
 
 Dev37 replaces the remaining full-window inventory interaction flow with retained in-world panels and cursor-local context menus.
