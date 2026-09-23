@@ -103,6 +103,7 @@ class PygameTerminal(PointerUI):
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
         self._context_backdrop = None
+        self._context_opening = False
         self._theme = {
             "bg": (13, 16, 18),
             "panel": (22, 26, 29),
@@ -377,6 +378,7 @@ class PygameTerminal(PointerUI):
                             y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
                             self._context_menu_origin=self._last_mouse
                             self._context_backdrop=self.screen.copy()
+                            self._context_opening=True
                             return f'UI_WORLD_MENU:{x}:{y}'
                 continue
             if event.type == pg.MOUSEBUTTONUP:
@@ -602,11 +604,13 @@ class PygameTerminal(PointerUI):
         x,y,w,h=state['x'],state['y'],state['w'],state['h']
         shadow=pg.Rect(x+6,y+7,w,h);pg.draw.rect(screen,(0,0,0),shadow,border_radius=8)
         outer=pg.Rect(x,y,w,h)
-        pg.draw.rect(screen,(15,18,20),outer,border_radius=8)
-        pg.draw.rect(screen,self._theme['edge_hi'],outer,1,border_radius=8)
+        pg.draw.rect(screen,(18,23,24),outer,border_radius=8)
+        pg.draw.rect(screen,(99,86,61),outer,2,border_radius=8)
+        pg.draw.rect(screen,(31,38,37),outer.inflate(-10,-10),1,border_radius=5)
         titlebar=pg.Rect(x,y,w,42)
         pg.draw.rect(screen,self._theme['panel2'],titlebar,border_radius=8)
         pg.draw.line(screen,self._theme['edge'],(x,y+42),(x+w,y+42),1)
+        pg.draw.line(screen,self._theme['accent'],(x+14,y+42),(x+min(w-14,150),y+42),2)
         self._ui_target(pg.Rect(x+8,y+4,w-58,34),f'UI_WINDOW_DRAG:{panel_id}')
         domain_s=self.small_font.render(domain.upper(),True,self._theme['accent']);screen.blit(domain_s,(x+14,y+7))
         title_s=self.font.render(self._fit_ui_text(title,self.font,w-190),True,self._theme['text']);screen.blit(title_s,(x+105,y+8))
@@ -622,8 +626,52 @@ class PygameTerminal(PointerUI):
         return x,y,w,h,cx,cy,cw
 
     def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str='Drag title • Resize corner • Esc closes') -> None:
+        self.pg.draw.line(self.screen,self._theme['edge'],(x+16,y+h-39),(x+w-16,y+h-39))
         s=self.small_font.render(self._fit_ui_text(text,self.small_font,w-44),True,self._theme['muted'])
         self.screen.blit(s,(x+16,y+h-27))
+
+    def _storage_gauge(self, rect, used: float, capacity: float) -> None:
+        pg=self.pg;ratio=max(0.,min(1.,used/max(.001,capacity)))
+        pg.draw.rect(self.screen,(49,53,48),rect,border_radius=3)
+        fill=pg.Rect(rect.x,rect.y,round(rect.width*ratio),rect.height)
+        if fill.width:pg.draw.rect(self.screen,self._theme['danger'] if ratio>=.9 else self._theme['accent'],fill,border_radius=3)
+
+    def _paint_action_popup(self, origin, rect, title: str, actions, *, opening: bool, subtitle: str='', selected: int=-1) -> None:
+        """Paint cursor-born buttons; only the finished layout owns hit targets."""
+        pg=self.pg;screen=self.screen;x,y,w,h=rect
+        surface=pg.Surface((w,h),pg.SRCALPHA)
+        pg.draw.rect(surface,(19,24,25),(0,0,w,h),border_radius=7)
+        pg.draw.rect(surface,self._theme['accent'],(0,0,w,h),1,border_radius=7)
+        header=62 if subtitle else 42
+        pg.draw.rect(surface,(39,47,44),(6,6,w-12,header-12),border_radius=4)
+        label=self.small_font.render(self._fit_ui_text(title,self.small_font,w-26),True,self._theme['accent'])
+        surface.blit(label,(13,11))
+        if subtitle:
+            note=self.small_font.render(self._fit_ui_text(subtitle,self.small_font,w-26),True,self._theme['muted'])
+            surface.blit(note,(13,31))
+        for i,(name,_) in enumerate(actions):
+            row=pg.Rect(7,header+i*36,w-14,32)
+            active=i==selected or row.move(x,y).collidepoint(self._last_mouse)
+            pg.draw.rect(surface,(52,60,54) if active else (29,36,35),row,border_radius=4)
+            pg.draw.rect(surface,self._theme['accent'] if active else self._theme['edge'],row,1,border_radius=4)
+            surf=self.small_font.render(self._fit_ui_text(name,self.small_font,w-32),True,self._theme['text'])
+            surface.blit(surf,(row.x+10,row.centery-surf.get_height()//2))
+        if opening:
+            start=pg.time.get_ticks();base=screen.copy()
+            while True:
+                t=min(1.,(pg.time.get_ticks()-start)/145.)
+                eased=1-(1-t)**3;scale=.28+.72*eased
+                fw=max(1,round(w*scale));fh=max(1,round(h*scale))
+                fx=round(origin[0]+(x-origin[0])*eased)
+                fy=round(origin[1]+(y-origin[1])*eased)
+                screen.blit(base,(0,0))
+                screen.blit(pg.transform.smoothscale(surface,(fw,fh)),(fx,fy))
+                pg.display.flip()
+                if t>=1:break
+                pg.event.pump();self.clock.tick(120)
+        screen.blit(surface,(x,y))
+        for i,(_,token) in enumerate(actions):
+            self._ui_target(pg.Rect(x+7,y+header+i*36,w-14,32),token)
 
     def _draw_item_context_popup(self, rows, data: dict, selected: int) -> None:
         ctx=self._ui_context
@@ -645,12 +693,10 @@ class PygameTerminal(PointerUI):
             direction='Store all →' if meta.get('side')=='pack' else '← Take all'
             actions.extend([(direction,'UI_ACTION:quick_transfer'),('Transfer selected amount','UI_ACTION:transfer'),('Half stack','UI_ACTION:split')])
         if not actions:return
-        pw=max(190,max(self.small_font.size(label)[0] for label,_ in actions)+34);ph=12+len(actions)*34
-        sw,sh=screen.get_size();px=min(mx+8,sw-pw-8);py=min(my+8,sh-ph-8);px=max(8,px);py=max(8,py)
-        rect=pg.Rect(px,py,pw,ph);pg.draw.rect(screen,(12,15,17),rect,border_radius=7);pg.draw.rect(screen,self._theme['accent'],rect,1,border_radius=7)
-        yy=py+7
-        for label,token in actions:
-            self._button((px+6,yy,pw-12,28),label,token);yy+=34
+        pw=max(216,max(self.small_font.size(label)[0] for label,_ in actions)+34);ph=48+len(actions)*36
+        sw,sh=screen.get_size();px=max(8,min(mx+8,sw-pw-8));py=max(8,min(my+8,sh-ph-8))
+        self._paint_action_popup((mx,my),(px,py,pw,ph),'ITEM ACTIONS',actions,opening=not ctx.get('opened',False))
+        ctx['opened']=True
 
     def _present_context_menu(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         pg=self.pg;screen=self.screen;assert screen is not None
@@ -658,22 +704,12 @@ class PygameTerminal(PointerUI):
         screen.blit(self._context_backdrop,(0,0));self._pointer_targets.clear();self._set_input_mode('ui')
         labels=[getattr(r,'label',str(r)) for r in rows]
         width=max(260,min(430,max([self.small_font.size(x)[0] for x in labels]+[220])+42))
-        title_h=38;sub_h=32 if subtitle else 0;row_h=38;height=title_h+sub_h+10+row_h*max(1,len(rows))+10
+        height=(68 if subtitle else 48)+len(rows)*36
         sw,sh=screen.get_size();mx,my=self._context_menu_origin
         x=max(8,min(sw-width-8,mx+8));y=max(8,min(sh-height-8,my+8))
-        outer=pg.Rect(x,y,width,height);pg.draw.rect(screen,(13,16,18),outer,border_radius=8);pg.draw.rect(screen,self._theme['accent'],outer,1,border_radius=8)
-        ts=self.small_font.render(self._fit_ui_text(title,self.small_font,width-24),True,self._theme['accent']);screen.blit(ts,(x+12,y+10))
-        cy=y+title_h
-        if subtitle:
-            for line in self._wrap_pixel_text(subtitle,self.small_font,width-24)[:2]:
-                ss=self.small_font.render(line,True,self._theme['muted']);screen.blit(ss,(x+12,cy));cy+=15
-            cy=y+title_h+sub_h
-        for i,row in enumerate(rows):
-            rr=pg.Rect(x+8,cy+i*row_h,width-16,row_h-4);active=i==selected
-            self._ui_target(rr,f'UI_SELECT:{i}')
-            pg.draw.rect(screen,(38,42,42) if active else self._theme['panel2'],rr,border_radius=5)
-            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rr,1,border_radius=5)
-            label=getattr(row,'label',str(row));surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rr.width-18),True,self._theme['text']);screen.blit(surf,(rr.x+9,rr.centery-surf.get_height()//2))
+        actions=[(getattr(row,'label',str(row)),f'UI_SELECT:{i}') for i,row in enumerate(rows)]
+        self._paint_action_popup((mx,my),(x,y,width,height),title,actions,opening=self._context_opening,subtitle=subtitle,selected=selected)
+        self._context_opening=False
         pg.display.flip();self.clock.tick(120)
 
     def _draw_feature_footer(self, x:int,y:int,w:int,h:int,footer:str) -> None:
@@ -784,6 +820,8 @@ class PygameTerminal(PointerUI):
         for panel_rect in (grid,detail):
             pg.draw.rect(screen,self._theme['panel'],panel_rect,border_radius=7)
             pg.draw.rect(screen,self._theme['edge'],panel_rect,1,border_radius=7)
+        heading=self.small_font.render('CARRIED GEAR  /  SELECT AN ITEM',True,self._theme['accent'])
+        screen.blit(heading,(grid.x+12,grid.y+10))
 
         if not rows:
             msg=self.font.render('Your pack is empty.',True,self._theme['muted'])
@@ -793,14 +831,16 @@ class PygameTerminal(PointerUI):
             card_gap=8;card_w=max(78,(grid.width-24-card_gap*(cols-1))//cols);card_h=112
             for i,row in enumerate(rows):
                 gx=i%cols;gy=i//cols
-                rect=pg.Rect(grid.x+12+gx*(card_w+card_gap),grid.y+12+gy*(card_h+card_gap),card_w,card_h)
+                rect=pg.Rect(grid.x+12+gx*(card_w+card_gap),grid.y+35+gy*(card_h+card_gap),card_w,card_h)
                 if rect.bottom>grid.bottom-10:break
                 iid=getattr(row,'key','');meta=items.get(iid,{})
                 self._ui_target(rect,f'UI_SELECT:{i}')
                 active=i==selected
-                pg.draw.rect(screen,(40,43,41) if active else self._theme['panel2'],rect,border_radius=6)
+                hovered=rect.collidepoint(self._last_mouse)
+                pg.draw.rect(screen,(48,54,48) if active or hovered else (29,36,35),rect,border_radius=6)
                 pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=6)
                 if active:pg.draw.rect(screen,self._theme['accent'],(rect.x,rect.y,4,rect.h),border_radius=3)
+                pg.draw.rect(screen,(22,28,28),(rect.x+7,rect.y+7,rect.width-14,58),border_radius=4)
                 count=int(meta.get('count',0))
                 if iid!='__empty__':
                     icon=pg.Rect(rect.x+7,rect.y+7,rect.width-14,58);self._draw_item_icon(iid,icon,scale=.9)
@@ -841,7 +881,7 @@ class PygameTerminal(PointerUI):
                 line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-28),True,self._theme['muted']);screen.blit(line_s,(detail.x+14,yy));yy+=17
 
             qty_y=action_top
-            qlab=self.small_font.render(f'ACTION AMOUNT  {action_amount} / {meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))
+            qlab=self.small_font.render(f'QTY {action_amount}/{meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))
             bw=38;bh=28;bx=detail.right-14-(bw*3+6*2)
             self._button((bx,qty_y+2,bw,bh),'−','UI_ACTION:qty_down')
             self._button((bx+bw+6,qty_y+2,bw,bh),'+','UI_ACTION:qty_up')
@@ -881,6 +921,8 @@ class PygameTerminal(PointerUI):
         mw=(cw-gap*3)//4
         self._draw_metric(pg.Rect(cx,cy,mw,head_h),'Container mass',f'{mass:.1f}/{mass_cap:.1f} kg')
         self._draw_metric(pg.Rect(cx+(mw+gap),cy,mw,head_h),'Container volume',f'{vol:.1f}/{vol_cap:.1f} L')
+        self._storage_gauge(pg.Rect(cx+10,cy+head_h-5,mw-20,4),mass,mass_cap)
+        self._storage_gauge(pg.Rect(cx+mw+gap+10,cy+head_h-5,mw-20,4),vol,vol_cap)
         self._draw_metric(pg.Rect(cx+2*(mw+gap),cy,mw,head_h),'Stacks',str(container.get('stack_count',0)))
         kind=str(container.get('kind','built')).replace('_',' ').title()
         self._draw_metric(pg.Rect(cx+3*(mw+gap),cy,mw,head_h),'Type',kind)
@@ -916,8 +958,10 @@ class PygameTerminal(PointerUI):
                 if card.bottom>rect.bottom-12:break
                 self._ui_target(card,f'UI_SELECT:{global_i}')
                 active=(global_i==selected)
-                pg.draw.rect(screen,(40,43,41) if active else self._theme['panel2'],card,border_radius=6)
+                hovered=card.collidepoint(self._last_mouse)
+                pg.draw.rect(screen,(48,54,48) if active or hovered else (29,36,35),card,border_radius=6)
                 pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],card,2 if active else 1,border_radius=6)
+                pg.draw.rect(screen,(22,28,28),(card.x+6,card.y+5,card.width-12,48),border_radius=4)
                 iid=str(meta.get('iid',''));icon=pg.Rect(card.x+6,card.y+5,card.width-12,48)
                 self._draw_item_icon(iid,icon,scale=.88)
                 nm=self.small_font.render(self._fit_ui_text(str(meta.get('name',iid)),self.small_font,card.width-12),True,self._theme['text']);screen.blit(nm,(card.x+6,card.y+57))

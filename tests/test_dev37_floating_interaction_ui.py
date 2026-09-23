@@ -181,6 +181,22 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertIn("UI_ACTION:store", tokens)
         self.assertNotIn("ESC", {self.term._hit_token(item.center)})
 
+    def test_item_popup_animates_once_and_actions_remain_clickable_at_window_edge(self):
+        rows = [MenuRow("core:wood", "Wood x4")]
+        data = self._inventory_data()
+        self.term.present_feature_menu("inventory_unified", "INVENTORY", rows, 0, data=data)
+        item = self._target_rect("UI_SELECT:0")
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN, button=3, pos=item.center))
+        self.assertEqual(self.term.read_key(), "UI_CONTEXT:0")
+        self.term._ui_context["pos"] = (1270, 790)
+        self.term.present_feature_menu("inventory_unified", "INVENTORY", rows, 0, data=data)
+        self.assertTrue(self.term._ui_context["opened"])
+        button = self._target_rect("UI_ACTION:drop")
+        self.assertLessEqual(button.right, self.term.screen.get_width() - 8)
+        self.assertLessEqual(button.bottom, self.term.screen.get_height() - 8)
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN, button=1, pos=button.center))
+        self.assertEqual(self.term.read_key(), "UI_ACTION:drop")
+
     def test_container_shift_click_emits_quick_transfer_intent(self):
         rows = [
             MenuRow("pack|core:wood", "Wood x4"),
@@ -218,6 +234,18 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertEqual(self.term.read_key(), "UI_SELECT:0")
         self.assertEqual(self.term.screen.get_at(first.center)[:3], (33, 44, 55))
         self.assertIsNone(self.term._context_backdrop)
+
+    def test_world_popup_opens_from_click_and_keeps_each_button_selectable(self):
+        self.term.screen.fill((33, 44, 55))
+        self.term._context_backdrop = self.term.screen.copy()
+        self.term._context_menu_origin = (1240, 755)
+        self.term._context_opening = True
+        rows = [MenuRow("open", "Open cache"), MenuRow("inspect", "Inspect contents")]
+        self.term.present_feature_menu("world_context", "WORLD ACTIONS", rows, 0)
+        self.assertFalse(self.term._context_opening)
+        buttons = [self._target_rect(f"UI_SELECT:{i}") for i in range(2)]
+        self.assertTrue(all(0 <= r.x < r.right <= 1272 and 0 <= r.y < r.bottom <= 792 for r in buttons))
+        self.assertEqual(self.term._hit_token(buttons[1].center), "UI_SELECT:1")
 
 
 if __name__ == "__main__":
