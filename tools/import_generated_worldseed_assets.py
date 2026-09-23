@@ -187,7 +187,7 @@ def main():
         'assets/sprites/items/scraped_hide.png': l['hide'],
         'assets/sprites/items/wild_grain.png': l['seeds'],
         'assets/sprites/items/yarrow.png': l['herb_bundle'],
-        'assets/sprites/items/herb.png': l['herb_bundle'],
+        'assets/sprites/items/medical_herb.png': l['herb_bundle'],
         'assets/sprites/items/nettle.png': l['herb_bundle'],
         'assets/sprites/items/dandelion.png': l['herb_bundle'],
         'assets/sprites/items/plantain.png': f['sapling_leaf'],
@@ -195,7 +195,7 @@ def main():
     }
     # Distinguish look-alike foraged items with consistent silhouette + palette cues.
     item_map['assets/sprites/items/morel.png'] = tint(ImageOps.mirror(l['mushroom_loot']), (105, 78, 55), 0.25)
-    item_map['assets/sprites/items/herb.png'] = tint(l['herb_bundle'], (75, 135, 70), 0.14)
+    item_map['assets/sprites/items/medical_herb.png'] = tint(l['herb_bundle'], (75, 135, 70), 0.14)
     item_map['assets/sprites/items/nettle.png'] = tint(l['herb_bundle'], (45, 95, 45), 0.24)
     item_map['assets/sprites/items/yarrow.png'] = tint(l['herb_bundle'], (210, 225, 175), 0.12)
     item_map['assets/sprites/items/dandelion.png'] = tint(l['herb_bundle'], (185, 160, 55), 0.16)
