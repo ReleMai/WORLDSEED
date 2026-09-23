@@ -100,7 +100,8 @@ class Renderer:
         return '\n'.join(self._clip(x, width) for x in lines[:max(1, height)])
 
     def render(self, world: World, entities: EntityStore, sim: Simulation, player_id: int,
-               width: int, height: int, message: str = '', cursor: WorldPos | None = None) -> str:
+               width: int, height: int, message: str = '', cursor: WorldPos | None = None,
+               combat_overlay: dict | None = None) -> str:
         self.use_color = bool(sim.state.ui_color)
         self.use_unicode = bool(sim.state.ui_unicode)
         layout = compute_layout(width, height, sim.state.ui_density)
@@ -118,7 +119,7 @@ class Renderer:
         header = f' WORLDSEED {ENGINE_VERSION} | {sim.state.player_name} | {sim.clock.label()} | {weather["kind"].title()} | ({pos.x},{pos.y},z{pos.z}) '
         lines = ['+' + self._clip(header, layout.width-2).center(layout.width-2, '-') + '+']
 
-        map_rows = self._map_rows(world, sim, pos, layout.map_width, layout.map_height, cursor)
+        map_rows = self._map_rows(world, sim, pos, layout.map_width, layout.map_height, cursor, combat_overlay)
         if layout.mode == 'wide':
             inner = layout.width - 4
             gap = 3
@@ -163,8 +164,9 @@ class Renderer:
         return '| ' + text.ljust(inner)[:inner] + ' |'
 
     def _map_rows(self, world: World, sim: Simulation, pos: WorldPos, map_w: int, map_h: int,
-                  cursor: WorldPos | None) -> list[str]:
+                  cursor: WorldPos | None, combat_overlay: dict | None = None) -> list[str]:
         known = sim.discovered_tiles_set
+        combat_by={(int(c["x"]),int(c["y"]),int(c["z"])):c for c in (combat_overlay or {}).get("cells",())}
         half_w, half_h = map_w//2, map_h//2
         # Keep the local-world camera centered on the player. The cursor may
         # move independently without dragging the camera away from the avatar.
@@ -226,6 +228,16 @@ class Renderer:
                     ch = f'{BOLD}\x1b[97m@{RESET}'
                 elif ch == 'X' and self.use_color:
                     ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=ANSI_RE.sub('',ch)
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch not in ('@','X'):
+                    ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
                 row.append(ch)
             rows.append(''.join(row))
         return rows
