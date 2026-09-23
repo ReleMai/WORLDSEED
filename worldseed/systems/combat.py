@@ -57,6 +57,97 @@ class CombatSystem:
         steadiness="steady" if self.state.player_aim_quality>=70 else "settling" if self.state.player_aim_quality>=40 else "rough"
         return f"You settle the {weapon.name.lower()} on the {creature.species_id.split(':')[-1].replace('_',' ')}'s {label}; your aim is {steadiness}."
 
+    def equipped_shield(self):
+        iid=self.state.player_equipment.get("offhand","")
+        item=self.registry.items.get(iid) if iid else None
+        return item if item and "shield" in item.tags else None
+
+    def shield_coverage_chance(self,part:str,attack_kind:str,stamina:int=100,source_dx:int=0,source_dy:int=0)->int:
+        shield=self.equipped_shield()
+        if not shield:return 0
+        group=self._player_part_group(part)
+        body=max(0,min(100,int(shield.shield_body_coverage.get(group,0))))
+        base=int(shield.shield_ranged_coverage if attack_kind=="ranged" else shield.shield_melee_coverage)
+        fx=int(getattr(self.state,"player_facing_dx",0));fy=int(getattr(self.state,"player_facing_dy",1))
+        if source_dx==0 and source_dy==0:arc=100
+        else:
+            dot=source_dx*fx+source_dy*fy
+            arc=100 if dot>0 else 65 if dot==0 else 15
+        skill=int(self.state.player_skills.get("shield",0));agility=int(self.state.player_attributes.get("agility",5))
+        guard=18 if bool(getattr(self.state,"player_guarding",False)) else 0
+        fatigue=max(0,40-int(stamina))//2
+        weight=max(0,(int(shield.mass_g)-4500)//500)
+        chance=(base*body*arc)//10000 + skill*2 + max(0,agility-5)*2 + guard - fatigue - weight
+        return max(0,min(95,chance))
+
+    def shield_defend(self,raw_damage:int,part:str,attack_kind:str,damage_type:str,turn:int,stamina:int=100,
+                      source_dx:int=0,source_dy:int=0,source_uid:str="")->tuple[int,str]:
+        shield=self.equipped_shield()
+        if not shield or raw_damage<=0:return raw_damage,""
+        chance=self.shield_coverage_chance(part,attack_kind,stamina,source_dx,source_dy)
+        if chance<=0:return raw_damage,""
+        roll=PCG32(derive_seed(self.seed,"shield-defense",turn,source_uid,part,attack_kind,damage_type,raw_damage,shield.id)).randbelow(100)
+        if roll>=chance:return raw_damage,""
+        skill=int(self.state.player_skills.get("shield",0));strength=int(self.state.player_attributes.get("strength",5))
+        stability=max(0,min(100,int(shield.shield_stability)))
+        full_threshold=chance*(45+stability//2)//100
+        full=roll<full_threshold
+        flat=max(0,int(shield.shield_block))+skill//2+max(0,strength-5)//2
+        if damage_type in ("pierce","bite") and attack_kind=="melee":flat=max(0,flat-1)
+        percent=(48+stability//3) if full else (22+stability//5)
+        reduced=min(raw_damage,flat + raw_damage*percent//100)
+        remaining=max(0,raw_damage-reduced)
+        drain=max(1,int(shield.shield_stamina_cost)+raw_damage//7-(skill//5))
+        if bool(getattr(self.state,"player_guarding",False)):drain=max(1,drain-1)
+        # The caller owns Vitals, so return the stamina drain in the text marker
+        # and let resolve_player_hit apply it once alongside the wound result.
+        grade="blocks" if full and remaining==0 else "catches" if full else "deflects"
+        return remaining,f"{shield.name} {grade} the {attack_kind} hit (-{reduced} damage, {drain} stamina)"
+
+    def resolve_player_hit(self,vitals:Vitals,part:str,raw_damage:int,damage_type:str,attack_kind:str,turn:int,
+                           source_name:str="attack",source_uid:str="",source_dx:int=0,source_dy:int=0,
+                           bleeding_bonus:int=0,fracture_chance:int=0)->str:
+        raw=max(1,int(raw_damage));agility=int(self.state.player_attributes.get("agility",5));athletics=int(self.state.player_skills.get("athletics",0))
+        evasion=min(20,max(0,agility-5)*2+athletics)
+        if attack_kind=="ranged":evasion//=2
+        raw=max(1,raw*(100-evasion)//100)
+        before=raw
+        raw,shield_text=self.shield_defend(raw,part,attack_kind,damage_type,turn,vitals.stamina,source_dx,source_dy,source_uid)
+        if shield_text:
+            try:drain=int(shield_text.rsplit(" ",2)[1])
+            except Exception:drain=1
+            vitals.stamina=max(0,vitals.stamina-drain)
+        if raw<=0:
+            return f"{source_name} is stopped at your shield"+(f"; {shield_text}." if shield_text else ".")
+        armor,names=self._player_armor(part);mitigation=min(max(0,raw-1),armor//4);damage=max(1,raw-mitigation)
+        penetration=damage+(4 if damage_type in ("bite","pierce") else 3 if damage_type=="cut" else 0)-armor//5
+        tissue="skin"
+        if penetration>6:tissue="muscle"
+        if penetration>12:tissue="bone"
+        if penetration>19 and part in ("head","neck","torso"):tissue="organ"
+        bleed=max(0,damage//3+int(bleeding_bonus)-armor//8)
+        rr=PCG32(derive_seed(self.seed,"player-hit-fracture",turn,source_uid,part,attack_kind,raw_damage,damage_type))
+        fracture=(tissue=="bone" and damage>=6) or (fracture_chance>0 and rr.randbelow(100)<int(fracture_chance))
+        severity=min(100,damage*7+max(0,penetration)*2)
+        vitals.hp=max(0,vitals.hp-damage);vitals.pain=min(100,vitals.pain+max(1,severity//5));vitals.blood=max(0,vitals.blood-max(0,bleed//2))
+        self.state.player_body_parts[part]=max(0,self.state.player_body_parts.get(part,100)-damage*3)
+        self.state.player_wounds.append({"part":part,"tissue":tissue,"type":damage_type,"severity":severity,"bleeding":bleed,"fracture":fracture,"turn":turn,"source":source_name,"attack_kind":attack_kind})
+        if self.artifact_system and names:
+            group=self._player_part_group(part)
+            for slot,iid in list(self.state.player_equipment.items()):
+                item=self.registry.items.get(iid)
+                if item and group in item.coverage:
+                    a=self.state.artifacts.get(self.state.player_equipped_artifacts.get(slot,""))
+                    if a:
+                        a.condition=max(0,a.condition-max(1,raw//8));a.history.append(f"Armor impact at turn {turn}; condition {a.condition}%.")
+                        if a.condition<=0:self.state.player_equipment.pop(slot,None);self.state.player_equipped_artifacts.pop(slot,None);a.owner='destroyed'
+        if len(self.state.player_wounds)>80:self.state.player_wounds=self.state.player_wounds[-80:]
+        details=[]
+        if shield_text:details.append(shield_text)
+        if mitigation and names:details.append(f"{', '.join(names)} absorbs {mitigation}")
+        suffix=("; "+"; ".join(details)) if details else ""
+        return f"{source_name} hits your {part.replace('_',' ')}, dealing {damage} {damage_type} damage{suffix}."
+
     def melee_hit_chance(self,weapon,distance:int,agility:int,melee:int,stamina:int,target_behavior:str="calm")->int:
         handling=0 if weapon is None else weapon.accuracy
         motion=12 if target_behavior in ("flee","wounded_flee") else 7 if target_behavior=="pursue" else 4 if target_behavior=="defend" else 0
@@ -107,7 +198,7 @@ class CombatSystem:
             return f"You strike the {sp.name.lower()}'s {part} for {damage}; it dies, leaving a carcass to process."
         return f"You strike the {sp.name.lower()}'s {part} for {damage} {dtype} damage."
 
-    def ranged_attack_creature(self,creature:CreatureState,inv:Inventory,turn:int,distance:int,perception:int=5,hunting:int=0,weapon_id:str|None=None,aim_zone:str="center",aim_quality:int=0,stamina:int=100)->str:
+    def ranged_attack_creature(self,creature:CreatureState,inv:Inventory,turn:int,distance:int,perception:int=5,hunting:int=0,weapon_id:str|None=None,aim_zone:str="center",aim_quality:int=0,stamina:int=100,cover_penalty:int=0)->str:
         weapon=self.registry.items.get(weapon_id or self.state.player_readied_weapon)
         if not weapon or weapon.weapon_damage<=0 or weapon.range<=1 or inv.count(weapon.id)<=0:return "You have no usable ranged weapon readied."
         if distance>weapon.range:return f"The target is beyond the useful range of your {weapon.name.lower()}."
@@ -116,7 +207,7 @@ class CombatSystem:
 
         sp=self.registry.species[creature.species_id];zone=aim_zone if aim_zone in self.AIM_ZONES else "center"
         rng=PCG32(derive_seed(self.seed,"ranged-attack",turn,creature.uid,distance,weapon.id,creature.hp,creature.blood,zone,aim_quality))
-        accuracy=self.ranged_hit_chance(weapon,distance,perception,hunting,zone,aim_quality,stamina,creature.behavior)
+        accuracy=max(2,self.ranged_hit_chance(weapon,distance,perception,hunting,zone,aim_quality,stamina,creature.behavior)-max(0,int(cover_penalty)))
         if rng.randbelow(100)>=accuracy:
             verb="throw" if weapon.throwable else "shot"
             return f"Your {weapon.name.lower()} {verb} at the {sp.name.lower()} misses."
@@ -171,7 +262,7 @@ class CombatSystem:
             piece=max(0,(item.armor+material_bonus)*quality_factor//50);rating += piece;names.append(artifact.name if artifact else item.name)
         return min(30,rating),names
 
-    def creature_attack_player(self,creature:CreatureState,vitals:Vitals,turn:int)->str:
+    def creature_attack_player(self,creature:CreatureState,vitals:Vitals,turn:int,source_dx:int=0,source_dy:int=0)->str:
         sp=self.registry.species[creature.species_id];rng=PCG32(derive_seed(self.seed,"creature-attack",turn,creature.uid,creature.hp))
         attacks=list(sp.attacks) or [{"name":"attack","damage":sp.damage,"type":"bite" if sp.diet in ("carnivore","omnivore") else "blunt","bleeding":1,"fracture":0}]
         attack=attacks[rng.randbelow(len(attacks))];attack_name=str(attack.get("name","attack"));base_damage=max(1,int(attack.get("damage",sp.damage)));dtype=str(attack.get("type","blunt"))
@@ -179,28 +270,8 @@ class CombatSystem:
         for p,w in parts:
             if roll<w:part=p;break
             roll-=w
-        raw=max(1,base_damage*(80+rng.randbelow(41))//100);armor,names=self._player_armor(part);agility=int(self.state.player_attributes.get('agility',5));athletics=int(self.state.player_skills.get('athletics',0));evasion=min(20,max(0,agility-5)*2+athletics);raw=max(1,raw*(100-evasion)//100);mitigation=min(max(0,raw-1),armor//4);damage=max(1,raw-mitigation)
-        penetration=damage+(4 if dtype in ("bite","pierce") else 3 if dtype=="cut" else 0)-armor//5
-        tissue="skin"
-        if penetration>6:tissue="muscle"
-        if penetration>12:tissue="bone"
-        if penetration>19 and part in ("head","neck","torso"):tissue="organ"
-        bleeding=max(0,damage//3+int(attack.get("bleeding",0))-armor//8);fracture=(tissue=="bone" and damage>=6) or (int(attack.get("fracture",0))>0 and rng.randbelow(100)<int(attack.get("fracture",0)))
-        severity=min(100,damage*7+max(0,penetration)*2);vitals.hp=max(0,vitals.hp-damage);vitals.pain=min(100,vitals.pain+max(1,severity//5));vitals.blood=max(0,vitals.blood-max(0,bleeding//2))
-        self.state.player_body_parts[part]=max(0,self.state.player_body_parts.get(part,100)-damage*3)
-        self.state.player_wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"source":attack_name})
-        if self.artifact_system and names:
-            group=self._player_part_group(part)
-            for slot,iid in list(self.state.player_equipment.items()):
-                item=self.registry.items.get(iid)
-                if item and group in item.coverage:
-                    a=self.state.artifacts.get(self.state.player_equipped_artifacts.get(slot,""))
-                    if a:
-                        a.condition=max(0,a.condition-max(1,raw//8));a.history.append(f"Armor impact at turn {turn}; condition {a.condition}%.")
-                        if a.condition<=0:self.state.player_equipment.pop(slot,None);self.state.player_equipped_artifacts.pop(slot,None);a.owner='destroyed'
-        if len(self.state.player_wounds)>80:self.state.player_wounds=self.state.player_wounds[-80:]
-        armor_text=f"; {', '.join(names)} absorbs {mitigation}" if mitigation and names else ""
-        return f"{sp.name} uses {attack_name} against your {part.replace('_',' ')}, dealing {damage} {dtype} damage{armor_text}."
+        raw=max(1,base_damage*(80+rng.randbelow(41))//100)
+        return self.resolve_player_hit(vitals,part,raw,dtype,"melee",turn,f"{sp.name} uses {attack_name}",creature.uid,source_dx,source_dy,int(attack.get("bleeding",0)),int(attack.get("fracture",0)))
 
     def treat_player_wound(self,index:int,item_id:str,inv:Inventory)->str:
         if index<0 or index>=len(self.state.player_wounds):return "That wound no longer exists."
@@ -256,7 +327,11 @@ class CombatSystem:
         profile=dict(sp.carcass)
         if not profile:
             meat=max(1,sp.mass_kg//25);profile={"core:raw_game_meat":meat,"core:bone":max(1,sp.mass_kg//50)}
-        uid=self.state.uid("carcass");self.state.carcasses[uid]=CarcassState(uid,c.species_id,c.x,c.y,c.z,self.state.clock_minute,quality)
+        uid=self.state.uid("carcass");embedded={}
+        for row in c.embedded_projectiles:
+            iid=str(row.get("item_id",""))
+            if iid:embedded[iid]=embedded.get(iid,0)+1
+        self.state.carcasses[uid]=CarcassState(uid,c.species_id,c.x,c.y,c.z,self.state.clock_minute,quality,source_uid=c.uid,embedded_items=embedded)
 
     def _drop(self,c:CreatureState,drops:dict[str,int])->None:
         key=pos_key(c.x,c.y,c.z);pile=self.state.ground_piles.get(key)
