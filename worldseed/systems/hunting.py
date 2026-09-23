@@ -288,6 +288,9 @@ class HuntingSystem:
         old = WorldPos(c.x, c.y, c.z)
         c.x, c.y = nxt.x, nxt.y
         c.facing_dx, c.facing_dy = nxt.x - old.x, nxt.y - old.y
+        if self.state.player_aim_target == c.uid:
+            loss = 20 if c.behavior in ("flee", "wounded_flee", "pursue") else 10
+            self.state.player_aim_quality = max(0, int(self.state.player_aim_quality) - loss)
         c.last_move_turn = turn
         exertion = 7 if c.behavior in ("flee", "wounded_flee", "pursue") else 4
         c.stamina = max(0, c.stamina - exertion)
