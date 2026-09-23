@@ -48,10 +48,13 @@ def main() -> int:
     ap.add_argument('--radius',type=int,default=3072)
     ap.add_argument('--step',type=int,default=128)
     args=ap.parse_args()
-    reports=[
-        audit_seed(f'v8-phase5-coast-{i:02d}',max(512,args.radius),max(32,args.step))
-        for i in range(max(1,args.seeds))
-    ]
+    reports=[]
+    for i in range(max(1,args.seeds)):
+        seed=f'v8-phase5-coast-{i:02d}'
+        print(f'coast audit: seed={seed} radius={max(512,args.radius)} step={max(32,args.step)}', flush=True)
+        report=audit_seed(seed,max(512,args.radius),max(32,args.step))
+        reports.append(report)
+        print(f'coast audit: seed={seed} samples={report["samples"]} near_coast={report["near_coast_samples"]}', flush=True)
     print(json.dumps({'reports':reports},indent=2,sort_keys=True))
     # Audit fails only on structural absence; calibration remains a human/data
     # review rather than encoding one preferred coastline distribution.
@@ -60,6 +63,7 @@ def main() -> int:
     # Phase-5 coast/bathymetry contract.
     coastal=[r for r in reports if r['near_coast_samples']>0]
     if not coastal:
+        print('coast audit FAILED: no coastal samples across all seeds', flush=True)
         return 1
     shelf_classes=set()
     coast_kinds=set()
@@ -67,6 +71,7 @@ def main() -> int:
         shelf_classes.update(r['shelf_classes'])
         coast_kinds.update(r['coast_kinds'])
     if len(shelf_classes)<2 or len(coast_kinds)<3:
+        print(f'coast audit FAILED: expected 2+ shelf classes and 3+ coast kinds; got {sorted(shelf_classes)} and {sorted(coast_kinds)}', flush=True)
         return 2
     return 0
 

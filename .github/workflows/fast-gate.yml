@@ -59,55 +59,61 @@ jobs:
 
       - name: Install WORLDSEED
         shell: pwsh
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install "Pillow>=10,<12"
+        timeout-minutes: 3
+        run: python -m pip install -e . "Pillow>=10,<12"
+
+      - name: Verify CI diagnostics and asset decoder
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name diagnostics-tests --timeout 60 -- python -u -m unittest -v tests.test_ci_diagnostics
 
       - name: Compile Python
         shell: pwsh
-        run: python -m compileall worldseed
+        run: python -m compileall -q worldseed tools tests
 
       - name: Dev34 inventory and storage regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev34_storage_containers
+        run: python -u tools/run_ci_check.py --name "Dev34 inventory and storage regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev34_storage_containers
 
       - name: Dev36 world interaction regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev36_world_interactions
+        run: python -u tools/run_ci_check.py --name "Dev36 world interaction regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev36_world_interactions
 
       - name: Dev37 floating interaction UI regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev37_floating_interaction_ui
+        run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui
 
       - name: Dev38 natural container art regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev38_natural_container_art
+        run: python -u tools/run_ci_check.py --name "Dev38 natural container art regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_art
 
       - name: Dev38 natural container visual regressions
         shell: pwsh
-        run: python -m unittest tests.test_dev38_natural_container_visuals
+        run: python -u tools/run_ci_check.py --name "Dev38 natural container visual regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_visuals
 
       - name: Phase 5 coast tests
         shell: pwsh
-        run: python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
+        run: python -u tools/run_ci_check.py --name "Phase 5 coast tests" --timeout 240 -- python -u -m unittest -v tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
 
       - name: Surface-cache and save-compatibility smoke tests
         shell: pwsh
-        run: python -m unittest tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
+        run: python -u tools/run_ci_check.py --name "Surface-cache and save-compatibility smoke tests" --timeout 120 -- python -u -m unittest -v tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
 
       - name: Atlas drag regression
         shell: pwsh
-        run: python -m unittest tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
+        run: python -u tools/run_ci_check.py --name "Atlas drag regression" --timeout 120 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
 
-      - name: Content and visual audits
+      - name: Content audit
         shell: pwsh
-        run: |
-          python tools/audit_content.py
-          python tools/audit_visuals.py
+        run: python -u tools/run_ci_check.py --name content-audit --timeout 90 -- python -u tools/audit_content.py
+
+      - name: Visual audit
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name visual-audit --timeout 90 -- python -u tools/audit_visuals.py
 
       - name: Bounded coast morphology audit
         shell: pwsh
-        run: |
-          python tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
-          python tools/audit_coastal_mouths.py --seeds 3
+        run: python -u tools/run_ci_check.py --name coast-audit --timeout 180 -- python -u tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
+
+      - name: Coastal mouths audit
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name coastal-mouths-audit --timeout 180 -- python -u tools/audit_coastal_mouths.py --seeds 3
