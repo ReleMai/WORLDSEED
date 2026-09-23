@@ -200,6 +200,7 @@ class Simulation:
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
         elif isinstance(command,ExperimentRecipeCommand):minutes=self._experiment_recipe(command)
+        elif isinstance(command,DiscoveryPotCommand):minutes=self._discovery_pot(command)
         elif isinstance(command,BuildCommand):self._build(command)
         elif isinstance(command,DismantleCommand):self._dismantle(command)
         elif isinstance(command,PickupCommand):self._pickup(command)
@@ -755,6 +756,10 @@ class Simulation:
         pos=self.entities.get(cmd.actor,Position).value;ok,msg,minutes=self.crafting.craft_design(cmd.design_id,cmd.choices,self.entities.get(cmd.actor,Inventory),self.building.nearby_station_ids(pos),self.clock.minute,"player");self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+    def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
+        ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed)
+        self._message(msg)
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _build(self,cmd:BuildCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.place(cmd.structure_id,pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
     def _dismantle(self,cmd:DismantleCommand)->None:

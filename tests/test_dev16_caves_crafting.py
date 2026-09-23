@@ -77,27 +77,32 @@ class Dev16CraftDiscoveryTests(unittest.TestCase):
     def setUpClass(cls):
         cls.registry=ContentRegistry.load(DATA_DIR)
 
-    def test_material_discovery_simple_recipe_then_experiment_branch(self):
+    def test_material_discovery_requires_pot_for_recipe_branch(self):
         state=LivingWorldState(player_crafting_discovery_enabled=True)
         inv=Inventory()
         craft=CraftingSystem(state,self.registry)
         inv.add('core:stone',1)
         new_items,new_recipes=craft.sync_discoveries(inv)
         self.assertIn('core:stone',new_items)
-        self.assertIn('core:stone_flake',new_recipes)
+        self.assertEqual(new_recipes,[])
+        self.assertNotIn('core:stone_flake',state.player_discovered_recipes)
         # A compound tool is not handed out merely because stone was seen.
         self.assertNotIn('core:stone_axe',state.player_discovered_recipes)
+        self.assertGreaterEqual(len(craft.recipe_pool_for_item('core:stone')),2)
+        ok,msg,minutes=craft.combine_in_pot(('core:stone',),inv,b'pot-test')
+        self.assertTrue(ok,msg)
+        self.assertEqual(inv.count('core:stone'),0)
+        self.assertEqual(len(state.player_discovered_recipes),1)
         inv.add('core:stone_flake',2)
         inv.add('core:stout_branch',1)
         inv.add('core:plant_cordage',1)
         craft.sync_discoveries(inv)
-        ideas={r.id for r in craft.researchable_recipes(inv)}
-        self.assertIn('core:stone_axe',ideas)
-        ok,msg,minutes=craft.experiment('core:stone_axe',inv)
+        self.assertEqual(craft.researchable_recipes(inv),[])
+        ok,msg,minutes=craft.combine_in_pot(('core:stone_flake','core:stone_flake','core:stout_branch','core:plant_cordage'),inv,b'pot-test')
         self.assertTrue(ok,msg)
         self.assertGreaterEqual(minutes,10)
-        self.assertIn('core:stone_axe',state.player_discovered_recipes)
-        self.assertEqual(state.player_crafting_experiments,1)
+        self.assertIn(state.player_discovered_recipes[-1],self.registry.recipes)
+        self.assertEqual(state.player_crafting_experiments,2)
 
     def test_browsing_discovery_tree_is_observational_and_state_roundtrips(self):
         state=LivingWorldState(player_crafting_discovery_enabled=True)

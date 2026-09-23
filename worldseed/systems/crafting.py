@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from worldseed.content.registry import ContentRegistry
+from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
 from worldseed.systems.state import LivingWorldState
 
@@ -37,15 +38,50 @@ class CraftingSystem:
             if n>0 and iid in self.registry.items and iid not in known_items:
                 known_items.add(iid);new_items.append(iid)
         if new_items:self.state.player_discovered_items=sorted(known_items)
-        known_recipes=set(self.state.player_discovered_recipes);new_recipes=[]
-        for r in sorted(self.registry.recipes.values(),key=lambda x:x.id):
-            if r.id in known_recipes:continue
-            if r.knowledge and r.knowledge not in self.state.player_knowledge:continue
-            mode=self._discovery_mode(r);req=self._discovery_requirements(r)
-            if mode=='knowledge' or (mode=='auto' and req.issubset(known_items)):
-                known_recipes.add(r.id);new_recipes.append(r.id)
-        if new_recipes:self.state.player_discovered_recipes=sorted(known_recipes)
-        return new_items,new_recipes
+        # Handling an item reveals its identity, not a predetermined recipe.
+        # Previously learned recipes remain recorded on existing saves.
+        return new_items,[]
+
+    def recipe_pool_for_item(self,item_id:str):
+        """Catalog-backed list of discoverable outcomes involving an item."""
+        return sorted((r for r in self.registry.recipes.values()
+                       if item_id in (set(r.inputs)|self._discovery_requirements(r))),key=lambda r:r.id)
+
+    def pot_candidates(self,items:tuple[str,...],inv:Inventory):
+        """Read-only recipes that could result from the placed quantities."""
+        from collections import Counter
+        counts=Counter(items)
+        if not self.state.player_crafting_discovery_enabled or not 1<=len(items)<=5:
+            return []
+        if any(i not in self.registry.items or inv.count(i)<n for i,n in counts.items()):
+            return []
+        known=set(self.state.player_discovered_recipes)
+        return sorted((r for r in self.registry.recipes.values()
+            if r.id not in known
+            and (not r.knowledge or r.knowledge in self.state.player_knowledge)
+            and counts==r.inputs
+            and r.inputs),key=lambda r:r.id)
+
+    def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes) -> tuple[bool,str,int]:
+        """Consume a valid experiment and select one catalog result reproducibly."""
+        from collections import Counter
+        if not self.state.player_crafting_discovery_enabled:
+            return False,'This world uses the legacy crafting catalog.',5
+        counts=Counter(items)
+        if not 1<=len(items)<=5 or any(i not in self.registry.items or inv.count(i)<n for i,n in counts.items()):
+            return False,'Place 1–5 items you actually carry in the discovery pot.',5
+        candidates=self.pot_candidates(items,inv)
+        if not candidates:
+            return False,'These materials reveal no new recipe. Try another combination.',5
+        attempt=max(0,int(self.state.player_crafting_experiments))
+        choice=hash_u64(world_seed,'crafting.discovery_pot.v1',attempt,*sorted(items))%len(candidates)
+        recipe=candidates[choice]
+        inv.consume(dict(counts))
+        self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe.id})
+        self.state.player_crafting_experiments=attempt+1
+        self.sync_discoveries(inv)
+        return True,f'You discover {recipe.name}! The recipe is recorded; crafting it will produce '+', '.join(
+            f'{self.registry.items[i].name} x{n}' for i,n in recipe.outputs.items() if i in self.registry.items)+'.',max(10,15+recipe.difficulty*5)
 
     def recipe_is_discovered(self, recipe_id:str) -> bool:
         if not self.state.player_crafting_discovery_enabled:return True
@@ -58,27 +94,12 @@ class CraftingSystem:
         return [r for r in self.registry.recipes.values() if r.id in known]
 
     def researchable_recipes(self, inv:Inventory|None=None):
-        if not self.state.player_crafting_discovery_enabled:return []
-        known_items=set(self.state.player_discovered_items);known=set(self.state.player_discovered_recipes)
-        out=[]
-        for r in self.registry.recipes.values():
-            if r.id in known or self._discovery_mode(r)!='experiment':continue
-            if r.knowledge and r.knowledge not in self.state.player_knowledge:continue
-            if self._discovery_requirements(r).issubset(known_items):out.append(r)
-        return sorted(out,key=lambda r:(r.category,r.name))
+        # Legacy caller compatibility: the pot owns discovery choice and must
+        # not reveal a named list of experiments before a combination is made.
+        return []
 
     def experiment(self, recipe_id:str, inv:Inventory) -> tuple[bool,str,int]:
-        if not self.state.player_crafting_discovery_enabled:
-            return False,'This world uses the legacy crafting catalog.',5
-        self.sync_discoveries(inv)
-        r=self.registry.recipes.get(recipe_id)
-        if not r:return False,'Unknown crafting idea.',5
-        if self.recipe_is_discovered(recipe_id):return False,f'You already understand {r.name}.',5
-        if r not in self.researchable_recipes(inv):return False,'You have not handled enough of the required materials to test that idea.',5
-        self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe_id})
-        self.state.player_crafting_experiments=max(0,int(self.state.player_crafting_experiments))+1
-        minutes=max(10,15+r.difficulty*5)
-        return True,f'Through trial and error, you work out how to {r.name.lower()}. The recipe is now discovered.',minutes
+        return False,'Combine carried materials in the discovery pot to learn recipes.',5
 
     def discovery_tree_rows(self, inv:Inventory|None=None) -> list[tuple[str,str,str]]:
         """Return stable (recipe,status,parents) rows for graphical/terminal UIs."""
@@ -87,11 +108,9 @@ class CraftingSystem:
         for r in self.registry.recipes.values():
             for iid in r.outputs:output_to_recipes.setdefault(iid,[]).append(r.id)
         rows=[]
-        researchable={r.id for r in self.researchable_recipes(inv)} if self.state.player_crafting_discovery_enabled else set()
         for r in sorted(self.registry.recipes.values(),key=lambda q:(q.category,q.name)):
             if not self.state.player_crafting_discovery_enabled:status='known'
             elif r.id in discovered:status='known'
-            elif r.id in researchable:status='experiment'
             elif r.knowledge and r.knowledge not in self.state.player_knowledge:status='knowledge'
             else:
                 req=self._discovery_requirements(r);status='materials' if req-known_items else 'locked'
@@ -108,9 +127,14 @@ class CraftingSystem:
         if r.station and r.station not in nearby_structures:out.append(f"station: {self.registry.structures[r.station].name}")
         for iid,n in r.inputs.items():
             if inv.count(iid)<n:out.append(f"{self.registry.items[iid].name} {inv.count(iid)}/{n}")
+        for iid,n in r.catalysts.items():
+            if inv.count(iid)<n:out.append(f"{self.registry.items[iid].name} catalyst {inv.count(iid)}/{n}")
         for q,need in r.tool_qualities.items():
             have=self._best_quality(inv,q)
             if have<need:out.append(f"{q} quality {have}/{need}")
+        if self.metallurgy:
+            ok,reason=self.metallurgy.can_process(r,inv,'player')
+            if not ok:out.append(reason)
         return out
 
     def can_craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str])->tuple[bool,str]:

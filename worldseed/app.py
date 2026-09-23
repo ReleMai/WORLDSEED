@@ -1167,8 +1167,13 @@ def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->d
     rows={}
     for r in recipes:
         missing=sim.crafting.missing_requirements(r.id,inv,stations)
-        outputs=[{'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'qty':n} for iid,n in r.outputs.items()]
+        outputs=[{'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'qty':n,
+                  'description':reg.items[iid].description if iid in reg.items else '',
+                  'roles':list(reg.items[iid].utility_roles) if iid in reg.items else [],
+                  'unit_mass_kg':reg.items[iid].mass_g/1000 if iid in reg.items else 0}
+                 for iid,n in r.outputs.items()]
         inputs=[{'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'need':n,'have':inv.count(iid)} for iid,n in r.inputs.items()]
+        inputs.extend({'id':iid,'name':(reg.items[iid].name if iid in reg.items else iid)+' (catalyst)','need':n,'have':inv.count(iid)} for iid,n in r.catalysts.items())
         rows[r.id]={
             'name':r.name,'category':r.category or 'general','description':r.description or '',
             'minutes':r.minutes,'difficulty':r.difficulty,'skill':r.skill,
@@ -1216,7 +1221,7 @@ def _crafting_tree_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory)->di
     for rid,status,parents in sim.crafting.discovery_tree_rows(inv):
         r=reg.recipes[rid]
         nodes.append({
-            'id':rid,'name':r.name,'category':r.category or 'general','status':status,
+            'id':rid,'name':r.name if status=='known' else 'Undiscovered technique','category':r.category or 'general','status':status,
             'parents':[x for x in parents.split(', ') if x],
             'outputs':[iid for iid in r.outputs if iid in reg.items],
             'minutes':r.minutes,
@@ -1357,6 +1362,102 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         status=sim.log[-1].message if sim.log else ''
         action_amount=1;last_selected=None
 
+def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
+    """One retained, movable crafting surface with recipe and discovery tabs."""
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    tab='recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
+    category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
+    category_page=categories.index(category)//12 if category in categories else 0
+    recipe_state=RouteState('crafting-recipes','CRAFTING')
+    pot_state=RouteState('crafting-pot','DISCOVERY')
+    placed=[];status=''
+    while True:
+        inv=ctx.entities.get(pid,Inventory)
+        if tab=='recipes':
+            known=[r for r in sim.crafting.discovered_recipes(inv) if (r.category or 'general')==category]
+            known.sort(key=lambda r:r.name)
+            rows=[(r.id,r.name) for r in known] or [('__none__','No recipes in this category')]
+            recipe_state.selected=max(0,min(recipe_state.selected,len(rows)-1))
+            data=_recipe_ui_data(reg,sim,inv,known)
+            data.update({'categories':categories,'category':category,'category_page':category_page})
+            choice=_select(term,'CRAFTING',rows,state=recipe_state,presentation='crafting_unified',
+                           subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
+            status=''
+            if choice is None:return UI_BACK
+            if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
+            if choice=='UI_ACTION:tab:index':tab='index';continue
+            if choice.startswith('UI_ACTION:category_page:'):
+                page_size=max(1,(term._floating_panels.get('crafting',{}).get('h',680)-240)//34)
+                delta=1 if choice.endswith(':next') else -1
+                category_page=max(0,min(category_page+delta,max(0,(len(categories)-1)//page_size)))
+                continue
+            if choice.startswith('UI_ACTION:category:'):
+                category=choice.split(':',2)[2];recipe_state.selected=0;continue
+            if choice=='UI_ACTION:craft':
+                rid=rows[recipe_state.selected][0]
+                if rid in reg.recipes:
+                    sim.execute(CraftCommand(pid,rid))
+                    status=sim.log[-1].message if sim.log else ''
+                continue
+            continue
+        if tab=='index':
+            carried=[iid for iid,n in inv.items.items() if n>0 and iid in reg.items]
+            carried.sort(key=lambda iid:reg.items[iid].name)
+            if not carried:tab='discovery';status='Gather a material to see its possible recipes.';continue
+            pot_state.selected=min(pot_state.selected,len(carried)-1)
+            iid=carried[pot_state.selected]
+            pool=sim.crafting.recipe_pool_for_item(iid)
+            index_rows=[(r.id,(r.name if sim.crafting.recipe_is_discovered(r.id) else 'Undiscovered technique')+
+                         f'  •  {r.category.replace("_"," ").title()}') for r in pool]
+            if not index_rows:index_rows=[('__none__','No catalog recipes use this item')]
+            choice=_select(term,'ITEM DISCOVERIES',index_rows,presentation='crafting_index',
+                           presentation_data={'item_name':reg.items[iid].name,
+                                              'known':sum(sim.crafting.recipe_is_discovered(r.id) for r in pool)},
+                           subtitle='Possible recipes for the selected carried item.')
+            if choice is None:return UI_BACK
+            if choice=='UI_ACTION:tab:recipes':tab='recipes'
+            elif choice=='UI_ACTION:tab:discovery':tab='discovery'
+            continue
+        entries={}
+        for iid,n in sorted(inv.items.items(),key=lambda pair:reg.items[pair[0]].name if pair[0] in reg.items else pair[0]):
+            if iid not in reg.items or n<=0:continue
+            pool=sim.crafting.recipe_pool_for_item(iid)
+            entries[iid]={'name':reg.items[iid].name,'count':n,'pool_count':len(pool),
+                          'known_recipes':[r.name for r in pool if sim.crafting.recipe_is_discovered(r.id)]}
+        rows=[(iid,v['name']) for iid,v in entries.items()] or [('__none__','Gather materials to experiment')]
+        pot_state.selected=max(0,min(pot_state.selected,len(rows)-1))
+        data={'items':entries,'selected_items':tuple(placed),
+              'candidates':len(sim.crafting.pot_candidates(tuple(placed),inv))}
+        choice=_select(term,'DISCOVERY POT',rows,state=pot_state,presentation='discovery_pot',
+                       subtitle=status or 'Place one to five carried items; the resulting technique is drawn from matching recipes.',presentation_data=data)
+        status=''
+        if choice is None:return UI_BACK
+        if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
+        if choice=='UI_ACTION:tab:index':tab='index';continue
+        if choice=='UI_ACTION:remove':
+            if placed:placed.pop()
+            continue
+        if choice=='UI_ACTION:clear':placed.clear();continue
+        if choice=='UI_ACTION:mix':
+            # The command validates quantities and chooses the recipe. The UI
+            # animates only after the simulation reports a successful result.
+            before=set(sim.state.player_discovered_recipes)
+            ingredients=tuple(placed)
+            sim.execute(DiscoveryPotCommand(pid,ingredients))
+            status=sim.log[-1].message if sim.log else ''
+            new=set(sim.state.player_discovered_recipes)-before
+            if new:
+                rid=next(iter(new));anim=getattr(term,'animate_discovery_pot',None)
+                if callable(anim):anim(ingredients,reg.recipes[rid].name)
+                placed.clear()
+            continue
+        if choice in entries:
+            if len(placed)>=5:status='The pot holds at most five items.'
+            elif placed.count(choice)>=inv.count(choice):status='You do not carry another one of those.'
+            else:placed.append(choice)
+
+
 def _crafting_menu(ctx:GameContext,term:Terminal)->str:
     """Discovery-first crafting browser.
 
@@ -1364,6 +1465,8 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
     renders these top-level routes as graphical tabs/cards. All discovery
     mutation is performed by simulation commands; opening this UI is read-only.
     """
+    if getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None)):
+        return _crafting_menu_graphical(ctx,term)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
         known=sorted(sim.crafting.discovered_recipes(inv),key=lambda r:(r.category or 'general',r.name))
@@ -1371,7 +1474,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
         discovered_items=set(sim.state.player_discovered_items)
         rows=[
             ('recipes',f'Discovered Recipes — {len(known)} known'),
-            ('ideas',f'Experiment — {len(ideas)} material combinations ready to test'),
+            ('ideas','Discovery Pot — combine 1–5 carried items'),
             ('materials',f'Materials — {len(discovered_items)} item types examined'),
             ('tree','Tech Tree — trace discovered recipes and future branches'),
         ]
@@ -1385,7 +1488,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
                 item=reg.items.get(iid)
                 if not item:continue
                 by_cat.setdefault(item.category or 'misc',[]).append(item)
-            body=['New material types reveal simple techniques immediately; multi-material techniques become experiments.','']
+            body=['Handled materials give clues. Combine carried materials in the discovery pot to uncover a matching recipe.','']
             if not by_cat:body.append('You have not examined any craft materials yet. Gather or pick up something useful.')
             for cat,items in sorted(by_cat.items()):
                 body.append(cat.replace('_',' ').upper())
@@ -1410,19 +1513,18 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
             continue
 
         if pick=='ideas':
-            if not ideas:
-                _view_text(term,box('CRAFTING // EXPERIMENT',['No unresolved material combinations are ready.','Find new material types or craft simple components to reveal new branches.'],screen_width(term.size()[0],96)))
-                continue
-            rid=_select(term,'CRAFTING // EXPERIMENT',[(r.id,f'{r.name} — test {", ".join(reg.items[i].name for i in sorted(sim.crafting.discovery_requirements(r)) if i in reg.items)}') for r in ideas],presentation='crafting_experiments',presentation_data={**_recipe_ui_data(reg,sim,inv,ideas),'clues':{r.id:[i for i in sorted(sim.crafting.discovery_requirements(r)) if i in reg.items] for r in ideas}})
-            if not rid:continue
-            r=reg.recipes[rid]
-            req=sim.crafting.discovery_requirements(r)
-            body=[r.name,'',r.description or 'A possible technique suggested by materials you have handled.','',
-                  'KNOWN MATERIAL CLUES']+[f'  {reg.items[i].name}' for i in sorted(req) if i in reg.items]
-            body+=['',f'Experiment time: {max(10,15+r.difficulty*5)} minutes','No output is created until the recipe itself is learned and crafted.']
-            action=_select(term,'CRAFTING // TRIAL & ERROR',[('experiment','Experiment and record the technique'),('back','Not now')],presentation='crafting_experiment_detail',presentation_data={'recipe_id':rid,**_recipe_ui_data(reg,sim,inv,[r]),'clues':{rid:[i for i in sorted(req) if i in reg.items]}})
-            if action=='experiment':
-                sim.execute(ExperimentRecipeCommand(pid,rid));return sim.log[-1].message if sim.log else ''
+            placed=[]
+            while len(placed)<5:
+                options=[(iid,f'{reg.items[iid].name} — held {inv.count(iid)}, placed {placed.count(iid)}; {len(sim.crafting.recipe_pool_for_item(iid))} possible recipes')
+                         for iid in sorted(inv.items) if iid in reg.items and inv.count(iid)>placed.count(iid)]
+                actions=[('__MIX__','Combine these items')] if len(placed)>=1 else []
+                choice=_select(term,'CRAFTING // DISCOVERY POT',options+actions,subtitle=f'{len(placed)}/5 items placed. Pick another item or combine.') if options or actions else None
+                if choice=='__MIX__':break
+                if choice is None:placed=[];break
+                placed.append(choice)
+            if len(placed)>=1:
+                sim.execute(DiscoveryPotCommand(pid,tuple(placed)))
+                return sim.log[-1].message if sim.log else ''
             continue
 
         if pick=='design':
@@ -1441,7 +1543,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
 
         # Discovered-recipe tab.
         if not known:
-            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Handle basic materials such as branches, stone, brush, bone, clay, or ore to start uncovering techniques.'],screen_width(term.size()[0],96)))
+            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the discovery pot to uncover techniques.'],screen_width(term.size()[0],96)))
             continue
         categories=sorted(set(r.category or 'general' for r in known))
         category=_select(term,'CRAFTING // RECIPES',[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})

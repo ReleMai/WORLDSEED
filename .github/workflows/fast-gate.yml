@@ -82,6 +82,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui
 
+      - name: Crafting discovery pot regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests
+
       - name: Dev38 natural container art regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev38 natural container art regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_art

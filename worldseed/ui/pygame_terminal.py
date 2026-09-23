@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -104,6 +105,7 @@ class PygameTerminal(PointerUI):
         self._context_menu_origin = (0, 0)
         self._context_backdrop = None
         self._context_opening = False
+        self._discovery_pot_center = None
         self._theme = {
             "bg": (13, 16, 18),
             "panel": (22, 26, 29),
@@ -577,13 +579,14 @@ class PygameTerminal(PointerUI):
         return x,y,w,h,cx,cy,cw
 
     def _floating_panel_minimum(self, panel_id: str) -> tuple[int,int]:
+        if panel_id=='crafting':return (740,500)
         return (760,500) if panel_id=='container_inventory' else (640,440)
 
     def _floating_panel_state(self, panel_id: str) -> dict[str,int]:
         sw,sh=self.screen.get_size()
         min_w,min_h=self._floating_panel_minimum(panel_id)
-        default_w=min(sw-48,1080 if panel_id=='container_inventory' else 900)
-        default_h=min(sh-48,680 if panel_id=='container_inventory' else 620)
+        default_w=min(sw-48,1080 if panel_id in ('container_inventory','crafting') else 900)
+        default_h=min(sh-48,680 if panel_id in ('container_inventory','crafting') else 620)
         state=self._floating_panels.get(panel_id)
         if state is None:
             state={'x':max(12,(sw-default_w)//2),'y':max(12,(sh-default_h)//2),
@@ -755,6 +758,9 @@ class PygameTerminal(PointerUI):
             'inventory_items':self._present_inventory_items,
             'inventory_unified':self._present_inventory_unified,
             'container_inventory':self._present_container_inventory,
+            'crafting_unified':self._present_crafting_unified,
+            'discovery_pot':self._present_discovery_pot,
+            'crafting_index':self._present_crafting_index,
             'inventory_item_actions':self._present_inventory_item_actions,
             'world_context':self._present_context_menu,
             'crafting_home':self._present_crafting_home,
@@ -1105,6 +1111,206 @@ class PygameTerminal(PointerUI):
         for i,row in enumerate(rows):
             self._draw_menu_card(pg.Rect(right.x+14,ry+i*(rh+9),right.width-28,rh),getattr(row,'label',str(row)),i==selected,badge=str(i+1))
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
+
+    def _crafting_tabs(self,x,y,w,active):
+        for i,(name,token) in enumerate((('RECIPES','recipes'),('DISCOVERY POT','discovery'),('ITEM INDEX','index'))):
+            rect=self.pg.Rect(x+i*158,y,150,30)
+            chosen=active==token
+            self.pg.draw.rect(self.screen,(53,49,37) if chosen else self._theme['panel2'],rect,border_radius=5)
+            self.pg.draw.rect(self.screen,self._theme['accent'] if chosen else self._theme['edge'],rect,2 if chosen else 1,border_radius=5)
+            label=self.small_font.render(name,True,self._theme['text'] if chosen else self._theme['muted'])
+            self.screen.blit(label,label.get_rect(center=rect.center))
+            self._ui_target(rect,f'UI_ACTION:tab:{token}')
+
+    def _present_crafting_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','CRAFTING',subtitle)
+        self._crafting_tabs(cx,cy,cw,'recipes');cy+=40
+        cats=data.get('categories',[]);cat=data.get('category','')
+        cat_w=180;detail_w=max(246,min(320,cw//3));gap=10
+        panel_h=y+h-48-cy
+        left=pg.Rect(cx,cy,cat_w,panel_h)
+        middle=pg.Rect(left.right+gap,cy,cw-cat_w-detail_w-2*gap,panel_h)
+        detail=pg.Rect(middle.right+gap,cy,detail_w,panel_h)
+        for rect in (left,middle,detail):
+            pg.draw.rect(screen,self._theme['panel'],rect,border_radius=6)
+            pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=6)
+        cat_size=max(1,(panel_h-51)//34)
+        cat_page=max(0,min(int(data.get('category_page',0)),max(0,(len(cats)-1)//cat_size)))
+        for i,name in enumerate(cats[cat_page*cat_size:(cat_page+1)*cat_size]):
+            r=pg.Rect(left.x+8,left.y+10+i*34,left.width-16,29)
+            active=name==cat
+            pg.draw.rect(screen,(50,48,39) if active else self._theme['panel2'],r,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],r,1,border_radius=5)
+            label=self.small_font.render(self._fit_ui_text(name.replace('_',' ').title(),self.small_font,r.width-12),True,self._theme['text'] if active else self._theme['muted'])
+            screen.blit(label,(r.x+7,r.y+6));self._ui_target(r,f'UI_ACTION:category:{name}')
+        if len(cats)>cat_size:
+            pg.draw.line(screen,self._theme['edge'],(left.x+8,left.bottom-40),(left.right-8,left.bottom-40))
+            self._button((left.x+8,left.bottom-33,45,25),'‹','UI_ACTION:category_page:prev')
+            page=self.small_font.render(f'{cat_page+1}/{(len(cats)+cat_size-1)//cat_size}',True,self._theme['muted'])
+            screen.blit(page,page.get_rect(center=(left.centerx,left.bottom-20)))
+            self._button((left.right-53,left.bottom-33,45,25),'›','UI_ACTION:category_page:next')
+        head=self.small_font.render(f'{str(cat).replace("_"," ").upper()}  /  {total or len(rows)} RECIPES',True,self._theme['accent'])
+        screen.blit(head,(middle.x+12,middle.y+12))
+        rh=67;start=middle.y+38
+        for i,row in enumerate(rows):
+            rect=pg.Rect(middle.x+9,start+i*(rh+5),middle.width-18,rh)
+            if rect.bottom>middle.bottom-12:break
+            rid=getattr(row,'key','');meta=recipes.get(rid,{})
+            ready=bool(meta.get('ready'));active=i==selected
+            pg.draw.rect(screen,(44,48,42) if ready else (32,35,35),rect,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=5)
+            icon=pg.Rect(rect.x+6,rect.y+6,52,52)
+            outputs=meta.get('outputs') or []
+            if outputs:self._draw_item_icon(outputs[0]['id'],icon,scale=.8)
+            fg=self._theme['text'] if ready else (131,139,137)
+            nm=self.small_font.render(self._fit_ui_text(meta.get('name',rid),self.small_font,rect.width-120),True,fg)
+            screen.blit(nm,(rect.x+62,rect.y+10))
+            if ready:info=', '.join(f"{o['name']} x{o['qty']}" for o in outputs)
+            else:info=next((str(m) for m in meta.get('missing',[]) if '/' in str(m)), 'Missing '+str((meta.get('missing') or ['requirements'])[0]))
+            sub=self.small_font.render(self._fit_ui_text(info,self.small_font,rect.width-76),True,self._theme['muted'] if ready else self._theme['danger'])
+            screen.blit(sub,(rect.x+62,rect.y+37))
+            self._ui_target(rect,f'UI_SELECT:{i}')
+        if not rows or getattr(rows[0],'key','')=='__none__':
+            msg=self.small_font.render('No recipes here yet. Try the discovery pot.',True,self._theme['muted'])
+            screen.blit(msg,(middle.x+14,middle.y+50))
+        meta=recipes.get(getattr(rows[max(0,min(selected,len(rows)-1))],'key',''),{}) if rows else {}
+        if meta:
+            yy=detail.y+12
+            for label,color in ((meta.get('name',''),self._theme['accent']),('PRODUCES',self._theme['muted'])):
+                f=self.font if yy==detail.y+12 else self.small_font
+                s=f.render(self._fit_ui_text(label,f,detail.width-26),True,color);screen.blit(s,(detail.x+13,yy));yy+=27
+            for out in meta.get('outputs',[]):
+                s=self.small_font.render(self._fit_ui_text(f"{out['name']} x{out['qty']}",self.small_font,detail.width-46),True,self._theme['good'])
+                self._draw_item_icon(out['id'],pg.Rect(detail.x+12,yy-4,28,26))
+                screen.blit(s,(detail.x+45,yy+1));yy+=30
+            if meta.get('ready') and meta.get('outputs'):
+                produced=meta['outputs'][0]
+                for line in self._wrap_pixel_text(str(produced.get('description','')),self.small_font,detail.width-26)[:2]:
+                    s=self.small_font.render(line,True,self._theme['muted']);screen.blit(s,(detail.x+13,yy));yy+=17
+                roles=', '.join(str(v).replace('_',' ') for v in produced.get('roles',[]))
+                if roles:
+                    s=self.small_font.render(self._fit_ui_text(roles,self.small_font,detail.width-26),True,self._theme['accent'])
+                    screen.blit(s,(detail.x+13,yy));yy+=18
+            yy+=9
+            lab=self.small_font.render('REQUIRES',True,self._theme['muted']);screen.blit(lab,(detail.x+13,yy));yy+=23
+            for inp in meta.get('inputs',[]):
+                ok=inp['have']>=inp['need']
+                line=f"{inp['name']} {inp['have']}/{inp['need']}"
+                s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['text'] if ok else self._theme['danger'])
+                screen.blit(s,(detail.x+13,yy));yy+=20
+            for missing in meta.get('missing',[]):
+                if '/' in missing:continue
+                s=self.small_font.render(self._fit_ui_text(missing,self.small_font,detail.width-25),True,self._theme['danger'])
+                screen.blit(s,(detail.x+13,yy));yy+=18
+            info_y=max(yy+10,detail.bottom-96)
+            for line in (f"{meta.get('minutes',0)} min  •  {meta.get('skill','crafting')}",str(meta.get('description',''))):
+                s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['muted'])
+                screen.blit(s,(detail.x+13,info_y));info_y+=19
+            if meta.get('ready'):self._button((detail.x+12,detail.bottom-40,detail.width-24,30),'CRAFT RECIPE','UI_ACTION:craft')
+        self._draw_floating_footer(x,y,w,h,'Select a category and recipe • Drag title • Resize corner • Esc closes')
+        pg.display.flip();self.clock.tick(120)
+
+    def _present_discovery_pot(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        data=data or {};pg=self.pg;screen=self.screen
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','DISCOVERY POT',subtitle)
+        self._crafting_tabs(cx,cy,cw,'discovery');cy+=40
+        panel_h=y+h-48-cy;left=pg.Rect(cx,cy,int(cw*.54),panel_h);right=pg.Rect(left.right+12,cy,cw-left.width-12,panel_h)
+        for rect in (left,right):
+            pg.draw.rect(screen,self._theme['panel'],rect,border_radius=6)
+            pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=6)
+        title_s=self.small_font.render('YOUR MATERIALS  /  CLICK TO ADD',True,self._theme['accent']);screen.blit(title_s,(left.x+12,left.y+12))
+        entries=data.get('items',{});selected_items=data.get('selected_items',())
+        for i,row in enumerate(rows):
+            rect=pg.Rect(left.x+10,left.y+40+i*49,left.width-20,43)
+            if rect.bottom>left.bottom-10:break
+            key=getattr(row,'key','');meta=entries.get(key,{})
+            pg.draw.rect(screen,self._theme['panel2'] if i!=selected else (46,49,40),rect,border_radius=5)
+            pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=5)
+            self._draw_item_icon(key,pg.Rect(rect.x+5,rect.y+3,36,36))
+            s=self.small_font.render(self._fit_ui_text(f"{meta.get('name',key)}  x{meta.get('count',0)}",self.small_font,rect.width-100),True,self._theme['text'])
+            screen.blit(s,(rect.x+44,rect.y+5))
+            pool=self.small_font.render(f"{meta.get('pool_count',0)} possible recipes",True,self._theme['muted'])
+            screen.blit(pool,(rect.x+44,rect.y+23))
+            placed=selected_items.count(key)
+            if placed:
+                tag=self.small_font.render(f'IN POT x{placed}',True,self._theme['accent']);screen.blit(tag,(rect.right-tag.get_width()-8,rect.y+12))
+            self._ui_target(rect,f'UI_SELECT:{i}')
+        head=self.font.render('COMBINE 1–5 ITEMS',True,self._theme['accent']);screen.blit(head,(right.x+14,right.y+13))
+        pot=pg.Rect(right.centerx-60,right.y+51,120,78)
+        self._discovery_pot_center=(pot.centerx,pot.centery)
+        pg.draw.arc(screen,(103,93,67),pot.inflate(38,6),2.8,3.5,4)
+        pg.draw.ellipse(screen,(48,54,47),pot)
+        pg.draw.ellipse(screen,self._theme['accent'],pot,3)
+        pg.draw.ellipse(screen,(15,19,20),pot.inflate(-22,-28))
+        pg.draw.arc(screen,(112,151,119),pot.inflate(-26,-30),.1,2.6,2)
+        for dx,dy,r in ((-27,5,4),(11,-11,3),(33,15,5)):
+            pg.draw.circle(screen,(101,158,122),(pot.centerx+dx,pot.centery+dy),r,1)
+        for i,item in enumerate(selected_items[:5]):
+            slot_w=(right.width-32)//3
+            slot=pg.Rect(right.x+12+(i%3)*(slot_w+3),right.y+140+(i//3)*39,slot_w,34)
+            pg.draw.rect(screen,(40,47,42),slot,border_radius=5)
+            pg.draw.rect(screen,self._theme['edge'],slot,1,border_radius=5)
+            self._draw_item_icon(item,pg.Rect(slot.x+3,slot.y+3,29,28))
+            name=entries.get(item,{}).get('name',item)
+            text=self.small_font.render(self._fit_ui_text(name,self.small_font,slot.width-40),True,self._theme['text']);screen.blit(text,(slot.x+35,slot.y+9))
+        hint=f"{data.get('candidates',0)} undiscovered outcomes for this mix"
+        info=self.small_font.render(self._fit_ui_text(hint,self.small_font,right.width-26),True,self._theme['muted'])
+        screen.blit(info,(right.x+13,right.bottom-94))
+        self._button((right.x+13,right.bottom-74,(right.width-34)//2,30),'REMOVE LAST','UI_ACTION:remove')
+        self._button((right.x+21+(right.width-34)//2,right.bottom-74,(right.width-34)//2,30),'EMPTY POT','UI_ACTION:clear')
+        if len(selected_items)>=1:
+            self._button((right.x+13,right.bottom-39,right.width-26,30),'MIX AND DISCOVER','UI_ACTION:mix')
+        self._draw_floating_footer(x,y,w,h,'Click materials to fill pot • Results are recorded recipes • Esc closes')
+        pg.display.flip();self.clock.tick(120)
+
+    def _present_crafting_index(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        data=data or {};pg=self.pg;screen=self.screen
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','ITEM DISCOVERIES',subtitle)
+        self._crafting_tabs(cx,cy,cw,'index');cy+=40
+        panel=pg.Rect(cx,cy,cw,y+h-48-cy)
+        pg.draw.rect(screen,self._theme['panel'],panel,border_radius=6)
+        pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=6)
+        name=str(data.get('item_name','Material'))
+        heading=self.title_font.render(self._fit_ui_text(name,self.title_font,panel.width-28),True,self._theme['accent'])
+        screen.blit(heading,(panel.x+14,panel.y+13))
+        summary=self.small_font.render(f"{data.get('known',0)} discovered / {total or len(rows)} catalog recipes",True,self._theme['muted'])
+        screen.blit(summary,(panel.x+14,panel.y+45))
+        for i,row in enumerate(rows):
+            rr=pg.Rect(panel.x+14,panel.y+75+i*40,panel.width-28,34)
+            if rr.bottom>panel.bottom-14:break
+            pg.draw.rect(screen,(46,49,40) if i==selected else self._theme['panel2'],rr,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if i==selected else self._theme['edge'],rr,1,border_radius=5)
+            label=self.small_font.render(self._fit_ui_text(getattr(row,'label',str(row)),self.small_font,rr.width-18),True,self._theme['text'])
+            screen.blit(label,(rr.x+9,rr.y+8));self._ui_target(rr,f'UI_SELECT:{i}')
+        self._draw_floating_footer(x,y,w,h,'The catalog lists possible results; combine items in the discovery pot to reveal them')
+        pg.display.flip();self.clock.tick(120)
+
+    def animate_discovery_pot(self,items,recipe_name):
+        """One-shot presentation effect after the simulation accepts a combination."""
+        pg=self.pg;screen=self.screen
+        if screen is None:return
+        base=screen.copy();sw,sh=screen.get_size()
+        cx,cy=self._discovery_pot_center or (sw//2,sh//2)
+        start=pg.time.get_ticks()
+        while True:
+            t=min(1.,(pg.time.get_ticks()-start)/520.)
+            screen.blit(base,(0,0))
+            for i,item in enumerate(items):
+                source=(cx-160+i*78,cy+130)
+                dest=(cx,cy)
+                eased=t*t*(3-2*t)
+                px=int(source[0]+(dest[0]-source[0])*eased)
+                py=int(source[1]+(dest[1]-source[1])*eased-22*math.sin(t*math.pi))
+                self._draw_item_icon(item,pg.Rect(px-22,py-22,44,44))
+            radius=max(6,int(30*t))
+            pg.draw.circle(screen,self._theme['accent'],(cx,cy),radius,2)
+            pg.display.flip()
+            if t>=1:break
+            pg.event.pump();self.clock.tick(60)
+        note=self.title_font.render(self._fit_ui_text('DISCOVERED  '+recipe_name,self.title_font,sw-80),True,self._theme['accent'])
+        screen.blit(note,note.get_rect(center=(cx,cy+105)));pg.display.flip()
+        pg.time.wait(300)
 
     def _present_crafting_home(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen

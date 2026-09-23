@@ -14,6 +14,8 @@ class WaitCommand: actor:int; minutes:int=10
 @dataclass(frozen=True,slots=True)
 class CraftCommand: actor:int; recipe_id:str
 @dataclass(frozen=True,slots=True)
+class DiscoveryPotCommand: actor:int; items:tuple[str,...]
+@dataclass(frozen=True,slots=True)
 class ComponentCraftCommand: actor:int; design_id:str; choices:dict[str,str]
 @dataclass(frozen=True,slots=True)
 class ExperimentRecipeCommand: actor:int; recipe_id:str
