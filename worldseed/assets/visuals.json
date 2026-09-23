@@ -974,7 +974,7 @@
       "atlas": "assets/sprites/resources/natural_container_variants.png",
       "atlas_row": 0,
       "atlas_columns": 5,
-      "atlas_frame": 128,
+      "atlas_frame": 64,
       "variants": 5
     },
     "core:rotten_stump_cache": {
@@ -984,7 +984,7 @@
       "atlas": "assets/sprites/resources/natural_container_variants.png",
       "atlas_row": 1,
       "atlas_columns": 5,
-      "atlas_frame": 128,
+      "atlas_frame": 64,
       "variants": 5
     },
     "core:rock_crevice_cache": {
@@ -994,7 +994,7 @@
       "atlas": "assets/sprites/resources/natural_container_variants.png",
       "atlas_row": 2,
       "atlas_columns": 5,
-      "atlas_frame": 128,
+      "atlas_frame": 64,
       "variants": 5
     }
   },
