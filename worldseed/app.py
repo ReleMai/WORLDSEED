@@ -419,6 +419,53 @@ def _gather_action(ctx:GameContext,term:Terminal)->str:
         if direction:
             nxt=cursor.moved(*direction);rdx,rdy=nxt.x-p.x,nxt.y-p.y
             if abs(rdx)+abs(rdy)<=1:cursor=nxt
+def _fishing_action(ctx:GameContext,term:Terminal,target:WorldPos|None=None)->str:
+    sim=ctx.sim;p=sim.player_pos;inv=ctx.entities.get(ctx.player_id,Inventory)
+    if target is None:
+        candidates=[]
+        for dy in range(-3,4):
+            for dx in range(-3,4):
+                if abs(dx)+abs(dy)>3:continue
+                q=p.moved(dx,dy)
+                if sim.fishing.is_fishable(q):
+                    region=sim.fishing.region_at(q)
+                    candidates.append((abs(dx)+abs(dy),q,region))
+        candidates.sort(key=lambda row:(row[0],row[1].y,row[1].x))
+        if not candidates:return 'No fishable water is within casting range.'
+        if len(candidates)==1:
+            target=candidates[0][1]
+        else:
+            rows=[]
+            for _,q,region in candidates:
+                terrain=sim.world.tile_at(q).terrain.name
+                rows.append((f'{q.x},{q.y}',f'{terrain} — {region.structure.replace("_"," ")} | {region.salinity} | productivity {region.productivity}'))
+            choice=_select(term,'CHOOSE FISHING WATER',rows,subtitle='Rod range is up to 3 tiles; hand, spear, and net require adjacent shallow water.')
+            if not choice:return UI_BACK
+            x,y=(int(v) for v in choice.split(','))
+            target=WorldPos(x,y,p.z)
+    if target.z!=p.z or not sim.fishing.is_fishable(target):return 'That tile is not fishable water.'
+    distance=abs(target.x-p.x)+abs(target.y-p.y)
+    methods=sim.fishing.available_methods(inv,target,distance)
+    if not methods:
+        region=sim.fishing.region_at(target)
+        return f'No usable fishing method for this {region.depth if region else "water"}. Craft a rod and line, fishing spear, or net, or move adjacent for hand fishing.'
+    method=_select(term,'FISHING METHOD',[(m,f'{m.title()} — {label}') for m,label in methods],
+                   subtitle='Method, skill, bait, water structure, rod control, and line strength all affect the catch.')
+    if not method:return UI_BACK
+    bait_id=''
+    if method in ('rod','net'):
+        bait_rows=[('__none__','No bait / bare presentation')]
+        for iid in sim.fishing.bait_options(inv):
+            item=ctx.registry.items[iid]
+            lure='reusable lure' if 'fishing_lure' in item.tags else f'x{inv.count(iid)}'
+            bait_rows.append((iid,f'{item.name} — {lure}'))
+        bait_choice=_select(term,'BAIT / LURE',bait_rows,subtitle='Different fish prefer different bait. Poor bait can still catch opportunistic species.')
+        if not bait_choice:return UI_BACK
+        bait_id='' if bait_choice=='__none__' else bait_choice
+    dx,dy=target.x-p.x,target.y-p.y
+    sim.execute(FishingCommand(ctx.player_id,dx,dy,method,bait_id))
+    return sim.log[-1].message if sim.log else ''
+
 def _talk_action(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;p=sim.player_pos
     nearby=[]
@@ -608,6 +655,10 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
             if action=='shaft':
                 ctx.sim.execute(ExcavateShaftCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='drink':ctx.sim.execute(DrinkCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='fish':
+                result=_fishing_action(ctx,term)
+                if result==UI_BACK:continue
+                return result
             if action=='rest':
                 result=_rest_menu(ctx,term);
                 if result==UI_BACK:continue
@@ -1066,6 +1117,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     if distance<=1 and sim.resources.is_harvestable(target):
         rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
+    if distance<=3 and sim.fishing.is_fishable(target):
+        region=sim.fishing.region_at(target)
+        rows.append(('fish',f'Fish — {sim.world.tile_at(target).terrain.name} / {region.structure.replace("_"," ")}'))
     if distance<=1 and pile and pile.items:
         count=sum(max(0,int(n)) for n in pile.items.values())
         rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
@@ -1077,6 +1131,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
     if choice=='gather':return _gather_positions(ctx,[target])
+    if choice=='fish':return _fishing_action(ctx,term,target)
     if choice=='pickup':
         sim.execute(PickupCommand(ctx.player_id,target.x-p.x,target.y-p.y))
         return sim.log[-1].message if sim.log else ''
