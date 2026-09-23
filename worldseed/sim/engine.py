@@ -5,6 +5,7 @@ from worldseed.content.registry import ContentRegistry
 from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
 from worldseed.core.events import GameEvent, GatheredEvent, MovedEvent
+from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import *
@@ -218,9 +219,12 @@ class Simulation:
         elif isinstance(command,StartProcessingCommand):minutes=self._start_processing(command)
         elif isinstance(command,RestCommand):minutes=self._rest(command)
         elif isinstance(command,RangedAttackCommand):minutes=self._ranged_attack(command)
+        elif isinstance(command,ReadyWeaponCommand):minutes=self._ready_weapon(command)
+        elif isinstance(command,ClearReadyWeaponCommand):minutes=self._clear_ready_weapon(command)
+        elif isinstance(command,AimCommand):minutes=self._aim(command)
         elif isinstance(command,PlantCommand):self._plant(command)
         elif isinstance(command,HarvestCommand):self._harvest(command)
-        elif isinstance(command,AttackCommand):self._attack(command)
+        elif isinstance(command,AttackCommand):self._attack(command);minutes=1
         elif isinstance(command,ExperimentMagicCommand):self._message(self.magic.experiment(command.source,command.form,self.entities.get(command.actor,Inventory),self.entities.get(command.actor,Vitals),self.clock.minute))
         elif isinstance(command,CastMagicCommand):
             pos=self.entities.get(command.actor,Position).value;tags=set(self.world.tile_at(pos).terrain.tags)
@@ -672,6 +676,7 @@ class Simulation:
             practice(self)
         elif water.mode=='wading':v.stamina=max(0,v.stamina-2)
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
+        self.combat.clear_aim()
         self.hunting.note_player_noise(new,self.hunting.movement_noise(new),self.turn,self.clock.minute,"movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
@@ -889,17 +894,49 @@ class Simulation:
 
     def _ranged_attack(self,cmd:RangedAttackCommand)->int:
         c=self.state.creatures.get(cmd.target_uid)
-        if not c or c.hp<=0:self._message("That target is no longer there.");return MINUTES_PER_ACTION
+        if not c or c.hp<=0:self.combat.clear_aim();self._message("That target is no longer there.");return 1
+        p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y);inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals)
+        weapon=self.combat.readied_weapon(inv)
+        if not weapon or weapon.range<=1:self.combat.clear_aim();self._message("Ready a ranged or throwable weapon first.");return 1
+        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self._message("You do not have a clear shot.");return 1
+        aim_quality=self.state.player_aim_quality if self.state.player_aim_target==c.uid else 0
+        aim_zone=self.state.player_aim_zone if self.state.player_aim_target==c.uid else "center"
+        cost=max(1,weapon.stamina_cost);stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost)
+        before_wounds=len(c.wounds);target_pos=WorldPos(c.x,c.y,c.z)
+        msg=self.combat.ranged_attack_creature(c,inv,self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'),weapon.id,aim_zone,aim_quality,stamina_before)
+        hit=len(c.wounds)>before_wounds if c.uid in self.state.creatures else True
+        projectile_id=None
+        if weapon.throwable:
+            if inv.remove(weapon.id,1):
+                projectile_id=weapon.id
+                if inv.count(weapon.id)<=0:self.state.player_readied_weapon=""
+        elif weapon.ammo_item and weapon.recovery_percent>0:
+            roll=hash_u64(self.seed,"projectile-recovery",self.turn,weapon.id,c.uid,target_pos.x,target_pos.y)%100
+            if roll<weapon.recovery_percent:projectile_id=weapon.ammo_item
+        if projectile_id:
+            key=pos_key(target_pos.x,target_pos.y,target_pos.z);pile=self.state.ground_piles.get(key)
+            if pile is None:pile=GroundPile(target_pos.x,target_pos.y,target_pos.z,{});self.state.ground_piles[key]=pile
+            pile.items[projectile_id]=pile.items.get(projectile_id,0)+1
+        self.combat.clear_aim()
+        if c.uid in self.state.creatures:self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
+        else:self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
+        self._message(msg);return 1
+
+    def _ready_weapon(self,cmd:ReadyWeaponCommand)->int:
+        self._message(self.combat.ready_weapon(cmd.item_id,self.entities.get(cmd.actor,Inventory)));return 1
+
+    def _clear_ready_weapon(self,cmd:ClearReadyWeaponCommand)->int:
+        self._message(self.combat.clear_ready_weapon());return 1
+
+    def _aim(self,cmd:AimCommand)->int:
+        c=self.state.creatures.get(cmd.target_uid)
+        if not c or c.hp<=0:self.combat.clear_aim();self._message("That target is no longer there.");return 1
         p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y)
-        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self._message("You do not have a clear shot.");return MINUTES_PER_ACTION
-        before_wounds=len(c.wounds)
-        msg=self.combat.ranged_attack_creature(c,self.entities.get(cmd.actor,Inventory),self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'))
-        hit=len(c.wounds)>before_wounds
-        if c.uid in self.state.creatures:
-            self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
-        else:
-            self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
-        self._message(msg);return 5
+        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self.combat.clear_aim();self._message("You cannot keep a clear aim on that target.");return 1
+        v=self.entities.get(cmd.actor,Vitals)
+        if v.stamina<=0:self._message("You are too exhausted to hold a steady aim.");return 1
+        v.stamina=max(0,v.stamina-1)
+        self._message(self.combat.aim_at(c,cmd.zone,self.player_attribute('perception'),self.player_skill('hunting'),dist));return 1
     def _plant(self,cmd:PlantCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value;crop=self.registry.crops.get(cmd.crop_id);inv=self.entities.get(cmd.actor,Inventory)
         if not crop:self._message("Unknown crop.");return
@@ -932,13 +969,16 @@ class Simulation:
         if not self._water_available(self.player_pos):self._message('You need accessible water nearby to irrigate by hand.');return
         plot.moisture=min(100,plot.moisture+35);self._message("You irrigate the crop.")
     def _attack(self,cmd:AttackCommand)->None:
-        p=self.player_pos.moved(cmd.dx,cmd.dy);target=min((c for c in self.state.creatures.values() if c.z==p.z and c.x==p.x and c.y==p.y),key=lambda c:c.hp,default=None)
+        origin=self.player_pos;p=origin.moved(cmd.dx,cmd.dy);distance=abs(cmd.dx)+abs(cmd.dy)
+        target=min((c for c in self.state.creatures.values() if c.z==p.z and c.x==p.x and c.y==p.y),key=lambda c:c.hp,default=None)
         if not target:self._message("There is nothing there to attack.");return
-        origin=self.player_pos
-        before_wounds=len(target.wounds)
-        msg=self.combat.attack_creature(target,self.entities.get(cmd.actor,Inventory),self.turn)
-        if target.uid in self.state.creatures:
-            self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
+        inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);weapon=self.combat.readied_weapon(inv)
+        reach=weapon.reach if weapon else 1
+        if distance<1 or distance>reach:self._message("That target is beyond your current melee reach.");return
+        stamina_before=v.stamina;cost=max(2,weapon.stamina_cost if weapon else 4);v.stamina=max(0,v.stamina-cost)
+        before_wounds=len(target.wounds);self.combat.clear_aim()
+        msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before)
+        if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
         self._message(msg)
     def _magic_project(self,effects:dict)->None:
         pos=self.player_pos;targets=[c for c in self.state.creatures.values() if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=4]
