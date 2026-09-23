@@ -1203,9 +1203,12 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         elif item.tool_power:
             detail.append(f'Tool effectiveness {item.tool_power}')
         if item.weapon_damage:
-            weapon=f'Weapon: {item.damage_type} {item.weapon_damage}'
+            weapon=f'Weapon: {item.weapon_class or item.damage_type} | {item.damage_type} {item.weapon_damage} | reach {item.reach}'
             if item.range>1:weapon+=f' | range {item.range}'
+            weapon+=f' | accuracy {item.accuracy:+d} | stamina {item.stamina_cost}'
             if item.ammo_item:weapon+=f' | ammo {reg.items[item.ammo_item].name if item.ammo_item in reg.items else item.ammo_item}'
+            if item.throwable:weapon+=' | throwable / recoverable'
+            if item.two_handed:weapon+=' | two-handed'
             detail.append(weapon)
         if item.equip_slot:
             equip=f'Equipment: {item.equip_slot.replace("_"," ")}'
@@ -1779,7 +1782,13 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
     if lower=='x':
         d=_direction(term)
         if not d:return UI_BACK
-        sim.execute(AttackCommand(pid,*d));return sim.log[-1].message if sim.log else ''
+        inv=ctx.entities.get(pid,Inventory);weapon=sim.combat.readied_weapon(inv);reach=weapon.reach if weapon else 1
+        dx,dy=d;distance=1
+        for step in range(1,reach+1):
+            q=sim.player_pos.moved(dx*step,dy*step)
+            if any(c.hp>0 and (c.x,c.y,c.z)==(q.x,q.y,q.z) for c in sim.state.creatures.values()):
+                distance=step;break
+        sim.execute(AttackCommand(pid,dx*distance,dy*distance));return sim.log[-1].message if sim.log else ''
     if lower=='k':
         while True:
             mode=_select(term,'ARCANE ACTION',[
