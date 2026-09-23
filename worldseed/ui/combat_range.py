@@ -4,6 +4,7 @@ from math import hypot
 
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Vitals
+from worldseed.systems.state import pos_key
 
 
 def difficulty_label(chance: int) -> str:
@@ -38,7 +39,6 @@ def ranged_overlay(sim, weapon, cursor:WorldPos, zone:str="center") -> dict:
     perception=sim.player_attribute("perception")
     hunting=sim.player_skill("hunting")
     vitals=sim.entities.get(sim.player_id,Vitals)
-    aim_quality=sim.state.player_aim_quality if sim.state.player_aim_target else 0
     cells=[]
     creatures={(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp>0 and c.z==origin.z}
     for dy in range(-weapon.range,weapon.range+1):
@@ -46,8 +46,10 @@ def ranged_overlay(sim, weapon, cursor:WorldPos, zone:str="center") -> dict:
             distance=abs(dx)+abs(dy)
             if distance<1 or distance>weapon.range or not _inside_directional_sector(dx,dy,fx,fy):continue
             pos=origin.moved(dx,dy)
+            if pos_key(pos.x,pos.y,pos.z) not in sim.discovered_tiles_set:continue
             target=creatures.get((pos.x,pos.y,pos.z))
             behavior=target.behavior if target else "calm"
+            aim_quality=sim.state.player_aim_quality if target and sim.state.player_aim_target==target.uid and sim.state.player_aim_zone==zone else 0
             blocked=not sim._visible_from(origin,pos)
             chance=0 if blocked else sim.combat.ranged_hit_chance(
                 weapon,distance,perception,hunting,zone,aim_quality,vitals.stamina,behavior
@@ -79,12 +81,14 @@ def melee_overlay(sim, weapon, cursor:WorldPos) -> dict:
             distance=abs(dx)+abs(dy)
             if distance<1 or distance>reach:continue
             pos=origin.moved(dx,dy)
+            if pos_key(pos.x,pos.y,pos.z) not in sim.discovered_tiles_set:continue
             target=creatures.get((pos.x,pos.y,pos.z))
             behavior=target.behavior if target else "calm"
-            chance=sim.combat.melee_hit_chance(weapon,distance,agility,melee,vitals.stamina,behavior)
+            blocked=distance>1 and not sim._visible_from(origin,pos)
+            chance=0 if blocked else sim.combat.melee_hit_chance(weapon,distance,agility,melee,vitals.stamina,behavior)
             cells.append({
                 "x":pos.x,"y":pos.y,"z":pos.z,"chance":chance,
-                "difficulty":difficulty_label(chance),"blocked":False,
+                "difficulty":"blocked" if blocked else difficulty_label(chance),"blocked":blocked,
             })
     selected=next((c for c in cells if (c["x"],c["y"],c["z"])==(cursor.x,cursor.y,cursor.z)),None)
     return {
