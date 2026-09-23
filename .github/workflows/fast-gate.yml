@@ -80,6 +80,10 @@ jobs:
         shell: pwsh
         run: python -m unittest tests.test_dev37_floating_interaction_ui
 
+      - name: Dev38 natural container art regressions
+        shell: pwsh
+        run: python -m unittest tests.test_dev38_natural_container_art
+
       - name: Dev38 natural container visual regressions
         shell: pwsh
         run: python -m unittest tests.test_dev38_natural_container_visuals
