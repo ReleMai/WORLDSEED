@@ -9,11 +9,16 @@ def save(name,data): (DATA/name).write_text(json.dumps(data,indent=2,ensure_asci
 def upsert(rows,row):
     for i,x in enumerate(rows):
         if x['id']==row['id']:
-            y=dict(x); y.update(row); rows[i]=y; return
+            y=dict(x); y.update(row)
+            # Preserve modern canonical authoring fields when this legacy
+            # enrichment tool is rerun.
+            for field in ('name','category','asset'):
+                if field in x: y[field]=x[field]
+            rows[i]=y; return
     rows.append(row)
 
 def item(i,n,mat='core:organic',mass=100,vol=100,tags=(),desc='',flavor='',cat='misc',roles=(),**kw):
-    r={'id':i,'name':n,'material':mat,'mass_g':mass,'volume_ml':vol,'tags':list(tags),'description':desc or f'{n} is a practical material of the living world.','flavor':flavor or f'"Every scrap of {n.lower()} has a use to someone patient enough to find it."','category':cat,'utility_roles':list(roles)}
+    r={'id':i,'name':n,'asset':i.split(':',1)[-1],'material':mat,'mass_g':mass,'volume_ml':vol,'tags':list(tags),'description':desc or f'{n} is a practical material of the living world.','flavor':flavor or f'"Every scrap of {n.lower()} has a use to someone patient enough to find it."','category':cat,'utility_roles':list(roles)}
     r.update(kw); return r
 
 items=load('items.json')
