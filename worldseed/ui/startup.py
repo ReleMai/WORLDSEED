@@ -113,6 +113,7 @@ SKILL_DEFS = [
     ('hunting','Hunting','Tracking and harvesting animals.'),
     ('fishing','Fishing','Reading water, presenting bait, and landing fish with hand, spear, rod, or net.'),
     ('melee','Melee','Close combat with weapons or fists.'),
+    ('shield','Shield','Active blocking, coverage control and stamina-efficient guarding.'),
     ('crafting','Crafting','General fabrication and material work.'),
     ('medicine','Medicine','Treating wounds and illness.'),
     ('scholarship','Scholarship','Reading, research and historical study.'),
