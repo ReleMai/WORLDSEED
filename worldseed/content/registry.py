@@ -49,7 +49,8 @@ class ItemDef:
     calories: int = 0; protein: int = 0; carbs: int = 0; fat: int = 0; fiber: int = 0
     food_groups: tuple[str, ...] = (); tool_qualities: dict[str, int] = field(default_factory=dict)
     spoilage_hours: int = 0; utility_roles: tuple[str, ...] = (); range: int = 1
-    ammo_item: str | None = None
+    ammo_item: str | None = None; weapon_class: str = ""; reach: int = 1; accuracy: int = 0
+    stamina_cost: int = 5; throwable: bool = False; recovery_percent: int = 0; two_handed: bool = False
 
     def quality(self, key: str) -> int:
         if key in self.tool_qualities:
@@ -268,6 +269,8 @@ class ContentRegistry:
             if item.material and item.material not in self.materials: raise ValueError(f"Unknown material {item.material} for {item.id}")
             if item.mass_g<0 or item.volume_ml<0: raise ValueError(f"Negative physical property on {item.id}")
             if item.ammo_item and item.ammo_item not in self.items: raise ValueError(f"Unknown ammo item {item.ammo_item} for {item.id}")
+            if item.weapon_damage>0 and (item.range<1 or item.reach<1 or item.stamina_cost<0 or not -40<=item.accuracy<=40 or not 0<=item.recovery_percent<=100):
+                raise ValueError(f"Invalid weapon handling metadata on {item.id}")
         for terrain in self.terrains.values():
             if len(terrain.glyph)!=1 or len(terrain.ascii_glyph)!=1: raise ValueError(f"Terrain glyph must be one character: {terrain.id}")
             if terrain.gather_item and terrain.gather_item not in self.items: raise ValueError(f"Unknown gather item {terrain.gather_item} on {terrain.id}")
