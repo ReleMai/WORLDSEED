@@ -617,7 +617,10 @@ def _hunt_action(ctx:GameContext,term:Terminal)->str:
             continue
         if low=='a':
             if not c:continue
-            sim.execute(AimCommand(ctx.player_id,c.uid,zone));return sim.log[-1].message if sim.log else ''
+            uid=c.uid;sim.execute(AimCommand(ctx.player_id,uid,zone))
+            moved=sim.state.creatures.get(uid)
+            if moved:cursor=WorldPos(moved.x,moved.y,moved.z)
+            continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
             sim.execute(RangedAttackCommand(ctx.player_id,c.uid));return sim.log[-1].message if sim.log else ''
