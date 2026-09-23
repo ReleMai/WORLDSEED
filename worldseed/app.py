@@ -523,10 +523,12 @@ def _process_carcass_menu(ctx:GameContext,term:Terminal)->str:
         if c.skinned:state.append('skinned')
         if c.butchered:state.append('butchered')
         if c.deboned:state.append('deboned')
-        rows.append((c.uid,f'{sp.name if sp else c.species_id} — quality {c.quality}%'+(f' — {", ".join(state)}' if state else '')))
+        embedded=sum(c.embedded_items.values())
+        rows.append((c.uid,f'{sp.name if sp else c.species_id} — quality {c.quality}%'+(f' — {", ".join(state)}' if state else '')+(f' — {embedded} embedded projectile(s)' if embedded else '')))
     uid=_select(term,'CARCASSES WITHIN REACH',rows)
     if not uid:return UI_BACK
     c=sim.state.carcasses[uid];sp=reg.species.get(c.species_id);actions=[]
+    if c.embedded_items:actions.append(('recover','Recover embedded arrows / thrown weapons'))
     if not c.skinned:actions.append(('skin','Skin — remove hide before butchering for the best hide'))
     if not c.butchered:actions.append(('butcher','Butcher — separate meat, organs and fat'))
     if c.butchered and not c.deboned:actions.append(('debone','Debone — recover bones and sinew; finishes carcass'))
