@@ -52,7 +52,9 @@ jobs:
       - name: Checkout exact commit
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # Two generations are enough to diff the synthetic PR merge against its base.
+          # Push events provide changed file lists directly in the event payload.
+          fetch-depth: 2
 
       - name: Detect affected test scopes
         id: scope
@@ -70,19 +72,34 @@ jobs:
             $files = @()
           }
           elseif ("${{ github.event_name }}" -eq "pull_request") {
-            $base = "${{ github.event.pull_request.base.sha }}"
-            $head = "${{ github.event.pull_request.head.sha }}"
-            $files = @(git diff --name-only "$base...$head")
-          }
-          else {
-            $base = "${{ github.event.before }}"
-            $head = "${{ github.sha }}"
-            if ([string]::IsNullOrWhiteSpace($base) -or $base -match "^0+$") {
+            # actions/checkout checks out GitHub's synthetic merge commit for PRs.
+            # Diffing it against parent 1 gives the exact tree changes introduced
+            # by the PR without downloading the repository's full history.
+            git rev-parse --verify "HEAD^1" *> $null
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "PR base parent unavailable -> full fast gate"
               $runAll = $true
               $files = @()
             }
             else {
-              $files = @(git diff --name-only "$base..$head")
+              $files = @(git diff --name-only "HEAD^1" HEAD)
+            }
+          }
+          else {
+            # Push webhook payloads already contain added/modified/removed paths
+            # for every commit in the push, so avoid a history fetch just to diff.
+            $event = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+            $files = @(
+              foreach ($commit in @($event.commits)) {
+                @($commit.added)
+                @($commit.modified)
+                @($commit.removed)
+              }
+            ) | Where-Object { $_ } | Sort-Object -Unique
+
+            if ($files.Count -eq 0) {
+              Write-Host "Push paths unavailable -> full fast gate"
+              $runAll = $true
             }
           }
 
