@@ -198,20 +198,18 @@ jobs:
           text=engine.read_text(encoding="utf-8")
           start=text.index("    def _pickup(self,cmd:PickupCommand)->None:")
           end=text.index("    def _drop(self,cmd:DropCommand)->None:",start)
-          pickup = r'''    def _pickup(self,cmd:PickupCommand)->None:
-              origin=self.entities.get(cmd.actor,Position).value
-              if abs(cmd.dx)+abs(cmd.dy)>1:
-                  self._message("You can only pick up items from your tile or an adjacent tile.");return
-              pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
-              if not pile or not pile.items:
-                  self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
-              inv=self.entities.get(cmd.actor,Inventory)
-              for iid,n in pile.items.items():inv.add(iid,n)
-              self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")
-          '''
-          pickup=textwrap.dedent(pickup)
-          # Restore class indentation after dedent.
-          pickup="\n".join(("    "+line if line else line) for line in pickup.splitlines())+"\n"
+          pickup = (
+              "    def _pickup(self,cmd:PickupCommand)->None:\n"
+              "        origin=self.entities.get(cmd.actor,Position).value\n"
+              "        if abs(cmd.dx)+abs(cmd.dy)>1:\n"
+              "            self._message(\"You can only pick up items from your tile or an adjacent tile.\");return\n"
+              "        pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)\n"
+              "        if not pile or not pile.items:\n"
+              "            self._message(\"There is nothing there to pick up.\" if (cmd.dx or cmd.dy) else \"There is nothing here to pick up.\");return\n"
+              "        inv=self.entities.get(cmd.actor,Inventory)\n"
+              "        for iid,n in pile.items.items():inv.add(iid,n)\n"
+              "        self.state.ground_piles.pop(key,None);self._message(\"You pick up everything on the ground.\")\n"
+          )
           text=text[:start]+pickup+text[end:]
           engine.write_text(text,encoding="utf-8")
 
@@ -219,16 +217,16 @@ jobs:
           pygame=Path("worldseed/ui/pygame_terminal.py")
           text=pygame.read_text(encoding="utf-8")
           old="                if event.button==3 and self._input_mode!='world':return 'ESC'"
-          new="""                if event.button==3:
-                      if self._input_mode!='world':return 'ESC'
-                      if self._hover_context:
-                          ctx=self._hover_context;rect=ctx['used']
-                          if rect.collidepoint(self._last_mouse):
-                              x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
-                              y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
-                              return f'UI_WORLD_MENU:{x}:{y}'"""
-          new=textwrap.dedent(new)
-          new="\n".join(("                "+line if line else line) for line in new.splitlines())
+          new=(
+              "                if event.button==3:\n"
+              "                    if self._input_mode!='world':return 'ESC'\n"
+              "                    if self._hover_context:\n"
+              "                        ctx=self._hover_context;rect=ctx['used']\n"
+              "                        if rect.collidepoint(self._last_mouse):\n"
+              "                            x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']\n"
+              "                            y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']\n"
+              "                            return f'UI_WORLD_MENU:{x}:{y}'"
+          )
           if old not in text:
               raise SystemExit("pygame right-click anchor missing")
           pygame.write_text(text.replace(old,new,1),encoding="utf-8")
