@@ -20,6 +20,8 @@ class CombatSystem:
         item=self.registry.items.get(item_id)
         if not item or item.weapon_damage<=0:return "That item is not a usable weapon."
         if inv.count(item_id)<=0:return "You are not carrying that weapon."
+        if item.two_handed and self.state.player_equipment.get("offhand"):
+            off=self.registry.items.get(self.state.player_equipment["offhand"]);return f"You need both hands free for the {item.name.lower()}; stow the {off.name.lower() if off else 'off-hand item'} first."
         self.state.player_readied_weapon=item_id
         self.clear_aim()
         hands="two hands" if item.two_handed else "your hands"
@@ -107,7 +109,9 @@ class CombatSystem:
         range_penalty=max(0,distance-2)*4;fatigue=max(0,35-stamina)//2
         zone_penalty={"center":0,"vitals":11,"head":24,"legs":10}[zone]
         accuracy=max(5,min(97,35+perception*4+hunting*3+weapon.accuracy+aim_quality//3-range_penalty-motion_penalty-zone_penalty-fatigue-self.arm_injury_penalty()//2))
-        if rng.randbelow(100)>=accuracy:return f"Your {weapon.name.lower()} shot at the {sp.name.lower()} misses."
+        if rng.randbelow(100)>=accuracy:
+            verb="throw" if weapon.throwable else "shot"
+            return f"Your {weapon.name.lower()} {verb} at the {sp.name.lower()} misses."
 
         source_parts=list(sp.body.items()) or [("torso",100)]
         if zone=="head":parts=[(p,w) for p,w in source_parts if p in ("head","neck")] or [("head",1)]
@@ -135,9 +139,11 @@ class CombatSystem:
         creature.alertness=100
         if creature.hp<=0 or creature.blood<=0:
             self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
-            return f"Your {weapon.name.lower()} strikes the {sp.name.lower()}'s {part}; it drops, leaving a carcass."
+            verb="thrown " if weapon.throwable else ""
+            return f"Your {verb}{weapon.name.lower()} strikes the {sp.name.lower()}'s {part}; it drops, leaving a carcass."
         condition=" and fractures bone" if fracture else f" into {tissue}"
-        return f"Your {weapon.name.lower()} hits the {sp.name.lower()}'s {part}{condition} for {damage} {dtype} damage."
+        verb="thrown " if weapon.throwable else ""
+        return f"Your {verb}{weapon.name.lower()} hits the {sp.name.lower()}'s {part}{condition} for {damage} {dtype} damage."
     @staticmethod
     def _player_part_group(part:str)->str:
         if part in ("head","neck"):return "head"
