@@ -22,7 +22,7 @@ class Dev38NaturalContainerArtTests(unittest.TestCase):
             self.assertEqual(style.get("atlas_row"),row)
             self.assertEqual(style.get("atlas_columns"),5)
             self.assertEqual(style.get("variants"),5)
-            self.assertEqual(style.get("atlas_frame"),64)
+            self.assertEqual(style.get("atlas_frame"),128)
             self.assertTrue(style.get("smooth"))
             path=visuals.resource_atlas_path(feature_id)
             self.assertIsNotNone(path)
@@ -36,7 +36,7 @@ class Dev38NaturalContainerArtTests(unittest.TestCase):
         try:
             path=term._visuals.resource_atlas_path("core:hollow_log_cache")
             atlas=term.pg.image.load(str(path))
-            self.assertEqual(atlas.get_size(),(320,192))
+            self.assertEqual(atlas.get_size(),(640,384))
             expected={
                 "core:hollow_log_cache":0,
                 "core:rotten_stump_cache":1,
@@ -48,7 +48,7 @@ class Dev38NaturalContainerArtTests(unittest.TestCase):
                 self.assertEqual(first,second)
                 self.assertEqual(first[0],"atlas")
                 self.assertEqual(first[3],row)
-                self.assertEqual(first[4],64)
+                self.assertEqual(first[4],128)
                 variants={term._resource_visual(feature_id,x,7,0)[2] for x in range(128)}
                 self.assertGreaterEqual(len(variants),4)
                 self.assertTrue(variants.issubset(set(range(5))))
