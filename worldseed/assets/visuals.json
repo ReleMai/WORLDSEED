@@ -966,6 +966,36 @@
       "width": 0.85,
       "height": 0.85,
       "smooth": true
+    },
+    "core:hollow_log_cache": {
+      "width": 1.75,
+      "height": 1.25,
+      "smooth": true,
+      "atlas": "assets/sprites/resources/natural_container_variants.png",
+      "atlas_row": 0,
+      "atlas_columns": 5,
+      "atlas_frame": 128,
+      "variants": 5
+    },
+    "core:rotten_stump_cache": {
+      "width": 1.45,
+      "height": 1.7,
+      "smooth": true,
+      "atlas": "assets/sprites/resources/natural_container_variants.png",
+      "atlas_row": 1,
+      "atlas_columns": 5,
+      "atlas_frame": 128,
+      "variants": 5
+    },
+    "core:rock_crevice_cache": {
+      "width": 1.55,
+      "height": 1.2,
+      "smooth": true,
+      "atlas": "assets/sprites/resources/natural_container_variants.png",
+      "atlas_row": 2,
+      "atlas_columns": 5,
+      "atlas_frame": 128,
+      "variants": 5
     }
   },
   "terrain_materials": {
