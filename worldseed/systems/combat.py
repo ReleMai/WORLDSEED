@@ -35,21 +35,61 @@ class CombatSystem:
             return f"You strike the {sp.name.lower()}'s {part} for {damage}; it dies, leaving a carcass to process."
         return f"You strike the {sp.name.lower()}'s {part} for {damage} {dtype} damage."
     def ranged_attack_creature(self,creature:CreatureState,inv:Inventory,turn:int,distance:int,perception:int=5,hunting:int=0)->str:
-        weapons=[self.registry.items[i] for i,n in inv.items.items() if n>0 and i in self.registry.items and self.registry.items[i].range>1 and self.registry.items[i].weapon_damage>0]
-        weapon=max(weapons,key=lambda x:(x.range,x.weapon_damage),default=None)
-        if weapon is None:return "You have no ranged weapon ready."
-        if distance>weapon.range:return f"The target is beyond the useful range of your {weapon.name.lower()}."
-        if weapon.ammo_item and inv.count(weapon.ammo_item)<=0:return f"You have no {self.registry.items[weapon.ammo_item].name.lower()}."
+        all_weapons=[self.registry.items[i] for i,n in inv.items.items() if n>0 and i in self.registry.items and self.registry.items[i].range>1 and self.registry.items[i].weapon_damage>0]
+        if not all_weapons:return "You have no ranged weapon ready."
+        in_range=[w for w in all_weapons if distance<=w.range]
+        if not in_range:
+            best=max(all_weapons,key=lambda x:(x.range,x.weapon_damage))
+            return f"The target is beyond the useful range of your {best.name.lower()}."
+        loaded=[w for w in in_range if not w.ammo_item or inv.count(w.ammo_item)>0]
+        if not loaded:
+            needed=next((w.ammo_item for w in in_range if w.ammo_item),None)
+            return f"You have no {self.registry.items[needed].name.lower()}." if needed and needed in self.registry.items else "You have no usable ammunition."
+        weapon=max(loaded,key=lambda x:(x.weapon_damage,x.range))
         if weapon.ammo_item:inv.remove(weapon.ammo_item,1)
-        sp=self.registry.species[creature.species_id];rng=PCG32(derive_seed(self.seed,"ranged-attack",turn,creature.uid,distance))
-        accuracy=max(20,min(92,42+perception*4+hunting*3-distance*5));roll=rng.randbelow(100)
-        if roll>=accuracy:return f"Your shot at the {sp.name.lower()} misses."
-        damage=max(1,weapon.weapon_damage*(75+rng.randbelow(51))//100 + hunting//3)
-        creature.hp-=damage;bleeding=max(1,damage//3);creature.blood=max(0,creature.blood-bleeding);creature.wounds.append({"part":"torso","tissue":"muscle","type":weapon.damage_type,"severity":min(100,damage*6),"bleeding":bleeding,"fracture":False,"turn":turn})
+
+        sp=self.registry.species[creature.species_id]
+        rng=PCG32(derive_seed(self.seed,"ranged-attack",turn,creature.uid,distance,weapon.id,creature.hp,creature.blood))
+        motion_penalty=18 if creature.behavior in ("flee","wounded_flee") else 10 if creature.behavior=="pursue" else 6 if creature.behavior=="alert" else 0
+        range_penalty=max(0,distance-2)*4
+        accuracy=max(8,min(95,38+perception*4+hunting*4-range_penalty-motion_penalty))
+        if rng.randbelow(100)>=accuracy:
+            return f"Your {weapon.name.lower()} shot at the {sp.name.lower()} misses."
+
+        parts=list(sp.body.items()) or [("torso",100)]
+        total=sum(max(0,int(weight)) for _,weight in parts) or 1
+        roll=rng.randbelow(total);part=parts[0][0]
+        for name,weight in parts:
+            weight=max(0,int(weight))
+            if roll<weight:
+                part=name;break
+            roll-=weight
+
+        variance=75+rng.randbelow(51)
+        damage=max(1,(weapon.weapon_damage+hunting//3)*variance//100)
+        dtype=weapon.damage_type
+        penetration=damage+(8 if dtype=="pierce" else 5 if dtype=="cut" else 1)
+        tissue="skin"
+        if penetration>7:tissue="muscle"
+        if penetration>13:tissue="bone"
+        if penetration>19 and part in ("head","neck","torso"):tissue="organ"
+        if tissue=="organ":
+            damage=max(damage,damage*5//4)
+
+        bleeding=max(1,damage//3+(4 if dtype=="pierce" else 3 if dtype=="cut" else 0))
+        if tissue=="organ":bleeding+=max(2,damage//3)
+        fracture=tissue=="bone" and (damage>=7 or rng.randbelow(100)<25)
+        severity=min(100,damage*6+max(0,penetration-6)*2)
+        creature.hp-=damage
+        creature.blood=max(0,creature.blood-bleeding)
+        creature.pain=min(100,creature.pain+max(2,severity//4))
+        creature.wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id})
+        creature.alertness=100
         if creature.hp<=0 or creature.blood<=0:
             self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
-            return f"Your {weapon.name.lower()} shot drops the {sp.name.lower()}, leaving a carcass."
-        return f"Your {weapon.name.lower()} hits the {sp.name.lower()} for {damage} {weapon.damage_type} damage."
+            return f"Your {weapon.name.lower()} strikes the {sp.name.lower()}'s {part}; it drops, leaving a carcass."
+        condition=" and fractures bone" if fracture else f" into {tissue}"
+        return f"Your {weapon.name.lower()} hits the {sp.name.lower()}'s {part}{condition} for {damage} {dtype} damage."
 
     @staticmethod
     def _player_part_group(part:str)->str:
