@@ -1,0 +1,455 @@
+name: Integrate Dev36 Mainline
+
+on:
+  push:
+    branches:
+      - integration/dev36-main-cleanup-20260922
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bring validated Dev35 code onto cleaned main
+        shell: bash
+        run: |
+          git fetch origin codex/terrain-coast-performance
+          git checkout origin/codex/terrain-coast-performance --             AGENTS.md             .github/workflows/fast-gate.yml             pyproject.toml             tests/test_coastal_mouths.py             tests/test_persistence.py             tests/test_rc14_region_blocks.py             tests/test_rc5_gameplay.py             tests/test_terrain_performance.py             tests/test_terrain_variants.py             tools/audit_coastal_mouths.py             tools/bench_local_play.py             tools/bootstrap_smoke.py             tools/preview_coastal_morphology.py             tools/preview_weather_visuals.py             worldseed/app.py             worldseed/assets/sprites/terrain/forest_floor.png             worldseed/assets/visuals.json             worldseed/config.py             worldseed/presentation/clouds.py             worldseed/presentation/weather_fx.py             worldseed/ui/pygame_terminal.py             worldseed/world/coast_v8.py             worldseed/world/coastal_mouths.py             worldseed/world/generator.py             worldseed/world/hydrology.py             worldseed/world/landforms.py             worldseed/world/world.py
+
+      - name: Install asset dependency
+        run: python -m pip install "Pillow>=10,<12"
+
+      - name: Apply Dev36 interactions and dedicated natural-container art
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+          from PIL import Image, ImageDraw, ImageFilter
+
+          # ---------- worldseed/app.py ----------
+          app = Path("worldseed/app.py")
+          text = app.read_text(encoding="utf-8")
+
+          gather_start = text.index("def _gather_action(ctx:GameContext,term:Terminal)->str:")
+          gather_end = text.index("\ndef _talk_action(ctx:GameContext,term:Terminal)->str:")
+          gather_block = r'''def _harvestable_positions(sim:Simulation,origin:WorldPos|None=None)->list[WorldPos]:
+              p=origin or sim.player_pos
+              offsets=((0,0),(0,-1),(0,1),(-1,0),(1,0))
+              return [p.moved(dx,dy) for dx,dy in offsets if sim.resources.is_harvestable(p.moved(dx,dy))]
+
+          def _gather_positions(ctx:GameContext,positions:list[WorldPos])->str:
+              sim=ctx.sim;p=sim.player_pos;messages=[];seen=set()
+              for target in positions:
+                  key=(target.x,target.y,target.z)
+                  if key in seen:continue
+                  seen.add(key)
+                  dx,dy=target.x-p.x,target.y-p.y
+                  if abs(dx)+abs(dy)>1:continue
+                  before=len(sim.log)
+                  sim.execute(GatherCommand(ctx.player_id,dx,dy))
+                  if len(sim.log)>before:messages.append(sim.log[-1].message)
+              if not messages:return 'Nothing harvestable is within reach.'
+              if len(messages)==1:return messages[0]
+              return f'Gathered {len(messages)} nearby targets. ' + ' | '.join(messages)
+
+          def _gather_action(ctx:GameContext,term:Terminal)->str:
+              """Gather the only nearby target immediately, or multi-select when several are in reach."""
+              sim=ctx.sim;p=sim.player_pos
+              candidates=_harvestable_positions(sim,p)
+              if not candidates:return 'Nothing harvestable is within reach.'
+              if len(candidates)==1:return _gather_positions(ctx,candidates)
+              renderer=Renderer(ctx.registry);cursor=candidates[0];selected=set()
+              while True:
+                  target_desc=sim.resources.description(cursor) if sim.resources.is_harvestable(cursor) else 'Nothing harvestable'
+                  picked=(cursor.x,cursor.y,cursor.z) in selected
+                  msg=(f'HARVEST — {target_desc} — {"SELECTED" if picked else "not selected"}. '
+                       f'Click or Space toggles; Enter gathers {len(selected)} selected; C clears; Esc cancels.')
+                  _present_game_frame(term,ctx,renderer,msg,cursor);k=term.read_key()
+                  if k.startswith('UI_WORLD:'):
+                      _,x,y=k.split(':');nxt=WorldPos(int(x),int(y),p.z)
+                      if abs(nxt.x-p.x)+abs(nxt.y-p.y)<=1:
+                          cursor=nxt
+                          if sim.resources.is_harvestable(cursor):
+                              key=(cursor.x,cursor.y,cursor.z)
+                              if key in selected:selected.remove(key)
+                              else:selected.add(key)
+                      continue
+                  if k in ('ESC','q','Q'):return UI_BACK
+                  if k in ('c','C'):
+                      selected.clear();continue
+                  if k in (' ','SPACE','\t'):
+                      if sim.resources.is_harvestable(cursor):
+                          key=(cursor.x,cursor.y,cursor.z)
+                          if key in selected:selected.remove(key)
+                          else:selected.add(key)
+                      continue
+                  if k in ('\r','\n'):
+                      if not selected:return 'No harvest targets selected.'
+                      ordered=[WorldPos(x,y,z) for x,y,z in sorted(selected,key=lambda q:(abs(q[0]-p.x)+abs(q[1]-p.y),q[1],q[0]))]
+                      return _gather_positions(ctx,ordered)
+                  direction=DIRECTION_KEYS.get(k.lower() if len(k)==1 else k)
+                  if direction:
+                      nxt=cursor.moved(*direction);rdx,rdy=nxt.x-p.x,nxt.y-p.y
+                      if abs(rdx)+abs(rdy)<=1:cursor=nxt
+          '''
+          # The raw block above is indented to live inside this script; normalize it.
+          import textwrap
+          gather_block = textwrap.dedent(gather_block)
+          text = text[:gather_start] + gather_block + text[gather_end+1:]
+
+          # Explicit container targeting for right-click "Open".
+          text = text.replace(
+              "def _storage_menu_terminal(ctx:GameContext,term:Terminal)->str:",
+              "def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=None)->str:"
+          )
+          text = text.replace(
+              "    c=sim.building.nearby_container(sim.player_pos)\n    if not c:\n",
+              "    c=next((row for row in sim.state.containers.values() if row.uid==container_uid),None) if container_uid else sim.building.nearby_container(sim.player_pos)\n"
+              "    if not c and container_uid:\n"
+              "        _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK\n"
+              "    if not c:\n",
+              1,
+          )
+          text = text.replace(
+              "def _storage_menu(ctx:GameContext,term:Terminal)->str:",
+              "def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->str:"
+          )
+          text = text.replace(
+              "        return _storage_menu_terminal(ctx,term)",
+              "        return _storage_menu_terminal(ctx,term,container_uid)",
+              1,
+          )
+          text = text.replace(
+              "    container=sim.building.nearby_container(sim.player_pos)\n    if not container:\n",
+              "    container=next((c for c in sim.state.containers.values() if c.uid==container_uid),None) if container_uid else sim.building.nearby_container(sim.player_pos)\n"
+              "    if not container and container_uid:\n"
+              "        _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK\n"
+              "    if not container:\n",
+              1,
+          )
+
+          marker = "\ndef _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_artifacts:bool=True)->dict:"
+          context_menu = r'''
+          def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
+              """Context actions for a right-clicked world tile; only mutations enforce reach."""
+              sim=ctx.sim;p=sim.player_pos
+              if target.z!=p.z:return UI_BACK
+              distance=abs(target.x-p.x)+abs(target.y-p.y)
+              rows=[]
+              container=sim.building.container_at(target)
+              pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
+              if distance<=1 and sim.resources.is_harvestable(target):
+                  rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
+              if distance<=1 and pile and pile.items:
+                  count=sum(max(0,int(n)) for n in pile.items.values())
+                  rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
+              if distance<=1 and container:
+                  rows.append(('open',f'Open {container.name or "container"}'))
+              rows.append(('examine','Examine tile and contents'))
+              subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
+              choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle)
+              if not choice:return UI_BACK
+              if choice=='gather':return _gather_positions(ctx,[target])
+              if choice=='pickup':
+                  sim.execute(PickupCommand(ctx.player_id,target.x-p.x,target.y-p.y))
+                  return sim.log[-1].message if sim.log else ''
+              if choice=='open' and container:return _storage_menu(ctx,term,container.uid)
+              if choice=='examine':
+                  _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
+              return UI_BACK
+
+          '''
+          context_menu = textwrap.dedent(context_menu)
+          if marker not in text:
+              raise SystemExit("inventory insertion marker missing")
+          text = text.replace(marker, "\n" + context_menu + marker, 1)
+
+          old_run = "        _present_game_frame(term,ctx,renderer,last);last=''\n        key=term.read_key();intent=classify_key(key)\n"
+          new_run = (
+              "        _present_game_frame(term,ctx,renderer,last);last=''\n"
+              "        key=term.read_key()\n"
+              "        if key.startswith('UI_WORLD_MENU:'):\n"
+              "            _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue\n"
+              "        intent=classify_key(key)\n"
+          )
+          if old_run not in text:
+              raise SystemExit("run_game input anchor missing")
+          text = text.replace(old_run,new_run,1)
+          app.write_text(text,encoding="utf-8")
+
+          # ---------- commands / engine ----------
+          commands=Path("worldseed/sim/commands.py")
+          text=commands.read_text(encoding="utf-8")
+          if "class PickupCommand: actor:int\n" not in text:
+              raise SystemExit("PickupCommand anchor missing")
+          commands.write_text(text.replace("class PickupCommand: actor:int\n","class PickupCommand: actor:int; dx:int=0; dy:int=0\n",1),encoding="utf-8")
+
+          engine=Path("worldseed/sim/engine.py")
+          text=engine.read_text(encoding="utf-8")
+          start=text.index("    def _pickup(self,cmd:PickupCommand)->None:")
+          end=text.index("    def _drop(self,cmd:DropCommand)->None:",start)
+          pickup = r'''    def _pickup(self,cmd:PickupCommand)->None:
+              origin=self.entities.get(cmd.actor,Position).value
+              if abs(cmd.dx)+abs(cmd.dy)>1:
+                  self._message("You can only pick up items from your tile or an adjacent tile.");return
+              pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
+              if not pile or not pile.items:
+                  self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
+              inv=self.entities.get(cmd.actor,Inventory)
+              for iid,n in pile.items.items():inv.add(iid,n)
+              self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")
+          '''
+          pickup=textwrap.dedent(pickup)
+          # Restore class indentation after dedent.
+          pickup="\n".join(("    "+line if line else line) for line in pickup.splitlines())+"\n"
+          text=text[:start]+pickup+text[end:]
+          engine.write_text(text,encoding="utf-8")
+
+          # ---------- pygame right-click ----------
+          pygame=Path("worldseed/ui/pygame_terminal.py")
+          text=pygame.read_text(encoding="utf-8")
+          old="                if event.button==3 and self._input_mode!='world':return 'ESC'"
+          new="""                if event.button==3:
+                      if self._input_mode!='world':return 'ESC'
+                      if self._hover_context:
+                          ctx=self._hover_context;rect=ctx['used']
+                          if rect.collidepoint(self._last_mouse):
+                              x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
+                              y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                              return f'UI_WORLD_MENU:{x}:{y}'"""
+          new=textwrap.dedent(new)
+          new="\n".join(("                "+line if line else line) for line in new.splitlines())
+          if old not in text:
+              raise SystemExit("pygame right-click anchor missing")
+          pygame.write_text(text.replace(old,new,1),encoding="utf-8")
+
+          # ---------- dedicated natural-container assets ----------
+          res=Path("worldseed/assets/sprites/resources")
+          res.mkdir(parents=True,exist_ok=True)
+
+          def canvas(size=(96,88)):
+              return Image.new("RGBA",size,(0,0,0,0))
+
+          def hollow_log():
+              im=canvas((104,88));d=ImageDraw.Draw(im,"RGBA")
+              d.ellipse((10,54,96,82),fill=(37,27,17,115))
+              d.rounded_rectangle((12,28,92,68),radius=15,fill=(98,67,37,255),outline=(52,34,18,255),width=4)
+              d.ellipse((25,32,78,61),fill=(31,23,17,255),outline=(147,104,60,245),width=4)
+              d.arc((18,26,88,69),195,345,fill=(167,126,78,175),width=3)
+              for x in (23,39,56,73,85):d.line((x,29,x+3,66),fill=(132,91,51,125),width=2)
+              d.ellipse((64,18,91,36),fill=(69,103,53,220),outline=(39,67,31,220),width=2)
+              d.ellipse((12,17,38,38),fill=(82,111,59,195),outline=(43,72,35,180),width=2)
+              return im.filter(ImageFilter.GaussianBlur(.15))
+
+          def rotten_stump():
+              im=canvas((96,96));d=ImageDraw.Draw(im,"RGBA")
+              d.ellipse((17,71,82,91),fill=(39,28,18,110))
+              d.rounded_rectangle((25,26,70,81),radius=10,fill=(94,65,38,255),outline=(52,34,18,255),width=4)
+              d.ellipse((18,12,77,42),fill=(126,88,52,255),outline=(58,38,20,255),width=4)
+              d.ellipse((32,19,62,33),fill=(39,29,21,255),outline=(160,119,75,200),width=2)
+              for x in (29,39,50,61,67):d.line((x,29,x-2,79),fill=(68,47,28,200),width=2)
+              d.polygon([(22,18),(12,3),(34,18)],fill=(103,72,40,240),outline=(57,37,20,220))
+              d.polygon([(68,18),(82,5),(74,25)],fill=(101,71,39,240),outline=(57,37,20,220))
+              d.ellipse((8,54,30,72),fill=(85,119,65,180),outline=(47,78,40,170),width=2)
+              return im.filter(ImageFilter.GaussianBlur(.12))
+
+          def rock_crevice():
+              im=canvas((100,92));d=ImageDraw.Draw(im,"RGBA")
+              d.ellipse((13,72,90,89),fill=(25,27,29,105))
+              d.polygon([(10,61),(15,35),(31,14),(55,7),(82,20),(93,45),(84,73),(52,84),(24,76)],
+                        fill=(92,96,101,255),outline=(48,51,55,255))
+              d.polygon([(27,58),(34,34),(51,23),(70,37),(72,62),(50,74)],
+                        fill=(69,73,79,255),outline=(43,46,50,255))
+              d.polygon([(41,56),(47,33),(55,32),(62,56),(51,71)],
+                        fill=(20,21,24,255),outline=(123,126,132,185))
+              for a,b in [((22,49),(38,26)),((56,21),(79,47)),((27,65),(46,76)),((62,65),(79,73))]:
+                  d.line((*a,*b),fill=(145,149,154,120),width=2)
+              d.ellipse((61,10,84,27),fill=(77,111,72,170),outline=(46,75,44,160),width=2)
+              return im.filter(ImageFilter.GaussianBlur(.12))
+
+          hollow_log().save(res/"hollow_log_cache.png")
+          rotten_stump().save(res/"rotten_stump_cache.png")
+          rock_crevice().save(res/"rock_crevice_cache.png")
+
+          visuals=Path("worldseed/assets/visuals.json")
+          data=json.loads(visuals.read_text(encoding="utf-8"))
+          data["resources"]["core:hollow_log_cache"]="assets/sprites/resources/hollow_log_cache.png"
+          data["resources"]["core:rotten_stump_cache"]="assets/sprites/resources/rotten_stump_cache.png"
+          data["resources"]["core:rock_crevice_cache"]="assets/sprites/resources/rock_crevice_cache.png"
+          data["structures"]["core:natural_hollow_log"]="assets/sprites/resources/hollow_log_cache.png"
+          data["structures"]["core:natural_rotten_stump"]="assets/sprites/resources/rotten_stump_cache.png"
+          data["structures"]["core:natural_rock_cache"]="assets/sprites/resources/rock_crevice_cache.png"
+          visuals.write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
+
+          # ---------- version / consolidated README ----------
+          config=Path("worldseed/config.py")
+          text=config.read_text(encoding="utf-8")
+          text=text.replace('ENGINE_VERSION = "1.0.0-rc14-dev35"','ENGINE_VERSION = "1.0.0-rc14-dev36"',1)
+          config.write_text(text,encoding="utf-8")
+
+          readme=Path("README.md")
+          text=readme.read_text(encoding="utf-8")
+          section = """## RC14 Dev36 — Integrated Mainline
+
+          This mainline combines the previously validated Dev34 inventory/container overhaul with the Dev35 Phase-5 coast/performance work and the latest direct world-interaction fixes.
+
+          - Inventory remains the unified graphical item grid with persistent detail/actions, quantity controls and category filtering.
+          - Container storage remains the dual-pane graphical transfer UI, including persistent natural containers, movable storage, deterministic seeded loot, break-apart salvage, wicker baskets and wooden storage boxes.
+          - Dev35 Phase-5 coast morphology v2 is integrated: estuary widening, connected distributaries, shallow sediment lobes, barrier/lagoon projection, save-version pinning and bounded coast caches.
+          - Forest presentation now uses the Dev35 continuous world-coordinate forest-floor material and boundary blending instead of repeated per-cell forest squares, removing visible tile seams/white lines.
+          - **G** now immediately gathers when only one valid resource is in reach. With multiple resources nearby it enters multi-select targeting; click or Space toggles targets and Enter gathers every selected target.
+          - Right-clicking the local world opens contextual actions. Adjacent harvestables can be Gathered, adjacent ground piles Picked Up, adjacent containers Opened, and any visible clicked tile can be Examined.
+          - Pickup commands support the current tile or one orthogonally adjacent tile, so right-click pickup does not require standing directly on the pile.
+          - Hollow Logs, Rotten Stumps and Rock Crevices now have dedicated transparent sprite art instead of borrowing fallen-branch/boulder graphics.
+          - Human-facing Markdown remains consolidated in this README; `AGENTS.md` stays separate for repository automation.
+
+          """
+          section=textwrap.dedent(section)
+          anchor="## Documentation Index\n"
+          if anchor not in text:
+              raise SystemExit("README index anchor missing")
+          text=text.replace(anchor,section+anchor,1)
+          readme.write_text(text,encoding="utf-8")
+
+          # ---------- focused interaction regression tests ----------
+          test=Path("tests/test_dev36_world_interactions.py")
+          test.write_text(r'''import os
+          os.environ.setdefault("SDL_VIDEODRIVER","dummy")
+          os.environ.setdefault("SDL_AUDIODRIVER","dummy")
+          import unittest
+          from types import SimpleNamespace
+          from unittest.mock import Mock, patch
+
+          from worldseed.app import _gather_action
+          from worldseed.core.coords import WorldPos
+          from worldseed.entities.components import Inventory, Position
+          from worldseed.entities.store import EntityStore
+          from worldseed.sim.commands import GatherCommand, PickupCommand
+          from worldseed.sim.engine import Simulation
+          from worldseed.systems.state import GroundPile, pos_key
+          from worldseed.ui.pygame_terminal import PygameTerminal
+
+
+          class GatherInteractionTests(unittest.TestCase):
+              def _ctx(self, harvestable):
+                  sim=Mock()
+                  sim.player_pos=WorldPos(0,0,0)
+                  sim.log=[]
+                  sim.resources=Mock()
+                  sim.resources.is_harvestable.side_effect=lambda p:(p.x,p.y,p.z) in harvestable
+                  sim.resources.description.return_value="Wild Resource"
+                  def execute(cmd):
+                      self.assertIsInstance(cmd,GatherCommand)
+                      sim.log.append(SimpleNamespace(message=f"gathered {cmd.dx},{cmd.dy}"))
+                  sim.execute.side_effect=execute
+                  return SimpleNamespace(sim=sim,player_id=1,registry=Mock())
+
+              def test_g_auto_gathers_when_only_one_target_is_in_reach(self):
+                  ctx=self._ctx({(1,0,0)})
+                  result=_gather_action(ctx,SimpleNamespace())
+                  self.assertEqual(result,"gathered 1,0")
+                  ctx.sim.execute.assert_called_once()
+
+              def test_g_multi_select_gathers_every_selected_target(self):
+                  ctx=self._ctx({(1,0,0),(0,-1,0)})
+                  class Term:
+                      def __init__(self):self.keys=iter(["UI_WORLD:1:0","UI_WORLD:0:-1","\r"])
+                      def read_key(self):return next(self.keys)
+                  with patch("worldseed.app._present_game_frame"):
+                      result=_gather_action(ctx,Term())
+                  self.assertEqual(ctx.sim.execute.call_count,2)
+                  self.assertIn("Gathered 2 nearby targets",result)
+
+
+          class AdjacentPickupTests(unittest.TestCase):
+              def test_pickup_command_collects_from_adjacent_ground_tile(self):
+                  entities=EntityStore();pid=entities.spawn(preferred_id=1)
+                  entities.add(pid,Position(WorldPos(0,0,0)));entities.add(pid,Inventory({"core:wood":1}))
+                  target=WorldPos(1,0,0);state=SimpleNamespace(ground_piles={
+                      pos_key(target.x,target.y,target.z):GroundPile(target.x,target.y,target.z,{"core:wood":2})
+                  })
+                  messages=[]
+                  fake=SimpleNamespace(entities=entities,state=state,_message=messages.append)
+                  Simulation._pickup(fake,PickupCommand(pid,1,0))
+                  self.assertEqual(entities.get(pid,Inventory).count("core:wood"),3)
+                  self.assertFalse(state.ground_piles)
+                  self.assertIn("pick up everything",messages[-1].lower())
+
+
+          @unittest.skipUnless(PygameTerminal.available(),"requires pygame-ce")
+          class WorldRightClickTests(unittest.TestCase):
+              def test_world_right_click_emits_context_menu_token(self):
+                  term=PygameTerminal();term.enter();pg=term.pg
+                  try:
+                      pg.event.clear();term._set_input_mode("world")
+                      term._hover_context={"used":pg.Rect(10,10,100,100),"left":5,"top":7,"tile_px":10}
+                      pg.event.post(pg.event.Event(pg.MOUSEBUTTONDOWN,button=3,pos=(25,35)))
+                      self.assertEqual(term.read_key(),"UI_WORLD_MENU:6:9")
+                  finally:
+                      term.restore()
+
+
+          if __name__=="__main__":
+              unittest.main()
+          ''',encoding="utf-8")
+          # Dedent generated test file.
+          test.write_text(textwrap.dedent(test.read_text(encoding="utf-8")),encoding="utf-8")
+
+          # Add new focused test to the bounded fast gate.
+          fast=Path(".github/workflows/fast-gate.yml")
+          text=fast.read_text(encoding="utf-8")
+          anchor="""      - name: Phase 5 coast tests
+          """
+          step="""      - name: Dev36 world interaction regressions
+                shell: pwsh
+                run: python -m unittest tests.test_dev36_world_interactions
+
+          """
+          step=textwrap.dedent(step)
+          # restore YAML indentation
+          step="\n".join(("      "+line if line else line) for line in step.splitlines())+"\n"
+          if anchor not in text:
+              raise SystemExit("fast-gate insertion anchor missing")
+          text=text.replace(anchor,step+anchor,1)
+          fast.write_text(text,encoding="utf-8")
+
+          # Main documentation cleanup contract: only the consolidated README
+          # plus the operational AGENTS file remain as Markdown.
+          remaining=sorted(p.as_posix() for p in Path(".").rglob("*.md") if ".git" not in p.parts)
+          if remaining != ["AGENTS.md","README.md"]:
+              raise SystemExit(f"unexpected Markdown files after integration: {remaining}")
+          PY
+
+      - name: Remove temporary integration workflow
+        run: rm .github/workflows/integrate-dev36-mainline.yml
+
+      - name: Validate integrated tree
+        shell: bash
+        run: |
+          python -m compileall worldseed
+          python -m unittest tests.test_dev34_storage_containers
+          python -m unittest tests.test_dev36_world_interactions
+          python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
+          python tools/audit_content.py
+          python tools/audit_visuals.py
+          test "$(find . -type f -name '*.md' -not -path './.git/*' | wc -l)" -eq 2
+          grep -q 'ENGINE_VERSION = "1.0.0-rc14-dev36"' worldseed/config.py
+
+      - name: Commit integrated mainline candidate
+        shell: bash
+        run: |
+          git config user.name "WORLDSEED Integration"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrate Dev36 interactions, storage and coast fixes"
+          git push origin HEAD:integration/dev36-main-cleanup-20260922
