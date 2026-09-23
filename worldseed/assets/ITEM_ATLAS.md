@@ -26,12 +26,19 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 
 | Icon | Item | Stable ID | Asset |
 |---|---|---|---|
+| <img src="sprites/items/beachgrass.png" width="48" height="48"> | Beachgrass | `core:beachgrass` | `beachgrass.png` |
 | <img src="sprites/items/berries.png" width="48" height="48"> | Berries | `core:berries` | `berries.png` |
 | <img src="sprites/items/blueberries.png" width="48" height="48"> | Blueberries | `core:blueberries` | `blueberries.png` |
 | <img src="sprites/items/cattail.png" width="48" height="48"> | Cattail Root | `core:cattail_root` | `cattail.png` |
+| <img src="sprites/items/duckweed.png" width="48" height="48"> | Duckweed | `core:duckweed` | `duckweed.png` |
+| <img src="sprites/items/eelgrass.png" width="48" height="48"> | Eelgrass | `core:eelgrass` | `eelgrass.png` |
+| <img src="sprites/items/kelp.png" width="48" height="48"> | Kelp | `core:kelp` | `kelp.png` |
 | <img src="sprites/items/nettle.png" width="48" height="48"> | Nettle | `core:nettles` | `nettle.png` |
+| <img src="sprites/items/pickerelweed.png" width="48" height="48"> | Pickerelweed | `core:pickerelweed` | `pickerelweed.png` |
 | <img src="sprites/items/raspberries.png" width="48" height="48"> | Raspberries | `core:raspberries` | `raspberries.png` |
+| <img src="sprites/items/saltmarsh_grass.png" width="48" height="48"> | Saltmarsh Grass | `core:saltmarsh_grass` | `saltmarsh_grass.png` |
 | <img src="sprites/items/strawberries.png" width="48" height="48"> | Strawberries | `core:wild_strawberries` | `strawberries.png` |
+| <img src="sprites/items/water_lily_root.png" width="48" height="48"> | Water Lily Root | `core:water_lily_root` | `water_lily_root.png` |
 | <img src="sprites/items/wild_carrot.png" width="48" height="48"> | Wild Carrot | `core:wild_carrot` | `wild_carrot.png` |
 | <img src="sprites/items/wild_grain.png" width="48" height="48"> | Wild Grain | `core:wild_grain` | `wild_grain.png` |
 | <img src="sprites/items/wild_onion.png" width="48" height="48"> | Wild Onion | `core:wild_onion` | `wild_onion.png` |
@@ -68,15 +75,28 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | Icon | Item | Stable ID | Asset |
 |---|---|---|---|
 | <img src="sprites/items/animal_fat.png" width="48" height="48"> | Animal Fat | `core:animal_fat` | `animal_fat.png` |
+| <img src="sprites/items/atlantic_cod.png" width="48" height="48"> | Atlantic Cod | `core:atlantic_cod` | `atlantic_cod.png` |
+| <img src="sprites/items/atlantic_mackerel.png" width="48" height="48"> | Atlantic Mackerel | `core:atlantic_mackerel` | `atlantic_mackerel.png` |
+| <img src="sprites/items/blue_mussels.png" width="48" height="48"> | Blue Mussels | `core:blue_mussels` | `blue_mussels.png` |
+| <img src="sprites/items/bluegill.png" width="48" height="48"> | Bluegill | `core:bluegill` | `bluegill.png` |
 | <img src="sprites/items/bolete.png" width="48" height="48"> | Bolete | `core:bolete` | `bolete.png` |
+| <img src="sprites/items/brook_trout.png" width="48" height="48"> | Brook Trout | `core:brook_trout` | `brook_trout.png` |
+| <img src="sprites/items/channel_catfish.png" width="48" height="48"> | Channel Catfish | `core:channel_catfish` | `channel_catfish.png` |
+| <img src="sprites/items/common_carp.png" width="48" height="48"> | Common Carp | `core:common_carp` | `common_carp.png` |
 | <img src="sprites/items/cooked_meat.png" width="48" height="48"> | Cooked Meat | `core:cooked_meat` | `cooked_meat.png` |
 | <img src="sprites/items/dried_meat.png" width="48" height="48"> | Dried Meat | `core:dried_meat` | `dried_meat.png` |
 | <img src="sprites/items/game_meat.png" width="48" height="48"> | Game Meat | `core:raw_game_meat` | `game_meat.png` |
+| <img src="sprites/items/largemouth_bass.png" width="48" height="48"> | Largemouth Bass | `core:largemouth_bass` | `largemouth_bass.png` |
 | <img src="sprites/items/meat.png" width="48" height="48"> | Meat | `core:meat` | `meat.png` |
 | <img src="sprites/items/morel.png" width="48" height="48"> | Morel | `core:morel` | `morel.png` |
+| <img src="sprites/items/northern_pike.png" width="48" height="48"> | Northern Pike | `core:northern_pike` | `northern_pike.png` |
 | <img src="sprites/items/offal.png" width="48" height="48"> | Offal | `core:offal` | `offal.png` |
 | <img src="sprites/items/poultry.png" width="48" height="48"> | Poultry | `core:raw_poultry` | `poultry.png` |
+| <img src="sprites/items/red_drum.png" width="48" height="48"> | Red Drum | `core:red_drum` | `red_drum.png` |
 | <img src="sprites/items/small_game.png" width="48" height="48"> | Small Game Meat | `core:raw_small_game` | `small_game.png` |
+| <img src="sprites/items/striped_bass.png" width="48" height="48"> | Striped Bass | `core:striped_bass` | `striped_bass.png` |
+| <img src="sprites/items/striped_mullet.png" width="48" height="48"> | Striped Mullet | `core:striped_mullet` | `striped_mullet.png` |
+| <img src="sprites/items/summer_flounder.png" width="48" height="48"> | Summer Flounder | `core:summer_flounder` | `summer_flounder.png` |
 
 ## Seeds & Farming
 
@@ -97,9 +117,11 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 |---|---|---|---|
 | <img src="sprites/items/bone.png" width="48" height="48"> | Bone | `core:bone` | `bone.png` |
 | <img src="sprites/items/bone_meal.png" width="48" height="48"> | Bone Meal | `core:bone_meal` | `bone_meal.png` |
+| <img src="sprites/items/braided_line.png" width="48" height="48"> | Braided Fishing Line | `core:braided_line` | `braided_line.png` |
 | <img src="sprites/items/copper_ingot.png" width="48" height="48"> | Copper Ingot | `core:copper_ingot` | `copper_ingot.png` |
 | <img src="sprites/items/cordage.png" width="48" height="48"> | Cordage | `core:plant_cordage` | `cordage.png` |
 | <img src="sprites/items/feather.png" width="48" height="48"> | Feather | `core:feather` | `feather.png` |
+| <img src="sprites/items/fiber_line.png" width="48" height="48"> | Fiber Fishing Line | `core:fiber_line` | `fiber_line.png` |
 | <img src="sprites/items/fresh_hide.png" width="48" height="48"> | Fresh Hide | `core:fresh_hide` | `fresh_hide.png` |
 | <img src="sprites/items/hide.png" width="48" height="48"> | Hide | `core:hide` | `hide.png` |
 | <img src="sprites/items/iron_bloom.png" width="48" height="48"> | Iron Bloom | `core:iron_bloom` | `iron_bloom.png` |
@@ -109,6 +131,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/scraped_hide.png" width="48" height="48"> | Scraped Hide | `core:scraped_hide` | `scraped_hide.png` |
 | <img src="sprites/items/sinew.png" width="48" height="48"> | Sinew | `core:sinew` | `sinew.png` |
 | <img src="sprites/items/sinew_cord.png" width="48" height="48"> | Sinew Cord | `core:sinew_cord` | `sinew_cord.png` |
+| <img src="sprites/items/sinew_line.png" width="48" height="48"> | Sinew Fishing Line | `core:sinew_line` | `sinew_line.png` |
 | <img src="sprites/items/steel_billet.png" width="48" height="48"> | Steel Billet | `core:steel_billet` | `steel_billet.png` |
 
 ## Medicine
@@ -128,8 +151,11 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/bone_needle.png" width="48" height="48"> | Bone Needle | `core:bone_needle` | `bone_needle.png` |
 | <img src="sprites/items/crafted_pick.png" width="48" height="48"> | Crafted Pick | `core:crafted_pick` | `crafted_pick.png` |
 | <img src="sprites/items/digging_stick.png" width="48" height="48"> | Digging Stick | `core:digging_stick` | `digging_stick.png` |
+| <img src="sprites/items/fishing_net.png" width="48" height="48"> | Fishing Net | `core:fishing_net` | `fishing_net.png` |
+| <img src="sprites/items/fishing_spear.png" width="48" height="48"> | Fishing Spear | `core:fishing_spear` | `fishing_spear.png` |
 | <img src="sprites/items/iron_pick.png" width="48" height="48"> | Iron Pick | `core:iron_pick` | `iron_pick.png` |
 | <img src="sprites/items/lockpick.png" width="48" height="48"> | Lockpick | `core:lockpick` | `lockpick.png` |
+| <img src="sprites/items/reed_rod.png" width="48" height="48"> | Reed Fishing Rod | `core:reed_rod` | `reed_rod.png` |
 | <img src="sprites/items/steel_pick.png" width="48" height="48"> | Steel Pick | `core:steel_pick` | `steel_pick.png` |
 | <img src="sprites/items/stone_axe.png" width="48" height="48"> | Stone Axe | `core:stone_axe` | `stone_axe.png` |
 | <img src="sprites/items/stone_flake.png" width="48" height="48"> | Stone Flake | `core:stone_flake` | `stone_flake.png` |
@@ -137,6 +163,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/stone_hoe.png" width="48" height="48"> | Stone Hoe | `core:crude_hoe` | `stone_hoe.png` |
 | <img src="sprites/items/stone_knife.png" width="48" height="48"> | Stone Knife | `core:stone_knife` | `stone_knife.png` |
 | <img src="sprites/items/stone_pick.png" width="48" height="48"> | Stone Pick | `core:stone_pick` | `stone_pick.png` |
+| <img src="sprites/items/wood_rod.png" width="48" height="48"> | Wood Fishing Rod | `core:wood_rod` | `wood_rod.png` |
 
 ## Weapons
 
@@ -177,6 +204,8 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/basket.png" width="48" height="48"> | Basket | `core:wicker_basket` | `basket.png` |
 | <img src="sprites/items/bowl.png" width="48" height="48"> | Bowl | `core:wooden_bowl` | `bowl.png` |
 | <img src="sprites/items/clay_pot.png" width="48" height="48"> | Clay Pot | `core:clay_pot` | `clay_pot.png` |
+| <img src="sprites/items/spoon_lure.png" width="48" height="48"> | Copper Spoon Lure | `core:spoon_lure` | `spoon_lure.png` |
+| <img src="sprites/items/earthworms.png" width="48" height="48"> | Earthworms | `core:earthworms` | `earthworms.png` |
 | <img src="sprites/items/storage_box.png" width="48" height="48"> | Storage Box | `core:wood_storage_box` | `storage_box.png` |
 | <img src="sprites/items/water_flask.png" width="48" height="48"> | Water Flask | `core:clean_water` | `water_flask.png` |
 | <img src="sprites/items/waterskin.png" width="48" height="48"> | Waterskin | `core:waterskin` | `waterskin.png` |
