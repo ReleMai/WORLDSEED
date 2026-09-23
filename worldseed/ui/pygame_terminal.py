@@ -293,6 +293,12 @@ class PygameTerminal(PointerUI):
                     if dx or dy:return f'ATLAS:drag:{dx}:{dy}'
                     continue
                 self._refresh_hover_only()
+                if self._input_mode=='target' and getattr(self,'_combat_targeting',False) and self._hover_context:
+                    ctx=self._hover_context;rect=ctx['used']
+                    if rect.collidepoint(self._last_mouse):
+                        x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
+                        y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                        return f'UI_TARGET_HOVER:{x}:{y}'
                 token=self._hit_token(self._last_mouse)
                 pointer=pg.SYSTEM_CURSOR_HAND if token else pg.SYSTEM_CURSOR_ARROW
                 if pointer!=getattr(self,'_last_pointer_cursor',None):
@@ -2417,6 +2423,7 @@ class PygameTerminal(PointerUI):
             configure_terrain_catalog(registry.terrains);self._terrain_catalog_token=terrain_token
             self._terrain_transition_cache.clear();self._terrain_transition_masks.clear()
         self._drawing_target=cursor is not None
+        self._combat_targeting=combat_overlay is not None
         ox,oy,ow,oh=self._draw_chrome("WORLDSEED // LOCAL")
         sw,sh=screen.get_size(); sidebar=max(280,min(350,sw//4)); footer=148
         map_rect=pg.Rect(ox,oy,ow-sidebar-10,oh-footer-8); side_rect=pg.Rect(map_rect.right+10,oy,sidebar,oh); foot_rect=pg.Rect(ox,map_rect.bottom+8,map_rect.width,footer)
