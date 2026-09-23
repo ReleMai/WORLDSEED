@@ -595,22 +595,31 @@ def _rest_menu(ctx:GameContext,term:Terminal)->str:
     ctx.sim.execute(RestCommand(ctx.player_id,int(pick)));return ctx.sim.log[-1].message if ctx.sim.log else ''
 
 def _hunt_action(ctx:GameContext,term:Terminal)->str:
-    sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);weapons=[reg.items[i] for i,n in inv.items.items() if n>0 and i in reg.items and reg.items[i].range>1 and reg.items[i].weapon_damage>0]
-    if not weapons:return 'You have no ranged weapon.'
-    max_range=max(w.range for w in weapons);p=sim.player_pos;renderer=Renderer(reg);cursor=p
+    sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);weapon=sim.combat.readied_weapon(inv)
+    if not weapon or weapon.range<=1:return 'Ready a ranged or throwable weapon first.'
+    p=sim.player_pos;renderer=Renderer(reg);cursor=p;zone='center'
+    zones={'1':'center','2':'vitals','3':'head','4':'legs'}
     while True:
         c=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(cursor.x,cursor.y,cursor.z)),None)
-        desc=(reg.species[c.species_id].name if c else 'No animal')
-        _present_game_frame(term,ctx,renderer,f'AIM: {desc} | range {abs(cursor.x-p.x)+abs(cursor.y-p.y)}/{max_range} | Enter fire | Esc cancel',cursor)
+        desc=(reg.species[c.species_id].name if c else 'No animal');dist=abs(cursor.x-p.x)+abs(cursor.y-p.y)
+        aim=sim.state.player_aim_quality if c and sim.state.player_aim_target==c.uid and sim.state.player_aim_zone==zone else 0
+        _present_game_frame(term,ctx,renderer,f'AIM: {desc} | {weapon.name} | range {dist}/{weapon.range} | zone {zone} | aim {aim}/100 | A steady | Enter fire | 1 center 2 vitals 3 head 4 legs | Esc',cursor)
         k=term.read_key();low=k.lower() if len(k)==1 else k
         if k.startswith('UI_WORLD:'):
             _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
-            if abs(n.x-p.x)+abs(n.y-p.y)<=max_range:cursor=n
+            if abs(n.x-p.x)+abs(n.y-p.y)<=weapon.range:cursor=n
             continue
         if low in ('ESC','q'):return UI_BACK
+        if low in zones:zone=zones[low];continue
         if low in DIRECTION_KEYS:
             dx,dy=DIRECTION_KEYS[low];n=cursor.moved(dx,dy)
-            if abs(n.x-p.x)+abs(n.y-p.y)<=max_range:cursor=n
+            if abs(n.x-p.x)+abs(n.y-p.y)<=weapon.range:cursor=n
+            continue
+        if low=='a':
+            if not c:continue
+            uid=c.uid;sim.execute(AimCommand(ctx.player_id,uid,zone))
+            moved=sim.state.creatures.get(uid)
+            if moved:cursor=WorldPos(moved.x,moved.y,moved.z)
             continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
@@ -1121,12 +1130,12 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         sp=sim.registry.species.get(creature.species_id)
         label=sp.name if sp and creature.species_id in sim.known_species_ids() else 'animal'
         rows.append(('observe_animal',f'Observe {label} — {creature.behavior.replace("_"," ")}'))
-        if distance==1:
-            rows.append(('attack_animal',f'Attack {label} at close range'))
-        inv=ctx.entities.get(ctx.player_id,Inventory)
-        max_range=max((sim.registry.items[i].range for i,n in inv.items.items() if n>0 and i in sim.registry.items and sim.registry.items[i].weapon_damage>0 and sim.registry.items[i].range>1),default=0)
-        if max_range and distance<=max_range and sim._visible_from(p,target):
-            rows.append(('shoot_animal',f'Aim / fire at {label} — range {distance}/{max_range}'))
+        inv=ctx.entities.get(ctx.player_id,Inventory);weapon=sim.combat.readied_weapon(inv)
+        reach=weapon.reach if weapon else 1
+        if 1<=distance<=reach:rows.append(('attack_animal',f'Attack {label} — reach {distance}/{reach}'))
+        if weapon and weapon.range>1 and distance<=weapon.range and sim._visible_from(p,target):
+            rows.append(('aim_animal',f'Aim at {label} — {weapon.name}'))
+            rows.append(('shoot_animal',f'Fire at {label} — range {distance}/{weapon.range}'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
@@ -1148,6 +1157,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
     if choice=='attack_animal' and creature:
         sim.execute(AttackCommand(ctx.player_id,target.x-p.x,target.y-p.y))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='aim_animal' and creature:
+        sim.execute(AimCommand(ctx.player_id,creature.uid,'center'))
         return sim.log[-1].message if sim.log else ''
     if choice=='shoot_animal' and creature:
         sim.execute(RangedAttackCommand(ctx.player_id,creature.uid))
@@ -1194,9 +1206,12 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         elif item.tool_power:
             detail.append(f'Tool effectiveness {item.tool_power}')
         if item.weapon_damage:
-            weapon=f'Weapon: {item.damage_type} {item.weapon_damage}'
+            weapon=f'Weapon: {item.weapon_class or item.damage_type} | {item.damage_type} {item.weapon_damage} | reach {item.reach}'
             if item.range>1:weapon+=f' | range {item.range}'
+            weapon+=f' | accuracy {item.accuracy:+d} | stamina {item.stamina_cost}'
             if item.ammo_item:weapon+=f' | ammo {reg.items[item.ammo_item].name if item.ammo_item in reg.items else item.ammo_item}'
+            if item.throwable:weapon+=' | throwable / recoverable'
+            if item.two_handed:weapon+=' | two-handed'
             detail.append(weapon)
         if item.equip_slot:
             equip=f'Equipment: {item.equip_slot.replace("_"," ")}'
@@ -1215,6 +1230,7 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         use_kind=''
         use_label='Use'
         if item.nutrition>0:use_kind='eat';use_label='Use · Eat'
+        elif item.weapon_damage>0:use_kind='ready';use_label='Use · Ready weapon'
         elif item.equip_slot:use_kind='equip';use_label='Use · Equip'
         elif iid=='core:book':use_kind='read';use_label='Use · Read'
         items[iid]={
@@ -1231,6 +1247,7 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
             'can_use':bool(use_kind),'use_kind':use_kind,'use_label':use_label,
         }
     equipped={slot:iid for slot,iid in sim.state.player_equipment.items() if iid in reg.items}
+    if sim.state.player_readied_weapon in reg.items:equipped['weapon']=sim.state.player_readied_weapon
     return {
         'total_mass_kg':total_mass/1000.0,'total_volume_l':total_volume/1000.0,
         'stack_count':len(items),'item_count':sum(v['count'] for v in items.values()),
@@ -1348,6 +1365,7 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
                 nav.back();continue
             actions=[('inspect','Inspect details'),('drop','Drop one')]
             if item.nutrition>0:actions.append(('eat',f'Eat — nutrition {item.nutrition}'))
+            if item.weapon_damage>0:actions.append(('ready',f'Ready weapon — {item.weapon_class or item.damage_type}'))
             if item.equip_slot:actions.append(('equip',f'Equip — {item.equip_slot}'))
             if sim.building.nearby_container(sim.player_pos):actions.append(('store','Store one in nearby container'))
             act=_stack_menu(term,nav,actions,subtitle=f'{item.name} x{inv.count(iid)}',presentation='inventory_item_actions',presentation_data={'item_id':iid,**_inventory_ui_data(reg,inv,sim)})
@@ -1357,6 +1375,7 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
                 nav.push(RouteState(f'inventory-detail:{iid}','INVENTORY // ITEM DETAIL',payload={'iid':iid}));_stack_view(term,nav,item_detail_screen(reg,sim,inv,iid,width),presentation='inventory_item_detail',presentation_data={'item_id':iid,**_inventory_ui_data(reg,inv,sim)});continue
             if act=='drop':sim.execute(DropCommand(pid,iid,1))
             elif act=='eat':sim.execute(EatCommand(pid,iid))
+            elif act=='ready':sim.execute(ReadyWeaponCommand(pid,iid))
             elif act=='equip':sim.execute(EquipCommand(pid,iid))
             elif act=='store':sim.execute(StoreCommand(pid,iid,1))
             return sim.log[-1].message if sim.log else ''
@@ -1431,6 +1450,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         elif action=='use':
             item=reg.items[selected_iid]
             if item.nutrition>0:sim.execute(EatCommand(pid,selected_iid))
+            elif item.weapon_damage>0:sim.execute(ReadyWeaponCommand(pid,selected_iid))
             elif item.equip_slot:sim.execute(EquipCommand(pid,selected_iid))
             elif selected_iid=='core:book':sim.execute(ReadBookCommand(pid))
             else:
@@ -1718,11 +1738,18 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
     if lower=='f':
         while True:
             mode=_select(term,'EQUIPMENT / HEALTH ACTION',[
-                ('overview','Review equipment, anatomy & wounds'),('equip','Equip armor/clothing'),
-                ('unequip','Unequip slot'),('treat','Treat a wound'),('medicine','Take medicine for symptomatic infection')])
+                ('overview','Review equipment, anatomy & wounds'),('ready','Ready a carried weapon'),('lower','Lower readied weapon'),
+                ('equip','Equip armor/clothing'),('unequip','Unequip slot'),('treat','Treat a wound'),('medicine','Take medicine for symptomatic infection')])
             if not mode:return UI_BACK
             if mode=='overview':
                 _view_text(term,equipment_screen(sim,reg,ctx.entities.get(pid,Inventory),screen_width(term.size()[0],100)));continue
+            if mode=='ready':
+                inv=ctx.entities.get(pid,Inventory);rows=[(iid,f'{reg.items[iid].name} | {reg.items[iid].weapon_class or reg.items[iid].damage_type} | damage {reg.items[iid].weapon_damage} | reach {reg.items[iid].reach} | range {reg.items[iid].range}') for iid,n in inv.items.items() if n>0 and iid in reg.items and reg.items[iid].weapon_damage>0]
+                iid=_select(term,'READY WEAPON',rows)
+                if not iid:continue
+                sim.execute(ReadyWeaponCommand(pid,iid));return sim.log[-1].message if sim.log else ''
+            if mode=='lower':
+                sim.execute(ClearReadyWeaponCommand(pid));return sim.log[-1].message if sim.log else ''
             if mode=='equip':
                 inv=ctx.entities.get(pid,Inventory);rows=[(iid,f'{reg.items[iid].name} -> {reg.items[iid].equip_slot} | armor {reg.items[iid].armor}') for iid,n in inv.items.items() if n>0 and iid in reg.items and reg.items[iid].equip_slot]
                 iid=_select(term,'EQUIP',rows)
@@ -1758,7 +1785,13 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
     if lower=='x':
         d=_direction(term)
         if not d:return UI_BACK
-        sim.execute(AttackCommand(pid,*d));return sim.log[-1].message if sim.log else ''
+        inv=ctx.entities.get(pid,Inventory);weapon=sim.combat.readied_weapon(inv);reach=weapon.reach if weapon else 1
+        dx,dy=d;distance=1
+        for step in range(1,reach+1):
+            q=sim.player_pos.moved(dx*step,dy*step)
+            if any(c.hp>0 and (c.x,c.y,c.z)==(q.x,q.y,q.z) for c in sim.state.creatures.values()):
+                distance=step;break
+        sim.execute(AttackCommand(pid,dx*distance,dy*distance));return sim.log[-1].message if sim.log else ''
     if lower=='k':
         while True:
             mode=_select(term,'ARCANE ACTION',[

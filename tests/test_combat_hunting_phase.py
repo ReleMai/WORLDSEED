@@ -35,6 +35,42 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         cls.reg = ContentRegistry.load(DATA_DIR)
         cls.world = _OpenWorld()
 
+    def test_primitive_combat_loadout_is_craftable_and_distinct(self):
+        sling=self.reg.items["core:sling"];bow=self.reg.items["core:short_bow"];javelin=self.reg.items["core:wooden_spear"];club=self.reg.items["core:club"];knife=self.reg.items["core:stone_knife"]
+        self.assertEqual(sling.weapon_class,"sling");self.assertEqual(sling.ammo_item,"core:sling_stone")
+        self.assertEqual(bow.weapon_class,"bow");self.assertEqual(bow.ammo_item,"core:wood_arrow");self.assertTrue(bow.two_handed)
+        self.assertEqual(javelin.weapon_class,"javelin");self.assertTrue(javelin.throwable);self.assertGreaterEqual(javelin.range,4);self.assertEqual(javelin.reach,2)
+        self.assertEqual(club.weapon_class,"club");self.assertEqual(knife.weapon_class,"knife")
+        for rid in ("core:sling","core:sling_stone","core:short_bow","core:wood_arrow","core:wooden_spear","core:club","core:stone_knife"):
+            self.assertIn(rid,self.reg.recipes)
+
+    def test_ready_weapon_is_explicit_and_aim_builds_steadiness(self):
+        state=LivingWorldState();combat=CombatSystem(state,self.reg,b"aim")
+        inv=Inventory({"core:short_bow":1,"core:wood_arrow":3})
+        self.assertIsNone(combat.readied_weapon(inv))
+        combat.ready_weapon("core:short_bow",inv)
+        self.assertEqual(combat.readied_weapon(inv).id,"core:short_bow")
+        deer=CreatureState("aim:deer","core:deer",4,0,0,self.reg.species["core:deer"].max_hp)
+        first=combat.aim_at(deer,"vitals",8,6,4);q1=state.player_aim_quality
+        second=combat.aim_at(deer,"vitals",8,6,4);q2=state.player_aim_quality
+        self.assertGreater(q1,0);self.assertGreater(q2,q1);self.assertIn("aim",first.lower());self.assertIn("aim",second.lower())
+
+    def test_targeted_head_and_leg_shots_use_requested_body_zone(self):
+        for zone,expected in (("head",{"head","neck"}),("legs",{"legs"})):
+            state=LivingWorldState(player_readied_weapon="core:short_bow");combat=CombatSystem(state,self.reg,("zone-"+zone).encode())
+            deer=CreatureState("target:"+zone,"core:deer",3,0,0,200)
+            inv=Inventory({"core:short_bow":1,"core:wood_arrow":20})
+            for turn in range(1,20):
+                combat.ranged_attack_creature(deer,inv,turn,3,perception=14,hunting=14,weapon_id="core:short_bow",aim_zone=zone,aim_quality=100,stamina=100)
+                if deer.wounds:break
+            self.assertTrue(deer.wounds,zone);self.assertIn(deer.wounds[-1]["part"],expected)
+
+    def test_save_roundtrip_preserves_ready_weapon_and_aim(self):
+        state=LivingWorldState(player_readied_weapon="core:sling",player_aim_target="animal:1",player_aim_zone="head",player_aim_quality=73)
+        restored=LivingWorldState.from_dict(state.to_dict())
+        self.assertEqual(restored.player_readied_weapon,"core:sling")
+        self.assertEqual((restored.player_aim_target,restored.player_aim_zone,restored.player_aim_quality),("animal:1","head",73))
+
     def test_key_hunting_species_have_distinct_behavior_profiles(self):
         rabbit = self.reg.species["core:rabbit"]
         deer = self.reg.species["core:deer"]
@@ -86,9 +122,10 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         combat = CombatSystem(state, self.reg, b"ranged-body")
         deer = CreatureState("target:deer", "core:deer", 2, 0, 0, self.reg.species["core:deer"].max_hp)
         inv = Inventory({"core:sling": 1, "core:sling_stone": 20})
+        state.player_readied_weapon="core:sling"
         before_ammo = inv.count("core:sling_stone")
         for turn in range(1, 16):
-            combat.ranged_attack_creature(deer, inv, turn, 2, perception=12, hunting=12)
+            combat.ranged_attack_creature(deer, inv, turn, 2, perception=12, hunting=12, weapon_id="core:sling")
             if deer.wounds:
                 break
         self.assertTrue(deer.wounds)

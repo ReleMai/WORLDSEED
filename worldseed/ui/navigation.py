@@ -91,8 +91,9 @@ ACTION_WORK = [
 ]
 
 ACTION_COMBAT = [
-    ('x', 'Attack adjacent target'),
-    ('hunt', 'Aim a ranged weapon'),
+    ('x', 'Attack with readied melee weapon'),
+    ('hunt', 'Aim / fire readied ranged or thrown weapon'),
+    ('f', 'Ready / lower weapons & review wounds'),
 ]
 
 ACTION_WORLD = [

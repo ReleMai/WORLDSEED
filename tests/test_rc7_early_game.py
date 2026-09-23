@@ -9,7 +9,7 @@ from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
-from worldseed.sim.commands import CookMealCommand, ProcessCarcassCommand, StartProcessingCommand, WaitCommand, RangedAttackCommand
+from worldseed.sim.commands import CookMealCommand, ProcessCarcassCommand, StartProcessingCommand, WaitCommand, RangedAttackCommand, ReadyWeaponCommand
 from worldseed.sim.engine import Simulation
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.state import LivingWorldState, CarcassState, StructureInstance, CreatureState, pos_key
@@ -130,7 +130,7 @@ class RC7EarlyGameTests(unittest.TestCase):
         td,db,world,e,pid,sim=self.make_sim(b'ranged',{'core:sling':1,'core:sling_stone':5})
         try:
             c=CreatureState('target','core:rabbit',1,0,0,20);sim.state.creatures[c.uid]=c;before=e.get(pid,Inventory).count('core:sling_stone')
-            sim.execute(RangedAttackCommand(pid,c.uid));self.assertEqual(e.get(pid,Inventory).count('core:sling_stone'),before-1)
+            sim.execute(ReadyWeaponCommand(pid,'core:sling'));sim.execute(RangedAttackCommand(pid,c.uid));self.assertEqual(e.get(pid,Inventory).count('core:sling_stone'),before-1)
         finally:db.close();td.cleanup()
 
     def test_environmental_furniture_bonuses_are_mechanical(self):
