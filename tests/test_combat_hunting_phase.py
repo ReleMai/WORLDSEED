@@ -4,10 +4,12 @@ from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Vitals
+from worldseed.entities.store import EntityStore
 from worldseed.systems.combat import CombatSystem
 from worldseed.systems.ecology import EcologySystem
 from worldseed.systems.hunting import HuntingSystem
-from worldseed.systems.state import AnimalSignState, CreatureState, LivingWorldState
+from worldseed.systems.state import AnimalSignState, CreatureState, LivingWorldState, pos_key
+from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 
 
 class _Terrain:
@@ -29,11 +31,62 @@ class _OpenWorld:
         return True
 
 
+class _OverlaySim:
+    def __init__(self,reg,*,hunting=0,melee=0,perception=5,agility=5,blocked=None):
+        self.player_id=1;self.player_pos=WorldPos(0,0,0);self.state=LivingWorldState()
+        self.state.player_skills["hunting"]=hunting;self.state.player_skills["melee"]=melee
+        self.state.player_attributes["perception"]=perception;self.state.player_attributes["agility"]=agility
+        self.entities=EntityStore();self.entities.spawn(preferred_id=1);self.entities.add(1,Vitals())
+        self.combat=CombatSystem(self.state,reg,b"overlay")
+        self._blocked=set(blocked or ())
+        self.discovered_tiles_set={pos_key(x,y,0) for x in range(-12,13) for y in range(-12,13)}
+    def player_attribute(self,key):return int(self.state.player_attributes.get(key,0))
+    def player_skill(self,key):return int(self.state.player_skills.get(key,0))
+    def _visible_from(self,origin,target):return (target.x,target.y,target.z) not in self._blocked
+
+
 class CombatHuntingPhaseTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.reg = ContentRegistry.load(DATA_DIR)
         cls.world = _OpenWorld()
+
+    def test_ranged_overlay_rotates_with_cursor_and_skill_changes_difficulty(self):
+        bow=self.reg.items["core:short_bow"]
+        novice=_OverlaySim(self.reg,hunting=0,perception=5)
+        expert=_OverlaySim(self.reg,hunting=10,perception=10)
+        east_n=ranged_overlay(novice,bow,WorldPos(5,0,0),"center")
+        east_e=ranged_overlay(expert,bow,WorldPos(5,0,0),"center")
+        self.assertTrue(east_n["cells"])
+        self.assertTrue(all(c["x"]>0 for c in east_n["cells"]))
+        novice_cell=next(c for c in east_n["cells"] if (c["x"],c["y"])==(5,0))
+        expert_cell=next(c for c in east_e["cells"] if (c["x"],c["y"])==(5,0))
+        self.assertGreater(expert_cell["chance"],novice_cell["chance"])
+        north=ranged_overlay(expert,bow,WorldPos(0,-5,0),"center")
+        self.assertTrue(all(c["y"]<0 for c in north["cells"]))
+
+    def test_ranged_overlay_marks_blocked_cells_and_harder_aim_zones(self):
+        bow=self.reg.items["core:short_bow"]
+        sim=_OverlaySim(self.reg,hunting=6,perception=8,blocked={(4,0,0)})
+        center=ranged_overlay(sim,bow,WorldPos(5,0,0),"center")
+        head=ranged_overlay(sim,bow,WorldPos(5,0,0),"head")
+        blocked=next(c for c in center["cells"] if (c["x"],c["y"])==(4,0))
+        self.assertTrue(blocked["blocked"]);self.assertEqual(blocked["difficulty"],"blocked")
+        center_far=next(c for c in center["cells"] if (c["x"],c["y"])==(5,0))
+        head_far=next(c for c in head["cells"] if (c["x"],c["y"])==(5,0))
+        self.assertGreater(center_far["chance"],head_far["chance"])
+
+    def test_melee_overlay_uses_weapon_reach_and_skill(self):
+        javelin=self.reg.items["core:wooden_spear"]
+        novice=_OverlaySim(self.reg,melee=0,agility=5)
+        expert=_OverlaySim(self.reg,melee=8,agility=9)
+        low=melee_overlay(novice,javelin,WorldPos(2,0,0))
+        high=melee_overlay(expert,javelin,WorldPos(2,0,0))
+        coords={(c["x"],c["y"]) for c in low["cells"]}
+        self.assertIn((2,0),coords);self.assertNotIn((3,0),coords)
+        low_outer=next(c for c in low["cells"] if (c["x"],c["y"])==(2,0))
+        high_outer=next(c for c in high["cells"] if (c["x"],c["y"])==(2,0))
+        self.assertGreater(high_outer["chance"],low_outer["chance"])
 
     def test_primitive_combat_loadout_is_craftable_and_distinct(self):
         sling=self.reg.items["core:sling"];bow=self.reg.items["core:short_bow"];javelin=self.reg.items["core:wooden_spear"];club=self.reg.items["core:club"];knife=self.reg.items["core:stone_knife"]
