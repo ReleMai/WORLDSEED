@@ -27,6 +27,13 @@ class ProcessingSystem:
         if effective_quality<=10:
             return False,f"The {sp.name.lower()} carcass has spoiled beyond safe processing.",0
         table_bonus=10 if any(s.structure_id=='core:butcher_table' and s.z==c.z and abs(s.x-c.x)+abs(s.y-c.y)<=2 for s in self.state.structures.values()) else 0
+        if action=='recover':
+            if not c.embedded_items:return False,"There are no recoverable projectiles in the carcass.",0
+            recovered=dict(c.embedded_items);c.embedded_items.clear()
+            for iid,n in recovered.items():
+                if iid in self.registry.items and n>0:inv.add(iid,n)
+            text=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in recovered.items() if i in self.registry.items) or 'nothing useful'
+            return True,f"You extract {text} from the carcass.",4
         if action=='skin':
             if c.skinned:return False,"The carcass has already been skinned.",0
             q=self._tool_quality(inv,'skin')
@@ -54,6 +61,9 @@ class ProcessingSystem:
             q=self._tool_quality(inv,'cut')
             if q<1:return False,"You need a cutting tool to debone the carcass.",0
             c.deboned=True;outs={}
+            for iid,n in list(c.embedded_items.items()):
+                if iid in self.registry.items and n>0:inv.add(iid,n);outs[iid]=outs.get(iid,0)+n
+            c.embedded_items.clear()
             for iid in ('core:bone','core:sinew'):
                 n=profile.get(iid,0)
                 if n:inv.add(iid,n);outs[iid]=n

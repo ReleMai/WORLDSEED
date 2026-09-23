@@ -292,6 +292,94 @@ Fast Gate run #66 passed completely on the final PR head. New deterministic regr
 - melee reach geometry;
 - skill improving attacks at outer reach.
 
+## Phase 3 — projectile cover, shields, and combat test arena
+
+### Projectile flight / cover
+
+Ranged attacks now use a dedicated deterministic local `ProjectileSystem` rather than treating line-of-sight as the entire ballistic model.
+
+- projectile paths are traced cell-by-cell through the already materialized local world;
+- solid sight-blocking terrain/structures stop the projectile before the target;
+- trees, boulders, brush, reeds, crops and other physical cover contribute bounded partial-cover penalties;
+- sufficiently substantial partial cover can deterministically intercept the projectile;
+- ranged difficulty overlays read the same projectile cover preview, so displayed shot difficulty and simulation resolution agree;
+- misses land at a deterministic bounded fall-short/long/lateral location rather than always at the target cell;
+- recoverable projectiles stop at the actual obstacle/landing cell;
+- arrows and thrown javelins that hit can remain embedded in living animals and transfer into the resulting carcass;
+- carcass processing exposes a Recover action and automatically recovers remaining embedded projectiles during deboning.
+
+Projectile RNG namespaces are isolated as `projectile-cover` and `projectile-miss`.
+
+### Active shield system
+
+Shields are off-hand defensive equipment rather than passive armor coverage. The combat resolver now evaluates shields before body armor and wound penetration.
+
+Shield interception chance combines:
+
+- shield melee or ranged base coverage;
+- shield-specific coverage of the struck body region;
+- player facing relative to the source attack;
+- Shield skill;
+- Agility;
+- active Guard bonus;
+- fatigue;
+- heavy-shield handling penalty.
+
+Front, side and rear attacks therefore produce different effective coverage. A tower shield can dominate frontal missile defense without pretending to cover the player's back. Once intercepted, block strength/stability determine how much incoming force is removed; Shield skill and Strength improve the block, while successful blocks consume stamina. Durable metal shields also lose artifact condition when absorbing impacts.
+
+The new Shield skill is part of character creation and is backfilled to 0 on older saves.
+
+Six authored shield profiles are present:
+
+- Rawhide Buckler — fast, excellent arm/melee interception, weak missile/body coverage;
+- Wicker Shield — broad low-cost primitive coverage with low stability;
+- Wooden Round Shield — balanced close/ranged coverage;
+- Hide Kite Shield — long torso/leg coverage with more weight;
+- Iron Heater Shield — high-stability frontal melee/ranged defense;
+- Steel Tower Shield — extreme frontal missile/body coverage at the highest stamina and weight cost.
+
+All six have distinct data profiles. The five new shield items have unique item sprites and all six have crafting recipes/progression.
+
+### Guard action
+
+The Combat Action Hub now exposes Guard. Guard requires an equipped shield, spends stamina, raises coverage for the immediate defensive exchange, and remains entirely on the authoritative command/combat path.
+
+Two-handed weapons and off-hand shields are mutually exclusive in both directions: a two-handed weapon cannot be readied while the off hand is occupied, and an off-hand item cannot be equipped while a two-handed weapon is readied.
+
+### Combat Test Arena
+
+The Combat Action Hub also contains a dedicated **Combat Test Arena** developer laboratory. It uses `NavigationStack` and authoritative arena commands rather than mutating state from UI code.
+
+Arena controls include:
+
+- spawn any combat weapon, shield, or ammunition;
+- spawn any authored/procedural animal at chosen bearings/ranges;
+- edit all player combat-relevant attributes and skills from bounded test values;
+- apply/heal light wounds, major bleeding, arm fracture, leg fracture, and exhaustion;
+- simulate incoming front/side/rear melee and ranged impacts against the current shield/facing;
+- clear arena creatures and restore player vitals.
+
+Practice presets provide:
+
+- close-combat ring — animals from several orientations plus knife/club/javelin/shields;
+- ranged lane — rabbit/deer/boar/wolf at several ranges with bow/sling/javelin supplies;
+- injury lab — fractures/bleeding, treatment supplies, shield set and a close threat;
+- shield gauntlet — all six shields and threats from opposite sides.
+
+Arena animals use an `arena:` UID prefix, are marked notable locally, and have no cohort key. They therefore cannot decrement or pollute authoritative wildlife cohorts. Arena management commands intentionally do not advance world time or trigger ecology/world simulation side effects.
+
+### Persistence and validation contracts
+
+New persistent state is backward-compatible by defaults:
+
+- shield skill;
+- player facing;
+- transient saved guard flag (cleared on Simulation construction);
+- creature embedded projectiles;
+- carcass source identity / embedded recoverables.
+
+Dedicated regression coverage verifies shield catalog/profile distinctness, facing-dependent coverage, buckler-vs-tower ranged behavior, Guard effects, shield-before-wound resolution, legacy skill backfill, state roundtrip, projectile partial/hard cover, deterministic miss landing, ecology-safe arena animals, arena stats/injuries/presets, and embedded-projectile recovery.
+
 ## Known gaps / next coherent phase
 
 The next pass should extend tactical depth without replacing the phase-1/2 contracts.
@@ -304,12 +392,11 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - weather masking;
    - wind-readable scent approach.
 
-2. **Projectile flight / cover**
-   - trace projectiles through intervening cells;
-   - partial cover;
-   - vegetation deflection;
-   - impact/landing cells on misses;
-   - embedded arrows/javelins and extraction damage.
+2. **Projectile depth beyond the phase-3 foundation**
+   - target-cell posture/cover exposure;
+   - projectile speed / time-of-flight where tactically meaningful;
+   - embedded-projectile extraction wounds from living targets;
+   - richer material-specific ricochet/breakage.
 
 3. **Animal combat decision depth**
    - committed boar/moose/bear charges;
@@ -318,11 +405,11 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - defensive threat displays before some attacks;
    - exhaustion and pain altering attack selection.
 
-4. **Melee defense**
-   - dodge/parry/block decisions;
-   - shields as active defense rather than passive arm armor only;
+4. **Melee defense beyond shields**
+   - explicit dodge/parry choices;
    - reach control and closing distance;
-   - weapon-class specific attack modes.
+   - weapon-class specific attack modes;
+   - shield bash / bind / brace decisions.
 
 5. **Expanded sign**
    - scat;
@@ -353,9 +440,7 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
 ## Important caveats
 
 - Weapon readiness currently references carried stack items; dedicated per-item weapon instances/condition are still future work outside existing durable-artifact handling.
-- Projectile recovery currently resolves to physical ground items at the target tile; full flight paths and embedded-projectile state are not implemented yet.
 - Aiming has four broad anatomical zones rather than species-specific named organs.
-- Shields are still primarily armor coverage rather than active block/parry tools.
 - Only track and blood physical signs are implemented.
 - No crouch/stalk stance exists yet.
 

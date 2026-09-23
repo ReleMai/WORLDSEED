@@ -523,10 +523,12 @@ def _process_carcass_menu(ctx:GameContext,term:Terminal)->str:
         if c.skinned:state.append('skinned')
         if c.butchered:state.append('butchered')
         if c.deboned:state.append('deboned')
-        rows.append((c.uid,f'{sp.name if sp else c.species_id} — quality {c.quality}%'+(f' — {", ".join(state)}' if state else '')))
+        embedded=sum(c.embedded_items.values())
+        rows.append((c.uid,f'{sp.name if sp else c.species_id} — quality {c.quality}%'+(f' — {", ".join(state)}' if state else '')+(f' — {embedded} embedded projectile(s)' if embedded else '')))
     uid=_select(term,'CARCASSES WITHIN REACH',rows)
     if not uid:return UI_BACK
     c=sim.state.carcasses[uid];sp=reg.species.get(c.species_id);actions=[]
+    if c.embedded_items:actions.append(('recover','Recover embedded arrows / thrown weapons'))
     if not c.skinned:actions.append(('skin','Skin — remove hide before butchering for the best hide'))
     if not c.butchered:actions.append(('butcher','Butcher — separate meat, organs and fat'))
     if c.butchered and not c.deboned:actions.append(('debone','Debone — recover bones and sinew; finishes carcass'))
@@ -673,6 +675,120 @@ def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=Non
             if not c:continue
             sim.execute(AttackCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
 
+def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
+    """Developer combat laboratory that uses authoritative simulation commands."""
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    nav=NavigationStack(RouteState('arena','COMBAT TEST ARENA'));status=''
+    root=[
+        ('presets','Load practice orientation'),
+        ('items','Spawn weapons, shields & ammunition'),
+        ('animals','Spawn an animal at a chosen bearing/range'),
+        ('stats','Set combat skills / attributes'),
+        ('injuries','Apply or heal injury states'),
+        ('hits','Simulate incoming melee / ranged hits'),
+        ('clear','Clear test animals and restore player'),
+    ]
+    while True:
+        route=nav.current
+        if route.route_id=='arena':
+            choice=_stack_menu(term,nav,root,subtitle=status or 'Local test entities have no ecology cohort and do not affect wildlife populations.')
+            status=''
+            if choice is None:return UI_BACK
+            if choice=='__BACK__':continue
+            if choice=='clear':
+                sim.execute(ArenaClearCommand(pid,True));status=sim.log[-1].message if sim.log else '';continue
+            nav.push(RouteState('arena:'+choice,choice.replace('_',' ').title()))
+            continue
+        if route.route_id=='arena:presets':
+            pick=_stack_menu(term,nav,[
+                ('close','Close-combat ring — threats from four orientations'),
+                ('ranged','Ranged lane — multiple ranges + flank threat'),
+                ('injury','Injury lab — fracture, bleeding, treatment & shields'),
+                ('shield','Shield gauntlet — all shield types + opposite threats'),
+            ])
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            sim.execute(ArenaPresetCommand(pid,pick));status=sim.log[-1].message if sim.log else '';nav.back();continue
+        if route.route_id=='arena:items':
+            rows=[]
+            for item in sorted(reg.items.values(),key=lambda q:(q.category,q.name)):
+                if item.weapon_damage>0 or 'shield' in item.tags or 'ammo' in item.tags:
+                    amount=20 if 'ammo' in item.tags else 1
+                    role='shield' if 'shield' in item.tags else item.weapon_class or item.damage_type
+                    rows.append((item.id,f'{item.name} — {role} — spawn x{amount}'))
+            pick=_stack_menu(term,nav,rows)
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            item=reg.items[pick];amount=20 if 'ammo' in item.tags else 1
+            sim.execute(ArenaSpawnItemCommand(pid,pick,amount));status=sim.log[-1].message if sim.log else '';nav.back();continue
+        if route.route_id=='arena:animals':
+            rows=[(sp.id,f'{sp.name} — HP {sp.max_hp} | aggression {sp.aggression} | speed {sp.speed}') for sp in sorted(reg.species.values(),key=lambda q:q.name)]
+            pick=_stack_menu(term,nav,rows)
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            nav.push(RouteState('arena:animal_position','SPAWN ORIENTATION',payload={'species_id':pick}));continue
+        if route.route_id=='arena:animal_position':
+            orientations=[
+                ('1,0','East adjacent'),('-1,0','West adjacent'),('0,-1','North adjacent'),('0,1','South adjacent'),
+                ('2,0','East 2 — close reach drill'),('-2,0','West 2 — close reach drill'),
+                ('4,0','East 4 — short ranged'),('0,-4','North 4 — short ranged'),
+                ('7,0','East 7 — medium ranged'),('0,7','South 7 — medium ranged'),
+                ('9,0','East 9 — long ranged'),('-6,-3','Northwest flank — 9 total range'),
+            ]
+            pick=_stack_menu(term,nav,orientations)
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            dx,dy=(int(v) for v in pick.split(','))
+            sim.execute(ArenaSpawnCreatureCommand(pid,route.payload['species_id'],dx,dy));status=sim.log[-1].message if sim.log else ''
+            nav.back();nav.back();continue
+        if route.route_id=='arena:stats':
+            rows=[]
+            for key,val in sorted(sim.state.player_attributes.items()):rows.append(('attribute|'+key,f'Attribute — {key.title()} = {val}'))
+            for key,val in sorted(sim.state.player_skills.items()):rows.append(('skill|'+key,f'Skill — {key.replace("_"," ").title()} = {val}'))
+            pick=_stack_menu(term,nav,rows)
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            kind,key=pick.split('|',1);nav.push(RouteState('arena:stat_value','SET TEST VALUE',payload={'kind':kind,'key':key}));continue
+        if route.route_id=='arena:stat_value':
+            lo=1 if route.payload['kind']=='attribute' else 0
+            values=sorted(set([lo,2,5,8,10,12,15,20]))
+            pick=_stack_menu(term,nav,[(str(v),f'{route.payload["key"].replace("_"," ").title()} → {v}') for v in values if v>=lo])
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            sim.execute(ArenaSetStatCommand(pid,route.payload['kind'],route.payload['key'],int(pick)));status=sim.log[-1].message if sim.log else ''
+            nav.back();nav.back();continue
+        if route.route_id=='arena:injuries':
+            pick=_stack_menu(term,nav,[
+                ('heal','Heal / reset all combat injuries'),('light_cut','Light torso cut'),
+                ('bleeding_torso','Heavy bleeding torso wound'),('arm_fracture','Left-arm fracture'),
+                ('leg_fracture','Left-leg fracture'),('exhausted','Severe stamina exhaustion'),
+            ])
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            sim.execute(ArenaInjuryCommand(pid,pick));status=sim.log[-1].message if sim.log else '';nav.back();continue
+        if route.route_id=='arena:hits':
+            tests=[
+                ('melee|blunt|12|front|torso','Front melee blunt — torso — 12'),
+                ('melee|pierce|12|front|torso','Front melee pierce — torso — 12'),
+                ('melee|cut|10|side|left_arm','Side melee cut — left arm — 10'),
+                ('melee|blunt|16|rear|head','Rear heavy melee — head — 16'),
+                ('ranged|pierce|12|front|torso','Front arrow — torso — 12'),
+                ('ranged|pierce|12|side|torso','Side arrow — torso — 12'),
+                ('ranged|pierce|16|rear|torso','Rear projectile — torso — 16'),
+                ('ranged|blunt|14|front|head','Front sling impact — head — 14'),
+            ]
+            pick=_stack_menu(term,nav,tests,subtitle='Front / side / rear are resolved from your current facing direction.')
+            if pick=='__BACK__':continue
+            if pick is None:return UI_BACK
+            kind,dtype,damage,bearing,part=pick.split('|')
+            fx=int(sim.state.player_facing_dx);fy=int(sim.state.player_facing_dy)
+            if fx==0 and fy==0:fx,fy=0,1
+            if bearing=='front':dx,dy=fx,fy
+            elif bearing=='rear':dx,dy=-fx,-fy
+            else:dx,dy=-fy,fx
+            sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),dx,dy,part));status=sim.log[-1].message if sim.log else '';nav.back();continue
+
+
 def _action_palette(ctx:GameContext,term:Terminal)->str:
     """Primary gameplay action hub with retained navigation state.
 
@@ -734,6 +850,12 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 return result
             if action=='hunt':
                 result=_hunt_action(ctx,term);
+                if result==UI_BACK:continue
+                return result
+            if action=='guard':
+                ctx.sim.execute(GuardCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='arena':
+                result=_combat_arena_menu(ctx,term)
                 if result==UI_BACK:continue
                 return result
             if action=='talk':

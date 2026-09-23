@@ -103,6 +103,10 @@ def item_detail_screen(reg:ContentRegistry,sim:Simulation,inv:Inventory,item_id:
     if item.tool_qualities:traits.append('Tool qualities: '+', '.join(f'{k.replace("_"," ")} {v}' for k,v in sorted(item.tool_qualities.items())))
     elif item.tool_power:traits.append(f'Tool effectiveness {item.tool_power}')
     if item.weapon_damage:traits.append(f'{item.damage_type.title()} damage {item.weapon_damage}' + (f' | range {item.range}' if item.range>1 else ''))
+    if 'shield' in item.tags:
+        traits.append(f'Shield type: {item.shield_type.replace("_"," ").title()} | melee coverage {item.shield_melee_coverage}% | ranged coverage {item.shield_ranged_coverage}%')
+        traits.append(f'Block {item.shield_block} | stability {item.shield_stability}% | guard stamina {item.shield_stamina_cost}')
+        if item.shield_body_coverage:traits.append('Shield body coverage: '+', '.join(f'{k} {v}%' for k,v in item.shield_body_coverage.items()))
     if item.ammo_item and item.ammo_item in reg.items:traits.append(f'Ammunition: {reg.items[item.ammo_item].name}')
     if item.armor:traits.append(f'Protection {item.armor}')
     if item.insulation:traits.append(f'Warmth {item.insulation}')
@@ -136,7 +140,9 @@ def equipment_screen(sim:Simulation,reg:ContentRegistry,inv:Inventory,width:int=
     if sim.state.player_equipment:
         for slot,iid in sorted(sim.state.player_equipment.items()):
             item=reg.items.get(iid);art=sim.state.artifacts.get(sim.state.player_equipped_artifacts.get(slot,''));detail=f' q{sim.artifacts.effective_quality(art)} cond {art.condition}%' if art else ''
-            body.append(f'{slot:<12} {(item.name if item else iid):<30} armor {(item.armor if item else 0):>3}{detail}')
+            line=f'{slot:<12} {(item.name if item else iid):<30} armor {(item.armor if item else 0):>3}{detail}'
+            if item and 'shield' in item.tags:line+=f' | shield M{item.shield_melee_coverage}% R{item.shield_ranged_coverage}% block {item.shield_block}'
+            body.append(line)
     else:body.append('Nothing equipped.')
     body+=['','ANATOMY']
     for part,hp in sim.state.player_body_parts.items():body.append(f'{part.replace("_"," "):<18} [{_bar(hp,100,16)}] {hp:>3}/100')

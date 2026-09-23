@@ -19,6 +19,8 @@ from worldseed.systems.ai import NPCSystem
 from worldseed.systems.factions import FactionSystem
 from worldseed.systems.magic import MagicSystem
 from worldseed.systems.combat import CombatSystem
+from worldseed.systems.projectiles import ProjectileSystem
+from worldseed.systems.test_arena import TestArenaSystem
 from worldseed.systems.crafting import CraftingSystem
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator, MagicGenerator
@@ -110,6 +112,9 @@ class Simulation:
         self.macrohistory=MacroHistorySystem(self.state,self.seed)
         self.magic=MagicSystem(self.state,self.seed,self.history,self.environment)
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
+        self.projectiles=ProjectileSystem(self.state,registry,self.seed,self.world,self.resources,self.building)
+        self.arena=TestArenaSystem(self.state,registry,self.world,self.resources,self.building)
+        self.state.player_guarding=False
         self.disasters=DisasterSystem(self.state,self.seed,self.history)
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
@@ -195,7 +200,14 @@ class Simulation:
         return key in self.state.player_talents
 
     def execute(self,command:object)->TickResult:
-        result=TickResult();minutes=MINUTES_PER_ACTION
+        result=TickResult()
+        if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
+            # Developer arena commands deliberately bypass world time, ecology
+            # ticks, and crafting discovery so practice cannot reveal recipes or
+            # perturb unrelated simulation systems.
+            self._arena_command(command)
+            return result
+        minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
             self._move(command,result);minutes=MOVE_MINUTES
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
@@ -222,6 +234,7 @@ class Simulation:
         elif isinstance(command,ReadyWeaponCommand):minutes=self._ready_weapon(command)
         elif isinstance(command,ClearReadyWeaponCommand):minutes=self._clear_ready_weapon(command)
         elif isinstance(command,AimCommand):minutes=self._aim(command)
+        elif isinstance(command,GuardCommand):minutes=self._guard(command)
         elif isinstance(command,PlantCommand):self._plant(command)
         elif isinstance(command,HarvestCommand):self._harvest(command)
         elif isinstance(command,AttackCommand):self._attack(command);minutes=1
@@ -255,7 +268,9 @@ class Simulation:
         # recipes. This runs on the authoritative command path only.
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
-        self.turn+=1;self._advance_time(minutes);self._post_action();return result
+        self.turn+=1;self._advance_time(minutes);self._post_action()
+        if isinstance(command,GuardCommand):self.state.player_guarding=False
+        return result
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
         """Fast-forward an absent player's world by meaningful event boundaries.
@@ -460,7 +475,9 @@ class Simulation:
         if v:
             for uid in attackers:
                 c=self.state.creatures.get(uid)
-                if c:self._message(self.combat.creature_attack_player(c,v,self.turn))
+                if c:
+                    p=self.player_pos
+                    self._message(self.combat.creature_attack_player(c,v,self.turn,c.x-p.x,c.y-p.y))
             if v.hp<=0:
                 killer=self.state.creatures.get(attackers[-1]) if attackers else None
                 if killer:
@@ -679,6 +696,7 @@ class Simulation:
             practice(self)
         elif water.mode=='wading':v.stamina=max(0,v.stamina-2)
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
+        self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
         self.hunting.note_player_noise(new,self.hunting.movement_noise(new),self.turn,self.clock.minute,"movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
@@ -898,18 +916,37 @@ class Simulation:
     def _ranged_attack(self,cmd:RangedAttackCommand)->int:
         c=self.state.creatures.get(cmd.target_uid)
         if not c or c.hp<=0:self.combat.clear_aim();self._message("That target is no longer there.");return 1
-        p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y);inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals)
+        p=self.player_pos;target_pos=WorldPos(c.x,c.y,c.z);dist=abs(c.x-p.x)+abs(c.y-p.y);inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals)
         weapon=self.combat.readied_weapon(inv)
         if not weapon or weapon.range<=1:self.combat.clear_aim();self._message("Ready a ranged or throwable weapon first.");return 1
         if dist>weapon.range:self._message(f"The target is beyond the useful range of your {weapon.name.lower()}.");return 1
         if weapon.ammo_item and inv.count(weapon.ammo_item)<=0:self._message(f"You have no {self.registry.items[weapon.ammo_item].name.lower()}.");return 1
-        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self.combat.clear_aim();self._message("You do not have a clear shot.");return 1
+        if c.z!=p.z:self.combat.clear_aim();self._message("The target is on another level.");return 1
+        dx=c.x-p.x;dy=c.y-p.y
+        self.state.player_facing_dx=0 if dx==0 else (1 if dx>0 else -1);self.state.player_facing_dy=0 if dy==0 else (1 if dy>0 else -1)
         aim_quality=self.state.player_aim_quality if self.state.player_aim_target==c.uid else 0
         aim_zone=self.state.player_aim_zone if self.state.player_aim_target==c.uid else "center"
         cost=max(1,weapon.stamina_cost);stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost)
-        before_wounds=len(c.wounds);target_pos=WorldPos(c.x,c.y,c.z)
-        msg=self.combat.ranged_attack_creature(c,inv,self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'),weapon.id,aim_zone,aim_quality,stamina_before)
-        hit=len(c.wounds)>before_wounds if c.uid in self.state.creatures else True
+        flight=self.projectiles.resolve(p,target_pos,weapon,self.turn,c.uid)
+        if flight.stopped_at is not None:
+            impact=flight.stopped_at
+            projectile_id=None
+            if weapon.throwable:
+                if inv.remove(weapon.id,1):
+                    projectile_id=weapon.id
+                    if inv.count(weapon.id)<=0:self.state.player_readied_weapon=""
+            elif weapon.ammo_item:
+                inv.remove(weapon.ammo_item,1)
+                if weapon.recovery_percent and hash_u64(self.seed,"projectile-recovery",self.turn,weapon.id,c.uid,impact.x,impact.y)%100<weapon.recovery_percent:
+                    projectile_id=weapon.ammo_item
+            if projectile_id:self._drop_projectile(projectile_id,impact)
+            self.combat.clear_aim();self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
+            obstacle=flight.cover_notes[-1] if flight.cover_notes else "cover"
+            self._message(f"Your {weapon.name.lower()} strikes {obstacle} before reaching the target.");return 1
+        before_wounds=len(c.wounds)
+        msg=self.combat.ranged_attack_creature(c,inv,self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'),weapon.id,aim_zone,aim_quality,stamina_before,flight.cover_penalty)
+        alive=c.uid in self.state.creatures
+        hit=(len(c.wounds)>before_wounds) if alive else True
         projectile_id=None
         if weapon.throwable:
             if inv.remove(weapon.id,1):
@@ -919,13 +956,27 @@ class Simulation:
             roll=hash_u64(self.seed,"projectile-recovery",self.turn,weapon.id,c.uid,target_pos.x,target_pos.y)%100
             if roll<weapon.recovery_percent:projectile_id=weapon.ammo_item
         if projectile_id:
-            key=pos_key(target_pos.x,target_pos.y,target_pos.z);pile=self.state.ground_piles.get(key)
-            if pile is None:pile=GroundPile(target_pos.x,target_pos.y,target_pos.z,{});self.state.ground_piles[key]=pile
-            pile.items[projectile_id]=pile.items.get(projectile_id,0)+1
+            if hit and weapon.weapon_class in ("bow","javelin"):
+                if alive:
+                    c.embedded_projectiles.append({"item_id":projectile_id,"weapon_id":weapon.id,"turn":self.turn,"part":c.wounds[-1].get("part","torso") if c.wounds else "torso"})
+                else:
+                    carcass=max((q for q in self.state.carcasses.values() if q.source_uid==c.uid),key=lambda q:q.killed_minute,default=None)
+                    if carcass:carcass.embedded_items[projectile_id]=carcass.embedded_items.get(projectile_id,0)+1
+                    else:self._drop_projectile(projectile_id,target_pos)
+            elif hit:
+                self._drop_projectile(projectile_id,target_pos)
+            else:
+                self._drop_projectile(projectile_id,self.projectiles.miss_landing(p,target_pos,weapon,self.turn,c.uid))
         self.combat.clear_aim()
-        if c.uid in self.state.creatures:self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
+        if alive:self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
         else:self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
+        if flight.cover_penalty and "misses" not in msg.lower():msg+=f" Cover imposed a {flight.cover_penalty}-point shot penalty."
         self._message(msg);return 1
+
+    def _drop_projectile(self,item_id:str,pos:WorldPos)->None:
+        key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
+        if pile is None:pile=GroundPile(pos.x,pos.y,pos.z,{});self.state.ground_piles[key]=pile
+        pile.items[item_id]=pile.items.get(item_id,0)+1
 
     def _ready_weapon(self,cmd:ReadyWeaponCommand)->int:
         self._message(self.combat.ready_weapon(cmd.item_id,self.entities.get(cmd.actor,Inventory)));return 1
@@ -937,7 +988,10 @@ class Simulation:
         c=self.state.creatures.get(cmd.target_uid)
         if not c or c.hp<=0:self.combat.clear_aim();self._message("That target is no longer there.");return 1
         p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y)
-        if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self.combat.clear_aim();self._message("You cannot keep a clear aim on that target.");return 1
+        if c.z!=p.z:self.combat.clear_aim();self._message("You cannot aim across levels.");return 1
+        dx=c.x-p.x;dy=c.y-p.y;self.state.player_facing_dx=0 if dx==0 else (1 if dx>0 else -1);self.state.player_facing_dy=0 if dy==0 else (1 if dy>0 else -1)
+        preview=self.projectiles.preview(p,WorldPos(c.x,c.y,c.z))
+        if preview.blocked_at:self.combat.clear_aim();self._message("Solid terrain completely blocks that shot.");return 1
         v=self.entities.get(cmd.actor,Vitals)
         if v.stamina<=0:self._message("You are too exhausted to hold a steady aim.");return 1
         v.stamina=max(0,v.stamina-1)
@@ -975,6 +1029,7 @@ class Simulation:
         plot.moisture=min(100,plot.moisture+35);self._message("You irrigate the crop.")
     def _attack(self,cmd:AttackCommand)->None:
         origin=self.player_pos;p=origin.moved(cmd.dx,cmd.dy);distance=abs(cmd.dx)+abs(cmd.dy)
+        self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         target=min((c for c in self.state.creatures.values() if c.z==p.z and c.x==p.x and c.y==p.y),key=lambda c:c.hp,default=None)
         if not target:self._message("There is nothing there to attack.");return
         inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);weapon=self.combat.readied_weapon(inv)
@@ -987,6 +1042,28 @@ class Simulation:
         msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before)
         if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
         self._message(msg)
+    def _guard(self,cmd:GuardCommand)->int:
+        shield=self.combat.equipped_shield();v=self.entities.get(cmd.actor,Vitals)
+        if not shield:self._message("Equip a shield in your off hand before guarding.");return 1
+        cost=max(1,shield.shield_stamina_cost//2)
+        if v.stamina<=0:self._message("You are too exhausted to establish a shield guard.");return 1
+        v.stamina=max(0,v.stamina-cost);self.state.player_guarding=True
+        self._message(f"You raise the {shield.name.lower()} and brace behind its {shield.shield_type} profile.");return 1
+
+    def _arena_command(self,cmd)->None:
+        inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);p=self.player_pos
+        if isinstance(cmd,ArenaSpawnItemCommand):msg=self.arena.spawn_item(inv,cmd.item_id,cmd.amount)
+        elif isinstance(cmd,ArenaSpawnCreatureCommand):msg=self.arena.spawn_creature(p,cmd.species_id,cmd.dx,cmd.dy)
+        elif isinstance(cmd,ArenaSetStatCommand):msg=self.arena.set_stat(cmd.stat_type,cmd.key,cmd.value)
+        elif isinstance(cmd,ArenaInjuryCommand):msg=self.arena.injury(v,cmd.preset)
+        elif isinstance(cmd,ArenaPresetCommand):msg=self.arena.preset(cmd.preset,p,inv,v)
+        elif isinstance(cmd,ArenaClearCommand):msg=self.arena.clear(v,cmd.heal)
+        elif isinstance(cmd,ArenaIncomingHitCommand):
+            part=cmd.part if cmd.part in self.state.player_body_parts else "torso"
+            msg=self.combat.resolve_player_hit(v,part,max(1,cmd.damage),cmd.damage_type,cmd.attack_kind,self.turn,"Arena test strike","arena:launcher",cmd.source_dx,cmd.source_dy,2 if cmd.damage_type in ("cut","pierce") else 0,10 if cmd.damage_type=="blunt" else 0)
+        else:msg="Unknown arena command."
+        self._message(msg)
+
     def _magic_project(self,effects:dict)->None:
         pos=self.player_pos;targets=[c for c in self.state.creatures.values() if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=4]
         if not targets:self._message("The projected force dissipates without a target.");return
@@ -998,6 +1075,9 @@ class Simulation:
         inv=self.entities.get(cmd.actor,Inventory);item=self.registry.items.get(cmd.item_id)
         if not item or not item.equip_slot:self._message("That item cannot be equipped.");return
         if inv.count(cmd.item_id)<=0:self._message("You are not carrying that item.");return
+        if item.equip_slot=="offhand":
+            ready=self.combat.readied_weapon(inv)
+            if ready and ready.two_handed:self._message(f"Lower the {ready.name.lower()} before equipping an off-hand item.");return
         old=self.state.player_equipment.get(item.equip_slot)
         if old:inv.add(old,1)
         self.state.player_equipped_artifacts.pop(item.equip_slot,None)

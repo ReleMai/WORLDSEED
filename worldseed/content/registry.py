@@ -51,6 +51,9 @@ class ItemDef:
     spoilage_hours: int = 0; utility_roles: tuple[str, ...] = (); range: int = 1
     ammo_item: str | None = None; weapon_class: str = ""; reach: int = 1; accuracy: int = 0
     stamina_cost: int = 5; throwable: bool = False; recovery_percent: int = 0; two_handed: bool = False
+    shield_type: str = ""; shield_melee_coverage: int = 0; shield_ranged_coverage: int = 0
+    shield_block: int = 0; shield_stability: int = 0; shield_stamina_cost: int = 0
+    shield_body_coverage: dict[str, int] = field(default_factory=dict)
 
     def quality(self, key: str) -> int:
         if key in self.tool_qualities:
@@ -271,6 +274,11 @@ class ContentRegistry:
             if item.ammo_item and item.ammo_item not in self.items: raise ValueError(f"Unknown ammo item {item.ammo_item} for {item.id}")
             if item.weapon_damage>0 and (item.range<1 or item.reach<1 or item.stamina_cost<0 or not -40<=item.accuracy<=40 or not 0<=item.recovery_percent<=100):
                 raise ValueError(f"Invalid weapon handling metadata on {item.id}")
+            shield_values=(item.shield_melee_coverage,item.shield_ranged_coverage,item.shield_stability)
+            if any(not 0<=int(v)<=100 for v in shield_values) or item.shield_block<0 or item.shield_stamina_cost<0 or any(not 0<=int(v)<=100 for v in item.shield_body_coverage.values()):
+                raise ValueError(f"Invalid shield metadata on {item.id}")
+            if "shield" in item.tags and (item.equip_slot!="offhand" or not item.shield_type or max(item.shield_melee_coverage,item.shield_ranged_coverage)<=0):
+                raise ValueError(f"Shield {item.id} requires offhand slot and coverage metadata")
         for terrain in self.terrains.values():
             if len(terrain.glyph)!=1 or len(terrain.ascii_glyph)!=1: raise ValueError(f"Terrain glyph must be one character: {terrain.id}")
             if terrain.gather_item and terrain.gather_item not in self.items: raise ValueError(f"Unknown gather item {terrain.gather_item} on {terrain.id}")

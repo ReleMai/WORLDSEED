@@ -52,6 +52,22 @@ class ReadyWeaponCommand: actor:int; item_id:str
 class ClearReadyWeaponCommand: actor:int
 @dataclass(frozen=True,slots=True)
 class AimCommand: actor:int; target_uid:str; zone:str="center"
+@dataclass(frozen=True,slots=True)
+class GuardCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class ArenaSpawnItemCommand: actor:int; item_id:str; amount:int=1
+@dataclass(frozen=True,slots=True)
+class ArenaSpawnCreatureCommand: actor:int; species_id:str; dx:int=1; dy:int=0
+@dataclass(frozen=True,slots=True)
+class ArenaSetStatCommand: actor:int; stat_type:str; key:str; value:int
+@dataclass(frozen=True,slots=True)
+class ArenaInjuryCommand: actor:int; preset:str
+@dataclass(frozen=True,slots=True)
+class ArenaPresetCommand: actor:int; preset:str
+@dataclass(frozen=True,slots=True)
+class ArenaClearCommand: actor:int; heal:bool=True
+@dataclass(frozen=True,slots=True)
+class ArenaIncomingHitCommand: actor:int; attack_kind:str="melee"; damage_type:str="blunt"; damage:int=10; source_dx:int=1; source_dy:int=0; part:str="torso"
 
 @dataclass(frozen=True,slots=True)
 class PlantCommand: actor:int; crop_id:str

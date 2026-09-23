@@ -1681,7 +1681,7 @@
   },
   {
     "id": "core:rawhide_buckler",
-    "name": "Buckler",
+    "name": "Rawhide Buckler",
     "asset": "buckler",
     "category": "armor",
     "material": "core:leather",
@@ -1692,17 +1692,28 @@
       "shield",
       "rawhide"
     ],
-    "description": "A light wooden-and-rawhide hand shield that turns glancing blows aside.",
-    "flavor": "\"Not a wall, just enough between you and the teeth.\"",
+    "description": "A compact wooden-and-rawhide hand shield built for quick interceptions without much missile coverage.",
+    "flavor": "\"Small enough to move first; large enough to matter.\"",
     "utility_roles": [
-      "combat"
+      "combat",
+      "shield"
     ],
     "base_value": 18,
     "equip_slot": "offhand",
-    "armor": 5,
-    "coverage": [
-      "left_arm"
-    ]
+    "armor": 0,
+    "coverage": [],
+    "shield_type": "buckler",
+    "shield_melee_coverage": 58,
+    "shield_ranged_coverage": 20,
+    "shield_block": 4,
+    "shield_stability": 28,
+    "shield_stamina_cost": 2,
+    "shield_body_coverage": {
+      "head": 18,
+      "torso": 42,
+      "arms": 82,
+      "legs": 10
+    }
   },
   {
     "id": "core:clay_pot",
@@ -3272,5 +3283,192 @@
     "base_value": 6,
     "description": "Edible shellfish gathered from exposed rocky shore beds.",
     "flavor": "A meal sealed shut and fastened to the rocks."
+  },
+  {
+    "id": "core:wicker_shield",
+    "name": "Wicker Shield",
+    "asset": "wicker_shield",
+    "category": "armor",
+    "material": "core:fiber",
+    "mass_g": 2300,
+    "volume_ml": 3200,
+    "tags": [
+      "armor",
+      "shield",
+      "primitive",
+      "wicker"
+    ],
+    "base_value": 22,
+    "equip_slot": "offhand",
+    "armor": 0,
+    "coverage": [],
+    "description": "A broad woven shield over a light wooden frame. It covers more of the body than a buckler but gives way under heavy impacts.",
+    "flavor": "\"A wall made from reeds still changes where the blow lands.\"",
+    "utility_roles": [
+      "combat",
+      "shield"
+    ],
+    "shield_type": "wicker",
+    "shield_melee_coverage": 48,
+    "shield_ranged_coverage": 50,
+    "shield_block": 3,
+    "shield_stability": 22,
+    "shield_stamina_cost": 2,
+    "shield_body_coverage": {
+      "head": 32,
+      "torso": 62,
+      "arms": 72,
+      "legs": 28
+    }
+  },
+  {
+    "id": "core:wood_round_shield",
+    "name": "Wooden Round Shield",
+    "asset": "wood_round_shield",
+    "category": "armor",
+    "material": "core:wood",
+    "mass_g": 3900,
+    "volume_ml": 4300,
+    "tags": [
+      "armor",
+      "shield",
+      "wooden"
+    ],
+    "base_value": 36,
+    "equip_slot": "offhand",
+    "armor": 0,
+    "coverage": [],
+    "description": "A layered round wooden shield with a central grip, balancing useful coverage with enough mobility for close fighting.",
+    "flavor": "\"Broad timber turns a clean hit into a problem of angles.\"",
+    "utility_roles": [
+      "combat",
+      "shield"
+    ],
+    "shield_type": "round",
+    "shield_melee_coverage": 68,
+    "shield_ranged_coverage": 58,
+    "shield_block": 6,
+    "shield_stability": 48,
+    "shield_stamina_cost": 3,
+    "shield_body_coverage": {
+      "head": 44,
+      "torso": 76,
+      "arms": 84,
+      "legs": 38
+    }
+  },
+  {
+    "id": "core:hide_kite_shield",
+    "name": "Hide Kite Shield",
+    "asset": "hide_kite_shield",
+    "category": "armor",
+    "material": "core:leather",
+    "mass_g": 4700,
+    "volume_ml": 5600,
+    "tags": [
+      "armor",
+      "shield",
+      "wooden",
+      "leather"
+    ],
+    "base_value": 52,
+    "equip_slot": "offhand",
+    "armor": 0,
+    "coverage": [],
+    "description": "An elongated wood-and-hide shield that protects the torso and leading leg while trading away some agility.",
+    "flavor": "\"Length below the hand keeps teeth and points farther from the thigh.\"",
+    "utility_roles": [
+      "combat",
+      "shield"
+    ],
+    "shield_type": "kite",
+    "shield_melee_coverage": 66,
+    "shield_ranged_coverage": 70,
+    "shield_block": 7,
+    "shield_stability": 56,
+    "shield_stamina_cost": 4,
+    "shield_body_coverage": {
+      "head": 40,
+      "torso": 84,
+      "arms": 80,
+      "legs": 65
+    }
+  },
+  {
+    "id": "core:iron_heater_shield",
+    "name": "Iron Heater Shield",
+    "asset": "iron_heater_shield",
+    "category": "armor",
+    "material": "core:iron",
+    "mass_g": 6100,
+    "volume_ml": 5200,
+    "tags": [
+      "armor",
+      "shield",
+      "metal",
+      "durable"
+    ],
+    "base_value": 90,
+    "equip_slot": "offhand",
+    "armor": 0,
+    "coverage": [],
+    "description": "A compact iron-faced shield with strong structure and high frontal protection against both blows and projectiles.",
+    "flavor": "\"Weight buys certainty when the impact arrives.\"",
+    "utility_roles": [
+      "combat",
+      "shield",
+      "durable"
+    ],
+    "shield_type": "heater",
+    "shield_melee_coverage": 76,
+    "shield_ranged_coverage": 78,
+    "shield_block": 10,
+    "shield_stability": 74,
+    "shield_stamina_cost": 5,
+    "shield_body_coverage": {
+      "head": 52,
+      "torso": 88,
+      "arms": 86,
+      "legs": 52
+    }
+  },
+  {
+    "id": "core:steel_tower_shield",
+    "name": "Steel Tower Shield",
+    "asset": "steel_tower_shield",
+    "category": "armor",
+    "material": "core:steel",
+    "mass_g": 9800,
+    "volume_ml": 8500,
+    "tags": [
+      "armor",
+      "shield",
+      "metal",
+      "durable",
+      "heavy"
+    ],
+    "base_value": 165,
+    "equip_slot": "offhand",
+    "armor": 0,
+    "coverage": [],
+    "description": "A very large steel-reinforced shield providing exceptional frontal missile and body coverage at a severe weight and stamina cost.",
+    "flavor": "\"Carry the wall, and accept that the wall carries you too.\"",
+    "utility_roles": [
+      "combat",
+      "shield",
+      "durable"
+    ],
+    "shield_type": "tower",
+    "shield_melee_coverage": 72,
+    "shield_ranged_coverage": 94,
+    "shield_block": 14,
+    "shield_stability": 92,
+    "shield_stamina_cost": 8,
+    "shield_body_coverage": {
+      "head": 76,
+      "torso": 98,
+      "arms": 94,
+      "legs": 88
+    }
   }
 ]

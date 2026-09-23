@@ -93,7 +93,9 @@ ACTION_WORK = [
 ACTION_COMBAT = [
     ('x', 'Attack with readied melee weapon'),
     ('hunt', 'Aim / fire readied ranged or thrown weapon'),
+    ('guard', 'Raise equipped shield for one defensive exchange'),
     ('f', 'Ready / lower weapons & review wounds'),
+    ('arena', 'Combat test arena / developer practice lab'),
 ]
 
 ACTION_WORLD = [
