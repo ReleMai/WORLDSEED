@@ -1,0 +1,29 @@
+name: Export Markdown Docs
+
+on:
+  push:
+    branches:
+      - docs/consolidate-markdown-20260922
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect markdown
+        run: |
+          mkdir -p export
+          find . -type f -name '*.md' -not -path './.git/*' -print0 | while IFS= read -r -d '' f; do
+            mkdir -p "export/$(dirname "$f")"
+            cp "$f" "export/$f"
+          done
+          mkdir -p export/tools
+          cp tools/package_dev15.py export/tools/package_dev15.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worldseed-markdown-export
+          path: export
+          retention-days: 1
