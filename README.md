@@ -16,6 +16,16 @@ Dev38 replaces the crude single-sprite natural containers with the new realistic
 - Natural-container sprites use smooth scaling and per-type dimensions so logs stay broad and low, stumps read vertically, and rock crevices stay close to the ground.
 - The atlas is presentation-only and does not change loot, storage capacity, movement rules, resource density, or save compatibility.
 
+## RC14 Dev38 — Natural Container Visual Variety
+
+Natural world containers now use a 15-frame realistic variant atlas instead of repeating one crude sprite.
+
+- Hollow Logs have five distinct realistic fallen-log variants.
+- Rotten Stumps have five distinct weathered-stump variants.
+- Rock Crevices have five distinct stone-shelter/crevice variants.
+- Art direction favors exposed bark, splintered wood, cavities, stone faces, rubble, sparse lichen and restrained moss rather than heavily moss-covered stylization.
+- Variant selection remains deterministic from resource ID and world coordinates, so the same generated container keeps the same appearance across reloads without changing world-generation or simulation authority.
+
 ## RC14 Dev37 — Floating Interaction Panels
 
 Dev37 replaces the remaining full-window inventory interaction flow with retained in-world panels and cursor-local context menus.
