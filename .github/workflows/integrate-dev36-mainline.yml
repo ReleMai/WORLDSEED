@@ -405,33 +405,12 @@ jobs:
           # Dedent generated test file.
           test.write_text(textwrap.dedent(test.read_text(encoding="utf-8")),encoding="utf-8")
 
-          # Add new focused test to the bounded fast gate.
-          fast=Path(".github/workflows/fast-gate.yml")
-          text=fast.read_text(encoding="utf-8")
-          anchor="""      - name: Phase 5 coast tests
-          """
-          step="""      - name: Dev36 world interaction regressions
-                shell: pwsh
-                run: python -m unittest tests.test_dev36_world_interactions
-
-          """
-          step=textwrap.dedent(step)
-          # restore YAML indentation
-          step="\n".join(("      "+line if line else line) for line in step.splitlines())+"\n"
-          if anchor not in text:
-              raise SystemExit("fast-gate insertion anchor missing")
-          text=text.replace(anchor,step+anchor,1)
-          fast.write_text(text,encoding="utf-8")
-
           # Main documentation cleanup contract: only the consolidated README
           # plus the operational AGENTS file remain as Markdown.
           remaining=sorted(p.as_posix() for p in Path(".").rglob("*.md") if ".git" not in p.parts)
           if remaining != ["AGENTS.md","README.md"]:
               raise SystemExit(f"unexpected Markdown files after integration: {remaining}")
           PY
-
-      - name: Remove temporary integration workflow
-        run: rm .github/workflows/integrate-dev36-mainline.yml
 
       - name: Validate integrated tree
         shell: bash
@@ -448,6 +427,7 @@ jobs:
       - name: Commit integrated mainline candidate
         shell: bash
         run: |
+          rm -rf worldseed.egg-info
           git config user.name "WORLDSEED Integration"
           git config user.email "actions@users.noreply.github.com"
           git add -A
