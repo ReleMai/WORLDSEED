@@ -1,0 +1,66 @@
+name: Dev38 Repair Natural Container Atlas
+
+on:
+  push:
+    branches: [dev38-natural-container-png-repair]
+    paths:
+      - ".github/workflows/dev38-repair-atlas.yml"
+      - "worldseed/assets/embedded/natural_container_variants.b64.part*"
+
+permissions:
+  contents: write
+
+jobs:
+  repair-atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev38-natural-container-png-repair
+
+      - name: Reconstruct and verify PNG
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import hashlib
+          from pathlib import Path
+
+          root = Path("worldseed/assets/embedded")
+          parts = sorted(root.glob("natural_container_variants.b64.part*"))
+          assert len(parts) == 7, parts
+          encoded = "".join(p.read_text(encoding="ascii") for p in parts)
+          data = base64.b64decode(encoded, validate=True)
+          digest = hashlib.sha256(data).hexdigest()
+          expected = "0733c98f7e601511ddad41d89b3cd077b27672475a607a28c6fdf5d162533c5a"
+          assert digest == expected, (digest, expected)
+          target = Path("worldseed/assets/sprites/resources/natural_container_variants.png")
+          target.write_bytes(data)
+          print(f"wrote {target} ({len(data)} bytes, sha256={digest})")
+          PY
+          python -m pip install --quiet "Pillow>=10,<12"
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          path = Path("worldseed/assets/sprites/resources/natural_container_variants.png")
+          with Image.open(path) as image:
+              image.verify()
+          with Image.open(path) as image:
+              assert image.size == (640, 384), image.size
+          print("PNG integrity and 640x384 atlas dimensions verified")
+          PY
+
+      - name: Commit repaired atlas
+        shell: bash
+        run: |
+          if git diff --quiet -- worldseed/assets/sprites/resources/natural_container_variants.png; then
+            echo "Atlas already matches repaired bytes."
+            exit 0
+          fi
+          git config user.name "WORLDSEED CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add worldseed/assets/sprites/resources/natural_container_variants.png
+          git commit -m "Dev38: repair corrupted natural container PNG atlas"
+          git push origin HEAD:dev38-natural-container-png-repair
