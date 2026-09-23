@@ -286,6 +286,7 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
             def hydro_progress(i,total,detail):emit('Resolving watersheds',0.08+0.14*(i/max(1,total)),detail)
             hydrology.prepare_world_bounds(*bounds,persist=True,progress=hydro_progress)
             world.generator.attach_hydrology(hydrology)
+            world.prepare_coastal_mouths(bounds)
             pos=_relocate_spawn_after_hydrology(world,pos,spawn_resources)
         def terrain_progress(i,total,detail):emit('Carving rivers / shaping terrain',0.22+0.33*(i/max(1,total)),f'{detail}  •  {i}/{total} chunks')
         world_stats=world.pre_generate(pos,radius,terrain_progress,persist=True)
@@ -301,6 +302,7 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
             def hydro_warm(i,total,detail):emit('Loading watershed plan',0.08+0.16*(i/max(1,total)),detail)
             hydrology.prepare_world_bounds(*bounds,persist=True,progress=hydro_warm)
             world.generator.attach_hydrology(hydrology)
+            world.prepare_coastal_mouths(bounds)
         def warm_terrain(i,total,detail):emit('Warming nearby terrain',0.24+0.28*(i/max(1,total)),f'{detail}  •  {i}/{total}')
         world.warm_region(pos,warm,warm_terrain)
         def warm_resources(i,total,detail):emit('Warming nearby resources',0.52+0.30*(i/max(1,total)),f'{detail}  •  {i}/{total}')
@@ -358,34 +360,65 @@ def _view_text(term:Terminal,text:str,**kwargs)->None:
 def _direction(term:Terminal)->tuple[int,int]|None:
     k=select_menu(term,'DIRECTION',[('UP','North'),('RIGHT','East'),('DOWN','South'),('LEFT','West')],subtitle='Choose an adjacent tile.')
     return DIRECTION_KEYS.get(k)
+def _harvestable_positions(sim:Simulation,origin:WorldPos|None=None)->list[WorldPos]:
+    p=origin or sim.player_pos
+    offsets=((0,0),(0,-1),(0,1),(-1,0),(1,0))
+    return [p.moved(dx,dy) for dx,dy in offsets if sim.resources.is_harvestable(p.moved(dx,dy))]
+
+def _gather_positions(ctx:GameContext,positions:list[WorldPos])->str:
+    sim=ctx.sim;p=sim.player_pos;messages=[];seen=set()
+    for target in positions:
+        key=(target.x,target.y,target.z)
+        if key in seen:continue
+        seen.add(key)
+        dx,dy=target.x-p.x,target.y-p.y
+        if abs(dx)+abs(dy)>1:continue
+        before=len(sim.log)
+        sim.execute(GatherCommand(ctx.player_id,dx,dy))
+        if len(sim.log)>before:messages.append(sim.log[-1].message)
+    if not messages:return 'Nothing harvestable is within reach.'
+    if len(messages)==1:return messages[0]
+    return f'Gathered {len(messages)} nearby targets. ' + ' | '.join(messages)
+
 def _gather_action(ctx:GameContext,term:Terminal)->str:
-    """Harvest targeting uses the map itself, never a second list menu."""
+    """Gather the only nearby target immediately, or multi-select when several are in reach."""
     sim=ctx.sim;p=sim.player_pos
-    offsets=[(0,0),(0,-1),(0,1),(-1,0),(1,0)]
-    candidates=[(dx,dy) for dx,dy in offsets if sim.resources.is_harvestable(p.moved(dx,dy))]
+    candidates=_harvestable_positions(sim,p)
     if not candidates:return 'Nothing harvestable is within reach.'
-    if len(candidates)==1:
-        dx,dy=candidates[0];sim.execute(GatherCommand(ctx.player_id,dx,dy));return sim.log[-1].message if sim.log else ''
-    renderer=Renderer(ctx.registry);cursor=p
+    if len(candidates)==1:return _gather_positions(ctx,candidates)
+    renderer=Renderer(ctx.registry);cursor=candidates[0];selected=set()
     while True:
         target_desc=sim.resources.description(cursor) if sim.resources.is_harvestable(cursor) else 'Nothing harvestable'
-        msg=f'HARVEST — {target_desc}. Click a nearby tile and Confirm; Esc cancels.'
+        picked=(cursor.x,cursor.y,cursor.z) in selected
+        msg=(f'HARVEST — {target_desc} — {"SELECTED" if picked else "not selected"}. '
+             f'Click or Space toggles; Enter gathers {len(selected)} selected; C clears; Esc cancels.')
         _present_game_frame(term,ctx,renderer,msg,cursor);k=term.read_key()
         if k.startswith('UI_WORLD:'):
             _,x,y=k.split(':');nxt=WorldPos(int(x),int(y),p.z)
-            if abs(nxt.x-p.x)+abs(nxt.y-p.y)<=1:cursor=nxt
+            if abs(nxt.x-p.x)+abs(nxt.y-p.y)<=1:
+                cursor=nxt
+                if sim.resources.is_harvestable(cursor):
+                    key=(cursor.x,cursor.y,cursor.z)
+                    if key in selected:selected.remove(key)
+                    else:selected.add(key)
             continue
         if k in ('ESC','q','Q'):return UI_BACK
-        if k in ('\r','\n'):
-            rdx,rdy=cursor.x-p.x,cursor.y-p.y
-            if abs(rdx)+abs(rdy)<=1 and sim.resources.is_harvestable(cursor):
-                sim.execute(GatherCommand(ctx.player_id,rdx,rdy));return sim.log[-1].message if sim.log else ''
+        if k in ('c','C'):
+            selected.clear();continue
+        if k in (' ','SPACE','\t'):
+            if sim.resources.is_harvestable(cursor):
+                key=(cursor.x,cursor.y,cursor.z)
+                if key in selected:selected.remove(key)
+                else:selected.add(key)
             continue
+        if k in ('\r','\n'):
+            if not selected:return 'No harvest targets selected.'
+            ordered=[WorldPos(x,y,z) for x,y,z in sorted(selected,key=lambda q:(abs(q[0]-p.x)+abs(q[1]-p.y),q[1],q[0]))]
+            return _gather_positions(ctx,ordered)
         direction=DIRECTION_KEYS.get(k.lower() if len(k)==1 else k)
         if direction:
             nxt=cursor.moved(*direction);rdx,rdy=nxt.x-p.x,nxt.y-p.y
             if abs(rdx)+abs(rdy)<=1:cursor=nxt
-
 def _talk_action(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;p=sim.player_pos
     nearby=[]
@@ -903,9 +936,11 @@ def _settings(ctx:GameContext,term:Terminal)->None:
         elif choice=='mods':
             rows2=getattr(sim,'loaded_mods',[]) or ['No external data mods are active.'];nav.push(RouteState('mods','Data Mods'));_stack_view(term,nav,box('DATA MODS',rows2+[f'hash={getattr(sim,"mod_hash","none")}'],screen_width(term.size()[0],110)))
 
-def _storage_menu_terminal(ctx:GameContext,term:Terminal)->str:
+def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=None)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
-    c=sim.building.nearby_container(sim.player_pos)
+    c=next((row for row in sim.state.containers.values() if row.uid==container_uid),None) if container_uid else sim.building.nearby_container(sim.player_pos)
+    if not c and container_uid:
+        _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not c:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
     nav=NavigationStack(RouteState('storage','Nearby Storage'))
@@ -940,12 +975,14 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal)->str:
         if not nav.back():return UI_BACK
 
 
-def _storage_menu(ctx:GameContext,term:Terminal)->str:
+def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->str:
     """One-screen graphical transfer view with terminal fallback."""
     if not (getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None))):
-        return _storage_menu_terminal(ctx,term)
+        return _storage_menu_terminal(ctx,term,container_uid)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
-    container=sim.building.nearby_container(sim.player_pos)
+    container=next((c for c in sim.state.containers.values() if c.uid==container_uid),None) if container_uid else sim.building.nearby_container(sim.player_pos)
+    if not container and container_uid:
+        _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not container:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
     uid=container.uid
@@ -1016,6 +1053,36 @@ def _storage_menu(ctx:GameContext,term:Terminal)->str:
             sim.execute(DestroyContainerCommand(pid,uid))
             return sim.log[-1].message if sim.log else ''
         continue
+
+
+
+def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
+    """Context actions for a right-clicked world tile; only mutations enforce reach."""
+    sim=ctx.sim;p=sim.player_pos
+    if target.z!=p.z:return UI_BACK
+    distance=abs(target.x-p.x)+abs(target.y-p.y)
+    rows=[]
+    container=sim.building.container_at(target)
+    pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
+    if distance<=1 and sim.resources.is_harvestable(target):
+        rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
+    if distance<=1 and pile and pile.items:
+        count=sum(max(0,int(n)) for n in pile.items.values())
+        rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
+    if distance<=1 and container:
+        rows.append(('open',f'Open {container.name or "container"}'))
+    rows.append(('examine','Examine tile and contents'))
+    subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
+    choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle)
+    if not choice:return UI_BACK
+    if choice=='gather':return _gather_positions(ctx,[target])
+    if choice=='pickup':
+        sim.execute(PickupCommand(ctx.player_id,target.x-p.x,target.y-p.y))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='open' and container:return _storage_menu(ctx,term,container.uid)
+    if choice=='examine':
+        _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
+    return UI_BACK
 
 
 def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_artifacts:bool=True)->dict:
@@ -1580,7 +1647,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
     while True:
         _present_game_frame(term,ctx,renderer,last);last=''
-        key=term.read_key();intent=classify_key(key)
+        key=term.read_key()
+        if key.startswith('UI_WORLD_MENU:'):
+            _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
+        intent=classify_key(key)
         if intent.kind=='quit':
             _save(ctx);return 'quit'
         if intent.kind=='pause':

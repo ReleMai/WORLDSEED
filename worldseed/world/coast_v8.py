@@ -95,7 +95,7 @@ class CoastV8Sampler:
         if hydro is None:
             return None
         try:
-            return hydro.surface_at(pos,prepared_only=prepared_only)
+            return getattr(hydro,'drainage_surface_at',hydro.surface_at)(pos,prepared_only=prepared_only)
         except TypeError:
             return hydro.surface_at(pos)
 
@@ -218,7 +218,8 @@ class CoastV8Sampler:
                 token="unprepared"
             else:
                 token="generate"
-        return self._sample_cached(int(pos.x),int(pos.y),token,bool(prepared_only))
+        return replace(self._sample_cached(int(pos.x),int(pos.y),token,bool(prepared_only)),
+                       version=self.generator.coast_morphology_version)
 
     def materialization_at(self,pos:WorldPos,fields=None)->CoastMorphology|None:
         """Cheap coast projection for per-tile terrain generation.

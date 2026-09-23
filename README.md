@@ -4,6 +4,20 @@ This README is the single consolidated human-facing Markdown document for WORLDS
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev36 — Integrated Mainline
+
+This mainline combines the previously validated Dev34 inventory/container overhaul with the Dev35 Phase-5 coast/performance work and the latest direct world-interaction fixes.
+
+- Inventory remains the unified graphical item grid with persistent detail/actions, quantity controls and category filtering.
+- Container storage remains the dual-pane graphical transfer UI, including persistent natural containers, movable storage, deterministic seeded loot, break-apart salvage, wicker baskets and wooden storage boxes.
+- Dev35 Phase-5 coast morphology v2 is integrated: estuary widening, connected distributaries, shallow sediment lobes, barrier/lagoon projection, save-version pinning and bounded coast caches.
+- Forest presentation now uses the Dev35 continuous world-coordinate forest-floor material and boundary blending instead of repeated per-cell forest squares, removing visible tile seams/white lines.
+- **G** now immediately gathers when only one valid resource is in reach. With multiple resources nearby it enters multi-select targeting; click or Space toggles targets and Enter gathers every selected target.
+- Right-clicking the local world opens contextual actions. Adjacent harvestables can be Gathered, adjacent ground piles Picked Up, adjacent containers Opened, and any visible clicked tile can be Examined.
+- Pickup commands support the current tile or one orthogonally adjacent tile, so right-click pickup does not require standing directly on the pile.
+- Hollow Logs, Rotten Stumps and Rock Crevices now have dedicated transparent sprite art instead of borrowing fallen-branch/boulder graphics.
+- Human-facing Markdown remains consolidated in this README; `AGENTS.md` stays separate for repository automation.
+
 ## Documentation Index
 
 - **Current Project Overview** — 1 source document

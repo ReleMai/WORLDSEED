@@ -11,6 +11,7 @@ surface, plateaus raise broad blocks, and fine roughness is applied last.
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from dataclasses import dataclass
 
 from worldseed.core.rng import hash_u64
@@ -111,6 +112,16 @@ class LandformSampler:
     def __init__(self, world_seed: bytes) -> None:
         self.seed = bytes(world_seed)
         self._lattice_cache: dict[tuple[str, int, int], int] = {}
+        # These values depend only on the immutable seed and coordinates.
+        # Instance-owned bounded caches avoid rehashing the same geological
+        # features for every climate/topography/coast probe and neighboring tile.
+        self._feature_hash=lru_cache(maxsize=8192)(self._feature_hash)
+        self._stress_direction=lru_cache(maxsize=8192)(self._stress_direction)
+        self.sample=lru_cache(maxsize=65536)(self.sample)
+
+    def _feature_hash(self, namespace: str, gx: int, gy: int) -> int:
+        return hash_u64(self.seed,namespace,LANDFORM_VERSION,gx,gy)
+
 
     def _lattice_value(self, namespace: str, ix: int, iy: int) -> int:
         key = (namespace, int(ix), int(iy))
@@ -153,21 +164,21 @@ class LandformSampler:
         best = 0
         for gy in range(cy - 1, cy + 2):
             for gx in range(cx - 1, cx + 2):
-                if hash_u64(self.seed, "v8:major-range-active", LANDFORM_VERSION, gx, gy) % 100 >= 43:
+                if self._feature_hash("v8:major-range-active",gx,gy) % 100 >= 43:
                     continue
-                jx = int(hash_u64(self.seed, "v8:major-range-x", LANDFORM_VERSION, gx, gy) % (cell // 2)) - cell // 4
-                jy = int(hash_u64(self.seed, "v8:major-range-y", LANDFORM_VERSION, gx, gy) % (cell // 2)) - cell // 4
+                jx = int(self._feature_hash("v8:major-range-x",gx,gy) % (cell // 2)) - cell // 4
+                jy = int(self._feature_hash("v8:major-range-y",gx,gy) % (cell // 2)) - cell // 4
                 mx = gx * cell + cell // 2 + jx
                 my = gy * cell + cell // 2 + jy
                 direction_index = self._stress_direction(mx, my)
                 direction_index = (
                     direction_index
-                    + int(hash_u64(self.seed, "v8:major-range-turn", LANDFORM_VERSION, gx, gy) % 3)
+                    + int(self._feature_hash("v8:major-range-turn",gx,gy) % 3)
                     - 1
                 ) % len(_DIRECTIONS)
                 dx, dy = _DIRECTIONS[direction_index]
                 half_length = 1500 + int(
-                    hash_u64(self.seed, "v8:major-range-len", LANDFORM_VERSION, gx, gy) % 1000
+                    self._feature_hash("v8:major-range-len",gx,gy) % 1000
                 )
                 ax = mx - dx * half_length // 1024
                 ay = my - dy * half_length // 1024
@@ -176,14 +187,14 @@ class LandformSampler:
                 # Two deterministic perpendicular bends prevent long ranges from
                 # reading as ruler-straight bars while preserving one coherent
                 # regional stress direction.
-                bend1 = int(hash_u64(self.seed, "v8:major-range-bend1", LANDFORM_VERSION, gx, gy) % 481) - 240
-                bend2 = int(hash_u64(self.seed, "v8:major-range-bend2", LANDFORM_VERSION, gx, gy) % 481) - 240
+                bend1 = int(self._feature_hash("v8:major-range-bend1",gx,gy) % 481) - 240
+                bend2 = int(self._feature_hash("v8:major-range-bend2",gx,gy) % 481) - 240
                 p1x = mx - dx * half_length // 3072 - dy * bend1 // 1024
                 p1y = my - dy * half_length // 3072 + dx * bend1 // 1024
                 p2x = mx + dx * half_length // 3072 - dy * bend2 // 1024
                 p2y = my + dy * half_length // 3072 + dx * bend2 // 1024
                 width = 280 + int(
-                    hash_u64(self.seed, "v8:major-range-width", LANDFORM_VERSION, gx, gy) % 320
+                    self._feature_hash("v8:major-range-width",gx,gy) % 320
                 )
                 strength = max(
                     _segment_strength(x, y, ax, ay, p1x, p1y, width),
@@ -191,7 +202,7 @@ class LandformSampler:
                     _segment_strength(x, y, p2x, p2y, bx, by, width),
                 )
                 amplitude = 47000 + int(
-                    hash_u64(self.seed, "v8:major-range-amp", LANDFORM_VERSION, gx, gy) % 18536
+                    self._feature_hash("v8:major-range-amp",gx,gy) % 18536
                 )
                 best = max(best, strength * amplitude // Q)
         return _clamp_q(best)
@@ -203,32 +214,32 @@ class LandformSampler:
         best = 0
         for gy in range(cy - 1, cy + 2):
             for gx in range(cx - 1, cx + 2):
-                if hash_u64(self.seed, "v8:branch-range-active", LANDFORM_VERSION, gx, gy) % 100 >= 29:
+                if self._feature_hash("v8:branch-range-active",gx,gy) % 100 >= 29:
                     continue
-                jx = int(hash_u64(self.seed, "v8:branch-range-x", LANDFORM_VERSION, gx, gy) % (cell // 2)) - cell // 4
-                jy = int(hash_u64(self.seed, "v8:branch-range-y", LANDFORM_VERSION, gx, gy) % (cell // 2)) - cell // 4
+                jx = int(self._feature_hash("v8:branch-range-x",gx,gy) % (cell // 2)) - cell // 4
+                jy = int(self._feature_hash("v8:branch-range-y",gx,gy) % (cell // 2)) - cell // 4
                 mx = gx * cell + cell // 2 + jx
                 my = gy * cell + cell // 2 + jy
                 direction_index = self._stress_direction(mx, my)
                 direction_index = (
                     direction_index
-                    + int(hash_u64(self.seed, "v8:branch-range-turn", LANDFORM_VERSION, gx, gy) % 5)
+                    + int(self._feature_hash("v8:branch-range-turn",gx,gy) % 5)
                     - 2
                 ) % len(_DIRECTIONS)
                 dx, dy = _DIRECTIONS[direction_index]
                 half_length = 500 + int(
-                    hash_u64(self.seed, "v8:branch-range-len", LANDFORM_VERSION, gx, gy) % 480
+                    self._feature_hash("v8:branch-range-len",gx,gy) % 480
                 )
                 ax = mx - dx * half_length // 1024
                 ay = my - dy * half_length // 1024
                 bx = mx + dx * half_length // 1024
                 by = my + dy * half_length // 1024
                 width = 140 + int(
-                    hash_u64(self.seed, "v8:branch-range-width", LANDFORM_VERSION, gx, gy) % 220
+                    self._feature_hash("v8:branch-range-width",gx,gy) % 220
                 )
                 strength = _segment_strength(x, y, ax, ay, bx, by, width)
                 amplitude = 30000 + int(
-                    hash_u64(self.seed, "v8:branch-range-amp", LANDFORM_VERSION, gx, gy) % 25000
+                    self._feature_hash("v8:branch-range-amp",gx,gy) % 25000
                 )
                 best = max(best, strength * amplitude // Q)
         return _clamp_q(best)
@@ -242,18 +253,18 @@ class LandformSampler:
         best = 0
         for gy in range(cy - 1, cy + 2):
             for gx in range(cx - 1, cx + 2):
-                if hash_u64(self.seed, "v8:basin-active", LANDFORM_VERSION, gx, gy) % 100 >= 28:
+                if self._feature_hash("v8:basin-active",gx,gy) % 100 >= 28:
                     continue
-                jx = int(hash_u64(self.seed, "v8:basin-x", LANDFORM_VERSION, gx, gy) % cell) - cell // 2
-                jy = int(hash_u64(self.seed, "v8:basin-y", LANDFORM_VERSION, gx, gy) % cell) - cell // 2
+                jx = int(self._feature_hash("v8:basin-x",gx,gy) % cell) - cell // 2
+                jy = int(self._feature_hash("v8:basin-y",gx,gy) % cell) - cell // 2
                 bx = gx * cell + cell // 2 + jx
                 by = gy * cell + cell // 2 + jy
                 radius = 440 + int(
-                    hash_u64(self.seed, "v8:basin-radius", LANDFORM_VERSION, gx, gy) % 820
+                    self._feature_hash("v8:basin-radius",gx,gy) % 820
                 )
                 strength = _radial_strength(x, y, bx, by, radius)
                 amplitude = 30000 + int(
-                    hash_u64(self.seed, "v8:basin-amp", LANDFORM_VERSION, gx, gy) % 35536
+                    self._feature_hash("v8:basin-amp",gx,gy) % 35536
                 )
                 best = max(best, strength * amplitude // Q)
         return _clamp_q(best)
@@ -265,34 +276,34 @@ class LandformSampler:
         best = 0
         for gy in range(cy - 1, cy + 2):
             for gx in range(cx - 1, cx + 2):
-                if hash_u64(self.seed, "v8:valley-active", LANDFORM_VERSION, gx, gy) % 100 >= 24:
+                if self._feature_hash("v8:valley-active",gx,gy) % 100 >= 24:
                     continue
                 mx = gx * cell + cell // 2 + int(
-                    hash_u64(self.seed, "v8:valley-x", LANDFORM_VERSION, gx, gy) % (cell // 2)
+                    self._feature_hash("v8:valley-x",gx,gy) % (cell // 2)
                 ) - cell // 4
                 my = gy * cell + cell // 2 + int(
-                    hash_u64(self.seed, "v8:valley-y", LANDFORM_VERSION, gx, gy) % (cell // 2)
+                    self._feature_hash("v8:valley-y",gx,gy) % (cell // 2)
                 ) - cell // 4
                 direction_index = self._stress_direction(mx, my)
                 direction_index = (
                     direction_index
-                    + int(hash_u64(self.seed, "v8:valley-turn", LANDFORM_VERSION, gx, gy) % 3)
+                    + int(self._feature_hash("v8:valley-turn",gx,gy) % 3)
                     - 1
                 ) % len(_DIRECTIONS)
                 dx, dy = _DIRECTIONS[direction_index]
                 half_length = 900 + int(
-                    hash_u64(self.seed, "v8:valley-len", LANDFORM_VERSION, gx, gy) % 900
+                    self._feature_hash("v8:valley-len",gx,gy) % 900
                 )
                 ax = mx - dx * half_length // 1024
                 ay = my - dy * half_length // 1024
                 bx = mx + dx * half_length // 1024
                 by = my + dy * half_length // 1024
                 width = 180 + int(
-                    hash_u64(self.seed, "v8:valley-width", LANDFORM_VERSION, gx, gy) % 320
+                    self._feature_hash("v8:valley-width",gx,gy) % 320
                 )
                 strength = _segment_strength(x, y, ax, ay, bx, by, width)
                 amplitude = 36000 + int(
-                    hash_u64(self.seed, "v8:valley-amp", LANDFORM_VERSION, gx, gy) % 29536
+                    self._feature_hash("v8:valley-amp",gx,gy) % 29536
                 )
                 best = max(best, strength * amplitude // Q)
         return _clamp_q(best)
