@@ -12,7 +12,7 @@ def upsert(rows,row):
             y=dict(x); y.update(row)
             # Preserve modern canonical authoring fields when this legacy
             # enrichment tool is rerun.
-            for field in ('name','category','asset'):
+            for field in ('name','category','subcategory','asset'):
                 if field in x: y[field]=x[field]
             rows[i]=y; return
     rows.append(row)
