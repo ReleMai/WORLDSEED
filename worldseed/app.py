@@ -614,9 +614,13 @@ def _hunt_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
         difficulty=overlay.get('cursor_difficulty','outside sector')
         _present_game_frame(term,ctx,renderer,f'AIM: {desc} | {weapon.name} | range {dist}/{weapon.range} | {difficulty.upper()} | zone {zone} | aim {aim}/100 | A steady | Enter fire | 1 center 2 vitals 3 head 4 legs | Esc',cursor,overlay)
         k=term.read_key();low=k.lower() if len(k)==1 else k
+        if k.startswith('UI_TARGET_HOVER:'):
+            _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
+            if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=weapon.range:cursor=n
+            continue
         if k.startswith('UI_WORLD:'):
             _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
-            if abs(n.x-p.x)+abs(n.y-p.y)<=weapon.range:cursor=n
+            if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=weapon.range:cursor=n
             continue
         if low in ('ESC','q'):return UI_BACK
         if low in zones:zone=zones[low];continue
@@ -652,6 +656,10 @@ def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=Non
         name=weapon.name if weapon else 'Unarmed'
         _present_game_frame(term,ctx,renderer,f'MELEE: {desc} | {name} | reach {dist}/{reach} | {difficulty.upper()} | Enter attack | Esc',cursor,overlay)
         k=term.read_key();low=k.lower() if len(k)==1 else k
+        if k.startswith('UI_TARGET_HOVER:'):
+            _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
+            if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
+            continue
         if k.startswith('UI_WORLD:'):
             _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
             if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
