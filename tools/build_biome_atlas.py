@@ -435,7 +435,9 @@ def build_png(catalog: dict, visuals: dict) -> None:
     draw.text((835, 54), "★ exclusive to one atlas biome group", fill=(181, 155, 103, 255), font=_font(10))
 
     y = 92
+    card_regions = []
     for biome, card_h in zip(catalog["biomes"], card_heights):
+        card_top = y
         draw.rounded_rectangle((margin, y, width - margin, y + card_h), radius=10, fill=(20, 24, 26, 255), outline=(66, 76, 79, 255))
         draw.text((34, y + 14), biome["name"], fill=(235, 231, 219, 255), font=_font(21, True))
         draw.text((34, y + 43), biome["kind"].upper(), fill=(197, 158, 83, 255), font=_font(10, True))
@@ -454,9 +456,20 @@ def build_png(catalog: dict, visuals: dict) -> None:
             for gap in biome["gaps"]:
                 draw.text((44, cy), "• " + _ellipsize(gap, 145), fill=(170, 178, 175, 255), font=_font(10))
                 cy += 18
+        card_regions.append((biome["id"], card_top, card_top + card_h))
         y += card_h + margin
 
     canvas.save(ASSETS / "biome_atlas.png", optimize=True)
+    detail_dir = ASSETS / "biome_atlas"
+    detail_dir.mkdir(parents=True, exist_ok=True)
+    expected = set()
+    for biome_id, top, bottom in card_regions:
+        expected.add(f"{biome_id}.png")
+        crop = canvas.crop((max(0, margin - 6), max(0, top - 6), min(width, width - margin + 6), min(total_h, bottom + 6)))
+        crop.save(detail_dir / f"{biome_id}.png", optimize=True)
+    for path in detail_dir.glob("*.png"):
+        if path.name not in expected:
+            path.unlink()
 
 
 def markdown_catalog(catalog: dict) -> str:
@@ -471,7 +484,14 @@ def markdown_catalog(catalog: dict) -> str:
         "",
     ]
     for biome in catalog["biomes"]:
-        lines += [f"## {biome['name']}", "", biome["description"], ""]
+        lines += [
+            f"## {biome['name']}",
+            "",
+            biome["description"],
+            "",
+            f'<img src="biome_atlas/{biome["id"]}.png" width="1100">',
+            "",
+        ]
         lines += ["### Terrain and physical features", "", "| Terrain | Runtime ID | Feature |", "|---|---|---|"]
         for row in biome["terrain"]:
             lines.append(f"| {row['name']} | {row['id']} | {row['feature']} |")
