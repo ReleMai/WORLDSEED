@@ -165,8 +165,8 @@ class CreatureState:
     last_threat_turn: int = -1
     last_move_turn: int = -1
     facing_dx: int = 0
-    embedded_projectiles: list[dict] = field(default_factory=list)
     facing_dy: int = 1
+    embedded_projectiles: list[dict] = field(default_factory=list)
 
 @dataclass(slots=True)
 class PopulationCohort:
