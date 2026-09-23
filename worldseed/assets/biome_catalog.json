@@ -1,0 +1,1871 @@
+{
+  "version": 1,
+  "source": {
+    "terrain": "data/terrain.json",
+    "resources": "data/resources.json",
+    "species": "data/species.json",
+    "crops": "data/crops.json",
+    "visuals": "assets/visuals.json"
+  },
+  "note": "Entries are spawn eligibility, not guaranteed presence. Climate, season, density, deterministic placement, and simulation state still apply.",
+  "biomes": [
+    {
+      "id": "grassland",
+      "name": "Grassland",
+      "kind": "surface",
+      "description": "Open temperate land. Resource and wildlife eligibility still depends on climate fields.",
+      "terrain": [
+        {
+          "id": "core:grass",
+          "name": "Grassland",
+          "tags": [
+            "surface",
+            "soil"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [
+        {
+          "id": "core:birch_tree",
+          "name": "Mature Birch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 180,
+          "yields": "Bark x2-3, Wood x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:oak_tree",
+          "name": "Mature Oak",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 420,
+          "yields": "Bark x1-2, Wood x4-7",
+          "exclusive": false
+        },
+        {
+          "id": "core:willow_tree",
+          "name": "Mature Willow",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Bark x2-4, Branch x1-2, Wood x2-4",
+          "exclusive": false
+        }
+      ],
+      "plants": [
+        {
+          "id": "core:blueberry_bush",
+          "name": "Blueberry Bush",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 120,
+          "yields": "Blueberries x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:plantain_patch",
+          "name": "Broadleaf Plantain",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn",
+          "density": 55,
+          "yields": "Plantain x1-3",
+          "exclusive": true
+        },
+        {
+          "id": "core:cattail_bed",
+          "name": "Cattails",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 70,
+          "yields": "Cattail Root x1-2, Reeds x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:dandelion_patch",
+          "name": "Dandelion Patch",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn",
+          "density": 110,
+          "yields": "Dandelion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:nettle_patch",
+          "name": "Nettle Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 80,
+          "yields": "Brush x1-2, Nettle x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:raspberry_cane",
+          "name": "Raspberry Cane",
+          "seasons": [
+            "summer"
+          ],
+          "season_label": "summer",
+          "density": 90,
+          "yields": "Raspberries x2-4",
+          "exclusive": false
+        },
+        {
+          "id": "core:reed_bed",
+          "name": "Reed Bed",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Reeds x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_carrot_patch",
+          "name": "Wild Carrot",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 55,
+          "yields": "Wild Carrot x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_grain_patch",
+          "name": "Wild Grain",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 80,
+          "yields": "Wild Grain x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_onion_patch",
+          "name": "Wild Onion",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn",
+          "density": 65,
+          "yields": "Wild Onion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:strawberry_patch",
+          "name": "Wild Strawberry Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 70,
+          "yields": "Strawberries x1-4",
+          "exclusive": false
+        },
+        {
+          "id": "core:yarrow_patch",
+          "name": "Yarrow",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 50,
+          "yields": "Yarrow x1-3",
+          "exclusive": false
+        }
+      ],
+      "deposits": [
+        {
+          "id": "core:clay_bank",
+          "name": "Clay Bank",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Clay x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:loose_stone",
+          "name": "Loose Stone",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 160,
+          "yields": "Stone x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:surface_boulder",
+          "name": "Surface Boulder",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 140,
+          "yields": "Stone x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:fallen_branches",
+          "name": "Fallen Branches",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 170,
+          "yields": "Brush x1-2, Branch x1-2",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:hollow_log_cache",
+          "name": "Hollow Log",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 26,
+          "yields": "\u2014",
+          "exclusive": false
+        },
+        {
+          "id": "core:rock_crevice_cache",
+          "name": "Rock Crevice",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 16,
+          "yields": "\u2014",
+          "exclusive": false
+        },
+        {
+          "id": "core:rotten_stump_cache",
+          "name": "Rotten Stump",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 20,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [
+        {
+          "id": "core:badger",
+          "name": "Badger",
+          "diet": "omnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:brown_bear",
+          "name": "Brown Bear",
+          "diet": "omnivore",
+          "group": [
+            1,
+            1
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:rabbit",
+          "name": "Cottontail Rabbit",
+          "diet": "herbivore",
+          "group": [
+            1,
+            3
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:elk",
+          "name": "Elk",
+          "diet": "herbivore",
+          "group": [
+            2,
+            8
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:wolf",
+          "name": "Grey Wolf",
+          "diet": "carnivore",
+          "group": [
+            2,
+            7
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:marsh_boar",
+          "name": "Marsh Boar",
+          "diet": "omnivore",
+          "group": [
+            1,
+            4
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:moose",
+          "name": "Moose",
+          "diet": "herbivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:red_fox",
+          "name": "Red Fox",
+          "diet": "carnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:deer",
+          "name": "White-Tailed Deer",
+          "diet": "herbivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:boar",
+          "name": "Wild Boar",
+          "diet": "omnivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:turkey",
+          "name": "Wild Turkey",
+          "diet": "omnivore",
+          "group": [
+            2,
+            8
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "forest",
+      "name": "Forest & Thickets",
+      "kind": "surface",
+      "description": "Wooded terrain and legacy berry-thicket ground. Forest wildlife also treats berry thickets as forest habitat.",
+      "terrain": [
+        {
+          "id": "core:forest",
+          "name": "Forest",
+          "tags": [
+            "surface",
+            "soil",
+            "vegetation"
+          ],
+          "feature": "terrain"
+        },
+        {
+          "id": "core:berry_thicket",
+          "name": "Berry Thicket",
+          "tags": [
+            "surface",
+            "soil",
+            "food"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [
+        {
+          "id": "core:birch_tree",
+          "name": "Mature Birch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 180,
+          "yields": "Bark x2-3, Wood x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:oak_tree",
+          "name": "Mature Oak",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 420,
+          "yields": "Bark x1-2, Wood x4-7",
+          "exclusive": false
+        },
+        {
+          "id": "core:pine_tree",
+          "name": "Mature Pine",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 380,
+          "yields": "Bark x1-2, Wood x3-6",
+          "exclusive": false
+        },
+        {
+          "id": "core:willow_tree",
+          "name": "Mature Willow",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Bark x2-4, Branch x1-2, Wood x2-4",
+          "exclusive": false
+        }
+      ],
+      "plants": [
+        {
+          "id": "core:blueberry_bush",
+          "name": "Blueberry Bush",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 120,
+          "yields": "Blueberries x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:bolete_patch",
+          "name": "Bolete Cluster",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 45,
+          "yields": "Bolete x1-3",
+          "exclusive": true
+        },
+        {
+          "id": "core:morel_patch",
+          "name": "Morel Cluster",
+          "seasons": [
+            "spring"
+          ],
+          "season_label": "spring",
+          "density": 35,
+          "yields": "Morel x1-3",
+          "exclusive": true
+        },
+        {
+          "id": "core:nettle_patch",
+          "name": "Nettle Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 80,
+          "yields": "Brush x1-2, Nettle x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:raspberry_cane",
+          "name": "Raspberry Cane",
+          "seasons": [
+            "summer"
+          ],
+          "season_label": "summer",
+          "density": 90,
+          "yields": "Raspberries x2-4",
+          "exclusive": false
+        },
+        {
+          "id": "core:strawberry_patch",
+          "name": "Wild Strawberry Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 70,
+          "yields": "Strawberries x1-4",
+          "exclusive": false
+        }
+      ],
+      "deposits": [
+        {
+          "id": "core:loose_stone",
+          "name": "Loose Stone",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 160,
+          "yields": "Stone x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:fallen_branches",
+          "name": "Fallen Branches",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 170,
+          "yields": "Brush x1-2, Branch x1-2",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:hollow_log_cache",
+          "name": "Hollow Log",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 26,
+          "yields": "\u2014",
+          "exclusive": false
+        },
+        {
+          "id": "core:rotten_stump_cache",
+          "name": "Rotten Stump",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 20,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [
+        {
+          "id": "core:badger",
+          "name": "Badger",
+          "diet": "omnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:brown_bear",
+          "name": "Brown Bear",
+          "diet": "omnivore",
+          "group": [
+            1,
+            1
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:rabbit",
+          "name": "Cottontail Rabbit",
+          "diet": "herbivore",
+          "group": [
+            1,
+            3
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:elk",
+          "name": "Elk",
+          "diet": "herbivore",
+          "group": [
+            2,
+            8
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:wolf",
+          "name": "Grey Wolf",
+          "diet": "carnivore",
+          "group": [
+            2,
+            7
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:grouse",
+          "name": "Grouse",
+          "diet": "omnivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:moose",
+          "name": "Moose",
+          "diet": "herbivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:red_fox",
+          "name": "Red Fox",
+          "diet": "carnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:snowshoe_hare",
+          "name": "Snowshoe Hare",
+          "diet": "herbivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:deer",
+          "name": "White-Tailed Deer",
+          "diet": "herbivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:boar",
+          "name": "Wild Boar",
+          "diet": "omnivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:turkey",
+          "name": "Wild Turkey",
+          "diet": "omnivore",
+          "group": [
+            2,
+            8
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "dry_scrub",
+      "name": "Dry Scrub",
+      "kind": "surface",
+      "description": "Dry, warm scrubland with hardy forage, loose resources, and scrub-adapted wildlife.",
+      "terrain": [
+        {
+          "id": "core:scrub",
+          "name": "Dry Scrub",
+          "tags": [
+            "surface",
+            "soil",
+            "vegetation"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [],
+      "plants": [
+        {
+          "id": "core:dandelion_patch",
+          "name": "Dandelion Patch",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn",
+          "density": 110,
+          "yields": "Dandelion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_carrot_patch",
+          "name": "Wild Carrot",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 55,
+          "yields": "Wild Carrot x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_grain_patch",
+          "name": "Wild Grain",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 80,
+          "yields": "Wild Grain x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_onion_patch",
+          "name": "Wild Onion",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn",
+          "density": 65,
+          "yields": "Wild Onion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:yarrow_patch",
+          "name": "Yarrow",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 50,
+          "yields": "Yarrow x1-3",
+          "exclusive": false
+        }
+      ],
+      "deposits": [
+        {
+          "id": "core:loose_stone",
+          "name": "Loose Stone",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 160,
+          "yields": "Stone x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:fallen_branches",
+          "name": "Fallen Branches",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 170,
+          "yields": "Brush x1-2, Branch x1-2",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:rock_crevice_cache",
+          "name": "Rock Crevice",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 16,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [
+        {
+          "id": "core:badger",
+          "name": "Badger",
+          "diet": "omnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:rabbit",
+          "name": "Cottontail Rabbit",
+          "diet": "herbivore",
+          "group": [
+            1,
+            3
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:grouse",
+          "name": "Grouse",
+          "diet": "omnivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:marsh_boar",
+          "name": "Marsh Boar",
+          "diet": "omnivore",
+          "group": [
+            1,
+            4
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:red_fox",
+          "name": "Red Fox",
+          "diet": "carnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:boar",
+          "name": "Wild Boar",
+          "diet": "omnivore",
+          "group": [
+            1,
+            5
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "tundra",
+      "name": "Tundra",
+      "kind": "surface",
+      "description": "Cold open ground. Current authored resource coverage is sparse and strongly climate-limited.",
+      "terrain": [
+        {
+          "id": "core:tundra",
+          "name": "Tundra",
+          "tags": [
+            "surface",
+            "soil"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [
+        {
+          "id": "core:pine_tree",
+          "name": "Mature Pine",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 380,
+          "yields": "Bark x1-2, Wood x3-6",
+          "exclusive": false
+        }
+      ],
+      "plants": [],
+      "deposits": [
+        {
+          "id": "core:loose_stone",
+          "name": "Loose Stone",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 160,
+          "yields": "Stone x1-2",
+          "exclusive": false
+        }
+      ],
+      "containers": [],
+      "animals": [
+        {
+          "id": "core:wolf",
+          "name": "Grey Wolf",
+          "diet": "carnivore",
+          "group": [
+            2,
+            7
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:mountain_goat",
+          "name": "Mountain Goat",
+          "diet": "herbivore",
+          "group": [
+            2,
+            6
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        },
+        {
+          "id": "core:snowshoe_hare",
+          "name": "Snowshoe Hare",
+          "diet": "herbivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "rocky_uplands",
+      "name": "Rocky Uplands",
+      "kind": "surface",
+      "description": "Exposed rocky ground associated with steep or high terrain.",
+      "terrain": [
+        {
+          "id": "core:rock",
+          "name": "Rocky Ground",
+          "tags": [
+            "surface",
+            "rock"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [
+        {
+          "id": "core:loose_stone",
+          "name": "Loose Stone",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 160,
+          "yields": "Stone x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:surface_boulder",
+          "name": "Surface Boulder",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 140,
+          "yields": "Stone x2-5",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:rock_crevice_cache",
+          "name": "Rock Crevice",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 16,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [
+        {
+          "id": "core:mountain_goat",
+          "name": "Mountain Goat",
+          "diet": "herbivore",
+          "group": [
+            2,
+            6
+          ],
+          "exclusive": false,
+          "climate_limited": true
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "wetland",
+      "name": "Wetland",
+      "kind": "surface",
+      "description": "Wet soil and standing-water margins supporting moisture-dependent plants and natural containers.",
+      "terrain": [
+        {
+          "id": "core:wetland",
+          "name": "Wetland",
+          "tags": [
+            "surface",
+            "soil",
+            "wetland",
+            "water_source"
+          ],
+          "feature": "wetland"
+        }
+      ],
+      "trees": [
+        {
+          "id": "core:willow_tree",
+          "name": "Mature Willow",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Bark x2-4, Branch x1-2, Wood x2-4",
+          "exclusive": false
+        }
+      ],
+      "plants": [
+        {
+          "id": "core:cattail_bed",
+          "name": "Cattails",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 70,
+          "yields": "Cattail Root x1-2, Reeds x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:nettle_patch",
+          "name": "Nettle Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 80,
+          "yields": "Brush x1-2, Nettle x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:reed_bed",
+          "name": "Reed Bed",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Reeds x1-3",
+          "exclusive": false
+        }
+      ],
+      "deposits": [
+        {
+          "id": "core:clay_bank",
+          "name": "Clay Bank",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Clay x1-3",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:rotten_stump_cache",
+          "name": "Rotten Stump",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 20,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No species habitat currently targets wetland/floodplain terrain directly."
+      ]
+    },
+    {
+      "id": "floodplain",
+      "name": "Floodplain",
+      "kind": "surface",
+      "description": "Fertile river-adjacent ground with wetland plants, clay, and deadwood containers.",
+      "terrain": [
+        {
+          "id": "core:floodplain",
+          "name": "Floodplain",
+          "tags": [
+            "surface",
+            "soil",
+            "floodplain"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [
+        {
+          "id": "core:willow_tree",
+          "name": "Mature Willow",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Bark x2-4, Branch x1-2, Wood x2-4",
+          "exclusive": false
+        }
+      ],
+      "plants": [
+        {
+          "id": "core:nettle_patch",
+          "name": "Nettle Patch",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer",
+          "density": 80,
+          "yields": "Brush x1-2, Nettle x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:reed_bed",
+          "name": "Reed Bed",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 120,
+          "yields": "Reeds x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:wild_grain_patch",
+          "name": "Wild Grain",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 80,
+          "yields": "Wild Grain x1-3",
+          "exclusive": false
+        }
+      ],
+      "deposits": [
+        {
+          "id": "core:clay_bank",
+          "name": "Clay Bank",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Clay x1-3",
+          "exclusive": false
+        }
+      ],
+      "containers": [
+        {
+          "id": "core:rotten_stump_cache",
+          "name": "Rotten Stump",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 20,
+          "yields": "\u2014",
+          "exclusive": false
+        }
+      ],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No species habitat currently targets wetland/floodplain terrain directly."
+      ]
+    },
+    {
+      "id": "sand",
+      "name": "Sandy Ground",
+      "kind": "surface",
+      "description": "Dry or coastal-adjacent sand. Current natural-resource eligibility is limited.",
+      "terrain": [
+        {
+          "id": "core:sand",
+          "name": "Sand",
+          "tags": [
+            "surface",
+            "soil"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [
+        {
+          "id": "core:clay_bank",
+          "name": "Clay Bank",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Clay x1-3",
+          "exclusive": false
+        }
+      ],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "rivers",
+      "name": "Rivers & Streams",
+      "kind": "freshwater",
+      "description": "River channels, rapids, streams, and banks generated by hydrology.",
+      "terrain": [
+        {
+          "id": "core:river_shallow",
+          "name": "Shallow River",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "river",
+            "shallow"
+          ],
+          "feature": "river"
+        },
+        {
+          "id": "core:river",
+          "name": "Deep River",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "river",
+            "deep"
+          ],
+          "feature": "river"
+        },
+        {
+          "id": "core:stream",
+          "name": "Shallow Stream",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "river",
+            "shallow"
+          ],
+          "feature": "river"
+        },
+        {
+          "id": "core:river_rapids",
+          "name": "River Rapids",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "river",
+            "swim",
+            "rapids"
+          ],
+          "feature": "river, rapids"
+        },
+        {
+          "id": "core:riverbank",
+          "name": "Sandy Gravel Riverbank",
+          "tags": [
+            "surface",
+            "soil",
+            "riverbank"
+          ],
+          "feature": "terrain"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "freshwater_lakes",
+      "name": "Freshwater Lakes",
+      "kind": "freshwater",
+      "description": "Shallow and deep freshwater basins plus the legacy generic deep-water terrain.",
+      "terrain": [
+        {
+          "id": "core:water",
+          "name": "Deep Water",
+          "tags": [
+            "surface",
+            "water"
+          ],
+          "feature": "terrain"
+        },
+        {
+          "id": "core:lake_shallow",
+          "name": "Freshwater Lake Shallows",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "freshwater",
+            "shallow"
+          ],
+          "feature": "freshwater"
+        },
+        {
+          "id": "core:lake_deep",
+          "name": "Deep Freshwater Lake",
+          "tags": [
+            "surface",
+            "water",
+            "water_source",
+            "freshwater",
+            "deep",
+            "swim"
+          ],
+          "feature": "freshwater"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "sandy_coast",
+      "name": "Sandy Coast",
+      "kind": "coast",
+      "description": "Immediate sandy shoreline produced by coastal morphology.",
+      "terrain": [
+        {
+          "id": "core:shore",
+          "name": "Wet Sandy Shore",
+          "tags": [
+            "surface",
+            "sand",
+            "shore"
+          ],
+          "feature": "shore"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "rocky_coast",
+      "name": "Rocky Coast",
+      "kind": "coast",
+      "description": "Rocky shores, gravel, and coastal cliffs selected from shoreline geology and morphology.",
+      "terrain": [
+        {
+          "id": "core:rocky_shore",
+          "name": "Rocky Shore",
+          "tags": [
+            "surface",
+            "rock",
+            "shore"
+          ],
+          "feature": "shore"
+        },
+        {
+          "id": "core:coastal_cliff",
+          "name": "Coastal Cliff",
+          "tags": [
+            "surface",
+            "rock",
+            "shore",
+            "cliff"
+          ],
+          "feature": "shore, cliff"
+        },
+        {
+          "id": "core:coastal_gravel",
+          "name": "Coastal Gravel",
+          "tags": [
+            "surface",
+            "rock",
+            "shore",
+            "gravel"
+          ],
+          "feature": "shore"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "tidal_wetlands",
+      "name": "Tidal Wetlands",
+      "kind": "coast",
+      "description": "Tidal flats and salt marshes formed where coastal deposition and marsh potential are high.",
+      "terrain": [
+        {
+          "id": "core:tidal_flat",
+          "name": "Tidal Flat",
+          "tags": [
+            "surface",
+            "soil",
+            "shore",
+            "wetland",
+            "tidal"
+          ],
+          "feature": "shore, tidal, wetland"
+        },
+        {
+          "id": "core:salt_marsh",
+          "name": "Salt Marsh",
+          "tags": [
+            "surface",
+            "soil",
+            "shore",
+            "wetland",
+            "brackish"
+          ],
+          "feature": "brackish, shore, wetland"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "estuaries",
+      "name": "Estuaries",
+      "kind": "coast",
+      "description": "Brackish shallow and deep channels where river and marine water meet.",
+      "terrain": [
+        {
+          "id": "core:estuary_shallow",
+          "name": "Brackish Estuary Shallows",
+          "tags": [
+            "surface",
+            "water",
+            "brackish",
+            "shallow"
+          ],
+          "feature": "brackish"
+        },
+        {
+          "id": "core:estuary_deep",
+          "name": "Brackish Estuary Channel",
+          "tags": [
+            "surface",
+            "water",
+            "brackish",
+            "deep",
+            "swim"
+          ],
+          "feature": "brackish"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "ocean",
+      "name": "Ocean",
+      "kind": "marine",
+      "description": "Coastal wading water through shallow, shelf, and deep-ocean classes.",
+      "terrain": [
+        {
+          "id": "core:ocean_wade",
+          "name": "Coastal Wading Water",
+          "tags": [
+            "surface",
+            "water",
+            "saltwater",
+            "shallow"
+          ],
+          "feature": "saltwater"
+        },
+        {
+          "id": "core:ocean_shallow",
+          "name": "Shallow Ocean",
+          "tags": [
+            "surface",
+            "water",
+            "saltwater",
+            "swim"
+          ],
+          "feature": "saltwater"
+        },
+        {
+          "id": "core:ocean_shelf",
+          "name": "Ocean Shelf",
+          "tags": [
+            "surface",
+            "water",
+            "saltwater",
+            "deep",
+            "swim"
+          ],
+          "feature": "saltwater"
+        },
+        {
+          "id": "core:ocean_deep",
+          "name": "Deep Ocean",
+          "tags": [
+            "surface",
+            "water",
+            "saltwater",
+            "deep",
+            "swim"
+          ],
+          "feature": "saltwater"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "No authored animal habitat currently targets these terrain IDs.",
+        "No authored ResourceSystem spawn currently targets these terrain IDs."
+      ]
+    },
+    {
+      "id": "caves",
+      "name": "Caves & Subterranean",
+      "kind": "underground",
+      "description": "Cave entrances, passages, shafts, aquifers, and mineral-bearing underground terrain.",
+      "terrain": [
+        {
+          "id": "core:cave_mouth",
+          "name": "Cave Mouth",
+          "tags": [
+            "surface",
+            "shaft"
+          ],
+          "feature": "shaft"
+        },
+        {
+          "id": "core:cave_floor",
+          "name": "Cave Floor",
+          "tags": [
+            "underground"
+          ],
+          "feature": "terrain"
+        },
+        {
+          "id": "core:cave_wall",
+          "name": "Cave Wall",
+          "tags": [
+            "underground",
+            "rock"
+          ],
+          "feature": "Gather: Stone x2"
+        },
+        {
+          "id": "core:iron_vein",
+          "name": "Iron Vein",
+          "tags": [
+            "underground",
+            "ore"
+          ],
+          "feature": "Gather: Iron Ore x2"
+        },
+        {
+          "id": "core:coal_seam",
+          "name": "Coal Seam",
+          "tags": [
+            "underground",
+            "ore"
+          ],
+          "feature": "Gather: Coal x3"
+        },
+        {
+          "id": "core:shaft",
+          "name": "Natural Shaft",
+          "tags": [
+            "underground",
+            "shaft"
+          ],
+          "feature": "shaft"
+        },
+        {
+          "id": "core:aquifer",
+          "name": "Water-Bearing Rock",
+          "tags": [
+            "underground",
+            "rock",
+            "water_source"
+          ],
+          "feature": "Gather: Stone x2"
+        },
+        {
+          "id": "core:copper_vein",
+          "name": "Copper Vein",
+          "tags": [
+            "underground",
+            "ore",
+            "copper"
+          ],
+          "feature": "Gather: Copper Ore x2"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [
+        {
+          "id": "core:cave_crawler",
+          "name": "Cave Crawler",
+          "diet": "omnivore",
+          "group": [
+            1,
+            4
+          ],
+          "exclusive": true,
+          "climate_limited": false
+        },
+        {
+          "id": "core:cave_grazer",
+          "name": "Cave Grazer",
+          "diet": "herbivore",
+          "group": [
+            2,
+            5
+          ],
+          "exclusive": true,
+          "climate_limited": false
+        },
+        {
+          "id": "core:cave_stalker",
+          "name": "Cave Stalker",
+          "diet": "carnivore",
+          "group": [
+            1,
+            2
+          ],
+          "exclusive": true,
+          "climate_limited": false
+        }
+      ],
+      "crops": [],
+      "gaps": []
+    },
+    {
+      "id": "ancient_ruins",
+      "name": "Ancient Ruins",
+      "kind": "underground",
+      "description": "Subterranean ancient masonry, walls, and relic-cache terrain.",
+      "terrain": [
+        {
+          "id": "core:ruin_floor",
+          "name": "Ancient Masonry",
+          "tags": [
+            "underground",
+            "ruin"
+          ],
+          "feature": "ruin"
+        },
+        {
+          "id": "core:ruin_wall",
+          "name": "Ancient Wall",
+          "tags": [
+            "underground",
+            "ruin",
+            "rock"
+          ],
+          "feature": "Gather: Stone x3"
+        },
+        {
+          "id": "core:relic_cache",
+          "name": "Relic Cache",
+          "tags": [
+            "underground",
+            "ruin",
+            "loot"
+          ],
+          "feature": "Gather: Relic x1"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [],
+      "gaps": [
+        "Ruin terrain features are generated as underground site terrain rather than ResourceSystem spawns."
+      ]
+    },
+    {
+      "id": "farmland",
+      "name": "Managed Farmland",
+      "kind": "managed",
+      "description": "Player-managed tilled soil. Crops are planted rather than natural biome spawns.",
+      "terrain": [
+        {
+          "id": "core:tilled_soil",
+          "name": "Tilled Soil",
+          "tags": [
+            "surface",
+            "soil",
+            "farm"
+          ],
+          "feature": "farm"
+        }
+      ],
+      "trees": [],
+      "plants": [],
+      "deposits": [],
+      "containers": [],
+      "animals": [],
+      "crops": [
+        {
+          "id": "core:barley",
+          "name": "Barley",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        },
+        {
+          "id": "core:cabbage",
+          "name": "Cabbage",
+          "seasons": [
+            "spring",
+            "autumn"
+          ],
+          "season_label": "spring, autumn"
+        },
+        {
+          "id": "core:carrot",
+          "name": "Carrot",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn"
+        },
+        {
+          "id": "core:beans",
+          "name": "Field Beans",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        },
+        {
+          "id": "core:flax",
+          "name": "Flax",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        },
+        {
+          "id": "core:onion",
+          "name": "Onion",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        },
+        {
+          "id": "core:turnip",
+          "name": "Turnip",
+          "seasons": [
+            "spring",
+            "autumn"
+          ],
+          "season_label": "spring, autumn"
+        },
+        {
+          "id": "core:wheat",
+          "name": "Wheat",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        }
+      ],
+      "gaps": [
+        "Crops are planted simulation state, not natural resource spawns."
+      ]
+    }
+  ]
+}
