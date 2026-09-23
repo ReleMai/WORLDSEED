@@ -1612,14 +1612,58 @@ class PygameTerminal(PointerUI):
         x=cell_rect.centerx-surf.get_width()//2; y=cell_rect.bottom-surf.get_height()
         self.screen.blit(surf,(x,y))
 
-    def _draw_resource_feature(self, feature, path, rect):
+    def _load_atlas_frame(self, path: Path, column: int, row: int, frame_size: int,
+                          max_w: int, max_h: int, *, smooth: bool=True):
+        """Load one frame from a presentation atlas and cache the scaled result."""
+        key=('atlas-frame',str(path),column,row,frame_size,max_w,max_h,smooth)
+        cached=self._sprite_cache.get(key)
+        if cached is not None:return cached
+        source_key=('atlas-source',str(path))
+        source=self._sprite_cache.get(source_key)
+        try:
+            if source is None:
+                source=self.pg.image.load(str(path)).convert_alpha()
+                self._sprite_cache[source_key]=source
+            frame=self.pg.Rect(column*frame_size,row*frame_size,frame_size,frame_size)
+            if frame.right>source.get_width() or frame.bottom>source.get_height():return None
+            surf=source.subsurface(frame).copy()
+            scale=min(max_w/max(1,surf.get_width()),max_h/max(1,surf.get_height()))
+            size=(max(1,int(surf.get_width()*scale)),max(1,int(surf.get_height()*scale)))
+            surf=self.pg.transform.smoothscale(surf,size) if smooth else self.pg.transform.scale(surf,size)
+            self._sprite_cache[key]=surf
+            return surf
+        except Exception:
+            return None
+
+    def _resource_visual(self, feature_id: str, x: int, y: int, z: int):
+        """Resolve a deterministic visual for a generated resource cell."""
+        style=self._visuals.resource_style(feature_id)
+        atlas=self._visuals.resource_atlas_path(feature_id)
+        if atlas is not None:
+            columns=max(1,int(style.get('atlas_columns',style.get('variants',1))))
+            variants=max(1,min(columns,int(style.get('variants',columns))))
+            variant=self._stable_variant(f"{feature_id}:{x}:{y}:{z}",variants)
+            return ('atlas',atlas,variant,int(style.get('atlas_row',0)),int(style.get('atlas_frame',128)))
+        ref=self._visuals.ref('resources',feature_id)
+        variant=self._stable_variant(f"{feature_id}:{x}:{y}:{z}",len(ref.paths)) if ref.paths else 0
+        return self._visuals.resolve(ref,variant)
+
+    def _draw_resource_feature(self, feature, visual, rect):
         style = self._visuals.resource_style(feature.feature_id)
         growth = 0.65 if feature.stage == 'sapling' and style else 1.0
-        self._draw_sprite_bottom(
-            path, rect, float(style.get('height', 1.7)) * growth,
-            190 if feature.stage == 'sapling' else 255,
-            width_mult=float(style.get('width', 1.35)) * growth,
-            smooth=bool(style.get('smooth', False)))
+        height=float(style.get('height', 1.7))*growth
+        width=float(style.get('width', 1.35))*growth
+        alpha=190 if feature.stage == 'sapling' else 255
+        smooth=bool(style.get('smooth', False))
+        if isinstance(visual,tuple) and visual and visual[0]=='atlas':
+            _,path,column,row,frame_size=visual
+            surf=self._load_atlas_frame(path,column,row,frame_size,int(rect.width*width),int(rect.height*height),smooth=smooth)
+            if surf is None:return
+            if alpha!=255:
+                surf=surf.copy();surf.set_alpha(alpha)
+            self.screen.blit(surf,(rect.centerx-surf.get_width()//2,rect.bottom-surf.get_height()))
+            return
+        self._draw_sprite_bottom(visual,rect,height,alpha,width_mult=width,smooth=smooth)
 
     def _terrain_transition_mask(self, direction: str, tile_px: int, center_id: str, neighbor_id: str):
         """Feather mask for local terrain autotiling in all 8 directions."""
@@ -1991,8 +2035,8 @@ class PygameTerminal(PointerUI):
                 if ckey not in self._resource_cell_cache:
                     fv=sim.resources.feature_at(WorldPos(wx,wy,z))
                     if fv and fv.stage!='depleted':
-                        path=self._visuals.resolve(self._visuals.ref('resources',fv.feature_id))
-                        self._resource_cell_cache[ckey]=(fv,path)
+                        visual=self._resource_visual(fv.feature_id,wx,wy,z)
+                        self._resource_cell_cache[ckey]=(fv,visual)
                     else:self._resource_cell_cache[ckey]=None
                     if len(self._resource_cell_cache)>20000:
                         # Old revision/day entries are reconstructable and cheap
