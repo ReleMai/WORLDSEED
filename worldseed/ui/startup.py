@@ -111,6 +111,7 @@ SKILL_DEFS = [
     ('woodcutting','Woodcutting','Felling and processing trees.'),
     ('mining','Mining','Rock, ore and underground excavation.'),
     ('hunting','Hunting','Tracking and harvesting animals.'),
+    ('fishing','Fishing','Reading water, presenting bait, and landing fish with hand, spear, rod, or net.'),
     ('melee','Melee','Close combat with weapons or fists.'),
     ('crafting','Crafting','General fabrication and material work.'),
     ('medicine','Medicine','Treating wounds and illness.'),
