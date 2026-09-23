@@ -14,17 +14,18 @@ from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.ui.renderer import Renderer
+from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
 from worldseed.ui.terminal import Terminal
 
 
-def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None) -> None:
+def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None, combat_overlay=None) -> None:
     presenter = getattr(term, 'present_game', None)
     if callable(presenter):
-        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor)
+        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor, combat_overlay)
     else:
         w, h = term.size()
-        term.present(renderer.render(ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message, cursor=cursor))
+        term.present(renderer.render(ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message, cursor=cursor, combat_overlay=combat_overlay))
 
 from worldseed.ui.widgets import select_menu, view_text
 from worldseed.ui.pointer import WindowCloseRequested
@@ -594,16 +595,24 @@ def _rest_menu(ctx:GameContext,term:Terminal)->str:
     if not pick:return UI_BACK
     ctx.sim.execute(RestCommand(ctx.player_id,int(pick)));return ctx.sim.log[-1].message if ctx.sim.log else ''
 
-def _hunt_action(ctx:GameContext,term:Terminal)->str:
+def _hunt_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
     sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);weapon=sim.combat.readied_weapon(inv)
     if not weapon or weapon.range<=1:return 'Ready a ranged or throwable weapon first.'
-    p=sim.player_pos;renderer=Renderer(reg);cursor=p;zone='center'
+    p=sim.player_pos;renderer=Renderer(reg);zone='center'
+    if initial is not None:
+        cursor=initial
+    else:
+        candidates=[c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=weapon.range and sim._visible_from(p,WorldPos(c.x,c.y,c.z))]
+        target=min(candidates,key=lambda c:abs(c.x-p.x)+abs(c.y-p.y),default=None)
+        cursor=WorldPos(target.x,target.y,target.z) if target else p.moved(1,0)
     zones={'1':'center','2':'vitals','3':'head','4':'legs'}
     while True:
         c=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(cursor.x,cursor.y,cursor.z)),None)
         desc=(reg.species[c.species_id].name if c else 'No animal');dist=abs(cursor.x-p.x)+abs(cursor.y-p.y)
         aim=sim.state.player_aim_quality if c and sim.state.player_aim_target==c.uid and sim.state.player_aim_zone==zone else 0
-        _present_game_frame(term,ctx,renderer,f'AIM: {desc} | {weapon.name} | range {dist}/{weapon.range} | zone {zone} | aim {aim}/100 | A steady | Enter fire | 1 center 2 vitals 3 head 4 legs | Esc',cursor)
+        overlay=ranged_overlay(sim,weapon,cursor,zone)
+        difficulty=overlay.get('cursor_difficulty','outside sector')
+        _present_game_frame(term,ctx,renderer,f'AIM: {desc} | {weapon.name} | range {dist}/{weapon.range} | {difficulty.upper()} | zone {zone} | aim {aim}/100 | A steady | Enter fire | 1 center 2 vitals 3 head 4 legs | Esc',cursor,overlay)
         k=term.read_key();low=k.lower() if len(k)==1 else k
         if k.startswith('UI_WORLD:'):
             _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
@@ -624,6 +633,37 @@ def _hunt_action(ctx:GameContext,term:Terminal)->str:
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
             sim.execute(RangedAttackCommand(ctx.player_id,c.uid));return sim.log[-1].message if sim.log else ''
+
+def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
+    sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);weapon=sim.combat.readied_weapon(inv)
+    if weapon and 'ranged' in weapon.tags and not weapon.throwable:return f'The {weapon.name.lower()} is not suited to melee.'
+    p=sim.player_pos;reach=max(1,weapon.reach if weapon else 1);renderer=Renderer(reg)
+    if initial is not None:
+        cursor=initial
+    else:
+        candidates=[c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and 1<=abs(c.x-p.x)+abs(c.y-p.y)<=reach]
+        target=min(candidates,key=lambda c:abs(c.x-p.x)+abs(c.y-p.y),default=None)
+        cursor=WorldPos(target.x,target.y,target.z) if target else p.moved(1,0)
+    while True:
+        dist=abs(cursor.x-p.x)+abs(cursor.y-p.y)
+        c=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(cursor.x,cursor.y,cursor.z)),None)
+        desc=reg.species[c.species_id].name if c else 'Empty tile'
+        overlay=melee_overlay(sim,weapon,cursor);difficulty=overlay.get('cursor_difficulty','out of reach')
+        name=weapon.name if weapon else 'Unarmed'
+        _present_game_frame(term,ctx,renderer,f'MELEE: {desc} | {name} | reach {dist}/{reach} | {difficulty.upper()} | Enter attack | Esc',cursor,overlay)
+        k=term.read_key();low=k.lower() if len(k)==1 else k
+        if k.startswith('UI_WORLD:'):
+            _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
+            if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
+            continue
+        if low in ('ESC','q'):return UI_BACK
+        if low in DIRECTION_KEYS:
+            dx,dy=DIRECTION_KEYS[low];n=cursor.moved(dx,dy)
+            if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
+            continue
+        if low in ('ENTER',' ','\r','\n'):
+            if not c:continue
+            sim.execute(AttackCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
 
 def _action_palette(ctx:GameContext,term:Terminal)->str:
     """Primary gameplay action hub with retained navigation state.
@@ -1156,11 +1196,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if choice=='observe_animal':
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
     if choice=='attack_animal' and creature:
-        sim.execute(AttackCommand(ctx.player_id,target.x-p.x,target.y-p.y))
-        return sim.log[-1].message if sim.log else ''
+        return _melee_attack_action(ctx,term,target)
     if choice=='aim_animal' and creature:
-        sim.execute(AimCommand(ctx.player_id,creature.uid,'center'))
-        return sim.log[-1].message if sim.log else ''
+        return _hunt_action(ctx,term,target)
     if choice=='shoot_animal' and creature:
         sim.execute(RangedAttackCommand(ctx.player_id,creature.uid))
         return sim.log[-1].message if sim.log else ''
@@ -1782,16 +1820,7 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
         if pick.startswith('meal:'):sim.execute(EatMealCommand(pid,pick[5:]))
         else:sim.execute(EatCommand(pid,pick[5:]))
         return sim.log[-1].message if sim.log else ''
-    if lower=='x':
-        d=_direction(term)
-        if not d:return UI_BACK
-        inv=ctx.entities.get(pid,Inventory);weapon=sim.combat.readied_weapon(inv);reach=weapon.reach if weapon else 1
-        dx,dy=d;distance=1
-        for step in range(1,reach+1):
-            q=sim.player_pos.moved(dx*step,dy*step)
-            if any(c.hp>0 and (c.x,c.y,c.z)==(q.x,q.y,q.z) for c in sim.state.creatures.values()):
-                distance=step;break
-        sim.execute(AttackCommand(pid,dx*distance,dy*distance));return sim.log[-1].message if sim.log else ''
+    if lower=='x':return _melee_attack_action(ctx,term)
     if lower=='k':
         while True:
             mode=_select(term,'ARCANE ACTION',[
