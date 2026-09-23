@@ -652,20 +652,20 @@
   },
   {
     "id": "core:wooden_spear",
-    "name": "Make Fire-Hardened Spear",
+    "name": "Make Fire-Hardened Javelin",
     "inputs": {
       "core:stout_branch": 1
     },
     "outputs": {
       "core:wooden_spear": 1
     },
-    "minutes": 20,
+    "minutes": 24,
     "station": "core:campfire",
     "knowledge": null,
-    "description": "Sharpen and harden a long branch for defense and hunting.",
+    "description": "Straighten, sharpen, balance, and fire-harden a light hunting shaft that can be thrust or thrown.",
     "category": "hunting",
     "skill": "crafting",
-    "difficulty": 2,
+    "difficulty": 1,
     "tool_qualities": {}
   },
   {
@@ -724,23 +724,23 @@
   },
   {
     "id": "core:short_bow",
-    "name": "Make Short Hunting Bow",
+    "name": "Shape Primitive Self Bow",
     "inputs": {
       "core:wood": 1,
-      "core:sinew_cord": 2
+      "core:plant_cordage": 2
     },
     "outputs": {
       "core:short_bow": 1
     },
-    "minutes": 90,
-    "station": "core:workbench",
+    "minutes": 65,
+    "station": null,
     "knowledge": null,
-    "description": "Shape a short stave and back it with sinew for a compact hunting bow.",
+    "description": "Shape a flexible stave, tiller the limbs by hand, and string it with strong plant cordage.",
     "category": "hunting",
     "skill": "crafting",
     "difficulty": 2,
     "tool_qualities": {
-      "cut": 2
+      "cut": 1
     }
   },
   {
