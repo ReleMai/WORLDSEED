@@ -1022,7 +1022,7 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
                 'item_count':sum(container.items.values()),'stack_count':len(container.items),
             },
         }
-        subtitle=status or 'Click either side, choose an amount, then transfer it. Natural containers can also be moved or broken apart.'
+        subtitle=status or 'Click either side • right-click for actions • Shift-click transfers the full stack. Natural containers can also be moved or broken apart.'
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
@@ -1039,8 +1039,8 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         if action=='qty_all':action_amount=max(1,count);continue
         if action=='split':
             action_amount=max(1,(count+1)//2);status=f'Half-stack selected: {action_amount} of {count}.';continue
-        if action=='transfer' and meta:
-            iid=meta['iid'];amount=min(action_amount,count)
+        if action in ('transfer','quick_transfer') and meta:
+            iid=meta['iid'];amount=count if action=='quick_transfer' else min(action_amount,count)
             if meta['side']=='pack':sim.execute(StoreCommand(pid,iid,amount,uid))
             else:sim.execute(TakeFromContainerCommand(pid,iid,amount,uid))
             status=sim.log[-1].message if sim.log else '';last_selected=None;action_amount=1;continue
@@ -1073,7 +1073,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         rows.append(('open',f'Open {container.name or "container"}'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
-    choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle)
+    choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
+                   presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
     if choice=='gather':return _gather_positions(ctx,[target])
     if choice=='pickup':
@@ -1307,7 +1308,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         count=inv.count(selected_iid) if selected_iid!='__empty__' else 0
         action_amount=max(1,min(action_amount,max(1,count)))
         data.update({'selected_item_id':selected_iid,'action_amount':action_amount,'active_filter':active_filter,'filter_categories':sorted(data.get('categories',{}))})
-        subtitle=status or 'Click an item to inspect it. Use, drop, split and storage actions stay on this screen.'
+        subtitle=status or 'Click to inspect • right-click for actions • Shift-click stores the full stack when a container is nearby.'
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
         if choice is None:return UI_BACK
@@ -1340,8 +1341,9 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             continue
         if action=='drop':
             sim.execute(DropCommand(pid,selected_iid,min(action_amount,count)))
-        elif action=='store':
-            sim.execute(StoreCommand(pid,selected_iid,min(action_amount,count)))
+        elif action in ('store','quick_store'):
+            amount=count if action=='quick_store' else min(action_amount,count)
+            sim.execute(StoreCommand(pid,selected_iid,amount))
         elif action=='use':
             item=reg.items[selected_iid]
             if item.nutrition>0:sim.execute(EatCommand(pid,selected_iid))
