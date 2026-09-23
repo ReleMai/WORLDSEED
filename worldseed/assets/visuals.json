@@ -126,16 +126,7 @@
       "assets/sprites/terrain/grass_hd_v09.png"
     ],
     "core:forest": [
-      "assets/sprites/terrain/forest_hd_v00.png",
-      "assets/sprites/terrain/forest_hd_v01.png",
-      "assets/sprites/terrain/forest_hd_v02.png",
-      "assets/sprites/terrain/forest_hd_v03.png",
-      "assets/sprites/terrain/forest_hd_v04.png",
-      "assets/sprites/terrain/forest_hd_v05.png",
-      "assets/sprites/terrain/forest_hd_v06.png",
-      "assets/sprites/terrain/forest_hd_v07.png",
-      "assets/sprites/terrain/forest_hd_v08.png",
-      "assets/sprites/terrain/forest_hd_v09.png"
+      "assets/sprites/terrain/forest_floor.png"
     ],
     "core:berry_thicket": [
       "assets/sprites/terrain/berry_thicket_v00.png",
@@ -699,9 +690,9 @@
     "core:fallen_branches": "assets/sprites/resources/fallen_branches.png",
     "core:loose_stone": "assets/sprites/resources/loose_stone.png",
     "core:surface_boulder": "assets/sprites/resources/surface_boulder.png",
-    "core:hollow_log_cache": "assets/sprites/resources/fallen_branches.png",
-    "core:rotten_stump_cache": "assets/sprites/resources/fallen_branches.png",
-    "core:rock_crevice_cache": "assets/sprites/resources/surface_boulder.png"
+    "core:hollow_log_cache": "assets/sprites/resources/hollow_log_cache.png",
+    "core:rotten_stump_cache": "assets/sprites/resources/rotten_stump_cache.png",
+    "core:rock_crevice_cache": "assets/sprites/resources/rock_crevice_cache.png"
   },
   "structures": {
     "core:wood_wall": "assets/sprites/structures/wood_wall.png",
@@ -728,9 +719,9 @@
     "core:stone_hearth": "assets/sprites/structures/stone_hearth.png",
     "core:reed_screen": "assets/sprites/structures/reed_screen.png",
     "core:wood_storage_box": "assets/sprites/structures/wood_chest.png",
-    "core:natural_hollow_log": "assets/sprites/resources/fallen_branches.png",
-    "core:natural_rotten_stump": "assets/sprites/resources/fallen_branches.png",
-    "core:natural_rock_cache": "assets/sprites/resources/surface_boulder.png"
+    "core:natural_hollow_log": "assets/sprites/resources/hollow_log_cache.png",
+    "core:natural_rotten_stump": "assets/sprites/resources/rotten_stump_cache.png",
+    "core:natural_rock_cache": "assets/sprites/resources/rock_crevice_cache.png"
   },
   "species": {
     "core:rabbit": [
@@ -975,6 +966,11 @@
       "width": 0.85,
       "height": 0.85,
       "smooth": true
+    }
+  },
+  "terrain_materials": {
+    "core:forest": {
+      "span_cells": 16
     }
   }
 }

@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from worldseed.app import _find_spawn
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
@@ -29,12 +30,15 @@ class PersistenceTests(unittest.TestCase):
             entities.add(player, Inventory({'core:stone_axe':1,'core:iron_pick':1}))
             entities.add(player, Vitals())
             state=LivingWorldState()
+            self.addCleanup(db.close)
+            entities.add(player,Position(WorldPos(0,0,0)))
             # Find a deterministic surface feature. Resource depletion, not the
             # underlying biome terrain, is the persistent harvest delta.
-            probe_sim = None
+            probe_sim = Simulation(world,entities,registry,0,state,bytes.fromhex(seed_hex))
+            center=_find_spawn(world,'wanderer',probe_sim.resources)
             target = None
-            for y in range(-60, 61):
-                for x in range(-60, 61):
+            for y in range(center.y-60, center.y+61):
+                for x in range(center.x-60, center.x+61):
                     pos=WorldPos(x,y,0)
                     if target is None:
                         entities.add(player, Position(pos)) if entities.try_get(player,Position) is None else setattr(entities.get(player,Position),'value',pos)

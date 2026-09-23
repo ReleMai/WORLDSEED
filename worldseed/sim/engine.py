@@ -792,8 +792,12 @@ class Simulation:
         if not inv.remove("core:bone_meal",1):self._message("You need bone meal.");return
         soil.nitrogen=min(100,soil.nitrogen+15);soil.phosphorus=min(100,soil.phosphorus+30);soil.potassium=min(100,soil.potassium+10);soil.organic=min(100,soil.organic+5);soil.disease_pressure=max(0,soil.disease_pressure-4);self._message("You work bone meal into the soil.")
     def _pickup(self,cmd:PickupCommand)->None:
-        pos=self.entities.get(cmd.actor,Position).value;key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
-        if not pile:self._message("There is nothing here to pick up.");return
+        origin=self.entities.get(cmd.actor,Position).value
+        if abs(cmd.dx)+abs(cmd.dy)>1:
+            self._message("You can only pick up items from your tile or an adjacent tile.");return
+        pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
+        if not pile or not pile.items:
+            self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
         inv=self.entities.get(cmd.actor,Inventory)
         for iid,n in pile.items.items():inv.add(iid,n)
         self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 import heapq
 from typing import Any, TYPE_CHECKING
@@ -867,6 +867,32 @@ class HydrologyGenerator:
         return (top * (spacing - ry) + bottom * ry) // (spacing * spacing)
 
     def surface_at(self, pos: WorldPos, *, prepared_only: bool = False) -> HydrologySurface | None:
+        base=self.drainage_surface_at(pos,prepared_only=prepared_only)
+        gen=self.world_generator
+        if base is None or pos.z!=0 or gen.version<8 or gen.coast_morphology_version<2:return base
+        domain=self.cached_domain(*self.domain_for_world(pos.x,pos.y))
+        mouth=gen.coastal_mouths.at(pos,domain,prepared_only=prepared_only)
+        if mouth is None:return base
+        terrain,plan,index=mouth
+        if index<0 and (base.river_class or base.lake):return base
+        if index==-2:
+            return replace(base,terrain_override=terrain,channel_style='coastal_deposit',
+                           river_class=0,river_width=0,river_depth_class=0,crossing_cost=0,
+                           wetland_probability=65 if terrain=='core:tidal_flat' else 20,water_access_score=80)
+        if index==-1:
+            return replace(base,terrain_override=terrain,channel_style='lagoon',
+                           river_class=0,river_width=0,river_depth_class=1,crossing_cost=5,
+                           water_access_score=100,wetland_probability=80)
+        deep=terrain=='core:estuary_deep'
+        return replace(base,watershed_id=plan.watershed,river_class=plan.river_class,
+                       ford=False,rapid=False,gorge=False,braided=False,lake=False,oxbow_lake=False,
+                       river_width=plan.mixing_width if index==0 else max(2,plan.width-2),
+                       river_depth_class=2 if deep else 1,water_access_score=100,
+                       crossing_cost=80 if deep else 5,flood_risk=85,
+                       delta=bool(plan.branches),channel_style='delta' if plan.branches else 'estuary',
+                       terrain_override=terrain)
+
+    def drainage_surface_at(self, pos: WorldPos, *, prepared_only: bool = False) -> HydrologySurface | None:
         if pos.z != 0:
             return HydrologySurface()
         dx, dy = self.domain_for_world(pos.x, pos.y)

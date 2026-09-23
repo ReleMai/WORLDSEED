@@ -59,7 +59,7 @@ def main():
                     tid = ('core:cave_wall' if (x//4+y//3)%4==0 else 'core:cave_floor') if cave else 'core:forest'
                     ref = vis.ref('terrain', tid)
                     path = vis.resolve(ref, token % len(ref.paths))
-                    tile = term._terrain_surface(tid,path,{}, {},size)
+                    tile = term._terrain_surface(tid,path,{}, {},size,world_x=x,world_y=y)
                     screen.blit(tile,(x*size,rect.y+y*size))
             saved = screen.get_clip()
             screen.set_clip(rect)

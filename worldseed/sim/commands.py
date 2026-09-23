@@ -22,7 +22,7 @@ class BuildCommand: actor:int; structure_id:str; dx:int=0; dy:int=0
 @dataclass(frozen=True,slots=True)
 class DismantleCommand: actor:int; dx:int=0; dy:int=0
 @dataclass(frozen=True,slots=True)
-class PickupCommand: actor:int
+class PickupCommand: actor:int; dx:int=0; dy:int=0
 @dataclass(frozen=True,slots=True)
 class DropCommand: actor:int; item_id:str; amount:int=1
 @dataclass(frozen=True,slots=True)

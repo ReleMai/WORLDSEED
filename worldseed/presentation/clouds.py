@@ -94,6 +94,21 @@ class CloudRenderer:
             self._stamp_bytes += size
         return cloud, shadow
 
+    def composited_layers(self, width, height, seed, cover, wind_dx, wind_dy,
+                          left, top, tile_px, elapsed_ms, **kwargs):
+        """Composite soft clouds once at a bounded pixel density on large screens."""
+        if cover<12:return ()
+        factor=2 if (width*height>900000 or tile_px>=40) and tile_px%2==0 else 1
+        lw,lh=(width+factor-1)//factor,(height+factor-1)//factor
+        shadow,cloud=self.layers(lw,lh,seed,cover,wind_dx,wind_dy,left,top,
+                                 tile_px//factor,elapsed_ms,**kwargs)
+        combined=shadow.copy()
+        combined.blit(cloud,(0,0))
+        if factor>1:
+            combined=self.pg.transform.smoothscale(combined,(lw*factor,lh*factor))
+            if combined.get_size()!=(width,height):combined=combined.subsurface((0,0,width,height))
+        return (combined,)
+
     def layers(self, width, height, seed, cover, wind_dx, wind_dy,
                left, top, tile_px, elapsed_ms, *, storm=0, minute=720,
                daylight=65535, sunrise=360, sunset=1080):

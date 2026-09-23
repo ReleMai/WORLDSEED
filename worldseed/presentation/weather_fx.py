@@ -19,6 +19,7 @@ class WeatherFxRenderer:
         self._clouds = CloudRenderer(pygame_module)
         self._cloud_cache = self._clouds.frames
         self._rain_cache = {}
+        self._rain_particles = {}
         self._glow_cache = {}
         self._lighting_target = None
         self._lighting_from = None
@@ -47,7 +48,7 @@ class WeatherFxRenderer:
 
     def _cloud_layers(self, frame):
         w = frame.weather
-        return self._clouds.layers(frame.width,frame.height,frame.seed,w.cloud_cover,
+        return self._clouds.composited_layers(frame.width,frame.height,frame.seed,w.cloud_cover,
                                    w.wind_dx,w.wind_dy,frame.left,frame.top,frame.tile_px,
                                    frame.elapsed_ms,storm=w.storm_intensity,minute=frame.game_minute,
                                    daylight=w.daylight,sunrise=w.sunrise,sunset=w.sunset)
@@ -233,14 +234,21 @@ class WeatherFxRenderer:
         surf = pg.Surface((width, height), pg.SRCALPHA)
         count = max(12, min(900, round((18 + rain * 18) * width * height / (960 * 600))))
         slant = max(-0.65, min(0.65, wind_dx / 1600.0))
-        for i in range(count):
-            token = hash_u64(seed, "weather-art:rain", i)
-            x = int(token % max(1, width))
-            y = int((token >> 17) % max(1, height))
-            depth = 0.55 + ((token >> 34) % 100) / 150.0
-            fall_ticks = 18 + int((token >> 44) % 17)
+        particle_key=(bytes(seed),width,height,count)
+        particles=self._rain_particles.get(particle_key)
+        if particles is None:
+            particles=[]
+            for i in range(count):
+                token=hash_u64(seed,"weather-art:rain",i)
+                fall_ticks=18+int((token>>44)%17)
+                particles.append((int(token%max(1,width)),int((token>>17)%max(1,height)),
+                                  0.55+((token>>34)%100)/150.0,fall_ticks,
+                                  int((token>>50)%(fall_ticks+9))))
+            if len(self._rain_particles)>=4:self._rain_particles.clear()
+            self._rain_particles[particle_key]=tuple(particles)
+        for x,y,depth,fall_ticks,offset in particles:
             cycle = fall_ticks + 9
-            age = (int(phase) + int((token >> 50) % cycle)) % cycle
+            age = (int(phase) + offset) % cycle
             if age < fall_ticks:
                 distance = (fall_ticks - age) * (7 + rain * 0.45) * depth
                 length = (5 + rain * 0.8) * depth

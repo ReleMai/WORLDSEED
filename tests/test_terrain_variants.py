@@ -24,7 +24,8 @@ class TerrainVariantTests(unittest.TestCase):
         for terrain_id in self.terrain_ids:
             with self.subTest(terrain_id=terrain_id):
                 ref = self.vis.ref('terrain', terrain_id)
-                self.assertGreaterEqual(len(ref.paths), 10)
+                span=int(self.vis.manifest.get('terrain_materials',{}).get(terrain_id,{}).get('span_cells',1))
+                self.assertGreaterEqual(len(ref.paths)*span*span, 10)
                 for raw in ref.paths:
                     path = self.root / raw
                     self.assertTrue(path.exists(), path)
@@ -34,7 +35,14 @@ class TerrainVariantTests(unittest.TestCase):
         for terrain_id in self.terrain_ids:
             with self.subTest(terrain_id=terrain_id):
                 ref = self.vis.ref('terrain', terrain_id)
-                digests = [self.digest(raw) for raw in ref.paths]
+                span=int(self.vis.manifest.get('terrain_materials',{}).get(terrain_id,{}).get('span_cells',1))
+                if span>1:
+                    import pygame as pg
+                    source=pg.transform.smoothscale(pg.image.load(str(self.vis.resolve(ref))),(span*28,span*28))
+                    digests=[hashlib.sha256(pg.image.tobytes(source.subsurface((x*28,y*28,28,28)),'RGB')).hexdigest()
+                             for y in range(span) for x in range(span)]
+                else:
+                    digests = [self.digest(raw) for raw in ref.paths]
                 self.assertGreaterEqual(len(set(digests)), 6)
 
     def test_visual_registry_resolves_different_variants(self):

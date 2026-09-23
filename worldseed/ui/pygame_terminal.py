@@ -298,7 +298,14 @@ class PygameTerminal(PointerUI):
                             x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
                             y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
                             return f'UI_WORLD:{x}:{y}'
-                if event.button==3 and self._input_mode!='world':return 'ESC'
+                if event.button==3:
+                    if self._input_mode!='world':return 'ESC'
+                    if self._hover_context:
+                        ctx=self._hover_context;rect=ctx['used']
+                        if rect.collidepoint(self._last_mouse):
+                            x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
+                            y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                            return f'UI_WORLD_MENU:{x}:{y}'
                 continue
             if event.type == pg.MOUSEBUTTONUP:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
@@ -1380,7 +1387,7 @@ class PygameTerminal(PointerUI):
         return overlay
 
     def _load_sprite(self, path: Path | None, max_w: int, max_h: int, *, smooth: bool = False):
-        if path is None or not path.exists(): return None
+        if path is None: return None
         key=(str(path),max_w,max_h,smooth)
         if key in self._sprite_cache: return self._sprite_cache[key]
         pg=self.pg
@@ -1396,7 +1403,7 @@ class PygameTerminal(PointerUI):
 
     def _load_terrain_sprite(self, path: Path | None, size: int):
         """Terrain uses smooth downsampling; resource/item art keeps crisp scaling."""
-        if path is None or not path.exists(): return None
+        if path is None: return None
         key=(f'terrain:{path}',size,size)
         if key in self._sprite_cache:return self._sprite_cache[key]
         try:
@@ -1456,7 +1463,43 @@ class PygameTerminal(PointerUI):
         self._terrain_transition_masks[key]=mask
         return mask
 
-    def _terrain_surface(self, center_id: str, center_path: Path | None, neighbor_ids: dict[str,str|None], neighbor_paths: dict[str,Path|None], tile_px: int):
+    def _material_phase(self, terrain_id, x, y):
+        styles=self._visuals.manifest.get('terrain_materials',{}) if self._visuals else {}
+        span=max(1,min(16,int(styles.get(terrain_id,{}).get('span_cells',1))))
+        return (span,x%span,y%span) if span>1 else (1,0,0)
+
+    def _ground_material(self, terrain_id, path, size, x, y):
+        span,cx,cy=self._material_phase(terrain_id,x,y)
+        if span==1:return self._load_terrain_sprite(path,size)
+        key=('ground',str(path),size,span,cx,cy)
+        cached=self._sprite_cache.get(key)
+        if cached is not None:return cached
+        material_key=('continuous-ground',str(path),size,span)
+        source=self._sprite_cache.get(material_key)
+        if source is None:
+            # Crossfade an overlapping border once, retaining organic detail
+            # without mirror symmetry or repeating a whole image in every cell.
+            full=self._load_terrain_sprite(path,size*(span+2))
+            if full is None:return None
+            extent=size*span;overlap=size*2
+            source=full.copy()
+            for vertical in (False,True):
+                strip=source.subsurface((0,extent,extent,overlap) if vertical else
+                                        (extent,0,overlap,source.get_height())).copy()
+                mask=self.pg.Surface(strip.get_size(),self.pg.SRCALPHA)
+                for i in range(overlap):
+                    alpha=255*(overlap-i)//overlap
+                    if vertical:self.pg.draw.line(mask,(255,255,255,alpha),(0,i),(strip.get_width()-1,i))
+                    else:self.pg.draw.line(mask,(255,255,255,alpha),(i,0),(i,strip.get_height()-1))
+                strip.blit(mask,(0,0),special_flags=self.pg.BLEND_RGBA_MULT)
+                source.blit(strip,(0,0))
+            source=source.subsurface((0,0,extent,extent)).copy()
+            self._sprite_cache[material_key]=source
+        tile=source.subsurface((cx*size,cy*size,size,size)).copy()
+        self._sprite_cache[key]=tile
+        return tile
+
+    def _terrain_surface(self, center_id: str, center_path: Path | None, neighbor_ids: dict[str,str|None], neighbor_paths: dict[str,Path|None], tile_px: int, *, world_x: int=0, world_y: int=0):
         """Compose a cached natural-terrain tile without altering world data."""
         if center_id == 'core:cave_mouth':
             # v7 cave art is an overlay rather than a baked square of ground.
@@ -1479,10 +1522,12 @@ class PygameTerminal(PointerUI):
         signature=transition_signature(center_id,neighbor_ids)
         path_signature=tuple((direction, str(neighbor_paths.get(direction)) if neighbor_id is not None else None)
                              for direction, neighbor_id in signature)
-        key=(str(center_path) if center_path else '',signature,path_signature,tile_px)
+        material_phase=self._material_phase(center_id,world_x,world_y)
+        neighbor_phases=tuple(self._material_phase(neighbor_ids.get(d),world_x+dx,world_y+dy) for d,dx,dy in DIRECTIONS_8)
+        key=(str(center_path) if center_path else '',signature,path_signature,tile_px,material_phase,neighbor_phases)
         cached=self._terrain_transition_cache.get(key)
         if cached is not None:return cached
-        base=self._load_terrain_sprite(center_path,tile_px)
+        base=self._ground_material(center_id,center_path,tile_px,world_x,world_y)
         if base is None:return None
         if not any(value for _,value in signature):
             self._terrain_transition_cache[key]=base
@@ -1490,7 +1535,8 @@ class PygameTerminal(PointerUI):
         composed=base.copy()
         for direction,neighbor_id in signature:
             if neighbor_id is None:continue
-            overlay=self._load_terrain_sprite(neighbor_paths.get(direction),tile_px)
+            dx,dy=next((dx,dy) for d,dx,dy in DIRECTIONS_8 if d==direction)
+            overlay=self._ground_material(neighbor_id,neighbor_paths.get(direction),tile_px,world_x+dx,world_y+dy)
             if overlay is None:continue
             masked=overlay.copy()
             masked.blit(self._terrain_transition_mask(direction,tile_px,center_id,neighbor_id),(0,0),special_flags=self.pg.BLEND_RGBA_MULT)
@@ -1647,7 +1693,7 @@ class PygameTerminal(PointerUI):
             key=(wx,wy,terrain_id)
             cached=display_cache.get(key)
             if cached is not None:return cached
-            value=contextual_display_id(terrain_id, discovered_neighbor_ids(wx,wy))
+            value=contextual_display_id(terrain_id, discovered_neighbor_ids(wx,wy) if terrain_id=='core:water' else {})
             display_cache[key]=value
             return value
 
@@ -1697,7 +1743,7 @@ class PygameTerminal(PointerUI):
                         nref,
                         self._terrain_variant_index(ndisplay, nwx, nwy, z, len(nref.paths)),
                     )
-                terr=self._terrain_surface(tile.terrain_id,terr_path,neighbor_ids,neighbor_paths,tile_px)
+                terr=self._terrain_surface(tile.terrain_id,terr_path,neighbor_ids,neighbor_paths,tile_px,world_x=wx,world_y=wy)
                 if terr:surf.blit(terr,rect.topleft)
                 else:pg.draw.rect(surf,(52,65,50),rect)
                 for direction,kind in edge_overlay_signature(tile.terrain_id, neighbor_ids):
@@ -1944,7 +1990,7 @@ class PygameTerminal(PointerUI):
             key=(wx,wy,terrain_id)
             cached=display_cache.get(key)
             if cached is not None:return cached
-            value=contextual_display_id(terrain_id, discovered_neighbor_ids(wx,wy))
+            value=contextual_display_id(terrain_id, discovered_neighbor_ids(wx,wy) if terrain_id=='core:water' else {})
             display_cache[key]=value
             return value
 
