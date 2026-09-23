@@ -76,6 +76,10 @@ jobs:
         shell: pwsh
         run: python -m unittest tests.test_dev36_world_interactions
 
+      - name: Dev37 floating interaction UI regressions
+        shell: pwsh
+        run: python -m unittest tests.test_dev37_floating_interaction_ui
+
       - name: Phase 5 coast tests
         shell: pwsh
         run: python -m unittest tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
