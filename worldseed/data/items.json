@@ -2576,8 +2576,10 @@
     "tags": [
       "food",
       "aquatic_plant",
-      "forage"
-    ]
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "A handful of green gathered from quiet water."
   },
   {
     "id": "core:water_lily_root",
@@ -2600,8 +2602,10 @@
       "food",
       "aquatic_plant",
       "root",
-      "forage"
-    ]
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "Mud hides more food than the surface suggests."
   },
   {
     "id": "core:pickerelweed",
@@ -2622,8 +2626,10 @@
     "tags": [
       "food",
       "aquatic_plant",
-      "forage"
-    ]
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "The wetland offers food where dry ground ends."
   },
   {
     "id": "core:saltmarsh_grass",
@@ -2639,7 +2645,8 @@
       "aquatic_plant",
       "fiber",
       "salt_tolerant"
-    ]
+    ],
+    "flavor": "Salt, wind, and tide have made every blade stubborn."
   },
   {
     "id": "core:eelgrass",
@@ -2655,7 +2662,8 @@
       "aquatic_plant",
       "marine",
       "fiber"
-    ]
+    ],
+    "flavor": "A submerged meadow pulled from brackish water."
   },
   {
     "id": "core:kelp",
@@ -2677,8 +2685,10 @@
       "food",
       "aquatic_plant",
       "marine",
-      "forage"
-    ]
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "The sea grows forests where no axe can stand."
   },
   {
     "id": "core:earthworms",
@@ -2693,6 +2703,10 @@
       "fishing_bait",
       "bait",
       "living"
+    ],
+    "flavor": "Good bait begins under damp soil.",
+    "utility_roles": [
+      "fishing_bait"
     ]
   },
   {
@@ -2709,6 +2723,10 @@
       "fishing_lure",
       "lure",
       "reusable"
+    ],
+    "flavor": "A flash of copper can look alive underwater.",
+    "utility_roles": [
+      "fishing_lure"
     ]
   },
   {
@@ -2726,6 +2744,10 @@
     "description": "A flexible improvised rod suited to small and moderate fish.",
     "tags": [
       "tool",
+      "fishing_rod"
+    ],
+    "flavor": "Simple tackle turns patient water into opportunity.",
+    "utility_roles": [
       "fishing_rod"
     ]
   },
@@ -2745,6 +2767,10 @@
     "tags": [
       "tool",
       "fishing_rod"
+    ],
+    "flavor": "A balanced rod gives the angler room to fight.",
+    "utility_roles": [
+      "fishing_rod"
     ]
   },
   {
@@ -2762,6 +2788,10 @@
     "tags": [
       "fishing_line",
       "cordage"
+    ],
+    "flavor": "Light line rewards finesse and punishes greed.",
+    "utility_roles": [
+      "fishing_line"
     ]
   },
   {
@@ -2780,6 +2810,10 @@
       "fishing_line",
       "cordage",
       "sinew"
+    ],
+    "flavor": "Tendon twisted tight enough to trust with a fish.",
+    "utility_roles": [
+      "fishing_line"
     ]
   },
   {
@@ -2798,6 +2832,10 @@
       "fishing_line",
       "cordage",
       "sinew"
+    ],
+    "flavor": "Heavy line for fish that do not intend to be landed.",
+    "utility_roles": [
+      "fishing_line"
     ]
   },
   {
@@ -2820,6 +2858,10 @@
       "spear",
       "fishing_spear",
       "weapon"
+    ],
+    "flavor": "Shallow water leaves only one chance at a clean strike.",
+    "utility_roles": [
+      "fishing_spear"
     ]
   },
   {
@@ -2838,6 +2880,10 @@
       "tool",
       "fishing_net",
       "net"
+    ],
+    "flavor": "A school can escape a hook but not always a well-thrown net.",
+    "utility_roles": [
+      "fishing_net"
     ]
   },
   {
@@ -2862,7 +2908,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Cold clear water made this fish quick and bright."
   },
   {
     "id": "core:bluegill",
@@ -2886,7 +2933,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Small water can still provide a dependable meal."
   },
   {
     "id": "core:largemouth_bass",
@@ -2910,7 +2958,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "It waits beside cover until prey makes one mistake."
   },
   {
     "id": "core:channel_catfish",
@@ -2934,7 +2983,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Deep water and scent guide a fish that rarely needs light."
   },
   {
     "id": "core:common_carp",
@@ -2958,7 +3008,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Heavy, wary, and stronger than its quiet feeding suggests."
   },
   {
     "id": "core:northern_pike",
@@ -2982,7 +3033,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "A green shadow built for one sudden strike."
   },
   {
     "id": "core:striped_bass",
@@ -3006,7 +3058,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Current and salt pull this fish across whole watersheds."
   },
   {
     "id": "core:summer_flounder",
@@ -3030,7 +3083,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "The bottom itself seems to move when it strikes."
   },
   {
     "id": "core:striped_mullet",
@@ -3054,7 +3108,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Silver schools turn together in shallow coastal water."
   },
   {
     "id": "core:atlantic_mackerel",
@@ -3078,7 +3133,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "A fast silver fish that arrives with the moving sea."
   },
   {
     "id": "core:atlantic_cod",
@@ -3102,7 +3158,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "Cold deep water carries a heavy fish close to the bottom."
   },
   {
     "id": "core:red_drum",
@@ -3126,7 +3183,8 @@
       "fish",
       "raw_fish",
       "protein"
-    ]
+    ],
+    "flavor": "A bronze-sided fighter from warm estuaries and surf."
   },
   {
     "id": "core:beachgrass",
@@ -3142,7 +3200,8 @@
       "forage"
     ],
     "base_value": 1,
-    "description": "Tough dune grass useful as coarse fiber and thatching."
+    "description": "Tough dune grass useful as coarse fiber and thatching.",
+    "flavor": "Thin blades hold dunes together one root at a time."
   },
   {
     "id": "core:blue_mussels",
@@ -3165,6 +3224,7 @@
     ],
     "spoilage_hours": 24,
     "base_value": 6,
-    "description": "Edible shellfish gathered from exposed rocky shore beds."
+    "description": "Edible shellfish gathered from exposed rocky shore beds.",
+    "flavor": "A meal sealed shut and fastened to the rocks."
   }
 ]
