@@ -51,6 +51,16 @@ class VisualRegistry:
     def resource_style(self, content_id: str) -> dict:
         return self.manifest.get('resource_rendering', {}).get(content_id, {})
 
+    def resource_atlas_path(self, content_id: str) -> Path | None:
+        """Return an optional presentation atlas for one resource type.
+
+        Resource atlases are presentation-only. World generation still decides
+        which resource occupies a cell; the renderer deterministically selects
+        one visual frame for that generated cell.
+        """
+        raw = self.resource_style(content_id).get('atlas')
+        return self.base_dir / str(raw) if raw else None
+
     def player_paths(self, sex: str = 'male') -> tuple[Path, ...]:
         groups = self.manifest.get('player_variants', {})
         raw = groups.get((sex or 'male').lower()) or groups.get('male') or []
@@ -110,6 +120,10 @@ class VisualRegistry:
         for raw in self.manifest.get("procedural_species", []):
             if not (self.base_dir / raw).exists():
                 issues.append(f"missing procedural species visual file: {raw}")
+        for cid, style in self.manifest.get('resource_rendering', {}).items():
+            raw = style.get('atlas') if isinstance(style, dict) else None
+            if raw and not (self.base_dir / str(raw)).exists():
+                issues.append(f"missing resource atlas: {raw} ({cid})")
         return issues
 
     def iter_asset_paths(self) -> Iterable[Path]:
@@ -125,3 +139,7 @@ class VisualRegistry:
             yield self.base_dir / p
         for p in self.manifest.get("procedural_species", []):
             yield self.base_dir / p
+        for style in self.manifest.get('resource_rendering', {}).values():
+            raw = style.get('atlas') if isinstance(style, dict) else None
+            if raw:
+                yield self.base_dir / str(raw)
