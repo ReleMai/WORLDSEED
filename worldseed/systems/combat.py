@@ -81,13 +81,13 @@ class CombatSystem:
         return max(0,min(95,chance))
 
     def shield_defend(self,raw_damage:int,part:str,attack_kind:str,damage_type:str,turn:int,stamina:int=100,
-                      source_dx:int=0,source_dy:int=0,source_uid:str="")->tuple[int,str]:
+                      source_dx:int=0,source_dy:int=0,source_uid:str="")->tuple[int,str,int]:
         shield=self.equipped_shield()
-        if not shield or raw_damage<=0:return raw_damage,""
+        if not shield or raw_damage<=0:return raw_damage,"",0
         chance=self.shield_coverage_chance(part,attack_kind,stamina,source_dx,source_dy)
-        if chance<=0:return raw_damage,""
+        if chance<=0:return raw_damage,"",0
         roll=PCG32(derive_seed(self.seed,"shield-defense",turn,source_uid,part,attack_kind,damage_type,raw_damage,shield.id)).randbelow(100)
-        if roll>=chance:return raw_damage,""
+        if roll>=chance:return raw_damage,"",0
         skill=int(self.state.player_skills.get("shield",0));strength=int(self.state.player_attributes.get("strength",5))
         stability=max(0,min(100,int(shield.shield_stability)))
         full_threshold=chance*(45+stability//2)//100
@@ -102,7 +102,7 @@ class CombatSystem:
         # The caller owns Vitals, so return the stamina drain in the text marker
         # and let resolve_player_hit apply it once alongside the wound result.
         grade="blocks" if full and remaining==0 else "catches" if full else "deflects"
-        return remaining,f"{shield.name} {grade} the {attack_kind} hit (-{reduced} damage, {drain} stamina)"
+        return remaining,f"{shield.name} {grade} the {attack_kind} hit (-{reduced} damage, {drain} stamina)",drain
 
     def resolve_player_hit(self,vitals:Vitals,part:str,raw_damage:int,damage_type:str,attack_kind:str,turn:int,
                            source_name:str="attack",source_uid:str="",source_dx:int=0,source_dy:int=0,
@@ -112,11 +112,8 @@ class CombatSystem:
         if attack_kind=="ranged":evasion//=2
         raw=max(1,raw*(100-evasion)//100)
         before=raw
-        raw,shield_text=self.shield_defend(raw,part,attack_kind,damage_type,turn,vitals.stamina,source_dx,source_dy,source_uid)
-        if shield_text:
-            try:drain=int(shield_text.rsplit(" ",2)[1])
-            except Exception:drain=1
-            vitals.stamina=max(0,vitals.stamina-drain)
+        raw,shield_text,shield_drain=self.shield_defend(raw,part,attack_kind,damage_type,turn,vitals.stamina,source_dx,source_dy,source_uid)
+        if shield_drain:vitals.stamina=max(0,vitals.stamina-shield_drain)
         if raw<=0:
             return f"{source_name} is stopped at your shield"+(f"; {shield_text}." if shield_text else ".")
         armor,names=self._player_armor(part);mitigation=min(max(0,raw-1),armor//4);damage=max(1,raw-mitigation)
