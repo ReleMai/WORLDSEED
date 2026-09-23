@@ -15,7 +15,7 @@ def main():
    z.write(path,Path(NAME)/rel);count+=1
  with zipfile.ZipFile(dest) as z:
   assert z.testzip() is None
-  for required in ['RUN_WORLDSEED.bat','worldseed/systems/swimming.py','DEV15_VALIDATION.md','worldseed/assets/sprites/terrain/v6_ocean_deep_00.png']:
+  for required in ['RUN_WORLDSEED.bat','worldseed/systems/swimming.py','README.md','worldseed/assets/sprites/terrain/v6_ocean_deep_00.png']:
    assert NAME+'/'+required in z.namelist()
  print(dest);print('files',count,'bytes',dest.stat().st_size)
 if __name__=='__main__':main()
