@@ -161,7 +161,11 @@ class ContentRegistry:
 
     def _load_items(self,path):
         for raw in self._json(path):
-            raw=dict(raw); raw["tags"]=_tuple(raw.get("tags")); raw["coverage"]=_tuple(raw.get("coverage")); raw["food_groups"]=_tuple(raw.get("food_groups")); raw["utility_roles"]=_tuple(raw.get("utility_roles")); raw["tool_qualities"]={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()}
+            raw=dict(raw)
+            # Presentation metadata is authored beside the item for maintainability,
+            # but is not simulation state.
+            raw.pop("asset", None)
+            raw["tags"]=_tuple(raw.get("tags")); raw["coverage"]=_tuple(raw.get("coverage")); raw["food_groups"]=_tuple(raw.get("food_groups")); raw["utility_roles"]=_tuple(raw.get("utility_roles")); raw["tool_qualities"]={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()}
             obj=ItemDef(**raw)
             if obj.id in self.items: raise ValueError(f"Duplicate item id: {obj.id}")
             self.items[obj.id]=obj
