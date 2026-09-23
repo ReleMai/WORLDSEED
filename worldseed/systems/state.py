@@ -35,6 +35,21 @@ class CarcassState:
     processed_by: str = ""
 
 @dataclass(slots=True)
+class AnimalSignState:
+    uid: str
+    species_id: str
+    x: int
+    y: int
+    z: int
+    kind: str
+    created_minute: int
+    direction_x: int = 0
+    direction_y: int = 0
+    strength: int = 50
+    source_uid: str = ""
+    detail: str = ""
+
+@dataclass(slots=True)
 class ProcessingJobState:
     uid: str
     process_id: str
@@ -139,6 +154,16 @@ class CreatureState:
     kills: int = 0
     bounty: int = 0
     cohort_key: str = ""
+    behavior: str = "calm"
+    alertness: int = 0
+    stamina: int = 100
+    threat_x: int | None = None
+    threat_y: int | None = None
+    threat_z: int | None = None
+    last_threat_turn: int = -1
+    last_move_turn: int = -1
+    facing_dx: int = 0
+    facing_dy: int = 1
 
 @dataclass(slots=True)
 class PopulationCohort:
@@ -625,6 +650,7 @@ class LivingWorldState:
     prepared_meals: dict[str, PreparedMealState] = field(default_factory=dict)
     crops: dict[str, CropPlot] = field(default_factory=dict)
     creatures: dict[str, CreatureState] = field(default_factory=dict)
+    animal_signs: dict[str, AnimalSignState] = field(default_factory=dict)
     cohorts: dict[str, PopulationCohort] = field(default_factory=dict)
     npcs: dict[str, NPCState] = field(default_factory=dict)
     settlements: dict[str, SettlementState] = field(default_factory=dict)
@@ -737,7 +763,7 @@ class LivingWorldState:
         return {
             "clock_minute": self.clock_minute,
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
-            "creatures": rows(self.creatures), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
+            "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
             "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "properties": rows(self.properties), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
@@ -763,7 +789,7 @@ class LivingWorldState:
             if key in raw:
                 setattr(s, key, raw[key])
         maps = {
-            "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"cohorts":PopulationCohort,
+            "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"cohorts":PopulationCohort,
             "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"properties":PropertyState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }

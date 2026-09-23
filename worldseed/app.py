@@ -1115,6 +1115,20 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     rows=[]
     container=sim.building.container_at(target)
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
+    creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
+    signs=sim.hunting.signs_at(target)
+    if creature:
+        sp=sim.registry.species.get(creature.species_id)
+        label=sp.name if sp and creature.species_id in sim.known_species_ids() else 'animal'
+        rows.append(('observe_animal',f'Observe {label} — {creature.behavior.replace("_"," ")}'))
+        if distance==1:
+            rows.append(('attack_animal',f'Attack {label} at close range'))
+        inv=ctx.entities.get(ctx.player_id,Inventory)
+        max_range=max((sim.registry.items[i].range for i,n in inv.items.items() if n>0 and i in sim.registry.items and sim.registry.items[i].weapon_damage>0 and sim.registry.items[i].range>1),default=0)
+        if max_range and distance<=max_range and sim._visible_from(p,target):
+            rows.append(('shoot_animal',f'Aim / fire at {label} — range {distance}/{max_range}'))
+    if signs:
+        rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
         rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
     if distance<=3 and sim.fishing.is_fishable(target):
@@ -1130,6 +1144,16 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='observe_animal':
+        _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
+    if choice=='attack_animal' and creature:
+        sim.execute(AttackCommand(ctx.player_id,target.x-p.x,target.y-p.y))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='shoot_animal' and creature:
+        sim.execute(RangedAttackCommand(ctx.player_id,creature.uid))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='inspect_sign':
+        _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
     if choice=='gather':return _gather_positions(ctx,[target])
     if choice=='fish':return _fishing_action(ctx,term,target)
     if choice=='pickup':

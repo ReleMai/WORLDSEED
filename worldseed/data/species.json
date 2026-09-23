@@ -44,7 +44,15 @@
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
       "core:bone": 1
-    }
+    },
+    "vision": 7,
+    "hearing": 11,
+    "scent": 7,
+    "flee_threshold": 22,
+    "defensive_aggression": 0,
+    "stamina": 90,
+    "trackability": 35,
+    "herd_response": 35
   },
   {
     "id": "core:snowshoe_hare",
@@ -145,7 +153,15 @@
       "core:bone": 3,
       "core:animal_fat": 1,
       "core:sinew": 2
-    }
+    },
+    "vision": 13,
+    "hearing": 12,
+    "scent": 14,
+    "flee_threshold": 24,
+    "defensive_aggression": 8,
+    "stamina": 120,
+    "trackability": 82,
+    "herd_response": 85
   },
   {
     "id": "core:elk",
@@ -311,7 +327,15 @@
       "core:bone": 3,
       "core:animal_fat": 2,
       "core:sinew": 1
-    }
+    },
+    "vision": 7,
+    "hearing": 10,
+    "scent": 13,
+    "flee_threshold": 42,
+    "defensive_aggression": 72,
+    "stamina": 105,
+    "trackability": 92,
+    "herd_response": 65
   },
   {
     "id": "core:turkey",
@@ -558,7 +582,15 @@
       "core:fresh_hide": 2,
       "core:bone": 2,
       "core:sinew": 1
-    }
+    },
+    "vision": 12,
+    "hearing": 15,
+    "scent": 16,
+    "flee_threshold": 72,
+    "defensive_aggression": 82,
+    "stamina": 125,
+    "trackability": 86,
+    "herd_response": 92
   },
   {
     "id": "core:brown_bear",

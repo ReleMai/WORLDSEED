@@ -11,6 +11,7 @@ from worldseed.sim.commands import *
 from worldseed.systems.state import LivingWorldState, GroundPile, CropPlot, SoilState, pos_key
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.ecology import EcologySystem
+from worldseed.systems.hunting import HuntingSystem
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.environment import EnvironmentSystem
 from worldseed.systems.ai import NPCSystem
@@ -94,6 +95,7 @@ class Simulation:
         self.ecology=EcologySystem(self.state,registry,self.seed,self.world)
         self.economy=EconomySystem(self.state,registry,self.seed,self.history)
         self.environment=EnvironmentSystem(self.state,registry,self.seed,self.history,self.world)
+        self.hunting=HuntingSystem(self.state,registry,self.seed,self.world,self.environment,self.resources,self.building)
         self.disease=EpidemiologySystem(self.state,registry,self.seed,self.history)
         self.npcs=NPCSystem(self.state,self.seed,self.history,self.world,self.building,self.lod)
         self.factions=FactionSystem(self.state,self.seed,self.history)
@@ -446,7 +448,7 @@ class Simulation:
             for did in self.disease.local_player_exposure(self.player_pos,self.clock.minute):
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
             for msg in self.disease.tick_player(self.clock.minute,v):self._message(msg)
-        attackers=self.ecology.update_local_ai(self.player_pos)
+        attackers=self.hunting.update_local_ai(self.player_pos,self.turn,self.clock.minute)
         v=self.entities.try_get(self.player_id,Vitals)
         if v:
             for uid in attackers:
@@ -670,6 +672,7 @@ class Simulation:
             practice(self)
         elif water.mode=='wading':v.stamina=max(0,v.stamina-2)
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
+        self.hunting.note_player_noise(new,self.hunting.movement_noise(new),self.turn,self.clock.minute,"movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
@@ -889,7 +892,14 @@ class Simulation:
         if not c or c.hp<=0:self._message("That target is no longer there.");return MINUTES_PER_ACTION
         p=self.player_pos;dist=abs(c.x-p.x)+abs(c.y-p.y)
         if c.z!=p.z or not self._visible_from(p,WorldPos(c.x,c.y,c.z)):self._message("You do not have a clear shot.");return MINUTES_PER_ACTION
-        msg=self.combat.ranged_attack_creature(c,self.entities.get(cmd.actor,Inventory),self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'));self._message(msg);return 5
+        before_wounds=len(c.wounds)
+        msg=self.combat.ranged_attack_creature(c,self.entities.get(cmd.actor,Inventory),self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'))
+        hit=len(c.wounds)>before_wounds
+        if c.uid in self.state.creatures:
+            self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
+        else:
+            self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
+        self._message(msg);return 5
     def _plant(self,cmd:PlantCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value;crop=self.registry.crops.get(cmd.crop_id);inv=self.entities.get(cmd.actor,Inventory)
         if not crop:self._message("Unknown crop.");return
@@ -924,7 +934,12 @@ class Simulation:
     def _attack(self,cmd:AttackCommand)->None:
         p=self.player_pos.moved(cmd.dx,cmd.dy);target=min((c for c in self.state.creatures.values() if c.z==p.z and c.x==p.x and c.y==p.y),key=lambda c:c.hp,default=None)
         if not target:self._message("There is nothing there to attack.");return
-        self._message(self.combat.attack_creature(target,self.entities.get(cmd.actor,Inventory),self.turn))
+        origin=self.player_pos
+        before_wounds=len(target.wounds)
+        msg=self.combat.attack_creature(target,self.entities.get(cmd.actor,Inventory),self.turn)
+        if target.uid in self.state.creatures:
+            self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
+        self._message(msg)
     def _magic_project(self,effects:dict)->None:
         pos=self.player_pos;targets=[c for c in self.state.creatures.values() if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=4]
         if not targets:self._message("The projected force dissipates without a target.");return

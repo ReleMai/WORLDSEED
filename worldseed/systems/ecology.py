@@ -81,7 +81,7 @@ class EcologySystem:
                     prefix=f"wild:{ax}:{ay}:{layer}:";existing=[c for c in self.state.creatures.values() if c.species_id==sid and c.uid.startswith(prefix)]
                     target=min(max(1,sp.group_max),4,max(0,cohort.count//max(1,sp.carrying_capacity//5)))
                     for ordinal in range(len(existing),target):
-                        x,y=self._spawn_position(ax,ay,layer,sp,ordinal);uid=f"{prefix}{sid}:{ordinal}";self.state.creatures[uid]=CreatureState(uid,sid,x,y,layer,sp.max_hp,cohort_key=ck)
+                        x,y=self._spawn_position(ax,ay,layer,sp,ordinal);uid=f"{prefix}{sid}:{ordinal}";self.state.creatures[uid]=CreatureState(uid,sid,x,y,layer,sp.max_hp,cohort_key=ck,stamina=sp.stamina)
 
     def reconcile_materialized(self)->None:
         grouped={}
@@ -104,7 +104,12 @@ class EcologySystem:
         remove=[]
         for uid,c in self.state.creatures.items():
             if c.notable:continue
-            if c.z!=player_pos.z or abs(c.x-player_pos.x)+abs(c.y-player_pos.y)>max_distance:remove.append(uid)
+            # Wounded or actively alarmed animals remain physical for a much
+            # larger chase envelope so a hunt cannot erase its target merely
+            # because the player crossed an ecology/materialization boundary.
+            active=bool(c.wounds) or c.behavior not in ("calm","")
+            limit=max_distance*2 if active else max_distance
+            if c.z!=player_pos.z or abs(c.x-player_pos.x)+abs(c.y-player_pos.y)>limit:remove.append(uid)
         for uid in remove:self.state.creatures.pop(uid,None)
 
     def update_local_ai(self,player_pos:WorldPos)->list[str]:

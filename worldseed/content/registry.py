@@ -92,6 +92,8 @@ class SpeciesDef:
     description: str = ""; flavor: str = ""; min_temp: int = 0; max_temp: int = 65535
     min_moisture: int = 0; max_moisture: int = 65535; group_min: int = 1; group_max: int = 3
     attacks: tuple[dict[str, Any], ...] = (); carcass: dict[str, int] = field(default_factory=dict)
+    vision: int = 8; hearing: int = 8; scent: int = 6; flee_threshold: int = 55
+    defensive_aggression: int = 20; stamina: int = 100; trackability: int = 50; herd_response: int = 50
 
 
 
@@ -213,7 +215,7 @@ class ContentRegistry:
 
     def _load_species(self,path):
         for raw in self._json(path):
-            obj=SpeciesDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],diet=raw["diet"],mass_kg=int(raw["mass_kg"]),max_hp=int(raw["max_hp"]),damage=int(raw["damage"]),aggression=int(raw["aggression"]),speed=int(raw["speed"]),reproduction=int(raw["reproduction"]),mortality=int(raw["mortality"]),carrying_capacity=int(raw["carrying_capacity"]),habitats=_tuple(raw.get("habitats")),drops=dict(raw.get("drops",{})),body=dict(raw.get("body",{})),description=raw.get("description",""),flavor=raw.get("flavor",""),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),group_min=int(raw.get("group_min",1)),group_max=int(raw.get("group_max",3)),attacks=tuple(dict(x) for x in raw.get("attacks",[])),carcass={str(k):int(v) for k,v in raw.get("carcass",{}).items()})
+            obj=SpeciesDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],diet=raw["diet"],mass_kg=int(raw["mass_kg"]),max_hp=int(raw["max_hp"]),damage=int(raw["damage"]),aggression=int(raw["aggression"]),speed=int(raw["speed"]),reproduction=int(raw["reproduction"]),mortality=int(raw["mortality"]),carrying_capacity=int(raw["carrying_capacity"]),habitats=_tuple(raw.get("habitats")),drops=dict(raw.get("drops",{})),body=dict(raw.get("body",{})),description=raw.get("description",""),flavor=raw.get("flavor",""),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),group_min=int(raw.get("group_min",1)),group_max=int(raw.get("group_max",3)),attacks=tuple(dict(x) for x in raw.get("attacks",[])),carcass={str(k):int(v) for k,v in raw.get("carcass",{}).items()},vision=max(1,int(raw.get("vision",8))),hearing=max(1,int(raw.get("hearing",8))),scent=max(0,int(raw.get("scent",6))),flee_threshold=max(1,min(100,int(raw.get("flee_threshold",55)))),defensive_aggression=max(0,min(100,int(raw.get("defensive_aggression",raw.get("aggression",20))))),stamina=max(20,int(raw.get("stamina",100))),trackability=max(0,min(100,int(raw.get("trackability",50)))),herd_response=max(0,min(100,int(raw.get("herd_response",50)))))
             if obj.id in self.species: raise ValueError(f"Duplicate species id: {obj.id}")
             self.species[obj.id]=obj
 
@@ -295,6 +297,8 @@ class ContentRegistry:
                 if iid not in self.items: raise ValueError(f"Unknown carcass yield {iid} in {sp.id}")
             for attack in sp.attacks:
                 if int(attack.get("damage",sp.damage))<0: raise ValueError(f"Invalid attack damage in {sp.id}")
+            if min(sp.vision,sp.hearing,sp.stamina)<=0 or not 0<=sp.scent<=100 or not 1<=sp.flee_threshold<=100 or not 0<=sp.defensive_aggression<=100 or not 0<=sp.trackability<=100 or not 0<=sp.herd_response<=100:
+                raise ValueError(f"Invalid hunting behavior parameters in {sp.id}")
         for fish in self.fish.values():
             if fish.item_id not in self.items: raise ValueError(f"Unknown fish item {fish.item_id} in {fish.id}")
             if fish.min_weight_g<=0 or fish.max_weight_g<fish.min_weight_g: raise ValueError(f"Invalid fish weight range in {fish.id}")

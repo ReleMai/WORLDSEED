@@ -228,6 +228,24 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
     if 'shaft' in t.terrain.tags:
         up=p.z<0 and 'shaft' in sim.world.tile_at(p.moved(0,0,1)).terrain.tags;down='shaft' in sim.world.tile_at(p.moved(0,0,-1)).terrain.tags
         body.append('Passage: '+('up and down' if up and down else 'down' if down else 'up' if up else 'blocked'))
+    creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(p.x,p.y,p.z)),None)
+    if creature:
+        sp=sim.registry.species.get(creature.species_id)
+        known=creature.species_id in sim.known_species_ids()
+        label=sp.name if sp and known else 'Unknown animal'
+        body.append(f'Animal: {label} — {creature.behavior.replace("_"," ")}')
+        hunting=sim.player_skill('hunting')
+        if hunting>=3 or survival>=4:
+            condition=[]
+            if creature.blood<75:condition.append('blood loss')
+            if creature.pain>=35:condition.append('in visible pain')
+            if any('leg' in str(w.get('part','')) and (w.get('fracture') or int(w.get('severity',0))>=35) for w in creature.wounds):condition.append('limping')
+            if condition:body.append('Observed condition: '+', '.join(condition))
+        if hunting>=7 and creature.wounds:
+            body.append(f'Observed wounds: {len(creature.wounds)}; blood reserve appears {"critical" if creature.blood<35 else "low" if creature.blood<70 else "stable"}.')
+    signs=sim.hunting.signs_at(p)
+    for sign in signs[:4]:
+        body.append('Sign: '+sim.hunting.describe_sign(sign,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=sign.species_id in sim.known_species_ids()))
     carcass=next((c for c in sim.state.carcasses.values() if (c.x,c.y,c.z)==(p.x,p.y,p.z)),None)
     if carcass:
         sp=sim.registry.species.get(carcass.species_id);steps=[]
@@ -359,8 +377,16 @@ def ecology_screen(sim:Simulation,width:int=108)->str:
     for c in near:
         spec=sim.registry.species.get(c.species_id);label=c.name if c.uid in known_creatures and c.name else spec.name if spec and c.species_id in known else 'Unknown animal';d=abs(c.x-p.x)+abs(c.y-p.y)
         extra=f' — about {d} tiles away' if survival>=3 else ''
-        body.append(label+extra)
-    if skill<5:body+=['','Better Naturalism, Survival, or information from local hunters can reveal more about abundance.']
+        state=f' — {c.behavior.replace("_"," ")}' if max(sim.player_skill('hunting'),survival)>=3 else ''
+        body.append(label+extra+state)
+    signs=sim.hunting.nearby_signs(p,10)[:8]
+    if signs:
+        body+=['','RECENT SIGN']
+        for sign in signs:
+            d=abs(sign.x-p.x)+abs(sign.y-p.y)
+            desc=sim.hunting.describe_sign(sign,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=sign.species_id in known)
+            body.append(f'{desc} ({d} tiles)')
+    if skill<5:body+=['','Better Naturalism, Survival, Hunting, or information from local hunters can reveal more about abundance and sign.']
     return box('WILDLIFE',body,width)
 
 def knowledge_screen(sim:Simulation,width:int=110)->str:
