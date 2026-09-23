@@ -8,6 +8,7 @@ from worldseed.entities.store import EntityStore
 from worldseed.systems.combat import CombatSystem
 from worldseed.systems.ecology import EcologySystem
 from worldseed.systems.hunting import HuntingSystem
+from worldseed.systems.projectiles import ProjectilePath
 from worldseed.systems.state import AnimalSignState, CreatureState, LivingWorldState, pos_key
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 
@@ -31,6 +32,13 @@ class _OpenWorld:
         return True
 
 
+class _OverlayProjectileView:
+    def __init__(self,sim):self.sim=sim
+    def preview(self,origin,target):
+        blocked=target if not self.sim._visible_from(origin,target) else None
+        return ProjectilePath((origin,target),blocked_at=blocked,cover_penalty=0,cover_notes=())
+
+
 class _OverlaySim:
     def __init__(self,reg,*,hunting=0,melee=0,perception=5,agility=5,blocked=None):
         self.player_id=1;self.player_pos=WorldPos(0,0,0);self.state=LivingWorldState()
@@ -39,6 +47,7 @@ class _OverlaySim:
         self.entities=EntityStore();self.entities.spawn(preferred_id=1);self.entities.add(1,Vitals())
         self.combat=CombatSystem(self.state,reg,b"overlay")
         self._blocked=set(blocked or ())
+        self.projectiles=_OverlayProjectileView(self)
         self.discovered_tiles_set={pos_key(x,y,0) for x in range(-12,13) for y in range(-12,13)}
     def player_attribute(self,key):return int(self.state.player_attributes.get(key,0))
     def player_skill(self,key):return int(self.state.player_skills.get(key,0))
