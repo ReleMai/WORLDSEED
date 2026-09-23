@@ -328,10 +328,20 @@ class PygameTerminal(PointerUI):
                         continue
                     if token and token.startswith('UI_SELECT:') and self._input_mode=='ui':
                         mods=pg.key.get_mods()
-                        if mods & pg.KMOD_SHIFT:
+                        if mods & pg.KMOD_SHIFT and self._current_presentation in ('inventory_unified','container_inventory'):
                             self._ui_context=None
                             return token.replace('UI_SELECT:','UI_SHIFT_SELECT:')
                         self._ui_context=None
+                        if self._current_presentation=='world_context':
+                            # A world context menu is a transient overlay. Restore
+                            # the exact underlying world before the selected
+                            # command opens another panel (for example Storage),
+                            # otherwise the popup gets baked into that panel's
+                            # retained backdrop.
+                            if self._context_backdrop is not None:
+                                self.screen.blit(self._context_backdrop,(0,0))
+                                pg.display.flip()
+                            self._context_backdrop=None
                     if token and token.startswith('UI_ACTION:'):
                         self._ui_context=None
                     if token=='ATLAS_DRAG_ZONE':
