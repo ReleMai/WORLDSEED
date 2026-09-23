@@ -99,8 +99,16 @@ class CombatSystem:
         remaining=max(0,raw_damage-reduced)
         drain=max(1,int(shield.shield_stamina_cost)+raw_damage//7-(skill//5))
         if bool(getattr(self.state,"player_guarding",False)):drain=max(1,drain-1)
-        # The caller owns Vitals, so return the stamina drain in the text marker
-        # and let resolve_player_hit apply it once alongside the wound result.
+        if self.artifact_system:
+            aid=self.state.player_equipped_artifacts.get("offhand","");artifact=self.state.artifacts.get(aid)
+            if artifact:
+                wear=max(1,raw_damage//10+(1 if damage_type=="blunt" else 0))
+                artifact.condition=max(0,artifact.condition-wear)
+                artifact.history.append(f"Shield impact at turn {turn}; condition {artifact.condition}%.")
+                if artifact.condition<=0:
+                    self.state.player_equipment.pop("offhand",None);self.state.player_equipped_artifacts.pop("offhand",None);artifact.owner="destroyed"
+        # Primitive stack items do not yet have per-instance durability; durable
+        # shields use the artifact condition path above.
         grade="blocks" if full and remaining==0 else "catches" if full else "deflects"
         return remaining,f"{shield.name} {grade} the {attack_kind} hit (-{reduced} damage, {drain} stamina)",drain
 
