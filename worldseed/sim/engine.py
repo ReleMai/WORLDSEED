@@ -40,6 +40,7 @@ from worldseed.systems.disease import EpidemiologySystem
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.food import NutritionSystem, CookingSystem
 from worldseed.systems.processing import ProcessingSystem
+from worldseed.systems.fishing import FishingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 
@@ -85,6 +86,7 @@ class Simulation:
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
         self.resources=resources_system or ResourceSystem(self.state,registry,self.seed,self.world)
+        self.fishing=FishingSystem(self.state,registry,self.seed,self.world)
         self.building.attach_resources(self.resources,self.seed)
         self.nutrition=NutritionSystem(self.state,registry)
         self.food=CookingSystem(self.state,registry,self.nutrition)
@@ -195,6 +197,7 @@ class Simulation:
             self._move(command,result);minutes=MOVE_MINUTES
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
+        elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
         elif isinstance(command,ExcavateShaftCommand):minutes=self._excavate_shaft(command)
         elif isinstance(command,WaitCommand):minutes=max(MINUTES_PER_ACTION,command.minutes);self._message(f"You wait {minutes} minutes.")
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
@@ -328,7 +331,7 @@ class Simulation:
                     elif abs(cp.x-player.x)+abs(cp.y-player.y)<=8 and cp.z==player.z:self._message("You hear a roof collapse nearby.")
         old_day=old//1440;new_day=self.clock.minute//1440
         for day in range(old_day+1,new_day+1):
-            minute=day*1440;self.ecology.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
+            minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
             if day%30==0:self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
 
@@ -708,6 +711,31 @@ class Simulation:
                 self._message("The passage does not continue safely to that level.");return
         pc.value=new
         self._message("You climb toward the surface." if cmd.dz>0 else "You descend into the earth.")
+
+    def _fish(self,cmd:FishingCommand,result:TickResult)->int:
+        origin=self.entities.get(cmd.actor,Position).value
+        target=origin.moved(cmd.dx,cmd.dy)
+        distance=abs(cmd.dx)+abs(cmd.dy)
+        inv=self.entities.get(cmd.actor,Inventory)
+        available={method for method,_ in self.fishing.available_methods(inv,target,distance)}
+        if cmd.method not in available:
+            if not self.fishing.is_fishable(target):
+                self._message("There is no fishable water at that target.");return MINUTES_PER_ACTION
+            self._message(f"You cannot use {cmd.method} fishing there with your current gear and range.");return MINUTES_PER_ACTION
+        before_skill=self.player_skill('fishing')
+        ok,msg,minutes,details=self.fishing.attempt(
+            target,inv,cmd.method,cmd.bait_id,self.clock.minute,
+            self.player_skill('fishing'),self.player_attribute('perception'),self.player_skill('survival')
+        )
+        self._message(msg)
+        after_skill=self.player_skill('fishing')
+        if after_skill>before_skill:
+            self._message(f"Fishing improves to {after_skill}. You read water and tackle more efficiently.")
+        if ok and details.get('fish'):
+            fish=self.registry.fish.get(details['fish'])
+            if fish:
+                result.events.append(GatheredEvent(cmd.actor,target,fish.item_id,int(details.get('count',1))))
+        return max(MINUTES_PER_ACTION,minutes)
 
     def _gather(self,cmd:GatherCommand,result:TickResult)->int:
         origin=self.entities.get(cmd.actor,Position).value
