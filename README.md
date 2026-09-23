@@ -4,6 +4,17 @@ This README is the single consolidated human-facing Markdown document for WORLDS
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev37 — Floating Interaction Panels
+
+Dev37 replaces the remaining full-window inventory interaction flow with retained in-world panels and cursor-local context menus.
+
+- Inventory and container storage now open as smaller floating overlays so the local world remains visible behind them.
+- Floating inventory/storage windows can be dragged by their title bar and resized from the lower-right grip; panel geometry is retained while the panel stays open.
+- Right-clicking an inventory or container item opens a compact action popup at the cursor instead of acting as Back/Escape.
+- Shift-clicking an item in container storage transfers the entire stack between backpack and container. In the normal inventory, Shift-click quick-stores the full stack when accessible storage is nearby.
+- Right-click world actions now render as a cursor-anchored popup rather than a full-screen menu. Opening storage from that popup restores the world beneath it before the floating storage panel appears.
+- The renderer still only emits UI intent. Inventory/container mutations continue through simulation commands such as StoreCommand and TakeFromContainerCommand.
+
 ## RC14 Dev36 — Integrated Mainline
 
 This mainline combines the previously validated Dev34 inventory/container overhaul with the Dev35 Phase-5 coast/performance work and the latest direct world-interaction fixes.
@@ -39,7 +50,7 @@ The original filenames are preserved as section labels below. Older notes that s
 
 ## Source: `README.md`
 
-> **Dev21 controls:** WASD moves your character only. Click the HUD buttons for Inventory, Crafting, Build, Health, Map, Actions, World, Look, Help and Pause. Click menu cards; use the wheel or Previous/Next to page; Back or right-click returns. Character creation and target selection support the mouse. Typing names still uses the keyboard. Arrow/Enter/Esc navigation and existing game shortcuts remain available.
+> **Dev21 controls (legacy note; superseded by Dev37 interaction panels):** WASD moves your character only. Click the HUD buttons for Inventory, Crafting, Build, Health, Map, Actions, World, Look, Help and Pause. Click menu cards; use the wheel or Previous/Next to page; Back/Esc returns. In Dev37 inventory/storage, right-click opens contextual item actions instead of backing out. Character creation and target selection support the mouse. Typing names still uses the keyboard. Arrow/Enter/Esc navigation and existing game shortcuts remain available.
 
 > **Dev20:** Clean rebuilt player/NPC art, crafting and inventory crash fixes, and new-character appearance startup repair. See `RC14_DEV20_HANDOFF.md` and `DEV20_VALIDATION.md`.
 
