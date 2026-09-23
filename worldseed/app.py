@@ -768,20 +768,25 @@ def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
             sim.execute(ArenaInjuryCommand(pid,pick));status=sim.log[-1].message if sim.log else '';nav.back();continue
         if route.route_id=='arena:hits':
             tests=[
-                ('melee|blunt|12|1|0|torso','Front melee blunt — torso — 12'),
-                ('melee|pierce|12|1|0|torso','Front melee pierce — torso — 12'),
-                ('melee|cut|10|0|-1|left_arm','Side melee cut — left arm — 10'),
-                ('melee|blunt|16|-1|0|head','Rear heavy melee — head — 16'),
-                ('ranged|pierce|12|1|0|torso','Front arrow — torso — 12'),
-                ('ranged|pierce|12|0|-1|torso','Side arrow — torso — 12'),
-                ('ranged|pierce|16|-1|0|torso','Rear projectile — torso — 16'),
-                ('ranged|blunt|14|1|0|head','Front sling impact — head — 14'),
+                ('melee|blunt|12|front|torso','Front melee blunt — torso — 12'),
+                ('melee|pierce|12|front|torso','Front melee pierce — torso — 12'),
+                ('melee|cut|10|side|left_arm','Side melee cut — left arm — 10'),
+                ('melee|blunt|16|rear|head','Rear heavy melee — head — 16'),
+                ('ranged|pierce|12|front|torso','Front arrow — torso — 12'),
+                ('ranged|pierce|12|side|torso','Side arrow — torso — 12'),
+                ('ranged|pierce|16|rear|torso','Rear projectile — torso — 16'),
+                ('ranged|blunt|14|front|head','Front sling impact — head — 14'),
             ]
-            pick=_stack_menu(term,nav,tests,subtitle='Equip a shield first; facing is the most recent movement/attack direction.')
+            pick=_stack_menu(term,nav,tests,subtitle='Front / side / rear are resolved from your current facing direction.')
             if pick=='__BACK__':continue
             if pick is None:return UI_BACK
-            kind,dtype,damage,dx,dy,part=pick.split('|')
-            sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),int(dx),int(dy),part));status=sim.log[-1].message if sim.log else '';nav.back();continue
+            kind,dtype,damage,bearing,part=pick.split('|')
+            fx=int(sim.state.player_facing_dx);fy=int(sim.state.player_facing_dy)
+            if fx==0 and fy==0:fx,fy=0,1
+            if bearing=='front':dx,dy=fx,fy
+            elif bearing=='rear':dx,dy=-fx,-fy
+            else:dx,dy=-fy,fx
+            sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),dx,dy,part));status=sim.log[-1].message if sim.log else '';nav.back();continue
 
 
 def _action_palette(ctx:GameContext,term:Terminal)->str:
