@@ -57,6 +57,21 @@ class CombatSystem:
         steadiness="steady" if self.state.player_aim_quality>=70 else "settling" if self.state.player_aim_quality>=40 else "rough"
         return f"You settle the {weapon.name.lower()} on the {creature.species_id.split(':')[-1].replace('_',' ')}'s {label}; your aim is {steadiness}."
 
+    def melee_hit_chance(self,weapon,distance:int,agility:int,melee:int,stamina:int,target_behavior:str="calm")->int:
+        handling=0 if weapon is None else weapon.accuracy
+        motion=12 if target_behavior in ("flee","wounded_flee") else 7 if target_behavior=="pursue" else 4 if target_behavior=="defend" else 0
+        fatigue=max(0,35-stamina)//2
+        reach_penalty=max(0,distance-1)*8
+        return max(25,min(97,70+handling+agility*2+melee*3-motion-fatigue-reach_penalty-self.arm_injury_penalty()//2))
+
+    def ranged_hit_chance(self,weapon,distance:int,perception:int,hunting:int,zone:str="center",aim_quality:int=0,stamina:int=100,target_behavior:str="calm")->int:
+        zone=zone if zone in self.AIM_ZONES else "center"
+        motion_penalty=20 if target_behavior in ("flee","wounded_flee") else 11 if target_behavior in ("pursue","defend") else 6 if target_behavior=="alert" else 0
+        range_penalty=max(0,distance-2)*4
+        fatigue=max(0,35-stamina)//2
+        zone_penalty={"center":0,"vitals":11,"head":24,"legs":10}[zone]
+        return max(5,min(97,35+perception*4+hunting*3+weapon.accuracy+aim_quality//3-range_penalty-motion_penalty-zone_penalty-fatigue-self.arm_injury_penalty()//2))
+
     def attack_creature(self,creature:CreatureState,inv:Inventory,turn:int,distance:int=1,stamina:int=100)->str:
         sp=self.registry.species[creature.species_id];weapon=self.readied_weapon(inv)
         if weapon is not None and distance>weapon.reach:return f"The {sp.name.lower()} is beyond the reach of your {weapon.name.lower()}."
@@ -66,11 +81,7 @@ class CombatSystem:
         strength=int(self.state.player_attributes.get('strength',5));agility=int(self.state.player_attributes.get('agility',5));melee=int(self.state.player_skills.get('melee',0))
         base+=max(0,(strength-5)//2)+melee//3
         rng=PCG32(derive_seed(self.seed,"attack",turn,creature.uid,creature.hp,self.state.player_readied_weapon,distance))
-        handling=0 if weapon is None else weapon.accuracy
-        motion=12 if creature.behavior in ("flee","wounded_flee") else 7 if creature.behavior=="pursue" else 0
-        fatigue=max(0,35-stamina)//2
-        reach_penalty=max(0,distance-1)*8
-        hit=max(25,min(97,70+handling+agility*2+melee*3-motion-fatigue-reach_penalty-self.arm_injury_penalty()//2))
+        hit=self.melee_hit_chance(weapon,distance,agility,melee,stamina,creature.behavior)
         if rng.randbelow(100)>=hit:
             return f"You miss the {sp.name.lower()}"+(f" with your {weapon.name.lower()}." if weapon else ".")
         parts=list(sp.body.items()) or [("torso",100)];total=sum(max(0,int(w)) for _,w in parts) or 1;r=rng.randbelow(total);part=parts[0][0]
@@ -105,10 +116,7 @@ class CombatSystem:
 
         sp=self.registry.species[creature.species_id];zone=aim_zone if aim_zone in self.AIM_ZONES else "center"
         rng=PCG32(derive_seed(self.seed,"ranged-attack",turn,creature.uid,distance,weapon.id,creature.hp,creature.blood,zone,aim_quality))
-        motion_penalty=20 if creature.behavior in ("flee","wounded_flee") else 11 if creature.behavior in ("pursue","defend") else 6 if creature.behavior=="alert" else 0
-        range_penalty=max(0,distance-2)*4;fatigue=max(0,35-stamina)//2
-        zone_penalty={"center":0,"vitals":11,"head":24,"legs":10}[zone]
-        accuracy=max(5,min(97,35+perception*4+hunting*3+weapon.accuracy+aim_quality//3-range_penalty-motion_penalty-zone_penalty-fatigue-self.arm_injury_penalty()//2))
+        accuracy=self.ranged_hit_chance(weapon,distance,perception,hunting,zone,aim_quality,stamina,creature.behavior)
         if rng.randbelow(100)>=accuracy:
             verb="throw" if weapon.throwable else "shot"
             return f"Your {weapon.name.lower()} {verb} at the {sp.name.lower()} misses."
