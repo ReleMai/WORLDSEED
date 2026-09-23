@@ -2337,6 +2337,10 @@ class PygameTerminal(PointerUI):
         if pile:
             for iid,qty in list(pile.items.items())[:3]:
                 d=registry.items.get(iid);lines.append(f'{qty}x {d.name if d else iid}')
+        attack=ctx.get('combat_by',{}).get(k)
+        if attack:
+            difficulty=str(attack.get('difficulty','')).replace('_',' ').title()
+            lines.append(f'Attack: {difficulty}')
         return lines
 
     def _restore_hover_damage(self):
@@ -2403,7 +2407,8 @@ class PygameTerminal(PointerUI):
         from worldseed.ui.atlas_map import draw_atlas
         draw_atlas(self, sim)
 
-    def present_game(self, registry, world, entities, sim, player_id: int, message: str = '', cursor: WorldPos | None = None) -> None:
+    def present_game(self, registry, world, entities, sim, player_id: int, message: str = '', cursor: WorldPos | None = None,
+                     combat_overlay: dict | None = None) -> None:
         """Hybrid local-world view: sprite map + dense terminal-derived panels."""
         pg=self.pg; screen=self.screen
         if screen is None: return
@@ -2515,6 +2520,24 @@ class PygameTerminal(PointerUI):
                 screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
+
+        combat_by={}
+        if combat_overlay:
+            range_fill=pg.Surface((cols*tile_px,rows*tile_px),pg.SRCALPHA)
+            for cell in combat_overlay.get('cells',()):
+                wx=int(cell.get('x',0));wy=int(cell.get('y',0));wz=int(cell.get('z',pos.z))
+                if not _onscreen(wx,wy,wz):continue
+                chance=max(0,min(100,int(cell.get('chance',0))))
+                if cell.get('blocked'):
+                    rgb=(104,108,110)
+                elif chance>=50:
+                    t=(chance-50)/50.0;rgb=(round(230*(1-t)+55*t),round(190+45*t),55)
+                else:
+                    t=chance/50.0;rgb=(225,round(55+135*t),55)
+                combat_by[(wx,wy,wz)]={**cell,'rgb':rgb}
+                local=pg.Rect((wx-left)*tile_px,(wy-top)*tile_px,tile_px,tile_px)
+                pg.draw.rect(range_fill,(*rgb,30),local.inflate(-2,-2),border_radius=max(1,tile_px//8))
+            if combat_by:screen.blit(range_fill,map_rect.topleft)
         npc_paths = self._visuals.npc_paths()
         proc_species = self._visuals.procedural_species_paths()
         player_sprite = self._visuals.player_path(getattr(sim.state, 'player_sex', 'male'), getattr(sim.state, 'player_sprite_index', 0))
@@ -2597,6 +2620,15 @@ class PygameTerminal(PointerUI):
                 tile_px=tile_px,elapsed_ms=now_ms,game_minute=sim.clock.minute,lighting=lighting)
         else:
             self._weather_static_snapshot=None
+        # Combat range stays readable after world lighting/weather while its
+        # translucent fill sits beneath sprites. Green is easier, red harder;
+        # blocked cells use a neutral grey outline.
+        if combat_by:
+            selected=tuple(combat_overlay.get('cursor',())) if combat_overlay else ()
+            for (wx,wy,wz),cell in combat_by.items():
+                rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                rgb=cell['rgb'];width=3 if (wx,wy,wz)==selected else 2
+                pg.draw.rect(screen,rgb,rect.inflate(-2,-2),width,border_radius=max(1,tile_px//8))
         # frame map exactly to drawn cells
         pg.draw.rect(screen,(78,91,91),used,1)
 
@@ -2615,6 +2647,13 @@ class PygameTerminal(PointerUI):
             bw=side_rect.width-32; frac=max(0,min(1,val/max(1,maxv))); pg.draw.rect(screen,(45,50,52),(tx,ty-1,bw,6),border_radius=2); pg.draw.rect(screen,self._theme['good'] if frac>.35 else self._theme['danger'],(tx,ty-1,int(bw*frac),6),border_radius=2); ty+=11
         ty+=6
         terrain=world.tile_at(pos).terrain.name; text('LOCAL',self._theme['accent'],gap=19); text(terrain); text(f"Carried stacks: {len(inv.items)}",self._theme['muted'])
+        if combat_overlay:
+            text('ATTACK RANGE',self._theme['accent'],gap=19)
+            mode=str(combat_overlay.get('mode','attack')).title();weapon_name=str(combat_overlay.get('weapon_name','Weapon'))
+            text(f'{mode} • {weapon_name}')
+            text('Green easier  →  red harder',self._theme['muted'])
+            diff=str(combat_overlay.get('cursor_difficulty','')).replace('_',' ').title()
+            if diff:text(f'Cursor: {diff}',self._theme['muted'])
         if pos.z==0 and lighting is not None:
             text('WEATHER',self._theme['accent'],gap=19)
             text(f"{str(weather.get('kind','clear')).title()}  Clouds {int(weather.get('cloud_cover',0))}%")
@@ -2651,6 +2690,7 @@ class PygameTerminal(PointerUI):
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
+            'combat_by':combat_by,
         }
         self._water_animation_cells=[]
         base=terrain_base
