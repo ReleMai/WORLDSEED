@@ -50,14 +50,16 @@ def ranged_overlay(sim, weapon, cursor:WorldPos, zone:str="center") -> dict:
             target=creatures.get((pos.x,pos.y,pos.z))
             behavior=target.behavior if target else "calm"
             aim_quality=sim.state.player_aim_quality if target and sim.state.player_aim_target==target.uid and sim.state.player_aim_zone==zone else 0
-            blocked=not sim._visible_from(origin,pos)
-            chance=0 if blocked else sim.combat.ranged_hit_chance(
+            flight=sim.projectiles.preview(origin,pos)
+            blocked=flight.blocked_at is not None
+            chance=0 if blocked else max(2,sim.combat.ranged_hit_chance(
                 weapon,distance,perception,hunting,zone,aim_quality,vitals.stamina,behavior
-            )
+            )-flight.cover_penalty)
             cells.append({
                 "x":pos.x,"y":pos.y,"z":pos.z,"chance":chance,
                 "difficulty":"blocked" if blocked else difficulty_label(chance),
-                "blocked":blocked,
+                "blocked":blocked,"cover_penalty":flight.cover_penalty,
+                "cover_notes":list(flight.cover_notes),
             })
     selected=next((c for c in cells if (c["x"],c["y"],c["z"])==(cursor.x,cursor.y,cursor.z)),None)
     return {
