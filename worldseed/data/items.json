@@ -1,7 +1,9 @@
 [
   {
     "id": "core:wood",
-    "name": "Wood Log",
+    "name": "Wood",
+    "asset": "wood",
+    "category": "resource",
     "material": "core:wood",
     "mass_g": 3000,
     "volume_ml": 4500,
@@ -10,9 +12,8 @@
       "fuel",
       "construction"
     ],
-    "description": "Wood Log has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Wood Log: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Wood has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Wood: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "fuel",
       "construction",
@@ -22,6 +23,8 @@
   {
     "id": "core:stone",
     "name": "Stone",
+    "asset": "stone",
+    "category": "resource",
     "material": "core:stone",
     "mass_g": 2500,
     "volume_ml": 1000,
@@ -31,7 +34,6 @@
     ],
     "description": "Stone has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Stone: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "construction",
       "primitive_craft",
@@ -41,6 +43,8 @@
   {
     "id": "core:brush",
     "name": "Brush",
+    "asset": "brush",
+    "category": "resource",
     "material": "core:fiber",
     "mass_g": 300,
     "volume_ml": 1500,
@@ -51,7 +55,6 @@
     ],
     "description": "Brush has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Brush: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "fuel",
       "cordage_input",
@@ -60,16 +63,17 @@
   },
   {
     "id": "core:fiber",
-    "name": "Cordage Fiber",
+    "name": "Fiber",
+    "asset": "fiber",
+    "category": "resource",
     "material": "core:fiber",
     "mass_g": 150,
     "volume_ml": 300,
     "tags": [
       "craft"
     ],
-    "description": "Cordage Fiber has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Cordage Fiber: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Fiber has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Fiber: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "cordage",
       "craft_input"
@@ -77,7 +81,9 @@
   },
   {
     "id": "core:berries",
-    "name": "Wild Berries",
+    "name": "Berries",
+    "asset": "berries",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -86,9 +92,8 @@
     "tags": [
       "food"
     ],
-    "description": "Wild Berries has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Wild Berries: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Berries has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Berries: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -104,7 +109,9 @@
   },
   {
     "id": "core:meat",
-    "name": "Raw Meat",
+    "name": "Meat",
+    "asset": "meat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 500,
     "volume_ml": 450,
@@ -113,9 +120,8 @@
       "food",
       "raw_meat"
     ],
-    "description": "Raw Meat has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Raw Meat: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Meat has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Meat: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -132,6 +138,8 @@
   {
     "id": "core:cooked_meat",
     "name": "Cooked Meat",
+    "asset": "cooked_meat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 450,
     "volume_ml": 420,
@@ -141,7 +149,6 @@
     ],
     "description": "Cooked Meat has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Cooked Meat: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "food"
     ],
@@ -157,6 +164,8 @@
   {
     "id": "core:hide",
     "name": "Hide",
+    "asset": "hide",
+    "category": "material",
     "material": "core:leather",
     "mass_g": 800,
     "volume_ml": 1600,
@@ -165,7 +174,6 @@
     ],
     "description": "Hide has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Hide: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "legacy_leather_input"
     ]
@@ -173,6 +181,8 @@
   {
     "id": "core:bone",
     "name": "Bone",
+    "asset": "bone",
+    "category": "material",
     "material": "core:bone",
     "mass_g": 400,
     "volume_ml": 250,
@@ -182,7 +192,6 @@
     ],
     "description": "Bone has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Bone: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "broth",
       "craft_input",
@@ -192,6 +201,8 @@
   {
     "id": "core:iron_ore",
     "name": "Iron Ore",
+    "asset": "iron_ore",
+    "category": "resource",
     "material": "core:stone",
     "mass_g": 3000,
     "volume_ml": 1100,
@@ -201,7 +212,6 @@
     ],
     "description": "Iron Ore has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Ore: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "smelting"
     ]
@@ -209,6 +219,8 @@
   {
     "id": "core:coal",
     "name": "Coal",
+    "asset": "coal",
+    "category": "resource",
     "material": "core:stone",
     "mass_g": 1200,
     "volume_ml": 1400,
@@ -218,7 +230,6 @@
     ],
     "description": "Coal has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Coal: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "fuel",
       "smelting"
@@ -227,6 +238,8 @@
   {
     "id": "core:iron_bloom",
     "name": "Iron Bloom",
+    "asset": "iron_bloom",
+    "category": "material",
     "material": "core:iron",
     "mass_g": 2000,
     "volume_ml": 300,
@@ -235,7 +248,6 @@
     ],
     "description": "Iron Bloom has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Bloom: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "metalworking"
     ]
@@ -243,6 +255,8 @@
   {
     "id": "core:steel_billet",
     "name": "Steel Billet",
+    "asset": "steel_billet",
+    "category": "material",
     "material": "core:steel",
     "mass_g": 1800,
     "volume_ml": 240,
@@ -251,7 +265,6 @@
     ],
     "description": "Steel Billet has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Steel Billet: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "metalworking"
     ]
@@ -259,6 +272,8 @@
   {
     "id": "core:stone_axe",
     "name": "Stone Axe",
+    "asset": "stone_axe",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 1400,
     "volume_ml": 1100,
@@ -272,7 +287,6 @@
     ],
     "description": "Stone Axe has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Stone Axe: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "tool",
       "axe",
@@ -285,6 +299,8 @@
   {
     "id": "core:iron_pick",
     "name": "Iron Pick",
+    "asset": "iron_pick",
+    "category": "tool",
     "material": "core:iron",
     "mass_g": 2800,
     "volume_ml": 1600,
@@ -298,7 +314,6 @@
     ],
     "description": "Iron Pick has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Pick: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "tool",
       "pick",
@@ -311,6 +326,8 @@
   {
     "id": "core:iron_sword",
     "name": "Iron Sword",
+    "asset": "iron_sword",
+    "category": "weapon",
     "material": "core:iron",
     "mass_g": 1600,
     "volume_ml": 1000,
@@ -321,7 +338,6 @@
     ],
     "description": "Iron Sword has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Sword: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "weapon"
     ],
@@ -332,6 +348,8 @@
   {
     "id": "core:waterskin",
     "name": "Waterskin",
+    "asset": "waterskin",
+    "category": "utility",
     "material": "core:leather",
     "mass_g": 500,
     "volume_ml": 1200,
@@ -341,7 +359,6 @@
     ],
     "description": "Waterskin has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Waterskin: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "drink"
     ]
@@ -349,6 +366,8 @@
   {
     "id": "core:wheat_seed",
     "name": "Wheat Seed",
+    "asset": "wheat_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -357,7 +376,6 @@
     ],
     "description": "Wheat Seed has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Wheat Seed: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "seed"
     ]
@@ -365,6 +383,8 @@
   {
     "id": "core:wheat",
     "name": "Wheat",
+    "asset": "wheat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -375,7 +395,6 @@
     ],
     "description": "Wheat has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Wheat: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "food",
       "cooking"
@@ -392,6 +411,8 @@
   {
     "id": "core:turnip_seed",
     "name": "Turnip Seed",
+    "asset": "turnip_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 15,
     "volume_ml": 10,
@@ -400,7 +421,6 @@
     ],
     "description": "Turnip Seed has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Turnip Seed: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "seed"
     ]
@@ -408,6 +428,8 @@
   {
     "id": "core:turnip",
     "name": "Turnip",
+    "asset": "turnip",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 180,
     "volume_ml": 190,
@@ -419,7 +441,6 @@
     ],
     "description": "Turnip has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Turnip: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "food",
       "cooking"
@@ -435,7 +456,9 @@
   },
   {
     "id": "core:relic",
-    "name": "Ancient Relic",
+    "name": "Relic",
+    "asset": "relic",
+    "category": "special",
     "material": "core:copper",
     "mass_g": 700,
     "volume_ml": 450,
@@ -444,9 +467,8 @@
       "trade"
     ],
     "base_value": 150,
-    "description": "Ancient Relic has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Ancient Relic: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Relic has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Relic: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "relic",
       "trade"
@@ -455,6 +477,8 @@
   {
     "id": "core:copper_coin",
     "name": "Copper Coin",
+    "asset": "copper_coin",
+    "category": "special",
     "material": "core:copper",
     "mass_g": 5,
     "volume_ml": 1,
@@ -464,14 +488,15 @@
     "base_value": 1,
     "description": "Copper Coin has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Copper Coin: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "currency"
     ]
   },
   {
     "id": "core:book",
-    "name": "Bound Book",
+    "name": "Book",
+    "asset": "book",
+    "category": "special",
     "material": "core:fiber",
     "mass_g": 600,
     "volume_ml": 900,
@@ -480,9 +505,8 @@
       "trade"
     ],
     "base_value": 35,
-    "description": "Bound Book has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Bound Book: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Book has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Book: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "knowledge"
     ]
@@ -490,6 +514,8 @@
   {
     "id": "core:leather_hood",
     "name": "Leather Hood",
+    "asset": "leather_hood",
+    "category": "armor",
     "material": "core:leather",
     "mass_g": 450,
     "volume_ml": 650,
@@ -506,7 +532,6 @@
     "insulation": 3,
     "description": "Leather Hood has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Leather Hood: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "clothing"
@@ -515,6 +540,8 @@
   {
     "id": "core:leather_vest",
     "name": "Leather Vest",
+    "asset": "leather_vest",
+    "category": "armor",
     "material": "core:leather",
     "mass_g": 1800,
     "volume_ml": 2400,
@@ -531,7 +558,6 @@
     "insulation": 5,
     "description": "Leather Vest has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Leather Vest: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "clothing"
@@ -540,6 +566,8 @@
   {
     "id": "core:leather_bracers",
     "name": "Leather Bracers",
+    "asset": "leather_bracers",
+    "category": "armor",
     "material": "core:leather",
     "mass_g": 650,
     "volume_ml": 700,
@@ -556,7 +584,6 @@
     "insulation": 3,
     "description": "Leather Bracers has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Leather Bracers: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "clothing"
@@ -565,6 +592,8 @@
   {
     "id": "core:leather_leggings",
     "name": "Leather Leggings",
+    "asset": "leather_leggings",
+    "category": "armor",
     "material": "core:leather",
     "mass_g": 1600,
     "volume_ml": 2100,
@@ -581,7 +610,6 @@
     "insulation": 5,
     "description": "Leather Leggings has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Leather Leggings: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "clothing"
@@ -590,6 +618,8 @@
   {
     "id": "core:iron_helmet",
     "name": "Iron Helmet",
+    "asset": "iron_helmet",
+    "category": "armor",
     "material": "core:iron",
     "mass_g": 2100,
     "volume_ml": 1300,
@@ -605,14 +635,15 @@
     "insulation": 1,
     "description": "Iron Helmet has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Helmet: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor"
     ]
   },
   {
     "id": "core:bandage",
-    "name": "Clean Bandage",
+    "name": "Bandage",
+    "asset": "bandage",
+    "category": "medicine",
     "material": "core:fiber",
     "mass_g": 80,
     "volume_ml": 120,
@@ -620,16 +651,17 @@
       "medical"
     ],
     "base_value": 6,
-    "description": "Clean Bandage has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Clean Bandage: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Bandage has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Bandage: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medical"
     ]
   },
   {
     "id": "core:splint",
-    "name": "Wooden Splint",
+    "name": "Splint",
+    "asset": "splint",
+    "category": "medicine",
     "material": "core:wood",
     "mass_g": 350,
     "volume_ml": 400,
@@ -637,9 +669,8 @@
       "medical"
     ],
     "base_value": 8,
-    "description": "Wooden Splint has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Wooden Splint: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Splint has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Splint: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medical"
     ]
@@ -647,6 +678,8 @@
   {
     "id": "core:steel_sword",
     "name": "Steel Sword",
+    "asset": "steel_sword",
+    "category": "weapon",
     "material": "core:steel",
     "mass_g": 1550,
     "volume_ml": 980,
@@ -659,7 +692,6 @@
     "base_value": 85,
     "description": "Steel Sword has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Steel Sword: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "weapon",
       "durable"
@@ -671,6 +703,8 @@
   {
     "id": "core:steel_pick",
     "name": "Steel Pick",
+    "asset": "steel_pick",
+    "category": "tool",
     "material": "core:steel",
     "mass_g": 2700,
     "volume_ml": 1550,
@@ -686,7 +720,6 @@
     "base_value": 78,
     "description": "Steel Pick has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Steel Pick: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "tool",
       "pick",
@@ -700,6 +733,8 @@
   {
     "id": "core:steel_helmet",
     "name": "Steel Helmet",
+    "asset": "steel_helmet",
+    "category": "armor",
     "material": "core:steel",
     "mass_g": 1950,
     "volume_ml": 1250,
@@ -716,7 +751,6 @@
     "insulation": 1,
     "description": "Steel Helmet has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Steel Helmet: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "durable"
@@ -725,6 +759,8 @@
   {
     "id": "core:bone_meal",
     "name": "Bone Meal",
+    "asset": "bone_meal",
+    "category": "material",
     "material": "core:bone",
     "mass_g": 250,
     "volume_ml": 300,
@@ -734,14 +770,15 @@
     "base_value": 5,
     "description": "Bone Meal has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Bone Meal: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "fertilizer"
     ]
   },
   {
     "id": "core:lockpick",
-    "name": "Iron Lockpick",
+    "name": "Lockpick",
+    "asset": "lockpick",
+    "category": "tool",
     "material": "core:iron",
     "mass_g": 40,
     "volume_ml": 15,
@@ -750,9 +787,8 @@
       "lockpick"
     ],
     "base_value": 9,
-    "description": "Iron Lockpick has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Iron Lockpick: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
+    "description": "Lockpick has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Lockpick: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "tool",
       "lockpick"
@@ -760,7 +796,9 @@
   },
   {
     "id": "core:ancient_key",
-    "name": "Ancient Key",
+    "name": "Key",
+    "asset": "key",
+    "category": "special",
     "material": "core:copper",
     "mass_g": 90,
     "volume_ml": 25,
@@ -769,9 +807,8 @@
       "relic"
     ],
     "base_value": 40,
-    "description": "Ancient Key has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Ancient Key: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Key has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Key: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "key",
       "relic"
@@ -780,6 +817,8 @@
   {
     "id": "core:parchment",
     "name": "Parchment",
+    "asset": "parchment",
+    "category": "material",
     "material": "core:fiber",
     "mass_g": 35,
     "volume_ml": 8,
@@ -789,7 +828,6 @@
     "base_value": 4,
     "description": "Parchment has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Parchment: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
     "utility_roles": [
       "writing"
     ]
@@ -797,6 +835,8 @@
   {
     "id": "core:crafted_sword",
     "name": "Crafted Sword",
+    "asset": "crafted_sword",
+    "category": "weapon",
     "mass_g": 1550,
     "volume_ml": 980,
     "weapon_damage": 11,
@@ -809,7 +849,6 @@
     "base_value": 65,
     "description": "Crafted Sword has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Crafted Sword: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "weapon",
       "durable",
@@ -821,7 +860,9 @@
   },
   {
     "id": "core:crafted_pick",
-    "name": "Crafted Mining Pick",
+    "name": "Crafted Pick",
+    "asset": "crafted_pick",
+    "category": "tool",
     "mass_g": 2600,
     "volume_ml": 1500,
     "tool_power": 4,
@@ -835,9 +876,8 @@
       "component_item"
     ],
     "base_value": 58,
-    "description": "Crafted Mining Pick has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Crafted Mining Pick: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
+    "description": "Crafted Pick has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Crafted Pick: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "tool",
       "pick",
@@ -852,6 +892,8 @@
   {
     "id": "core:crafted_helmet",
     "name": "Crafted Helmet",
+    "asset": "crafted_helmet",
+    "category": "armor",
     "mass_g": 1800,
     "volume_ml": 1200,
     "tags": [
@@ -868,7 +910,6 @@
     "insulation": 1,
     "description": "Crafted Helmet has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Crafted Helmet: ordinary in isolation, important when the right need appears.\"",
-    "category": "equipment",
     "utility_roles": [
       "armor",
       "durable",
@@ -877,7 +918,9 @@
   },
   {
     "id": "core:medicinal_herb",
-    "name": "Medicinal Herb",
+    "name": "Herb",
+    "asset": "herb",
+    "category": "medicine",
     "material": "core:organic",
     "mass_g": 60,
     "volume_ml": 120,
@@ -886,9 +929,8 @@
       "herb"
     ],
     "base_value": 5,
-    "description": "Medicinal Herb has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Medicinal Herb: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Herb has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Herb: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medicine",
       "cooking"
@@ -896,7 +938,9 @@
   },
   {
     "id": "core:herbal_tonic",
-    "name": "Herbal Tonic",
+    "name": "Tonic",
+    "asset": "tonic",
+    "category": "medicine",
     "material": "core:organic",
     "mass_g": 250,
     "volume_ml": 260,
@@ -907,9 +951,8 @@
       "consumable"
     ],
     "base_value": 18,
-    "description": "Herbal Tonic has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Herbal Tonic: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Tonic has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Tonic: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medical",
       "medicine",
@@ -918,7 +961,9 @@
   },
   {
     "id": "core:soap",
-    "name": "Lye Soap",
+    "name": "Soap",
+    "asset": "soap",
+    "category": "medicine",
     "material": "core:organic",
     "mass_g": 140,
     "volume_ml": 100,
@@ -927,16 +972,17 @@
       "sanitation"
     ],
     "base_value": 10,
-    "description": "Lye Soap has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Lye Soap: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Soap has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Soap: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "sanitation"
     ]
   },
   {
     "id": "core:clean_water",
-    "name": "Clean Water Flask",
+    "name": "Water Flask",
+    "asset": "water_flask",
+    "category": "utility",
     "material": "core:organic",
     "mass_g": 1000,
     "volume_ml": 1000,
@@ -946,9 +992,8 @@
       "sanitation"
     ],
     "base_value": 3,
-    "description": "Clean Water Flask has a clear practical place in survival, craft, trade, or daily life.",
-    "flavor": "\"Clean Water Flask: ordinary in isolation, important when the right need appears.\"",
-    "category": "material",
+    "description": "Water Flask has a clear practical place in survival, craft, trade, or daily life.",
+    "flavor": "\"Water Flask: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "drink",
       "cooking"
@@ -956,7 +1001,9 @@
   },
   {
     "id": "core:stout_branch",
-    "name": "Stout Branch",
+    "name": "Branch",
+    "asset": "branch",
+    "category": "resource",
     "material": "core:wood",
     "mass_g": 700,
     "volume_ml": 900,
@@ -968,7 +1015,6 @@
     ],
     "description": "A straight fallen branch thick enough to become a haft, spear shaft, firewood, or frame member.",
     "flavor": "\"A useful branch is already half a tool.\"",
-    "category": "natural",
     "utility_roles": [
       "primitive_craft",
       "fuel",
@@ -977,7 +1023,9 @@
   },
   {
     "id": "core:bark",
-    "name": "Tannin-Rich Bark",
+    "name": "Bark",
+    "asset": "bark",
+    "category": "resource",
     "material": "core:wood",
     "mass_g": 250,
     "volume_ml": 450,
@@ -989,7 +1037,6 @@
     ],
     "description": "Strips of bark rich in tannins, useful for cordage, fire-starting, and preserving hides.",
     "flavor": "\"The tree gives more than timber.\"",
-    "category": "natural",
     "utility_roles": [
       "cordage_input",
       "tanning",
@@ -998,7 +1045,9 @@
   },
   {
     "id": "core:reed_bundle",
-    "name": "Reed Bundle",
+    "name": "Reeds",
+    "asset": "reeds",
+    "category": "resource",
     "material": "core:fiber",
     "mass_g": 300,
     "volume_ml": 1200,
@@ -1010,7 +1059,6 @@
     ],
     "description": "Long wetland reeds suitable for mats, baskets, thatching, cordage, and kindling.",
     "flavor": "\"Where the ground is too wet for grass, reeds do the building.\"",
-    "category": "natural",
     "utility_roles": [
       "weaving",
       "construction",
@@ -1019,7 +1067,9 @@
   },
   {
     "id": "core:clay_lump",
-    "name": "Clay Lump",
+    "name": "Clay",
+    "asset": "clay",
+    "category": "resource",
     "material": "core:clay",
     "mass_g": 1000,
     "volume_ml": 700,
@@ -1029,7 +1079,6 @@
     ],
     "description": "Plastic clay dug from damp ground, ready to be shaped and fired.",
     "flavor": "\"Mud remembers the hands that shaped it.\"",
-    "category": "natural",
     "utility_roles": [
       "pottery",
       "construction"
@@ -1037,7 +1086,9 @@
   },
   {
     "id": "core:stone_flake",
-    "name": "Sharp Stone Flake",
+    "name": "Stone Flake",
+    "asset": "stone_flake",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 180,
     "volume_ml": 80,
@@ -1048,7 +1099,6 @@
     ],
     "description": "A deliberately struck stone flake with a keen but fragile edge.",
     "flavor": "\"The first blade needed no forge.\"",
-    "category": "tool",
     "utility_roles": [
       "cutting",
       "primitive_craft"
@@ -1063,7 +1113,9 @@
   },
   {
     "id": "core:plant_cordage",
-    "name": "Plant Cordage",
+    "name": "Cordage",
+    "asset": "cordage",
+    "category": "material",
     "material": "core:fiber",
     "mass_g": 120,
     "volume_ml": 180,
@@ -1073,7 +1125,6 @@
     ],
     "description": "Twisted plant fibers strong enough for bindings, snares, lashings, and primitive tools.",
     "flavor": "\"Strength made from many weak fibers.\"",
-    "category": "material",
     "utility_roles": [
       "binding",
       "construction",
@@ -1083,6 +1134,8 @@
   {
     "id": "core:sinew",
     "name": "Sinew",
+    "asset": "sinew",
+    "category": "material",
     "material": "core:organic",
     "mass_g": 90,
     "volume_ml": 100,
@@ -1093,7 +1146,6 @@
     ],
     "description": "Cleaned tendon fibers valued for compact, very strong bindings and bow work.",
     "flavor": "\"Pulled from bone, stronger than it looks.\"",
-    "category": "animal_product",
     "utility_roles": [
       "binding",
       "bowmaking",
@@ -1103,6 +1155,8 @@
   {
     "id": "core:sinew_cord",
     "name": "Sinew Cord",
+    "asset": "sinew_cord",
+    "category": "material",
     "material": "core:organic",
     "mass_g": 80,
     "volume_ml": 90,
@@ -1113,7 +1167,6 @@
     ],
     "description": "Tightly twisted sinew cord with excellent tensile strength.",
     "flavor": "\"It dries hard and holds harder.\"",
-    "category": "material",
     "utility_roles": [
       "binding",
       "bowmaking"
@@ -1121,7 +1174,9 @@
   },
   {
     "id": "core:animal_fat",
-    "name": "Rendered Animal Fat",
+    "name": "Animal Fat",
+    "asset": "animal_fat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 250,
     "volume_ml": 260,
@@ -1132,7 +1187,6 @@
     ],
     "description": "Dense animal fat useful for cooking, soap, sealing, and calorie-rich meals.",
     "flavor": "\"Winter stores itself under the hide.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "soap",
@@ -1150,7 +1204,9 @@
   },
   {
     "id": "core:offal",
-    "name": "Fresh Offal",
+    "name": "Offal",
+    "asset": "offal",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 350,
     "volume_ml": 330,
@@ -1162,7 +1218,6 @@
     ],
     "description": "Nutrient-dense organs that spoil quickly but enrich broths and survival meals.",
     "flavor": "\"Waste to the careless; strength to the hungry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -1178,6 +1233,8 @@
   {
     "id": "core:fresh_hide",
     "name": "Fresh Hide",
+    "asset": "fresh_hide",
+    "category": "material",
     "material": "core:leather",
     "mass_g": 1200,
     "volume_ml": 2100,
@@ -1188,7 +1245,6 @@
     ],
     "description": "Unprocessed hide, heavy with moisture and vulnerable to rot until scraped and preserved.",
     "flavor": "\"A skin is not leather until work makes it so.\"",
-    "category": "animal_product",
     "utility_roles": [
       "hide_processing"
     ]
@@ -1196,6 +1252,8 @@
   {
     "id": "core:scraped_hide",
     "name": "Scraped Hide",
+    "asset": "scraped_hide",
+    "category": "material",
     "material": "core:leather",
     "mass_g": 1000,
     "volume_ml": 1800,
@@ -1206,7 +1264,6 @@
     ],
     "description": "A cleaned hide with flesh and membrane removed, ready for drying or tanning.",
     "flavor": "\"The blade work shows in every clean patch.\"",
-    "category": "animal_product",
     "utility_roles": [
       "drying",
       "tanning"
@@ -1214,7 +1271,9 @@
   },
   {
     "id": "core:rawhide",
-    "name": "Rawhide Sheet",
+    "name": "Rawhide",
+    "asset": "rawhide",
+    "category": "material",
     "material": "core:leather",
     "mass_g": 850,
     "volume_ml": 1400,
@@ -1224,7 +1283,6 @@
     ],
     "description": "A stiff dried hide useful for shields, lashings, containers, and hard-wearing camp gear.",
     "flavor": "\"Hard as old bark when dry, pliable when soaked.\"",
-    "category": "material",
     "utility_roles": [
       "armor",
       "binding",
@@ -1233,7 +1291,9 @@
   },
   {
     "id": "core:leather",
-    "name": "Tanned Leather",
+    "name": "Leather",
+    "asset": "leather",
+    "category": "material",
     "material": "core:leather",
     "mass_g": 750,
     "volume_ml": 1250,
@@ -1243,7 +1303,6 @@
     ],
     "description": "Flexible preserved hide suitable for clothing, armor, containers, straps, and fine work.",
     "flavor": "\"Time, bark, water, and patience make skin endure.\"",
-    "category": "material",
     "utility_roles": [
       "armor",
       "clothing",
@@ -1253,7 +1312,9 @@
   },
   {
     "id": "core:feather",
-    "name": "Flight Feather",
+    "name": "Feather",
+    "asset": "feather",
+    "category": "material",
     "material": "core:organic",
     "mass_g": 10,
     "volume_ml": 35,
@@ -1263,7 +1324,6 @@
     ],
     "description": "A stiff flight feather suitable for arrow fletching, bedding, and decorative work.",
     "flavor": "\"A small piece of the sky left behind.\"",
-    "category": "animal_product",
     "utility_roles": [
       "fletching",
       "bedding"
@@ -1272,6 +1332,8 @@
   {
     "id": "core:stone_knife",
     "name": "Stone Knife",
+    "asset": "stone_knife",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 420,
     "volume_ml": 300,
@@ -1283,7 +1345,6 @@
     ],
     "description": "A flaked stone blade lashed to a short handle. Essential for carcass work and hide preparation.",
     "flavor": "\"Ugly edges still cut cleanly.\"",
-    "category": "tool",
     "utility_roles": [
       "hunting",
       "butchery",
@@ -1301,6 +1362,8 @@
   {
     "id": "core:stone_pick",
     "name": "Stone Pick",
+    "asset": "stone_pick",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 1800,
     "volume_ml": 1400,
@@ -1312,7 +1375,6 @@
     ],
     "description": "A heavy stone head bound to a stout branch for breaking softer rock and opening shallow workings.",
     "flavor": "\"The mountain yields first to persistence, then to metal.\"",
-    "category": "tool",
     "utility_roles": [
       "mining"
     ],
@@ -1327,6 +1389,8 @@
   {
     "id": "core:stone_hammer",
     "name": "Stone Hammer",
+    "asset": "stone_hammer",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 1500,
     "volume_ml": 1050,
@@ -1338,7 +1402,6 @@
     ],
     "description": "A rounded stone hammer for construction, crushing bone, and rough craft.",
     "flavor": "\"Simple weight, carefully directed.\"",
-    "category": "tool",
     "utility_roles": [
       "construction",
       "processing"
@@ -1353,6 +1416,8 @@
   {
     "id": "core:digging_stick",
     "name": "Digging Stick",
+    "asset": "digging_stick",
+    "category": "tool",
     "material": "core:wood",
     "mass_g": 900,
     "volume_ml": 950,
@@ -1363,7 +1428,6 @@
     ],
     "description": "A fire-hardened stick used to loosen soil, pry roots, and begin primitive farming.",
     "flavor": "\"The first plow was a branch and stubborn hands.\"",
-    "category": "tool",
     "utility_roles": [
       "farming",
       "foraging"
@@ -1375,7 +1439,9 @@
   },
   {
     "id": "core:crude_hoe",
-    "name": "Crude Stone Hoe",
+    "name": "Stone Hoe",
+    "asset": "stone_hoe",
+    "category": "tool",
     "material": "core:stone",
     "mass_g": 1350,
     "volume_ml": 1200,
@@ -1386,7 +1452,6 @@
     ],
     "description": "A broad stone edge lashed to a handle for turning soil more efficiently than a digging stick.",
     "flavor": "\"A field begins one broken clod at a time.\"",
-    "category": "tool",
     "utility_roles": [
       "farming"
     ],
@@ -1397,7 +1462,9 @@
   },
   {
     "id": "core:wooden_spear",
-    "name": "Fire-Hardened Spear",
+    "name": "Spear",
+    "asset": "spear",
+    "category": "weapon",
     "material": "core:wood",
     "mass_g": 1300,
     "volume_ml": 1800,
@@ -1408,7 +1475,6 @@
     ],
     "description": "A straight branch with a hardened point. Crude, reachy, and far safer than empty hands against game.",
     "flavor": "\"Keep the teeth at the far end of the shaft.\"",
-    "category": "weapon",
     "utility_roles": [
       "hunting",
       "combat"
@@ -1419,7 +1485,9 @@
   },
   {
     "id": "core:club",
-    "name": "Heavy Club",
+    "name": "Club",
+    "asset": "club",
+    "category": "weapon",
     "material": "core:wood",
     "mass_g": 1500,
     "volume_ml": 1400,
@@ -1429,7 +1497,6 @@
     ],
     "description": "A dense branch trimmed into a brutal close-quarters weapon and pounding tool.",
     "flavor": "\"No edge to dull, only weight to swing.\"",
-    "category": "weapon",
     "utility_roles": [
       "combat"
     ],
@@ -1438,7 +1505,9 @@
   },
   {
     "id": "core:sling",
-    "name": "Fiber Sling",
+    "name": "Sling",
+    "asset": "sling",
+    "category": "weapon",
     "material": "core:fiber",
     "mass_g": 140,
     "volume_ml": 120,
@@ -1449,7 +1518,6 @@
     ],
     "description": "A braided sling that turns smooth stones into useful small-game ammunition.",
     "flavor": "\"A stone travels farther when the cord lends it speed.\"",
-    "category": "weapon",
     "utility_roles": [
       "hunting",
       "ranged_combat"
@@ -1462,6 +1530,8 @@
   {
     "id": "core:sling_stone",
     "name": "Sling Stone",
+    "asset": "sling_stone",
+    "category": "ammo",
     "material": "core:stone",
     "mass_g": 80,
     "volume_ml": 35,
@@ -1471,14 +1541,15 @@
     ],
     "description": "A smooth palm-sized stone selected for consistent sling flight.",
     "flavor": "\"The best ammunition is often underfoot.\"",
-    "category": "ammo",
     "utility_roles": [
       "ranged_ammo"
     ]
   },
   {
     "id": "core:short_bow",
-    "name": "Short Hunting Bow",
+    "name": "Short Bow",
+    "asset": "short_bow",
+    "category": "weapon",
     "material": "core:wood",
     "mass_g": 900,
     "volume_ml": 1300,
@@ -1489,7 +1560,6 @@
     ],
     "description": "A compact sinew-backed hunting bow suited to woods and close stalking.",
     "flavor": "\"A bent stave stores patience as force.\"",
-    "category": "weapon",
     "utility_roles": [
       "hunting",
       "ranged_combat"
@@ -1501,7 +1571,9 @@
   },
   {
     "id": "core:wood_arrow",
-    "name": "Stone-Tipped Arrow",
+    "name": "Stone Arrow",
+    "asset": "arrow",
+    "category": "ammo",
     "material": "core:wood",
     "mass_g": 45,
     "volume_ml": 35,
@@ -1511,7 +1583,6 @@
     ],
     "description": "A light shaft with stone point and feather fletching.",
     "flavor": "\"Straight wood, sharp stone, steady breath.\"",
-    "category": "ammo",
     "utility_roles": [
       "ranged_ammo"
     ]
@@ -1519,6 +1590,8 @@
   {
     "id": "core:bone_awl",
     "name": "Bone Awl",
+    "asset": "bone_awl",
+    "category": "tool",
     "material": "core:bone",
     "mass_g": 90,
     "volume_ml": 40,
@@ -1528,7 +1601,6 @@
     ],
     "description": "A polished bone point for piercing leather, bark, and woven material.",
     "flavor": "\"A little point opens the way for thread.\"",
-    "category": "tool",
     "utility_roles": [
       "leatherwork",
       "basketry"
@@ -1541,6 +1613,8 @@
   {
     "id": "core:bone_needle",
     "name": "Bone Needle",
+    "asset": "bone_needle",
+    "category": "tool",
     "material": "core:bone",
     "mass_g": 25,
     "volume_ml": 10,
@@ -1550,7 +1624,6 @@
     ],
     "description": "A fine drilled bone needle for stitched leather, cloth, and careful repairs.",
     "flavor": "\"Small enough to lose, important enough to mourn.\"",
-    "category": "tool",
     "utility_roles": [
       "sewing"
     ],
@@ -1560,7 +1633,9 @@
   },
   {
     "id": "core:rawhide_buckler",
-    "name": "Rawhide Buckler",
+    "name": "Buckler",
+    "asset": "buckler",
+    "category": "armor",
     "material": "core:leather",
     "mass_g": 1800,
     "volume_ml": 1500,
@@ -1571,7 +1646,6 @@
     ],
     "description": "A light wooden-and-rawhide hand shield that turns glancing blows aside.",
     "flavor": "\"Not a wall, just enough between you and the teeth.\"",
-    "category": "armor",
     "utility_roles": [
       "combat"
     ],
@@ -1584,7 +1658,9 @@
   },
   {
     "id": "core:clay_pot",
-    "name": "Fired Clay Cooking Pot",
+    "name": "Clay Pot",
+    "asset": "clay_pot",
+    "category": "utility",
     "material": "core:clay",
     "mass_g": 1700,
     "volume_ml": 1700,
@@ -1594,14 +1670,15 @@
     ],
     "description": "A fire-safe clay pot for stews, broths, porridges, boiling water, and rendering fat.",
     "flavor": "\"A pot turns scattered ingredients into a meal.\"",
-    "category": "tool",
     "utility_roles": [
       "cooking"
     ]
   },
   {
     "id": "core:wooden_bowl",
-    "name": "Wooden Bowl",
+    "name": "Bowl",
+    "asset": "bowl",
+    "category": "utility",
     "material": "core:wood",
     "mass_g": 250,
     "volume_ml": 450,
@@ -1611,7 +1688,6 @@
     ],
     "description": "A carved bowl for eating meals, collecting ingredients, and simple camp use.",
     "flavor": "\"The shape of hunger answered in wood.\"",
-    "category": "tool",
     "utility_roles": [
       "cooking",
       "serving"
@@ -1619,7 +1695,9 @@
   },
   {
     "id": "core:raw_small_game",
-    "name": "Small-Game Meat",
+    "name": "Small Game Meat",
+    "asset": "small_game",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 350,
     "volume_ml": 320,
@@ -1630,7 +1708,6 @@
     ],
     "description": "Lean meat from rabbit, hare, or similar small game. Best cooked before eating.",
     "flavor": "\"Small prey feeds a careful hunter.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "drying"
@@ -1647,7 +1724,9 @@
   },
   {
     "id": "core:raw_game_meat",
-    "name": "Red Game Meat",
+    "name": "Game Meat",
+    "asset": "game_meat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 500,
     "volume_ml": 450,
@@ -1658,7 +1737,6 @@
     ],
     "description": "Dense red meat from deer, elk, boar, or other large game.",
     "flavor": "\"A day of tracking condensed into a heavy cut of meat.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "drying"
@@ -1675,7 +1753,9 @@
   },
   {
     "id": "core:raw_poultry",
-    "name": "Raw Poultry",
+    "name": "Poultry",
+    "asset": "poultry",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 400,
     "volume_ml": 360,
@@ -1687,7 +1767,6 @@
     ],
     "description": "Light meat from wild birds, tender but quick to spoil.",
     "flavor": "\"Feathers on the ground, supper in the pot.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "drying"
@@ -1705,6 +1784,8 @@
   {
     "id": "core:dried_meat",
     "name": "Dried Meat",
+    "asset": "dried_meat",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 220,
     "volume_ml": 210,
@@ -1715,7 +1796,6 @@
     ],
     "description": "Thin strips of meat dried until light, chewy, and resistant to spoilage.",
     "flavor": "\"Hard travel food that asks only strong teeth.\"",
-    "category": "food",
     "utility_roles": [
       "food",
       "travel"
@@ -1734,6 +1814,8 @@
   {
     "id": "core:blueberries",
     "name": "Blueberries",
+    "asset": "blueberries",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 120,
     "volume_ml": 140,
@@ -1744,7 +1826,6 @@
     ],
     "description": "Dark wild berries with tart sweetness and useful moisture.",
     "flavor": "\"A handful stains the fingers and brightens a lean meal.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -1763,6 +1844,8 @@
   {
     "id": "core:raspberries",
     "name": "Raspberries",
+    "asset": "raspberries",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 120,
     "volume_ml": 150,
@@ -1773,7 +1856,6 @@
     ],
     "description": "Soft red berries that bruise easily and reward careful gathering.",
     "flavor": "\"Sweet enough that birds always arrive first.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -1791,7 +1873,9 @@
   },
   {
     "id": "core:wild_strawberries",
-    "name": "Wild Strawberries",
+    "name": "Strawberries",
+    "asset": "strawberries",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -1802,7 +1886,6 @@
     ],
     "description": "Small fragrant berries growing close to sunny ground.",
     "flavor": "\"Tiny fruit with a summer larger than itself.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -1820,7 +1903,9 @@
   },
   {
     "id": "core:dandelion_greens",
-    "name": "Dandelion Greens",
+    "name": "Dandelion",
+    "asset": "dandelion",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 160,
@@ -1832,7 +1917,6 @@
     ],
     "description": "Bitter young greens that add fiber and vitamins to soups and stews.",
     "flavor": "\"The weed survives because it knows the world better than gardeners do.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking"
@@ -1850,7 +1934,9 @@
   },
   {
     "id": "core:nettles",
-    "name": "Nettle Leaves",
+    "name": "Nettle",
+    "asset": "nettle",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 200,
@@ -1862,7 +1948,6 @@
     ],
     "description": "Stinging leaves that become edible when cooked and useful as coarse fiber when processed.",
     "flavor": "\"Handle badly and it bites; handle well and it feeds.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "fiber"
@@ -1880,6 +1965,8 @@
   {
     "id": "core:wild_onion",
     "name": "Wild Onion",
+    "asset": "wild_onion",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 130,
     "volume_ml": 140,
@@ -1891,7 +1978,6 @@
     ],
     "description": "Sharp wild bulbs that flavor meals and can yield seed for cultivation.",
     "flavor": "\"A small bulb with enough scent to announce dinner.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking",
@@ -1910,7 +1996,9 @@
   },
   {
     "id": "core:wild_carrot",
-    "name": "Wild Carrot Root",
+    "name": "Wild Carrot",
+    "asset": "wild_carrot",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 150,
     "volume_ml": 160,
@@ -1922,7 +2010,6 @@
     ],
     "description": "A pale tough root, less sweet than cultivated carrot but dependable.",
     "flavor": "\"Pulled from stubborn ground, still worth the dirt under the nails.\"",
-    "category": "food",
     "utility_roles": [
       "raw_food",
       "cooking",
@@ -1942,6 +2029,8 @@
   {
     "id": "core:yarrow",
     "name": "Yarrow",
+    "asset": "yarrow",
+    "category": "medicine",
     "material": "core:organic",
     "mass_g": 50,
     "volume_ml": 90,
@@ -1952,7 +2041,6 @@
     ],
     "description": "A pungent flowering herb traditionally valued in field dressings and bitter infusions.",
     "flavor": "\"White flowers above, old fieldcraft below.\"",
-    "category": "herb",
     "utility_roles": [
       "medicine",
       "cooking"
@@ -1960,7 +2048,9 @@
   },
   {
     "id": "core:plantain_leaf",
-    "name": "Broadleaf Plantain",
+    "name": "Plantain",
+    "asset": "plantain",
+    "category": "medicine",
     "material": "core:organic",
     "mass_g": 70,
     "volume_ml": 120,
@@ -1971,7 +2061,6 @@
     ],
     "description": "Broad resilient leaves useful in simple poultices and herb mixtures.",
     "flavor": "\"It grows where boots pass and survives because of it.\"",
-    "category": "herb",
     "utility_roles": [
       "medicine",
       "cooking"
@@ -1979,7 +2068,9 @@
   },
   {
     "id": "core:morel",
-    "name": "Morel Mushroom",
+    "name": "Morel",
+    "asset": "morel",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 90,
     "volume_ml": 110,
@@ -1991,7 +2082,6 @@
     ],
     "description": "A honeycombed woodland mushroom, valuable cooked and risky to waste.",
     "flavor": "\"The forest hides good food in shapes that look improbable.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2007,7 +2097,9 @@
   },
   {
     "id": "core:bolete",
-    "name": "Bolete Mushroom",
+    "name": "Bolete",
+    "asset": "bolete",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 120,
     "volume_ml": 140,
@@ -2019,7 +2111,6 @@
     ],
     "description": "A firm woodland mushroom well suited to broths and stews.",
     "flavor": "\"A quiet cap beneath old trees.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2035,7 +2126,9 @@
   },
   {
     "id": "core:wild_grain",
-    "name": "Wild Grain Heads",
+    "name": "Wild Grain",
+    "asset": "wild_grain",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 120,
     "volume_ml": 150,
@@ -2046,7 +2139,6 @@
     ],
     "description": "Loose heads of wild cereal grain, sparse but enough to seed the first field.",
     "flavor": "\"Civilization begins when someone saves a handful instead of eating it.\"",
-    "category": "food",
     "utility_roles": [
       "cooking",
       "seed_source"
@@ -2064,6 +2156,8 @@
   {
     "id": "core:cattail_root",
     "name": "Cattail Root",
+    "asset": "cattail",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 220,
     "volume_ml": 260,
@@ -2075,7 +2169,6 @@
     ],
     "description": "A starchy wetland rhizome that becomes much more pleasant after cooking.",
     "flavor": "\"The marsh keeps its starch underground.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2093,6 +2186,8 @@
   {
     "id": "core:barley_seed",
     "name": "Barley Seed",
+    "asset": "barley_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2101,7 +2196,6 @@
     ],
     "description": "Seed saved for planting barley.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
@@ -2109,6 +2203,8 @@
   {
     "id": "core:barley",
     "name": "Barley",
+    "asset": "barley",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2119,7 +2215,6 @@
     ],
     "description": "Harvested barley suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2135,7 +2230,9 @@
   },
   {
     "id": "core:beans_seed",
-    "name": "Field Beans Seed",
+    "name": "Bean Seed",
+    "asset": "bean_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2144,14 +2241,15 @@
     ],
     "description": "Seed saved for planting field beans.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
   },
   {
     "id": "core:beans",
-    "name": "Field Beans",
+    "name": "Beans",
+    "asset": "beans",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2162,7 +2260,6 @@
     ],
     "description": "Harvested field beans suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2179,6 +2276,8 @@
   {
     "id": "core:cabbage_seed",
     "name": "Cabbage Seed",
+    "asset": "cabbage_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2187,7 +2286,6 @@
     ],
     "description": "Seed saved for planting cabbage.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
@@ -2195,6 +2293,8 @@
   {
     "id": "core:cabbage",
     "name": "Cabbage",
+    "asset": "cabbage",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2205,7 +2305,6 @@
     ],
     "description": "Harvested cabbage suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2222,6 +2321,8 @@
   {
     "id": "core:carrot_seed",
     "name": "Carrot Seed",
+    "asset": "carrot_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2230,7 +2331,6 @@
     ],
     "description": "Seed saved for planting carrot.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
@@ -2238,6 +2338,8 @@
   {
     "id": "core:carrot",
     "name": "Carrot",
+    "asset": "carrot",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2248,7 +2350,6 @@
     ],
     "description": "Harvested carrot suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2265,6 +2366,8 @@
   {
     "id": "core:onion_seed",
     "name": "Onion Seed",
+    "asset": "onion_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2273,7 +2376,6 @@
     ],
     "description": "Seed saved for planting onion.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
@@ -2281,6 +2383,8 @@
   {
     "id": "core:onion",
     "name": "Onion",
+    "asset": "onion",
+    "category": "food",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2291,7 +2395,6 @@
     ],
     "description": "Harvested onion suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2307,7 +2410,9 @@
   },
   {
     "id": "core:flax_seed",
-    "name": "Flax Seed Seed",
+    "name": "Flax Seed",
+    "asset": "flax_seed",
+    "category": "seed",
     "material": "core:organic",
     "mass_g": 20,
     "volume_ml": 15,
@@ -2316,14 +2421,15 @@
     ],
     "description": "Seed saved for planting flax seed.",
     "flavor": "\"A future field carried in the palm.\"",
-    "category": "seed",
     "utility_roles": [
       "planting"
     ]
   },
   {
     "id": "core:flax",
-    "name": "Flax Seed",
+    "name": "Flax",
+    "asset": "flax",
+    "category": "material",
     "material": "core:organic",
     "mass_g": 100,
     "volume_ml": 120,
@@ -2334,7 +2440,6 @@
     ],
     "description": "Harvested flax seed suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
-    "category": "food",
     "utility_roles": [
       "cooking"
     ],
@@ -2351,6 +2456,8 @@
   {
     "id": "core:copper_ore",
     "name": "Copper Ore",
+    "asset": "copper_ore",
+    "category": "resource",
     "material": "core:stone",
     "mass_g": 2800,
     "volume_ml": 1050,
@@ -2361,7 +2468,6 @@
     "base_value": 5,
     "description": "Green- and rust-stained copper-bearing rock from a mineral vein.",
     "flavor": "A promising vein mineral whose metal can be worked below iron temperatures.",
-    "category": "material",
     "utility_roles": [
       "smelting",
       "trade"
@@ -2370,6 +2476,8 @@
   {
     "id": "core:copper_ingot",
     "name": "Copper Ingot",
+    "asset": "copper_ingot",
+    "category": "material",
     "material": "core:copper",
     "mass_g": 1800,
     "volume_ml": 230,
@@ -2379,7 +2487,6 @@
     "base_value": 14,
     "description": "A cast ingot of refined copper, soft enough for early metalworking.",
     "flavor": "Warm red metal carrying the first clear step beyond stone tools.",
-    "category": "material",
     "utility_roles": [
       "metalworking",
       "trade"
@@ -2387,7 +2494,9 @@
   },
   {
     "id": "core:wicker_basket",
-    "name": "Wicker Basket",
+    "name": "Basket",
+    "asset": "basket",
+    "category": "utility",
     "material": "core:fiber",
     "mass_g": 900,
     "volume_ml": 9000,
@@ -2399,7 +2508,6 @@
     "base_value": 10,
     "description": "A tightly woven reed basket ready to be placed as lightweight camp storage.",
     "flavor": "\"A hundred bends turn reeds into order.\"",
-    "category": "tool",
     "utility_roles": [
       "storage",
       "construction"
@@ -2407,7 +2515,9 @@
   },
   {
     "id": "core:wood_storage_box",
-    "name": "Wooden Storage Box",
+    "name": "Storage Box",
+    "asset": "storage_box",
+    "category": "utility",
     "material": "core:wood",
     "mass_g": 7500,
     "volume_ml": 18000,
@@ -2419,7 +2529,6 @@
     "base_value": 22,
     "description": "A fitted wooden box that can be placed as sturdy camp or household storage.",
     "flavor": "\"Dry boards, square corners, fewer things lost in the dark.\"",
-    "category": "tool",
     "utility_roles": [
       "storage",
       "construction"

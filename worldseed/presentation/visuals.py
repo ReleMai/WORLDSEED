@@ -31,7 +31,18 @@ class VisualRegistry:
     def load_default(cls) -> "VisualRegistry":
         base = Path(__file__).resolve().parents[1]
         path = base / "assets" / "visuals.json"
-        return cls(json.loads(path.read_text(encoding="utf-8")), base)
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        # Item visuals are derived from data/items.json so adding, removing, or
+        # renaming an icon does not require maintaining a second 100+ entry map.
+        item_path = base / "data" / "items.json"
+        if item_path.exists():
+            item_visuals: dict[str, str] = {}
+            for raw in json.loads(item_path.read_text(encoding="utf-8")):
+                content_id = str(raw["id"])
+                asset = str(raw.get("asset") or content_id.split(":", 1)[-1])
+                item_visuals[content_id] = f"assets/sprites/items/{asset}.png"
+            manifest["items"] = item_visuals
+        return cls(manifest, base)
 
     def _paths(self, kind: str, content_id: str) -> tuple[str, ...]:
         raw = self.manifest.get(kind, {}).get(content_id)

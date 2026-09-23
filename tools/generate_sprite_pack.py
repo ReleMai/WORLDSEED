@@ -347,10 +347,13 @@ def make_preview(paths, out):
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
     items=json.load(open(DATA/'items.json',encoding='utf-8')); terrain=json.load(open(DATA/'terrain.json',encoding='utf-8')); resources=json.load(open(DATA/'resources.json',encoding='utf-8')); structures=json.load(open(DATA/'structures.json',encoding='utf-8')); species=json.load(open(DATA/'species.json',encoding='utf-8')); crops=json.load(open(DATA/'crops.json',encoding='utf-8'))
-    manifest={'version':1,'tile_px':32,'items':{},'terrain':{},'resources':{},'structures':{},'species':{},'crops':{},'npc_variants':[],'procedural_species':[],'special':{}}
+    manifest={'version':2,'tile_px':32,'item_assets_source':'data/items.json','items':{},'terrain':{},'resources':{},'structures':{},'species':{},'crops':{},'npc_variants':[],'procedural_species':[],'special':{}}
     preview=[]
     for it in items:
-        p=OUT/'items'/f'{sid(it["id"])}.png'; save(item_sprite(it),p); manifest['items'][it['id']]=str(p.relative_to(ROOT/'worldseed')).replace('\\','/'); preview.append(p)
+        asset = str(it.get('asset') or sid(it['id']))
+        p=OUT/'items'/f'{asset}.png'
+        save(item_sprite(it),p)
+        preview.append(p)
     for t in terrain:
         p=OUT/'terrain'/f'{sid(t["id"])}.png'; save(terrain_sprite(t),p); manifest['terrain'][t['id']]=str(p.relative_to(ROOT/'worldseed')).replace('\\','/'); preview.append(p)
     for r in resources:

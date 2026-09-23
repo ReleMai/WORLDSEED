@@ -165,16 +165,16 @@ def main():
 
     # Items / ground loot
     item_map = {
-        'assets/sprites/items/stout_branch.png': l['single_branch'],
+        'assets/sprites/items/branch.png': l['single_branch'],
         'assets/sprites/items/brush.png': l['bundle_sticks'],
         'assets/sprites/items/wood.png': l['log'],
         'assets/sprites/items/bark.png': l['forked_branch'],
         'assets/sprites/items/stone.png': l['stone'],
         'assets/sprites/items/stone_flake.png': l['stone_flake'],
-        'assets/sprites/items/clay_lump.png': l['clay_lump'],
+        'assets/sprites/items/clay.png': l['clay_lump'],
         'assets/sprites/items/iron_ore.png': l['ore_rock'],
         'assets/sprites/items/fiber.png': l['fiber'],
-        'assets/sprites/items/plant_cordage.png': l['fiber'],
+        'assets/sprites/items/cordage.png': l['fiber'],
         'assets/sprites/items/berries.png': l['berries'],
         'assets/sprites/items/raspberries.png': l['berries'],
         'assets/sprites/items/bolete.png': l['mushroom_loot'],
@@ -187,18 +187,18 @@ def main():
         'assets/sprites/items/scraped_hide.png': l['hide'],
         'assets/sprites/items/wild_grain.png': l['seeds'],
         'assets/sprites/items/yarrow.png': l['herb_bundle'],
-        'assets/sprites/items/medicinal_herb.png': l['herb_bundle'],
-        'assets/sprites/items/nettles.png': l['herb_bundle'],
-        'assets/sprites/items/dandelion_greens.png': l['herb_bundle'],
-        'assets/sprites/items/plantain_leaf.png': f['sapling_leaf'],
+        'assets/sprites/items/herb.png': l['herb_bundle'],
+        'assets/sprites/items/nettle.png': l['herb_bundle'],
+        'assets/sprites/items/dandelion.png': l['herb_bundle'],
+        'assets/sprites/items/plantain.png': f['sapling_leaf'],
         'assets/sprites/items/wild_onion.png': f['white_herb'],
     }
     # Distinguish look-alike foraged items with consistent silhouette + palette cues.
     item_map['assets/sprites/items/morel.png'] = tint(ImageOps.mirror(l['mushroom_loot']), (105, 78, 55), 0.25)
-    item_map['assets/sprites/items/medicinal_herb.png'] = tint(l['herb_bundle'], (75, 135, 70), 0.14)
-    item_map['assets/sprites/items/nettles.png'] = tint(l['herb_bundle'], (45, 95, 45), 0.24)
+    item_map['assets/sprites/items/herb.png'] = tint(l['herb_bundle'], (75, 135, 70), 0.14)
+    item_map['assets/sprites/items/nettle.png'] = tint(l['herb_bundle'], (45, 95, 45), 0.24)
     item_map['assets/sprites/items/yarrow.png'] = tint(l['herb_bundle'], (210, 225, 175), 0.12)
-    item_map['assets/sprites/items/dandelion_greens.png'] = tint(l['herb_bundle'], (185, 160, 55), 0.16)
+    item_map['assets/sprites/items/dandelion.png'] = tint(l['herb_bundle'], (185, 160, 55), 0.16)
     for rel_path, img in item_map.items():
         changed.append(save_asset(img, rel_path, canvas=(80, 80), inner=(68, 68)))
 
