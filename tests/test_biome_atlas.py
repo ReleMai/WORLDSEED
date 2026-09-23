@@ -71,6 +71,17 @@ class BiomeAtlasTests(unittest.TestCase):
             self.assertGreaterEqual(image.height, 3000)
             image.verify()
 
+    def test_each_biome_has_a_readable_detail_card(self):
+        detail_dir = ASSETS / "biome_atlas"
+        expected = {f"{row['id']}.png" for row in BIOME_GROUPS}
+        actual = {path.name for path in detail_dir.glob("*.png")}
+        self.assertEqual(expected, actual)
+        for name in sorted(expected):
+            with Image.open(detail_dir / name) as image:
+                self.assertGreaterEqual(image.width, 1000)
+                self.assertGreaterEqual(image.height, 150)
+                image.verify()
+
 
 if __name__ == "__main__":
     unittest.main()
