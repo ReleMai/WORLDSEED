@@ -25,6 +25,7 @@ class BiomeAtlasTests(unittest.TestCase):
         terrain_ids = {row["id"] for row in json.loads((DATA / "terrain.json").read_text(encoding="utf-8"))}
         resource_ids = {row["id"] for row in json.loads((DATA / "resources.json").read_text(encoding="utf-8"))}
         species_ids = {row["id"] for row in json.loads((DATA / "species.json").read_text(encoding="utf-8"))}
+        fish_ids = {row["id"] for row in json.loads((DATA / "fish.json").read_text(encoding="utf-8"))}
         crop_ids = {row["id"] for row in json.loads((DATA / "crops.json").read_text(encoding="utf-8"))}
         for biome in catalog["biomes"]:
             for row in biome["terrain"]:
@@ -34,6 +35,8 @@ class BiomeAtlasTests(unittest.TestCase):
                     self.assertIn(row["id"], resource_ids)
             for row in biome["animals"]:
                 self.assertIn(row["id"], species_ids)
+            for row in biome["fish"]:
+                self.assertIn(row["id"], fish_ids)
             for row in biome["crops"]:
                 self.assertIn(row["id"], crop_ids)
 
@@ -52,10 +55,23 @@ class BiomeAtlasTests(unittest.TestCase):
         watery = [x for x in catalog["biomes"] if x["kind"] in {"freshwater", "coast", "marine"}]
         self.assertTrue(watery)
         for biome in watery:
-            if not biome["animals"]:
-                self.assertTrue(any("No authored animal habitat" in note for note in biome["gaps"]))
+            if not biome["animals"] and not biome["fish"]:
+                self.assertTrue(any("No authored animal or fish stock" in note for note in biome["gaps"]))
             if not (biome["trees"] or biome["plants"] or biome["deposits"] or biome["containers"]):
                 self.assertTrue(any("No authored ResourceSystem spawn" in note for note in biome["gaps"]))
+
+    def test_fishing_regions_have_distinct_stocks(self):
+        catalog = build_catalog()
+        by_id = {row["id"]: row for row in catalog["biomes"]}
+        self.assertTrue(by_id["rivers"]["fish"])
+        self.assertTrue(by_id["freshwater_lakes"]["fish"])
+        self.assertTrue(by_id["estuaries"]["fish"])
+        self.assertTrue(by_id["ocean"]["fish"])
+        river_ids = {row["id"] for row in by_id["rivers"]["fish"]}
+        ocean_ids = {row["id"] for row in by_id["ocean"]["fish"]}
+        self.assertIn("core:brook_trout", river_ids)
+        self.assertNotIn("core:atlantic_cod", river_ids)
+        self.assertIn("core:atlantic_cod", ocean_ids)
 
     def test_committed_generated_catalog_and_markdown_are_current(self):
         catalog = build_catalog()
