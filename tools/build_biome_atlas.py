@@ -323,7 +323,7 @@ def build_catalog() -> dict:
                     "max_weight_g": int(row.get("max_weight_g",0)),
                     "rarity": int(row.get("rarity",0)),
                     "fight": int(row.get("fight",0)),
-                    "preferred_baits": baits[:3],
+                    "preferred_baits": [list(pair) for pair in baits[:3]],
                 })
             fish_rows.sort(key=lambda x:(x["name"].casefold(),x["id"]))
 
