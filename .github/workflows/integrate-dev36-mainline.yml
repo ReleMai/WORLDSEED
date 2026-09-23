@@ -24,8 +24,10 @@ jobs:
           git fetch origin codex/terrain-coast-performance
           git checkout origin/codex/terrain-coast-performance --             AGENTS.md             .github/workflows/fast-gate.yml             pyproject.toml             tests/test_coastal_mouths.py             tests/test_persistence.py             tests/test_rc14_region_blocks.py             tests/test_rc5_gameplay.py             tests/test_terrain_performance.py             tests/test_terrain_variants.py             tools/audit_coastal_mouths.py             tools/bench_local_play.py             tools/bootstrap_smoke.py             tools/preview_coastal_morphology.py             tools/preview_weather_visuals.py             worldseed/app.py             worldseed/assets/sprites/terrain/forest_floor.png             worldseed/assets/visuals.json             worldseed/config.py             worldseed/presentation/clouds.py             worldseed/presentation/weather_fx.py             worldseed/ui/pygame_terminal.py             worldseed/world/coast_v8.py             worldseed/world/coastal_mouths.py             worldseed/world/generator.py             worldseed/world/hydrology.py             worldseed/world/landforms.py             worldseed/world/world.py
 
-      - name: Install asset dependency
-        run: python -m pip install "Pillow>=10,<12"
+      - name: Install integration dependencies
+        run: |
+          python -m pip install -e .
+          python -m pip install "Pillow>=10,<12"
 
       - name: Apply Dev36 interactions and dedicated natural-container art
         shell: bash
