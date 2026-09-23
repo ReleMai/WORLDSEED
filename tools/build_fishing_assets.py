@@ -70,6 +70,12 @@ def plant_icon(kind):
         for y,side in [(20,-1),(27,1),(34,-1),(41,1)]:
             if side<0:d.ellipse((15,y-5,31,y+4),fill=(86,126,48,255))
             else:d.ellipse((31,y-5,49,y+4),fill=(86,126,48,255))
+    elif kind=="beachgrass":
+        for x in range(18,47,5):
+            d.line((32,51,x,19+(x%4)*3),fill=(151,145,77,255),width=2)
+    elif kind=="blue_mussels":
+        for x,y in [(23,30),(34,24),(41,36),(28,41)]:
+            d.ellipse((x-6,y-9,x+6,y+9),fill=(55,70,82,255),outline=(113,130,139,255),width=2)
     return im
 
 
@@ -111,10 +117,13 @@ def resource_sprite(kind):
         d.arc((15,27,42,49),10,170,fill=(166,91,78,255),width=4)
         d.arc((28,33,55,53),170,340,fill=(145,78,70,255),width=4)
         return im
+    if kind=="blue_mussel_bed":
+        im.alpha_composite(plant_icon("blue_mussels"))
+        return im
     icon_kind={
         "duckweed_mat":"duckweed","water_lily_patch":"water_lily_root",
         "pickerelweed_patch":"pickerelweed","saltmarsh_grass_patch":"saltmarsh_grass",
-        "eelgrass_bed":"eelgrass","kelp_bed":"kelp"
+        "eelgrass_bed":"eelgrass","kelp_bed":"kelp","beachgrass_patch":"beachgrass"
     }[kind]
     base=plant_icon(icon_kind)
     im.alpha_composite(base)
@@ -166,11 +175,11 @@ def build():
     }
     for slug,(body,accent,stripe,flat,long) in fish_specs.items():
         save(fish_icon(body,accent,stripe,flat,long),ITEMS/f"{slug}.png")
-    for slug in ("duckweed","water_lily_root","pickerelweed","saltmarsh_grass","eelgrass","kelp"):
+    for slug in ("duckweed","water_lily_root","pickerelweed","saltmarsh_grass","eelgrass","kelp","beachgrass","blue_mussels"):
         save(plant_icon(slug),ITEMS/f"{slug}.png")
     for slug in ("earthworms","spoon_lure","reed_rod","wood_rod","fiber_line","sinew_line","braided_line","fishing_spear","fishing_net"):
         save(gear_icon(slug),ITEMS/f"{slug}.png")
-    for slug in ("duckweed_mat","water_lily_patch","pickerelweed_patch","saltmarsh_grass_patch","eelgrass_bed","kelp_bed","earthworm_patch"):
+    for slug in ("duckweed_mat","water_lily_patch","pickerelweed_patch","saltmarsh_grass_patch","eelgrass_bed","kelp_bed","earthworm_patch","beachgrass_patch","blue_mussel_bed"):
         save(resource_sprite(slug),RES/f"{slug}.png")
     for slug in ("muskrat","beaver","river_otter","great_blue_heron","herring_gull","harbor_seal"):
         save(animal_sprite(slug),SPECIES/slug/"variant_0.png")
