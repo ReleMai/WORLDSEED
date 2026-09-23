@@ -1204,5 +1204,59 @@
     "tool_qualities": {
       "hammer": 1
     }
+  },
+  {
+    "id": "core:beachgrass_fiber",
+    "name": "Process Beachgrass Fiber",
+    "inputs": {
+      "core:beachgrass": 3
+    },
+    "outputs": {
+      "core:fiber": 2
+    },
+    "minutes": 18,
+    "station": null,
+    "knowledge": null,
+    "description": "Strip and twist dry beachgrass into usable coarse fiber.",
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:saltmarsh_grass_fiber",
+    "name": "Process Saltmarsh Fiber",
+    "inputs": {
+      "core:saltmarsh_grass": 3
+    },
+    "outputs": {
+      "core:fiber": 2
+    },
+    "minutes": 18,
+    "station": null,
+    "knowledge": null,
+    "description": "Dry and strip saltmarsh grass into tough fiber.",
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:eelgrass_fiber",
+    "name": "Dry Eelgrass Fiber",
+    "inputs": {
+      "core:eelgrass": 3
+    },
+    "outputs": {
+      "core:fiber": 1
+    },
+    "minutes": 20,
+    "station": null,
+    "knowledge": null,
+    "description": "Wash and dry eelgrass into coarse stuffing and utility fiber.",
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
   }
 ]
