@@ -10,7 +10,9 @@
       "raw_meat",
       "vegetable",
       "mushroom",
-      "root"
+      "root",
+      "raw_fish",
+      "shellfish"
     ],
     "minutes": 25,
     "satiety_percent": 115,
@@ -33,7 +35,9 @@
       "root",
       "grain",
       "fat",
-      "herb"
+      "herb",
+      "raw_fish",
+      "shellfish"
     ],
     "minutes": 50,
     "satiety_percent": 135,
