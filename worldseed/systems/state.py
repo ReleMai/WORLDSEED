@@ -803,6 +803,9 @@ class LivingWorldState:
             "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"properties":PropertyState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }
+        # New skills must appear on legacy saves even when the old save
+        # serialized the entire skill dictionary before the skill existed.
+        s.player_skills.setdefault("shield",0)
         for key, typ in maps.items():
             setattr(s, key, {k:typ(**v) for k,v in raw.get(key, {}).items()})
         s.history = [HistoricEvent(**v) for v in raw.get("history", [])]
