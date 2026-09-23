@@ -202,9 +202,10 @@ class Simulation:
     def execute(self,command:object)->TickResult:
         result=TickResult()
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
+            # Developer arena commands deliberately bypass world time, ecology
+            # ticks, and crafting discovery so practice cannot reveal recipes or
+            # perturb unrelated simulation systems.
             self._arena_command(command)
-            try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
-            except Exception:pass
             return result
         minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
