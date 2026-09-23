@@ -123,6 +123,9 @@ class HuntingSystem:
                     creature.behavior = "calm"
 
             creature.behavior = self._choose_behavior(creature, sp, dist, turn)
+            if creature.behavior in ("pursue", "defend") and dist <= 1:
+                attackers.append(creature.uid)
+                continue
             if creature.behavior in ("flee", "wounded_flee", "pursue", "defend"):
                 steps = self._movement_steps(creature, sp)
                 for _ in range(steps):
