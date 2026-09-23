@@ -10,6 +10,10 @@ Validated phase-2 source branch: `combat-hunting-phase2`.
 
 Validated phase-2 PR: #20, **Deepen combat readiness aiming and primitive weapon handling**.
 
+Combat targeting/range visualization was merged to `main` at commit `766fff52bdd43c64e7eaa85a8ccc025b5ac86a1f`.
+
+Validated range-overlay PR: #21, **Add skill-graded melee and ranged attack radius overlays**.
+
 ## Design contract
 
 The new hunting layer must preserve WORLDSEED's existing simulation authority:
@@ -244,6 +248,49 @@ The Primitive Self Bow is intentionally craftable from wood + plant cordage with
 Phase-2 Fast Gate run #61 completed successfully. It passed compile, item assets, biome atlas, fishing, combat/hunting, storage/inventory, world interaction, floating interaction UI, crafting/discovery, natural containers, coast/worldgen, save compatibility, atlas drag, content audit, visual audit, coast morphology and coastal-mouth checks.
 
 The combat/hunting suite additionally covers explicit readiness, primitive weapon definitions/recipes, accumulated aim, targeted head/leg shots, readied/aim save persistence, animal behavior/sign persistence, wound behavior and retained player armor mechanics.
+
+## Combat targeting overlays implemented
+
+Combat targeting now has a read-only tactical range projection backed by the exact hit-chance formulas used by live combat.
+
+### Ranged attack radius
+
+- entering Aim / Fire displays a directional sector from the player toward the targeting cursor;
+- moving the mouse across the world rotates the sector immediately;
+- the sector is bounded by the readied weapon's physical range;
+- cells grade continuously from green (easier) through yellow/orange to red (harder);
+- the grading responds to Perception, Hunting, weapon accuracy, range, selected anatomical zone, accumulated aim, stamina, arm injury and target motion;
+- blocked lines of fire are neutral/grey rather than presented as viable shots;
+- undiscovered tiles are not revealed by the combat overlay;
+- the selected tile is outlined more strongly;
+- hover/sidebar feedback exposes only qualitative difficulty: easy, favorable, fair, hard, very hard, or blocked.
+
+Higher skill therefore does not arbitrarily increase the weapon's physical maximum range; it makes a larger part of that range tactically reliable and visibly greener.
+
+### Melee attack radius
+
+The Attack action now opens a proper targeting state rather than immediately requesting a direction.
+
+- all legal cells inside the current weapon's reach are displayed;
+- reach-2 thrusting weapons show their full outer ring;
+- melee difficulty uses Agility, Melee skill, weapon handling, reach distance, stamina, arm injuries and target motion;
+- extended melee thrusts may no longer pass through blocking terrain/objects;
+- right-click animal attacks route through the same targeting view.
+
+### Rendering contract
+
+The graphical renderer draws a faint skill-colored ground fill beneath sprites plus a stronger outline above weather/lighting so animals remain readable. The terminal fallback colorizes the same cells. The overlay never mutates simulation state.
+
+### Validation
+
+Fast Gate run #66 passed completely on the final PR head. New deterministic regressions verify:
+
+- ranged sector rotation;
+- skill improving downrange difficulty;
+- blocked-cell classification;
+- harder anatomical aim zones;
+- melee reach geometry;
+- skill improving attacks at outer reach.
 
 ## Known gaps / next coherent phase
 
