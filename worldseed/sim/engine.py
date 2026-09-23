@@ -981,6 +981,7 @@ class Simulation:
         if weapon and "ranged" in weapon.tags and not weapon.throwable:self._message(f"The {weapon.name.lower()} is not suited to melee. Ready a melee weapon or lower it to fight unarmed.");return
         reach=weapon.reach if weapon else 1
         if distance<1 or distance>reach:self._message("That target is beyond your current melee reach.");return
+        if distance>1 and not self._visible_from(origin,p):self._message("Something blocks the line of your thrust.");return
         stamina_before=v.stamina;cost=max(2,weapon.stamina_cost if weapon else 4);v.stamina=max(0,v.stamina-cost)
         before_wounds=len(target.wounds);self.combat.clear_aim()
         msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before)
