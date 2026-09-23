@@ -4,9 +4,11 @@
 
 Combat/hunting phase 1 was merged to `main` at commit `f5f2a40448a6670217031b26d9ea899a56645d92`.
 
-Validated source branch: `combat-hunting-phase1`.
+Combat/hunting phase 2 was merged to `main` at commit `0d17b4f441350c80f5cbd8cc6848f0215d2f4967`.
 
-Validated PR: #19, **Begin detailed animal combat and hunting phase**.
+Validated phase-2 source branch: `combat-hunting-phase2`.
+
+Validated phase-2 PR: #20, **Deepen combat readiness aiming and primitive weapon handling**.
 
 ## Design contract
 
@@ -161,77 +163,155 @@ The combat/hunting regression suite specifically covers:
 - wounded-animal chase envelope;
 - retained player armor/wound mechanics.
 
+## Phase 2 implemented
+
+### Explicit weapon handling
+
+Combat no longer silently chooses the strongest weapon in inventory. The player now has persistent readied-weapon state and can ready/lower carried weapons through the authoritative command path.
+
+Readied weapons expose handling data:
+
+- weapon class;
+- melee reach;
+- ranged range;
+- accuracy modifier;
+- stamina cost;
+- thrown/recoverable behavior;
+- projectile recovery rate;
+- one-hand/two-hand requirement.
+
+Two-handed weapons require the off-hand to be free. If a readied item leaves inventory, readiness and aim are reconciled automatically.
+
+### Tactical aiming
+
+Ranged combat now has persistent aim state:
+
+- target creature;
+- target zone;
+- accumulated steadiness.
+
+Supported zones:
+
+- center mass;
+- vital area;
+- head / neck;
+- legs.
+
+Repeated Aim actions build steadiness, while animal movement degrades it. Shot resolution combines weapon handling, range, target motion, aim quality, Perception, Hunting, fatigue and arm injuries. Target-zone difficulty trades hit probability for anatomical placement.
+
+### Melee handling and reach
+
+Melee now uses the explicitly readied weapon and evaluates:
+
+- weapon reach;
+- weapon handling accuracy;
+- Agility;
+- Melee skill;
+- stamina/fatigue;
+- arm injuries;
+- moving target state.
+
+Long thrusting weapons can attack beyond adjacent range. Pure ranged weapons such as bows/slings cannot be used as ordinary melee weapons.
+
+### Tactical time and stamina
+
+Aim, melee attack and ranged attack now use a one-minute tactical cadence instead of the ordinary survival action interval. Weapons have stamina costs, allowing light knives/slings to handle differently from heavier clubs, axes and javelins.
+
+### Physical projectile semantics
+
+- arrows and sling stones can survive a shot and remain as physical ground items according to recovery probability;
+- thrown javelins leave inventory when thrown;
+- thrown javelins physically land at the target tile and can be recovered;
+- invalid/out-of-range/empty-ammunition attempts do not incorrectly consume/throw projectiles.
+
+### Primitive weapon progression
+
+The early craftable combat set now includes:
+
+- Stone Knife — light close combat/carcass utility;
+- Stone Axe — heavier cutting weapon/tool;
+- Club — basic blunt weapon;
+- Sling + Sling Stones — low-cost small-game ranged option;
+- Primitive Self Bow + Stone Arrows — deliberately aimed early bow;
+- Fire-Hardened Javelin — two-tile thrust reach plus recoverable thrown attack.
+
+The historical `core:wooden_spear` content ID is retained for save/asset compatibility, but its authored identity is now the Fire-Hardened Javelin.
+
+The Primitive Self Bow is intentionally craftable from wood + plant cordage without a workbench. The javelin is shaped/fire-hardened at a campfire.
+
+## Validation
+
+Phase-2 Fast Gate run #61 completed successfully. It passed compile, item assets, biome atlas, fishing, combat/hunting, storage/inventory, world interaction, floating interaction UI, crafting/discovery, natural containers, coast/worldgen, save compatibility, atlas drag, content audit, visual audit, coast morphology and coastal-mouth checks.
+
+The combat/hunting suite additionally covers explicit readiness, primitive weapon definitions/recipes, accumulated aim, targeted head/leg shots, readied/aim save persistence, animal behavior/sign persistence, wound behavior and retained player armor mechanics.
+
 ## Known gaps / next coherent phase
 
-The next pass should deepen interaction rather than add unrelated combat content.
+The next pass should extend tactical depth without replacing the phase-1/2 contracts.
 
-1. **Readied equipment**
-   - Stop silently choosing the strongest melee/ranged item from inventory.
-   - Add explicit ready/main-hand/off-hand/ranged state.
-   - Preserve durable artifact identity when readied.
+1. **Stealth and stalking**
+   - crouch/stalk stance;
+   - slower/quiet movement;
+   - vegetation/terrain concealment;
+   - equipment noise;
+   - weather masking;
+   - wind-readable scent approach.
 
-2. **Aiming and targeted attacks**
-   - Add an Aim command/state with accumulated aim quality.
-   - Allow center-mass, head/neck and limb targeting with appropriate difficulty.
-   - Moving targets, cover, pain, arm wounds and fatigue should alter aim.
-   - Keep exact percentages hidden unless a debug view requests them.
+2. **Projectile flight / cover**
+   - trace projectiles through intervening cells;
+   - partial cover;
+   - vegetation deflection;
+   - impact/landing cells on misses;
+   - embedded arrows/javelins and extraction damage.
 
-3. **Projectile semantics**
-   - Separate bows/slings from thrown weapons.
-   - A thrown spear must leave inventory/equipment, occupy a physical landing/embedded state and be recoverable.
-   - Add projectile obstruction/cover checks rather than line-of-sight only.
+3. **Animal combat decision depth**
+   - committed boar/moose/bear charges;
+   - wolf pack pursuit and flanking;
+   - herd cohesion, panic cascades and regrouping;
+   - defensive threat displays before some attacks;
+   - exhaustion and pain altering attack selection.
 
-4. **Stealth/stalking**
-   - Add crouch/stalk movement.
-   - Terrain, vegetation, weather, movement speed and equipment noise should modify sight/sound detection.
-   - Wind already participates in scent and should remain a readable hunting consideration.
+4. **Melee defense**
+   - dodge/parry/block decisions;
+   - shields as active defense rather than passive arm armor only;
+   - reach control and closing distance;
+   - weapon-class specific attack modes.
 
-5. **More animal decision depth**
-   - Herd cohesion and panic propagation.
-   - Pack pursuit/flanking for wolves.
-   - Boar/bear threat displays and charge commitment.
-   - Deer/rabbit cover-seeking and escape-route preference.
-   - Exhaustion, pain, blood loss and injury should continuously reshape choices.
-
-6. **Expanded physical sign**
+5. **Expanded sign**
    - scat;
+   - beds;
    - feeding sign;
-   - bedding sites;
-   - calls;
    - disturbed vegetation;
-   - dens/nests;
-   - species/terrain-specific footprint clarity.
-   - These must still come from real state/events.
+   - calls;
+   - dens/nests.
 
-7. **Traps and snares**
-   - Persistent placed traps;
+6. **Traps and snares**
+   - persistent placement;
    - bait/scent;
    - species suitability;
-   - maintenance;
-   - delayed outcomes;
-   - injury/escape possibility;
-   - population reconciliation.
+   - injury/escape outcomes;
+   - delayed checking;
+   - ecology reconciliation.
 
-8. **Combat time**
-   - Current attacks still advance normal survival-time increments.
-   - Introduce a bounded tactical action cadence so multi-action combat does not advance implausibly large world time while preserving the normal minute/hour/day simulation.
+7. **Hunting progression**
+   - XP for correctly reading sign, stalking, good shot placement and carcass handling;
+   - avoid simple kill-count grinding.
 
-9. **Skill progression**
-   - Hunting XP should come from meaningful actions such as identifying sign, successful stalking, placing useful shots and correctly processing carcasses rather than raw kill count alone.
-
-10. **Species tuning**
-    - Extend authored perception/temperament values beyond the first four vertical-slice species after the behavior contracts are stable.
+8. **Weapon depth**
+   - improved bows and arrows;
+   - stone-tipped spear distinct from light javelin when dedicated new art is added;
+   - weapon condition/breakage for primitive gear;
+   - material quality effects on penetration/handling.
 
 ## Important caveats
 
-- `CombatSystem.best_weapon()` still auto-selects melee equipment from inventory.
-- Ranged selection still chooses a usable ranged-capable inventory item rather than explicit readied gear.
-- The wooden spear currently has ranged metadata but does not yet implement true thrown/recoverable projectile behavior.
-- `EcologySystem.update_local_ai()` still exists as legacy code but the live Simulation post-action path now uses `HuntingSystem.update_local_ai()`.
-- Only track/blood physical signs are currently implemented.
-- No crouch/stalk input or targeted-shot UI exists yet.
-- Combat still uses the normal action-time model.
+- Weapon readiness currently references carried stack items; dedicated per-item weapon instances/condition are still future work outside existing durable-artifact handling.
+- Projectile recovery currently resolves to physical ground items at the target tile; full flight paths and embedded-projectile state are not implemented yet.
+- Aiming has four broad anatomical zones rather than species-specific named organs.
+- Shields are still primarily armor coverage rather than active block/parry tools.
+- Only track and blood physical signs are implemented.
+- No crouch/stalk stance exists yet.
 
 ## Next starting point
 
-Start with explicit readied weapons + aim/targeting + projectile semantics. Those systems should be completed before adding many more weapons or animals because they define the command/data contract every later combat system will consume.
+Start with stealth/stalking + projectile flight/cover + active melee defense. Those three systems will make the existing readiness, aim, anatomy, animal perception and weapon classes interact as one coherent combat loop.
