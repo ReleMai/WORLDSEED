@@ -81,7 +81,7 @@ class EcologySystem:
                     prefix=f"wild:{ax}:{ay}:{layer}:";existing=[c for c in self.state.creatures.values() if c.species_id==sid and c.uid.startswith(prefix)]
                     target=min(max(1,sp.group_max),4,max(0,cohort.count//max(1,sp.carrying_capacity//5)))
                     for ordinal in range(len(existing),target):
-                        x,y=self._spawn_position(ax,ay,layer,sp,ordinal);uid=f"{prefix}{sid}:{ordinal}";self.state.creatures[uid]=CreatureState(uid,sid,x,y,layer,sp.max_hp,cohort_key=ck)
+                        x,y=self._spawn_position(ax,ay,layer,sp,ordinal);uid=f"{prefix}{sid}:{ordinal}";self.state.creatures[uid]=CreatureState(uid,sid,x,y,layer,sp.max_hp,cohort_key=ck,stamina=sp.stamina)
 
     def reconcile_materialized(self)->None:
         grouped={}
