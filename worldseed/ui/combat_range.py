@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import hypot
 
 from worldseed.core.coords import WorldPos
+from worldseed.entities.components import Vitals
 
 
 def difficulty_label(chance: int) -> str:
@@ -36,7 +37,7 @@ def ranged_overlay(sim, weapon, cursor:WorldPos, zone:str="center") -> dict:
     fx,fy=_direction(origin,cursor)
     perception=sim.player_attribute("perception")
     hunting=sim.player_skill("hunting")
-    vitals=sim.entities.get(sim.player_id,__import__("worldseed.entities.components",fromlist=["Vitals"]).Vitals)
+    vitals=sim.entities.get(sim.player_id,Vitals)
     aim_quality=sim.state.player_aim_quality if sim.state.player_aim_target else 0
     cells=[]
     creatures={(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp>0 and c.z==origin.z}
