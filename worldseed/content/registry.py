@@ -45,7 +45,7 @@ class ItemDef:
     nutrition: int = 0; hydration: int = 0; tool_power: int = 0; weapon_damage: int = 0
     damage_type: str = "blunt"; tags: tuple[str, ...] = (); base_value: int = 1
     equip_slot: str | None = None; armor: int = 0; coverage: tuple[str, ...] = (); insulation: int = 0
-    description: str = ""; flavor: str = ""; category: str = "misc"
+    description: str = ""; flavor: str = ""; category: str = "misc"; subcategory: str = ""
     calories: int = 0; protein: int = 0; carbs: int = 0; fat: int = 0; fiber: int = 0
     food_groups: tuple[str, ...] = (); tool_qualities: dict[str, int] = field(default_factory=dict)
     spoilage_hours: int = 0; utility_roles: tuple[str, ...] = (); range: int = 1

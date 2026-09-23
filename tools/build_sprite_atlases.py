@@ -16,11 +16,13 @@ CELL = 64
 COLS = 16
 
 ITEM_TYPE_ORDER = (
-    "resource", "food", "seed", "material", "medicine",
+    "resource", "plant", "herb", "food", "seed", "material", "medicine",
     "tool", "weapon", "ammo", "armor", "utility", "special",
 )
 ITEM_TYPE_LABELS = {
     "resource": "Resources",
+    "plant": "Plants",
+    "herb": "Herbs",
     "food": "Food",
     "seed": "Seeds & Farming",
     "material": "Materials",
@@ -31,6 +33,17 @@ ITEM_TYPE_LABELS = {
     "armor": "Armor",
     "utility": "Utility & Containers",
     "special": "Special",
+}
+ITEM_SUBCATEGORY_ORDER = {
+    "plant": ("wild", "farmed"),
+    "herb": ("cooking", "medical", "poisonous"),
+}
+ITEM_SUBCATEGORY_LABELS = {
+    ("plant", "wild"): "Wild Plants",
+    ("plant", "farmed"): "Farmed Plants",
+    ("herb", "cooking"): "Cooking Herbs",
+    ("herb", "medical"): "Medical Herbs",
+    ("herb", "poisonous"): "Poisonous Herbs",
 }
 
 
@@ -45,12 +58,48 @@ def item_asset_path(raw: dict) -> Path:
     return SP / "items" / f"{asset}.png"
 
 
+def _subcategory_rank(category: str, subcategory: str) -> int:
+    known = ITEM_SUBCATEGORY_ORDER.get(category)
+    if not known:
+        return 0
+    if subcategory not in known:
+        raise ValueError(f"unknown {category} subcategory: {subcategory or '<missing>'}")
+    return known.index(subcategory)
+
+
+def item_sort_key(raw: dict):
+    category = str(raw.get("category", ""))
+    try:
+        category_rank = ITEM_TYPE_ORDER.index(category)
+    except ValueError as exc:
+        raise ValueError(f"unknown item atlas category: {category or '<missing>'}") from exc
+    subcategory = str(raw.get("subcategory", ""))
+    subcategory_rank = _subcategory_rank(category, subcategory)
+    return category_rank, subcategory_rank, str(raw["name"]).casefold(), str(raw["id"])
+
+
 def ordered_items(items: list[dict]) -> list[dict]:
-    rank = {name: n for n, name in enumerate(ITEM_TYPE_ORDER)}
-    unknown = sorted({str(x.get("category", "")) for x in items if str(x.get("category", "")) not in rank})
-    if unknown:
-        raise ValueError(f"unknown item atlas categories: {', '.join(unknown)}")
-    return sorted(items, key=lambda x: (rank[str(x["category"])], str(x["name"]).casefold(), str(x["id"])))
+    return sorted(items, key=item_sort_key)
+
+
+def item_sections(items: list[dict]) -> list[tuple[str, str, str, list[dict]]]:
+    ordered = ordered_items(items)
+    sections: list[tuple[str, str, str, list[dict]]] = []
+    for category in ITEM_TYPE_ORDER:
+        subcategories = ITEM_SUBCATEGORY_ORDER.get(category)
+        if subcategories:
+            for subcategory in subcategories:
+                group = [
+                    raw for raw in ordered
+                    if raw["category"] == category and raw.get("subcategory", "") == subcategory
+                ]
+                if group:
+                    sections.append((category, subcategory, ITEM_SUBCATEGORY_LABELS[(category, subcategory)], group))
+        else:
+            group = [raw for raw in ordered if raw["category"] == category]
+            if group:
+                sections.append((category, "", ITEM_TYPE_LABELS[category], group))
+    return sections
 
 
 def build(name: str, entries, cols: int = COLS):
@@ -73,14 +122,10 @@ def build(name: str, entries, cols: int = COLS):
 
 
 def build_grouped_items(items: list[dict]):
-    ordered = ordered_items(items)
     slot = 0
     placements: list[tuple[int, dict, Path]] = []
     groups: list[dict] = []
-    for category in ITEM_TYPE_ORDER:
-        group = [raw for raw in ordered if raw["category"] == category]
-        if not group:
-            continue
+    for category, subcategory, label, group in item_sections(items):
         if slot % COLS:
             slot += COLS - (slot % COLS)
         start = slot
@@ -90,9 +135,12 @@ def build_grouped_items(items: list[dict]):
                 raise FileNotFoundError(f"missing item asset: {path.relative_to(ROOT)} ({raw['id']})")
             placements.append((slot, raw, path))
             slot += 1
+        group_id = f"{category}:{subcategory}" if subcategory else category
         groups.append({
-            "id": category,
-            "label": ITEM_TYPE_LABELS[category],
+            "id": group_id,
+            "category": category,
+            "subcategory": subcategory,
+            "label": label,
             "start_row": start // COLS,
             "count": len(group),
             "rows": math.ceil(len(group) / COLS),
@@ -121,18 +169,14 @@ def _font(size: int):
 
 
 def build_readable_item_catalog(items: list[dict]) -> None:
-    ordered = ordered_items(items)
     card_w, card_h, cols = 250, 92, 4
     margin, gap, header_h = 18, 8, 34
     title_h = 54
     sections = []
     total_h = margin + title_h
-    for category in ITEM_TYPE_ORDER:
-        group = [x for x in ordered if x["category"] == category]
-        if not group:
-            continue
+    for category, subcategory, label, group in item_sections(items):
         rows = math.ceil(len(group) / cols)
-        sections.append((category, group, rows))
+        sections.append((category, subcategory, label, group, rows))
         total_h += header_h + rows * (card_h + gap) + 14
     width = margin * 2 + cols * card_w + (cols - 1) * gap
     canvas = Image.new("RGBA", (width, total_h), (15, 18, 20, 255))
@@ -142,11 +186,11 @@ def build_readable_item_catalog(items: list[dict]) -> None:
     name_font = _font(15)
     meta_font = _font(11)
     draw.text((margin, margin), "WORLDSEED Item Atlas", fill=(235, 231, 219, 255), font=title_font)
-    draw.text((margin, margin + 30), "Grouped by item type • canonical filenames • stable content IDs", fill=(155, 164, 160, 255), font=meta_font)
+    draw.text((margin, margin + 30), "Broad resources • split plants/herbs • stable content IDs", fill=(155, 164, 160, 255), font=meta_font)
     y = margin + title_h
-    for category, group, rows in sections:
+    for category, subcategory, label, group, rows in sections:
         draw.rounded_rectangle((margin, y, width - margin, y + header_h - 4), radius=6, fill=(43, 48, 51, 255))
-        draw.text((margin + 10, y + 7), ITEM_TYPE_LABELS[category], fill=(220, 185, 111, 255), font=header_font)
+        draw.text((margin + 10, y + 7), label, fill=(220, 185, 111, 255), font=header_font)
         y += header_h
         for n, raw in enumerate(group):
             row, col = divmod(n, cols)
@@ -165,20 +209,18 @@ def build_readable_item_catalog(items: list[dict]) -> None:
 
 
 def write_markdown_catalog(items: list[dict]) -> None:
-    ordered = ordered_items(items)
     lines = [
         "# WORLDSEED Item Atlas",
         "",
-        "This is the human-readable item/asset catalog. Stable content IDs stay unchanged for save compatibility; edit the display `name`, short `asset` basename, or `category` in `worldseed/data/items.json`, then run `python tools/build_sprite_atlases.py --items-only`.",
+        "This is the human-readable item/asset catalog. Stable content IDs stay unchanged for save compatibility. Edit `name`, `asset`, `category`, and optional `subcategory` in `worldseed/data/items.json`, then run `python tools/build_sprite_atlases.py --items-only`.",
+        "",
+        "Common resources intentionally stay broad. Plants are split into wild/farmed groups; herbs are split into cooking/medical/poisonous groups.",
         "",
         "The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is the larger labeled preview.",
         "",
     ]
-    for category in ITEM_TYPE_ORDER:
-        group = [x for x in ordered if x["category"] == category]
-        if not group:
-            continue
-        lines += [f"## {ITEM_TYPE_LABELS[category]}", "", "| Icon | Item | Stable ID | Asset |", "|---|---|---|---|"]
+    for category, subcategory, label, group in item_sections(items):
+        lines += [f"## {label}", "", "| Icon | Item | Stable ID | Asset |", "|---|---|---|---|"]
         for raw in group:
             asset = f"{raw['asset']}.png"
             lines.append(f'| <img src="sprites/items/{asset}" width="48" height="48"> | {raw["name"]} | `{raw["id"]}` | `{asset}` |')
@@ -201,7 +243,7 @@ def build_all(items_only: bool = False) -> None:
     index["atlases"]["items"] = {
         "image": "assets/atlases/items.png",
         "entries": item_idx,
-        "group_order": list(ITEM_TYPE_ORDER),
+        "group_order": [group["id"] for group in groups],
         "groups": groups,
     }
     build_readable_item_catalog(items)
@@ -226,7 +268,7 @@ def build_all(items_only: bool = False) -> None:
         index["atlases"]["npc"] = {"image": "assets/atlases/npc.png", "entries": build("npc", npc)}
 
     (AS / "atlas_index.json").write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
-    print(f"built item atlas: {len(items)} items across {len(groups)} types")
+    print(f"built item atlas: {len(items)} items across {len(groups)} sections")
     if not items_only:
         print("built atlases:", ", ".join(index["atlases"]))
 

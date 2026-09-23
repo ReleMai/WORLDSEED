@@ -4,7 +4,7 @@
     "items": {
       "image": "assets/atlases/items.png",
       "entries": {
-        "core:wood": {
+        "core:bark": {
           "cell": [
             0,
             0
@@ -16,7 +16,7 @@
             64
           ]
         },
-        "core:stone": {
+        "core:stout_branch": {
           "cell": [
             1,
             0
@@ -40,85 +40,13 @@
             64
           ]
         },
-        "core:fiber": {
+        "core:clay_lump": {
           "cell": [
             3,
             0
           ],
           "rect": [
             192,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:berries": {
-          "cell": [
-            4,
-            0
-          ],
-          "rect": [
-            256,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:meat": {
-          "cell": [
-            5,
-            0
-          ],
-          "rect": [
-            320,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:cooked_meat": {
-          "cell": [
-            6,
-            0
-          ],
-          "rect": [
-            384,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:hide": {
-          "cell": [
-            7,
-            0
-          ],
-          "rect": [
-            448,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:bone": {
-          "cell": [
-            8,
-            0
-          ],
-          "rect": [
-            512,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:iron_ore": {
-          "cell": [
-            9,
-            0
-          ],
-          "rect": [
-            576,
             0,
             64,
             64
@@ -126,912 +54,156 @@
         },
         "core:coal": {
           "cell": [
-            10,
-            0
-          ],
-          "rect": [
-            640,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:iron_bloom": {
-          "cell": [
-            11,
-            0
-          ],
-          "rect": [
-            704,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:steel_billet": {
-          "cell": [
-            12,
-            0
-          ],
-          "rect": [
-            768,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:stone_axe": {
-          "cell": [
-            13,
-            0
-          ],
-          "rect": [
-            832,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:iron_pick": {
-          "cell": [
-            14,
-            0
-          ],
-          "rect": [
-            896,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:iron_sword": {
-          "cell": [
-            15,
-            0
-          ],
-          "rect": [
-            960,
-            0,
-            64,
-            64
-          ]
-        },
-        "core:waterskin": {
-          "cell": [
-            0,
-            1
-          ],
-          "rect": [
-            0,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:wheat_seed": {
-          "cell": [
-            1,
-            1
-          ],
-          "rect": [
-            64,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:wheat": {
-          "cell": [
-            2,
-            1
-          ],
-          "rect": [
-            128,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:turnip_seed": {
-          "cell": [
-            3,
-            1
-          ],
-          "rect": [
-            192,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:turnip": {
-          "cell": [
             4,
-            1
+            0
           ],
           "rect": [
             256,
-            64,
+            0,
             64,
             64
           ]
         },
-        "core:relic": {
+        "core:copper_ore": {
           "cell": [
             5,
-            1
+            0
           ],
           "rect": [
             320,
-            64,
+            0,
             64,
             64
           ]
         },
-        "core:copper_coin": {
+        "core:fiber": {
           "cell": [
             6,
-            1
+            0
           ],
           "rect": [
             384,
-            64,
+            0,
             64,
             64
           ]
         },
-        "core:book": {
+        "core:iron_ore": {
           "cell": [
             7,
-            1
+            0
           ],
           "rect": [
             448,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:leather_hood": {
-          "cell": [
-            8,
-            1
-          ],
-          "rect": [
-            512,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:leather_vest": {
-          "cell": [
-            9,
-            1
-          ],
-          "rect": [
-            576,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:leather_bracers": {
-          "cell": [
-            10,
-            1
-          ],
-          "rect": [
-            640,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:leather_leggings": {
-          "cell": [
-            11,
-            1
-          ],
-          "rect": [
-            704,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:iron_helmet": {
-          "cell": [
-            12,
-            1
-          ],
-          "rect": [
-            768,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:bandage": {
-          "cell": [
-            13,
-            1
-          ],
-          "rect": [
-            832,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:splint": {
-          "cell": [
-            14,
-            1
-          ],
-          "rect": [
-            896,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:steel_sword": {
-          "cell": [
-            15,
-            1
-          ],
-          "rect": [
-            960,
-            64,
-            64,
-            64
-          ]
-        },
-        "core:steel_pick": {
-          "cell": [
             0,
-            2
-          ],
-          "rect": [
-            0,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:steel_helmet": {
-          "cell": [
-            1,
-            2
-          ],
-          "rect": [
-            64,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:bone_meal": {
-          "cell": [
-            2,
-            2
-          ],
-          "rect": [
-            128,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:lockpick": {
-          "cell": [
-            3,
-            2
-          ],
-          "rect": [
-            192,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:ancient_key": {
-          "cell": [
-            4,
-            2
-          ],
-          "rect": [
-            256,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:parchment": {
-          "cell": [
-            5,
-            2
-          ],
-          "rect": [
-            320,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:crafted_sword": {
-          "cell": [
-            6,
-            2
-          ],
-          "rect": [
-            384,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:crafted_pick": {
-          "cell": [
-            7,
-            2
-          ],
-          "rect": [
-            448,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:crafted_helmet": {
-          "cell": [
-            8,
-            2
-          ],
-          "rect": [
-            512,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:medicinal_herb": {
-          "cell": [
-            9,
-            2
-          ],
-          "rect": [
-            576,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:herbal_tonic": {
-          "cell": [
-            10,
-            2
-          ],
-          "rect": [
-            640,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:soap": {
-          "cell": [
-            11,
-            2
-          ],
-          "rect": [
-            704,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:clean_water": {
-          "cell": [
-            12,
-            2
-          ],
-          "rect": [
-            768,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:stout_branch": {
-          "cell": [
-            13,
-            2
-          ],
-          "rect": [
-            832,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:bark": {
-          "cell": [
-            14,
-            2
-          ],
-          "rect": [
-            896,
-            128,
             64,
             64
           ]
         },
         "core:reed_bundle": {
           "cell": [
-            15,
-            2
-          ],
-          "rect": [
-            960,
-            128,
-            64,
-            64
-          ]
-        },
-        "core:clay_lump": {
-          "cell": [
-            0,
-            3
-          ],
-          "rect": [
-            0,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:stone_flake": {
-          "cell": [
-            1,
-            3
-          ],
-          "rect": [
-            64,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:plant_cordage": {
-          "cell": [
-            2,
-            3
-          ],
-          "rect": [
-            128,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:sinew": {
-          "cell": [
-            3,
-            3
-          ],
-          "rect": [
-            192,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:sinew_cord": {
-          "cell": [
-            4,
-            3
-          ],
-          "rect": [
-            256,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:animal_fat": {
-          "cell": [
-            5,
-            3
-          ],
-          "rect": [
-            320,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:offal": {
-          "cell": [
-            6,
-            3
-          ],
-          "rect": [
-            384,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:fresh_hide": {
-          "cell": [
-            7,
-            3
-          ],
-          "rect": [
-            448,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:scraped_hide": {
-          "cell": [
             8,
-            3
+            0
           ],
           "rect": [
             512,
-            192,
+            0,
             64,
             64
           ]
         },
-        "core:rawhide": {
+        "core:stone": {
           "cell": [
             9,
-            3
+            0
           ],
           "rect": [
             576,
-            192,
+            0,
             64,
             64
           ]
         },
-        "core:leather": {
+        "core:wood": {
           "cell": [
             10,
-            3
+            0
           ],
           "rect": [
             640,
-            192,
+            0,
             64,
             64
           ]
         },
-        "core:feather": {
-          "cell": [
-            11,
-            3
-          ],
-          "rect": [
-            704,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:stone_knife": {
-          "cell": [
-            12,
-            3
-          ],
-          "rect": [
-            768,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:stone_pick": {
-          "cell": [
-            13,
-            3
-          ],
-          "rect": [
-            832,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:stone_hammer": {
-          "cell": [
-            14,
-            3
-          ],
-          "rect": [
-            896,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:digging_stick": {
-          "cell": [
-            15,
-            3
-          ],
-          "rect": [
-            960,
-            192,
-            64,
-            64
-          ]
-        },
-        "core:crude_hoe": {
+        "core:berries": {
           "cell": [
             0,
-            4
+            1
           ],
           "rect": [
             0,
-            256,
             64,
-            64
-          ]
-        },
-        "core:wooden_spear": {
-          "cell": [
-            1,
-            4
-          ],
-          "rect": [
-            64,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:club": {
-          "cell": [
-            2,
-            4
-          ],
-          "rect": [
-            128,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:sling": {
-          "cell": [
-            3,
-            4
-          ],
-          "rect": [
-            192,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:sling_stone": {
-          "cell": [
-            4,
-            4
-          ],
-          "rect": [
-            256,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:short_bow": {
-          "cell": [
-            5,
-            4
-          ],
-          "rect": [
-            320,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:wood_arrow": {
-          "cell": [
-            6,
-            4
-          ],
-          "rect": [
-            384,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:bone_awl": {
-          "cell": [
-            7,
-            4
-          ],
-          "rect": [
-            448,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:bone_needle": {
-          "cell": [
-            8,
-            4
-          ],
-          "rect": [
-            512,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:rawhide_buckler": {
-          "cell": [
-            9,
-            4
-          ],
-          "rect": [
-            576,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:clay_pot": {
-          "cell": [
-            10,
-            4
-          ],
-          "rect": [
-            640,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:wooden_bowl": {
-          "cell": [
-            11,
-            4
-          ],
-          "rect": [
-            704,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:raw_small_game": {
-          "cell": [
-            12,
-            4
-          ],
-          "rect": [
-            768,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:raw_game_meat": {
-          "cell": [
-            13,
-            4
-          ],
-          "rect": [
-            832,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:raw_poultry": {
-          "cell": [
-            14,
-            4
-          ],
-          "rect": [
-            896,
-            256,
-            64,
-            64
-          ]
-        },
-        "core:dried_meat": {
-          "cell": [
-            15,
-            4
-          ],
-          "rect": [
-            960,
-            256,
             64,
             64
           ]
         },
         "core:blueberries": {
           "cell": [
-            0,
-            5
-          ],
-          "rect": [
-            0,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:raspberries": {
-          "cell": [
             1,
-            5
+            1
           ],
           "rect": [
             64,
-            320,
+            64,
             64,
             64
           ]
         },
-        "core:wild_strawberries": {
+        "core:cattail_root": {
           "cell": [
             2,
-            5
+            1
           ],
           "rect": [
             128,
-            320,
             64,
-            64
-          ]
-        },
-        "core:dandelion_greens": {
-          "cell": [
-            3,
-            5
-          ],
-          "rect": [
-            192,
-            320,
             64,
             64
           ]
         },
         "core:nettles": {
           "cell": [
-            4,
-            5
+            3,
+            1
           ],
           "rect": [
-            256,
-            320,
+            192,
+            64,
             64,
             64
           ]
         },
-        "core:wild_onion": {
+        "core:raspberries": {
+          "cell": [
+            4,
+            1
+          ],
+          "rect": [
+            256,
+            64,
+            64,
+            64
+          ]
+        },
+        "core:wild_strawberries": {
           "cell": [
             5,
-            5
+            1
           ],
           "rect": [
             320,
-            320,
+            64,
             64,
             64
           ]
@@ -1039,6 +211,258 @@
         "core:wild_carrot": {
           "cell": [
             6,
+            1
+          ],
+          "rect": [
+            384,
+            64,
+            64,
+            64
+          ]
+        },
+        "core:wild_grain": {
+          "cell": [
+            7,
+            1
+          ],
+          "rect": [
+            448,
+            64,
+            64,
+            64
+          ]
+        },
+        "core:wild_onion": {
+          "cell": [
+            8,
+            1
+          ],
+          "rect": [
+            512,
+            64,
+            64,
+            64
+          ]
+        },
+        "core:barley": {
+          "cell": [
+            0,
+            2
+          ],
+          "rect": [
+            0,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:beans": {
+          "cell": [
+            1,
+            2
+          ],
+          "rect": [
+            64,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:cabbage": {
+          "cell": [
+            2,
+            2
+          ],
+          "rect": [
+            128,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:carrot": {
+          "cell": [
+            3,
+            2
+          ],
+          "rect": [
+            192,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:flax": {
+          "cell": [
+            4,
+            2
+          ],
+          "rect": [
+            256,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:onion": {
+          "cell": [
+            5,
+            2
+          ],
+          "rect": [
+            320,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:turnip": {
+          "cell": [
+            6,
+            2
+          ],
+          "rect": [
+            384,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:wheat": {
+          "cell": [
+            7,
+            2
+          ],
+          "rect": [
+            448,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:dandelion_greens": {
+          "cell": [
+            0,
+            3
+          ],
+          "rect": [
+            0,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:medicinal_herb": {
+          "cell": [
+            0,
+            4
+          ],
+          "rect": [
+            0,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:plantain_leaf": {
+          "cell": [
+            1,
+            4
+          ],
+          "rect": [
+            64,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:yarrow": {
+          "cell": [
+            2,
+            4
+          ],
+          "rect": [
+            128,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:animal_fat": {
+          "cell": [
+            0,
+            5
+          ],
+          "rect": [
+            0,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:bolete": {
+          "cell": [
+            1,
+            5
+          ],
+          "rect": [
+            64,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:cooked_meat": {
+          "cell": [
+            2,
+            5
+          ],
+          "rect": [
+            128,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:dried_meat": {
+          "cell": [
+            3,
+            5
+          ],
+          "rect": [
+            192,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:raw_game_meat": {
+          "cell": [
+            4,
+            5
+          ],
+          "rect": [
+            256,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:meat": {
+          "cell": [
+            5,
+            5
+          ],
+          "rect": [
+            320,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:morel": {
+          "cell": [
+            6,
             5
           ],
           "rect": [
@@ -1048,7 +472,7 @@
             64
           ]
         },
-        "core:yarrow": {
+        "core:offal": {
           "cell": [
             7,
             5
@@ -1060,7 +484,7 @@
             64
           ]
         },
-        "core:plantain_leaf": {
+        "core:raw_poultry": {
           "cell": [
             8,
             5
@@ -1072,7 +496,7 @@
             64
           ]
         },
-        "core:morel": {
+        "core:raw_small_game": {
           "cell": [
             9,
             5
@@ -1084,79 +508,7 @@
             64
           ]
         },
-        "core:bolete": {
-          "cell": [
-            10,
-            5
-          ],
-          "rect": [
-            640,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:wild_grain": {
-          "cell": [
-            11,
-            5
-          ],
-          "rect": [
-            704,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:cattail_root": {
-          "cell": [
-            12,
-            5
-          ],
-          "rect": [
-            768,
-            320,
-            64,
-            64
-          ]
-        },
         "core:barley_seed": {
-          "cell": [
-            13,
-            5
-          ],
-          "rect": [
-            832,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:barley": {
-          "cell": [
-            14,
-            5
-          ],
-          "rect": [
-            896,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:beans_seed": {
-          "cell": [
-            15,
-            5
-          ],
-          "rect": [
-            960,
-            320,
-            64,
-            64
-          ]
-        },
-        "core:beans": {
           "cell": [
             0,
             6
@@ -1168,7 +520,7 @@
             64
           ]
         },
-        "core:cabbage_seed": {
+        "core:beans_seed": {
           "cell": [
             1,
             6
@@ -1180,7 +532,7 @@
             64
           ]
         },
-        "core:cabbage": {
+        "core:cabbage_seed": {
           "cell": [
             2,
             6
@@ -1204,7 +556,7 @@
             64
           ]
         },
-        "core:carrot": {
+        "core:flax_seed": {
           "cell": [
             4,
             6
@@ -1228,7 +580,7 @@
             64
           ]
         },
-        "core:onion": {
+        "core:turnip_seed": {
           "cell": [
             6,
             6
@@ -1240,7 +592,7 @@
             64
           ]
         },
-        "core:flax_seed": {
+        "core:wheat_seed": {
           "cell": [
             7,
             6
@@ -1252,19 +604,869 @@
             64
           ]
         },
-        "core:flax": {
+        "core:bone": {
+          "cell": [
+            0,
+            7
+          ],
+          "rect": [
+            0,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:bone_meal": {
+          "cell": [
+            1,
+            7
+          ],
+          "rect": [
+            64,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:copper_ingot": {
+          "cell": [
+            2,
+            7
+          ],
+          "rect": [
+            128,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:plant_cordage": {
+          "cell": [
+            3,
+            7
+          ],
+          "rect": [
+            192,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:feather": {
+          "cell": [
+            4,
+            7
+          ],
+          "rect": [
+            256,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:fresh_hide": {
+          "cell": [
+            5,
+            7
+          ],
+          "rect": [
+            320,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:hide": {
+          "cell": [
+            6,
+            7
+          ],
+          "rect": [
+            384,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:iron_bloom": {
+          "cell": [
+            7,
+            7
+          ],
+          "rect": [
+            448,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:leather": {
           "cell": [
             8,
-            6
+            7
           ],
           "rect": [
             512,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:parchment": {
+          "cell": [
+            9,
+            7
+          ],
+          "rect": [
+            576,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:rawhide": {
+          "cell": [
+            10,
+            7
+          ],
+          "rect": [
+            640,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:scraped_hide": {
+          "cell": [
+            11,
+            7
+          ],
+          "rect": [
+            704,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:sinew": {
+          "cell": [
+            12,
+            7
+          ],
+          "rect": [
+            768,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:sinew_cord": {
+          "cell": [
+            13,
+            7
+          ],
+          "rect": [
+            832,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:steel_billet": {
+          "cell": [
+            14,
+            7
+          ],
+          "rect": [
+            896,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:bandage": {
+          "cell": [
+            0,
+            8
+          ],
+          "rect": [
+            0,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:soap": {
+          "cell": [
+            1,
+            8
+          ],
+          "rect": [
+            64,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:splint": {
+          "cell": [
+            2,
+            8
+          ],
+          "rect": [
+            128,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:herbal_tonic": {
+          "cell": [
+            3,
+            8
+          ],
+          "rect": [
+            192,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:bone_awl": {
+          "cell": [
+            0,
+            9
+          ],
+          "rect": [
+            0,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:bone_needle": {
+          "cell": [
+            1,
+            9
+          ],
+          "rect": [
+            64,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:crafted_pick": {
+          "cell": [
+            2,
+            9
+          ],
+          "rect": [
+            128,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:digging_stick": {
+          "cell": [
+            3,
+            9
+          ],
+          "rect": [
+            192,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:iron_pick": {
+          "cell": [
+            4,
+            9
+          ],
+          "rect": [
+            256,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:lockpick": {
+          "cell": [
+            5,
+            9
+          ],
+          "rect": [
+            320,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:steel_pick": {
+          "cell": [
+            6,
+            9
+          ],
+          "rect": [
             384,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:stone_axe": {
+          "cell": [
+            7,
+            9
+          ],
+          "rect": [
+            448,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:stone_flake": {
+          "cell": [
+            8,
+            9
+          ],
+          "rect": [
+            512,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:stone_hammer": {
+          "cell": [
+            9,
+            9
+          ],
+          "rect": [
+            576,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:crude_hoe": {
+          "cell": [
+            10,
+            9
+          ],
+          "rect": [
+            640,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:stone_knife": {
+          "cell": [
+            11,
+            9
+          ],
+          "rect": [
+            704,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:stone_pick": {
+          "cell": [
+            12,
+            9
+          ],
+          "rect": [
+            768,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:club": {
+          "cell": [
+            0,
+            10
+          ],
+          "rect": [
+            0,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:crafted_sword": {
+          "cell": [
+            1,
+            10
+          ],
+          "rect": [
+            64,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:iron_sword": {
+          "cell": [
+            2,
+            10
+          ],
+          "rect": [
+            128,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:short_bow": {
+          "cell": [
+            3,
+            10
+          ],
+          "rect": [
+            192,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:sling": {
+          "cell": [
+            4,
+            10
+          ],
+          "rect": [
+            256,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:wooden_spear": {
+          "cell": [
+            5,
+            10
+          ],
+          "rect": [
+            320,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:steel_sword": {
+          "cell": [
+            6,
+            10
+          ],
+          "rect": [
+            384,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:sling_stone": {
+          "cell": [
+            0,
+            11
+          ],
+          "rect": [
+            0,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:wood_arrow": {
+          "cell": [
+            1,
+            11
+          ],
+          "rect": [
+            64,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:rawhide_buckler": {
+          "cell": [
+            0,
+            12
+          ],
+          "rect": [
+            0,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:crafted_helmet": {
+          "cell": [
+            1,
+            12
+          ],
+          "rect": [
+            64,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:iron_helmet": {
+          "cell": [
+            2,
+            12
+          ],
+          "rect": [
+            128,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:leather_bracers": {
+          "cell": [
+            3,
+            12
+          ],
+          "rect": [
+            192,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:leather_hood": {
+          "cell": [
+            4,
+            12
+          ],
+          "rect": [
+            256,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:leather_leggings": {
+          "cell": [
+            5,
+            12
+          ],
+          "rect": [
+            320,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:leather_vest": {
+          "cell": [
+            6,
+            12
+          ],
+          "rect": [
+            384,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:steel_helmet": {
+          "cell": [
+            7,
+            12
+          ],
+          "rect": [
+            448,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:wicker_basket": {
+          "cell": [
+            0,
+            13
+          ],
+          "rect": [
+            0,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:wooden_bowl": {
+          "cell": [
+            1,
+            13
+          ],
+          "rect": [
+            64,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:clay_pot": {
+          "cell": [
+            2,
+            13
+          ],
+          "rect": [
+            128,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:wood_storage_box": {
+          "cell": [
+            3,
+            13
+          ],
+          "rect": [
+            192,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:clean_water": {
+          "cell": [
+            4,
+            13
+          ],
+          "rect": [
+            256,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:waterskin": {
+          "cell": [
+            5,
+            13
+          ],
+          "rect": [
+            320,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:book": {
+          "cell": [
+            0,
+            14
+          ],
+          "rect": [
+            0,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:copper_coin": {
+          "cell": [
+            1,
+            14
+          ],
+          "rect": [
+            64,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:ancient_key": {
+          "cell": [
+            2,
+            14
+          ],
+          "rect": [
+            128,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:relic": {
+          "cell": [
+            3,
+            14
+          ],
+          "rect": [
+            192,
+            896,
             64,
             64
           ]
         }
-      }
+      },
+      "group_order": [
+        "resource",
+        "plant:wild",
+        "plant:farmed",
+        "herb:cooking",
+        "herb:medical",
+        "food",
+        "seed",
+        "material",
+        "medicine",
+        "tool",
+        "weapon",
+        "ammo",
+        "armor",
+        "utility",
+        "special"
+      ],
+      "groups": [
+        {
+          "id": "resource",
+          "category": "resource",
+          "subcategory": "",
+          "label": "Resources",
+          "start_row": 0,
+          "count": 11,
+          "rows": 1
+        },
+        {
+          "id": "plant:wild",
+          "category": "plant",
+          "subcategory": "wild",
+          "label": "Wild Plants",
+          "start_row": 1,
+          "count": 9,
+          "rows": 1
+        },
+        {
+          "id": "plant:farmed",
+          "category": "plant",
+          "subcategory": "farmed",
+          "label": "Farmed Plants",
+          "start_row": 2,
+          "count": 8,
+          "rows": 1
+        },
+        {
+          "id": "herb:cooking",
+          "category": "herb",
+          "subcategory": "cooking",
+          "label": "Cooking Herbs",
+          "start_row": 3,
+          "count": 1,
+          "rows": 1
+        },
+        {
+          "id": "herb:medical",
+          "category": "herb",
+          "subcategory": "medical",
+          "label": "Medical Herbs",
+          "start_row": 4,
+          "count": 3,
+          "rows": 1
+        },
+        {
+          "id": "food",
+          "category": "food",
+          "subcategory": "",
+          "label": "Food",
+          "start_row": 5,
+          "count": 10,
+          "rows": 1
+        },
+        {
+          "id": "seed",
+          "category": "seed",
+          "subcategory": "",
+          "label": "Seeds & Farming",
+          "start_row": 6,
+          "count": 8,
+          "rows": 1
+        },
+        {
+          "id": "material",
+          "category": "material",
+          "subcategory": "",
+          "label": "Materials",
+          "start_row": 7,
+          "count": 15,
+          "rows": 1
+        },
+        {
+          "id": "medicine",
+          "category": "medicine",
+          "subcategory": "",
+          "label": "Medicine",
+          "start_row": 8,
+          "count": 4,
+          "rows": 1
+        },
+        {
+          "id": "tool",
+          "category": "tool",
+          "subcategory": "",
+          "label": "Tools",
+          "start_row": 9,
+          "count": 13,
+          "rows": 1
+        },
+        {
+          "id": "weapon",
+          "category": "weapon",
+          "subcategory": "",
+          "label": "Weapons",
+          "start_row": 10,
+          "count": 7,
+          "rows": 1
+        },
+        {
+          "id": "ammo",
+          "category": "ammo",
+          "subcategory": "",
+          "label": "Ammo",
+          "start_row": 11,
+          "count": 2,
+          "rows": 1
+        },
+        {
+          "id": "armor",
+          "category": "armor",
+          "subcategory": "",
+          "label": "Armor",
+          "start_row": 12,
+          "count": 8,
+          "rows": 1
+        },
+        {
+          "id": "utility",
+          "category": "utility",
+          "subcategory": "",
+          "label": "Utility & Containers",
+          "start_row": 13,
+          "count": 6,
+          "rows": 1
+        },
+        {
+          "id": "special",
+          "category": "special",
+          "subcategory": "",
+          "label": "Special",
+          "start_row": 14,
+          "count": 4,
+          "rows": 1
+        }
+      ]
     },
     "terrain": {
       "image": "assets/atlases/terrain.png",
