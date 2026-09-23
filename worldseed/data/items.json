@@ -3127,5 +3127,44 @@
       "raw_fish",
       "protein"
     ]
+  },
+  {
+    "id": "core:beachgrass",
+    "name": "Beachgrass",
+    "asset": "beachgrass",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 100,
+    "volume_ml": 220,
+    "tags": [
+      "fiber",
+      "coastal_plant",
+      "forage"
+    ],
+    "base_value": 1,
+    "description": "Tough dune grass useful as coarse fiber and thatching."
+  },
+  {
+    "id": "core:blue_mussels",
+    "name": "Blue Mussels",
+    "asset": "blue_mussels",
+    "category": "food",
+    "mass_g": 220,
+    "volume_ml": 180,
+    "nutrition": 5,
+    "calories": 90,
+    "protein": 15,
+    "fat": 3,
+    "tags": [
+      "food",
+      "shellfish",
+      "protein"
+    ],
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 24,
+    "base_value": 6,
+    "description": "Edible shellfish gathered from exposed rocky shore beds."
   }
 ]
