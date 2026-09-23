@@ -105,6 +105,25 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         k = _ui_key(term.read_key())
         if state is not None:
             state.selected = selected
+        if k == 'UI_REDRAW':
+            continue
+        if k.startswith('UI_CONTEXT:'):
+            try:idx=page_start+int(k.split(':',1)[1])
+            except ValueError:continue
+            if page_start<=idx<page_start+len(page_items):
+                selected=idx
+                if state is not None:state.selected=selected
+            continue
+        if k.startswith('UI_SHIFT_SELECT:'):
+            try:idx=page_start+int(k.split(':',1)[1])
+            except ValueError:continue
+            if page_start<=idx<page_start+len(page_items):
+                selected=idx
+                if state is not None:state.selected=selected
+                if presentation=='container_inventory':return 'UI_ACTION:quick_transfer'
+                if presentation=='inventory_unified' and bool((presentation_data or {}).get('near_storage')):
+                    return 'UI_ACTION:quick_store'
+            continue
         if k.startswith('UI_ACTION:'):
             return k
         if presentation=='inventory_unified':

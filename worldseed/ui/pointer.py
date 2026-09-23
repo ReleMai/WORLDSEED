@@ -40,10 +40,20 @@ class PointerUI:
             self._button((36+i*112,y,104,30),label,token)
 
     def menu_page_size(self, presentation=''):
-        w,h=self.screen.get_size();usable=max(80,h-245)
+        w,h=self.screen.get_size()
+        if presentation in ('container_inventory','inventory_unified'):
+            state=getattr(self,'_floating_panels',{}).get(presentation)
+            if state:
+                w,h=state.get('w',w),state.get('h',h)
+        usable=max(80,h-245)
         if presentation=='container_inventory':
-            return max(6,2*max(3,usable//112))
-        if presentation in ('inventory_items','inventory_unified'):
+            return max(4,2*max(2,usable//105))
+        if presentation=='inventory_unified':
+            detail_w=max(292,min(378,max(1,w-32)//3))
+            grid_w=max(180,w-32-detail_w-16)
+            cols=4 if grid_w>=570 else (3 if grid_w>=390 else 2)
+            return cols*max(1,usable//120)
+        if presentation=='inventory_items':
             grid_w=w-72-max(280,min(360,(w-72)//3))-16
             return (4 if grid_w>=560 else 3)*max(1,usable//127)
         if presentation=='crafting_categories':return 3*max(1,usable//108)

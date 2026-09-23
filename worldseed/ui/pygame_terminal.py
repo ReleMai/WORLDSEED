@@ -90,6 +90,19 @@ class PygameTerminal(PointerUI):
         self._movement_repeat_ms = 72
         self._input_mode = 'world'
         self._pointer_targets = []
+        # RC14 Dev37: graphical inventory/storage are floating retained panels
+        # instead of full-window modal pages.  Geometry is presentation-only;
+        # simulation commands remain authoritative.
+        self._floating_panels: dict[str, dict[str, int]] = {}
+        self._floating_backdrop = None
+        self._floating_panel_id: str | None = None
+        self._ui_window_dragging: str | None = None
+        self._ui_window_resizing: str | None = None
+        self._ui_window_pointer_last = (0, 0)
+        self._current_presentation = ''
+        self._ui_context: dict[str, Any] | None = None
+        self._context_menu_origin = (0, 0)
+        self._context_backdrop = None
         self._theme = {
             "bg": (13, 16, 18),
             "panel": (22, 26, 29),
@@ -253,6 +266,23 @@ class PygameTerminal(PointerUI):
                 pending = pg.event.get(pg.MOUSEMOTION)
                 if pending:
                     self._last_mouse = pending[-1].pos
+                if self._ui_window_dragging or self._ui_window_resizing:
+                    panel_id=self._ui_window_dragging or self._ui_window_resizing
+                    state=self._floating_panels.get(str(panel_id))
+                    if state:
+                        last=self._ui_window_pointer_last
+                        dx=self._last_mouse[0]-last[0];dy=self._last_mouse[1]-last[1]
+                        self._ui_window_pointer_last=self._last_mouse
+                        sw,sh=self.screen.get_size()
+                        if self._ui_window_dragging:
+                            state['x']=max(8,min(sw-state['w']-8,state['x']+dx))
+                            state['y']=max(8,min(sh-state['h']-8,state['y']+dy))
+                        else:
+                            min_w,min_h=self._floating_panel_minimum(str(panel_id))
+                            state['w']=max(min_w,min(sw-state['x']-8,state['w']+dx))
+                            state['h']=max(min_h,min(sh-state['y']-8,state['h']+dy))
+                        return 'UI_REDRAW'
+                    continue
                 if getattr(self,'_atlas_dragging',False):
                     last=getattr(self,'_atlas_drag_last',self._last_mouse)
                     dx=self._last_mouse[0]-last[0];dy=self._last_mouse[1]-last[1]
@@ -286,6 +316,34 @@ class PygameTerminal(PointerUI):
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
                 if event.button==1:
                     token=self._hit_token(self._last_mouse)
+                    if token and token.startswith('UI_WINDOW_DRAG:'):
+                        self._ui_window_dragging=token.split(':',1)[1]
+                        self._ui_window_resizing=None
+                        self._ui_window_pointer_last=self._last_mouse
+                        continue
+                    if token and token.startswith('UI_WINDOW_RESIZE:'):
+                        self._ui_window_resizing=token.split(':',1)[1]
+                        self._ui_window_dragging=None
+                        self._ui_window_pointer_last=self._last_mouse
+                        continue
+                    if token and token.startswith('UI_SELECT:') and self._input_mode=='ui':
+                        mods=pg.key.get_mods()
+                        if mods & pg.KMOD_SHIFT and self._current_presentation in ('inventory_unified','container_inventory'):
+                            self._ui_context=None
+                            return token.replace('UI_SELECT:','UI_SHIFT_SELECT:')
+                        self._ui_context=None
+                        if self._current_presentation=='world_context':
+                            # A world context menu is a transient overlay. Restore
+                            # the exact underlying world before the selected
+                            # command opens another panel (for example Storage),
+                            # otherwise the popup gets baked into that panel's
+                            # retained backdrop.
+                            if self._context_backdrop is not None:
+                                self.screen.blit(self._context_backdrop,(0,0))
+                                pg.display.flip()
+                            self._context_backdrop=None
+                    if token and token.startswith('UI_ACTION:'):
+                        self._ui_context=None
                     if token=='ATLAS_DRAG_ZONE':
                         self._atlas_dragging=True
                         self._atlas_drag_moved=False
@@ -299,16 +357,33 @@ class PygameTerminal(PointerUI):
                             y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
                             return f'UI_WORLD:{x}:{y}'
                 if event.button==3:
-                    if self._input_mode!='world':return 'ESC'
+                    token=self._hit_token(self._last_mouse)
+                    if self._input_mode!='world':
+                        # Right click inside graphical UI is contextual, never
+                        # an implicit Back/Escape action.
+                        if token and token.startswith('UI_SELECT:'):
+                            try:idx=int(token.split(':',1)[1])
+                            except ValueError:continue
+                            self._ui_context={'presentation':self._current_presentation,'index':idx,'pos':self._last_mouse}
+                            return f'UI_CONTEXT:{idx}'
+                        if self._ui_context is not None:
+                            self._ui_context=None
+                            return 'UI_REDRAW'
+                        continue
                     if self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
                         if rect.collidepoint(self._last_mouse):
                             x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
                             y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                            self._context_menu_origin=self._last_mouse
+                            self._context_backdrop=self.screen.copy()
                             return f'UI_WORLD_MENU:{x}:{y}'
                 continue
             if event.type == pg.MOUSEBUTTONUP:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
+                if event.button==1 and (self._ui_window_dragging or self._ui_window_resizing):
+                    self._ui_window_dragging=None;self._ui_window_resizing=None
+                    return 'UI_REDRAW'
                 if event.button==1 and getattr(self,'_atlas_dragging',False):
                     moved=bool(getattr(self,'_atlas_drag_moved',False))
                     self._atlas_dragging=False
@@ -356,6 +431,11 @@ class PygameTerminal(PointerUI):
         self._pointer_targets.clear()
         mode=('target' if getattr(self,'_drawing_target',False) else 'world') if title=='WORLDSEED // LOCAL' else 'ui'
         self._set_input_mode(mode)
+        if mode in ('world','target'):
+            self._floating_backdrop=None
+            self._floating_panel_id=None
+            self._ui_context=None
+            self._context_backdrop=None
         self._hover_context = None
         self._hover_map_snapshot = None
         self._hover_rect = None
@@ -494,6 +574,108 @@ class PygameTerminal(PointerUI):
             screen.blit(sub,(cx,cy));cy+=21
         return x,y,w,h,cx,cy,cw
 
+    def _floating_panel_minimum(self, panel_id: str) -> tuple[int,int]:
+        return (760,500) if panel_id=='container_inventory' else (640,440)
+
+    def _floating_panel_state(self, panel_id: str) -> dict[str,int]:
+        sw,sh=self.screen.get_size()
+        min_w,min_h=self._floating_panel_minimum(panel_id)
+        default_w=min(sw-48,1080 if panel_id=='container_inventory' else 900)
+        default_h=min(sh-48,680 if panel_id=='container_inventory' else 620)
+        state=self._floating_panels.get(panel_id)
+        if state is None:
+            state={'x':max(12,(sw-default_w)//2),'y':max(12,(sh-default_h)//2),
+                   'w':max(min_w,default_w),'h':max(min_h,default_h)}
+            self._floating_panels[panel_id]=state
+        state['w']=max(min_w,min(sw-16,state['w']));state['h']=max(min_h,min(sh-16,state['h']))
+        state['x']=max(8,min(sw-state['w']-8,state['x']));state['y']=max(8,min(sh-state['h']-8,state['y']))
+        return state
+
+    def _floating_feature_shell(self, panel_id: str, domain: str, title: str, subtitle: str=''):
+        pg=self.pg;screen=self.screen;assert screen is not None
+        if self._floating_backdrop is None or self._floating_panel_id!=panel_id:
+            self._floating_backdrop=screen.copy()
+            self._floating_panel_id=panel_id
+        screen.blit(self._floating_backdrop,(0,0))
+        self._pointer_targets.clear();self._set_input_mode('ui')
+        state=self._floating_panel_state(panel_id)
+        x,y,w,h=state['x'],state['y'],state['w'],state['h']
+        shadow=pg.Rect(x+6,y+7,w,h);pg.draw.rect(screen,(0,0,0),shadow,border_radius=8)
+        outer=pg.Rect(x,y,w,h)
+        pg.draw.rect(screen,(15,18,20),outer,border_radius=8)
+        pg.draw.rect(screen,self._theme['edge_hi'],outer,1,border_radius=8)
+        titlebar=pg.Rect(x,y,w,42)
+        pg.draw.rect(screen,self._theme['panel2'],titlebar,border_radius=8)
+        pg.draw.line(screen,self._theme['edge'],(x,y+42),(x+w,y+42),1)
+        self._ui_target(pg.Rect(x+8,y+4,w-58,34),f'UI_WINDOW_DRAG:{panel_id}')
+        domain_s=self.small_font.render(domain.upper(),True,self._theme['accent']);screen.blit(domain_s,(x+14,y+7))
+        title_s=self.font.render(self._fit_ui_text(title,self.font,w-190),True,self._theme['text']);screen.blit(title_s,(x+105,y+8))
+        self._button((x+w-38,y+7,28,27),'×','ESC')
+        grip=pg.Rect(x+w-20,y+h-20,14,14)
+        pg.draw.line(screen,self._theme['edge_hi'],(grip.x+3,grip.bottom-2),(grip.right-2,grip.y+3),2)
+        pg.draw.line(screen,self._theme['edge'],(grip.x+7,grip.bottom-2),(grip.right-2,grip.y+7),2)
+        self._ui_target(grip,f'UI_WINDOW_RESIZE:{panel_id}')
+        cx=x+16;cy=y+52;cw=w-32
+        heading=self.title_font.render(self._fit_ui_text(title,self.title_font,cw),True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+5
+        if subtitle:
+            sub=self.small_font.render(self._fit_ui_text(subtitle,self.small_font,cw),True,self._theme['muted']);screen.blit(sub,(cx,cy));cy+=19
+        return x,y,w,h,cx,cy,cw
+
+    def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str='Drag title • Resize corner • Esc closes') -> None:
+        s=self.small_font.render(self._fit_ui_text(text,self.small_font,w-44),True,self._theme['muted'])
+        self.screen.blit(s,(x+16,y+h-27))
+
+    def _draw_item_context_popup(self, rows, data: dict, selected: int) -> None:
+        ctx=self._ui_context
+        if not ctx or ctx.get('presentation')!=self._current_presentation or int(ctx.get('index',-1))!=selected:return
+        pg=self.pg;screen=self.screen
+        mx,my=ctx.get('pos',self._last_mouse)
+        actions=[]
+        if self._current_presentation=='inventory_unified':
+            items=data.get('items',{});row=rows[selected] if rows and 0<=selected<len(rows) else None
+            iid=getattr(row,'key','') if row else '';meta=items.get(iid,{})
+            amount=max(1,min(int(data.get('action_amount',1)),max(1,int(meta.get('count',1)))))
+            if meta.get('can_use'):actions.append(('Use','UI_ACTION:use'))
+            actions.extend([(f'Drop x{amount}','UI_ACTION:drop'),('Half stack','UI_ACTION:split')])
+            if data.get('near_storage'):actions.append((f'Store x{amount}','UI_ACTION:store'))
+        elif self._current_presentation=='container_inventory':
+            entries=data.get('entries',{});row=rows[selected] if rows and 0<=selected<len(rows) else None
+            meta=entries.get(getattr(row,'key','') if row else '',{})
+            count=max(1,int(meta.get('count',1)))
+            direction='Store all →' if meta.get('side')=='pack' else '← Take all'
+            actions.extend([(direction,'UI_ACTION:quick_transfer'),('Transfer selected amount','UI_ACTION:transfer'),('Half stack','UI_ACTION:split')])
+        if not actions:return
+        pw=max(190,max(self.small_font.size(label)[0] for label,_ in actions)+34);ph=12+len(actions)*34
+        sw,sh=screen.get_size();px=min(mx+8,sw-pw-8);py=min(my+8,sh-ph-8);px=max(8,px);py=max(8,py)
+        rect=pg.Rect(px,py,pw,ph);pg.draw.rect(screen,(12,15,17),rect,border_radius=7);pg.draw.rect(screen,self._theme['accent'],rect,1,border_radius=7)
+        yy=py+7
+        for label,token in actions:
+            self._button((px+6,yy,pw-12,28),label,token);yy+=34
+
+    def _present_context_menu(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        pg=self.pg;screen=self.screen;assert screen is not None
+        if self._context_backdrop is None:self._context_backdrop=screen.copy()
+        screen.blit(self._context_backdrop,(0,0));self._pointer_targets.clear();self._set_input_mode('ui')
+        labels=[getattr(r,'label',str(r)) for r in rows]
+        width=max(260,min(430,max([self.small_font.size(x)[0] for x in labels]+[220])+42))
+        title_h=38;sub_h=32 if subtitle else 0;row_h=38;height=title_h+sub_h+10+row_h*max(1,len(rows))+10
+        sw,sh=screen.get_size();mx,my=self._context_menu_origin
+        x=max(8,min(sw-width-8,mx+8));y=max(8,min(sh-height-8,my+8))
+        outer=pg.Rect(x,y,width,height);pg.draw.rect(screen,(13,16,18),outer,border_radius=8);pg.draw.rect(screen,self._theme['accent'],outer,1,border_radius=8)
+        ts=self.small_font.render(self._fit_ui_text(title,self.small_font,width-24),True,self._theme['accent']);screen.blit(ts,(x+12,y+10))
+        cy=y+title_h
+        if subtitle:
+            for line in self._wrap_pixel_text(subtitle,self.small_font,width-24)[:2]:
+                ss=self.small_font.render(line,True,self._theme['muted']);screen.blit(ss,(x+12,cy));cy+=15
+            cy=y+title_h+sub_h
+        for i,row in enumerate(rows):
+            rr=pg.Rect(x+8,cy+i*row_h,width-16,row_h-4);active=i==selected
+            self._ui_target(rr,f'UI_SELECT:{i}')
+            pg.draw.rect(screen,(38,42,42) if active else self._theme['panel2'],rr,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rr,1,border_radius=5)
+            label=getattr(row,'label',str(row));surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rr.width-18),True,self._theme['text']);screen.blit(surf,(rr.x+9,rr.centery-surf.get_height()//2))
+        pg.display.flip();self.clock.tick(120)
+
     def _draw_feature_footer(self, x:int,y:int,w:int,h:int,footer:str) -> None:
         self._ui_navigation()
 
@@ -531,12 +713,14 @@ class PygameTerminal(PointerUI):
     def present_feature_menu(self, presentation: str, title: str, rows, selected: int, *, subtitle: str='', breadcrumb: str='',
                              footer: str='', page_start: int=0, total: int|None=None, data: dict|None=None) -> None:
         data=data or {}
+        self._current_presentation=presentation
         handlers={
             'inventory_home':self._present_inventory_home,
             'inventory_items':self._present_inventory_items,
             'inventory_unified':self._present_inventory_unified,
             'container_inventory':self._present_container_inventory,
             'inventory_item_actions':self._present_inventory_item_actions,
+            'world_context':self._present_context_menu,
             'crafting_home':self._present_crafting_home,
             'crafting_categories':self._present_crafting_categories,
             'crafting_recipes':self._present_crafting_recipes,
@@ -565,7 +749,7 @@ class PygameTerminal(PointerUI):
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Render one graphical inventory surface with inline item actions."""
         data=data or {};pg=self.pg;screen=self.screen;items=data.get('items',{})
-        x,y,w,h,cx,cy,cw=self._feature_shell('INVENTORY','INVENTORY',subtitle)
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','INVENTORY','INVENTORY',subtitle)
         gap=9;summary_h=50
         metric_gap=8;metric_w=max(90,(cw-metric_gap*3)//4)
         metrics=[
@@ -682,13 +866,15 @@ class PygameTerminal(PointerUI):
             msg=self.font.render('Select an item to inspect it.',True,self._theme['muted'])
             screen.blit(msg,msg.get_rect(center=detail.center))
 
-        self._draw_feature_footer(x,y,w,h,footer);self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
+        self._draw_item_context_popup(rows,data,selected)
+        self._draw_floating_footer(x,y,w,h,'Shift-click moves a full stack • Right-click actions • Drag title • Resize corner • Esc closes')
+        pg.display.flip();self.clock.tick(120)
 
     def _present_container_inventory(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Dual-pane visual storage transfer UI."""
         data=data or {};pg=self.pg;screen=self.screen
         entries=data.get('entries',{});container=data.get('container',{})
-        x,y,w,h,cx,cy,cw=self._feature_shell('STORAGE',str(container.get('name','CONTAINER')).upper(),subtitle)
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('container_inventory','STORAGE',str(container.get('name','CONTAINER')).upper(),subtitle)
         head_h=58;gap=10
         mass=float(container.get('mass_kg',0));mass_cap=max(.001,float(container.get('capacity_mass_kg',0) or .001))
         vol=float(container.get('volume_l',0));vol_cap=max(.001,float(container.get('capacity_volume_l',0) or .001))
@@ -786,7 +972,9 @@ class PygameTerminal(PointerUI):
 
         if total is not None and total>len(rows):
             p=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted']);screen.blit(p,(cont_rect.right-p.get_width()-10,cont_rect.bottom-20))
-        self._draw_feature_footer(x,y,w,h,footer);self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
+        self._draw_item_context_popup(rows,data,selected)
+        self._draw_floating_footer(x,y,w,h,'Shift-click transfers full stack • Right-click actions • Drag title • Resize corner • Esc closes')
+        pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_home(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
