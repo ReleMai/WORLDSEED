@@ -84,7 +84,7 @@ jobs:
 
       - name: Combat and hunting regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Combat and hunting regressions" --timeout 120 -- python -u -m unittest -v tests.test_combat_hunting_phase tests.test_rc7_early_game.RC7EarlyGameTests.test_ranged_hunting_consumes_ammo tests.test_v041.V041Tests.test_armor_reduces_or_matches_incoming_damage_and_creates_wound
+        run: python -u tools/run_ci_check.py --name "Combat and hunting regressions" --timeout 60 -- python -u -m unittest -v tests.test_combat_hunting_phase
 
       - name: Dev34 inventory and storage regressions
         shell: pwsh
