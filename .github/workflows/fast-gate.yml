@@ -1,8 +1,8 @@
 name: WORLDSEED Fast Gate
 
-# This is the only normal automatic CI path. It is intentionally bounded so
-# a development mistake is caught in a few minutes without launching the
-# expensive full release suite for every commit.
+# Normal automatic CI path. It remains strict, but only executes expensive
+# suites that can be affected by the files in the current change. Unknown
+# code/test/tool changes intentionally fall back to the complete fast gate.
 on:
   push:
     branches: [main]
@@ -51,62 +51,173 @@ jobs:
     steps:
       - name: Checkout exact commit
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect affected test scopes
+        id: scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $runAll = $false
+          $frontend = $false
+          $worldgen = $false
+          $content = $false
+
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $runAll = $true
+            $files = @()
+          }
+          elseif ("${{ github.event_name }}" -eq "pull_request") {
+            $base = "${{ github.event.pull_request.base.sha }}"
+            $head = "${{ github.event.pull_request.head.sha }}"
+            $files = @(git diff --name-only "$base...$head")
+          }
+          else {
+            $base = "${{ github.event.before }}"
+            $head = "${{ github.sha }}"
+            if ([string]::IsNullOrWhiteSpace($base) -or $base -match "^0+$") {
+              $runAll = $true
+              $files = @()
+            }
+            else {
+              $files = @(git diff --name-only "$base..$head")
+            }
+          }
+
+          Write-Host "Changed files:"
+          if ($files.Count -eq 0) {
+            Write-Host "  (scope fallback/manual run)"
+          }
+          else {
+            $files | ForEach-Object { Write-Host "  $_" }
+          }
+
+          foreach ($raw in $files) {
+            $path = $raw.Replace("\", "/")
+            $matched = $false
+
+            if (
+              $path -match "^\.github/workflows/" -or
+              $path -in @(
+                "pyproject.toml",
+                "requirements.txt",
+                "run_worldseed.py",
+                "RUN_WORLDSEED.bat",
+                "RUN_WORLDSEED_TERMINAL.bat"
+              )
+            ) {
+              $runAll = $true
+              $matched = $true
+            }
+
+            if (
+              $path -match "^worldseed/(assets|presentation|ui)/" -or
+              $path -match "^tests/test_dev(19|21|22|34|36|37|38)" -or
+              $path -eq "tools/audit_visuals.py"
+            ) {
+              $frontend = $true
+              $matched = $true
+            }
+
+            if (
+              $path -match "^worldseed/world/" -or
+              $path -match "^worldseed/persistence/" -or
+              $path -match "^worldseed/systems/(generation|pathfinding|physicalization|settlement_planner|route_planner|landuse|settlements|economy|state)\.py$" -or
+              $path -match "^tests/test_(worldgen_v8|coastal_mouths|terrain_performance|terrain_variants|rc14_hydrology|rc13_pregeneration)" -or
+              $path -match "^tools/audit_(worldgen_v8_coast|coastal_mouths|hydrology|hydrology_morphology)\.py$"
+            ) {
+              $worldgen = $true
+              $matched = $true
+            }
+
+            if (
+              $path -match "^worldseed/(content|data)/" -or
+              $path -eq "tools/audit_content.py"
+            ) {
+              $content = $true
+              $matched = $true
+            }
+
+            if (
+              -not $matched -and (
+                $path -match "^worldseed/" -or
+                $path -match "^tests/" -or
+                $path -match "^tools/"
+              )
+            ) {
+              Write-Host "Unclassified CI-relevant path -> full fast gate: $path"
+              $runAll = $true
+            }
+          }
+
+          if ($runAll) {
+            $frontend = $true
+            $worldgen = $true
+            $content = $true
+          }
+
+          "all=$($runAll.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "frontend=$($frontend.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "worldgen=$($worldgen.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "content=$($content.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+          Write-Host "CI scopes: all=$runAll frontend=$frontend worldgen=$worldgen content=$content"
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: pyproject.toml
 
       - name: Install WORLDSEED
         shell: pwsh
-        run: python -m pip install -e . "Pillow>=10,<12"
+        run: python -m pip install --no-input -e . "Pillow>=10,<12"
 
       - name: Compile Python
         shell: pwsh
-        run: python -m compileall worldseed
+        run: python -m compileall -q worldseed
 
       - name: Validate visual asset files
+        if: steps.scope.outputs.frontend == 'true' || steps.scope.outputs.content == 'true'
         shell: pwsh
         run: python tools/audit_visuals.py
 
-      - name: Dev34 inventory and storage regressions
+      - name: Frontend and interaction regressions
+        if: steps.scope.outputs.frontend == 'true'
         shell: pwsh
-        run: python -m unittest -v tests.test_dev34_storage_containers
-
-      - name: Dev36 world interaction regressions
-        shell: pwsh
-        run: python -m unittest -v tests.test_dev36_world_interactions
-
-      - name: Dev37 floating interaction UI regressions
-        shell: pwsh
-        run: python -m unittest -v tests.test_dev37_floating_interaction_ui
-
-      - name: Dev38 natural container art regressions
-        shell: pwsh
-        run: python -m unittest -v tests.test_dev38_natural_container_art
-
-      - name: Dev38 natural container visual regressions
-        shell: pwsh
-        run: python -m unittest -v tests.test_dev38_natural_container_visuals
+        run: >
+          python -m unittest -v
+          tests.test_dev34_storage_containers
+          tests.test_dev36_world_interactions
+          tests.test_dev37_floating_interaction_ui
+          tests.test_dev38_natural_container_art
+          tests.test_dev38_natural_container_visuals
 
       - name: Phase 5 coast tests
+        if: steps.scope.outputs.worldgen == 'true'
         shell: pwsh
         run: python -m unittest -v tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
 
       - name: Surface-cache and save-compatibility smoke tests
+        if: steps.scope.outputs.worldgen == 'true'
         shell: pwsh
         run: python -m unittest -v tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
 
       - name: Atlas drag regression
+        if: steps.scope.outputs.frontend == 'true' || steps.scope.outputs.worldgen == 'true'
         shell: pwsh
         run: python -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
 
       - name: Content audit
+        if: steps.scope.outputs.content == 'true'
         shell: pwsh
         run: python tools/audit_content.py
 
       - name: Bounded coast morphology audit
+        if: steps.scope.outputs.worldgen == 'true'
         shell: pwsh
         run: |
           python tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
