@@ -73,7 +73,7 @@ def melee_overlay(sim, weapon, cursor:WorldPos) -> dict:
     reach=max(1,weapon.reach if weapon else 1)
     agility=sim.player_attribute("agility")
     melee=sim.player_skill("melee")
-    vitals=sim.entities.get(sim.player_id,__import__("worldseed.entities.components",fromlist=["Vitals"]).Vitals)
+    vitals=sim.entities.get(sim.player_id,Vitals)
     cells=[]
     creatures={(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp>0 and c.z==origin.z}
     for dy in range(-reach,reach+1):
