@@ -46,6 +46,12 @@ class StartProcessingCommand: actor:int; process_id:str
 class RestCommand: actor:int; minutes:int=120
 @dataclass(frozen=True,slots=True)
 class RangedAttackCommand: actor:int; target_uid:str
+@dataclass(frozen=True,slots=True)
+class ReadyWeaponCommand: actor:int; item_id:str
+@dataclass(frozen=True,slots=True)
+class ClearReadyWeaponCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class AimCommand: actor:int; target_uid:str; zone:str="center"
 
 @dataclass(frozen=True,slots=True)
 class PlantCommand: actor:int; crop_id:str
