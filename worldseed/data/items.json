@@ -296,7 +296,11 @@
     ],
     "tool_qualities": {
       "chop": 2
-    }
+    },
+    "weapon_class": "axe",
+    "reach": 1,
+    "accuracy": -2,
+    "stamina_cost": 8
   },
   {
     "id": "core:iron_pick",
@@ -345,7 +349,11 @@
     ],
     "tool_qualities": {
       "cut": 3
-    }
+    },
+    "weapon_class": "sword",
+    "reach": 1,
+    "accuracy": 5,
+    "stamina_cost": 6
   },
   {
     "id": "core:waterskin",
@@ -702,7 +710,11 @@
     ],
     "tool_qualities": {
       "cut": 4
-    }
+    },
+    "weapon_class": "sword",
+    "reach": 1,
+    "accuracy": 7,
+    "stamina_cost": 6
   },
   {
     "id": "core:steel_pick",
@@ -1363,7 +1375,11 @@
       "scrape": 2
     },
     "weapon_damage": 4,
-    "damage_type": "cut"
+    "damage_type": "cut",
+    "weapon_class": "knife",
+    "reach": 1,
+    "accuracy": 8,
+    "stamina_cost": 4
   },
   {
     "id": "core:stone_pick",
@@ -1468,7 +1484,7 @@
   },
   {
     "id": "core:wooden_spear",
-    "name": "Spear",
+    "name": "Fire-Hardened Javelin",
     "asset": "spear",
     "category": "weapon",
     "material": "core:wood",
@@ -1477,17 +1493,26 @@
     "tags": [
       "weapon",
       "spear",
-      "primitive"
+      "javelin",
+      "primitive",
+      "throwable"
     ],
-    "description": "A straight branch with a hardened point. Crude, reachy, and far safer than empty hands against game.",
-    "flavor": "\"Keep the teeth at the far end of the shaft.\"",
+    "description": "A straight fire-hardened shaft balanced well enough for a long thrust or a committed throw.",
+    "flavor": "\"Reach first, throw only when the opening is worth losing the shaft.\"",
     "utility_roles": [
       "hunting",
-      "combat"
+      "combat",
+      "thrown_weapon"
     ],
     "weapon_damage": 7,
     "damage_type": "pierce",
-    "range": 2
+    "range": 5,
+    "weapon_class": "javelin",
+    "reach": 2,
+    "accuracy": -3,
+    "stamina_cost": 8,
+    "throwable": true,
+    "recovery_percent": 95
   },
   {
     "id": "core:club",
@@ -1507,7 +1532,11 @@
       "combat"
     ],
     "weapon_damage": 6,
-    "damage_type": "blunt"
+    "damage_type": "blunt",
+    "weapon_class": "club",
+    "reach": 1,
+    "accuracy": 4,
+    "stamina_cost": 7
   },
   {
     "id": "core:sling",
@@ -1531,7 +1560,13 @@
     "weapon_damage": 5,
     "damage_type": "blunt",
     "range": 6,
-    "ammo_item": "core:sling_stone"
+    "ammo_item": "core:sling_stone",
+    "weapon_class": "sling",
+    "reach": 1,
+    "accuracy": -7,
+    "stamina_cost": 5,
+    "recovery_percent": 20,
+    "two_handed": true
   },
   {
     "id": "core:sling_stone",
@@ -1553,7 +1588,7 @@
   },
   {
     "id": "core:short_bow",
-    "name": "Short Bow",
+    "name": "Primitive Self Bow",
     "asset": "short_bow",
     "category": "weapon",
     "material": "core:wood",
@@ -1562,10 +1597,11 @@
     "tags": [
       "weapon",
       "ranged",
-      "bow"
+      "bow",
+      "primitive"
     ],
-    "description": "A compact sinew-backed hunting bow suited to woods and close stalking.",
-    "flavor": "\"A bent stave stores patience as force.\"",
+    "description": "A simple one-piece hunting bow shaped from a stave and strung with strong cordage. It rewards careful aim more than raw power.",
+    "flavor": "\"A straight stave becomes distance held under tension.\"",
     "utility_roles": [
       "hunting",
       "ranged_combat"
@@ -1573,7 +1609,13 @@
     "weapon_damage": 8,
     "damage_type": "pierce",
     "range": 9,
-    "ammo_item": "core:wood_arrow"
+    "ammo_item": "core:wood_arrow",
+    "weapon_class": "bow",
+    "reach": 1,
+    "accuracy": 3,
+    "stamina_cost": 7,
+    "recovery_percent": 65,
+    "two_handed": true
   },
   {
     "id": "core:wood_arrow",
@@ -2862,7 +2904,11 @@
     "flavor": "Shallow water leaves only one chance at a clean strike.",
     "utility_roles": [
       "fishing_spear"
-    ]
+    ],
+    "weapon_class": "spear",
+    "reach": 2,
+    "accuracy": -1,
+    "stamina_cost": 7
   },
   {
     "id": "core:fishing_net",
