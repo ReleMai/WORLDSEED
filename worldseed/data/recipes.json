@@ -838,7 +838,7 @@
     "minutes": 60,
     "station": "core:workbench",
     "knowledge": null,
-    "description": "Stretch stiff rawhide across a light wooden frame.",
+    "description": "Stretch stiff rawhide across a compact wooden hand-shield frame.",
     "category": "leatherwork",
     "skill": "crafting",
     "difficulty": 2,
@@ -1257,6 +1257,115 @@
     "category": "fiberwork",
     "skill": "crafting",
     "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:wicker_shield",
+    "name": "Weave Wicker Shield",
+    "inputs": {
+      "core:fiber": 4,
+      "core:plant_cordage": 2,
+      "core:stout_branch": 2
+    },
+    "outputs": {
+      "core:wicker_shield": 1
+    },
+    "minutes": 70,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Weave a broad defensive face over a light branch frame and bind the grip.",
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
+  },
+  {
+    "id": "core:wood_round_shield",
+    "name": "Build Wooden Round Shield",
+    "inputs": {
+      "core:wood": 2,
+      "core:rawhide": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:wood_round_shield": 1
+    },
+    "minutes": 95,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Laminate and brace a round wooden shield with a rawhide rim and central grip.",
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2
+    }
+  },
+  {
+    "id": "core:hide_kite_shield",
+    "name": "Build Hide Kite Shield",
+    "inputs": {
+      "core:wood": 2,
+      "core:leather": 2,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:hide_kite_shield": 1
+    },
+    "minutes": 125,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Shape a long wooden shield body, reinforce its edges, and skin it in leather.",
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2,
+      "sew": 1
+    }
+  },
+  {
+    "id": "core:iron_heater_shield",
+    "name": "Forge Iron Heater Shield",
+    "inputs": {
+      "core:iron_bloom": 2,
+      "core:wood": 1,
+      "core:leather": 1
+    },
+    "outputs": {
+      "core:iron_heater_shield": 1
+    },
+    "minutes": 260,
+    "station": "core:forge",
+    "knowledge": "tech:smelting",
+    "process": "forge_metal_item",
+    "description": "Forge and fit an iron defensive face over a braced grip and backing.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 4,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:steel_tower_shield",
+    "name": "Forge Steel Tower Shield",
+    "inputs": {
+      "core:steel_billet": 3,
+      "core:wood": 1,
+      "core:leather": 2
+    },
+    "outputs": {
+      "core:steel_tower_shield": 1
+    },
+    "minutes": 360,
+    "station": "core:forge",
+    "knowledge": "tech:steelmaking",
+    "process": "forge_metal_item",
+    "description": "Forge a large steel-reinforced shield with broad body coverage and reinforced straps.",
+    "category": "advanced",
+    "skill": "crafting",
+    "difficulty": 5,
     "tool_qualities": {}
   }
 ]
