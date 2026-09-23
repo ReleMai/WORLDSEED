@@ -1049,5 +1049,160 @@
     "tool_qualities": {
       "cut": 1
     }
+  },
+  {
+    "id": "core:fiber_line",
+    "name": "Twist Fiber Fishing Line",
+    "inputs": {
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:fiber_line": 1
+    },
+    "minutes": 18,
+    "station": null,
+    "knowledge": null,
+    "description": "Twist and wax plant cordage into a light fishing line.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:sinew_line",
+    "name": "Twist Sinew Fishing Line",
+    "inputs": {
+      "core:sinew_cord": 2
+    },
+    "outputs": {
+      "core:sinew_line": 1
+    },
+    "minutes": 25,
+    "station": null,
+    "knowledge": null,
+    "description": "Lay strong sinew cords into a tougher fishing line.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:braided_line",
+    "name": "Braid Heavy Fishing Line",
+    "inputs": {
+      "core:sinew_line": 2,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:braided_line": 1
+    },
+    "minutes": 35,
+    "station": null,
+    "knowledge": null,
+    "description": "Braid reinforced line for large hard-fighting fish.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:reed_rod",
+    "name": "Make Reed Fishing Rod",
+    "inputs": {
+      "core:reed_bundle": 1,
+      "core:stout_branch": 1,
+      "core:fiber_line": 1
+    },
+    "outputs": {
+      "core:reed_rod": 1
+    },
+    "minutes": 30,
+    "station": null,
+    "knowledge": null,
+    "description": "Bind a flexible reed-and-branch rod for basic angling.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:wood_rod",
+    "name": "Shape Wood Fishing Rod",
+    "inputs": {
+      "core:wood": 1,
+      "core:sinew_line": 1
+    },
+    "outputs": {
+      "core:wood_rod": 1
+    },
+    "minutes": 70,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Shape a balanced wooden rod with stronger line and better control.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
+  },
+  {
+    "id": "core:fishing_spear",
+    "name": "Make Fishing Spear",
+    "inputs": {
+      "core:stout_branch": 1,
+      "core:stone_flake": 1,
+      "core:plant_cordage": 1
+    },
+    "outputs": {
+      "core:fishing_spear": 1
+    },
+    "minutes": 28,
+    "station": null,
+    "knowledge": null,
+    "description": "Lash a narrow point to a light shaft for striking fish in shallow water.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:fishing_net",
+    "name": "Weave Fishing Net",
+    "inputs": {
+      "core:reed_bundle": 2,
+      "core:plant_cordage": 3
+    },
+    "outputs": {
+      "core:fishing_net": 1
+    },
+    "minutes": 55,
+    "station": null,
+    "knowledge": null,
+    "description": "Weave a hand-cast net for schooling fish in shallows.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:spoon_lure",
+    "name": "Hammer Copper Spoon Lures",
+    "inputs": {
+      "core:copper_ingot": 1
+    },
+    "outputs": {
+      "core:spoon_lure": 3
+    },
+    "minutes": 35,
+    "station": "core:workbench",
+    "knowledge": null,
+    "description": "Hammer and polish copper into flashing reusable fishing lures.",
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "hammer": 1
+    }
   }
 ]
