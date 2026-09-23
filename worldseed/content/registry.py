@@ -94,6 +94,17 @@ class SpeciesDef:
     attacks: tuple[dict[str, Any], ...] = (); carcass: dict[str, int] = field(default_factory=dict)
 
 
+
+@dataclass(frozen=True, slots=True)
+class FishDef:
+    id: str; name: str; item_id: str; habitats: tuple[str, ...]
+    min_weight_g: int; max_weight_g: int; rarity: int; fight: int
+    min_temp: int = 0; max_temp: int = 65535
+    structures: tuple[str, ...] = (); methods: tuple[str, ...] = ("hand","spear","rod","net")
+    bait_affinity: dict[str, int] = field(default_factory=dict)
+    schooling: int = 1; quality_base: int = 50
+    description: str = ""
+
 @dataclass(frozen=True, slots=True)
 class DiseaseDef:
     id: str; name: str; transmissions: tuple[str, ...]; incubation_hours: int; illness_hours: int
@@ -127,7 +138,7 @@ class ContentRegistry:
         self.terrains: dict[str, TerrainDef] = {}; self.resources: dict[str, ResourceFeatureDef] = {}
         self.items: dict[str, ItemDef] = {}; self.materials: dict[str, MaterialDef] = {}; self.recipes: dict[str, RecipeDef] = {}
         self.structures: dict[str, StructureDef] = {}; self.designs: dict[str, ComponentDesignDef] = {}
-        self.species: dict[str, SpeciesDef] = {}; self.crops: dict[str, CropDef] = {}
+        self.species: dict[str, SpeciesDef] = {}; self.fish: dict[str, FishDef] = {}; self.crops: dict[str, CropDef] = {}
         self.settlement_processes: dict[str, SettlementProcessDef] = {}; self.diseases: dict[str, DiseaseDef] = {}
         self.cooking_methods: dict[str, CookingMethodDef] = {}
         self.terrain_ids: list[str] = []; self._terrain_index: dict[str, int] = {}
@@ -142,7 +153,7 @@ class ContentRegistry:
         loaders=[
             ("materials.json",self._load_materials),("items.json",self._load_items),("terrain.json",self._load_terrain),
             ("resources.json",self._load_resources),("recipes.json",self._load_recipes),("structures.json",self._load_structures),
-            ("designs.json",self._load_designs),("species.json",self._load_species),("crops.json",self._load_crops),
+            ("designs.json",self._load_designs),("species.json",self._load_species),("fish.json",self._load_fish),("crops.json",self._load_crops),
             ("settlement_processes.json",self._load_settlement_processes),("diseases.json",self._load_diseases),
             ("cooking_methods.json",self._load_cooking_methods),]
         for filename,loader in loaders:
@@ -206,6 +217,22 @@ class ContentRegistry:
             if obj.id in self.species: raise ValueError(f"Duplicate species id: {obj.id}")
             self.species[obj.id]=obj
 
+    def _load_fish(self,path):
+        for raw in self._json(path):
+            obj=FishDef(
+                id=raw["id"], name=raw["name"], item_id=raw["item_id"],
+                habitats=_tuple(raw.get("habitats")),
+                min_weight_g=int(raw["min_weight_g"]), max_weight_g=int(raw["max_weight_g"]),
+                rarity=int(raw.get("rarity",50)), fight=int(raw.get("fight",20)),
+                min_temp=int(raw.get("min_temp",0)), max_temp=int(raw.get("max_temp",65535)),
+                structures=_tuple(raw.get("structures")), methods=_tuple(raw.get("methods") or ("hand","spear","rod","net")),
+                bait_affinity={str(k):int(v) for k,v in raw.get("bait_affinity",{}).items()},
+                schooling=max(1,int(raw.get("schooling",1))), quality_base=int(raw.get("quality_base",50)),
+                description=raw.get("description",""),
+            )
+            if obj.id in self.fish: raise ValueError(f"Duplicate fish id: {obj.id}")
+            self.fish[obj.id]=obj
+
     def _load_diseases(self,path):
         for raw in self._json(path):
             raw=dict(raw); raw["transmissions"]=_tuple(raw.get("transmissions")); raw["symptoms"]=_tuple(raw.get("symptoms")); raw["season_bias"]=_tuple(raw.get("season_bias")); obj=DiseaseDef(**raw)
@@ -231,7 +258,7 @@ class ContentRegistry:
             self.cooking_methods[obj.id]=obj
 
     def _validate(self)->None:
-        namespaces=[self.items,self.materials,self.terrains,self.recipes,self.structures,self.designs,self.species,self.crops,self.settlement_processes,self.diseases,self.cooking_methods]
+        namespaces=[self.items,self.materials,self.terrains,self.recipes,self.structures,self.designs,self.species,self.fish,self.crops,self.settlement_processes,self.diseases,self.cooking_methods]
         for table in namespaces:
             for cid in table:
                 if ":" not in cid: raise ValueError(f"Content id must be namespaced: {cid}")
@@ -268,6 +295,14 @@ class ContentRegistry:
                 if iid not in self.items: raise ValueError(f"Unknown carcass yield {iid} in {sp.id}")
             for attack in sp.attacks:
                 if int(attack.get("damage",sp.damage))<0: raise ValueError(f"Invalid attack damage in {sp.id}")
+        for fish in self.fish.values():
+            if fish.item_id not in self.items: raise ValueError(f"Unknown fish item {fish.item_id} in {fish.id}")
+            if fish.min_weight_g<=0 or fish.max_weight_g<fish.min_weight_g: raise ValueError(f"Invalid fish weight range in {fish.id}")
+            if not fish.habitats: raise ValueError(f"Fish {fish.id} requires at least one habitat")
+            for bait_id in fish.bait_affinity:
+                if bait_id not in self.items: raise ValueError(f"Unknown bait {bait_id} in {fish.id}")
+            if any(method not in {"hand","spear","rod","net"} for method in fish.methods):
+                raise ValueError(f"Unknown fishing method in {fish.id}")
         for method in self.cooking_methods.values():
             if method.station not in self.structures: raise ValueError(f"Unknown cooking station {method.station} in {method.id}")
             if method.cookware and method.cookware not in self.items: raise ValueError(f"Unknown cookware {method.cookware} in {method.id}")

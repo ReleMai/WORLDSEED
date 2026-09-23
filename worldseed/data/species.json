@@ -872,5 +872,293 @@
       "core:bone": 3,
       "core:animal_fat": 3
     }
+  },
+  {
+    "id": "core:muskrat",
+    "name": "Muskrat",
+    "glyph": "m",
+    "diet": "herbivore",
+    "mass_kg": 1,
+    "max_hp": 10,
+    "damage": 2,
+    "aggression": 10,
+    "speed": 2,
+    "reproduction": 35,
+    "mortality": 18,
+    "carrying_capacity": 140,
+    "habitats": [
+      "wetland",
+      "floodplain",
+      "salt_marsh"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A semi-aquatic rodent feeding on wetland stems and roots.",
+    "flavor": "\"Muskrat belongs to the water margin as much as the land.\"",
+    "min_temp": 9000,
+    "max_temp": 57000,
+    "min_moisture": 38000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 4,
+    "attacks": [
+      {
+        "name": "defensive bite",
+        "damage": 2,
+        "type": "bite",
+        "bleeding": 1,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 1,
+      "core:fresh_hide": 1
+    }
+  },
+  {
+    "id": "core:beaver",
+    "name": "Beaver",
+    "glyph": "b",
+    "diet": "herbivore",
+    "mass_kg": 24,
+    "max_hp": 30,
+    "damage": 4,
+    "aggression": 16,
+    "speed": 2,
+    "reproduction": 18,
+    "mortality": 8,
+    "carrying_capacity": 55,
+    "habitats": [
+      "riverbank",
+      "floodplain",
+      "wetland",
+      "forest"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A heavy aquatic engineer feeding on bark and riverside vegetation.",
+    "flavor": "\"Beaver belongs to the water margin as much as the land.\"",
+    "min_temp": 4000,
+    "max_temp": 48000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 3,
+    "attacks": [
+      {
+        "name": "incisor bite",
+        "damage": 5,
+        "type": "bite",
+        "bleeding": 2,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 2,
+      "core:fresh_hide": 2,
+      "core:bone": 1,
+      "core:animal_fat": 1
+    }
+  },
+  {
+    "id": "core:river_otter",
+    "name": "River Otter",
+    "glyph": "o",
+    "diet": "carnivore",
+    "mass_kg": 10,
+    "max_hp": 24,
+    "damage": 5,
+    "aggression": 18,
+    "speed": 3,
+    "reproduction": 16,
+    "mortality": 10,
+    "carrying_capacity": 45,
+    "habitats": [
+      "wetland",
+      "riverbank",
+      "river_shallow",
+      "stream",
+      "lake_shallow"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "An agile fish-eating mammal of streams, wetlands, and lake margins.",
+    "flavor": "\"River Otter belongs to the water margin as much as the land.\"",
+    "min_temp": 3000,
+    "max_temp": 52000,
+    "min_moisture": 25000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 3,
+    "attacks": [
+      {
+        "name": "quick bite",
+        "damage": 5,
+        "type": "bite",
+        "bleeding": 2,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_small_game": 2,
+      "core:fresh_hide": 1,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:great_blue_heron",
+    "name": "Great Blue Heron",
+    "glyph": "H",
+    "diet": "carnivore",
+    "mass_kg": 3,
+    "max_hp": 16,
+    "damage": 3,
+    "aggression": 5,
+    "speed": 3,
+    "reproduction": 12,
+    "mortality": 12,
+    "carrying_capacity": 65,
+    "habitats": [
+      "wetland",
+      "floodplain",
+      "tidal_flat",
+      "salt_marsh",
+      "riverbank"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A tall wading bird stalking fish and frogs in quiet shallows.",
+    "flavor": "\"Great Blue Heron belongs to the water margin as much as the land.\"",
+    "min_temp": 8000,
+    "max_temp": 60000,
+    "min_moisture": 25000,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 2,
+    "attacks": [
+      {
+        "name": "bill jab",
+        "damage": 3,
+        "type": "pierce",
+        "bleeding": 1,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_poultry": 1,
+      "core:feather": 3,
+      "core:bone": 1
+    }
+  },
+  {
+    "id": "core:herring_gull",
+    "name": "Herring Gull",
+    "glyph": "g",
+    "diet": "omnivore",
+    "mass_kg": 1,
+    "max_hp": 10,
+    "damage": 2,
+    "aggression": 12,
+    "speed": 3,
+    "reproduction": 22,
+    "mortality": 15,
+    "carrying_capacity": 100,
+    "habitats": [
+      "shore",
+      "rocky_shore",
+      "coastal_gravel",
+      "tidal_flat"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A noisy coastal scavenger common on beaches, flats, and rocky shorelines.",
+    "flavor": "\"Herring Gull belongs to the water margin as much as the land.\"",
+    "min_temp": 3000,
+    "max_temp": 56000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 6,
+    "attacks": [
+      {
+        "name": "peck",
+        "damage": 2,
+        "type": "pierce",
+        "bleeding": 1,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_poultry": 1,
+      "core:feather": 2
+    }
+  },
+  {
+    "id": "core:harbor_seal",
+    "name": "Harbor Seal",
+    "glyph": "S",
+    "diet": "carnivore",
+    "mass_kg": 95,
+    "max_hp": 52,
+    "damage": 7,
+    "aggression": 20,
+    "speed": 2,
+    "reproduction": 10,
+    "mortality": 7,
+    "carrying_capacity": 28,
+    "habitats": [
+      "shore",
+      "rocky_shore",
+      "coastal_gravel"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 16,
+      "legs": 26
+    },
+    "description": "A coastal marine mammal hauling out on quiet beaches and rocky ledges.",
+    "flavor": "\"Harbor Seal belongs to the water margin as much as the land.\"",
+    "min_temp": 1000,
+    "max_temp": 42000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "group_min": 1,
+    "group_max": 5,
+    "attacks": [
+      {
+        "name": "defensive bite",
+        "damage": 7,
+        "type": "bite",
+        "bleeding": 3,
+        "fracture": 0
+      }
+    ],
+    "carcass": {
+      "core:raw_game_meat": 6,
+      "core:fresh_hide": 2,
+      "core:animal_fat": 3,
+      "core:bone": 2
+    }
   }
 ]

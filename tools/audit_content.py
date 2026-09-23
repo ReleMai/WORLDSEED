@@ -47,6 +47,11 @@ def audit(reg: ContentRegistry) -> list[str]:
         if m.station not in reg.structures: errors.append(f"cooking method {m.id} station undefined: {m.station}")
         if m.cookware and m.cookware not in reg.items: errors.append(f"cooking method {m.id} cookware undefined: {m.cookware}")
 
+    fishing_sinks: set[str] = set()
+    for fish in reg.fish.values():
+        fishing_sinks.add(fish.item_id)
+        fishing_sinks.update(fish.bait_affinity)
+
     dynamic_food: set[str] = set()
     for iid, item in reg.items.items():
         if any(set(item.tags) & set(method.allowed_tags) for method in reg.cooking_methods.values()):
@@ -58,9 +63,9 @@ def audit(reg: ContentRegistry) -> list[str]:
         direct = bool(
             item.utility_roles or item.nutrition or item.hydration or item.weapon_damage or item.armor
             or item.tool_qualities or item.equip_slot or item.range > 1
-            or {'currency','book','seed','medicine','container','water'} & set(item.tags)
+            or {'currency','book','seed','medicine','container','water','fishing_rod','fishing_line','fishing_spear','fishing_net','fishing_lure','fishing_bait'} & set(item.tags)
         )
-        if item.id not in sinks and item.id not in dynamic_food and not direct:
+        if item.id not in sinks and item.id not in dynamic_food and item.id not in fishing_sinks and not direct:
             errors.append(f"item {item.id} has no direct use or downstream sink")
     return sorted(set(errors))
 

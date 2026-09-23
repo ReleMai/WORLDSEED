@@ -74,6 +74,7 @@ ACTION_INTERACT = [
 ACTION_SURVIVAL = [
     ('e', 'Eat / prepared meals'),
     ('drink', 'Drink water'),
+    ('fish', 'Fish nearby water — hand, spear, rod, or net'),
     ('rest', 'Rest / sleep'),
     ('f', 'Equipment, wounds & treatment'),
 ]

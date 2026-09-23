@@ -73,6 +73,8 @@ class WorldGenerator:
         self.hydrology=None
         from worldseed.world.environmental_fields import EnvironmentalFieldSampler
         self.environmental_fields = EnvironmentalFieldSampler(self)
+        from worldseed.world.fishing_regions import FishingRegionSampler
+        self.fishing_regions = FishingRegionSampler(self.world_seed, self)
         self.caves = None
         if self.version >= 8:
             from worldseed.world.caves import CaveGeneratorV8
@@ -305,6 +307,10 @@ class WorldGenerator:
         if self.version < 5 or pos.z != 0 or self.hydrology is None:
             return None
         return self.hydrology.surface_at(pos)
+
+    def fishing_region_at(self,pos:WorldPos):
+        """Return the deterministic fish-stock region for a fishable water tile."""
+        return self.fishing_regions.sample(pos)
 
     @staticmethod
     def _sign(v:int)->int:

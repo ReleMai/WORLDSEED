@@ -6,6 +6,8 @@ class MoveCommand: actor:int; dx:int; dy:int
 class VerticalMoveCommand: actor:int; dz:int
 @dataclass(frozen=True,slots=True)
 class GatherCommand: actor:int; dx:int=0; dy:int=0
+@dataclass(frozen=True,slots=True)
+class FishingCommand: actor:int; dx:int=0; dy:int=0; method:str="hand"; bait_id:str=""
 
 @dataclass(frozen=True,slots=True)
 class ExcavateShaftCommand: actor:int

@@ -91,7 +91,8 @@
     "nutrition": 9,
     "hydration": 5,
     "tags": [
-      "food"
+      "food",
+      "fishing_bait"
     ],
     "description": "Berries has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Berries: ordinary in isolation, important when the right need appears.\"",
@@ -1218,7 +1219,8 @@
       "food",
       "raw_meat",
       "offal",
-      "animal"
+      "animal",
+      "fishing_bait"
     ],
     "description": "Nutrient-dense organs that spoil quickly but enrich broths and survival meals.",
     "flavor": "\"Waste to the careless; strength to the hungry.\"",
@@ -2554,5 +2556,675 @@
       "storage",
       "construction"
     ]
+  },
+  {
+    "id": "core:duckweed",
+    "name": "Duckweed",
+    "asset": "duckweed",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 20,
+    "volume_ml": 40,
+    "nutrition": 1,
+    "calories": 8,
+    "fiber": 1,
+    "food_groups": [
+      "vegetable"
+    ],
+    "base_value": 1,
+    "description": "Tiny floating freshwater plants gathered as emergency greens and animal feed.",
+    "tags": [
+      "food",
+      "aquatic_plant",
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "A handful of green gathered from quiet water."
+  },
+  {
+    "id": "core:water_lily_root",
+    "name": "Water Lily Root",
+    "asset": "water_lily_root",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 180,
+    "volume_ml": 200,
+    "nutrition": 4,
+    "calories": 65,
+    "carbs": 14,
+    "fiber": 2,
+    "food_groups": [
+      "vegetable"
+    ],
+    "base_value": 2,
+    "description": "A starchy rhizome dug from shallow freshwater lilies.",
+    "tags": [
+      "food",
+      "aquatic_plant",
+      "root",
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "Mud hides more food than the surface suggests."
+  },
+  {
+    "id": "core:pickerelweed",
+    "name": "Pickerelweed",
+    "asset": "pickerelweed",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 100,
+    "volume_ml": 140,
+    "nutrition": 2,
+    "calories": 22,
+    "fiber": 2,
+    "food_groups": [
+      "vegetable"
+    ],
+    "base_value": 2,
+    "description": "A wetland plant with edible young shoots and seeds.",
+    "tags": [
+      "food",
+      "aquatic_plant",
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "The wetland offers food where dry ground ends."
+  },
+  {
+    "id": "core:saltmarsh_grass",
+    "name": "Saltmarsh Grass",
+    "asset": "saltmarsh_grass",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 120,
+    "volume_ml": 240,
+    "base_value": 1,
+    "description": "Tough salt-tolerant marsh grass useful as coarse fiber and bedding.",
+    "tags": [
+      "aquatic_plant",
+      "fiber",
+      "salt_tolerant"
+    ],
+    "flavor": "Salt, wind, and tide have made every blade stubborn."
+  },
+  {
+    "id": "core:eelgrass",
+    "name": "Eelgrass",
+    "asset": "eelgrass",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 100,
+    "volume_ml": 220,
+    "base_value": 1,
+    "description": "Long submerged blades forming productive estuary and coastal grass beds.",
+    "tags": [
+      "aquatic_plant",
+      "marine",
+      "fiber"
+    ],
+    "flavor": "A submerged meadow pulled from brackish water."
+  },
+  {
+    "id": "core:kelp",
+    "name": "Kelp",
+    "asset": "kelp",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 180,
+    "volume_ml": 260,
+    "nutrition": 2,
+    "calories": 20,
+    "fiber": 3,
+    "food_groups": [
+      "vegetable"
+    ],
+    "base_value": 2,
+    "description": "Large marine algae gathered from shallow coastal water.",
+    "tags": [
+      "food",
+      "aquatic_plant",
+      "marine",
+      "forage",
+      "vegetable"
+    ],
+    "flavor": "The sea grows forests where no axe can stand."
+  },
+  {
+    "id": "core:earthworms",
+    "name": "Earthworms",
+    "asset": "earthworms",
+    "category": "utility",
+    "mass_g": 30,
+    "volume_ml": 50,
+    "base_value": 2,
+    "description": "Live worms kept damp for reliable freshwater bait.",
+    "tags": [
+      "fishing_bait",
+      "bait",
+      "living"
+    ],
+    "flavor": "Good bait begins under damp soil.",
+    "utility_roles": [
+      "fishing_bait"
+    ]
+  },
+  {
+    "id": "core:spoon_lure",
+    "name": "Copper Spoon Lure",
+    "asset": "spoon_lure",
+    "category": "utility",
+    "material": "core:copper",
+    "mass_g": 24,
+    "volume_ml": 12,
+    "base_value": 10,
+    "description": "A flashing reusable copper lure effective on predatory fish.",
+    "tags": [
+      "fishing_lure",
+      "lure",
+      "reusable"
+    ],
+    "flavor": "A flash of copper can look alive underwater.",
+    "utility_roles": [
+      "fishing_lure"
+    ]
+  },
+  {
+    "id": "core:reed_rod",
+    "name": "Reed Fishing Rod",
+    "asset": "reed_rod",
+    "category": "tool",
+    "material": "core:wood",
+    "mass_g": 650,
+    "volume_ml": 1800,
+    "base_value": 12,
+    "tool_qualities": {
+      "rod_quality": 1
+    },
+    "description": "A flexible improvised rod suited to small and moderate fish.",
+    "tags": [
+      "tool",
+      "fishing_rod"
+    ],
+    "flavor": "Simple tackle turns patient water into opportunity.",
+    "utility_roles": [
+      "fishing_rod"
+    ]
+  },
+  {
+    "id": "core:wood_rod",
+    "name": "Wood Fishing Rod",
+    "asset": "wood_rod",
+    "category": "tool",
+    "material": "core:wood",
+    "mass_g": 900,
+    "volume_ml": 2200,
+    "base_value": 28,
+    "tool_qualities": {
+      "rod_quality": 3
+    },
+    "description": "A shaped wooden rod with better leverage and fish control.",
+    "tags": [
+      "tool",
+      "fishing_rod"
+    ],
+    "flavor": "A balanced rod gives the angler room to fight.",
+    "utility_roles": [
+      "fishing_rod"
+    ]
+  },
+  {
+    "id": "core:fiber_line",
+    "name": "Fiber Fishing Line",
+    "asset": "fiber_line",
+    "category": "material",
+    "mass_g": 40,
+    "volume_ml": 35,
+    "base_value": 4,
+    "tool_qualities": {
+      "line_quality": 1
+    },
+    "description": "Plant-fiber line suitable for small fish but prone to breaking under heavy strain.",
+    "tags": [
+      "fishing_line",
+      "cordage"
+    ],
+    "flavor": "Light line rewards finesse and punishes greed.",
+    "utility_roles": [
+      "fishing_line"
+    ]
+  },
+  {
+    "id": "core:sinew_line",
+    "name": "Sinew Fishing Line",
+    "asset": "sinew_line",
+    "category": "material",
+    "mass_g": 45,
+    "volume_ml": 35,
+    "base_value": 9,
+    "tool_qualities": {
+      "line_quality": 2
+    },
+    "description": "Strong prepared sinew line able to handle medium fish.",
+    "tags": [
+      "fishing_line",
+      "cordage",
+      "sinew"
+    ],
+    "flavor": "Tendon twisted tight enough to trust with a fish.",
+    "utility_roles": [
+      "fishing_line"
+    ]
+  },
+  {
+    "id": "core:braided_line",
+    "name": "Braided Fishing Line",
+    "asset": "braided_line",
+    "category": "material",
+    "mass_g": 55,
+    "volume_ml": 40,
+    "base_value": 18,
+    "tool_qualities": {
+      "line_quality": 3
+    },
+    "description": "Tightly braided line for large, hard-fighting fish.",
+    "tags": [
+      "fishing_line",
+      "cordage",
+      "sinew"
+    ],
+    "flavor": "Heavy line for fish that do not intend to be landed.",
+    "utility_roles": [
+      "fishing_line"
+    ]
+  },
+  {
+    "id": "core:fishing_spear",
+    "name": "Fishing Spear",
+    "asset": "fishing_spear",
+    "category": "tool",
+    "material": "core:wood",
+    "mass_g": 1500,
+    "volume_ml": 2200,
+    "weapon_damage": 5,
+    "damage_type": "pierce",
+    "base_value": 12,
+    "tool_qualities": {
+      "fish_spear": 2
+    },
+    "description": "A light multi-purpose spear balanced for striking fish in shallow water.",
+    "tags": [
+      "tool",
+      "spear",
+      "fishing_spear",
+      "weapon"
+    ],
+    "flavor": "Shallow water leaves only one chance at a clean strike.",
+    "utility_roles": [
+      "fishing_spear"
+    ]
+  },
+  {
+    "id": "core:fishing_net",
+    "name": "Fishing Net",
+    "asset": "fishing_net",
+    "category": "tool",
+    "mass_g": 1800,
+    "volume_ml": 5000,
+    "base_value": 24,
+    "tool_qualities": {
+      "net_quality": 2
+    },
+    "description": "A hand-cast woven net effective on schooling fish in shallow water.",
+    "tags": [
+      "tool",
+      "fishing_net",
+      "net"
+    ],
+    "flavor": "A school can escape a hook but not always a well-thrown net.",
+    "utility_roles": [
+      "fishing_net"
+    ]
+  },
+  {
+    "id": "core:brook_trout",
+    "name": "Brook Trout",
+    "asset": "brook_trout",
+    "category": "food",
+    "mass_g": 700,
+    "volume_ml": 630,
+    "nutrition": 7,
+    "calories": 90,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 14,
+    "description": "Fresh brook trout from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Cold clear water made this fish quick and bright."
+  },
+  {
+    "id": "core:bluegill",
+    "name": "Bluegill",
+    "asset": "bluegill",
+    "category": "food",
+    "mass_g": 280,
+    "volume_ml": 252,
+    "nutrition": 7,
+    "calories": 60,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 7,
+    "description": "Fresh bluegill from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Small water can still provide a dependable meal."
+  },
+  {
+    "id": "core:largemouth_bass",
+    "name": "Largemouth Bass",
+    "asset": "largemouth_bass",
+    "category": "food",
+    "mass_g": 1600,
+    "volume_ml": 1440,
+    "nutrition": 7,
+    "calories": 110,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 20,
+    "description": "Fresh largemouth bass from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "It waits beside cover until prey makes one mistake."
+  },
+  {
+    "id": "core:channel_catfish",
+    "name": "Channel Catfish",
+    "asset": "channel_catfish",
+    "category": "food",
+    "mass_g": 2600,
+    "volume_ml": 2340,
+    "nutrition": 7,
+    "calories": 125,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 24,
+    "description": "Fresh channel catfish from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Deep water and scent guide a fish that rarely needs light."
+  },
+  {
+    "id": "core:common_carp",
+    "name": "Common Carp",
+    "asset": "common_carp",
+    "category": "food",
+    "mass_g": 3000,
+    "volume_ml": 2700,
+    "nutrition": 7,
+    "calories": 110,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 18,
+    "description": "Fresh common carp from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Heavy, wary, and stronger than its quiet feeding suggests."
+  },
+  {
+    "id": "core:northern_pike",
+    "name": "Northern Pike",
+    "asset": "northern_pike",
+    "category": "food",
+    "mass_g": 2800,
+    "volume_ml": 2520,
+    "nutrition": 7,
+    "calories": 120,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 28,
+    "description": "Fresh northern pike from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "A green shadow built for one sudden strike."
+  },
+  {
+    "id": "core:striped_bass",
+    "name": "Striped Bass",
+    "asset": "striped_bass",
+    "category": "food",
+    "mass_g": 3200,
+    "volume_ml": 2880,
+    "nutrition": 7,
+    "calories": 125,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 32,
+    "description": "Fresh striped bass from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Current and salt pull this fish across whole watersheds."
+  },
+  {
+    "id": "core:summer_flounder",
+    "name": "Summer Flounder",
+    "asset": "summer_flounder",
+    "category": "food",
+    "mass_g": 1500,
+    "volume_ml": 1350,
+    "nutrition": 7,
+    "calories": 105,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 25,
+    "description": "Fresh summer flounder from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "The bottom itself seems to move when it strikes."
+  },
+  {
+    "id": "core:striped_mullet",
+    "name": "Striped Mullet",
+    "asset": "striped_mullet",
+    "category": "food",
+    "mass_g": 850,
+    "volume_ml": 765,
+    "nutrition": 7,
+    "calories": 85,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 13,
+    "description": "Fresh striped mullet from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Silver schools turn together in shallow coastal water."
+  },
+  {
+    "id": "core:atlantic_mackerel",
+    "name": "Atlantic Mackerel",
+    "asset": "atlantic_mackerel",
+    "category": "food",
+    "mass_g": 600,
+    "volume_ml": 540,
+    "nutrition": 7,
+    "calories": 95,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 16,
+    "description": "Fresh atlantic mackerel from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "A fast silver fish that arrives with the moving sea."
+  },
+  {
+    "id": "core:atlantic_cod",
+    "name": "Atlantic Cod",
+    "asset": "atlantic_cod",
+    "category": "food",
+    "mass_g": 3500,
+    "volume_ml": 3150,
+    "nutrition": 7,
+    "calories": 130,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 35,
+    "description": "Fresh atlantic cod from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "Cold deep water carries a heavy fish close to the bottom."
+  },
+  {
+    "id": "core:red_drum",
+    "name": "Red Drum",
+    "asset": "red_drum",
+    "category": "food",
+    "mass_g": 3000,
+    "volume_ml": 2700,
+    "nutrition": 7,
+    "calories": 125,
+    "protein": 20,
+    "fat": 5,
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 30,
+    "base_value": 30,
+    "description": "Fresh red drum from local waters. Individual catch size and quality are recorded by the fishing system.",
+    "tags": [
+      "food",
+      "fish",
+      "raw_fish",
+      "protein"
+    ],
+    "flavor": "A bronze-sided fighter from warm estuaries and surf."
+  },
+  {
+    "id": "core:beachgrass",
+    "name": "Beachgrass",
+    "asset": "beachgrass",
+    "category": "plant",
+    "subcategory": "wild",
+    "mass_g": 100,
+    "volume_ml": 220,
+    "tags": [
+      "fiber",
+      "coastal_plant",
+      "forage"
+    ],
+    "base_value": 1,
+    "description": "Tough dune grass useful as coarse fiber and thatching.",
+    "flavor": "Thin blades hold dunes together one root at a time."
+  },
+  {
+    "id": "core:blue_mussels",
+    "name": "Blue Mussels",
+    "asset": "blue_mussels",
+    "category": "food",
+    "mass_g": 220,
+    "volume_ml": 180,
+    "nutrition": 5,
+    "calories": 90,
+    "protein": 15,
+    "fat": 3,
+    "tags": [
+      "food",
+      "shellfish",
+      "protein"
+    ],
+    "food_groups": [
+      "protein"
+    ],
+    "spoilage_hours": 24,
+    "base_value": 6,
+    "description": "Edible shellfish gathered from exposed rocky shore beds.",
+    "flavor": "A meal sealed shut and fastened to the rocks."
   }
 ]

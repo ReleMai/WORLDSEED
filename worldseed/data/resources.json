@@ -1087,5 +1087,359 @@
         3
       ]
     }
+  },
+  {
+    "id": "core:duckweed_mat",
+    "name": "Duckweed Mat",
+    "glyph": "~",
+    "ascii_glyph": "~",
+    "ansi_color": 92,
+    "tags": [
+      "aquatic_plant",
+      "food",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 5,
+    "regrow_days": 10,
+    "yields": {
+      "core:duckweed": [
+        1,
+        4
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A green floating mat sheltering insects and small fish.",
+    "flavor": "Still water wears a living skin.",
+    "terrains": [
+      "core:wetland",
+      "core:lake_shallow",
+      "core:river_shallow"
+    ],
+    "min_temp": 16000,
+    "max_temp": 58000,
+    "min_moisture": 42000,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 85,
+    "patch_scale": 5
+  },
+  {
+    "id": "core:water_lily_patch",
+    "name": "Water Lilies",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "aquatic_plant",
+      "food",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 10,
+    "regrow_days": 35,
+    "yields": {
+      "core:water_lily_root": [
+        1,
+        2
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Broad floating leaves anchored by edible rhizomes.",
+    "flavor": "A flower marks where the mud below is alive.",
+    "terrains": [
+      "core:wetland",
+      "core:lake_shallow"
+    ],
+    "min_temp": 18000,
+    "max_temp": 56000,
+    "min_moisture": 48000,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer"
+    ],
+    "density": 45,
+    "patch_scale": 5
+  },
+  {
+    "id": "core:pickerelweed_patch",
+    "name": "Pickerelweed",
+    "glyph": "|",
+    "ascii_glyph": "|",
+    "ansi_color": 94,
+    "tags": [
+      "aquatic_plant",
+      "food",
+      "living",
+      "wetland"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 28,
+    "yields": {
+      "core:pickerelweed": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Purple-flowered wetland plants growing in saturated margins.",
+    "flavor": "Shallow water turns stems into a field.",
+    "terrains": [
+      "core:wetland",
+      "core:floodplain",
+      "core:riverbank"
+    ],
+    "min_temp": 19000,
+    "max_temp": 59000,
+    "min_moisture": 46000,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 75,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:saltmarsh_grass_patch",
+    "name": "Saltmarsh Grass",
+    "glyph": "|",
+    "ascii_glyph": "|",
+    "ansi_color": 93,
+    "tags": [
+      "aquatic_plant",
+      "fiber",
+      "living",
+      "salt_tolerant"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 10,
+    "regrow_days": 30,
+    "yields": {
+      "core:saltmarsh_grass": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Dense grass enduring regular saltwater flooding.",
+    "flavor": "The tide combs it twice each day.",
+    "terrains": [
+      "core:salt_marsh",
+      "core:tidal_flat"
+    ],
+    "min_temp": 13000,
+    "max_temp": 62000,
+    "min_moisture": 40000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 120,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:eelgrass_bed",
+    "name": "Eelgrass Bed",
+    "glyph": "~",
+    "ascii_glyph": "~",
+    "ansi_color": 32,
+    "tags": [
+      "aquatic_plant",
+      "marine",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 40,
+    "yields": {
+      "core:eelgrass": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Submerged seagrass forming rich nursery habitat in protected brackish shallows.",
+    "flavor": "Under the surface, a meadow moves with the tide.",
+    "terrains": [
+      "core:estuary_shallow",
+      "core:ocean_wade"
+    ],
+    "min_temp": 9000,
+    "max_temp": 52000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 100,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:kelp_bed",
+    "name": "Kelp Bed",
+    "glyph": "}",
+    "ascii_glyph": "}",
+    "ansi_color": 32,
+    "tags": [
+      "aquatic_plant",
+      "marine",
+      "food",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 45,
+    "yields": {
+      "core:kelp": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Long marine algae anchored in productive coastal water.",
+    "flavor": "A forest that bends instead of breaking.",
+    "terrains": [
+      "core:ocean_shallow",
+      "core:ocean_shelf"
+    ],
+    "min_temp": 4000,
+    "max_temp": 42000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 70,
+    "patch_scale": 7
+  },
+  {
+    "id": "core:earthworm_patch",
+    "name": "Worm-Rich Soil",
+    "glyph": ";",
+    "ascii_glyph": ";",
+    "ansi_color": 33,
+    "tags": [
+      "bait",
+      "soil"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 6,
+    "regrow_days": 14,
+    "yields": {
+      "core:earthworms": [
+        2,
+        5
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Damp organic soil where earthworms can be gathered for bait.",
+    "flavor": "Good soil moves when you turn it.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain",
+      "core:wetland",
+      "core:riverbank"
+    ],
+    "min_temp": 12000,
+    "max_temp": 56000,
+    "min_moisture": 39000,
+    "max_moisture": 65535,
+    "seasons": [
+      "spring",
+      "summer",
+      "autumn"
+    ],
+    "density": 45,
+    "patch_scale": 4
+  },
+  {
+    "id": "core:beachgrass_patch",
+    "name": "Beachgrass",
+    "glyph": "|",
+    "ascii_glyph": "|",
+    "ansi_color": 93,
+    "tags": [
+      "coastal_plant",
+      "fiber",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 8,
+    "regrow_days": 35,
+    "yields": {
+      "core:beachgrass": [
+        1,
+        3
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Salt-tolerant grass binding sandy shore margins.",
+    "flavor": "Its roots hold ground the wind would rather move.",
+    "terrains": [
+      "core:shore"
+    ],
+    "min_temp": 8000,
+    "max_temp": 62000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 80,
+    "patch_scale": 5
+  },
+  {
+    "id": "core:blue_mussel_bed",
+    "name": "Blue Mussel Bed",
+    "glyph": "o",
+    "ascii_glyph": "o",
+    "ansi_color": 94,
+    "tags": [
+      "shellfish",
+      "food",
+      "coastal"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 10,
+    "regrow_days": 25,
+    "yields": {
+      "core:blue_mussels": [
+        1,
+        4
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "Clusters of edible mussels gripping wave-washed stone.",
+    "flavor": "The tide leaves food fastened to the rocks.",
+    "terrains": [
+      "core:rocky_shore",
+      "core:coastal_gravel",
+      "core:tidal_flat"
+    ],
+    "min_temp": 2000,
+    "max_temp": 48000,
+    "min_moisture": 0,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 70,
+    "patch_scale": 5
   }
 ]

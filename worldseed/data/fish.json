@@ -1,0 +1,396 @@
+[
+  {
+    "id": "core:brook_trout",
+    "name": "Brook Trout",
+    "item_id": "core:brook_trout",
+    "habitats": [
+      "river"
+    ],
+    "structures": [
+      "riffle",
+      "run",
+      "pool"
+    ],
+    "min_weight_g": 180,
+    "max_weight_g": 2400,
+    "rarity": 42,
+    "fight": 48,
+    "min_temp": 4000,
+    "max_temp": 30000,
+    "methods": [
+      "hand",
+      "spear",
+      "rod"
+    ],
+    "bait_affinity": {
+      "core:earthworms": 28,
+      "core:spoon_lure": 34
+    },
+    "schooling": 2,
+    "quality_base": 68,
+    "description": "A cold-water trout favoring clean streams, riffles, and shaded pools."
+  },
+  {
+    "id": "core:bluegill",
+    "name": "Bluegill",
+    "item_id": "core:bluegill",
+    "habitats": [
+      "lake_shallow",
+      "river"
+    ],
+    "structures": [
+      "weedbed",
+      "reed_edge",
+      "pool"
+    ],
+    "min_weight_g": 80,
+    "max_weight_g": 900,
+    "rarity": 18,
+    "fight": 20,
+    "min_temp": 16000,
+    "max_temp": 52000,
+    "methods": [
+      "hand",
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:earthworms": 36,
+      "core:berries": 8
+    },
+    "schooling": 6,
+    "quality_base": 55,
+    "description": "A common schooling panfish found around vegetation and quiet shallows."
+  },
+  {
+    "id": "core:largemouth_bass",
+    "name": "Largemouth Bass",
+    "item_id": "core:largemouth_bass",
+    "habitats": [
+      "lake_shallow",
+      "lake_deep",
+      "river"
+    ],
+    "structures": [
+      "weedbed",
+      "dropoff",
+      "pool"
+    ],
+    "min_weight_g": 350,
+    "max_weight_g": 6200,
+    "rarity": 48,
+    "fight": 62,
+    "min_temp": 15000,
+    "max_temp": 56000,
+    "methods": [
+      "spear",
+      "rod"
+    ],
+    "bait_affinity": {
+      "core:earthworms": 18,
+      "core:spoon_lure": 42
+    },
+    "schooling": 1,
+    "quality_base": 62,
+    "description": "An ambush predator using weed edges, pools, and lake drop-offs."
+  },
+  {
+    "id": "core:channel_catfish",
+    "name": "Channel Catfish",
+    "item_id": "core:channel_catfish",
+    "habitats": [
+      "river",
+      "river_deep",
+      "lake_deep",
+      "lake_shallow"
+    ],
+    "structures": [
+      "channel",
+      "pool",
+      "dropoff"
+    ],
+    "min_weight_g": 500,
+    "max_weight_g": 11000,
+    "rarity": 40,
+    "fight": 58,
+    "min_temp": 15000,
+    "max_temp": 59000,
+    "methods": [
+      "hand",
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:offal": 46,
+      "core:earthworms": 24
+    },
+    "schooling": 2,
+    "quality_base": 54,
+    "description": "A bottom-feeding fish drawn strongly to scent in deeper rivers and lakes."
+  },
+  {
+    "id": "core:common_carp",
+    "name": "Common Carp",
+    "item_id": "core:common_carp",
+    "habitats": [
+      "river",
+      "lake_shallow",
+      "lake_deep"
+    ],
+    "structures": [
+      "weedbed",
+      "muddy_margin",
+      "pool"
+    ],
+    "min_weight_g": 700,
+    "max_weight_g": 14000,
+    "rarity": 32,
+    "fight": 64,
+    "min_temp": 13000,
+    "max_temp": 60000,
+    "methods": [
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:berries": 30,
+      "core:earthworms": 22
+    },
+    "schooling": 4,
+    "quality_base": 45,
+    "description": "A powerful omnivore of warm, productive waters and soft margins."
+  },
+  {
+    "id": "core:northern_pike",
+    "name": "Northern Pike",
+    "item_id": "core:northern_pike",
+    "habitats": [
+      "lake_shallow",
+      "lake_deep",
+      "river_deep"
+    ],
+    "structures": [
+      "weedbed",
+      "dropoff",
+      "channel"
+    ],
+    "min_weight_g": 650,
+    "max_weight_g": 12500,
+    "rarity": 58,
+    "fight": 76,
+    "min_temp": 4000,
+    "max_temp": 39000,
+    "methods": [
+      "spear",
+      "rod"
+    ],
+    "bait_affinity": {
+      "core:spoon_lure": 48,
+      "core:offal": 10
+    },
+    "schooling": 1,
+    "quality_base": 64,
+    "description": "A long predatory fish holding near weeds and sudden depth changes."
+  },
+  {
+    "id": "core:striped_bass",
+    "name": "Striped Bass",
+    "item_id": "core:striped_bass",
+    "habitats": [
+      "estuary_shallow",
+      "estuary_deep",
+      "river_deep",
+      "ocean_shallow"
+    ],
+    "structures": [
+      "channel",
+      "current_seam",
+      "shoal"
+    ],
+    "min_weight_g": 800,
+    "max_weight_g": 18000,
+    "rarity": 62,
+    "fight": 82,
+    "min_temp": 7000,
+    "max_temp": 48000,
+    "methods": [
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:spoon_lure": 45,
+      "core:offal": 24,
+      "core:earthworms": 8
+    },
+    "schooling": 5,
+    "quality_base": 70,
+    "description": "A migratory predator concentrating in estuary channels and coastal current seams."
+  },
+  {
+    "id": "core:summer_flounder",
+    "name": "Summer Flounder",
+    "item_id": "core:summer_flounder",
+    "habitats": [
+      "estuary_shallow",
+      "coast",
+      "ocean_shallow"
+    ],
+    "structures": [
+      "mudflat",
+      "sandbar",
+      "channel"
+    ],
+    "min_weight_g": 250,
+    "max_weight_g": 6500,
+    "rarity": 46,
+    "fight": 44,
+    "min_temp": 15000,
+    "max_temp": 59000,
+    "methods": [
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:offal": 35,
+      "core:earthworms": 12
+    },
+    "schooling": 2,
+    "quality_base": 66,
+    "description": "A flatfish lying over sand and mud near estuaries and shallow coasts."
+  },
+  {
+    "id": "core:striped_mullet",
+    "name": "Striped Mullet",
+    "item_id": "core:striped_mullet",
+    "habitats": [
+      "estuary_shallow",
+      "coast"
+    ],
+    "structures": [
+      "mudflat",
+      "grassbed",
+      "shoal"
+    ],
+    "min_weight_g": 180,
+    "max_weight_g": 2800,
+    "rarity": 24,
+    "fight": 28,
+    "min_temp": 18000,
+    "max_temp": 62000,
+    "methods": [
+      "hand",
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:earthworms": 14,
+      "core:berries": 12
+    },
+    "schooling": 8,
+    "quality_base": 56,
+    "description": "A schooling coastal fish feeding across shallow estuaries and grassy margins."
+  },
+  {
+    "id": "core:atlantic_mackerel",
+    "name": "Atlantic Mackerel",
+    "item_id": "core:atlantic_mackerel",
+    "habitats": [
+      "ocean_shallow",
+      "shelf"
+    ],
+    "structures": [
+      "shoal",
+      "current_seam",
+      "open_water"
+    ],
+    "min_weight_g": 180,
+    "max_weight_g": 1800,
+    "rarity": 35,
+    "fight": 46,
+    "min_temp": 7000,
+    "max_temp": 43000,
+    "methods": [
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:spoon_lure": 40,
+      "core:offal": 16
+    },
+    "schooling": 10,
+    "quality_base": 68,
+    "description": "A fast schooling marine fish moving through productive coastal water."
+  },
+  {
+    "id": "core:atlantic_cod",
+    "name": "Atlantic Cod",
+    "item_id": "core:atlantic_cod",
+    "habitats": [
+      "shelf",
+      "deep_ocean"
+    ],
+    "structures": [
+      "shelf_edge",
+      "deep_channel",
+      "open_water"
+    ],
+    "min_weight_g": 600,
+    "max_weight_g": 19000,
+    "rarity": 60,
+    "fight": 70,
+    "min_temp": 2000,
+    "max_temp": 30000,
+    "methods": [
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:offal": 38,
+      "core:spoon_lure": 22
+    },
+    "schooling": 4,
+    "quality_base": 72,
+    "description": "A cold-water bottom predator of shelves and deeper offshore water."
+  },
+  {
+    "id": "core:red_drum",
+    "name": "Red Drum",
+    "item_id": "core:red_drum",
+    "habitats": [
+      "estuary_shallow",
+      "estuary_deep",
+      "coast",
+      "ocean_shallow"
+    ],
+    "structures": [
+      "grassbed",
+      "channel",
+      "shoal"
+    ],
+    "min_weight_g": 700,
+    "max_weight_g": 16000,
+    "rarity": 56,
+    "fight": 78,
+    "min_temp": 17000,
+    "max_temp": 62000,
+    "methods": [
+      "spear",
+      "rod",
+      "net"
+    ],
+    "bait_affinity": {
+      "core:offal": 34,
+      "core:spoon_lure": 38,
+      "core:earthworms": 10
+    },
+    "schooling": 4,
+    "quality_base": 69,
+    "description": "A strong warm-water coastal fish feeding around estuary channels and grass beds."
+  }
+]

@@ -78,6 +78,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Biome atlas regressions" --timeout 90 -- python -u -m unittest -v tests.test_biome_atlas
 
+      - name: Fishing system regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Fishing system regressions" --timeout 90 -- python -u -m unittest -v tests.test_fishing_system
+
       - name: Dev34 inventory and storage regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev34 inventory and storage regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev34_storage_containers
