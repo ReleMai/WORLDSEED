@@ -589,7 +589,9 @@
     "core:saltmarsh_grass_patch": "assets/sprites/resources/saltmarsh_grass_patch.png",
     "core:eelgrass_bed": "assets/sprites/resources/eelgrass_bed.png",
     "core:kelp_bed": "assets/sprites/resources/kelp_bed.png",
-    "core:earthworm_patch": "assets/sprites/resources/earthworm_patch.png"
+    "core:earthworm_patch": "assets/sprites/resources/earthworm_patch.png",
+    "core:beachgrass_patch": "assets/sprites/resources/beachgrass_patch.png",
+    "core:blue_mussel_bed": "assets/sprites/resources/blue_mussel_bed.png"
   },
   "structures": {
     "core:wood_wall": "assets/sprites/structures/wood_wall.png",
