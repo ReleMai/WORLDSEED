@@ -1,0 +1,34 @@
+name: WORLDSEED Test Build Package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/package-test-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+
+      - name: Create source test-build ZIP
+        shell: bash
+        run: |
+          short="${GITHUB_SHA::7}"
+          git archive --format=zip --output="$RUNNER_TEMP/WORLDSEED_TestBuild_${short}.zip" "$GITHUB_SHA"
+          echo "PACKAGE=$RUNNER_TEMP/WORLDSEED_TestBuild_${short}.zip" >> "$GITHUB_ENV"
+
+      - name: Upload test-build package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED-TestBuild-${{ github.sha }}
+          path: ${{ env.PACKAGE }}
+          if-no-files-found: error
+          retention-days: 7
