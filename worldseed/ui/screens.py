@@ -126,7 +126,13 @@ def equipment_screen(sim:Simulation,reg:ContentRegistry,inv:Inventory,width:int=
     sex=str(getattr(sim.state,'player_sex','male')).title();appearance=int(getattr(sim.state,'player_sprite_index',0))+1
     body=[f'{sim.state.player_name}', f'Sex: {sex}    Appearance: {appearance:02d}', '', 'ATTRIBUTES', '  '+', '.join(f'{k.title()} {v}' for k,v in attrs.items()), '', 'SKILLS']
     trained=[f'{k.replace("_"," ").title()} {v}' for k,v in skills.items() if v>0]
-    body+=['  '+(', '.join(trained) if trained else 'None trained'),'', 'TALENTS','  '+(', '.join(x.replace('_',' ').title() for x in talents) if talents else 'None'),'','CONDITION',f'Body temperature  [{_bar(vit.body_temp)}] {vit.body_temp}/100',f'Blood volume     [{_bar(vit.blood)}] {vit.blood}/100',f'Pain             [{_bar(vit.pain)}] {vit.pain}/100','', 'EQUIPPED']
+    body+=['  '+(', '.join(trained) if trained else 'None trained'),'', 'TALENTS','  '+(', '.join(x.replace('_',' ').title() for x in talents) if talents else 'None'),'','CONDITION',f'Body temperature  [{_bar(vit.body_temp)}] {vit.body_temp}/100',f'Blood volume     [{_bar(vit.blood)}] {vit.blood}/100',f'Pain             [{_bar(vit.pain)}] {vit.pain}/100',f'Stamina          [{_bar(vit.stamina)}] {vit.stamina}/100','','COMBAT READY']
+    ready=reg.items.get(sim.state.player_readied_weapon)
+    if ready:
+        body.append(f'Weapon: {ready.name} | {ready.weapon_class or ready.damage_type} | damage {ready.weapon_damage} | reach {ready.reach} | range {ready.range} | stamina {ready.stamina_cost}')
+        if sim.state.player_aim_target:body.append(f'Aim: {sim.state.player_aim_zone} | steadiness {sim.state.player_aim_quality}/100')
+    else:body.append('Weapon: unarmed')
+    body+=['', 'EQUIPPED']
     if sim.state.player_equipment:
         for slot,iid in sorted(sim.state.player_equipment.items()):
             item=reg.items.get(iid);art=sim.state.artifacts.get(sim.state.player_equipped_artifacts.get(slot,''));detail=f' q{sim.artifacts.effective_quality(art)} cond {art.condition}%' if art else ''
