@@ -410,11 +410,19 @@ class PropertySecuritySystem:
             self.state.player_trespass_property_id=""
             messages.append("You leave the restricted property.")
             current=""
-        if not new_property or new_property==old_property or not self._property_restricted(new_property):
+        if not new_property:
             return messages
-        door=self.door_at(new) or self._door_for_property(new_property)
-        if door is None or self.authorized_player(door):
-            return messages
+        if new_property==old_property:
+            crossed=self.door_at(new)
+            if crossed is None or crossed.access=="public" or self.authorized_player(crossed):
+                return messages
+            door=crossed
+        else:
+            if not self._property_restricted(new_property):
+                return messages
+            door=self.door_at(new) or self._door_for_property(new_property)
+            if door is None or self.authorized_player(door):
+                return messages
         entry_method="forced" if door.forced else "picked" if door.picked else "unsecured"
         row=self.state.trespass_states.get(new_property)
         if row is None:
@@ -460,8 +468,6 @@ class PropertySecuritySystem:
         if not row.warned:
             row.warned=True;row.warning_count+=1;row.search_level=max(row.search_level,1)
             return ["A guard or occupant challenges you and orders you out of the property."]
-        if int(minute)>row.last_seen_minute:
-            return []
         # A second observed step after the initial warning is an escalation.
         if row.search_level<2:
             row.search_level=2;row.warning_count+=1
