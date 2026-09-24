@@ -34,6 +34,37 @@ class ProcessingSystem:
                 if iid in self.registry.items and n>0:inv.add(iid,n)
             text=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in recovered.items() if i in self.registry.items) or 'nothing useful'
             return True,f"You extract {text} from the carcass.",4
+        if action=='anatomy':
+            if not c.anatomy_condition:return False,"This carcass has no detailed anatomy record to harvest.",0
+            q=max(self._tool_quality(inv,'butcher'),self._tool_quality(inv,'cut'))
+            if q<1:return False,"You need a cutting or butchering tool to recover organs and specialized parts.",0
+            recovered={};notes=[];damaged=[]
+            for name,condition in sorted(c.anatomy_condition.items()):
+                if name in c.harvested_anatomy:continue
+                meta=sp.anatomy.get(name,{})
+                harvest=str(meta.get("harvest","offal"))
+                if harvest=="none":
+                    c.harvested_anatomy.append(name);continue
+                mass=max(1,int(c.anatomy_mass_g.get(name,0)))
+                effective=max(0,min(100,int(condition)+hunting_skill*2+q*3+table_bonus//2))
+                c.harvested_anatomy.append(name)
+                if effective<25:
+                    damaged.append(name.replace('_',' '));continue
+                item_id={"offal":"core:offal","bone":"core:bone","sinew":"core:sinew"}.get(harvest)
+                if not item_id or item_id not in self.registry.items:continue
+                item_mass=max(1,int(self.registry.items[item_id].mass_g))
+                usable=max(1,mass*effective//100)
+                units=max(1,(usable+item_mass-1)//item_mass)
+                inv.add(item_id,units);recovered[item_id]=recovered.get(item_id,0)+units
+                size="tiny" if mass<80 else "small" if mass<250 else "medium" if mass<800 else "large" if mass<2500 else "massive"
+                rarity=int(meta.get("rarity",50));rarity_label="notable" if rarity>=75 else "uncommon" if rarity>=60 else "common"
+                notes.append(f"{size} {name.replace('_',' ')} ({mass} g, {rarity_label}, {effective}% usable)")
+            if not recovered and not notes:
+                return False,"No recoverable anatomy remains.",0
+            output=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in recovered.items()) or 'no usable material'
+            detail='; '.join(notes[:7])
+            spoil=f" Damaged beyond recovery: {', '.join(damaged[:5])}." if damaged else ""
+            return True,f"You recover the animal's anatomy: {detail}. Yield: {output}.{spoil}",max(12,38-hunting_skill-q*2-table_bonus//3)
         if action=='skin':
             if c.skinned:return False,"The carcass has already been skinned.",0
             q=self._tool_quality(inv,'skin')
@@ -51,6 +82,9 @@ class ProcessingSystem:
             c.butchered=True;c.processed_by='player';outputs={};quality=max(20,min(120,effective_quality+hunting_skill*2+q*4+table_bonus))
             for iid,n in profile.items():
                 if iid in ('core:fresh_hide','core:bone','core:sinew'):continue
+                # Detailed anatomy is recovered through the anatomy action so
+                # named organs are not duplicated as generic offal.
+                if iid=='core:offal' and c.anatomy_condition:continue
                 got=max(0,n*quality//100)
                 if got:inv.add(iid,got);outputs[iid]=got
             text=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in outputs.items()) or 'little usable meat'
