@@ -57,7 +57,11 @@ class ProceduralSocietyGenerator:
             while len(traits)<2:
                 t=nr.choice(TRAITS)
                 if t not in traits:traits.append(t)
-            npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,x+nr.randbelow(13)-6,y+nr.randbelow(13)-6,0,uid,f.uid,wealth=10+nr.randbelow(60)))
+            # Local positions are assigned from the authoritative physical plan
+            # once the settlement is active. Until then representatives stay at
+            # the settlement anchor instead of being scattered into arbitrary
+            # walls, water, or resource cells.
+            npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,x,y,0,uid,f.uid,wealth=10+nr.randbelow(60)))
         return s,npcs,c,r,f
 
     def representatives_for_settlement(self,s:SettlementState,count:int|None=None)->list[NPCState]:
@@ -68,7 +72,7 @@ class ProceduralSocietyGenerator:
             while len(traits)<2:
                 t=nr.choice(TRAITS)
                 if t not in traits:traits.append(t)
-            out.append(NPCState(f"npc:{s.uid}:r{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,s.x+nr.randbelow(13)-6,s.y+nr.randbelow(13)-6,0,s.uid,s.faction_id,wealth=10+nr.randbelow(60)))
+            out.append(NPCState(f"npc:{s.uid}:r{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,s.x,s.y,0,s.uid,s.faction_id,wealth=10+nr.randbelow(60)))
         return out
 
 class MagicGenerator:
