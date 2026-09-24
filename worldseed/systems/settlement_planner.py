@@ -862,8 +862,17 @@ class SettlementSkeletonPlanner:
         # Functional land-use anchors pull roads outward toward the land that
         # explains the settlement's economy.
         occupied = set(common_cells) | road_cells
-        farm_target = self._best_functional_site(common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied)
-        industry_target = self._best_functional_site(common_center, bounds, kind="industry", archetype=plan.archetype, occupied=occupied)
+        farm_target = self._best_functional_site(
+            common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied
+        )
+        # Agricultural and industrial anchors must be physically distinct even
+        # when a uniformly good test/plain gives both scorers the same optimum.
+        industry_occupied=set(occupied)
+        if farm_target:
+            industry_occupied |= self._rect(farm_target,11,9)
+        industry_target = self._best_functional_site(
+            common_center, bounds, kind="industry", archetype=plan.archetype, occupied=industry_occupied
+        )
         farm_road = add_road(
             "farm-access", self._approach_point(farm_target,9,7,common_center), "path"
         ) if farm_target else ""
