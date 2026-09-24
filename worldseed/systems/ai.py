@@ -46,6 +46,36 @@ class NPCSystem:
             if target is not None:return target
         return WorldPos(int(town.x),int(town.y),0)
 
+    def _routine_bias(self,npc:NPCState,minute:int)->dict[str,int]:
+        """Soft daily rhythm. Urgent needs still override these preferences."""
+        hour=(int(minute)%1440)//60
+        out={"eat":0,"rest":0,"work":0,"socialize":0,"guard":0,"worship":0,"learn":0}
+        if npc.age<16:
+            if 8<=hour<15:out["learn"]+=55
+            if 16<=hour<20:out["socialize"]+=45
+            if hour>=21 or hour<7:out["rest"]+=100
+            return out
+        if npc.occupation=="guard":
+            shift=int(hash_u64(self.seed,"guard-shift",npc.uid)%3)
+            start=(0,8,16)[shift]
+            active=((hour-start)%24)<8
+            if active:out["guard"]+=90
+            else:out["rest"]+=35
+        else:
+            start,end={
+                "farmer":(6,15),"herder":(6,15),"merchant":(8,18),
+                "healer":(7,18),"scholar":(9,17),"priest":(7,15),
+                "miner":(7,16),"hunter":(6,14),
+            }.get(npc.occupation,(8,17))
+            if start<=hour<end:out["work"]+=55
+        if hour in (7,12,18):out["eat"]+=55
+        if 18<=hour<21:
+            out["socialize"]+=45
+            if npc.occupation=="priest" or npc.needs.get("faith",0)>45:out["worship"]+=35
+        if npc.occupation=="scholar" and 17<=hour<20:out["learn"]+=35
+        if hour>=22 or hour<6:out["rest"]+=105
+        return out
+
     def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
         war=bool(self.state.factions.get(npc.faction_id).at_war) if npc.faction_id in self.state.factions else False
         needs=npc.needs
