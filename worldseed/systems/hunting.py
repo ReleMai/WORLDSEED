@@ -344,7 +344,7 @@ class HuntingSystem:
                 den=self.state.animal_dens.get(c.home_den_uid)
                 if den and (den.x,den.y,den.z)==(c.x,c.y,c.z):den.last_used_minute=minute
                 return True
-            return self._move_activity_one(c,sp,target,turn,minute)
+            return self._move_activity_one(c,sp,target,turn,minute,player)
 
         # Needs and deterministic opportunistic distractions.
         profile=sp.activity_profile or {"feed":55,"drink":45,"rest":40}
@@ -370,18 +370,25 @@ class HuntingSystem:
                     self._write_stationary_sign(c,"bed",target,minute,max(25,sp.trackability),"flattened bedding")
                     if den:den.last_used_minute=minute
                     return True
-                self._set_activity_target(c,target,"to_den",turn);return self._move_activity_one(c,sp,target,turn,minute)
+                self._set_activity_target(c,target,"to_den",turn);return self._move_activity_one(c,sp,target,turn,minute,player)
             target=self._find_activity_target(c,sp,kind)
             if target is None:continue
+            if target==WorldPos(c.x,c.y,c.z):
+                c.activity="feeding" if kind=="food" else "drinking";c.activity_until_turn=turn+3
+                sign_kind="feeding" if kind=="food" else "drink"
+                detail="feeding sign" if kind=="food" else "trampled bank at a drinking spot"
+                self._write_stationary_sign(c,sign_kind,target,minute,max(25,sp.trackability),detail)
+                return True
             self._set_activity_target(c,target,"to_"+kind,turn)
-            return self._move_activity_one(c,sp,target,turn,minute)
+            return self._move_activity_one(c,sp,target,turn,minute,player)
         return False
 
-    def _move_activity_one(self,c:CreatureState,sp:SpeciesDef,target:WorldPos,turn:int,minute:int)->bool:
+    def _move_activity_one(self,c:CreatureState,sp:SpeciesDef,target:WorldPos,turn:int,minute:int,avoid:WorldPos|None=None)->bool:
         current=WorldPos(c.x,c.y,c.z);occupied={(o.x,o.y,o.z) for o in self.state.creatures.values() if o.uid!=c.uid}
         rows=[]
         for dx,dy in CARDINALS:
             q=current.moved(dx,dy)
+            if avoid is not None and q==avoid:continue
             if (q.x,q.y,q.z) not in occupied and self._passable_for(sp,q):
                 d=abs(q.x-target.x)+abs(q.y-target.y)
                 score=-d*30+self._cover_score(q)//5
