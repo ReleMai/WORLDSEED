@@ -89,22 +89,29 @@ class HuntingSystem:
         creature.alertness = 100
         creature.threat_x, creature.threat_y, creature.threat_z = player_pos.x, player_pos.y, player_pos.z
         creature.last_threat_turn = turn
+        creature.last_attacked_turn = turn
+        sp = self.registry.species.get(creature.species_id)
+        if sp and sp.combat_style in ("prey","herd_prey"):
+            creature.panic = 100
         if hit and creature.pain >= 35:
             creature.behavior = "wounded_flee"
         elif creature.behavior == "calm":
             creature.behavior = "alert"
         self.note_player_noise(player_pos, loudness, turn, minute, "weapon")
-        sp = self.registry.species.get(creature.species_id)
         if sp:
             self._alarm_group(creature, sp, turn, 85 if hit else 60)
 
     def update_local_ai(self, player_pos: WorldPos, turn: int, minute: int) -> list[str]:
         self._prune_signs(minute)
         attackers: list[str] = []
-        for creature in sorted(list(self.state.creatures.values()), key=lambda c: c.uid):
-            if creature.hp <= 0 or creature.z != player_pos.z:
-                continue
-            if abs(creature.x - player_pos.x) > 42 or abs(creature.y - player_pos.y) > 32:
+        local = [
+            c for c in self.state.creatures.values()
+            if c.hp > 0 and c.z == player_pos.z
+            and abs(c.x-player_pos.x) <= 42 and abs(c.y-player_pos.y) <= 32
+        ]
+        self._prepare_group_tactics(local, turn)
+        for creature in sorted(local, key=lambda c: c.uid):
+            if creature.uid not in self.state.creatures:
                 continue
             sp = self.registry.species.get(creature.species_id)
             if not sp:
@@ -114,23 +121,32 @@ class HuntingSystem:
             if turn <= int(getattr(creature,"staggered_until_turn",-1)):
                 creature.behavior = "staggered"
                 creature.stamina = min(sp.stamina, creature.stamina + 2)
+                creature.charge_momentum = 0
+                creature.charge_committed_until_turn = -1
                 continue
+
             perceived = self._perception_score(creature, sp, player_pos, turn, minute)
             if perceived > 0:
                 creature.alertness = min(100, creature.alertness + perceived)
                 creature.threat_x, creature.threat_y, creature.threat_z = player_pos.x, player_pos.y, player_pos.z
                 creature.last_threat_turn = turn
+                if sp.combat_style in ("prey","herd_prey"):
+                    creature.panic = min(100,max(creature.panic,perceived))
                 self._alarm_group(creature, sp, turn, max(20, perceived))
             elif turn - creature.last_threat_turn > 2:
                 creature.alertness = max(0, creature.alertness - 8)
+                creature.panic = max(0,creature.panic-10)
                 if creature.alertness == 0 and creature.behavior not in ("wounded_flee",):
                     creature.behavior = "calm"
 
-            creature.behavior = self._choose_behavior(creature, sp, dist, turn)
-            if creature.behavior in ("pursue", "defend") and dist <= 1:
+            creature.behavior = self._choose_behavior(creature, sp, dist, turn, player_pos)
+            if creature.behavior == "display":
+                creature.stamina = min(sp.stamina,creature.stamina+3)
+                continue
+            if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
                 attackers.append(creature.uid)
                 continue
-            if creature.behavior in ("flee", "wounded_flee", "pursue", "defend"):
+            if creature.behavior in ("flee","herd_flee","wounded_flee","pursue","defend","charge","flank","disengage","regroup"):
                 steps = self._movement_steps(creature, sp)
                 for _ in range(steps):
                     if creature.uid not in self.state.creatures:
@@ -139,25 +155,106 @@ class HuntingSystem:
                     if not moved:
                         break
                     dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
-                    if creature.behavior in ("pursue", "defend") and dist <= 1:
+                    if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
                         break
             else:
                 creature.stamina = min(sp.stamina, creature.stamina + 5)
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
-            if creature.behavior in ("pursue", "defend") and dist <= 1:
+            if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
                 attackers.append(creature.uid)
         return list(dict.fromkeys(attackers))
 
-    def _choose_behavior(self, c: CreatureState, sp: SpeciesDef, dist: int, turn: int) -> str:
+    def _prepare_group_tactics(self, local:list[CreatureState], turn:int) -> None:
+        groups:dict[tuple[str,str],list[CreatureState]]={}
+        for c in local:
+            key=(c.species_id,c.cohort_key or "local")
+            groups.setdefault(key,[]).append(c)
+        for (species_id,_),members in groups.items():
+            sp=self.registry.species.get(species_id)
+            if not sp:
+                continue
+            members.sort(key=lambda c:c.uid)
+            if sp.combat_style=="pack_predator" and sp.pack_coordination>0:
+                ranked=sorted(members,key=lambda c:(hash_u64(self.seed,"pack-role",species_id,c.uid),c.uid))
+                for i,c in enumerate(ranked):
+                    c.pack_role="anchor" if i==0 else "flank_left" if i%2 else "flank_right"
+            elif sp.combat_style in ("prey","herd_prey") and sp.herd_cohesion>0 and len(members)>1:
+                peak=max((max(c.panic,c.alertness if c.last_threat_turn>=turn-1 else 0) for c in members),default=0)
+                if peak>0:
+                    shared=peak*sp.herd_cohesion//100
+                    for c in members:c.panic=max(c.panic,shared)
+
+    def _same_group(self,c:CreatureState,radius:int=12)->list[CreatureState]:
+        rows=[]
+        for other in self.state.creatures.values():
+            if other.hp<=0 or other.z!=c.z or other.species_id!=c.species_id:
+                continue
+            if c.cohort_key and other.cohort_key!=c.cohort_key:
+                continue
+            if abs(other.x-c.x)+abs(other.y-c.y)<=radius:rows.append(other)
+        return rows
+
+    def _group_centroid(self,c:CreatureState)->tuple[int,int]:
+        group=self._same_group(c,14)
+        if not group:return c.x,c.y
+        return round(sum(o.x for o in group)/len(group)),round(sum(o.y for o in group)/len(group))
+
+    def _charge_possible(self,c:CreatureState,sp:SpeciesDef,player:WorldPos,dist:int)->bool:
+        if sp.charge_range<2 or dist<2 or dist>sp.charge_range:return False
+        if self._leg_penalty(c)>=2 or c.stamina<30:return False
+        if not self._visible(WorldPos(c.x,c.y,c.z),player):return False
+        return True
+
+    def _start_charge(self,c:CreatureState,sp:SpeciesDef,turn:int)->str:
+        c.charge_committed_until_turn=turn+max(1,1+sp.charge_power//45)
+        c.charge_momentum=0
+        return "charge"
+
+    def _choose_behavior(self, c: CreatureState, sp: SpeciesDef, dist: int, turn: int, player:WorldPos) -> str:
         severe_leg = self._leg_penalty(c) >= 2
         badly_wounded = c.blood < 65 or c.pain >= 45 or c.hp <= max(1, sp.max_hp // 2)
         threatened = c.alertness >= sp.flee_threshold or turn - c.last_threat_turn <= 1
+        critical = c.blood < 30 or c.hp <= max(1,sp.max_hp//4)
+
+        if c.behavior=="charge" and turn<=c.charge_committed_until_turn and not critical and not severe_leg and c.stamina>=12:
+            return "charge"
 
         if badly_wounded:
-            if sp.defensive_aggression >= 65 and dist <= 2 and c.stamina >= 15:
+            c.charge_momentum=0
+            if sp.combat_style=="pack_predator" and len(self._same_group(c))>=2:
+                return "disengage"
+            if sp.defensive_aggression >= 65 and dist <= 2 and c.stamina >= 15 and not severe_leg:
                 return "defend"
             return "wounded_flee"
+
+        if sp.combat_style=="pack_predator" and threatened:
+            group=self._same_group(c)
+            if c.stamina<25 or c.pain>=55:
+                return "disengage"
+            if len(group)>=2 and sp.pack_coordination>=45:
+                return "pursue" if c.pack_role=="anchor" else "flank"
+            return "pursue" if sp.aggression>=55 else "flee"
+
+        if sp.combat_style in ("charger","territorial_charger","solitary_predator") and threatened:
+            if sp.display_range>=2 and 2<=dist<=sp.display_range and turn-c.last_attacked_turn>1 and turn-c.last_display_turn>5:
+                c.last_display_turn=turn
+                return "display"
+            if self._charge_possible(c,sp,player,dist):
+                threshold=max(sp.defensive_aggression,sp.charge_power//2)
+                roll=hash_u64(self.seed,"charge-decision",c.uid,c.last_threat_turn,turn//2)%100
+                if roll<threshold:
+                    return self._start_charge(c,sp,turn)
+            if sp.defensive_aggression>=55 and dist<=2 and not severe_leg:
+                return "defend"
+            return "pursue" if sp.aggression>=50 and c.stamina>=25 else "flee"
+
+        if sp.combat_style in ("prey","herd_prey"):
+            if threatened or c.panic>=max(20,sp.flee_threshold//2):
+                return "herd_flee" if sp.combat_style=="herd_prey" and len(self._same_group(c))>1 else "flee"
+            if c.panic>0 and dist>=6 and len(self._same_group(c))>1:
+                return "regroup"
+
         if sp.aggression >= 50 and threatened and dist <= max(5, sp.vision):
             return "pursue"
         if threatened:
@@ -172,6 +269,10 @@ class HuntingSystem:
         effective = max(1, sp.speed - self._leg_penalty(c))
         if c.stamina <= 10:
             return 0
+        if c.behavior=="charge":
+            return max(1,min(3,1+sp.charge_power//45-self._leg_penalty(c)))
+        if c.behavior in ("flank","disengage") and effective>=3 and c.stamina>=30:
+            return 2
         if effective >= 3 and c.stamina >= 35:
             return 2
         return 1
@@ -257,6 +358,8 @@ class HuntingSystem:
             if transmitted <= other.alertness:
                 continue
             other.alertness = min(100, transmitted)
+            if sp.combat_style in ("prey","herd_prey"):
+                other.panic=max(other.panic,min(100,transmitted*sp.herd_cohesion//100))
             other.threat_x, other.threat_y, other.threat_z = source.threat_x, source.threat_y, source.threat_z
             other.last_threat_turn = max(other.last_threat_turn, turn)
 
@@ -279,11 +382,27 @@ class HuntingSystem:
                 continue
             d = abs(nxt.x - player.x) + abs(nxt.y - player.y)
             cover = self._cover_score(nxt)
-            if c.behavior in ("flee", "wounded_flee"):
-                score = d * 24 + cover
+            if c.behavior in ("flee","wounded_flee","disengage"):
+                score=d*26+cover
+                if c.behavior=="disengage":
+                    gx,gy=self._group_centroid(c);score-= (abs(nxt.x-gx)+abs(nxt.y-gy))*4
+            elif c.behavior=="herd_flee":
+                gx,gy=self._group_centroid(c);cohesion=sp.herd_cohesion//12
+                score=d*25+cover-(abs(nxt.x-gx)+abs(nxt.y-gy))*cohesion
+            elif c.behavior=="regroup":
+                gx,gy=self._group_centroid(c);score=-(abs(nxt.x-gx)+abs(nxt.y-gy))*30+d*3+cover//3
+            elif c.behavior=="flank":
+                fx=int(getattr(self.state,"player_facing_dx",0));fy=int(getattr(self.state,"player_facing_dy",1))
+                if fx==0 and fy==0:fx,fy=0,1
+                side=1 if c.pack_role=="flank_left" else -1
+                tx=player.x+(-fy)*side*2-fx;ty=player.y+fx*side*2-fy
+                score=-(abs(nxt.x-tx)+abs(nxt.y-ty))*34-d*2+cover//5
+                if d==1:score+=40
+            elif c.behavior=="charge":
+                score=-d*42-cover//8
             else:
-                score = -d * 28 + cover // 4
-            tie = int(hash_u64(self.seed, "animal-step", c.uid, turn, nxt.x, nxt.y) & 0xFFFF)
+                score=-d*28+cover//4
+            tie = int(hash_u64(self.seed, "animal-step", c.uid, turn, c.behavior, nxt.x, nxt.y) & 0xFFFF)
             candidates.append((score, tie, dx * 10 + dy, nxt))
         if not candidates:
             return False
@@ -293,10 +412,12 @@ class HuntingSystem:
         c.x, c.y = nxt.x, nxt.y
         c.facing_dx, c.facing_dy = nxt.x - old.x, nxt.y - old.y
         if self.state.player_aim_target == c.uid:
-            loss = 20 if c.behavior in ("flee", "wounded_flee", "pursue") else 10
+            loss = 24 if c.behavior in ("flee","herd_flee","wounded_flee","charge","flank") else 20 if c.behavior=="pursue" else 10
             self.state.player_aim_quality = max(0, int(self.state.player_aim_quality) - loss)
         c.last_move_turn = turn
-        exertion = 7 if c.behavior in ("flee", "wounded_flee", "pursue") else 4
+        if c.behavior=="charge":c.charge_momentum=min(5,c.charge_momentum+1)
+        elif c.behavior not in ("pursue","flank"):c.charge_momentum=max(0,c.charge_momentum-1)
+        exertion = 10 if c.behavior=="charge" else 8 if c.behavior in ("flee","herd_flee","wounded_flee","pursue","flank","disengage") else 4
         c.stamina = max(0, c.stamina - exertion)
         self._leave_sign(c, sp, old, nxt, turn, minute)
         return True
