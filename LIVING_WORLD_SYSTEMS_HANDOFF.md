@@ -90,3 +90,12 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Keys transfer between actors and duplicate into distinct persistent copies targeting the same lock.
 - Simulation commands support transfer and duplication; lockpicking remains the unauthorized fallback.
 - Regression coverage verifies unlocking, transfer, duplication and save roundtrip.
+
+
+## Work Unit 16 - Key/lock interaction polish
+- Matching keys now explicitly lock and unlock doors and property storage through authoritative simulation commands.
+- Manual door operation clears schedule-lock provenance so a schedule update cannot masquerade as the player's action.
+- Picked locks and forced doors cannot be magically re-secured with a key; they require later repair work.
+- Inventory presentation exposes the player's persistent key ring, target lock identity and copy provenance.
+- Key duplication is no longer free: it requires a nearby forge, consumes one iron bloom and takes 30 in-world minutes.
+- Targeted regressions cover lock/unlock authorization and damaged-lock safety.

@@ -209,6 +209,15 @@ class PropertyStorageSystem:
         self.keys.ensure_lock(container)
         return bool(container.locked and not self.authorized_actor(container,actor_uid) and not self.keys.actor_has_key(actor_uid,container.lock_uid))
 
+    def set_locked_with_key(self,container_uid:str,actor_uid:str,locked:bool):
+        container=self.by_id(container_uid)
+        if container is None:return False,"That storage is no longer present."
+        self.keys.ensure_lock(container)
+        if not (self.authorized_actor(container,actor_uid) or self.keys.actor_has_key(actor_uid,container.lock_uid)):return False,"You do not have a key for that storage."
+        if container.picked and locked:return False,"The picked lock must be repaired before it can be locked again."
+        container.locked=bool(locked)
+        return True,f"You {'lock' if locked else 'unlock'} {container.name or 'the storage'}."
+
     def grant_keyholder(self,container_uid:str,actor_uid:str)->bool:
         container=self.by_id(container_uid);actor_uid=str(actor_uid or "")
         if container is None or not actor_uid:return False
@@ -391,6 +400,16 @@ class PropertySecuritySystem:
 
     def blocks_player(self,pos:WorldPos)->bool:
         return self.blocks_actor(pos,"player")
+
+    def set_locked_with_key(self,door_uid:str,actor_uid:str,locked:bool):
+        door=self.door_by_id(door_uid)
+        if door is None:return False,"That door is no longer present."
+        self.keys.ensure_lock(door)
+        if door.forced:return False,"The broken door cannot be locked until it is repaired."
+        if door.picked and locked:return False,"The picked lock must be repaired before it can be locked again."
+        if not (self.authorized_actor(door,actor_uid) or self.keys.actor_has_key(actor_uid,door.lock_uid)):return False,"You do not have a key for that door."
+        door.locked=bool(locked);door.schedule_locked=False;door.last_schedule_minute=-1
+        return True,f"You {'lock' if locked else 'unlock'} the door."
 
     def grant_keyholder(self,property_id:str,actor_uid:str)->int:
         """Grant explicit guest/key access without changing property ownership."""

@@ -314,6 +314,8 @@ class Simulation:
         elif isinstance(command,StealContainerCommand):self._steal_container(command)
         elif isinstance(command,LockpickDoorCommand):minutes=self._lockpick_door(command)
         elif isinstance(command,LockpickContainerCommand):minutes=self._lockpick_container(command)
+        elif isinstance(command,SetDoorLockCommand):minutes=self._set_door_lock(command)
+        elif isinstance(command,SetContainerLockCommand):minutes=self._set_container_lock(command)
         elif isinstance(command,TransferKeyCommand):minutes=self._transfer_key(command)
         elif isinstance(command,DuplicateKeyCommand):minutes=self._duplicate_key(command)
         elif isinstance(command,ForceDoorCommand):minutes=self._force_door(command)
@@ -1560,13 +1562,23 @@ class Simulation:
         self._message(msg)
         return max(1,int(minutes or MINUTES_PER_ACTION))
 
+    def _set_door_lock(self,cmd:SetDoorLockCommand)->int:
+        ok,msg=self.property_security.set_locked_with_key(cmd.door_uid,"player",cmd.locked);self._message(msg);return 1
+
+    def _set_container_lock(self,cmd:SetContainerLockCommand)->int:
+        ok,msg=self.property_storage.set_locked_with_key(cmd.container_uid,"player",cmd.locked);self._message(msg);return 1
+
     def _transfer_key(self,cmd:TransferKeyCommand)->int:
         ok=self.physical_keys.transfer(cmd.key_uid,"player",cmd.to_actor_uid);self._message("You hand over the key." if ok else "You do not possess that key.");return 1
 
     def _duplicate_key(self,cmd:DuplicateKeyCommand)->int:
-        key=self.state.physical_keys.get(cmd.key_uid)
+        key=self.state.physical_keys.get(cmd.key_uid);inv=self.entities.get(cmd.actor,Inventory)
         if key is None or key.owner_uid!="player":self._message("You do not possess that key.");return 1
-        copy=self.physical_keys.duplicate(cmd.key_uid,"player",self.clock.minute);self._message(f"You duplicate {key.label}." if copy else "You cannot duplicate that key.");return 10
+        if "core:forge" not in self.building.nearby_station_ids(self.player_pos):self._message("You need a forge to duplicate a key.");return 1
+        if inv.count("core:iron_bloom")<1:self._message("You need an iron bloom to forge a duplicate key.");return 1
+        inv.remove("core:iron_bloom",1);copy=self.physical_keys.duplicate(cmd.key_uid,"player",self.clock.minute)
+        if copy is None:inv.add("core:iron_bloom",1);self._message("You cannot duplicate that key.");return 1
+        self._message(f"You forge a duplicate of {key.label}.");return 30
 
     def _force_door(self,cmd:ForceDoorCommand)->int:
         inv=self.entities.get(cmd.actor,Inventory)

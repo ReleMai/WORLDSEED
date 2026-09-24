@@ -478,5 +478,16 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertFalse(security.blocks_actor(WorldPos(door.x,door.y,door.z),"player"))
         restored=LivingWorldState.from_dict(state.to_dict());self.assertEqual(restored.physical_keys[key.uid].lock_uid,key.lock_uid);self.assertEqual(restored.physical_keys[copy.uid].owner_uid,"npc:guest");self.assertEqual(restored.physical_keys[door_key.uid].owner_uid,"player")
 
+    def test_key_lock_controls_and_picked_lock_safety(self):
+        base,security=self._security_fixture();state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        keys=PhysicalKeySystem(state,b"property-storage-casing");storage.keys=keys;security.keys=keys
+        container=next(c for c in state.containers.values() if c.kind=="property" and c.locked);keys.ensure_key(container,"player","Chest key",1)
+        ok,msg=storage.set_locked_with_key(container.uid,"player",False);self.assertTrue(ok);self.assertFalse(container.locked)
+        ok,msg=storage.set_locked_with_key(container.uid,"player",True);self.assertTrue(ok);self.assertTrue(container.locked)
+        container.locked=False;container.picked=True;ok,msg=storage.set_locked_with_key(container.uid,"player",True);self.assertFalse(ok);self.assertFalse(container.locked)
+        door=next(d for d in state.door_security.values() if d.locked);keys.ensure_key(door,"player","Door key",2)
+        ok,msg=security.set_locked_with_key(door.uid,"player",False);self.assertTrue(ok);self.assertFalse(door.locked);self.assertFalse(door.schedule_locked)
+        ok,msg=security.set_locked_with_key(door.uid,"npc:stranger",True);self.assertFalse(ok);self.assertFalse(door.locked)
+
 if __name__=="__main__":
     unittest.main()
