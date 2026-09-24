@@ -83,6 +83,16 @@ class StructureDef:
 
 
 @dataclass(frozen=True, slots=True)
+class SettlementPieceDef:
+    id: str; name: str; category: str; layer: str; glyph: str
+    tags: tuple[str, ...] = (); room_tags: tuple[str, ...] = (); settlement_roles: tuple[str, ...] = ()
+    material: str = ""; passable: bool = True; blocks_sight: bool = False; enclosure_role: str = ""
+    workplace_role: str = ""; interior_allowed: bool = True; exterior_allowed: bool = True
+    road_access_required: bool = False; support_strength: int = 0; comfort: int = 0; work_bonus: int = 0
+    materialization_family: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class ComponentDesignDef:
     id: str; name: str; output_item: str; minutes: int; station: str | None; knowledge: str | None
     primary_component: str; components: dict[str, dict[str, dict[str, Any]]]
@@ -145,7 +155,8 @@ class ContentRegistry:
     def __init__(self) -> None:
         self.terrains: dict[str, TerrainDef] = {}; self.resources: dict[str, ResourceFeatureDef] = {}
         self.items: dict[str, ItemDef] = {}; self.materials: dict[str, MaterialDef] = {}; self.recipes: dict[str, RecipeDef] = {}
-        self.structures: dict[str, StructureDef] = {}; self.designs: dict[str, ComponentDesignDef] = {}
+        self.structures: dict[str, StructureDef] = {}; self.settlement_pieces: dict[str, SettlementPieceDef] = {}
+        self.designs: dict[str, ComponentDesignDef] = {}
         self.species: dict[str, SpeciesDef] = {}; self.fish: dict[str, FishDef] = {}; self.crops: dict[str, CropDef] = {}
         self.settlement_processes: dict[str, SettlementProcessDef] = {}; self.diseases: dict[str, DiseaseDef] = {}
         self.cooking_methods: dict[str, CookingMethodDef] = {}
@@ -161,7 +172,7 @@ class ContentRegistry:
         loaders=[
             ("materials.json",self._load_materials),("items.json",self._load_items),("terrain.json",self._load_terrain),
             ("resources.json",self._load_resources),("recipes.json",self._load_recipes),("structures.json",self._load_structures),
-            ("designs.json",self._load_designs),("species.json",self._load_species),("fish.json",self._load_fish),("crops.json",self._load_crops),
+            ("settlement_pieces.json",self._load_settlement_pieces),("designs.json",self._load_designs),("species.json",self._load_species),("fish.json",self._load_fish),("crops.json",self._load_crops),
             ("settlement_processes.json",self._load_settlement_processes),("diseases.json",self._load_diseases),
             ("cooking_methods.json",self._load_cooking_methods),]
         for filename,loader in loaders:
@@ -212,6 +223,22 @@ class ContentRegistry:
             obj=StructureDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],passable=bool(raw["passable"]),blocks_sight=bool(raw["blocks_sight"]),cost=dict(raw.get("cost",{})),tags=_tuple(raw.get("tags")),capacity_mass_g=int(raw.get("capacity_mass_g",0)),capacity_volume_ml=int(raw.get("capacity_volume_ml",0)),support_strength=int(raw.get("support_strength",0)),load=int(raw.get("load",0)),description=raw.get("description",""),uses=_tuple(raw.get("uses")),comfort=int(raw.get("comfort",0)),work_bonus=int(raw.get("work_bonus",0)),warmth=int(raw.get("warmth",0)),shelter=int(raw.get("shelter",0)))
             if obj.id in self.structures: raise ValueError(f"Duplicate structure id: {obj.id}")
             self.structures[obj.id]=obj
+
+    def _load_settlement_pieces(self,path):
+        for raw in self._json(path):
+            obj=SettlementPieceDef(
+                id=str(raw["id"]), name=str(raw["name"]), category=str(raw["category"]), layer=str(raw.get("layer","structure")),
+                glyph=str(raw.get("glyph","?")), tags=_tuple(raw.get("tags")), room_tags=_tuple(raw.get("room_tags")),
+                settlement_roles=_tuple(raw.get("settlement_roles")), material=str(raw.get("material","")),
+                passable=bool(raw.get("passable",True)), blocks_sight=bool(raw.get("blocks_sight",False)),
+                enclosure_role=str(raw.get("enclosure_role","")), workplace_role=str(raw.get("workplace_role","")),
+                interior_allowed=bool(raw.get("interior_allowed",True)), exterior_allowed=bool(raw.get("exterior_allowed",True)),
+                road_access_required=bool(raw.get("road_access_required",False)), support_strength=int(raw.get("support_strength",0)),
+                comfort=int(raw.get("comfort",0)), work_bonus=int(raw.get("work_bonus",0)),
+                materialization_family=str(raw.get("materialization_family",raw.get("category",""))),
+            )
+            if obj.id in self.settlement_pieces: raise ValueError(f"Duplicate settlement piece id: {obj.id}")
+            self.settlement_pieces[obj.id]=obj
 
     def _load_designs(self,path):
         for raw in self._json(path):
@@ -266,7 +293,7 @@ class ContentRegistry:
             self.cooking_methods[obj.id]=obj
 
     def _validate(self)->None:
-        namespaces=[self.items,self.materials,self.terrains,self.recipes,self.structures,self.designs,self.species,self.fish,self.crops,self.settlement_processes,self.diseases,self.cooking_methods]
+        namespaces=[self.items,self.materials,self.terrains,self.recipes,self.structures,self.settlement_pieces,self.designs,self.species,self.fish,self.crops,self.settlement_processes,self.diseases,self.cooking_methods]
         for table in namespaces:
             for cid in table:
                 if ":" not in cid: raise ValueError(f"Content id must be namespaced: {cid}")
@@ -303,6 +330,15 @@ class ContentRegistry:
         for struct in self.structures.values():
             for iid in struct.cost:
                 if iid not in self.items: raise ValueError(f"Unknown construction item {iid} in {struct.id}")
+        allowed_piece_categories={"wall","floor","opening","furniture","workshop","road","agriculture","mine","decoration","civic"}
+        allowed_piece_layers={"structure","ground","overlay"}
+        allowed_enclosure_roles={"","wall","door","opening","floor","partition"}
+        for piece in self.settlement_pieces.values():
+            if len(piece.glyph)!=1: raise ValueError(f"Settlement piece glyph must be one character: {piece.id}")
+            if piece.category not in allowed_piece_categories: raise ValueError(f"Unknown settlement piece category {piece.category} on {piece.id}")
+            if piece.layer not in allowed_piece_layers: raise ValueError(f"Unknown settlement piece layer {piece.layer} on {piece.id}")
+            if piece.enclosure_role not in allowed_enclosure_roles: raise ValueError(f"Unknown enclosure role {piece.enclosure_role} on {piece.id}")
+            if piece.support_strength<0 or piece.comfort<0 or piece.work_bonus<0: raise ValueError(f"Negative settlement piece property on {piece.id}")
         for crop in self.crops.values():
             if crop.seed_item not in self.items or crop.harvest_item not in self.items: raise ValueError(f"Unknown crop item in {crop.id}")
         for sp in self.species.values():
