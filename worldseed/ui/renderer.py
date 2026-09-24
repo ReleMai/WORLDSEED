@@ -184,6 +184,9 @@ class Renderer:
         fluid_by = {(f.x,f.y,f.z):f for f in sim.state.fluids.values() if f.amount > 20}
         pile_by = {(p.x,p.y,p.z):p for p in sim.state.ground_piles.values() if p.items}
         carcass_by = {(c.x,c.y,c.z):c for c in sim.state.carcasses.values()}
+        skill=max(sim.player_skill('hunting'),sim.player_skill('survival'))
+        sign_by={(q.x,q.y,q.z):q for q in sim.state.animal_signs.values() if pos_key(q.x,q.y,q.z) in visible and q.strength+skill*8>=52}
+        home_by={(q.x,q.y,q.z):q for q in sim.state.animal_homes.values() if q.discovered and pos_key(q.x,q.y,q.z) in visible}
         grave_by = {(g.x,g.y,g.z):g for g in sim.state.graves.values()}
         arc_by = {tuple(int(q) for q in k.split(',')):a for k,a in sim.state.arcane_contamination.items() if a.intensity > 20}
         dungeon_by: dict[tuple[int,int,int], str] = {}
@@ -217,7 +220,119 @@ class Renderer:
                 elif k in fluid_by: ch = '~'
                 elif k in dungeon_by: ch = dungeon_by[k]
                 elif k in carcass_by: ch = '&'
-                elif k in pile_by: ch = '$'
+                elif k in home_by: ch = '⌂' if self.use_unicode else 'H'
+                elif k in sign_by: ch = '·' if self.use_unicode else ','
+                elif k in pile_by: ch = '
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
+                elif k in arc_by: ch = '*'
+                elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
+                elif k in structure_by:
+                    sd = self.registry.structures.get(structure_by[k].structure_id)
+                    ch = sd.glyph if sd else '#'
+                elif k in property_container_by and pk in visible:
+                    ch = '□' if self.use_unicode else 'C'
+                else:
+                    wp=WorldPos(x,y,pos.z)
+                    settlement_glyph=sim.settlement_physicalization.glyph_at(wp)
+                    if settlement_glyph is not None:
+                        ch=settlement_glyph
+                    else:
+                        resource=self._resource_glyph(sim,wp)
+                        ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                if ch == '@' and self.use_color:
+                    ch = f'{BOLD}\x1b[97m@{RESET}'
+                elif ch == 'X' and self.use_color:
+                    ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=ANSI_RE.sub('',ch)
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch not in ('@','X'):
+                    ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
+                elif k in stealth_by and self.use_color and ch not in ('@','X'):
+                    plain=ANSI_RE.sub('',ch)
+                    code="91" if bool(stealth_by[k].get("alert")) else "93"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in stealth_by and not self.use_color and ch not in ('@','X'):
+                    ch='!' if bool(stealth_by[k].get("alert")) else '?'
+                row.append(ch)
+            rows.append(''.join(row))
+        return rows
+
+    def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
+                 width: int, height: int, cursor: WorldPos | None, stealth_overlay: dict | None = None) -> list[str]:
+        p = sim.player_pos
+        rows = [
+            'STATUS',
+            f'HP   {self._bar(v.hp,v.max_hp)} {v.hp:>3}',
+            f'STA  {self._bar(v.stamina)} {v.stamina:>3}',
+            f'FOOD {self._bar(100-v.hunger)}',
+            f'WATR {self._bar(100-v.thirst)}',
+            f'BLD  {self._bar(v.blood)} {v.blood:>3}',
+            f'PAIN {self._bar(v.pain)} {v.pain:>3}',
+            '',
+            self._clip(sim.resources.description(p), width),
+            'Room: ' + str(room.get('classification','outside')),
+            'Stance: ' + str(getattr(sim.state,'player_hunting_stance','normal')).title(),
+        ]
+        if cursor is not None:
+            rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        if sim.state.player_stealth_mode:
+            snap=stealth_overlay or {}
+            seen=list(snap.get('seen_by',()))
+            rows += ['', 'STEALTH', f'Observed by: {len(seen)}', f'Skill: {sim.player_skill("stealth")}']
+            known=sim.known_npc_ids()
+            for uid in seen[:3]:
+                npc=sim.state.npcs.get(uid)
+                rows.append((npc.name if npc and uid in known else 'Stranger')+' sees you')
+            casing=snap.get('casing') or {}
+            if casing.get('active'):
+                rows += [
+                    '',
+                    'CASING',
+                    f"{str(casing.get('function','property')).replace('_',' ').title()} {int(casing.get('survey_progress',0))}%",
+                    f"Attention: {str(casing.get('attention','low')).title()}",
+                    f"Rooms {int(casing.get('room_count',0))} | Storage {int(casing.get('storage_count',0))}",
+                ]
+            security=snap.get('security') or {}
+            if security.get('trespassing'):
+                rows += [
+                    '',
+                    'TRESPASSING',
+                    'Guard response: '+('active search' if int(security.get('search_level',0))>=2 else 'warning / observation'),
+                ]
+        alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
+        if alerts:
+            rows += ['', 'ALERTS']
+            for a in alerts:
+                rows.append(f'{a.severity:>3} {a.text}')
+        wounds = [w for w in sim.state.player_wounds if int(w.get('severity',0))>0 or int(w.get('bleeding',0))>0 or w.get('fracture')]
+        if wounds:
+            rows += ['', 'INJURIES']
+            for w in wounds[-2:]:
+                rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
+        rows += ['', 'NEARBY']
+        near = []
+        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
+            spec = self.registry.species.get(c.species_id)
+            label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
+            near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+            near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
+        rows += near or ['Quiet nearby']
+        rows += ['', 'GEAR']
+        gear = [f'{slot}: {self.registry.items[iid].name}' for slot,iid in sorted(sim.state.player_equipment.items()) if iid in self.registry.items]
+        rows += gear[:3] or ['None equipped']
+        rows += ['', f'Pack: {sum(n for n in inv.items.values() if n>0)} items']
+        rows = [self._clip(str(r), width) for r in rows]
+        rows += [''] * max(0, height-len(rows))
+        return rows[:height]
+
                 elif k in grave_by: ch = '†' if self.use_unicode else '+'
                 elif k in arc_by: ch = '*'
                 elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
