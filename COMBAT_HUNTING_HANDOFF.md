@@ -465,6 +465,112 @@ Phase-4 regression coverage verifies:
 - defense/stagger save roundtrip;
 - Combat Action Hub exposure without adding global key bindings.
 
+## Phase 5 — tactical animal combat AI
+
+### Data-driven tactical profiles
+
+Species can now declare tactical combat behavior rather than relying only on aggression/flee thresholds:
+
+- `combat_style`
+- `charge_range`
+- `charge_power`
+- `display_range`
+- `pack_coordination`
+- `herd_cohesion`
+
+Validation constrains those fields and older/modded species safely fall back to `generic`.
+
+The first tuned tactical set includes rabbits/deer, elk, moose, wild boar, marsh boar, grey wolves, and brown bears.
+
+### Committed charges and threat displays
+
+Boar, moose, and bears can now distinguish between warning behavior and a committed attack.
+
+- an uninjured territorial animal may stop and perform a visible threat display before committing;
+- a recently attacked high-defensive-aggression charger can skip the warning and commit immediately;
+- a charge persists for a bounded number of turns rather than being re-rolled every step;
+- movement during the charge builds physical `charge_momentum`;
+- leg trauma, critical blood/HP state, exhaustion, stagger, or reaching the target can end the commitment;
+- charge movement is faster/more direct and costs more stamina;
+- charge attacks prefer authored rush/charge/goring/trampling attacks where available;
+- impact damage and fracture pressure scale with species charge power and accumulated momentum.
+
+Dodge and Shield Brace now interact with that momentum. Dodging a committed charge forces the animal into a short recovery window. A successful braced shield collision can drain the charger, inflict recoil pain, and stagger it.
+
+### Reach control against charges
+
+A player who explicitly chooses **Parry** while holding a reach-2+ piercing weapon can meet a committed charge before body contact.
+
+This is not a passive spear bonus. It requires:
+
+- an actual committed charge;
+- the Parry defensive action;
+- a readied piercing reach weapon.
+
+The interception uses the normal thrust/melee wound resolver. A successful point interception cancels charge momentum, spends the prepared defense, drains animal stamina, and produces a bounded stagger. A failed interception spends the prepared parry and lets the charge continue.
+
+### Wolf pack tactics
+
+Grey wolves now use deterministic pack roles when multiple local members of the same materialized group are present:
+
+- one **anchor** applies direct pursuit pressure;
+- remaining wolves alternate between **flank left** and **flank right** roles;
+- flankers choose side/back approach positions using the player's actual facing;
+- flank attacks prefer bite/hamstring-style authored attacks and bias toward lower limbs;
+- exhausted or heavily pained wolves disengage instead of blindly continuing pressure;
+- disengaging wolves move away from the player while also biasing toward pack cohesion.
+
+Pack role assignment uses an isolated deterministic hash namespace and never creates distant individuals.
+
+### Herd panic and cohesion
+
+Prey/herd species now carry bounded local `panic`.
+
+- direct attacks spike panic;
+- alarm propagation transfers panic through nearby members according to `herd_cohesion`;
+- panicked deer/herd animals flee away from the threat while retaining a cohesion pressure toward their group centroid;
+- once the threat is lost, residual panic can produce regroup behavior rather than independent wandering;
+- panic decays when the animal no longer perceives the threat.
+
+This keeps the authoritative ecology cohort unchanged: tactics operate only on already-materialized local individuals.
+
+### Tactical legibility
+
+The local action log reports state transitions such as:
+
+- threat display;
+- committed charge;
+- pack flanking;
+- herd panic;
+- disengagement.
+
+Look/Wildlife screens expose pack role, charge momentum, and panic only at appropriate Hunting/Survival skill thresholds. Rendering remains observational.
+
+### Test arena
+
+A new **Tactical AI Field** preset loads:
+
+- a boar charger;
+- a moose territorial charger;
+- a three-wolf pack;
+- a three-deer herd;
+- reach weapon and shield equipment.
+
+This is designed specifically to exercise charge timing, side pressure, panic propagation, Parry/reach control, Dodge, Guard, and Brace.
+
+### Persistence / determinism
+
+Creature tactical state is save-compatible through appended defaults:
+
+- committed charge deadline;
+- charge momentum;
+- pack role;
+- panic;
+- last threat-display turn;
+- last attacked turn.
+
+Tests cover tactical profile loading, reliable attacked-boar charge commitment, threat displays, wolf role assignment/flanking, low-stamina wolf disengagement, herd panic/cohesion, tactical-state roundtrip, reach interception, braced-charge recoil, charge impact cleanup, and the tactical arena preset.
+
 ## Known gaps / next coherent phase
 
 The next pass should extend tactical depth without replacing the phase-1/2 contracts.
@@ -483,12 +589,12 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - embedded-projectile extraction wounds from living targets;
    - richer material-specific ricochet/breakage.
 
-3. **Animal combat decision depth**
-   - committed boar/moose/bear charges;
-   - wolf pack pursuit and flanking;
-   - herd cohesion, panic cascades and regrouping;
-   - defensive threat displays before some attacks;
-   - exhaustion and pain altering attack selection.
+3. **Animal combat depth beyond phase 5**
+   - species-specific feints, bluff displays and retreat thresholds;
+   - pack target switching and wounded-member protection;
+   - true knockback / trampling displacement;
+   - den/young defense and territorial memory;
+   - predator-prey combat between non-player animals.
 
 4. **Melee depth beyond phase 4**
    - reach control, closing distance, and disengagement;
