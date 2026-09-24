@@ -20,12 +20,16 @@ from worldseed.ui.terminal import Terminal
 
 
 def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None, combat_overlay=None) -> None:
+    stealth_overlay=ctx.sim.stealth_snapshot() if ctx.sim.state.player_stealth_mode else None
     presenter = getattr(term, 'present_game', None)
     if callable(presenter):
-        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor, combat_overlay)
+        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor, combat_overlay, stealth_overlay)
     else:
         w, h = term.size()
-        term.present(renderer.render(ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message, cursor=cursor, combat_overlay=combat_overlay))
+        term.present(renderer.render(
+            ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message,
+            cursor=cursor, combat_overlay=combat_overlay, stealth_overlay=stealth_overlay,
+        ))
 
 from worldseed.ui.widgets import select_menu, view_text
 from worldseed.ui.pointer import WindowCloseRequested
@@ -937,6 +941,9 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 result=_talk_action(ctx,term)
                 if result==UI_BACK:continue
                 return result
+            if action=='stealth':
+                ctx.sim.execute(ToggleStealthCommand(ctx.player_id))
+                return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='p':ctx.sim.execute(PickupCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             result=_handle_menu(ctx,term,action)
             if result==UI_BACK:
