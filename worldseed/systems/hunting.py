@@ -510,8 +510,17 @@ class HuntingSystem:
             dx, dy = player.x - c.x, player.y - c.y
             facing = c.facing_dx * dx + c.facing_dy * dy
             sight = max(8, 44 - dist * 3)
-            if facing < 0 and dist > 2:
-                sight //= 2
+            if facing < 0 and dist > 2:sight //= 2
+            distraction={"feeding":72,"drinking":78,"resting":52}.get(c.activity,100)
+            sight=sight*distraction//100
+            if self.state.player_stance=="stalk":
+                skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
+                agility=int(self.state.player_attributes.get("agility",5));cover=self._cover_score(player)
+                conceal=min(32,7+skill+max(0,agility-5)+cover//4)
+                sight=max(0,sight-conceal)
+            if self.environment is not None:
+                weather=self.environment.weather.at(minute,player.x,player.y)
+                sight=sight*max(4,min(8,int(weather.get("visibility",8))))//8
             score = max(score, sight)
 
         noise = self._player_noise
@@ -519,7 +528,9 @@ class HuntingSystem:
             ndist = abs(c.x - int(noise["x"])) + abs(c.y - int(noise["y"]))
             radius = max(1, sp.hearing * max(20, int(noise["loudness"])) // 40)
             if ndist <= radius:
-                score = max(score, max(8, 38 + int(noise["loudness"]) // 3 - ndist * 3))
+                heard=max(8,38+int(noise["loudness"])//3-ndist*3)
+                heard=heard*{"feeding":76,"drinking":82,"resting":62}.get(c.activity,100)//100
+                score=max(score,heard)
 
         scent = self._scent_score(c, sp, player, minute)
         score = max(score, scent)
@@ -697,6 +708,8 @@ class HuntingSystem:
         if roll < chance:
             strength = max(10, min(100, sp.trackability + min(25, sp.mass_kg // 10)))
             self._write_sign(c, "track", old, new, minute, strength, terrain)
+        if self._cover_score(old)>=18 and hash_u64(self.seed,"animal-disturbance",c.uid,turn,old.x,old.y)%100<55:
+            self._write_sign(c,"disturbed",old,new,minute,max(15,min(80,sp.mass_kg//3+sp.trackability//2)),"bent vegetation / disturbed ground")
 
         bleeding = sum(max(0, int(w.get("bleeding", 0))) for w in c.wounds[-10:])
         if bleeding > 0:
@@ -738,10 +751,10 @@ class HuntingSystem:
                 self.state.animal_signs.pop(sign.uid, None)
 
     def _prune_signs(self, minute: int) -> None:
+        ttl_by={"blood":18*60,"track":36*60,"disturbed":24*60,"drink":18*60,"feeding":48*60,"bed":72*60,"scat":96*60,"call":4*60}
         for uid, sign in list(self.state.animal_signs.items()):
-            ttl = 18 * 60 if sign.kind == "blood" else 36 * 60
-            if minute - sign.created_minute > ttl:
-                self.state.animal_signs.pop(uid, None)
+            ttl=ttl_by.get(sign.kind,36*60)
+            if minute-sign.created_minute>ttl:self.state.animal_signs.pop(uid,None)
 
     def nearby_signs(self, pos: WorldPos, radius: int = 8) -> list[AnimalSignState]:
         rows = [
@@ -756,6 +769,20 @@ class HuntingSystem:
             key=lambda s: (-s.created_minute, s.uid),
         )
 
+    def nearby_dens(self,pos:WorldPos,radius:int=10)->list[AnimalDenState]:
+        rows=[d for d in self.state.animal_dens.values() if d.z==pos.z and abs(d.x-pos.x)+abs(d.y-pos.y)<=radius]
+        return sorted(rows,key=lambda d:(abs(d.x-pos.x)+abs(d.y-pos.y),-d.last_used_minute,d.uid))
+
+    def describe_den(self,den:AnimalDenState,hunting_skill:int,survival_skill:int,minute:int,species_known:bool=True)->str:
+        sp=self.registry.species.get(den.species_id);skill=max(int(hunting_skill),int(survival_skill))
+        animal=sp.name.lower() if sp and species_known else "animal"
+        age=max(0,minute-den.last_used_minute)
+        use="freshly used" if age<=60 else "recently used" if age<=360 else "old"
+        if skill<3:return f"An animal {den.kind}."
+        stored=sum(den.stored_items.values())
+        cache=f" It contains {stored} cached item(s)." if stored and skill>=6 else ""
+        return f"A {use} {animal} {den.kind}: {den.detail}.{cache}"
+
     def describe_sign(
         self,
         sign: AnimalSignState,
@@ -765,28 +792,23 @@ class HuntingSystem:
         *,
         species_known: bool = True,
     ) -> str:
-        skill = max(int(hunting_skill), int(survival_skill))
-        sp = self.registry.species.get(sign.species_id)
-        animal = sp.name.lower() if sp and species_known else "animal"
-        age = max(0, minute - sign.created_minute)
-        if age <= 30:
-            freshness = "very fresh"
-        elif age <= 120:
-            freshness = "fresh"
-        elif age <= 480:
-            freshness = "aging"
-        else:
-            freshness = "old"
-        if skill < 2:
-            return "Blood sign." if sign.kind == "blood" else "Animal tracks."
-        direction = self._direction_name(sign.direction_x, sign.direction_y)
-        if sign.kind == "blood":
-            severity = "heavy" if sign.strength >= 65 else "clear" if sign.strength >= 35 else "faint"
+        skill=max(int(hunting_skill),int(survival_skill));sp=self.registry.species.get(sign.species_id)
+        animal=sp.name.lower() if sp and species_known else "animal";age=max(0,minute-sign.created_minute)
+        freshness="very fresh" if age<=30 else "fresh" if age<=120 else "aging" if age<=480 else "old"
+        direction=self._direction_name(sign.direction_x,sign.direction_y)
+        if skill<2:
+            basic={"blood":"Blood sign.","track":"Animal tracks.","scat":"Animal droppings.","feeding":"Feeding sign.","bed":"Flattened bedding.","drink":"Tracks at a drinking spot.","disturbed":"Disturbed vegetation.","call":"Recent animal sign."}
+            return basic.get(sign.kind,"Animal sign.")
+        if sign.kind=="blood":
+            severity="heavy" if sign.strength>=65 else "clear" if sign.strength>=35 else "faint"
             return f"{freshness.title()} {severity} blood from a {animal}, leading {direction}."
-        if skill >= 6:
-            print_strength = "deep" if sign.strength >= 70 else "clear" if sign.strength >= 40 else "faint"
-            return f"{freshness.title()} {print_strength} {animal} tracks heading {direction}."
-        return f"{freshness.title()} {animal} tracks heading {direction}."
+        if sign.kind=="track":
+            clarity="deep" if sign.strength>=70 else "clear" if sign.strength>=40 else "faint"
+            return f"{freshness.title()} {clarity} {animal} tracks heading {direction}."
+        labels={"scat":"droppings","feeding":"feeding sign","bed":"bedding depression","drink":"drinking sign","disturbed":"disturbed vegetation","call":"calling sign"}
+        label=labels.get(sign.kind,sign.kind.replace("_"," "))
+        extra=f" ({sign.detail})" if skill>=6 and sign.detail else ""
+        return f"{freshness.title()} {animal} {label}{extra}."
 
     @staticmethod
     def _direction_name(dx: int, dy: int) -> str:
