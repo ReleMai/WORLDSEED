@@ -203,6 +203,7 @@ class CreatureState:
     last_need_minute: int = -1
     last_sign_turn: int = -1000
     organ_damage: dict[str, int] = field(default_factory=dict)
+    carried_item_id: str = ""
 
 @dataclass(slots=True)
 class PopulationCohort:
