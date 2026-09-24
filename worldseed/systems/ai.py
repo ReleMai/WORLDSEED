@@ -164,10 +164,15 @@ class NPCSystem:
                 if food:
                     town.stocks[food]-=1;npc.hunger=max(0,npc.hunger-45)
                     if self.economy is not None and npc.wealth>0:
-                        price=min(npc.wealth,self.economy.trade_price(town.uid,food,buy=True));npc.wealth-=price;town.wealth+=price
+                        price=min(npc.wealth,self.economy.trade_price(town.uid,food,buy=True))
+                        npc.wealth-=price;town.wealth+=price
+                        self.economy.record_transaction(
+                            town.uid,"npc_purchase",npc.uid,town.uid,
+                            copper_value=price,minute=minute,requested={food:1},
+                        )
             elif action=='drink':npc.thirst=max(0,npc.thirst-55)
             elif action=='rest':npc.rest=max(0,npc.rest-55)
-            elif action=='work':self._work(npc,town);npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
+            elif action=='work':self._work(npc,town,minute);npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
             elif action=='guard':npc.rest=min(100,npc.rest+5);npc.needs['safety']=max(0,npc.needs.get('safety',0)-20)
             elif action=='heal':
                 medicine=next((iid for iid in ('core:herbal_tonic','core:medicinal_herb') if town.stocks.get(iid,0)>0),None)
@@ -186,10 +191,11 @@ class NPCSystem:
         # fabricated house/workplace identifiers.
         if self.settlement_population is not None:
             self.settlement_population.bind_settlement(town)
-    def _work(self,npc:NPCState,town)->None:
-        mapping={"farmer":("core:wheat",2),"hunter":("core:meat",1),"miner":("core:iron_ore",1),"carpenter":("core:wood",2),"herder":("core:turnip",1),"merchant":("core:wood",1)};item,amount=mapping.get(npc.occupation,(None,0))
-        if npc.occupation=='smith' and 'tech:smelting' in town.knowledge and town.stocks.get('core:iron_ore',0)>=2 and town.stocks.get('core:coal',0)>=1:town.stocks['core:iron_ore']-=2;town.stocks['core:coal']-=1;town.stocks['core:iron_bloom']=town.stocks.get('core:iron_bloom',0)+1
-        elif item:town.stocks[item]=town.stocks.get(item,0)+amount
+    def _work(self,npc:NPCState,town,minute:int=0)->None:
+        # Production belongs to the aggregate labor reservation. The named NPC
+        # is its physical representative and must not mint a second output.
+        if self.economy is not None:
+            self.economy.representative_work(npc,town,minute)
     def _socialize(self,npc:NPCState,other:NPCState,minute:int)->None:
         rel=npc.relationships.setdefault(other.uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0});rel['familiarity']=min(100,rel['familiarity']+2);rel['trust']=min(100,rel['trust']+1);rel['affection']=min(100,rel['affection']+1)
         npc.needs["social"]=max(0,npc.needs.get("social",0)-35)
