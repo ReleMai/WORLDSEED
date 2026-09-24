@@ -49,6 +49,7 @@ from worldseed.systems.food import NutritionSystem, CookingSystem
 from worldseed.systems.processing import ProcessingSystem
 from worldseed.systems.fishing import FishingSystem
 from worldseed.systems.stealth import StealthSystem
+from worldseed.systems.property_intrusion import PropertyStorageSystem, CasingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 
@@ -142,6 +143,12 @@ class Simulation:
         self.stealth=StealthSystem(
             self.state,self.seed,self.world,self.resources,self.building,
             self.settlement_physicalization,self.environment,
+        )
+        self.property_storage=PropertyStorageSystem(
+            self.state,registry,self.seed,self.settlement_physicalization,self.civics
+        )
+        self.casing=CasingSystem(
+            self.state,self.settlement_physicalization,self.civics,self.property_storage
         )
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
@@ -284,7 +291,10 @@ class Simulation:
         elif isinstance(command,SellCommand):self._sell(command)
         elif isinstance(command,BarterCommand):self._barter(command)
         elif isinstance(command,StealMarketCommand):self._steal_market(command)
+        elif isinstance(command,StealContainerCommand):self._steal_container(command)
         elif isinstance(command,ToggleStealthCommand):self._toggle_stealth(command);minutes=0
+        elif isinstance(command,StartCasingCommand):self._start_casing(command);minutes=0
+        elif isinstance(command,StopCasingCommand):self._stop_casing(command);minutes=0
         elif isinstance(command,ReadBookCommand):self._read_book(command)
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
@@ -483,6 +493,9 @@ class Simulation:
                 if abs(settlement.region_x-rx)<=1 and abs(settlement.region_y-ry)<=1:
                     self.civics.ensure_settlement(settlement.uid)
                     self.institutions.ensure_settlement(settlement.uid)
+            self.property_storage.sync_active()
+            if self.state.player_casing_property_id and self.settlement_physicalization.structure_by_id(self.state.player_casing_property_id) is None:
+                self.state.player_casing_property_id=""
             self.magic.ensure_traditions();self.magic.ensure_rituals();self.economy.update_prices()
             self._nearby_region_key=region_key
 
@@ -843,6 +856,9 @@ class Simulation:
         if self.state.player_stealth_mode:
             movement_noise=self.stealth.movement_noise(movement_noise)
         self.hunting.note_player_noise(new,movement_noise,self.turn,self.clock.minute,"stealth_movement" if self.state.player_stealth_mode else "movement")
+        if self.state.player_casing_property_id:
+            for casing_message in self.casing.observe_step(new,self.clock.minute,self.stealth):
+                self._message(casing_message)
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
@@ -974,10 +990,14 @@ class Simulation:
     def _store(self,cmd:StoreCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
+        if c.kind=="property" and c.owner!="player" and c.access!="public":
+            self._message("That storage belongs to someone else.");return
         ok,msg=self.building.store(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _take_container(self,cmd:TakeFromContainerCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
+        if c.kind=="property" and c.owner!="player" and c.access!="public":
+            self._message("That storage is private. Use the theft action while casing the property.");return
         ok,msg=self.building.take(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _move_container(self,cmd:MoveContainerCommand)->None:
         c=self._command_container(cmd.container_uid)
@@ -1424,14 +1444,19 @@ class Simulation:
         self._message(f"You barter {offered} {offered_name} for {requested} {requested_name}.")
 
     def stealth_snapshot(self)->dict:
-        return self.stealth.snapshot(
+        snap=self.stealth.snapshot(
             self.player_pos,self.clock.minute,active=bool(self.state.player_stealth_mode)
         )
+        if self.state.player_casing_property_id:
+            snap["casing"]=self.casing.summary()
+        return snap
 
     def _toggle_stealth(self,cmd:ToggleStealthCommand)->None:
         enabled=(not self.state.player_stealth_mode) if cmd.enabled is None else bool(cmd.enabled)
         self.state.player_stealth_mode=enabled
         if not enabled:
+            if self.state.player_casing_property_id:
+                self.casing.stop()
             self._message("You leave stealth mode and move normally.")
             return
         snap=self.stealth.snapshot(self.player_pos,self.clock.minute,active=True)
@@ -1440,6 +1465,69 @@ class Simulation:
             self._message(f"You enter stealth mode, but {seen} observer{'s' if seen!=1 else ''} currently has line of sight.")
         else:
             self._message("You enter stealth mode. Observer sight cones are now visible.")
+
+    def _start_casing(self,cmd:StartCasingCommand)->None:
+        ok,msg=self.casing.start(
+            cmd.property_id,self.player_pos,self.clock.minute,self.stealth
+        )
+        self._message(msg)
+        if ok:
+            for casing_message in self.casing.observe_step(
+                self.player_pos,self.clock.minute,self.stealth
+            ):
+                self._message(casing_message)
+
+    def _stop_casing(self,cmd:StopCasingCommand)->None:
+        self._message(self.casing.stop())
+
+    def _steal_container(self,cmd:StealContainerCommand)->None:
+        if not self.state.player_stealth_mode:
+            self._message("Enter stealth mode before attempting theft.");return
+        container=self._command_container(cmd.container_uid)
+        if container is None or container.kind!="property":
+            self._message("That property storage is not within reach.");return
+        if self.state.player_casing_property_id!=container.property_id:
+            self._message("You need to case this property before stealing from its storage.");return
+        intel=self.state.casing_intel.get(container.property_id)
+        if intel is None or container.uid not in intel.storage_uids:
+            self._message("You have not located this storage while casing the property.");return
+        amount=max(1,int(cmd.amount))
+        if container.items.get(cmd.item_id,0)<amount:
+            self._message("That quantity is not present in the storage.");return
+        if cmd.item_id not in self.registry.items:
+            self._message("That stored good is invalid.");return
+        town=self.state.settlements.get(container.settlement_id)
+        if town is None:
+            self._message("The property's settlement record is unavailable.");return
+        witnesses=list(self.stealth.witnesses(self.player_pos,self.clock.minute,town.uid))
+        container.items[cmd.item_id]-=amount
+        if container.items[cmd.item_id]<=0:
+            container.items.pop(cmd.item_id,None)
+        self.entities.get(cmd.actor,Inventory).add(cmd.item_id,amount)
+        owner=container.owner or self.civics.owner_for_structure(town.uid,container.property_id) or town.uid
+        theft=self.economy.record_theft(
+            town.uid,"player",owner,cmd.item_id,amount,self.clock.minute,
+            witnessed=bool(witnesses),property_id=container.property_id,
+            source_kind="property_storage",witness_uids=witnesses,
+        )
+        if witnesses:
+            alarm=int(getattr(intel,"alarm_level",0))
+            guards=sum(
+                1 for uid in witnesses
+                if uid in self.state.npcs and self.state.npcs[uid].occupation=="guard"
+            )
+            self.state.player_crime_heat[town.uid]=min(
+                100,self.state.player_crime_heat.get(town.uid,0)+10+guards*15+alarm*5
+            )
+            self._message(
+                f"You steal {amount} {self.registry.items[cmd.item_id].name} from {container.name.lower()}. "
+                "The theft was witnessed."
+            )
+        else:
+            self._message(
+                f"You steal {amount} {self.registry.items[cmd.item_id].name} from {container.name.lower()}. "
+                "No witness is apparent."
+            )
 
     def _steal_market(self,cmd:StealMarketCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id)
