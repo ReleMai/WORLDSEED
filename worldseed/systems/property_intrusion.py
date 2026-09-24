@@ -108,6 +108,10 @@ class PropertyStorageSystem:
         _,y,x=min(candidates)
         return WorldPos(x,y,0),room.uid
 
+    @staticmethod
+    def _lock_level(function: str) -> int:
+        return {"residence":18,"smithy":24,"workshop":20,"mill":18,"fishery":14,"barn":14,"clinic":24,"watchhouse":36,"archive":34,"school":18}.get(str(function),12)
+
     def _existing(self, uid: str):
         return next((c for c in self.state.containers.values() if c.uid==uid),None)
 
@@ -150,6 +154,8 @@ class PropertyStorageSystem:
                 existing.settlement_id=town.uid
                 existing.property_id=structure.uid
                 existing.access="private"
+                if existing.lock_level<=0:existing.lock_level=self._lock_level(structure.function)
+                if existing.last_tampered_minute<0 and not existing.picked:existing.locked=existing.lock_level>0
                 continue
             placed=self._position(skeleton,structure)
             if placed is None:
@@ -167,7 +173,8 @@ class PropertyStorageSystem:
                 capacity_volume_ml=260000 if structure.function in {"barn","smithy","workshop","mill"} else 140000,
                 items=items,name=name,kind="property",movable=False,source_id=source_id,
                 settlement_id=town.uid,property_id=structure.uid,room_id=room_id,
-                access="private",lock_level=0,seeded_from_settlement=True,
+                access="private",lock_level=self._lock_level(structure.function),
+                locked=self._lock_level(structure.function)>0,seeded_from_settlement=True,
             )
             created+=1
         return PropertyStorageSync(town.uid,eligible,created,reserved)
@@ -187,6 +194,37 @@ class PropertyStorageSystem:
             key=lambda c:c.uid,
         ))
 
+
+    def by_id(self, container_uid: str):
+        return next((c for c in self.state.containers.values() if c.uid==str(container_uid)),None)
+
+    @staticmethod
+    def authorized_actor(container:ContainerState,actor_uid:str)->bool:
+        actor_uid=str(actor_uid or "")
+        return container.access=="public" or actor_uid==container.owner or actor_uid in container.keyholder_uids or (actor_uid=="player" and container.owner=="player")
+
+    def blocks_actor(self,container:ContainerState,actor_uid:str)->bool:
+        return bool(container.locked and not self.authorized_actor(container,actor_uid))
+
+    def grant_keyholder(self,container_uid:str,actor_uid:str)->bool:
+        container=self.by_id(container_uid);actor_uid=str(actor_uid or "")
+        if container is None or not actor_uid:return False
+        if actor_uid not in container.keyholder_uids:container.keyholder_uids=sorted(set(container.keyholder_uids+[actor_uid]))
+        return True
+
+    def attempt_lockpick(self,container_uid:str,inventory,minute:int,skill:int,agility:int):
+        container=self.by_id(container_uid)
+        if container is None:return False,"That storage is no longer present.",0
+        if not container.locked:return True,f"{container.name or 'The storage'} is already unlocked.",0
+        if self.authorized_actor(container,"player"):return False,"You already have access to this storage.",0
+        if inventory.quantity("core:lockpick")<=0:return False,"You need a lockpick.",0
+        container.pick_attempts+=1;container.last_tampered_minute=int(minute)
+        chance=max(5,min(92,32+int(skill)*7+int(agility)*2-container.lock_level))
+        roll=int(hash_u64(self.seed,"container-lockpick",container.uid,container.pick_attempts,minute)%100)
+        if roll<chance:
+            container.locked=False;container.picked=True
+            return True,"You pick the storage lock.",5
+        return False,"The storage lock holds.",5
 
 
 class PropertySecuritySystem:

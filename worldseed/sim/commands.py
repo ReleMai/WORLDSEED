@@ -144,6 +144,10 @@ class ForceDoorCommand:
     actor:int
     door_uid:str
 @dataclass(frozen=True,slots=True)
+class LockpickContainerCommand:
+    actor:int
+    container_uid:str
+@dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 
 @dataclass(frozen=True,slots=True)

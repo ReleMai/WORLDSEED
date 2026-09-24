@@ -312,6 +312,7 @@ class Simulation:
         elif isinstance(command,StealMarketCommand):self._steal_market(command)
         elif isinstance(command,StealContainerCommand):self._steal_container(command)
         elif isinstance(command,LockpickDoorCommand):minutes=self._lockpick_door(command)
+        elif isinstance(command,LockpickContainerCommand):minutes=self._lockpick_container(command)
         elif isinstance(command,ForceDoorCommand):minutes=self._force_door(command)
         elif isinstance(command,ToggleStealthCommand):self._toggle_stealth(command);minutes=0
         elif isinstance(command,StartCasingCommand):self._start_casing(command);minutes=0
@@ -1026,12 +1027,16 @@ class Simulation:
     def _store(self,cmd:StoreCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
+        if c.kind=="property" and self.property_storage.blocks_actor(c,"player"):
+            self._message(f"{c.name or 'That storage'} is locked.");return
         if c.kind=="property" and c.owner!="player" and c.access!="public":
             self._message("That storage belongs to someone else.");return
         ok,msg=self.building.store(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _take_container(self,cmd:TakeFromContainerCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
+        if c.kind=="property" and self.property_storage.blocks_actor(c,"player"):
+            self._message(f"{c.name or 'That storage'} is locked.");return
         if c.kind=="property" and c.owner!="player" and c.access!="public":
             self._message("That storage is private. Use the theft action while casing the property.");return
         ok,msg=self.building.take(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
@@ -1546,6 +1551,12 @@ class Simulation:
             self._message(security_message)
         return max(1,int(minutes or MINUTES_PER_ACTION))
 
+    def _lockpick_container(self,cmd:LockpickContainerCommand)->int:
+        inv=self.entities.get(cmd.actor,Inventory)
+        ok,msg,minutes=self.property_storage.attempt_lockpick(cmd.container_uid,inv,self.clock.minute,self.player_skill("stealth"),self.player_attribute("agility"))
+        self._message(msg)
+        return max(1,int(minutes or MINUTES_PER_ACTION))
+
     def _force_door(self,cmd:ForceDoorCommand)->int:
         inv=self.entities.get(cmd.actor,Inventory)
         ok,msg,minutes,noise=self.property_security.force_entry(
@@ -1590,6 +1601,8 @@ class Simulation:
         intel=self.state.casing_intel.get(container.property_id)
         if intel is None or container.uid not in intel.storage_uids:
             self._message("You have not located this storage while casing the property.");return
+        if self.property_storage.blocks_actor(container,"player"):
+            self._message(f"{container.name or 'That storage'} is locked. Pick the lock before taking goods.");return
         amount=max(1,int(cmd.amount))
         if container.items.get(cmd.item_id,0)<amount:
             self._message("That quantity is not present in the storage.");return

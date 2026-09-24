@@ -66,3 +66,18 @@ Status: implemented in this development unit.
 ## Validation rule
 
 Use targeted local tests during each coherent work unit, then GitHub Fast Gate for integrated publication. Full Validation & Package is reserved for substantial milestones or a new playtest build. Fix causes rather than bypassing failing assertions.
+
+
+## Work Unit 14 - Materialized property container locks
+
+Status: implemented in this development unit.
+
+- Generated private property storage now materializes with deterministic persistent lock strength by building function.
+- Container locked/picked/tamper/attempt/keyholder state serializes with the existing container authority.
+- Existing untampered pre-lock storage gains its deterministic lock during active sync without reseeding goods; picked storage is not silently relocked.
+- A dedicated LockpickContainerCommand reuses the existing lockpick item and player stealth/agility progression.
+- Normal store/take and property-theft paths consume the same lock authority. Casing can reveal storage but does not bypass the physical lock.
+- Sparse container keyholder grants provide the permission target for the next physical-key item system.
+
+### Next dependency
+Add physical key items bound to stable lock identities, ownership/transfer and duplicate-key/lock crafting, then expose lock/key status and guest access through the interaction UI.
