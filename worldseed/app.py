@@ -1373,6 +1373,8 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
         _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not c:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
+    if c.kind=='property' and c.owner!='player' and c.access!='public':
+        _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     nav=NavigationStack(RouteState('storage','Nearby Storage'))
     while True:
         route=nav.current
