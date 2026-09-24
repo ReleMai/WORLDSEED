@@ -96,6 +96,14 @@ class BuyCommand: actor:int; settlement_id:str; item_id:str; amount:int=1
 @dataclass(frozen=True,slots=True)
 class SellCommand: actor:int; settlement_id:str; item_id:str; amount:int=1
 @dataclass(frozen=True,slots=True)
+class BarterCommand:
+    actor:int
+    settlement_id:str
+    offered_item:str
+    offered_amount:int
+    requested_item:str
+    requested_amount:int
+@dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 
 @dataclass(frozen=True,slots=True)
