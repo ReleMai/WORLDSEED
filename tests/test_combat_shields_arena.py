@@ -116,7 +116,7 @@ class CombatShieldArenaTests(unittest.TestCase):
         guard_state,guard=self.combat("core:steel_tower_shield")
         brace_state,brace=self.combat("core:steel_tower_shield")
         for state in (guard_state,brace_state):
-            state.player_skills["shield"]=20;state.player_attributes["strength"]=14;state.player_guarding=True
+            state.player_skills["shield"]=8;state.player_attributes["strength"]=14;state.player_guarding=True
         guard_state.player_defense_mode="guard";brace_state.player_defense_mode="brace"
         vitals=Vitals()
         guard_cov=guard.shield_coverage_chance("torso","melee",100,1,0)
