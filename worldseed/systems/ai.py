@@ -79,17 +79,20 @@ class NPCSystem:
     def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
         war=bool(self.state.factions.get(npc.faction_id).at_war) if npc.faction_id in self.state.factions else False
         needs=npc.needs
+        routine=self._routine_bias(npc,minute)
         scores={
-            "eat":npc.hunger*3,
+            "eat":npc.hunger*3+routine["eat"],
             "drink":npc.thirst*4,
-            "rest":npc.rest*2,
-            "work":(80+(30 if "ambitious" in npc.traits else 0)-npc.hunger) if npc.workplace_id else 15,
-            "socialize":needs.get("social",0)*2+(15 if "kind" in npc.traits else 0),
-            "guard":((85 if npc.occupation=="guard" else 0)+(35 if war else 0)),
+            "rest":npc.rest*2+routine["rest"]+(80 if npc.rest>=80 else 0),
+            "work":((65+(25 if "ambitious" in npc.traits else 0)-npc.hunger)+routine["work"]) if npc.workplace_id else 10,
+            "socialize":needs.get("social",0)*2+(15 if "kind" in npc.traits else 0)+routine["socialize"],
+            "guard":((50 if npc.occupation=="guard" else 0)+(35 if war else 0)+routine["guard"]),
             "heal":max((100-npc.hp)*4,needs.get("health",0)*3),
-            "worship":needs.get("faith",0)*2 if npc.occupation=="priest" or needs.get("faith",0)>55 else 0,
-            "learn":needs.get("learning",0)*2 if npc.occupation=="scholar" or "curious" in npc.traits else 0,
+            "worship":(needs.get("faith",0)*2+routine["worship"]) if npc.occupation=="priest" or needs.get("faith",0)>55 else 0,
+            "learn":(needs.get("learning",0)*2+routine["learn"]) if npc.occupation=="scholar" or "curious" in npc.traits or npc.age<16 else 0,
         }
+        if npc.hunger>=80:scores["eat"]+=90
+        if npc.thirst>=75:scores["drink"]+=100
         if npc.hunger>=85 and npc.wealth<=1 and ("greedy" in npc.traits or town.food_stress>=70):
             scores["steal"]=npc.hunger*3+25
         best=max(scores,key=scores.get);best_score=scores[best]
