@@ -1,8 +1,13 @@
 name: WORLDSEED Full Validation & Package
 
-# Intentionally manual. The comprehensive suite is expensive and is a
-# release/handoff gate, not something to run after every development commit.
+# Normally manual: the comprehensive suite is a release/handoff gate, not
+# something to run after every development commit. A PR that changes this
+# workflow also runs it so validation/package maintenance can prove itself.
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/test-build.yml"
   workflow_dispatch:
 
 concurrency:
