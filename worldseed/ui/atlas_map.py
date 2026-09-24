@@ -6,6 +6,7 @@ import textwrap
 
 from worldseed.config import CHUNK_SIZE
 from worldseed.world.atlas import read_atlas
+from worldseed.world.settlement_atlas import build_settlement_atlas
 
 UNKNOWN = (17, 21, 23)
 
@@ -19,6 +20,66 @@ class AtlasControls:
     snapshot: object = None
     raster: object = None
     inspected: tuple | None = None
+    detail: object = None
+    detail_inspected: tuple | None = None
+    detail_notice: str = ''
+
+
+@dataclass(frozen=True)
+class SettlementDetailData:
+    town: object
+    skeleton: object
+    snapshot: object
+
+
+LAND_USE_COLORS = {
+    'residential': (70, 76, 68),
+    'civic': (96, 80, 55),
+    'farm': (67, 88, 57),
+    'industrial': (91, 66, 54),
+    'pasture': (77, 91, 63),
+    'reserve': (55, 62, 58),
+}
+ROAD_COLOR = (172, 144, 91)
+BUILDING_COLOR = (154, 151, 139)
+ROOM_COLOR = (103, 112, 105)
+ENTRANCE_COLOR = (219, 188, 118)
+
+
+def _prepared_settlement_skeleton(sim, settlement_id):
+    physical = getattr(sim, 'settlement_physicalization', None)
+    if physical is not None:
+        getter = getattr(physical, 'skeleton_for', None)
+        if callable(getter):
+            skeleton = getter(settlement_id)
+            if skeleton is not None:
+                return skeleton
+    planner = getattr(sim, 'settlement_planner', None)
+    reader = getattr(planner, 'read_prepared', None)
+    if callable(reader):
+        return reader(settlement_id)
+    return None
+
+
+def read_prepared_settlement_detail(sim, settlement_id):
+    """Read one already-prepared settlement plan without generating anything."""
+    skeleton = _prepared_settlement_skeleton(sim, settlement_id)
+    if skeleton is None:
+        return None
+    town = getattr(getattr(sim, 'state', None), 'settlements', {}).get(settlement_id)
+    if town is None:
+        town = next((row for row in sim.known_settlements() if row.uid == settlement_id), None)
+    if town is None:
+        return None
+    snapshot = build_settlement_atlas(
+        skeleton.plan,
+        roads=skeleton.roads,
+        parcels=skeleton.parcels,
+        structures=skeleton.structures,
+        rooms=skeleton.rooms,
+        margin=4,
+    )
+    return SettlementDetailData(town, skeleton, snapshot)
 
 
 class AtlasArt:
