@@ -13,6 +13,8 @@ from worldseed.world.regional_plan import (
     RoadSegmentPlan,
     RoomPlanState,
     SettlementPlanState,
+    StructurePiecePlan,
+    StructurePlanState,
     stable_plan_uid,
 )
 
@@ -114,10 +116,10 @@ def _building_type(room_kinds: list[str], all_tags: set[str]) -> str:
         return "workshop"
     if "bedroom" in kinds:
         return "residence"
-    if "storage" in kinds and len(kinds) == 1:
-        return "storehouse"
     if all_tags & {"stable", "livestock"}:
         return "stable"
+    if "storage" in kinds and len(kinds) == 1:
+        return "storehouse"
     return "building"
 
 
@@ -253,6 +255,9 @@ class SettlementSkeleton:
     plan: SettlementPlanState
     roads: list[RoadSegmentPlan] = field(default_factory=list)
     parcels: list[LandUseParcel] = field(default_factory=list)
+    structures: list[StructurePlanState] = field(default_factory=list)
+    rooms: list[RoomPlanState] = field(default_factory=list)
+    pieces: list[StructurePiecePlan] = field(default_factory=list)
     fingerprint: str = ""
 
     def to_dict(self) -> dict:
@@ -260,6 +265,9 @@ class SettlementSkeleton:
             "plan": asdict(self.plan),
             "roads": [asdict(row) for row in self.roads],
             "parcels": [asdict(row) for row in self.parcels],
+            "structures": [asdict(row) for row in self.structures],
+            "rooms": [asdict(row) for row in self.rooms],
+            "pieces": [asdict(row) for row in self.pieces],
         }
         payload["fingerprint"] = self.fingerprint or canonical_hash(payload)
         return payload
@@ -283,7 +291,21 @@ class SettlementSkeleton:
             row = dict(item)
             row["cells"] = [tuple(map(int, p)) for p in row.get("cells", ())]
             parcels.append(LandUseParcel(**row))
-        return cls(plan, roads, parcels, str(raw.get("fingerprint", "")))
+        structures = []
+        for item in raw.get("structures", ()):
+            row = dict(item)
+            row["footprint"] = [tuple(map(int, p)) for p in row.get("footprint", ())]
+            if row.get("entrance") is not None:
+                row["entrance"] = tuple(map(int, row["entrance"]))
+            structures.append(StructurePlanState(**row))
+        rooms = []
+        for item in raw.get("rooms", ()):
+            row = dict(item)
+            row["cells"] = [tuple(map(int, p)) for p in row.get("cells", ())]
+            row["doorway_cells"] = [tuple(map(int, p)) for p in row.get("doorway_cells", ())]
+            rooms.append(RoomPlanState(**row))
+        pieces = [StructurePiecePlan(**dict(item)) for item in raw.get("pieces", ())]
+        return cls(plan, roads, parcels, structures, rooms, pieces, str(raw.get("fingerprint", "")))
 
 
 def settlement_rank_for_population(population: int) -> str:
@@ -563,6 +585,206 @@ class SettlementSkeletonPlanner:
             terrain_score=terrain_score,
         )
 
+    @staticmethod
+    def _parcel_bbox(parcel: LandUseParcel) -> tuple[int, int, int, int]:
+        xs=[p[0] for p in parcel.cells]; ys=[p[1] for p in parcel.cells]
+        return min(xs),min(ys),max(xs),max(ys)
+
+    @staticmethod
+    def _piece_choice(registry, category: str, *, tags: tuple[str, ...] = (), contains: str = ""):
+        if registry is None:
+            return None
+        rows=[]
+        for piece in registry.settlement_pieces.values():
+            if piece.category!=category:
+                continue
+            if tags and not all(tag in piece.tags or tag in piece.room_tags for tag in tags):
+                continue
+            if contains and contains not in piece.id:
+                continue
+            rows.append(piece)
+        return min(rows,key=lambda p:p.id,default=None)
+
+    def _material_choices(self, archetype: str):
+        registry=getattr(self.world,"registry",None)
+        wall_contains="stone" if archetype=="mining" else "timber"
+        wall=self._piece_choice(registry,"wall",contains=wall_contains) or self._piece_choice(registry,"wall")
+        floor_contains="stone" if archetype=="mining" else "plank"
+        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor")
+        roof_contains="stone" if archetype=="mining" else ("timber" if archetype in {"forest","frontier"} else "thatch")
+        roof=self._piece_choice(registry,"roof",contains=roof_contains) or self._piece_choice(registry,"roof")
+        door=self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
+        return wall,floor,roof,door
+
+    @staticmethod
+    def _road_cell_set(roads: Iterable[RoadSegmentPlan]) -> set[tuple[int,int]]:
+        return {tuple(p) for road in roads for p in road.polyline}
+
+    def _building_rect(self, parcel: LandUseParcel, *, large: bool) -> tuple[int,int,int,int] | None:
+        left,top,right,bottom=self._parcel_bbox(parcel)
+        available_w=right-left+1; available_h=bottom-top+1
+        target_w=7 if large and available_w>=7 else 5 if available_w>=5 else available_w
+        target_h=5 if available_h>=5 else available_h
+        if target_w<4 or target_h<4:
+            return None
+        cx=(left+right)//2; cy=(top+bottom)//2
+        x0=cx-target_w//2; y0=cy-target_h//2
+        rect={(x,y) for y in range(y0,y0+target_h) for x in range(x0,x0+target_w)}
+        if not rect.issubset(set(parcel.cells)):
+            candidates=[]
+            for sy in range(top,bottom-target_h+2):
+                for sx in range(left,right-target_w+2):
+                    cells={(x,y) for y in range(sy,sy+target_h) for x in range(sx,sx+target_w)}
+                    if cells.issubset(set(parcel.cells)):
+                        candidates.append((abs((sx+target_w//2)-cx)+abs((sy+target_h//2)-cy),sy,sx))
+            if not candidates:
+                return None
+            _,y0,x0=min(candidates)
+        return x0,y0,target_w,target_h
+
+    def _fixture_piece(self, function: str, room_side: str):
+        registry=getattr(self.world,"registry",None)
+        if function=="residence":
+            if room_side=="primary":
+                return self._piece_choice(registry,"furniture",tags=("bed",))
+            return self._piece_choice(registry,"furniture",contains="house_hearth")
+        if function=="smithy":
+            return self._piece_choice(registry,"workshop",contains="forge") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="workshop":
+            return self._piece_choice(registry,"workshop",contains="carpenter_bench") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="mill":
+            return self._piece_choice(registry,"workshop",contains="millstone") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="fishery":
+            return self._piece_choice(registry,"workshop",contains="butcher_table") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="barn":
+            return self._piece_choice(registry,"agriculture",contains="barn_stall") if room_side=="primary" else self._piece_choice(registry,"agriculture",contains="hay_rack")
+        return self._piece_choice(registry,"furniture",contains="small_table")
+
+    def _plan_building(
+        self,
+        parcel: LandUseParcel,
+        roads: list[RoadSegmentPlan],
+        *,
+        slot: str,
+        function: str,
+        archetype: str,
+        large: bool,
+    ) -> tuple[StructurePlanState,list[RoomPlanState],list[StructurePiecePlan]] | None:
+        registry=getattr(self.world,"registry",None)
+        if registry is None:
+            return None
+        rect=self._building_rect(parcel,large=large)
+        if rect is None:
+            return None
+        x0,y0,width,height=rect
+        shell={(x,y) for x in range(x0,x0+width) for y in (y0,y0+height-1)}
+        shell|={(x,y) for y in range(y0,y0+height) for x in (x0,x0+width-1)}
+        interior={(x,y) for y in range(y0+1,y0+height-1) for x in range(x0+1,x0+width-1)}
+        road_cells=self._road_cell_set(roads)
+        if not road_cells:
+            return None
+        entrance=min(shell,key=lambda p:(min(abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),p[1],p[0]))
+        walls=set(shell); walls.discard(entrance)
+        doors={entrance}
+        partition_cells=set()
+        if large and width>=7 and len(interior)>=9:
+            px=x0+width//2
+            partition_cells={(px,y) for y in range(y0+1,y0+height-1)}
+            internal_door=(px,y0+height//2)
+            partition_cells.discard(internal_door)
+            doors.add(internal_door)
+            walls|=partition_cells
+
+        structure_uid=stable_plan_uid("structure",parcel.uid,slot,sorted(shell|interior))
+        wall_piece,floor_piece,roof_piece,door_piece=self._material_choices(archetype)
+        if not all((wall_piece,floor_piece,roof_piece,door_piece)):
+            return None
+        placements=[]
+        def place(piece,cell,role):
+            uid=stable_plan_uid("piece",structure_uid,f"{piece.id}:{role}:{cell[0]}:{cell[1]}",[cell])
+            placements.append(StructurePiecePlan(uid,structure_uid,piece.id,cell[0],cell[1],piece.layer,role))
+            return uid
+        for cell in sorted(walls,key=lambda p:(p[1],p[0])):
+            place(wall_piece,cell,"partition" if cell in partition_cells else "wall")
+        for cell in sorted(doors,key=lambda p:(p[1],p[0])):
+            place(door_piece,cell,"interior_door" if cell!=entrance else "entrance")
+        for cell in sorted(interior,key=lambda p:(p[1],p[0])):
+            place(floor_piece,cell,"floor")
+            place(roof_piece,cell,"roof")
+
+        fixture_tags={}
+        interior_sorted=sorted(interior,key=lambda p:(p[1],p[0]))
+        if interior_sorted:
+            if large and partition_cells:
+                px=x0+width//2
+                left_cells=[p for p in interior_sorted if p[0]<px]
+                right_cells=[p for p in interior_sorted if p[0]>px]
+                fixture_slots=[("primary",left_cells[0] if left_cells else interior_sorted[0]),
+                               ("secondary",right_cells[-1] if right_cells else interior_sorted[-1])]
+            else:
+                fixture_slots=[("primary",interior_sorted[0])]
+            for side,cell in fixture_slots:
+                fixture=self._fixture_piece(function,side)
+                if fixture is None:
+                    continue
+                place(fixture,cell,"fixture")
+                fixture_tags.setdefault(cell,set()).update(fixture.room_tags or fixture.tags)
+
+        analysis=analyze_building(
+            structure_uid,wall_cells=walls,door_cells=doors,roof_cells=interior,
+            floor_cells=interior,fixture_tags=fixture_tags,
+        )
+        if not analysis.enclosed or analysis.roof_percent<60:
+            return None
+        rooms=[RoomPlanState(**asdict(room)) for room in analysis.rooms]
+        fixture_placements=[p for p in placements if p.role=="fixture"]
+        for room in rooms:
+            room.fixture_ids=[p.uid for p in fixture_placements if (p.x,p.y) in set(room.cells)]
+        structure=StructurePlanState(
+            uid=structure_uid,settlement_plan_id=parcel.settlement_plan_id,
+            content_id=f"core:generated_{function}",function=function,
+            footprint=sorted(shell|interior,key=lambda p:(p[1],p[0])),
+            entrance=entrance,building_type=analysis.building_type,enclosed=analysis.enclosed,
+            interior_area=analysis.interior_area,room_ids=[r.uid for r in rooms],
+            piece_ids=[p.uid for p in placements],roof_percent=analysis.roof_percent,
+            workplace_role=("smith" if function=="smithy" else "carpenter" if function=="workshop" else "miller" if function=="mill" else "fisher" if function=="fishery" else ""),
+        )
+        return structure,rooms,placements
+
+    def _generate_buildings(
+        self,
+        plan: SettlementPlanState,
+        roads: list[RoadSegmentPlan],
+        parcels: list[LandUseParcel],
+    ) -> tuple[list[StructurePlanState],list[RoomPlanState],list[StructurePiecePlan]]:
+        structures=[]; rooms=[]; pieces=[]
+        residential=[p for p in parcels if p.kind=="residential"]
+        for index,parcel in enumerate(residential):
+            large=plan.rank in {"town","city"} and index%3==0
+            result=self._plan_building(parcel,roads,slot=f"home:{index}",function="residence",archetype=plan.archetype,large=large)
+            if result:
+                structure,new_rooms,new_pieces=result
+                structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
+                parcel.structure_ids.append(structure.uid)
+
+        industrial=[p for p in parcels if p.kind=="industrial"]
+        if industrial:
+            function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
+            result=self._plan_building(industrial[0],roads,slot="industry:0",function=function,archetype=plan.archetype,large=True)
+            if result:
+                structure,new_rooms,new_pieces=result
+                structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
+                industrial[0].structure_ids.append(structure.uid)
+
+        farms=[p for p in parcels if p.kind=="farm"]
+        if farms:
+            result=self._plan_building(farms[0],roads,slot="farm:0",function="barn",archetype=plan.archetype,large=True)
+            if result:
+                structure,new_rooms,new_pieces=result
+                structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
+                farms[0].structure_ids.append(structure.uid)
+        return structures,rooms,pieces
+
     def _generate(self, region_plan, settlement_id: str, population: int) -> SettlementSkeleton:
         if not region_plan.settlement_present or region_plan.settlement_anchor is None:
             raise ValueError("Cannot generate settlement skeleton for a region without a settlement anchor")
@@ -669,7 +891,9 @@ class SettlementSkeletonPlanner:
         for _, y, x, access_id in sorted(candidates):
             parcel = self._parcel(
                 plan.uid, f"residential:{len([p for p in parcels if p.kind=='residential'])}",
-                "residential", "home_lot", (x, y), 5, 5,
+                "residential", "home_lot", (x, y),
+                7 if rank in {"town","city"} else 5,
+                7 if rank in {"town","city"} else 5,
                 forbidden=occupied, road_cells=road_cells, access_road_id=access_id,
             )
             if parcel is None:
@@ -724,11 +948,16 @@ class SettlementSkeletonPlanner:
             xs = [p[0] for p in all_points]; ys = [p[1] for p in all_points]
             plan.atlas_bounds = (min(xs), min(ys), max(xs), max(ys))
 
-        skeleton = SettlementSkeleton(plan, roads, parcels)
+        structures,rooms,pieces=self._generate_buildings(plan,roads,parcels)
+        plan.structure_site_ids=[row.uid for row in structures]
+        skeleton = SettlementSkeleton(plan, roads, parcels, structures, rooms, pieces)
         skeleton.fingerprint = canonical_hash({
             "plan": asdict(plan),
             "roads": [asdict(row) for row in roads],
             "parcels": [asdict(row) for row in parcels],
+            "structures": [asdict(row) for row in structures],
+            "rooms": [asdict(row) for row in rooms],
+            "pieces": [asdict(row) for row in pieces],
         })
         return skeleton
 

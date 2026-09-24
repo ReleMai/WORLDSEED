@@ -330,7 +330,7 @@ class ContentRegistry:
         for struct in self.structures.values():
             for iid in struct.cost:
                 if iid not in self.items: raise ValueError(f"Unknown construction item {iid} in {struct.id}")
-        allowed_piece_categories={"wall","floor","opening","furniture","workshop","road","agriculture","mine","decoration","civic"}
+        allowed_piece_categories={"wall","floor","roof","opening","furniture","workshop","road","agriculture","mine","decoration","civic"}
         allowed_piece_layers={"structure","ground","overlay"}
         allowed_enclosure_roles={"","wall","door","opening","floor","partition"}
         for piece in self.settlement_pieces.values():

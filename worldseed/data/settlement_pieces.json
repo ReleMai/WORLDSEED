@@ -4086,5 +4086,233 @@
     "comfort": 0,
     "work_bonus": 0,
     "materialization_family": "civic"
+  },
+  {
+    "id": "core:thatch_roof_piece",
+    "name": "Thatch Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "flammable",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "agricultural"
+    ],
+    "material": "thatch",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:reed_roof_piece",
+    "name": "Reed Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "flammable",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "agricultural"
+    ],
+    "material": "reed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:timber_shingle_roof_piece",
+    "name": "Timber Shingle Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "flammable",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:plank_roof_piece",
+    "name": "Plank Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "flammable",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "industrial",
+      "residential"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:slate_roof_piece",
+    "name": "Slate Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "civic",
+      "industrial"
+    ],
+    "material": "slate",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:clay_tile_roof_piece",
+    "name": "Clay Tile Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "civic",
+      "residential"
+    ],
+    "material": "clay",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:sod_roof_piece",
+    "name": "Sod Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "frontier"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
+  },
+  {
+    "id": "core:stone_slab_roof_piece",
+    "name": "Stone Slab Roof",
+    "category": "roof",
+    "layer": "overlay",
+    "glyph": "^",
+    "tags": [
+      "roof",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "roof"
   }
 ]

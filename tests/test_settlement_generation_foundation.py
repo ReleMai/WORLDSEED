@@ -130,6 +130,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         world=SimpleNamespace(
             generator=SimpleNamespace(world_seed=b'skeleton-test'),
             delta_source=cache,
+            registry=self.registry,
             environment_at=lambda pos: Env(pos.x,pos.y),
         )
         region=RegionBlockPlan(
@@ -175,7 +176,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             open_water=False,slope=10,flood_risk=5,wetness=40,soil_fertility=65,farmland=70,
             resources=SimpleNamespace(stone=40,timber=60,freshwater=50),resource_opportunity=50,
         )
-        world=SimpleNamespace(generator=SimpleNamespace(world_seed=b'order-test'),delta_source=Cache(),environment_at=lambda pos: env)
+        world=SimpleNamespace(generator=SimpleNamespace(world_seed=b'order-test'),delta_source=Cache(),registry=self.registry,environment_at=lambda pos: env)
         region=RegionBlockPlan(
             uid='r',region_x=0,region_y=0,version=1,dominant_biome='grassland',biome_mix={'grassland':25},
             mean_elevation=1,mean_moisture=1,mean_temperature=1,relief=1,
@@ -189,6 +190,52 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         b=SettlementSkeletonPlanner(world).plan(region,'settlement:r',55,persist=False)
         self.assertEqual(a.fingerprint,b.fingerprint)
 
+
+
+    def test_generated_buildings_use_catalog_and_pass_enclosure_detector(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(
+            open_water=False,slope=6,flood_risk=4,wetness=42,soil_fertility=70,farmland=76,
+            resources=SimpleNamespace(stone=72,timber=60,freshwater=55),resource_opportunity=62,
+        )
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'building-plan-test'),delta_source=Cache(),
+            registry=self.registry,environment_at=lambda pos: env,
+        )
+        region=RegionBlockPlan(
+            uid='rb',region_x=0,region_y=0,version=1,dominant_biome='grassland',biome_mix={'grassland':25},
+            mean_elevation=1,mean_moisture=1,mean_temperature=1,relief=1,
+            settlement_present=True,settlement_anchor=(160,160),settlement_score=80,
+            settlement_archetype='mining',control_potential='settled',
+            roads=(RegionRoadExit('north',160,'road'),RegionRoadExit('east',160,'road')),
+        )
+        skeleton=SettlementSkeletonPlanner(world).plan(region,'settlement:buildings',110,persist=False)
+        self.assertTrue(skeleton.structures)
+        self.assertTrue(skeleton.rooms)
+        self.assertTrue(skeleton.pieces)
+        self.assertEqual(set(skeleton.plan.structure_site_ids),{s.uid for s in skeleton.structures})
+        catalog=set(self.registry.settlement_pieces)
+        self.assertTrue(all(piece.piece_id in catalog for piece in skeleton.pieces))
+        for structure in skeleton.structures:
+            self.assertTrue(structure.enclosed)
+            self.assertGreaterEqual(structure.roof_percent,60)
+            self.assertTrue(structure.entrance)
+            self.assertTrue(structure.room_ids)
+            self.assertTrue(structure.piece_ids)
+            self.assertTrue(set(structure.room_ids).issubset({r.uid for r in skeleton.rooms}))
+            self.assertTrue(set(structure.piece_ids).issubset({p.uid for p in skeleton.pieces}))
+        self.assertTrue(any(len(s.room_ids)>=2 for s in skeleton.structures))
+        self.assertTrue(any(s.building_type=='smithy' for s in skeleton.structures))
+        smithy=next(s for s in skeleton.structures if s.building_type=='smithy')
+        self.assertIn('smithy',{r.kind for r in skeleton.rooms if r.structure_plan_id==smithy.uid})
+
+    def test_roofs_are_first_class_settlement_pieces(self):
+        roofs=[p for p in self.registry.settlement_pieces.values() if p.category=='roof']
+        self.assertGreaterEqual(len(roofs),8)
+        self.assertTrue(all(p.layer=='overlay' for p in roofs))
 
 
 if __name__ == "__main__":
