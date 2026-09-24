@@ -104,10 +104,15 @@ class HuntingStealthAnatomyTests(unittest.TestCase):
         deer.activity="";deer.thirst=0;deer.hunger=80
         self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),3,510))
         self.assertIn(deer.activity,("to_food","feeding"))
+        if deer.activity=="to_food":
+            hunting._activity_tick(deer,sp,WorldPos(30,30,0),4,511)
+        if deer.activity=="feeding":
+            self.assertTrue(any(x.kind=="feeding" for x in state.animal_signs.values()))
+            self.assertTrue(state.resource_depletion)
 
         deer.activity="";deer.hunger=0;deer.stamina=20
-        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),4,520))
-        if deer.activity=="to_den":hunting._activity_tick(deer,sp,WorldPos(30,30,0),5,521)
+        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),5,520))
+        if deer.activity=="to_den":hunting._activity_tick(deer,sp,WorldPos(30,30,0),6,521)
         self.assertIn(deer.activity,("resting","to_den"))
         if deer.activity=="resting":self.assertTrue(any(x.kind=="bed" for x in state.animal_signs.values()))
 
@@ -157,7 +162,7 @@ class HuntingStealthAnatomyTests(unittest.TestCase):
             self.assertIn("neck",sp.body);self.assertIn("heart",sp.anatomy);self.assertIn("liver",sp.anatomy)
         self.assertIn("antlers",deer.anatomy);self.assertEqual(deer.anatomy["antlers"]["harvest"],"bone")
         self.assertIn("tusks",boar.anatomy)
-        self.assertIn("wings",turkey.body)
+        self.assertIn("wings",turkey.body);self.assertEqual(turkey.anatomy["feathers"]["harvest"],"feather")
 
     def test_anatomy_processing_converts_named_parts_to_real_existing_materials(self):
         state=LivingWorldState();combat=CombatSystem(state,self.reg,b"process-anatomy")
