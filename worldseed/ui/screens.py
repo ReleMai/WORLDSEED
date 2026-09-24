@@ -245,7 +245,8 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
         sp=sim.registry.species.get(creature.species_id)
         known=creature.species_id in sim.known_species_ids()
         label=sp.name if sp and known else 'Unknown animal'
-        body.append(f'Animal: {label} — {creature.behavior.replace("_"," ")}')
+        activity=f' / {creature.activity.replace("_"," ")}' if creature.activity else ''
+        body.append(f'Animal: {label} — {creature.behavior.replace("_"," ")}{activity}')
         hunting=sim.player_skill('hunting')
         if hunting>=3 or survival>=4:
             condition=[]
@@ -260,7 +261,11 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
             if creature.panic>=35:tactical.append('high panic' if creature.panic>=70 else 'rising panic')
             if tactical:body.append('Tactical read: '+', '.join(tactical))
         if hunting>=7 and creature.wounds:
-            body.append(f'Observed wounds: {len(creature.wounds)}; blood reserve appears {"critical" if creature.blood<35 else "low" if creature.blood<70 else "stable"}.')
+            injured=sorted({str(w.get('anatomy','')).replace('_',' ') for w in creature.wounds if w.get('anatomy')})
+            body.append(f'Observed wounds: {len(creature.wounds)}; blood reserve appears {"critical" if creature.blood<35 else "low" if creature.blood<70 else "stable"}.'+(f' Injured anatomy: {", ".join(injured)}.' if injured else ''))
+    den=next((d for d in sim.state.animal_dens.values() if (d.x,d.y,d.z)==(p.x,p.y,p.z)),None)
+    if den:
+        body.append('Den: '+sim.hunting.describe_den(den,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=den.species_id in sim.known_species_ids()))
     signs=sim.hunting.signs_at(p)
     for sign in signs[:4]:
         body.append('Sign: '+sim.hunting.describe_sign(sign,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=sign.species_id in sim.known_species_ids()))
@@ -271,6 +276,9 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
         steps.append('butchered' if carcass.butchered else 'not butchered')
         steps.append('deboned' if carcass.deboned else 'bones remain')
         body.append(f'Carcass: {sp.name if sp else carcass.species_id} — quality {carcass.quality}% — '+', '.join(steps))
+        if sim.player_skill('hunting')>=5 and carcass.anatomy_condition:
+            remaining=[f"{name.replace('_',' ')} {carcass.anatomy_mass_g.get(name,0)}g/{cond}%" for name,cond in carcass.anatomy_condition.items() if name not in carcass.harvested_anatomy]
+            if remaining:body.append('Harvestable anatomy: '+', '.join(remaining[:6]))
     if crop:
         stage='ready to harvest' if crop.mature else 'growing';body.append(f'Crop: {crop.crop_id.split(":")[-1].replace("_"," ")} — {stage}')
         if sim.player_skill('survival')>=4:body.append(f'Condition: health {crop.health}, moisture {crop.moisture}, disease {crop.disease}')
@@ -396,6 +404,7 @@ def ecology_screen(sim:Simulation,width:int=108)->str:
         spec=sim.registry.species.get(c.species_id);label=c.name if c.uid in known_creatures and c.name else spec.name if spec and c.species_id in known else 'Unknown animal';d=abs(c.x-p.x)+abs(c.y-p.y)
         extra=f' — about {d} tiles away' if survival>=3 else ''
         state=f' — {c.behavior.replace("_"," ")}' if max(sim.player_skill('hunting'),survival)>=3 else ''
+        if max(sim.player_skill('hunting'),survival)>=4 and c.activity:state+=f' / {c.activity.replace("_"," ")}'
         tactic=''
         if max(sim.player_skill('hunting'),survival)>=6:
             details=[]
@@ -405,6 +414,12 @@ def ecology_screen(sim:Simulation,width:int=108)->str:
             if details:tactic=' ['+', '.join(details)+']'
         body.append(label+extra+state+tactic)
     signs=sim.hunting.nearby_signs(p,10)[:8]
+    dens=sim.hunting.nearby_dens(p,12)[:6]
+    if dens:
+        body+=['','DENS / BEDS / NESTS']
+        for den in dens:
+            d=abs(den.x-p.x)+abs(den.y-p.y)
+            body.append(sim.hunting.describe_den(den,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=den.species_id in known)+f' ({d} tiles)')
     if signs:
         body+=['','RECENT SIGN']
         for sign in signs:
