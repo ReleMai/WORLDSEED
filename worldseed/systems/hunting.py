@@ -162,7 +162,11 @@ class HuntingSystem:
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
             if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
-                attackers.append(creature.uid)
+                # A deliberate disengage buys one exchange against ordinary
+                # closing pressure if the animal had to move to re-enter reach.
+                # Committed charges ignore that spacing grace.
+                if not (self.state.player_disengage_turn==turn and creature.last_move_turn==turn and creature.behavior!="charge"):
+                    attackers.append(creature.uid)
         return list(dict.fromkeys(attackers))
 
     def _prepare_group_tactics(self, local:list[CreatureState], turn:int) -> None:
