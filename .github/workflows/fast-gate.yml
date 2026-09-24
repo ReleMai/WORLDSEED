@@ -122,9 +122,9 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Surface-cache and save-compatibility smoke tests" --timeout 120 -- python -u -m unittest -v tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
 
-      - name: Atlas drag regression
+      - name: Atlas UI regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Atlas drag regression" --timeout 120 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
+        run: python -u tools/run_ci_check.py --name "Atlas UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets tests.test_settlement_atlas_ui
 
       - name: Content audit
         shell: pwsh
