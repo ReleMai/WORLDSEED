@@ -452,11 +452,28 @@ class EconomySystem:
     def barter_balance(self, settlement_id: str, offered: dict[str,int], requested: dict[str,int]) -> int:
         return self.barter_value(settlement_id,offered,offered=True)-self.barter_value(settlement_id,requested,offered=False)
 
-    def record_theft(self, settlement_id: str, thief_uid: str, victim_uid: str, item_id: str, quantity: int, minute: int, *, witnessed: bool) -> TheftRecordState:
+    def record_theft(
+        self,
+        settlement_id: str,
+        thief_uid: str,
+        victim_uid: str,
+        item_id: str,
+        quantity: int,
+        minute: int,
+        *,
+        witnessed: bool,
+        property_id: str = "",
+        source_kind: str = "",
+        witness_uids=(),
+    ) -> TheftRecordState:
         qty=max(1,int(quantity))
         value=max(1,self.trade_price(settlement_id,item_id,buy=True)*qty)
         uid=self.state.uid("theft")
-        row=TheftRecordState(uid,settlement_id,thief_uid,victim_uid,item_id,qty,value,int(minute),bool(witnessed),False)
+        row=TheftRecordState(
+            uid,settlement_id,thief_uid,victim_uid,item_id,qty,value,int(minute),
+            bool(witnessed),False,str(property_id),str(source_kind),
+            sorted({str(value) for value in witness_uids if value}),
+        )
         self.state.theft_records[uid]=row
         self.record_transaction(
             settlement_id,"theft",thief_uid,victim_uid or settlement_id,
