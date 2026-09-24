@@ -95,26 +95,31 @@ class HuntingStealthAnatomyTests(unittest.TestCase):
         den=AnimalDenState("den:test","core:deer",0,0,0,"bed",500,last_used_minute=500,detail="flattened bedding site")
         state.animal_dens[den.uid]=den;deer.home_den_uid=den.uid
 
-        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),1,500))
-        if deer.activity=="to_water":
-            self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),2,501))
+        water_target=hunting._find_activity_target(deer,sp,"water")
+        self.assertIsNotNone(water_target)
+        hunting._set_activity_target(deer,water_target,"to_water",1)
+        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),2,501))
         self.assertEqual(deer.activity,"drinking")
         self.assertTrue(any(x.kind=="drink" for x in state.animal_signs.values()))
 
         deer.activity="";deer.thirst=0;deer.hunger=80
-        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),3,510))
-        self.assertIn(deer.activity,("to_food","feeding"))
-        if deer.activity=="to_food":
-            hunting._activity_tick(deer,sp,WorldPos(30,30,0),4,511)
-        if deer.activity=="feeding":
-            self.assertTrue(any(x.kind=="feeding" for x in state.animal_signs.values()))
-            self.assertTrue(state.resource_depletion)
+        food_target=hunting._find_activity_target(deer,sp,"food")
+        self.assertIsNotNone(food_target)
+        hunting._set_activity_target(deer,food_target,"to_food",3)
+        for turn in range(4,9):
+            hunting._activity_tick(deer,sp,WorldPos(30,30,0),turn,510+turn)
+            if deer.activity=="feeding":break
+        self.assertEqual(deer.activity,"feeding")
+        self.assertTrue(any(x.kind=="feeding" for x in state.animal_signs.values()))
+        self.assertTrue(state.resource_depletion)
 
         deer.activity="";deer.hunger=0;deer.stamina=20
-        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),5,520))
-        if deer.activity=="to_den":hunting._activity_tick(deer,sp,WorldPos(30,30,0),6,521)
-        self.assertIn(deer.activity,("resting","to_den"))
-        if deer.activity=="resting":self.assertTrue(any(x.kind=="bed" for x in state.animal_signs.values()))
+        hunting._set_activity_target(deer,WorldPos(den.x,den.y,den.z),"to_den",9)
+        for turn in range(10,15):
+            hunting._activity_tick(deer,sp,WorldPos(30,30,0),turn,520+turn)
+            if deer.activity=="resting":break
+        self.assertEqual(deer.activity,"resting")
+        self.assertTrue(any(x.kind=="bed" for x in state.animal_signs.values()))
 
     def test_den_is_stable_bounded_physical_state_and_roundtrips(self):
         state=LivingWorldState();hunting=self.hunting(state);sp=self.reg.species["core:wolf"]
