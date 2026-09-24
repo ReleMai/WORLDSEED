@@ -12,7 +12,7 @@ from worldseed.persistence.database import WorldDatabase
 from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState
 from worldseed.ui.layout import compute_layout, screen_width, regional_grid
-from worldseed.ui.navigation import WORLD_CONSOLE_ROOT
+from worldseed.ui.navigation import WORLD_CONSOLE_ROOT, ACTION_COMBAT
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.router import classify_key, DIRECT_MENUS
 from worldseed.ui.screens import help_screen
@@ -87,6 +87,14 @@ class UIRC2Tests(unittest.TestCase):
         self.assertEqual(classify_key('Q').kind,'none')
         self.assertEqual(classify_key('QUIT').kind,'quit')
         self.assertNotIn('d',DIRECT_MENUS)
+
+    def test_combat_action_hub_exposes_active_defense_without_new_global_keys(self):
+        keys={key for key,_ in ACTION_COMBAT}
+        for expected in ("dodge","parry","guard","brace","bash","arena"):
+            self.assertIn(expected,keys)
+        # These are Action Hub verbs, not global movement/router bindings.
+        for key in ("dodge","parry","guard","brace","bash"):
+            self.assertNotIn(key,DIRECT_MENUS)
 
     def test_primary_navigation_is_small_and_hierarchical(self):
         self.assertLessEqual(len(WORLD_CONSOLE_ROOT),9)
