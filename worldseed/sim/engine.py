@@ -136,6 +136,7 @@ class Simulation:
         self.npcs.attach_settlement_population(
             self.settlement_physicalization,self.settlement_population
         )
+        self.npcs.attach_economy(self.economy)
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
         # to crossing the corresponding spatial boundary, not to every one-cell
@@ -464,6 +465,10 @@ class Simulation:
                 self.state.settlements.values(),(rx,ry),radius=0
             )
             self.settlement_population.bind_active(self.state.settlements.values())
+            for settlement_id in self.settlement_physicalization.active_settlement_ids:
+                self.family.ensure_settlement_identity(settlement_id)
+                town=self.state.settlements.get(settlement_id)
+                if town is not None:self.economy.ensure_currency(town)
             for settlement in self.state.settlements.values():
                 if abs(settlement.region_x-rx)<=1 and abs(settlement.region_y-ry)<=1:
                     self.civics.ensure_settlement(settlement.uid)
