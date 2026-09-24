@@ -292,6 +292,13 @@ class Renderer:
                     f"Attention: {str(casing.get('attention','low')).title()}",
                     f"Rooms {int(casing.get('room_count',0))} | Storage {int(casing.get('storage_count',0))}",
                 ]
+            security=snap.get('security') or {}
+            if security.get('trespassing'):
+                rows += [
+                    '',
+                    'TRESPASSING',
+                    'Guard response: '+('active search' if int(security.get('search_level',0))>=2 else 'warning / observation'),
+                ]
         alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
         if alerts:
             rows += ['', 'ALERTS']
