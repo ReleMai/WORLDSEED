@@ -253,6 +253,12 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
             if creature.pain>=35:condition.append('in visible pain')
             if any('leg' in str(w.get('part','')) and (w.get('fracture') or int(w.get('severity',0))>=35) for w in creature.wounds):condition.append('limping')
             if condition:body.append('Observed condition: '+', '.join(condition))
+        if hunting>=5:
+            tactical=[]
+            if creature.pack_role:tactical.append(creature.pack_role.replace("_"," "))
+            if creature.behavior=="charge" and creature.charge_momentum>0:tactical.append(f'charge momentum {creature.charge_momentum}')
+            if creature.panic>=35:tactical.append('high panic' if creature.panic>=70 else 'rising panic')
+            if tactical:body.append('Tactical read: '+', '.join(tactical))
         if hunting>=7 and creature.wounds:
             body.append(f'Observed wounds: {len(creature.wounds)}; blood reserve appears {"critical" if creature.blood<35 else "low" if creature.blood<70 else "stable"}.')
     signs=sim.hunting.signs_at(p)
@@ -390,7 +396,14 @@ def ecology_screen(sim:Simulation,width:int=108)->str:
         spec=sim.registry.species.get(c.species_id);label=c.name if c.uid in known_creatures and c.name else spec.name if spec and c.species_id in known else 'Unknown animal';d=abs(c.x-p.x)+abs(c.y-p.y)
         extra=f' — about {d} tiles away' if survival>=3 else ''
         state=f' — {c.behavior.replace("_"," ")}' if max(sim.player_skill('hunting'),survival)>=3 else ''
-        body.append(label+extra+state)
+        tactic=''
+        if max(sim.player_skill('hunting'),survival)>=6:
+            details=[]
+            if c.pack_role:details.append(c.pack_role.replace("_"," "))
+            if c.behavior=="charge" and c.charge_momentum:details.append(f'momentum {c.charge_momentum}')
+            if c.panic>=35:details.append(f'panic {c.panic}')
+            if details:tactic=' ['+', '.join(details)+']'
+        body.append(label+extra+state+tactic)
     signs=sim.hunting.nearby_signs(p,10)[:8]
     if signs:
         body+=['','RECENT SIGN']
