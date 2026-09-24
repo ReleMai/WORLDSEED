@@ -48,6 +48,23 @@ class SettlementPlanState:
     workplace_capacity: dict[str, int] = field(default_factory=dict)
     plan_revision: int = 0
     history_projection_revision: int = 0
+    atlas_version: int = 1
+    atlas_bounds: tuple[int, int, int, int] | None = None
+
+
+@dataclass(slots=True)
+class RoomPlanState:
+    """Stable interior room inside a larger planned structure."""
+    uid: str
+    structure_plan_id: str
+    kind: str = "room"
+    cells: list[tuple[int, int]] = field(default_factory=list)
+    doorway_cells: list[tuple[int, int]] = field(default_factory=list)
+    fixture_ids: list[str] = field(default_factory=list)
+    area: int = 0
+    enclosed: bool = True
+    sheltered: bool = False
+    roof_percent: int = 0
 
 
 @dataclass(slots=True)
@@ -66,6 +83,10 @@ class StructurePlanState:
     condition: int = 100
     destroyed: bool = False
     local_materialized_id: str = ""
+    building_type: str = ""
+    enclosed: bool = False
+    interior_area: int = 0
+    room_ids: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

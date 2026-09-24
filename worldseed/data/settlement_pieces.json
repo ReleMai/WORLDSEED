@@ -1,0 +1,4090 @@
+[
+  {
+    "id": "core:timber_straight_wall_piece",
+    "name": "Timber Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "straight",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "timber",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 55,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:timber_corner_wall_piece",
+    "name": "Timber Corner Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "corner",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "timber",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 55,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:timber_windowed_wall_piece",
+    "name": "Timber Windowed Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "windowed",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "timber",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 55,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:timber_reinforced_wall_piece",
+    "name": "Timber Reinforced Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "reinforced",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "timber",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 73,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:plank_straight_wall_piece",
+    "name": "Plank Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "straight",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "plank",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 48,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:plank_corner_wall_piece",
+    "name": "Plank Corner Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "corner",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "plank",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 48,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:plank_windowed_wall_piece",
+    "name": "Plank Windowed Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "windowed",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "plank",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 48,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:plank_reinforced_wall_piece",
+    "name": "Plank Reinforced Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "reinforced",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "plank",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 66,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:stone_straight_wall_piece",
+    "name": "Stone Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "straight"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 90,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:stone_corner_wall_piece",
+    "name": "Stone Corner Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "corner"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 90,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:stone_windowed_wall_piece",
+    "name": "Stone Windowed Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "windowed"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 90,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:stone_reinforced_wall_piece",
+    "name": "Stone Reinforced Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "reinforced"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 108,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:wattle_straight_wall_piece",
+    "name": "Wattle Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "straight",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wattle",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 28,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:wattle_corner_wall_piece",
+    "name": "Wattle Corner Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "corner",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wattle",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 28,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:wattle_windowed_wall_piece",
+    "name": "Wattle Windowed Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "windowed",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wattle",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 28,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:wattle_reinforced_wall_piece",
+    "name": "Wattle Reinforced Wall",
+    "category": "wall",
+    "layer": "structure",
+    "glyph": "#",
+    "tags": [
+      "wall",
+      "worldgen_piece",
+      "reinforced",
+      "flammable"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wattle",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 46,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "wall"
+  },
+  {
+    "id": "core:plank_plain_floor_piece",
+    "name": "Plank Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "plain"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "plank",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:plank_patterned_floor_piece",
+    "name": "Plank Patterned Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "patterned"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "plank",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:plank_drained_floor_piece",
+    "name": "Plank Drained Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "drained"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "plank",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:stone_plain_floor_piece",
+    "name": "Stone Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "plain"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:stone_patterned_floor_piece",
+    "name": "Stone Patterned Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "patterned"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:stone_drained_floor_piece",
+    "name": "Stone Drained Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "drained"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:packed_earth_plain_floor_piece",
+    "name": "Packed Earth Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "plain"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "packed_earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:packed_earth_patterned_floor_piece",
+    "name": "Packed Earth Patterned Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "patterned"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "packed_earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:packed_earth_drained_floor_piece",
+    "name": "Packed Earth Drained Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "drained"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "packed_earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:clay_plain_floor_piece",
+    "name": "Clay Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "plain"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "clay",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:clay_patterned_floor_piece",
+    "name": "Clay Patterned Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "patterned"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "clay",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:clay_drained_floor_piece",
+    "name": "Clay Drained Floor",
+    "category": "floor",
+    "layer": "ground",
+    "glyph": ".",
+    "tags": [
+      "floor",
+      "worldgen_piece",
+      "drained"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial"
+    ],
+    "material": "clay",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "floor",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "floor"
+  },
+  {
+    "id": "core:wood_door_piece",
+    "name": "Wood Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:ironbound_door_piece",
+    "name": "Ironbound Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood_iron",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:wattle_door_piece",
+    "name": "Wattle Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wattle",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:stone_arch_door_piece",
+    "name": "Stone Arch Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:wood_double_door_piece",
+    "name": "Wood Double Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "double_door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:iron_double_door_piece",
+    "name": "Iron Double Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "double_door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "iron",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:barn_door_piece",
+    "name": "Barn Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "double_door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:workshop_door_piece",
+    "name": "Workshop Door",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "door",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:wood_gate_piece",
+    "name": "Wood Gate",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "gate",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:palisade_gate_piece",
+    "name": "Palisade Gate",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "gate",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:stone_gate_piece",
+    "name": "Stone Gate",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "gate",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:market_arch_piece",
+    "name": "Market Arch",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "arch",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "civic",
+      "industrial",
+      "defense"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "opening",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 20,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "opening"
+  },
+  {
+    "id": "core:single_bed_piece",
+    "name": "Single Bed",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "bed",
+      "sleep",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "bed",
+      "sleep"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 6,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:double_bed_piece",
+    "name": "Double Bed",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "bed",
+      "sleep",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "bed",
+      "sleep"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 9,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:bunk_bed_piece",
+    "name": "Bunk Bed",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "bed",
+      "sleep",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "bed",
+      "sleep"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 8,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:small_table_piece",
+    "name": "Small Table",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "table",
+      "dining",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "table",
+      "dining"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:large_table_piece",
+    "name": "Large Table",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "table",
+      "dining",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "table",
+      "dining"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 3,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:bench_piece",
+    "name": "Bench",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "seating",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "seating"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:stool_piece",
+    "name": "Stool",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "seating",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "seating"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:chair_piece",
+    "name": "Chair",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "seating",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "seating"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:wall_shelf_piece",
+    "name": "Wall Shelf",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "storage",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:cupboard_piece",
+    "name": "Cupboard",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "storage",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:house_chest_piece",
+    "name": "House Chest",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "storage",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:wardrobe_piece",
+    "name": "Wardrobe",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "storage",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:writing_desk_piece",
+    "name": "Writing Desk",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "desk",
+      "workshop",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "desk",
+      "workshop"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:brazier_piece",
+    "name": "Brazier",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "hearth",
+      "warmth",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "hearth",
+      "warmth"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:house_hearth_piece",
+    "name": "House Hearth",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "hearth",
+      "cooking",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "hearth",
+      "cooking"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 3,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:washbasin_piece",
+    "name": "Washbasin",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "hygiene",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "hygiene"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:cradle_piece",
+    "name": "Cradle",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "bed",
+      "family",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "bed",
+      "family"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 2,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:woven_rug_piece",
+    "name": "Woven Rug",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "comfort",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "comfort"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 3,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:partition_screen_piece",
+    "name": "Partition Screen",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "partition",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "partition"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "partition",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:lamp_stand_piece",
+    "name": "Lamp Stand",
+    "category": "furniture",
+    "layer": "structure",
+    "glyph": "f",
+    "tags": [
+      "light",
+      "furniture",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "light"
+    ],
+    "settlement_roles": [
+      "residential",
+      "inn",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 1,
+    "work_bonus": 0,
+    "materialization_family": "furniture"
+  },
+  {
+    "id": "core:forge_piece",
+    "name": "Forge",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "forge",
+      "smithy",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "forge",
+      "smithy",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "smith",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 18,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:anvil_piece",
+    "name": "Anvil",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "anvil",
+      "smithy",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "anvil",
+      "smithy",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "smith",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 16,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:bellows_piece",
+    "name": "Bellows",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "bellows",
+      "smithy",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "bellows",
+      "smithy",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "smith",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:smith_bench_piece",
+    "name": "Smith Bench",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "smith",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:carpenter_bench_piece",
+    "name": "Carpenter Bench",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "carpentry",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "carpentry",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "carpenter",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 14,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:sawbench_piece",
+    "name": "Sawbench",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "carpentry",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "carpentry",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "carpenter",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:loom_piece",
+    "name": "Loom",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "loom",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "loom",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "weaver",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 14,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:spinning_wheel_piece",
+    "name": "Spinning Wheel",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "textile",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "textile",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "weaver",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 10,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:tanning_rack_piece",
+    "name": "Tanning Rack",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "tanning",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "tanning",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "tanner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:butcher_table_piece",
+    "name": "Butcher Table",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "butchery",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "butchery",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "butcher",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:pottery_wheel_piece",
+    "name": "Pottery Wheel",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "pottery",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "pottery",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "potter",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:kiln_piece",
+    "name": "Kiln",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "pottery",
+      "fire",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "pottery",
+      "fire",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "potter",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 15,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:brewery_vat_piece",
+    "name": "Brewery Vat",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "brewing",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "brewing",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "brewer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:millstone_piece",
+    "name": "Millstone",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "milling",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "milling",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miller",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 15,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:bakery_oven_piece",
+    "name": "Bakery Oven",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "oven",
+      "kitchen",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "oven",
+      "kitchen",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "baker",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 14,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:herbalist_table_piece",
+    "name": "Herbalist Table",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "healing",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "healing",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "healer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:apothecary_shelf_piece",
+    "name": "Apothecary Shelf",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "storage",
+      "healing",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "healing",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "healer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 8,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:scribe_desk_piece",
+    "name": "Scribe Desk",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "writing",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "writing",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "scribe",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 10,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:jeweler_bench_piece",
+    "name": "Jeweler Bench",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "jeweler",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 14,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:masonry_bench_piece",
+    "name": "Masonry Bench",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "workshop",
+      "masonry",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "masonry",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "mason",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 14,
+    "materialization_family": "workshop"
+  },
+  {
+    "id": "core:footpath_piece",
+    "name": "Footpath",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "footpath"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:dirt_lane_piece",
+    "name": "Dirt Lane",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "dirt_lane"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:cart_road_piece",
+    "name": "Cart Road",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "cart_road"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:gravel_road_piece",
+    "name": "Gravel Road",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "gravel_road"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "gravel",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:plank_road_piece",
+    "name": "Plank Road",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "plank_road"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:cobble_road_piece",
+    "name": "Cobble Road",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "cobble_road"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:stone_road_piece",
+    "name": "Stone Road",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "stone_road"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:bridge_approach_piece",
+    "name": "Bridge Approach",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "bridge_approach"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:market_square_piece",
+    "name": "Market Square",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "market_square"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:courtyard_piece",
+    "name": "Courtyard",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "courtyard"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "packed_earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:alley_piece",
+    "name": "Alley",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "alley"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:dock_walk_piece",
+    "name": "Dock Walk",
+    "category": "road",
+    "layer": "ground",
+    "glyph": "=",
+    "tags": [
+      "road",
+      "worldgen_piece",
+      "dock_walk"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "transport",
+      "civic",
+      "market"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "road"
+  },
+  {
+    "id": "core:field_fence_piece",
+    "name": "Field Fence",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "fence",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "fence"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:field_gate_piece",
+    "name": "Field Gate",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "gate",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "gate"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:animal_trough_piece",
+    "name": "Animal Trough",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "livestock",
+      "water",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "livestock",
+      "water"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:hay_rack_piece",
+    "name": "Hay Rack",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "livestock",
+      "storage",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "livestock",
+      "storage"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:granary_bin_piece",
+    "name": "Granary Bin",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "storage",
+      "granary",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "granary"
+    ],
+    "settlement_roles": [
+      "granary",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:barn_stall_piece",
+    "name": "Barn Stall",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "stable",
+      "livestock",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "stable",
+      "livestock"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:grain_silo_piece",
+    "name": "Grain Silo",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "storage",
+      "granary",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "granary"
+    ],
+    "settlement_roles": [
+      "granary",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:root_cellar_piece",
+    "name": "Root Cellar",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "storage",
+      "cellar",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "cellar"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:village_well_piece",
+    "name": "Village Well",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "water",
+      "utility",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "water",
+      "utility"
+    ],
+    "settlement_roles": [
+      "civic",
+      "agricultural"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:irrigation_ditch_piece",
+    "name": "Irrigation Ditch",
+    "category": "agriculture",
+    "layer": "ground",
+    "glyph": "a",
+    "tags": [
+      "water",
+      "irrigation",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "water",
+      "irrigation"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "earth",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:scarecrow_piece",
+    "name": "Scarecrow",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "field",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "field",
+      "decoration"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:drying_shed_piece",
+    "name": "Drying Shed",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "a",
+    "tags": [
+      "storage",
+      "drying",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "drying"
+    ],
+    "settlement_roles": [
+      "farm",
+      "agricultural"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "agriculture"
+  },
+  {
+    "id": "core:mine_support_piece",
+    "name": "Mine Support",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "support",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "support",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:mine_track_piece",
+    "name": "Mine Cart Track",
+    "category": "mine",
+    "layer": "ground",
+    "glyph": "m",
+    "tags": [
+      "road",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "road",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:ore_bin_piece",
+    "name": "Ore Bin",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "storage",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "storage",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:mine_hoist_piece",
+    "name": "Mine Hoist",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "station",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "station",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 8,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:shaft_ladder_piece",
+    "name": "Shaft Ladder",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "access",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "access",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:quarry_ramp_piece",
+    "name": "Quarry Ramp",
+    "category": "mine",
+    "layer": "ground",
+    "glyph": "m",
+    "tags": [
+      "road",
+      "quarry",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "road",
+      "quarry"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "quarrier",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:stone_cutting_yard_piece",
+    "name": "Stone Cutting Yard",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "workshop",
+      "quarry",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "workshop",
+      "quarry"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "mason",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 8,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:mine_lamp_post_piece",
+    "name": "Mine Lamp Post",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "m",
+    "tags": [
+      "light",
+      "mine",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "light",
+      "mine"
+    ],
+    "settlement_roles": [
+      "mining",
+      "industrial"
+    ],
+    "material": "wood_stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "mine"
+  },
+  {
+    "id": "core:signpost_piece",
+    "name": "Signpost",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "sign",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "sign"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:banner_piece",
+    "name": "Banner",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "banner",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "banner"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:wayside_shrine_piece",
+    "name": "Wayside Shrine",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "shrine",
+      "worship",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "shrine",
+      "worship"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:statue_piece",
+    "name": "Statue",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "monument",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "monument"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:planter_piece",
+    "name": "Planter",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "garden",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "garden"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:notice_board_piece",
+    "name": "Notice Board",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "notice",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "notice"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:milestone_piece",
+    "name": "Milestone",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "roadside",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "roadside"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:fountain_piece",
+    "name": "Fountain",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "d",
+    "tags": [
+      "water",
+      "monument",
+      "decoration",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "water",
+      "monument"
+    ],
+    "settlement_roles": [
+      "civic",
+      "market",
+      "residential"
+    ],
+    "material": "mixed",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "decoration"
+  },
+  {
+    "id": "core:palisade_piece",
+    "name": "Palisade",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "wall",
+      "defense",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "wall",
+      "defense"
+    ],
+    "settlement_roles": [
+      "defense"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "wall",
+    "workplace_role": "guard",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:watchtower_base_piece",
+    "name": "Watchtower Base",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "tower",
+      "defense",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "tower",
+      "defense"
+    ],
+    "settlement_roles": [
+      "defense"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": true,
+    "enclosure_role": "",
+    "workplace_role": "guard",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:guard_post_piece",
+    "name": "Guard Post",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "guard",
+      "defense",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "guard",
+      "defense"
+    ],
+    "settlement_roles": [
+      "defense"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "guard",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:town_gate_piece",
+    "name": "Town Gate",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "gate",
+      "defense",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "gate",
+      "defense"
+    ],
+    "settlement_roles": [
+      "defense"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "guard",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:cistern_piece",
+    "name": "Cistern",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "water",
+      "utility",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "water",
+      "utility"
+    ],
+    "settlement_roles": [
+      "civic"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:latrine_piece",
+    "name": "Latrine",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "sanitation",
+      "utility",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "sanitation",
+      "utility"
+    ],
+    "settlement_roles": [
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:cemetery_marker_piece",
+    "name": "Cemetery Marker",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "cemetery",
+      "ritual",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "cemetery",
+      "ritual"
+    ],
+    "settlement_roles": [
+      "cemetery"
+    ],
+    "material": "stone",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  },
+  {
+    "id": "core:market_stall_piece",
+    "name": "Market Stall",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "market",
+      "shop",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "market",
+      "shop"
+    ],
+    "settlement_roles": [
+      "market"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "merchant",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "civic"
+  }
+]
