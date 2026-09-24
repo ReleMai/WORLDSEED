@@ -95,6 +95,12 @@ def _room_kind(tags: set[str]) -> str:
         return "bedroom"
     if tags & {"merchant", "shop", "market"}:
         return "shop"
+    if tags & {"healing", "clinic", "medicine", "apothecary"}:
+        return "clinic"
+    if tags & {"guard", "defense", "watch"}:
+        return "watch"
+    if tags & {"writing", "archive", "school", "study"}:
+        return "study"
     if tags & {"storage", "stockpile", "granary"}:
         return "storage"
     if tags & {"workshop", "station", "crafting", "loom", "carpentry", "tanning"}:
@@ -109,7 +115,13 @@ def _building_type(room_kinds: list[str], all_tags: set[str]) -> str:
     if "smithy" in kinds:
         return "smithy"
     if "shop" in kinds:
-        return "shop"
+        return "market"
+    if "clinic" in kinds:
+        return "clinic"
+    if "watch" in kinds:
+        return "watchhouse"
+    if "study" in kinds:
+        return "archive"
     if "sanctuary" in kinds:
         return "shrine"
     if "workshop" in kinds:
@@ -669,6 +681,16 @@ class SettlementSkeletonPlanner:
             return self._piece_choice(registry,"workshop",contains="butcher_table") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
         if function=="barn":
             return self._piece_choice(registry,"agriculture",contains="barn_stall") if room_side=="primary" else self._piece_choice(registry,"agriculture",contains="hay_rack")
+        if function=="market":
+            return self._piece_choice(registry,"civic",contains="market_stall") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="large_table")
+        if function=="clinic":
+            return self._piece_choice(registry,"workshop",contains="herbalist_table") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="apothecary_shelf")
+        if function=="watchhouse":
+            return self._piece_choice(registry,"civic",contains="guard_post") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="bench")
+        if function=="shrine":
+            return self._piece_choice(registry,"decoration",contains="wayside_shrine") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="bench")
+        if function in {"archive","school"}:
+            return self._piece_choice(registry,"workshop",contains="scribe_desk") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="wall_shelf")
         return self._piece_choice(registry,"furniture",contains="small_table")
 
     def _plan_building(
@@ -758,7 +780,7 @@ class SettlementSkeletonPlanner:
             entrance=entrance,building_type=analysis.building_type,enclosed=analysis.enclosed,
             interior_area=analysis.interior_area,room_ids=[r.uid for r in rooms],
             piece_ids=[p.uid for p in placements],roof_percent=analysis.roof_percent,
-            workplace_role=("smith" if function=="smithy" else "carpenter" if function=="workshop" else "miller" if function=="mill" else "fisher" if function=="fishery" else ""),
+            workplace_role=({"smithy":"smith","workshop":"carpenter","mill":"miller","fishery":"fisher","barn":"farmer","market":"merchant","clinic":"healer","watchhouse":"guard","shrine":"priest","archive":"scholar","school":"scholar"}.get(function,"")),
         )
         return structure,rooms,placements
 
@@ -786,6 +808,15 @@ class SettlementSkeletonPlanner:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
                 industrial[0].structure_ids.append(structure.uid)
+
+        civic=[p for p in parcels if p.kind=="civic" and p.purpose not in {"","common"}]
+        for index,parcel in enumerate(civic):
+            function=parcel.purpose
+            result=self._plan_building(parcel,roads,slot=f"civic:{index}:{function}",function=function,archetype=plan.archetype,large=plan.rank in {"town","city"})
+            if result:
+                structure,new_rooms,new_pieces=result
+                structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
+                parcel.structure_ids.append(structure.uid)
 
         farms=[p for p in parcels if p.kind=="farm"]
         if farms:
@@ -921,7 +952,28 @@ class SettlementSkeletonPlanner:
                     if env is None:
                         continue
                     candidates.append((env.slope*3 + env.flood_risk*4 + abs(center[0]-common_center[0])//2 + abs(center[1]-common_center[1])//2, center[1], center[0], road.uid))
-        for _, y, x, access_id in sorted(candidates):
+        service_by_rank={
+            "homestead":(),
+            "hamlet":("market",),
+            "village":("market","clinic","watchhouse","shrine"),
+            "town":("market","clinic","watchhouse","shrine","archive"),
+            "city":("market","clinic","watchhouse","shrine","archive","school"),
+        }
+        remaining_candidates=list(sorted(candidates))
+        for service in service_by_rank[rank]:
+            placed=None
+            for _,sy,sx,access_id in list(remaining_candidates):
+                size=7 if rank in {"town","city"} else 5
+                parcel=self._parcel(
+                    plan.uid,f"civic:{service}","civic",service,(sx,sy),size,size,
+                    forbidden=occupied | functional_reserve,road_cells=road_cells,access_road_id=access_id,
+                )
+                if parcel is None:continue
+                parcels.append(parcel);occupied.update(parcel.cells);placed=(sx,sy,access_id)
+                remaining_candidates=[row for row in remaining_candidates if (row[2],row[1])!=(sx,sy)]
+                break
+
+        for _, y, x, access_id in remaining_candidates:
             parcel = self._parcel(
                 plan.uid, f"residential:{len([p for p in parcels if p.kind=='residential'])}",
                 "residential", "home_lot", (x, y),
