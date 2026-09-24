@@ -50,7 +50,7 @@ class ProcessingSystem:
                 c.harvested_anatomy.append(name)
                 if effective<25:
                     damaged.append(name.replace('_',' '));continue
-                item_id={"offal":"core:offal","bone":"core:bone","sinew":"core:sinew"}.get(harvest)
+                item_id={"offal":"core:offal","bone":"core:bone","sinew":"core:sinew","feather":"core:feather"}.get(harvest)
                 if not item_id or item_id not in self.registry.items:continue
                 item_mass=max(1,int(self.registry.items[item_id].mass_g))
                 usable=max(1,mass*effective//100)
