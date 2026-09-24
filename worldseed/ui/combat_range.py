@@ -70,7 +70,7 @@ def ranged_overlay(sim, weapon, cursor:WorldPos, zone:str="center") -> dict:
     }
 
 
-def melee_overlay(sim, weapon, cursor:WorldPos) -> dict:
+def melee_overlay(sim, weapon, cursor:WorldPos, attack_mode:str="standard") -> dict:
     origin=sim.player_pos
     reach=max(1,weapon.reach if weapon else 1)
     agility=sim.player_attribute("agility")
@@ -87,7 +87,7 @@ def melee_overlay(sim, weapon, cursor:WorldPos) -> dict:
             target=creatures.get((pos.x,pos.y,pos.z))
             behavior=target.behavior if target else "calm"
             blocked=distance>1 and not sim._visible_from(origin,pos)
-            chance=0 if blocked else sim.combat.melee_hit_chance(weapon,distance,agility,melee,vitals.stamina,behavior)
+            chance=0 if blocked else sim.combat.melee_hit_chance(weapon,distance,agility,melee,vitals.stamina,behavior,attack_mode)
             cells.append({
                 "x":pos.x,"y":pos.y,"z":pos.z,"chance":chance,
                 "difficulty":"blocked" if blocked else difficulty_label(chance),"blocked":blocked,
@@ -97,6 +97,6 @@ def melee_overlay(sim, weapon, cursor:WorldPos) -> dict:
         "mode":"melee","weapon_id":weapon.id if weapon else "unarmed",
         "weapon_name":weapon.name if weapon else "Unarmed",
         "origin":(origin.x,origin.y,origin.z),"cursor":(cursor.x,cursor.y,cursor.z),
-        "max_range":reach,"cells":cells,
+        "max_range":reach,"attack_mode":attack_mode,"cells":cells,
         "cursor_difficulty":selected["difficulty"] if selected else "out of reach",
     }
