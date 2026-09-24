@@ -137,6 +137,7 @@ class Simulation:
             self.settlement_physicalization,self.settlement_population
         )
         self.npcs.attach_economy(self.economy)
+        self.civics.attach_settlement_physicalization(self.settlement_physicalization)
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
         # to crossing the corresponding spatial boundary, not to every one-cell
