@@ -119,6 +119,7 @@ SKILL_DEFS = [
     ('scholarship','Scholarship','Reading, research and historical study.'),
     ('persuasion','Persuasion','Conversation, trust and gathering information.'),
     ('trading','Trading','Valuation, bargaining and market awareness.'),
+    ('stealth','Stealth','Quiet movement, concealment and theft under observation.'),
     ('naturalism','Naturalism','Ecology, species signs and population estimates.'),
     ('arcana','Arcana','Recognizing and manipulating magical laws.'),
 ]
