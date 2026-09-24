@@ -66,6 +66,7 @@ ACTION_ROOT = [
 ACTION_INTERACT = [
     ('g', 'Harvest / mine here or an adjacent resource'),
     ('talk', 'Talk to someone nearby'),
+    ('stealth', 'Toggle stealth mode / observer sight cones'),
     ('p', 'Pick up items'),
     ('l', 'Look / examine'),
     ('i', 'Inventory / nearby storage'),
