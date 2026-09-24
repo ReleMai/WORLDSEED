@@ -275,6 +275,7 @@ class Simulation:
             minutes=max(MINUTES_PER_ACTION,duration or MINUTES_PER_ACTION)
         elif isinstance(command,BuyCommand):self._buy(command)
         elif isinstance(command,SellCommand):self._sell(command)
+        elif isinstance(command,BarterCommand):self._barter(command)
         elif isinstance(command,ReadBookCommand):self._read_book(command)
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
