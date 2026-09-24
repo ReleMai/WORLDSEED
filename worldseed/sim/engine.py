@@ -967,11 +967,17 @@ class Simulation:
         if abs(cmd.dx)+abs(cmd.dy)>1:
             self._message("You can only pick up items from your tile or an adjacent tile.");return
         pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
-        if not pile or not pile.items:
-            self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
         inv=self.entities.get(cmd.actor,Inventory)
-        for iid,n in pile.items.items():inv.add(iid,n)
-        self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")
+        if pile and pile.items:
+            for iid,n in pile.items.items():inv.add(iid,n)
+            self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.");return
+        den=next((d for d in self.state.animal_dens.values() if (d.x,d.y,d.z)==(pos.x,pos.y,pos.z) and d.stored_items),None)
+        if den:
+            total=sum(den.stored_items.values())
+            for iid,n in den.stored_items.items():
+                if iid in self.registry.items and n>0:inv.add(iid,n)
+            den.stored_items.clear();self._message(f"You recover {total} cached item(s) from the {den.kind}.");return
+        self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.")
     def _drop(self,cmd:DropCommand)->None:
         inv=self.entities.get(cmd.actor,Inventory)
         if not inv.remove(cmd.item_id,cmd.amount):self._message("You do not have enough of that item.");return
