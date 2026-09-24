@@ -8,12 +8,13 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
         self.settlement_population=population_binder
     def attach_economy(self,economy)->None:self.economy=economy
+    def attach_property_security(self,security)->None:self.property_security=security
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -155,14 +156,22 @@ class NPCSystem:
             goal=WorldPos(int(task['x']),int(task['y']),npc.z);start=WorldPos(npc.x,npc.y,npc.z)
             if abs(npc.x-goal.x)+abs(npc.y-goal.y)<=1:npc.tasks.pop(0);return
             if self.world and abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60:
-                def passable(p):return self.world.is_passable(p) and (self.building.passable(p,self.world.is_passable(p)) if self.building else True)
+                def passable(p):
+                    world_pass=self.world.is_passable(p)
+                    if not world_pass:return False
+                    if self.building and not self.building.passable(p,world_pass):return False
+                    if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
+                    return True
                 path=local_path(start,goal,passable,800)
                 if len(path)>1:
                     old_x,old_y=npc.x,npc.y
                     step=path[min(3,len(path)-1)];npc.x,npc.y=step.x,step.y
                     self._face_step(npc,old_x,old_y)
                     if step==goal:npc.tasks.pop(0)
-                    return
+                # Exact nearby actors may wait/replan when a locked door or
+                # other physical obstacle blocks the route. Never fall through
+                # to coarse straight-line movement and ghost through it.
+                return
             # aggregate/remote travel is straight-line at coarse fidelity
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)

@@ -153,6 +153,7 @@ class Simulation:
         self.property_security=PropertySecuritySystem(
             self.state,registry,self.seed,self.settlement_physicalization,self.civics
         )
+        self.npcs.attach_property_security(self.property_security)
         self.casing=CasingSystem(
             self.state,self.settlement_physicalization,self.civics,self.property_storage,
             self.property_security,
@@ -407,7 +408,7 @@ class Simulation:
         old_hour=old//60;new_hour=self.clock.minute//60
         player=self.player_pos
         for hour in range(old_hour+1,new_hour+1):
-            minute=hour*60;self.environment.hourly_update(minute);collapsed=self.building.hourly_update();self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+            minute=hour*60;self.environment.hourly_update(minute);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
             pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
             if collapsed:
                 v=self.entities.try_get(self.player_id,Vitals)
@@ -515,6 +516,7 @@ class Simulation:
                     self.institutions.ensure_settlement(settlement.uid)
             self.property_storage.sync_active()
             self.property_security.sync_active()
+            self.property_security.update_scheduled_locks(self.clock.minute)
             if self.state.player_casing_property_id and self.settlement_physicalization.structure_by_id(self.state.player_casing_property_id) is None:
                 self.state.player_casing_property_id=""
             if self.state.player_trespass_property_id and self.settlement_physicalization.structure_by_id(self.state.player_trespass_property_id) is None:

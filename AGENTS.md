@@ -60,6 +60,8 @@ Never create an unrelated decorative village, road, river, building list, or loc
 - Generated hydrology/plan/route rows are rebuildable caches. Player/history mutations belong in authoritative state or `physical_plan_deltas` and must survive cache deletion.
 - Stable plan IDs derive from stable parent identity + deterministic slot/geometry fingerprint, never transient iteration order or process hashing.
 - No movement, hover, renderer, or inspection path may perform hydrology, settlement planning, or route generation. Preparation belongs in startup/background planning phases.
+- Local property access must consume the stable physical door ID plus authoritative NPC home/work/property bindings. Do not create a second resident/employee roster inside security code.
+- Nearby NPC pathfinding must honor actor-aware property locks; only distant aggregate movement may omit exact doors. Scheduled local locks must never silently repair or relock a picked/forced door.
 
 ### RC14 release gates
 

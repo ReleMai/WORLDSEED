@@ -83,6 +83,32 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         active=sum(1 for hour in range(24) if ai._routine_bias(guard,hour*60)['guard']>0)
         self.assertEqual(active,8)
 
+
+    def test_nearby_npc_path_respects_actor_aware_locked_door(self):
+        state,town,economy=self._economy()
+        worker=NPCState(
+            uid='npc:worker',name='Worker',age=30,occupation='smith',traits=[],
+            x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
+        )
+        outsider=NPCState(
+            uid='npc:outsider',name='Outsider',age=30,occupation='merchant',traits=[],
+            x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
+        )
+        state.npcs={worker.uid:worker,outsider.uid:outsider}
+        world=SimpleNamespace(is_passable=lambda p:p.z==0 and p.y==0 and 0<=p.x<=2)
+        building=SimpleNamespace(passable=lambda p,world_pass:world_pass)
+        security=SimpleNamespace(
+            blocks_actor=lambda p,uid,minute:(p.x,p.y)==(1,0) and uid!='npc:worker'
+        )
+        ai=NPCSystem(state,b'door-path-test',NullHistory(),world=world,building=building)
+        ai.attach_property_security(security)
+        for npc in (worker,outsider):
+            npc.tasks=[{'kind':'move','x':2,'y':0}]
+            ai._execute_task(npc,town,9*60,WorldPos(0,0,0))
+        self.assertEqual((worker.x,worker.y),(2,0))
+        self.assertEqual((outsider.x,outsider.y),(0,0))
+        self.assertTrue(outsider.tasks)
+
     def test_market_transactions_are_persistent_bounded_economic_events(self):
         state,town,economy=self._economy()
         row=economy.record_transaction(

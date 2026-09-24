@@ -356,3 +356,33 @@ Add physical door permissions and locks to generated properties, then build tres
 
 ### Next dependency
 Generalize actor-aware door permissions for resident/employee/guest keys and scheduled locking, then add container locks, key ownership, lock/key crafting, guard stop/search interactions, surrender/flee/bribe choices, and property-owner reactions to discovered damage or missing goods. Household schedules can then lock/unlock the same stable doors as occupants leave, work, sleep, and return.
+
+
+## Work unit 13 - Actor-aware property access and scheduled doors
+- Property security now consumes the existing physical home/property/workplace bindings when deciding whether a local actor can pass a locked generated door. Residents and employees no longer need NPC pathfinding to ignore security in order to reach their own homes or jobs.
+- `DoorSecurityState` adds sparse `keyholder_uids` grants for explicit guest/future physical-key access. These grants are exceptions only; household and employment membership remain authoritative in the existing NPC/property bindings.
+- Added bounded local opening schedules for generated workplace and public-service entrances. Workplaces and services close deterministically by hour while the settlement is active; private/restricted security remains unchanged.
+- Scheduled lock provenance is tracked separately from the raw locked flag. Opening hours only undo locks created by the scheduler and never unlock unrelated security state.
+- Picked and forced doors are not relocked or repaired by the schedule. A later owner repair/security action must restore them.
+- `NPCSystem` now consumes the same `PropertySecuritySystem` as player movement. Exact nearby pathfinding treats unauthorized locked doors as blocked, while residents/employees/keyholders can route through their permitted doors.
+- Fixed a local-fidelity escape hatch where an NPC with no exact local path could fall through to aggregate straight-line movement and ghost through a physical obstacle. Nearby actors now wait/replan; only remote aggregate actors use the coarse movement fallback.
+- Door schedules update at active-settlement synchronization and on hourly local simulation boundaries. Distant Tier-C labor/schedules remain aggregate and do not force physical door state.
+- Existing casing/door inspection surfaces read the same `DoorSecurityState`, so scheduled closures are visible without a second UI-owned state model.
+
+### Compatibility / authority
+- `keyholder_uids`, `schedule_locked`, and `last_schedule_minute` are additive `DoorSecurityState` fields with safe defaults; no save-schema or settlement-plan version bump is required.
+- Home/work/property bindings remain resident/employee authority. Door security owns only dynamic access/lock state and sparse explicit grants.
+- Physical key items are not invented in this work unit; the keyholder grant is the stable permission target that the later key ownership/crafting system will consume.
+- Exact door schedules are local/Tier-A/B behavior. Distant settlement economy and labor remain bounded aggregate systems.
+
+### Validation added
+- a resident can traverse the locked entrance of the physical home bound to that NPC while a stranger cannot
+- explicit player keyholder access survives LivingWorldState serialization and permits the same stable door
+- workplace entrances close after hours and reopen during their deterministic schedule
+- public-service entrances close after hours for ordinary player access
+- picked work doors remain open instead of being silently repaired/relocked by the schedule
+- nearby NPC pathfinding honors actor-aware locked-door permission and cannot fall back to coarse movement through a blocked local door
+- existing property storage/casing, settlement population and building-stealth regressions remain green
+
+### Next dependency
+Materialize container locks and physical keys/key ownership/crafting on top of the new access-grant substrate. Add owner reactions to discovered damage/missing goods and guard stop/search choices (surrender, flee, bribe/restitution). Then move household budgets/consumption and local hauling through the same real market/property storage authority.
