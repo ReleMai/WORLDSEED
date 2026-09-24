@@ -118,6 +118,8 @@ class HuntingSystem:
             creature.behavior = "alert"
         self.note_player_noise(player_pos, loudness, turn, minute, "weapon")
         if sp:
+            if sp.herd_response>=55 or sp.pack_coordination>=45:
+                self._write_stationary_sign(creature,"call",WorldPos(creature.x,creature.y,creature.z),minute,max(25,sp.hearing*4),"alarm / contact call")
             self._alarm_group(creature, sp, turn, 85 if hit else 60)
 
     def update_local_ai(self, player_pos: WorldPos, turn: int, minute: int) -> list[str]:
@@ -628,6 +630,10 @@ class HuntingSystem:
             cover = self._cover_score(nxt)
             if c.behavior in ("flee","wounded_flee","disengage"):
                 score=d*26+cover
+                if c.behavior=="wounded_flee" and c.home_den_uid in self.state.animal_dens:
+                    den=self.state.animal_dens[c.home_den_uid]
+                    den_dist=abs(nxt.x-den.x)+abs(nxt.y-den.y)
+                    score-=den_dist*5
                 if c.behavior=="disengage":
                     gx,gy=self._group_centroid(c);score-= (abs(nxt.x-gx)+abs(nxt.y-gy))*4
             elif c.behavior=="herd_flee":
