@@ -487,6 +487,14 @@ class EconomySystem:
             rel=victim.relationships.setdefault(thief_uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0})
             rel["trust"]=max(-100,rel["trust"]-25);rel["affection"]=max(-100,rel["affection"]-12)
             rel["familiarity"]=min(100,rel["familiarity"]+8)
+        for witness_uid in row.witness_uids:
+            witness=self.state.npcs.get(witness_uid)
+            if witness is None:
+                continue
+            rel=witness.relationships.setdefault(thief_uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0})
+            rel["trust"]=max(-100,int(rel.get("trust",0))-15)
+            rel["respect"]=max(-100,int(rel.get("respect",0))-8)
+            rel["familiarity"]=min(100,int(rel.get("familiarity",0))+6)
         return row
 
     def npc_steal_food(self, npc, town, minute: int) -> bool:
