@@ -184,6 +184,9 @@ class SettlementPhysicalizationSystem:
         self.revision += 1
         return len(active)
 
+    def cells(self) -> tuple[PhysicalizedSettlementCell, ...]:
+        return tuple(self._cells[key] for key in sorted(self._cells, key=lambda p: (p[1], p[0])))
+
     def cell_at(self, pos: WorldPos) -> PhysicalizedSettlementCell | None:
         if pos.z != 0:
             return None
@@ -231,12 +234,12 @@ class SettlementPhysicalizationSystem:
         if room is None:
             return None
         fixture_names = []
-        for fixture_uid in getattr(room, "fixture_ids", ()):
-            for c in self._cells.values():
-                if c.fixture_piece_id:
-                    # Fixture IDs are placement IDs, while cells store piece IDs;
-                    # names are optional presentation detail and not authority.
-                    pass
+        for c in self._cells.values():
+            if c.room_id != room.uid or not c.fixture_piece_id:
+                continue
+            definition = self.registry.settlement_pieces.get(c.fixture_piece_id)
+            if definition is not None:
+                fixture_names.append(definition.name)
         return {
             "enclosed": bool(room.enclosed),
             "sheltered": bool(room.sheltered),
@@ -244,7 +247,7 @@ class SettlementPhysicalizationSystem:
             "area": int(room.area),
             "doors": len(room.doorway_cells),
             "beds": 1 if room.kind == "bedroom" else 0,
-            "stations": fixture_names,
+            "stations": sorted(set(fixture_names)),
             "classification": str(room.kind),
             "room_id": room.uid,
             "structure_id": room.structure_plan_id,
