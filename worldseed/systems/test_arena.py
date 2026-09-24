@@ -129,4 +129,11 @@ class TestArenaSystem:
             for iid in ("core:rawhide_buckler","core:wicker_shield","core:wood_round_shield","core:hide_kite_shield","core:iron_heater_shield","core:steel_tower_shield"):item(iid)
             item("core:club");animal("core:boar",2,0);animal("core:wolf",-2,0)
             return "Shield gauntlet loaded: all six shield profiles plus threats from opposite orientations."
+        if name=="tactics":
+            for iid in ("core:wooden_spear","core:club","core:wood_round_shield","core:steel_tower_shield"):item(iid)
+            animal("core:boar",5,0)
+            animal("core:moose",0,-5)
+            animal("core:wolf",-5,-1);animal("core:wolf",-5,1);animal("core:wolf",-6,0)
+            animal("core:deer",6,3);animal("core:deer",7,3);animal("core:deer",6,4)
+            return "Tactical AI field loaded: committed chargers, a three-wolf pack, and a deer herd for panic/cohesion drills."
         return "Unknown arena preset."
