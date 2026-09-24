@@ -50,6 +50,9 @@ class SettlementPlanState:
     history_projection_revision: int = 0
     atlas_version: int = 1
     atlas_bounds: tuple[int, int, int, int] | None = None
+    rank: str = "village"
+    common_cells: list[tuple[int, int]] = field(default_factory=list)
+    gateway_cells: list[tuple[int, int]] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -117,6 +120,9 @@ class LandUseParcel:
     wetness: int = 0
     current_use_state: str = "available"
     structure_ids: list[str] = field(default_factory=list)
+    purpose: str = ""
+    access_road_id: str = ""
+    terrain_score: int = 0
 
 
 @dataclass(slots=True)

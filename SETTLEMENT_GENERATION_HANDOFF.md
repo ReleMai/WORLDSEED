@@ -37,3 +37,24 @@ The new settlement atlas is a read model only. A dedicated visual settlement-atl
 
 ## Next dependency
 Implement the terrain-aware settlement skeleton generator: primary access road/common, local street hierarchy, land-use districts, parcels, then building footprints assembled from the new piece catalog.
+
+
+## Work unit 2 - Terrain-aware settlement skeletons
+- Added `SettlementSkeletonPlanner`, a bounded Phase-8 planner that consumes the prepared regional settlement anchor, regional road exits and environmental fields.
+- Main roads now aim toward the actual regional route exits and use terrain-cost A* rather than straight lines.
+- Local streets grow from the common and reuse existing road cells where economical.
+- Farm and industrial anchors are selected from causal environmental opportunity. Mining settlements, for example, prefer stone opportunity and create a `mine_approach` industrial parcel.
+- Residential lots are generated from real street frontage. Fields and industrial parcels bind to explicit access-road IDs.
+- Settlement plans now persist rank, common cells, gateway cells, atlas bounds and land-use summaries.
+- Land-use parcels now carry purpose, access-road binding and terrain score.
+- Generated skeleton bundles persist through `generated_settlement_plans` with a deterministic fingerprint and reload without raw replanning.
+
+### Validation added
+- terrain barrier avoidance / pass selection
+- road/common/residential/farm/industrial generation
+- stable parcel access-road bindings
+- deterministic fingerprint and generated-cache reload
+- unrelated state/order isolation
+
+### Next dependency
+Generate structure footprints on the new residential/civic/industrial parcels, then assemble walls/floors/doors/interior rooms/furniture/workstations from the 128-piece catalog. Structure placement should feed the existing enclosure/type detector and settlement atlas.

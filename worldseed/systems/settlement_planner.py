@@ -1,10 +1,20 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
+import heapq
 from typing import Iterable, Mapping
 
-from worldseed.world.regional_plan import RoomPlanState, stable_plan_uid
+from worldseed.config import SETTLEMENT_PLAN_VERSION
+from worldseed.core.canonical import canonical_hash
+from worldseed.core.coords import WorldPos
+from worldseed.world.regional_plan import (
+    LandUseParcel,
+    RoadSegmentPlan,
+    RoomPlanState,
+    SettlementPlanState,
+    stable_plan_uid,
+)
 
 CARDINALS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
@@ -231,3 +241,532 @@ def settlement_piece_groups(registry) -> dict[str, tuple]:
         category: tuple(sorted(values, key=lambda piece: piece.id))
         for category, values in sorted(groups.items())
     }
+
+
+@dataclass(slots=True)
+class SettlementSkeleton:
+    """Persistent, reconstructable Phase-8 settlement skeleton.
+
+    The skeleton owns spatial planning only: streets, gateways, commons and
+    land-use parcels. Population/economy remain in the simulation ledger.
+    """
+    plan: SettlementPlanState
+    roads: list[RoadSegmentPlan] = field(default_factory=list)
+    parcels: list[LandUseParcel] = field(default_factory=list)
+    fingerprint: str = ""
+
+    def to_dict(self) -> dict:
+        payload = {
+            "plan": asdict(self.plan),
+            "roads": [asdict(row) for row in self.roads],
+            "parcels": [asdict(row) for row in self.parcels],
+        }
+        payload["fingerprint"] = self.fingerprint or canonical_hash(payload)
+        return payload
+
+    @classmethod
+    def from_dict(cls, raw: dict) -> "SettlementSkeleton":
+        plan_raw = dict(raw["plan"])
+        if plan_raw.get("atlas_bounds") is not None:
+            plan_raw["atlas_bounds"] = tuple(int(v) for v in plan_raw["atlas_bounds"])
+        plan_raw["common_cells"] = [tuple(map(int, p)) for p in plan_raw.get("common_cells", ())]
+        plan_raw["gateway_cells"] = [tuple(map(int, p)) for p in plan_raw.get("gateway_cells", ())]
+        plan = SettlementPlanState(**plan_raw)
+        roads = []
+        for item in raw.get("roads", ()):
+            row = dict(item)
+            row["polyline"] = [tuple(map(int, p)) for p in row.get("polyline", ())]
+            row["chunk_corridor"] = [tuple(map(int, p)) for p in row.get("chunk_corridor", ())]
+            roads.append(RoadSegmentPlan(**row))
+        parcels = []
+        for item in raw.get("parcels", ()):
+            row = dict(item)
+            row["cells"] = [tuple(map(int, p)) for p in row.get("cells", ())]
+            parcels.append(LandUseParcel(**row))
+        return cls(plan, roads, parcels, str(raw.get("fingerprint", "")))
+
+
+def settlement_rank_for_population(population: int) -> str:
+    population = max(0, int(population))
+    if population < 6:
+        return "homestead"
+    if population < 21:
+        return "hamlet"
+    if population < 61:
+        return "village"
+    if population < 181:
+        return "town"
+    return "city"
+
+
+class SettlementSkeletonPlanner:
+    """Terrain-aware bounded settlement planner for RC14 Phase 8.
+
+    Roads are chosen before parcels. The planner reads prepared environmental
+    fields only and never realizes terrain/NPCs. It persists one stable physical
+    plan that later local materialization and RC17 schedules can consume.
+    """
+
+    _RADIUS = {"homestead": 22, "hamlet": 30, "village": 42, "town": 58, "city": 76}
+    _RESIDENTIAL_TARGET = {"homestead": 1, "hamlet": 4, "village": 10, "town": 22, "city": 40}
+    _FARM_TARGET = {"homestead": 1, "hamlet": 2, "village": 4, "town": 7, "city": 10}
+    _LOCAL_STREETS = {"homestead": 0, "hamlet": 1, "village": 2, "town": 4, "city": 6}
+
+    def __init__(self, world, version: int = SETTLEMENT_PLAN_VERSION):
+        self.world = world
+        self.seed = world.generator.world_seed
+        self.version = int(version)
+        self.cache_source = world.delta_source
+        self._cache: dict[str, SettlementSkeleton] = {}
+        self._env_cache: dict[tuple[int, int], object | None] = {}
+
+    def _env(self, x: int, y: int):
+        key = (int(x), int(y))
+        if key not in self._env_cache:
+            self._env_cache[key] = self.world.environment_at(WorldPos(key[0], key[1], 0))
+        return self._env_cache[key]
+
+    def _legal(self, x: int, y: int) -> bool:
+        env = self._env(x, y)
+        return bool(env is not None and not env.open_water and env.slope <= 78 and env.flood_risk <= 88)
+
+    def _road_cost(self, x: int, y: int, existing: set[tuple[int, int]]) -> int | None:
+        env = self._env(x, y)
+        if env is None or env.open_water or env.slope > 88 or env.flood_risk > 95:
+            return None
+        if (x, y) in existing:
+            return 3
+        return 10 + env.slope * 2 + env.flood_risk * 3 + max(0, env.wetness - 60) * 2 + env.farmland // 6
+
+    def _bounds(self, region_plan, rank: str) -> tuple[int, int, int, int]:
+        radius = self._RADIUS[rank]
+        ax, ay = region_plan.settlement_anchor
+        region_size = 512
+        x0, y0 = region_plan.region_x * region_size, region_plan.region_y * region_size
+        return (
+            max(x0 + 8, ax - radius), max(y0 + 8, ay - radius),
+            min(x0 + region_size - 9, ax + radius), min(y0 + region_size - 9, ay + radius),
+        )
+
+    def _nearest_legal(self, target: tuple[int, int], bounds: tuple[int, int, int, int], radius: int = 8) -> tuple[int, int] | None:
+        left, top, right, bottom = bounds
+        tx, ty = target
+        rows = []
+        for d in range(radius + 1):
+            for dy in range(-d, d + 1):
+                dx = d - abs(dy)
+                for sx in ({-1, 1} if dx else {1}):
+                    x, y = tx + sx * dx, ty + dy
+                    if left <= x <= right and top <= y <= bottom and self._legal(x, y):
+                        env = self._env(x, y)
+                        rows.append((d, env.slope + env.flood_risk * 2, y, x))
+            if rows:
+                row = min(rows)
+                return row[3], row[2]
+        return None
+
+    def _common_center(self, anchor: tuple[int, int], bounds: tuple[int, int, int, int]) -> tuple[int, int]:
+        ax, ay = anchor
+        candidates = []
+        for y in range(ay - 5, ay + 6):
+            for x in range(ax - 5, ax + 6):
+                if not (bounds[0] <= x <= bounds[2] and bounds[1] <= y <= bounds[3]):
+                    continue
+                env = self._env(x, y)
+                if env is None or env.open_water:
+                    continue
+                distance = abs(x - ax) + abs(y - ay)
+                score = env.slope * 3 + env.flood_risk * 4 + max(0, env.wetness - 70) * 2 + distance * 4
+                candidates.append((score, y, x))
+        if not candidates:
+            legal = self._nearest_legal(anchor, bounds, radius=12)
+            if legal is None:
+                raise ValueError("Settlement anchor has no legal common site inside planning bounds")
+            return legal
+        _, y, x = min(candidates)
+        return x, y
+
+    @staticmethod
+    def _square(center: tuple[int, int], half: int) -> set[tuple[int, int]]:
+        cx, cy = center
+        return {(x, y) for y in range(cy - half, cy + half + 1) for x in range(cx - half, cx + half + 1)}
+
+    def _gateway_targets(self, region_plan, common: tuple[int, int], bounds: tuple[int, int, int, int], rank: str) -> list[tuple[int, int]]:
+        left, top, right, bottom = bounds
+        region_x0, region_y0 = region_plan.region_x * 512, region_plan.region_y * 512
+        targets = []
+        for road in sorted(region_plan.roads, key=lambda row: (row.direction, row.offset, row.road_class)):
+            if road.direction == "north":
+                raw = (region_x0 + int(road.offset), top)
+            elif road.direction == "south":
+                raw = (region_x0 + int(road.offset), bottom)
+            elif road.direction == "west":
+                raw = (left, region_y0 + int(road.offset))
+            else:
+                raw = (right, region_y0 + int(road.offset))
+            raw = (max(left, min(right, raw[0])), max(top, min(bottom, raw[1])))
+            target = self._nearest_legal(raw, bounds, radius=10)
+            if target and target not in targets:
+                targets.append(target)
+
+        if targets:
+            return targets[:4]
+
+        # Isolated settlements still need an outward-facing access lane. Select
+        # the best legal edge sites from terrain rather than random directions.
+        edge = []
+        samples = (1, 2, 3)
+        for n in samples:
+            x = left + (right - left) * n // 4
+            y = top + (bottom - top) * n // 4
+            for raw in ((x, top), (x, bottom), (left, y), (right, y)):
+                target = self._nearest_legal(raw, bounds, radius=6)
+                if target is None:
+                    continue
+                env = self._env(*target)
+                edge.append((env.slope * 2 + env.flood_risk * 3 + abs(target[0]-common[0])//4 + abs(target[1]-common[1])//4, target[1], target[0]))
+        wanted = 1 if rank in {"homestead", "hamlet"} else 2
+        out = []
+        for _, y, x in sorted(edge):
+            p = (x, y)
+            if p not in out:
+                out.append(p)
+            if len(out) >= wanted:
+                break
+        return out
+
+    def _path(
+        self,
+        start: tuple[int, int],
+        goal: tuple[int, int],
+        bounds: tuple[int, int, int, int],
+        existing: set[tuple[int, int]],
+    ) -> list[tuple[int, int]]:
+        if start == goal:
+            return [start]
+        left, top, right, bottom = bounds
+        queue = [(0, 0, start[1], start[0])]
+        best = {start: 0}
+        came: dict[tuple[int, int], tuple[int, int]] = {}
+        while queue:
+            _, cost, y, x = heapq.heappop(queue)
+            node = (x, y)
+            if cost != best.get(node):
+                continue
+            if node == goal:
+                path = [node]
+                while node in came:
+                    node = came[node]
+                    path.append(node)
+                path.reverse()
+                return path
+            for dx, dy in CARDINALS:
+                nx, ny = x + dx, y + dy
+                if not (left <= nx <= right and top <= ny <= bottom):
+                    continue
+                step = self._road_cost(nx, ny, existing)
+                if step is None:
+                    continue
+                ncost = cost + step
+                nxt = (nx, ny)
+                if ncost >= best.get(nxt, 10**18):
+                    continue
+                best[nxt] = ncost
+                came[nxt] = node
+                heuristic = (abs(goal[0]-nx) + abs(goal[1]-ny)) * 8
+                heapq.heappush(queue, (ncost + heuristic, ncost, ny, nx))
+        return []
+
+    def _best_functional_site(
+        self,
+        common: tuple[int, int],
+        bounds: tuple[int, int, int, int],
+        *,
+        kind: str,
+        archetype: str,
+        occupied: set[tuple[int, int]],
+    ) -> tuple[int, int] | None:
+        left, top, right, bottom = bounds
+        rows = []
+        for y in range(top + 5, bottom - 4, 4):
+            for x in range(left + 5, right - 4, 4):
+                if (x, y) in occupied:
+                    continue
+                env = self._env(x, y)
+                if env is None or env.open_water or env.slope > 72 or env.flood_risk > 82:
+                    continue
+                distance = abs(x-common[0]) + abs(y-common[1])
+                if kind == "farm":
+                    score = env.farmland * 5 + env.soil_fertility * 2 - env.slope * 3 - env.flood_risk * 3 + min(distance, 50)
+                else:
+                    if archetype == "mining":
+                        resource = env.resources.stone * 6
+                    elif archetype == "forest":
+                        resource = env.resources.timber * 6
+                    elif archetype in {"fishing", "river_market"}:
+                        resource = env.resources.freshwater * 5 + env.resources.stone
+                    else:
+                        resource = env.resource_opportunity * 4
+                    score = resource - env.flood_risk * 2 - env.slope + min(distance, 45)
+                tie = int((x * 73856093 ^ y * 19349663) & 0xFFFF)
+                rows.append((-score, tie, y, x))
+        if not rows:
+            return None
+        _, _, y, x = min(rows)
+        return x, y
+
+    @staticmethod
+    def _rect(center: tuple[int, int], width: int, height: int) -> set[tuple[int, int]]:
+        cx, cy = center
+        left = cx - width // 2
+        top = cy - height // 2
+        return {(x, y) for y in range(top, top + height) for x in range(left, left + width)}
+
+    def _parcel(
+        self,
+        plan_uid: str,
+        slot: str,
+        kind: str,
+        purpose: str,
+        center: tuple[int, int],
+        width: int,
+        height: int,
+        *,
+        forbidden: set[tuple[int, int]],
+        road_cells: set[tuple[int, int]],
+        access_road_id: str = "",
+        min_legal_ratio: int = 82,
+    ) -> LandUseParcel | None:
+        raw = self._rect(center, width, height)
+        if raw & forbidden:
+            return None
+        legal = {p for p in raw if self._legal(*p)}
+        if len(legal) * 100 < len(raw) * min_legal_ratio:
+            return None
+        cells = legal - road_cells
+        if len(cells) * 100 < len(raw) * 65:
+            return None
+        values = [self._env(*p) for p in cells]
+        fertility = sum(v.soil_fertility for v in values) // len(values)
+        wetness = sum(v.wetness for v in values) // len(values)
+        terrain_score = sum(max(0, 100-v.slope-v.flood_risk//2) for v in values) // len(values)
+        ordered = sorted(cells, key=lambda p: (p[1], p[0]))
+        return LandUseParcel(
+            uid=stable_plan_uid("parcel", plan_uid, slot, ordered),
+            settlement_plan_id=plan_uid,
+            cells=ordered,
+            kind=kind,
+            fertility=fertility,
+            wetness=wetness,
+            purpose=purpose,
+            access_road_id=access_road_id,
+            terrain_score=terrain_score,
+        )
+
+    def _generate(self, region_plan, settlement_id: str, population: int) -> SettlementSkeleton:
+        if not region_plan.settlement_present or region_plan.settlement_anchor is None:
+            raise ValueError("Cannot generate settlement skeleton for a region without a settlement anchor")
+        rank = settlement_rank_for_population(population)
+        bounds = self._bounds(region_plan, rank)
+        common_center = self._common_center(region_plan.settlement_anchor, bounds)
+        common_half = 1 if rank in {"homestead", "hamlet"} else 2 if rank in {"village", "town"} else 3
+        common_cells = {p for p in self._square(common_center, common_half) if self._legal(*p)}
+        if not common_cells:
+            common_cells = {common_center}
+
+        plan_uid = stable_plan_uid("settlement-plan", str(settlement_id), self.version, [region_plan.settlement_anchor])
+        plan = SettlementPlanState(
+            uid=plan_uid, settlement_id=str(settlement_id), version=self.version,
+            anchor_x=region_plan.settlement_anchor[0], anchor_y=region_plan.settlement_anchor[1],
+            archetype=region_plan.settlement_archetype, rank=rank,
+            common_cells=sorted(common_cells, key=lambda p: (p[1], p[0])),
+        )
+
+        roads: list[RoadSegmentPlan] = []
+        road_cells: set[tuple[int, int]] = set()
+        gateways = self._gateway_targets(region_plan, common_center, bounds, rank)
+        plan.gateway_cells = list(gateways)
+
+        def add_road(slot: str, target: tuple[int, int], road_class: str, width: int = 1) -> str:
+            path = self._path(common_center, target, bounds, road_cells)
+            if len(path) < 2:
+                return ""
+            uid = stable_plan_uid("road", plan.uid, slot, path)
+            roads.append(RoadSegmentPlan(
+                uid=uid, settlement_plan_id=plan.uid, road_class=road_class,
+                polyline=path, width=width, surface="earth",
+            ))
+            road_cells.update(path)
+            return uid
+
+        main_class = "maintained_road" if rank in {"town", "city"} else "road"
+        main_width = 2 if rank in {"town", "city"} else 1
+        for i, target in enumerate(gateways):
+            add_road(f"gateway:{i}", target, main_class, main_width)
+
+        # Grow bounded local streets around the common. These are street seeds,
+        # not arbitrary house coordinates, and provide frontage for later lots.
+        local_count = self._LOCAL_STREETS[rank]
+        radius = min(22, max(10, self._RADIUS[rank] // 2))
+        local_targets = [
+            (common_center[0] + radius, common_center[1]),
+            (common_center[0] - radius, common_center[1]),
+            (common_center[0], common_center[1] + radius),
+            (common_center[0], common_center[1] - radius),
+            (common_center[0] + radius//2, common_center[1] + radius//2),
+            (common_center[0] - radius//2, common_center[1] - radius//2),
+        ]
+        added = 0
+        for raw in local_targets:
+            target = self._nearest_legal(raw, bounds, radius=7)
+            if target is None or target in gateways:
+                continue
+            if add_road(f"street:{added}", target, "road" if rank in {"town","city"} else "path"):
+                added += 1
+            if added >= local_count:
+                break
+
+        # Functional land-use anchors pull roads outward toward the land that
+        # explains the settlement's economy.
+        occupied = set(common_cells) | road_cells
+        farm_target = self._best_functional_site(common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied)
+        industry_target = self._best_functional_site(common_center, bounds, kind="industry", archetype=plan.archetype, occupied=occupied)
+        farm_road = add_road("farm-access", farm_target, "path") if farm_target else ""
+        industry_road = add_road("industry-access", industry_target, "road") if industry_target else ""
+
+        parcels: list[LandUseParcel] = []
+        common_ordered = sorted(common_cells, key=lambda p: (p[1], p[0]))
+        common_parcel = LandUseParcel(
+            stable_plan_uid("parcel", plan.uid, "common", common_ordered), plan.uid,
+            cells=common_ordered, kind="civic", current_use_state="common",
+            purpose="common", terrain_score=100,
+        )
+        parcels.append(common_parcel)
+        occupied = set(common_cells)
+
+        # Residential lots are street-fronting by construction. Candidate lots
+        # are projected to either side of the actual curved road polyline.
+        residential_goal = self._RESIDENTIAL_TARGET[rank]
+        candidates = []
+        for road in roads:
+            path = road.polyline
+            for idx in range(3, max(3, len(path)-2), 5):
+                x, y = path[idx]
+                prev = path[max(0, idx-1)]
+                nxt = path[min(len(path)-1, idx+1)]
+                dx = nxt[0] - prev[0]
+                dy = nxt[1] - prev[1]
+                if abs(dx) >= abs(dy):
+                    normals = ((0, 5), (0, -5))
+                else:
+                    normals = ((5, 0), (-5, 0))
+                for nx, ny in normals:
+                    center = (x + nx, y + ny)
+                    env = self._env(*center)
+                    if env is None:
+                        continue
+                    candidates.append((env.slope*3 + env.flood_risk*4 + abs(center[0]-common_center[0])//2 + abs(center[1]-common_center[1])//2, center[1], center[0], road.uid))
+        for _, y, x, access_id in sorted(candidates):
+            parcel = self._parcel(
+                plan.uid, f"residential:{len([p for p in parcels if p.kind=='residential'])}",
+                "residential", "home_lot", (x, y), 5, 5,
+                forbidden=occupied, road_cells=road_cells, access_road_id=access_id,
+            )
+            if parcel is None:
+                continue
+            parcels.append(parcel)
+            occupied.update(parcel.cells)
+            if len([p for p in parcels if p.kind == "residential"]) >= residential_goal:
+                break
+
+        if farm_target:
+            farm_goal = self._FARM_TARGET[rank]
+            offsets = ((0,0),(10,0),(-10,0),(0,8),(0,-8),(10,8),(-10,8),(10,-8),(-10,-8),(20,0),(-20,0))
+            made = 0
+            for ox, oy in offsets:
+                parcel = self._parcel(
+                    plan.uid, f"farm:{made}", "farm", "field",
+                    (farm_target[0]+ox, farm_target[1]+oy), 9, 7,
+                    forbidden=occupied, road_cells=road_cells, access_road_id=farm_road,
+                    min_legal_ratio=75,
+                )
+                if parcel is None or parcel.fertility < 22:
+                    continue
+                parcels.append(parcel); occupied.update(parcel.cells); made += 1
+                if made >= farm_goal:
+                    break
+
+        if industry_target:
+            purpose = {
+                "mining": "mine_approach",
+                "forest": "logging_yard",
+                "fishing": "fishery",
+                "river_market": "trade_workyard",
+                "agrarian": "mill_workyard",
+                "frontier": "general_workyard",
+            }.get(plan.archetype, "general_workyard")
+            parcel = self._parcel(
+                plan.uid, "industrial:0", "industrial", purpose, industry_target, 7, 7,
+                forbidden=occupied, road_cells=road_cells, access_road_id=industry_road,
+                min_legal_ratio=70,
+            )
+            if parcel is not None:
+                parcels.append(parcel); occupied.update(parcel.cells)
+
+        plan.road_segment_ids = [row.uid for row in roads]
+        plan.parcel_ids = [row.uid for row in parcels]
+        summary: dict[str, int] = {}
+        for parcel in parcels:
+            summary[parcel.kind] = summary.get(parcel.kind, 0) + len(parcel.cells)
+        plan.land_use_summary = summary
+        all_points = set(common_cells) | road_cells | {p for parcel in parcels for p in parcel.cells}
+        if all_points:
+            xs = [p[0] for p in all_points]; ys = [p[1] for p in all_points]
+            plan.atlas_bounds = (min(xs), min(ys), max(xs), max(ys))
+
+        skeleton = SettlementSkeleton(plan, roads, parcels)
+        skeleton.fingerprint = canonical_hash({
+            "plan": asdict(plan),
+            "roads": [asdict(row) for row in roads],
+            "parcels": [asdict(row) for row in parcels],
+        })
+        return skeleton
+
+    def read_prepared(self, settlement_id: str) -> SettlementSkeleton | None:
+        settlement_id = str(settlement_id)
+        if settlement_id in self._cache:
+            return self._cache[settlement_id]
+        loader = getattr(self.cache_source, "load_generated_settlement_plan", None)
+        if not callable(loader):
+            return None
+        raw = loader(settlement_id, self.version)
+        if not raw:
+            return None
+        try:
+            fingerprint = str(raw.get("fingerprint", ""))
+            check = dict(raw); check.pop("fingerprint", None)
+            if fingerprint != canonical_hash(check):
+                return None
+            skeleton = SettlementSkeleton.from_dict(raw)
+            if skeleton.plan.settlement_id != settlement_id or skeleton.plan.version != self.version:
+                return None
+            self._cache[settlement_id] = skeleton
+            return skeleton
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True) -> SettlementSkeleton:
+        prepared = self.read_prepared(settlement_id)
+        if prepared is not None:
+            return prepared
+        self._env_cache.clear()
+        skeleton = self._generate(region_plan, settlement_id, population)
+        self._cache[str(settlement_id)] = skeleton
+        if persist:
+            storer = getattr(self.cache_source, "store_generated_settlement_plan", None)
+            if callable(storer):
+                storer(str(settlement_id), self.version, skeleton.to_dict())
+                commit = getattr(self.cache_source, "commit_generated", None)
+                if callable(commit):
+                    commit()
+        return skeleton
