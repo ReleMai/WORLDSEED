@@ -212,7 +212,7 @@ class Simulation:
             return result
         minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
-            self._move(command,result);minutes=MOVE_MINUTES
+            self._move(command,result);minutes=MOVE_MINUTES*(2 if self.state.player_stance=="stalk" else 1)
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
@@ -243,6 +243,7 @@ class Simulation:
         elif isinstance(command,BraceCommand):minutes=self._brace(command)
         elif isinstance(command,ShieldBashCommand):minutes=self._shield_bash(command)
         elif isinstance(command,DisengageCommand):minutes=self._disengage(command)
+        elif isinstance(command,StalkCommand):minutes=self._stalk(command)
         elif isinstance(command,PlantCommand):self._plant(command)
         elif isinstance(command,HarvestCommand):self._harvest(command)
         elif isinstance(command,AttackCommand):self._attack(command);minutes=1
@@ -802,7 +803,11 @@ class Simulation:
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
-        self.hunting.note_player_noise(new,self.hunting.movement_noise(new),self.turn,self.clock.minute,"movement")
+        if self.state.player_stance=="stalk" and water.mode=="swimming":
+            self.state.player_stance="normal";self._message("Swimming breaks your stalking stance.")
+        if self.state.player_stance=="stalk" and water.mode=="normal":
+            v.stamina=max(0,v.stamina-1)
+        self.hunting.note_player_noise(new,self.hunting.movement_noise(new,self.clock.minute),self.turn,self.clock.minute,"movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
@@ -1100,6 +1105,18 @@ class Simulation:
         if v.stamina<=0:self._message("You are too exhausted to hold a steady aim.");return 1
         v.stamina=max(0,v.stamina-1)
         self._message(self.combat.aim_at(c,cmd.zone,self.player_attribute('perception'),self.player_skill('hunting'),dist));return 1
+    def _stalk(self,cmd:StalkCommand)->int:
+        stance="normal" if self.state.player_stance=="stalk" else "stalk"
+        msg=self.hunting.set_player_stance(stance)
+        if stance=="stalk":
+            weather=self.environment.weather.at(self.clock.minute,self.player_pos.x,self.player_pos.y)
+            wx=int(weather.get("wind_dx",0));wy=int(weather.get("wind_dy",0))
+            direction="calm"
+            if wx or wy:
+                direction=("east" if wx>0 else "west" if wx<0 else "")+(" / " if wx and wy else "")+("south" if wy>0 else "north" if wy<0 else "")
+            msg+=f" Wind: {direction}; approach from downwind to keep your scent from the animal."
+        self.combat.clear_aim();self._message(msg);return 1
+
     def _plant(self,cmd:PlantCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value;crop=self.registry.crops.get(cmd.crop_id);inv=self.entities.get(cmd.actor,Inventory)
         if not crop:self._message("Unknown crop.");return
