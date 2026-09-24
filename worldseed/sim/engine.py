@@ -805,7 +805,7 @@ class Simulation:
         self.combat.clear_aim()
         if self.state.player_stance=="stalk" and water.mode=="swimming":
             self.state.player_stance="normal";self._message("Swimming breaks your stalking stance.")
-        if self.state.player_stance=="stalk" and water.mode=="normal":
+        if self.state.player_stance=="stalk" and water.mode=="dry":
             v.stamina=max(0,v.stamina-1)
         self.hunting.note_player_noise(new,self.hunting.movement_noise(new,self.clock.minute),self.turn,self.clock.minute,"movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
