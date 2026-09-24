@@ -1466,6 +1466,8 @@ class Simulation:
         )
         if self.state.player_casing_property_id:
             snap["casing"]=self.casing.summary()
+        if self.state.player_trespass_property_id:
+            snap["security"]=self.property_security.summary(self.state.player_trespass_property_id)
         return snap
 
     def _toggle_stealth(self,cmd:ToggleStealthCommand)->None:
