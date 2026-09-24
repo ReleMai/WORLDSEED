@@ -75,10 +75,11 @@ class StealthSystem:
             blocked = None if opaque_cache is None else opaque_cache.get(key)
             if blocked is None:
                 tile = self.world.tile_at(cell)
-                physical_door=self.physicalization.door_at(cell)
+                door_lookup=getattr(self.physicalization,"door_at",None)
+                physical_door=door_lookup(cell) if callable(door_lookup) else None
                 door_state=(
                     self.state.door_security.get(physical_door.structure_piece_uid)
-                    if physical_door is not None and physical_door.structure_piece_uid
+                    if physical_door is not None and getattr(physical_door,"structure_piece_uid","")
                     else None
                 )
                 blocked = bool(
