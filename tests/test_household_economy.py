@@ -1,6 +1,7 @@
 import unittest
 
-from worldseed.content.loader import load_registry
+from worldseed.config import DATA_DIR
+from worldseed.content.registry import ContentRegistry
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.household_economy import HouseholdEconomySystem
 from worldseed.systems.state import ContainerState, LivingWorldState, NPCState, SettlementState
@@ -10,7 +11,7 @@ class NullHistory:
 
 class HouseholdEconomyTests(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):cls.registry=load_registry()
+    def setUpClass(cls):cls.registry=ContentRegistry.load(DATA_DIR)
 
     def fixture(self,wealth=40,stock=20):
         state=LivingWorldState();town=SettlementState(uid="town:1",name="Test",x=10,y=10,region_x=0,region_y=0,population=3,culture_id="",religion_id="",faction_id="faction:1",wealth=500,stocks={"core:wheat":stock,"core:wood":10,"core:soap":5,"core:herbal_tonic":2})
