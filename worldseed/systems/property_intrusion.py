@@ -13,7 +13,10 @@ from dataclasses import dataclass
 
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
-from worldseed.systems.state import CasingIntelState, ContainerState, pos_key
+from worldseed.systems.state import (
+    CasingIntelState, ContainerState, DoorSecurityState, SecurityIncidentState,
+    TrespassState, pos_key,
+)
 
 
 _STORAGE_FUNCTIONS = {
@@ -185,16 +188,310 @@ class PropertyStorageSystem:
         ))
 
 
+
+class PropertySecuritySystem:
+    """Physical access control for generated settlement properties.
+
+    Door state is keyed by the stable StructurePiecePlan uid. Generated plans
+    remain the geometry authority; this layer owns only dynamic lock/condition,
+    trespass and security-response state.
+    """
+
+    PUBLIC_ENTRANCES={"market","clinic","shrine","school"}
+    WORK_ENTRANCES={"smithy","workshop","mill","fishery","barn"}
+    SECURE_FUNCTIONS={"residence","watchhouse","archive"}
+
+    def __init__(self,state,registry,seed:bytes,physicalization,civics):
+        self.state=state
+        self.registry=registry
+        self.seed=seed
+        self.physicalization=physicalization
+        self.civics=civics
+
+    def _function(self, property_id: str) -> str:
+        structure=self.physicalization.structure_by_id(str(property_id))
+        return str(structure.function) if structure is not None else ""
+
+    def _profile(self, function: str, role: str) -> tuple[str,bool,int]:
+        function=str(function);role=str(role)
+        if role=="entrance" and function in self.PUBLIC_ENTRANCES:
+            return "public",False,0
+        if function in self.WORK_ENTRANCES and role=="entrance":
+            return "work",False,0
+        if function in self.SECURE_FUNCTIONS:
+            base={"residence":24,"archive":42,"watchhouse":52}.get(function,30)
+            if role=="interior_door":base+=6
+            return ("restricted" if function in {"archive","watchhouse"} else "private"),True,base
+        if role=="interior_door":
+            return "restricted",bool(hash_u64(self.seed,"interior-lock",function)%100<35),28
+        return "private",False,16
+
+    def sync_settlement(self, settlement_id: str) -> int:
+        settlement_id=str(settlement_id)
+        skeleton=self.physicalization.skeleton_for(settlement_id)
+        town=self.state.settlements.get(settlement_id)
+        if skeleton is None or town is None:return 0
+        self.civics.ensure_settlement(settlement_id)
+        made=0
+        structures={s.uid:s for s in skeleton.structures if not s.destroyed}
+        for piece in sorted(skeleton.pieces,key=lambda p:p.uid):
+            if piece.role not in {"entrance","interior_door"}:
+                continue
+            structure=structures.get(piece.structure_plan_id)
+            if structure is None:continue
+            owner=self.civics.owner_for_structure(settlement_id,structure.uid) or town.uid
+            access,initial_locked,base=self._profile(structure.function,piece.role)
+            level=0 if base<=0 else min(90,base+int(hash_u64(self.seed,"door-lock-level",piece.uid)%16))
+            door=self.state.door_security.get(piece.uid)
+            if door is None:
+                door=DoorSecurityState(
+                    uid=piece.uid,settlement_id=settlement_id,property_id=structure.uid,
+                    x=int(piece.x),y=int(piece.y),z=0,role=str(piece.role),owner_uid=owner,
+                    access=access,locked=bool(initial_locked),lock_level=level,
+                )
+                self.state.door_security[piece.uid]=door;made+=1
+            else:
+                door.settlement_id=settlement_id;door.property_id=structure.uid
+                door.x=int(piece.x);door.y=int(piece.y);door.z=0;door.role=str(piece.role)
+                door.owner_uid=owner;door.access=access
+                if door.lock_level<=0 and level>0 and not door.forced:
+                    door.lock_level=level
+        return made
+
+    def sync_active(self) -> int:
+        return sum(self.sync_settlement(uid) for uid in sorted(self.physicalization.active_settlement_ids))
+
+    def door_at(self,pos:WorldPos):
+        cell=self.physicalization.door_at(pos)
+        if cell is None or not cell.structure_piece_uid:return None
+        return self.state.door_security.get(cell.structure_piece_uid)
+
+    def door_by_id(self,door_uid:str):
+        return self.state.door_security.get(str(door_uid))
+
+    def doors_for_property(self,property_id:str):
+        return tuple(sorted(
+            (d for d in self.state.door_security.values() if d.property_id==str(property_id)),
+            key=lambda d:(d.role,d.y,d.x,d.uid),
+        ))
+
+    @staticmethod
+    def lock_band(level:int)->str:
+        level=max(0,int(level))
+        if level>=60:return "heavy"
+        if level>=40:return "sturdy"
+        if level>=20:return "simple"
+        return "none"
+
+    def authorized_player(self,door:DoorSecurityState)->bool:
+        return door.owner_uid=="player" or door.access=="public"
+
+    def blocks_player(self,pos:WorldPos)->bool:
+        door=self.door_at(pos)
+        return bool(door and door.locked and not door.forced and not self.authorized_player(door))
+
+    def _witnesses(self,door:DoorSecurityState,pos:WorldPos,minute:int,stealth,noise_radius:int=0):
+        seen=set(stealth.witnesses(pos,minute,door.settlement_id))
+        if noise_radius>0:
+            prop=self.state.properties.get(door.property_id)
+            interested={door.owner_uid}
+            if prop:interested.update(prop.occupants)
+            for npc in self.state.npcs.values():
+                if not npc.alive or npc.z!=pos.z or npc.settlement_id!=door.settlement_id:continue
+                distance=abs(npc.x-pos.x)+abs(npc.y-pos.y)
+                if distance<=noise_radius and (npc.occupation=="guard" or npc.uid in interested):
+                    seen.add(npc.uid)
+        return tuple(sorted(uid for uid in seen if uid in self.state.npcs))
+
+    def _alert_guards(self,door:DoorSecurityState,witnesses,level:int)->None:
+        structure=self.physicalization.structure_by_id(door.property_id)
+        target=(door.x,door.y)
+        if structure is not None and structure.entrance is not None:
+            target=(int(structure.entrance[0]),int(structure.entrance[1]))
+        witness_set=set(witnesses)
+        for npc in self.state.npcs.values():
+            if not npc.alive or npc.settlement_id!=door.settlement_id or npc.occupation!="guard":
+                continue
+            distance=abs(npc.x-door.x)+abs(npc.y-door.y)
+            if npc.uid not in witness_set and distance>10+level*3:continue
+            npc.goal="guard";npc.goal_score=max(int(npc.goal_score),80+level*5)
+            npc.tasks=[
+                {"kind":"move","x":target[0],"y":target[1]},
+                {"kind":"perform","action":"guard"},
+            ]
+
+    def _incident(self,door:DoorSecurityState,kind:str,minute:int,witnesses,severity:int):
+        witnesses=tuple(sorted(set(witnesses)))
+        row=SecurityIncidentState(
+            uid=self.state.uid("security"),settlement_id=door.settlement_id,
+            property_id=door.property_id,actor_uid="player",kind=str(kind),
+            minute=int(minute),severity=max(1,int(severity)),witnessed=bool(witnesses),
+            witness_uids=list(witnesses),door_uid=door.uid,
+        )
+        self.state.security_incidents[row.uid]=row
+        if witnesses:
+            guards=sum(1 for uid in witnesses if self.state.npcs.get(uid) and self.state.npcs[uid].occupation=="guard")
+            self.state.player_crime_heat[door.settlement_id]=min(
+                100,self.state.player_crime_heat.get(door.settlement_id,0)+severity+guards*5
+            )
+            self._alert_guards(door,witnesses,min(3,max(1,severity//6)))
+        return row
+
+    def attempt_lockpick(self,door_uid:str,inventory,player_pos:WorldPos,minute:int,stealth,skill:int,agility:int):
+        door=self.door_by_id(door_uid)
+        if door is None:return False,"That door is not physically present.",0
+        if abs(door.x-player_pos.x)+abs(door.y-player_pos.y)>1 or door.z!=player_pos.z:
+            return False,"Move next to the door before working the lock.",0
+        if self.authorized_player(door):
+            door.locked=False
+            return True,"You have legitimate access to this door.",0
+        if door.forced or not door.locked:return True,"The door is already unsecured.",0
+        if inventory.count("core:lockpick")<=0:return False,"You need a lockpick.",0
+        door.pick_attempts+=1;door.last_tampered_minute=int(minute)
+        chance=max(5,min(92,34+int(skill)*7+max(0,int(agility)-5)*5-door.lock_level))
+        roll=int(hash_u64(self.seed,"property-lockpick",door.uid,door.pick_attempts,int(minute)//5)%100)
+        witnesses=self._witnesses(door,player_pos,minute,stealth,noise_radius=1)
+        self._incident(door,"lock_tampering",minute,witnesses,6)
+        if roll<chance:
+            door.locked=False;door.picked=True
+            return True,f"You pick the {self.lock_band(door.lock_level)} lock.",5
+        broke=(hash_u64(self.seed,"lockpick-break",door.uid,door.pick_attempts,int(minute))%100)<18
+        if broke:
+            inventory.remove("core:lockpick",1)
+            return False,"The lock resists you and the pick snaps.",5
+        return False,"The lock resists the attempt.",5
+
+    def force_entry(self,door_uid:str,inventory,player_pos:WorldPos,minute:int,stealth,strength:int):
+        door=self.door_by_id(door_uid)
+        if door is None:return False,"That door is not physically present.",0,0
+        if abs(door.x-player_pos.x)+abs(door.y-player_pos.y)>1 or door.z!=player_pos.z:
+            return False,"Move next to the door before forcing it.",0,0
+        if self.authorized_player(door):
+            door.locked=False
+            return True,"You have legitimate access to this door.",0,0
+        if door.forced:return True,"The doorway has already been forced open.",0,0
+        best_power=0;best_name="your weight"
+        for iid,count in inventory.items.items():
+            if count<=0:continue
+            item=self.registry.items.get(iid)
+            if item is None:continue
+            tags=set(item.tags)
+            if not tags.intersection({"axe","hammer","pick"}):continue
+            power=max(int(item.tool_power),max((int(v) for v in item.tool_qualities.values()),default=0))
+            if power>best_power:
+                best_power=power;best_name=item.name.lower()
+        damage=max(6,8+int(strength)*2+best_power*8)
+        door.condition=max(0,door.condition-damage);door.last_tampered_minute=int(minute)
+        witnesses=self._witnesses(door,player_pos,minute,stealth,noise_radius=9)
+        self._incident(door,"forced_entry",minute,witnesses,14)
+        if door.condition<=0:
+            door.locked=False;door.forced=True
+            return True,f"You break the door open with {best_name}.",2,85
+        return False,f"You batter the door with {best_name}; it holds at {door.condition}% condition.",2,80
+
+    def _property_restricted(self,property_id:str)->bool:
+        doors=self.doors_for_property(property_id)
+        return any(d.access!="public" for d in doors)
+
+    def _door_for_property(self,property_id:str):
+        rows=self.doors_for_property(property_id)
+        return next((d for d in rows if d.role=="entrance"),rows[0] if rows else None)
+
+    def note_player_step(self,old:WorldPos,new:WorldPos,minute:int,stealth)->list[str]:
+        messages=[]
+        old_cell=self.physicalization.cell_at(old)
+        cell=self.physicalization.cell_at(new)
+        old_property=old_cell.structure_id if old_cell is not None else ""
+        new_property=cell.structure_id if cell is not None else ""
+        current=str(self.state.player_trespass_property_id or "")
+        if current and new_property!=current:
+            row=self.state.trespass_states.get(current)
+            if row:row.active=False
+            self.state.player_trespass_property_id=""
+            messages.append("You leave the restricted property.")
+            current=""
+        if not new_property or new_property==old_property or not self._property_restricted(new_property):
+            return messages
+        door=self.door_at(new) or self._door_for_property(new_property)
+        if door is None or self.authorized_player(door):
+            return messages
+        entry_method="forced" if door.forced else "picked" if door.picked else "unsecured"
+        row=self.state.trespass_states.get(new_property)
+        if row is None:
+            row=TrespassState(new_property,door.settlement_id)
+            self.state.trespass_states[new_property]=row
+        row.active=True;row.entered_minute=int(minute);row.entry_method=entry_method
+        self.state.player_trespass_property_id=new_property
+        witnesses=self._witnesses(door,new,minute,stealth,noise_radius=0)
+        if witnesses:
+            row.witness_uids=sorted(set(row.witness_uids).union(witnesses))
+            row.last_seen_minute=int(minute);row.search_level=max(row.search_level,1)
+            self._incident(door,"trespass",minute,witnesses,5)
+            messages.append("Your unauthorized entry is noticed.")
+        else:
+            messages.append("You enter the property without permission.")
+        return messages
+
+    def update_response(self,player_pos:WorldPos,minute:int,stealth)->list[str]:
+        property_id=str(self.state.player_trespass_property_id or "")
+        if not property_id:return []
+        cell=self.physicalization.cell_at(player_pos)
+        if cell is None or cell.structure_id!=property_id:
+            row=self.state.trespass_states.get(property_id)
+            if row:row.active=False
+            self.state.player_trespass_property_id=""
+            return ["You are no longer trespassing."]
+        row=self.state.trespass_states.get(property_id)
+        door=self._door_for_property(property_id)
+        if row is None or door is None:return []
+        seen=tuple(sorted(set(stealth.witnesses(player_pos,minute,row.settlement_id))))
+        guards=[self.state.npcs[uid] for uid in seen if uid in self.state.npcs and self.state.npcs[uid].occupation=="guard"]
+        prop=self.state.properties.get(property_id)
+        interested=set(prop.occupants if prop else ())
+        if prop:interested.add(prop.owner_uid)
+        occupants=[self.state.npcs[uid] for uid in seen if uid in self.state.npcs and uid in interested]
+        witnesses=guards or occupants
+        if not witnesses:return []
+        row.witness_uids=sorted(set(row.witness_uids).union(n.uid for n in witnesses))
+        row.last_seen_minute=int(minute)
+        for npc in guards:
+            npc.goal="guard";npc.goal_score=max(int(npc.goal_score),100)
+            npc.tasks=[{"kind":"move","x":player_pos.x,"y":player_pos.y},{"kind":"perform","action":"guard"}]
+        if not row.warned:
+            row.warned=True;row.warning_count+=1;row.search_level=max(row.search_level,1)
+            return ["A guard or occupant challenges you and orders you out of the property."]
+        if int(minute)>row.last_seen_minute:
+            return []
+        # A second observed step after the initial warning is an escalation.
+        if row.search_level<2:
+            row.search_level=2;row.warning_count+=1
+            self._incident(door,"defied_trespass_warning",minute,[n.uid for n in witnesses],10)
+            return ["You ignore the warning. Guards begin an active search and removal response."]
+        return []
+
+    def summary(self,property_id:str)->dict:
+        doors=self.doors_for_property(property_id)
+        trespass=self.state.trespass_states.get(str(property_id))
+        return {
+            "doors":len(doors),
+            "locked":sum(1 for d in doors if d.locked and not d.forced),
+            "forced":sum(1 for d in doors if d.forced),
+            "trespassing":bool(trespass and trespass.active),
+            "search_level":int(trespass.search_level if trespass else 0),
+        }
+
+
 class CasingSystem:
     """Accumulate property intel only from the player's physical survey."""
 
     CARDINALS=((1,0),(-1,0),(0,1),(0,-1))
 
-    def __init__(self,state,physicalization,civics,property_storage):
+    def __init__(self,state,physicalization,civics,property_storage,security=None):
         self.state=state
         self.physicalization=physicalization
         self.civics=civics
         self.property_storage=property_storage
+        self.security=security
 
     def _structure(self, property_id: str):
         return self.physicalization.structure_by_id(str(property_id))
@@ -345,6 +642,18 @@ class CasingSystem:
                 intel.entrance_known=True;changed=True
                 messages.append("You identify the property's main entrance.")
 
+        if self.security is not None:
+            known_doors=set(intel.door_uids);known_locks=set(intel.lock_uids)
+            for door in self.security.doors_for_property(property_id):
+                dpos=WorldPos(door.x,door.y,door.z)
+                if door.uid not in known_doors and self._visible_nearby(player_pos,dpos,stealth,2):
+                    known_doors.add(door.uid);changed=True
+                    messages.append("You identify a doorway in the property's access pattern.")
+                if door.lock_level>0 and door.uid not in known_locks and self._visible_nearby(player_pos,dpos,stealth,1):
+                    known_locks.add(door.uid);changed=True
+                    messages.append(f"You inspect a {self.security.lock_band(door.lock_level)} lock.")
+            intel.door_uids=sorted(known_doors);intel.lock_uids=sorted(known_locks)
+
         cell=self.physicalization.cell_at(player_pos)
         if cell is not None and cell.structure_id==property_id and cell.room_id:
             rooms=set(intel.room_ids)
@@ -423,6 +732,8 @@ class CasingSystem:
             "room_count":len(intel.room_ids),
             "storage_count":len(intel.storage_uids),
             "storage_cells":tuple(storage_cells),
+            "door_count":len(intel.door_uids),
+            "lock_count":len(intel.lock_uids),
             "occupant_count":len(intel.occupant_uids),
             "owner_known":bool(intel.owner_known),
             "attention":self.attention_label(max(intel.suspicion,self.victim_suspicion(intel.owner_uid))),
