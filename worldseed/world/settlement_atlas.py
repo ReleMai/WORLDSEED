@@ -25,8 +25,11 @@ class SettlementAtlasCell:
     road_ids: tuple[str, ...] = ()
     parcel_id: str = ""
     land_use: str = ""
+    parcel_purpose: str = ""
     structure_id: str = ""
     building_type: str = ""
+    structure_function: str = ""
+    entrance: bool = False
     room_id: str = ""
     room_kind: str = ""
 
@@ -148,8 +151,11 @@ def build_settlement_atlas(
             road_ids=tuple(sorted(road_map.get((x, y), ()))),
             parcel_id=parcel.uid if parcel else "",
             land_use=parcel.kind if parcel else "",
+            parcel_purpose=parcel.purpose if parcel else "",
             structure_id=structure.uid if structure else "",
             building_type=(structure.building_type or structure.function) if structure else "",
+            structure_function=structure.function if structure else "",
+            entrance=bool(structure and structure.entrance == (x, y)),
             room_id=room.uid if room else "",
             room_kind=room.kind if room else "",
         )
@@ -163,6 +169,17 @@ def build_settlement_atlas(
         labels.append((
             "building",
             structure.building_type or structure.function,
+            sum(xs) // len(xs),
+            sum(ys) // len(ys),
+        ))
+    for room in rooms:
+        if not room.cells:
+            continue
+        xs = [p[0] for p in room.cells]
+        ys = [p[1] for p in room.cells]
+        labels.append((
+            "room",
+            room.kind,
             sum(xs) // len(xs),
             sum(ys) // len(ys),
         ))

@@ -129,3 +129,29 @@ Expose the exact settlement atlas as a dedicated UI layer with roads, parcels, b
 
 ### Next dependency
 Expose `build_settlement_atlas(...)` through the atlas UI as a settlement-detail view with roads, parcel land use, building footprints and room labels. After that, expand physical workplace types (healer, guard, shrine, market, school) before RC17 exact daily schedules.
+
+
+## Work unit 6 - Settlement atlas detail UI
+- Connected the exact settlement-plan atlas to the existing mouse-first world atlas without allowing the UI to generate or mutate settlement plans.
+- Selecting a known village/city now offers `Open settlement plan` only when an authoritative plan is already active or persisted. Unprepared settlements show a short availability note instead of triggering world generation from the map screen.
+- The settlement detail view uses one focused layout: the plan occupies the main area; a compact right panel contains four summary metrics, a four-item land-use legend, and one context-sensitive inspect section.
+- Land-use parcels are visually separated into residential, civic, farm and industrial areas. Roads, building footprints, rooms and entrances layer on top in a clear hierarchy.
+- Work buildings are labeled on the map; repeated residence labels are intentionally suppressed. Interior room labels appear only after selecting a building, preventing dense settlements from becoming text-heavy.
+- Cell inspection reports coordinates, land use, parcel purpose, road access, building type/function, room kind and entrance status without exposing stable internal IDs unless needed by debugging.
+- The detail map automatically fits the complete settlement bounds and does not inherit world-atlas drag/zoom controls. This keeps the settlement plan readable and prevents accidental camera changes.
+- Escape from settlement detail returns to the world atlas first; the explicit `Back to atlas` button provides the same behavior.
+- Added parcel-purpose, structure-function and entrance fields to `SettlementAtlasCell`, plus stable room-center labels. These remain read-only projections of the physical plan.
+- UI copy is intentionally functional and sparse: names, categories, counts and actions only. No decorative slogans, generated mottos or narrative filler are added to the settlement screens.
+
+### Validation added
+- exact atlas cells expose parcel purpose, structure function, entrance state and room labels
+- active physical plans take precedence over cache reads
+- persisted prepared plans can be viewed without generation
+- settlement detail view fits 800x520, 1280x800 and 1920x1080
+- every settlement-detail pointer target remains inside the window at tested resolutions
+- detail mode exposes only inspect/back interactions and does not leave the world-atlas drag target active
+- inspected world coordinates round-trip correctly from the rendered plan
+- Fast Gate atlas coverage now includes the settlement-detail UI module
+
+### Next dependency
+Expand the physical settlement planner with missing civic/service workplaces (market, healer, guard/watch, shrine, school/archive) and bind those professions to real structures. Keep the same UI rule: expose the resulting complexity through context and inspection rather than adding more always-visible panels.

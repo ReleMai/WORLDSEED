@@ -1955,7 +1955,12 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
             presenter(sim)
             while True:
                 mk=term.read_key();ml=mk.lower() if len(mk)==1 else mk
-                if mk=='ESC' or ml in ('m','q','\r','\n'):break
+                if mk=='ESC':
+                    controls=getattr(term,'_atlas_controls',None)
+                    if controls is not None and getattr(controls,'detail',None) is not None:
+                        atlas_input(term,sim,'ATLAS_DETAIL_BACK');presenter(sim);continue
+                    break
+                if ml in ('m','q','\r','\n'):break
                 if atlas_input(term,sim,mk):presenter(sim)
             return ''
         _view_text(term,world_screen(sim,screen_width(term.size()[0],106)));return ''
