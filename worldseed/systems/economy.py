@@ -222,7 +222,9 @@ class EconomySystem:
             for proc, workers in assignments:
                 self._run_process(town, proc, workers)
             # Food is physically consumed after production, so bad harvests propagate immediately.
-            food_need = max(1, town.population // 3)
+            represented=sum(len(h.member_uids) for h in self.state.households.values() if h.settlement_id==town.uid and h.last_consumed_minute==minute)
+            aggregate_population=max(0,town.population-represented)
+            food_need = max(0, aggregate_population // 3)
             eaten = min(food_need, town.stocks.get("core:wheat", 0))
             town.stocks["core:wheat"] = town.stocks.get("core:wheat", 0) - eaten
             remain = food_need - eaten

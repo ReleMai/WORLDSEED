@@ -99,3 +99,12 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Inventory presentation exposes the player's persistent key ring, target lock identity and copy provenance.
 - Key duplication is no longer free: it requires a nearby forge, consumes one iron bloom and takes 30 in-world minutes.
 - Targeted regressions cover lock/unlock authorization and damaged-lock safety.
+
+
+## Work Unit 17 - Household inventories and consumption (foundation)
+- Named NPC family groups materialize as persistent households keyed by existing family identity.
+- Household inventories use the already-authoritative physical home storage containers rather than creating a second invisible item ledger.
+- Daily household food consumption removes real food stacks from home storage and records persistent shortage pressure.
+- Member hunger rises on shortages and recovers when the household is fed.
+- Aggregate settlement food consumption excludes named residents processed through households, preventing double consumption.
+- This establishes the physical logistics boundary for later shopping, hauling, wages and household budgeting.
