@@ -14,7 +14,7 @@ from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.property_intrusion import CasingSystem, PropertyStorageSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
 from worldseed.systems.settlement_population import SettlementPopulationBinder
-from worldseed.systems.state import LivingWorldState, NPCState, SettlementState
+from worldseed.systems.state import CasingIntelState, LivingWorldState, NPCState, SettlementState
 from worldseed.systems.stealth import StealthSystem
 from worldseed.world.region_blocks import RegionBlockPlan, RegionRoadExit
 
@@ -212,15 +212,13 @@ class PropertyStorageCasingTests(unittest.TestCase):
     def test_storage_theft_uses_real_container_and_sight_witnesses(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
         container=next(c for c in state.containers.values() if c.kind=="property" and c.items)
-        item_id,next_qty=next(iter(container.items.items()))
+        item_id,_=next(iter(container.items.items()))
         guard=state.npcs["npc:guard"]
         state.player_stealth_mode=True
         state.player_casing_property_id=container.property_id
         intel=state.casing_intel.setdefault(
             container.property_id,
-            __import__("worldseed.systems.state",fromlist=["CasingIntelState"]).CasingIntelState(
-                container.property_id,container.settlement_id,owner_uid=container.owner
-            ),
+            CasingIntelState(container.property_id,container.settlement_id,owner_uid=container.owner),
         )
         intel.storage_uids=[container.uid]
         inv=Inventory()
@@ -250,9 +248,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
         state.player_casing_property_id=container.property_id
         intel=state.casing_intel.setdefault(
             container.property_id,
-            __import__("worldseed.systems.state",fromlist=["CasingIntelState"]).CasingIntelState(
-                container.property_id,container.settlement_id,owner_uid=container.owner
-            ),
+            CasingIntelState(container.property_id,container.settlement_id,owner_uid=container.owner),
         )
         intel.sessions=3;intel.suspicion=27;intel.alarm_level=1;intel.storage_uids=[container.uid]
         restored=LivingWorldState.from_dict(state.to_dict())
