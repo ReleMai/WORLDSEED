@@ -1601,7 +1601,7 @@ class Simulation:
         intel=self.state.casing_intel.get(container.property_id)
         if intel is None or container.uid not in intel.storage_uids:
             self._message("You have not located this storage while casing the property.");return
-        if self.property_storage.blocks_actor(container,"player"):
+        if container.locked and "player" not in container.keyholder_uids and container.owner!="player":
             self._message(f"{container.name or 'That storage'} is locked. Pick the lock before taking goods.");return
         amount=max(1,int(cmd.amount))
         if container.items.get(cmd.item_id,0)<amount:

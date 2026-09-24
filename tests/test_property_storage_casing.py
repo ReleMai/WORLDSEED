@@ -263,6 +263,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
             _message=messages.append,
         )
         before=container.items[item_id]
+        container.locked=False;container.picked=True
         Simulation._steal_container(harness,StealContainerCommand(1,container.uid,item_id,1))
         self.assertEqual(container.items.get(item_id,0),before-1)
         self.assertEqual(inv.count(item_id),1)
