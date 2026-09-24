@@ -140,6 +140,7 @@ class ContainerState:
     pick_attempts: int = 0
     last_tampered_minute: int = -1
     keyholder_uids: list[str] = field(default_factory=list)
+    lock_uid: str = ""
     seeded_from_settlement: bool = False
 
 @dataclass(slots=True)
@@ -389,12 +390,22 @@ class DoorSecurityState:
     # authoritative home/work/property bindings. Physical key items are a
     # later consumer of this grant list rather than a second permission model.
     keyholder_uids: list[str] = field(default_factory=list)
+    lock_uid: str = ""
     # Work entrances may be locked by the local schedule. Track that provenance
     # so opening hours never unlock a lock changed by another authoritative
     # action, and so picked/forced doors are not silently repaired.
     schedule_locked: bool = False
     last_schedule_minute: int = -1
 
+
+@dataclass(slots=True)
+class PhysicalKeyState:
+    uid: str
+    lock_uid: str
+    owner_uid: str
+    label: str = "Key"
+    copied_from_uid: str = ""
+    created_minute: int = 0
 
 @dataclass(slots=True)
 class TrespassState:
@@ -838,6 +849,7 @@ class LivingWorldState:
     market_transactions: dict[str, MarketTransactionState] = field(default_factory=dict)
     properties: dict[str, PropertyState] = field(default_factory=dict)
     door_security: dict[str, DoorSecurityState] = field(default_factory=dict)
+    physical_keys: dict[str, PhysicalKeyState] = field(default_factory=dict)
     trespass_states: dict[str, TrespassState] = field(default_factory=dict)
     security_incidents: dict[str, SecurityIncidentState] = field(default_factory=dict)
     migration_cohorts: dict[str, MigrationCohortState] = field(default_factory=dict)
@@ -963,7 +975,7 @@ class LivingWorldState:
             "clock_minute": self.clock_minute,
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_homes": rows(self.animal_homes), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
-            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
+            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "physical_keys": rows(self.physical_keys), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
             "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_hunting_stance": self.player_hunting_stance, "player_hunting_xp": int(self.player_hunting_xp), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
@@ -993,7 +1005,7 @@ class LivingWorldState:
                 setattr(s, key, raw[key])
         maps = {
             "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"animal_homes":AnimalHomeState,"cohorts":PopulationCohort,
-            "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
+            "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"physical_keys":PhysicalKeyState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }
         # New skills must appear on legacy saves even when the old save

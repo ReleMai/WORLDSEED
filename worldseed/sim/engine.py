@@ -49,7 +49,7 @@ from worldseed.systems.food import NutritionSystem, CookingSystem
 from worldseed.systems.processing import ProcessingSystem
 from worldseed.systems.fishing import FishingSystem
 from worldseed.systems.stealth import StealthSystem
-from worldseed.systems.property_intrusion import PropertyStorageSystem, PropertySecuritySystem, CasingSystem
+from worldseed.systems.property_intrusion import PhysicalKeySystem, PropertyStorageSystem, PropertySecuritySystem, CasingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 
@@ -147,11 +147,12 @@ class Simulation:
             self.state,self.seed,self.world,self.resources,self.building,
             self.settlement_physicalization,self.environment,
         )
+        self.physical_keys=PhysicalKeySystem(self.state,self.seed)
         self.property_storage=PropertyStorageSystem(
-            self.state,registry,self.seed,self.settlement_physicalization,self.civics
+            self.state,registry,self.seed,self.settlement_physicalization,self.civics,self.physical_keys
         )
         self.property_security=PropertySecuritySystem(
-            self.state,registry,self.seed,self.settlement_physicalization,self.civics
+            self.state,registry,self.seed,self.settlement_physicalization,self.civics,self.physical_keys
         )
         self.npcs.attach_property_security(self.property_security)
         self.casing=CasingSystem(
@@ -313,6 +314,8 @@ class Simulation:
         elif isinstance(command,StealContainerCommand):self._steal_container(command)
         elif isinstance(command,LockpickDoorCommand):minutes=self._lockpick_door(command)
         elif isinstance(command,LockpickContainerCommand):minutes=self._lockpick_container(command)
+        elif isinstance(command,TransferKeyCommand):minutes=self._transfer_key(command)
+        elif isinstance(command,DuplicateKeyCommand):minutes=self._duplicate_key(command)
         elif isinstance(command,ForceDoorCommand):minutes=self._force_door(command)
         elif isinstance(command,ToggleStealthCommand):self._toggle_stealth(command);minutes=0
         elif isinstance(command,StartCasingCommand):self._start_casing(command);minutes=0
@@ -1556,6 +1559,14 @@ class Simulation:
         ok,msg,minutes=self.property_storage.attempt_lockpick(cmd.container_uid,inv,self.clock.minute,self.player_skill("stealth"),self.player_attribute("agility"))
         self._message(msg)
         return max(1,int(minutes or MINUTES_PER_ACTION))
+
+    def _transfer_key(self,cmd:TransferKeyCommand)->int:
+        ok=self.physical_keys.transfer(cmd.key_uid,"player",cmd.to_actor_uid);self._message("You hand over the key." if ok else "You do not possess that key.");return 1
+
+    def _duplicate_key(self,cmd:DuplicateKeyCommand)->int:
+        key=self.state.physical_keys.get(cmd.key_uid)
+        if key is None or key.owner_uid!="player":self._message("You do not possess that key.");return 1
+        copy=self.physical_keys.duplicate(cmd.key_uid,"player",self.clock.minute);self._message(f"You duplicate {key.label}." if copy else "You cannot duplicate that key.");return 10
 
     def _force_door(self,cmd:ForceDoorCommand)->int:
         inv=self.entities.get(cmd.actor,Inventory)

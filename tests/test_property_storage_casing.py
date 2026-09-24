@@ -12,7 +12,7 @@ from worldseed.systems.civics import CivicsSystem
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.law import LawSystem
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
-from worldseed.systems.property_intrusion import CasingSystem, PropertySecuritySystem, PropertyStorageSystem
+from worldseed.systems.property_intrusion import CasingSystem, PhysicalKeySystem, PropertySecuritySystem, PropertyStorageSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
 from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.state import CasingIntelState, LivingWorldState, NPCState, SettlementState
@@ -466,6 +466,17 @@ class PropertyStorageCasingTests(unittest.TestCase):
                 break
         self.assertTrue(all(row.resolved for row in restored.security_incidents.values()))
         self.assertGreater(restored.player_bounties.get(town.uid,0),0)
+
+    def test_physical_keys_unlock_transfer_duplicate_and_roundtrip(self):
+        base,security=self._security_fixture();state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        keys=PhysicalKeySystem(state,b"property-storage-casing");storage.keys=keys;security.keys=keys
+        container=next(c for c in state.containers.values() if c.kind=="property" and c.locked);key=keys.ensure_key(container,"player","Household key",120)
+        self.assertFalse(storage.blocks_actor(container,"player"));self.assertTrue(storage.blocks_actor(container,"npc:guest"))
+        copy=keys.duplicate(key.uid,"player",121);self.assertEqual(copy.lock_uid,key.lock_uid);self.assertEqual(copy.copied_from_uid,key.uid)
+        self.assertTrue(keys.transfer(copy.uid,"player","npc:guest"));self.assertFalse(storage.blocks_actor(container,"npc:guest"))
+        door=next(d for d in state.door_security.values() if d.locked);door_key=keys.ensure_key(door,"player","Door key",122)
+        self.assertFalse(security.blocks_actor(WorldPos(door.x,door.y,door.z),"player"))
+        restored=LivingWorldState.from_dict(state.to_dict());self.assertEqual(restored.physical_keys[key.uid].lock_uid,key.lock_uid);self.assertEqual(restored.physical_keys[copy.uid].owner_uid,"npc:guest");self.assertEqual(restored.physical_keys[door_key.uid].owner_uid,"player")
 
 if __name__=="__main__":
     unittest.main()
