@@ -58,3 +58,28 @@ Implement the terrain-aware settlement skeleton generator: primary access road/c
 
 ### Next dependency
 Generate structure footprints on the new residential/civic/industrial parcels, then assemble walls/floors/doors/interior rooms/furniture/workstations from the 128-piece catalog. Structure placement should feed the existing enclosure/type detector and settlement atlas.
+
+
+## Work unit 3 - Composite building generation
+- Promoted the settlement planning contract to v2 for new worlds. Existing saves remain pinned to stored v1; saves missing settlement metadata infer v1.
+- Region and settlement planners now read the save-pinned settlement-plan version.
+- Added exact `BuildingPiecePlan` placements and v2 persistence for structures, rooms and building pieces.
+- Added 8 roof pieces, bringing the settlement catalog to 136 pieces.
+- Town/city residential lots can be 7x7, allowing multi-room houses with interior partitions and doors.
+- V2 plans generate enclosed residences, one farm barn/outbuilding, and archetype-driven industrial workplaces. Mining uses mine workshops, forest settlements use logging/carpentry workshops, agrarian settlements use mill workshops, and river/fishing settlements use matching work buildings.
+- The existing enclosure detector remains authoritative for final room segmentation and building classification.
+- Fixtures are attached to detected room IDs. Settlement plans now expose housing and workplace capacity for later NPC home/work schedules.
+- Settlement atlas cells can expose exact piece placement IDs/content IDs together with parcel, structure and room identity.
+- Farm/industry access roads now terminate outside their work parcel rather than cutting through the building site.
+
+### Validation added
+- v2 structures stay inside parcels and have valid entrances
+- generated homes expose bedrooms and housing capacity
+- mining workplaces classify as workshops and contain multiple rooms
+- generated buildings use wall/floor/roof/opening/furniture/workshop pieces
+- parcel/structure/room/piece IDs remain linked and deterministic
+- settlement atlas exposes exact building pieces
+- legacy v1 settlement-plan metadata remains pinned while new worlds use v2
+
+### Next dependency
+Add richer civic/market parcels and property/home/work bindings, then move into Phase 9 projection so the stable v2 road/parcel/building/room/piece plan becomes actual local terrain and structure state without rerolling.

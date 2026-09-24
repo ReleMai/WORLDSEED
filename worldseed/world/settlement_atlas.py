@@ -10,6 +10,7 @@ from typing import Iterable
 
 from worldseed.core.canonical import canonical_hash
 from worldseed.world.regional_plan import (
+    BuildingPiecePlan,
     LandUseParcel,
     RoadSegmentPlan,
     RoomPlanState,
@@ -29,6 +30,8 @@ class SettlementAtlasCell:
     building_type: str = ""
     room_id: str = ""
     room_kind: str = ""
+    piece_ids: tuple[str, ...] = ()
+    piece_content_ids: tuple[str, ...] = ()
 
 
 @dataclass(slots=True)
@@ -87,6 +90,7 @@ def build_settlement_atlas(
     parcels: Iterable[LandUseParcel] = (),
     structures: Iterable[StructurePlanState] = (),
     rooms: Iterable[RoomPlanState] = (),
+    pieces: Iterable[BuildingPiecePlan] = (),
     margin: int = 3,
 ) -> SettlementAtlasSnapshot:
     """Build a deterministic sparse atlas from one settlement physical plan."""
@@ -94,12 +98,14 @@ def build_settlement_atlas(
     parcels = tuple(sorted(parcels, key=lambda row: row.uid))
     structures = tuple(sorted(structures, key=lambda row: row.uid))
     rooms = tuple(sorted(rooms, key=lambda row: row.uid))
+    pieces = tuple(sorted(pieces, key=lambda row: row.uid))
 
     points: set[tuple[int, int]] = set()
     road_map: dict[tuple[int, int], set[str]] = {}
     parcel_map: dict[tuple[int, int], LandUseParcel] = {}
     structure_map: dict[tuple[int, int], StructurePlanState] = {}
     room_map: dict[tuple[int, int], RoomPlanState] = {}
+    piece_map: dict[tuple[int, int], list[BuildingPiecePlan]] = {}
 
     for road in roads:
         for point in road.polyline:
@@ -124,6 +130,8 @@ def build_settlement_atlas(
             p = (int(point[0]), int(point[1]))
             points.add(p)
             room_map.setdefault(p, room)
+    for piece in pieces:
+        p=(int(piece.x),int(piece.y));points.add(p);piece_map.setdefault(p,[]).append(piece)
 
     left, top, right, bottom = _bounds_from_points(
         points, (plan.anchor_x, plan.anchor_y), max(0, int(margin))
@@ -137,11 +145,12 @@ def build_settlement_atlas(
         bottom=bottom,
     )
 
-    all_cells = set(road_map) | set(parcel_map) | set(structure_map) | set(room_map)
+    all_cells = set(road_map) | set(parcel_map) | set(structure_map) | set(room_map) | set(piece_map)
     for x, y in sorted(all_cells, key=lambda p: (p[1], p[0])):
         parcel = parcel_map.get((x, y))
         structure = structure_map.get((x, y))
         room = room_map.get((x, y))
+        cell_pieces=sorted(piece_map.get((x,y),()),key=lambda p:(p.layer,p.piece_id,p.uid))
         atlas.cells[(x, y)] = SettlementAtlasCell(
             x=x,
             y=y,
@@ -152,6 +161,8 @@ def build_settlement_atlas(
             building_type=(structure.building_type or structure.function) if structure else "",
             room_id=room.uid if room else "",
             room_kind=room.kind if room else "",
+            piece_ids=tuple(p.uid for p in cell_pieces),
+            piece_content_ids=tuple(p.piece_id for p in cell_pieces),
         )
 
     labels = [("settlement", plan.archetype, int(plan.anchor_x), int(plan.anchor_y))]

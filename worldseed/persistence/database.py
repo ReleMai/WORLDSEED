@@ -100,7 +100,7 @@ class WorldDatabase:
             # keep the pre-materialization shoreline instead of silently
             # repainting an existing v8 world under Phase-5 rules.
             "coast_morphology_version":0,
-            "settlement_plan_version":SETTLEMENT_PLAN_VERSION,
+            "settlement_plan_version":1,
             "routegen_version":ROUTEGEN_VERSION,
         }
         changed=False

@@ -122,11 +122,17 @@ class RegionBlockPlanner:
     under the existing simulation/world authorities.
     """
 
-    def __init__(self, world, version: int = SETTLEMENT_PLAN_VERSION):
+    def __init__(self, world, version: int | None = None):
         self.world = world
         self.generator = world.generator
         self.seed = world.generator.world_seed
         self.cache_source = world.delta_source
+        if version is None:
+            getter = getattr(self.cache_source, "get_meta", None)
+            try:
+                version = int(getter("settlement_plan_version")) if callable(getter) else SETTLEMENT_PLAN_VERSION
+            except (KeyError, TypeError, ValueError):
+                version = SETTLEMENT_PLAN_VERSION
         self.version = int(version)
         self._cache: dict[tuple[int, int], RegionBlockPlan] = {}
 

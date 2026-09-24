@@ -8,10 +8,12 @@ from worldseed.systems.settlement_planner import (
     settlement_piece_groups,
 )
 from worldseed.world.regional_plan import (
+    BuildingPiecePlan,
     LandUseParcel,
     RoadSegmentPlan,
     SettlementPlanState,
     StructurePlanState,
+    RoomPlanState,
 )
 from worldseed.world.settlement_atlas import build_settlement_atlas
 from worldseed.world.region_blocks import RegionBlockPlan, RegionRoadExit
@@ -25,10 +27,10 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
 
     def test_settlement_piece_catalog_has_required_breadth(self):
         pieces = self.registry.settlement_pieces
-        self.assertGreaterEqual(len(pieces), 100)
+        self.assertGreaterEqual(len(pieces), 136)
         groups = settlement_piece_groups(self.registry)
         required = {
-            "wall", "floor", "opening", "furniture", "workshop",
+            "wall", "floor", "roof", "opening", "furniture", "workshop",
             "road", "agriculture", "mine", "decoration", "civic",
         }
         self.assertTrue(required.issubset(groups))
@@ -140,7 +142,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             settlement_archetype='mining',control_potential='settled',
             roads=(RegionRoadExit('east',100,'road'),),
         )
-        planner=SettlementSkeletonPlanner(world)
+        planner=SettlementSkeletonPlanner(world,self.registry,version=2)
         skeleton=planner.plan(region,'settlement:0:0',95,persist=True)
         self.assertEqual(skeleton.plan.rank,'town')
         self.assertTrue(skeleton.plan.common_cells)
@@ -162,9 +164,51 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             if parcel.kind!='civic':
                 self.assertTrue(parcel.access_road_id)
                 self.assertIn(parcel.access_road_id,{r.uid for r in skeleton.roads})
-        rebuilt=SettlementSkeletonPlanner(world).plan(region,'settlement:0:0',95,persist=True)
+        rebuilt=SettlementSkeletonPlanner(world,self.registry,version=2).plan(region,'settlement:0:0',95,persist=True)
         self.assertEqual(rebuilt.fingerprint,skeleton.fingerprint)
         self.assertEqual(rebuilt.to_dict(),skeleton.to_dict())
+
+    def test_v2_buildings_are_enclosed_roomed_and_piece_backed(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(open_water=False,slope=7,flood_risk=4,wetness=42,soil_fertility=70,farmland=76,
+            resources=SimpleNamespace(stone=82,timber=58,freshwater=50),resource_opportunity=63)
+        world=SimpleNamespace(generator=SimpleNamespace(world_seed=b'building-v2'),delta_source=Cache(),environment_at=lambda pos: env)
+        region=RegionBlockPlan(uid='rb',region_x=0,region_y=0,version=2,dominant_biome='grassland',biome_mix={'grassland':25},
+            mean_elevation=1,mean_moisture=1,mean_temperature=1,relief=1,settlement_present=True,settlement_anchor=(150,150),
+            settlement_score=80,settlement_archetype='mining',control_potential='settled',
+            roads=(RegionRoadExit('east',150,'road'),RegionRoadExit('west',150,'road')))
+        skeleton=SettlementSkeletonPlanner(world,self.registry,version=2).plan(region,'settlement:buildings',120,persist=False)
+        self.assertTrue(skeleton.structures);self.assertTrue(skeleton.rooms);self.assertTrue(skeleton.pieces)
+        self.assertEqual(set(skeleton.plan.structure_site_ids),{s.uid for s in skeleton.structures})
+        self.assertEqual(set(skeleton.plan.room_ids),{r.uid for r in skeleton.rooms})
+        self.assertEqual(set(skeleton.plan.piece_ids),{p.uid for p in skeleton.pieces})
+        self.assertGreater(skeleton.plan.housing_capacity,0);self.assertTrue(skeleton.plan.workplace_capacity)
+        residence=next(s for s in skeleton.structures if s.function=='residence')
+        self.assertTrue(residence.enclosed);self.assertGreater(residence.interior_area,0)
+        self.assertIn('bedroom',{r.kind for r in skeleton.rooms if r.structure_plan_id==residence.uid})
+        industrial=next(s for s in skeleton.structures if s.function=='mine_workshop')
+        self.assertEqual(industrial.building_type,'workshop')
+        self.assertGreaterEqual(len([r for r in skeleton.rooms if r.structure_plan_id==industrial.uid]),2)
+        categories={self.registry.settlement_pieces[p.piece_id].category for p in skeleton.pieces}
+        self.assertTrue({'wall','floor','roof','opening','furniture','workshop'}.issubset(categories))
+        for structure in skeleton.structures:
+            parcel=next(p for p in skeleton.parcels if p.uid==structure.parcel_id)
+            self.assertTrue(set(structure.footprint).issubset(set(parcel.cells)))
+            self.assertIn(structure.uid,parcel.structure_ids);self.assertIn(structure.entrance,structure.footprint)
+
+    def test_settlement_atlas_exposes_exact_building_pieces(self):
+        plan=SettlementPlanState('sp','s',2,0,0,'agrarian')
+        parcel=LandUseParcel('parcel','sp',cells=[(0,0)],kind='residential')
+        structure=StructurePlanState('structure','sp','core:generated_residence','residence',footprint=[(0,0)],building_type='residence')
+        room=RoomPlanState('room','structure','bedroom',cells=[(0,0)])
+        piece=BuildingPiecePlan('piece','structure','core:single_bed_piece',0,0,'structure',0,'room')
+        atlas=build_settlement_atlas(plan,parcels=[parcel],structures=[structure],rooms=[room],pieces=[piece])
+        cell=atlas.cell_at(0,0)
+        self.assertEqual(cell.piece_ids,('piece',));self.assertEqual(cell.piece_content_ids,('core:single_bed_piece',))
+        self.assertEqual(cell.room_kind,'bedroom')
 
     def test_skeleton_is_independent_of_unrelated_registry_or_rng_state(self):
         class Cache:
@@ -183,10 +227,10 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             settlement_archetype='agrarian',control_potential='settled',
             roads=(RegionRoadExit('north',120,'road'),RegionRoadExit('south',120,'road')),
         )
-        a=SettlementSkeletonPlanner(world).plan(region,'settlement:r',55,persist=False)
+        a=SettlementSkeletonPlanner(world,self.registry,version=2).plan(region,'settlement:r',55,persist=False)
         # An unrelated attribute/order mutation must not enter the planner's deterministic inputs.
         world.unrelated={'z':3,'a':1}
-        b=SettlementSkeletonPlanner(world).plan(region,'settlement:r',55,persist=False)
+        b=SettlementSkeletonPlanner(world,self.registry,version=2).plan(region,'settlement:r',55,persist=False)
         self.assertEqual(a.fingerprint,b.fingerprint)
 
 

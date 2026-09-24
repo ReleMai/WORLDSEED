@@ -42,6 +42,8 @@ class SettlementPlanState:
     road_segment_ids: list[str] = field(default_factory=list)
     parcel_ids: list[str] = field(default_factory=list)
     structure_site_ids: list[str] = field(default_factory=list)
+    room_ids: list[str] = field(default_factory=list)
+    piece_ids: list[str] = field(default_factory=list)
     crossing_ids: list[str] = field(default_factory=list)
     land_use_summary: dict[str, int] = field(default_factory=dict)
     housing_capacity: int = 0
@@ -71,6 +73,19 @@ class RoomPlanState:
 
 
 @dataclass(slots=True)
+class BuildingPiecePlan:
+    """One exact construction/furnishing piece inside a composite building plan."""
+    uid: str
+    structure_plan_id: str
+    piece_id: str
+    x: int
+    y: int
+    layer: str = "structure"
+    orientation: int = 0
+    room_id: str = ""
+
+
+@dataclass(slots=True)
 class StructurePlanState:
     uid: str
     settlement_plan_id: str
@@ -86,6 +101,8 @@ class StructurePlanState:
     condition: int = 100
     destroyed: bool = False
     local_materialized_id: str = ""
+    parcel_id: str = ""
+    piece_ids: list[str] = field(default_factory=list)
     building_type: str = ""
     enclosed: bool = False
     interior_area: int = 0

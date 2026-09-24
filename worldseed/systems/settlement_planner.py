@@ -9,10 +9,12 @@ from worldseed.config import SETTLEMENT_PLAN_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.world.regional_plan import (
+    BuildingPiecePlan,
     LandUseParcel,
     RoadSegmentPlan,
     RoomPlanState,
     SettlementPlanState,
+    StructurePlanState,
     stable_plan_uid,
 )
 
@@ -87,10 +89,10 @@ def _flood(
 def _room_kind(tags: set[str]) -> str:
     if tags & {"forge", "smithy", "anvil", "bellows"}:
         return "smithy"
-    if tags & {"oven", "hearth", "kitchen", "cooking"}:
-        return "kitchen"
     if tags & {"bed", "sleep"}:
         return "bedroom"
+    if tags & {"oven", "hearth", "kitchen", "cooking"}:
+        return "kitchen"
     if tags & {"merchant", "shop", "market"}:
         return "shop"
     if tags & {"storage", "stockpile", "granary"}:
@@ -114,10 +116,10 @@ def _building_type(room_kinds: list[str], all_tags: set[str]) -> str:
         return "workshop"
     if "bedroom" in kinds:
         return "residence"
-    if "storage" in kinds and len(kinds) == 1:
-        return "storehouse"
     if all_tags & {"stable", "livestock"}:
         return "stable"
+    if "storage" in kinds and len(kinds) == 1:
+        return "storehouse"
     return "building"
 
 
@@ -253,6 +255,9 @@ class SettlementSkeleton:
     plan: SettlementPlanState
     roads: list[RoadSegmentPlan] = field(default_factory=list)
     parcels: list[LandUseParcel] = field(default_factory=list)
+    structures: list[StructurePlanState] = field(default_factory=list)
+    rooms: list[RoomPlanState] = field(default_factory=list)
+    pieces: list[BuildingPiecePlan] = field(default_factory=list)
     fingerprint: str = ""
 
     def to_dict(self) -> dict:
@@ -260,6 +265,9 @@ class SettlementSkeleton:
             "plan": asdict(self.plan),
             "roads": [asdict(row) for row in self.roads],
             "parcels": [asdict(row) for row in self.parcels],
+            "structures": [asdict(row) for row in self.structures],
+            "rooms": [asdict(row) for row in self.rooms],
+            "pieces": [asdict(row) for row in self.pieces],
         }
         payload["fingerprint"] = self.fingerprint or canonical_hash(payload)
         return payload
@@ -283,7 +291,21 @@ class SettlementSkeleton:
             row = dict(item)
             row["cells"] = [tuple(map(int, p)) for p in row.get("cells", ())]
             parcels.append(LandUseParcel(**row))
-        return cls(plan, roads, parcels, str(raw.get("fingerprint", "")))
+        structures = []
+        for item in raw.get("structures", ()):
+            row = dict(item)
+            row["footprint"] = [tuple(map(int, p)) for p in row.get("footprint", ())]
+            if row.get("entrance") is not None:
+                row["entrance"] = tuple(map(int, row["entrance"]))
+            structures.append(StructurePlanState(**row))
+        rooms = []
+        for item in raw.get("rooms", ()):
+            row = dict(item)
+            row["cells"] = [tuple(map(int, p)) for p in row.get("cells", ())]
+            row["doorway_cells"] = [tuple(map(int, p)) for p in row.get("doorway_cells", ())]
+            rooms.append(RoomPlanState(**row))
+        pieces = [BuildingPiecePlan(**dict(item)) for item in raw.get("pieces", ())]
+        return cls(plan, roads, parcels, structures, rooms, pieces, str(raw.get("fingerprint", "")))
 
 
 def settlement_rank_for_population(population: int) -> str:
@@ -312,11 +334,18 @@ class SettlementSkeletonPlanner:
     _FARM_TARGET = {"homestead": 1, "hamlet": 2, "village": 4, "town": 7, "city": 10}
     _LOCAL_STREETS = {"homestead": 0, "hamlet": 1, "village": 2, "town": 4, "city": 6}
 
-    def __init__(self, world, version: int = SETTLEMENT_PLAN_VERSION):
+    def __init__(self, world, registry=None, version: int | None = None):
         self.world = world
+        self.registry = registry if registry is not None else getattr(world, "registry", None)
         self.seed = world.generator.world_seed
-        self.version = int(version)
         self.cache_source = world.delta_source
+        if version is None:
+            getter = getattr(self.cache_source, "get_meta", None)
+            try:
+                version = int(getter("settlement_plan_version")) if callable(getter) else SETTLEMENT_PLAN_VERSION
+            except (KeyError, TypeError, ValueError):
+                version = SETTLEMENT_PLAN_VERSION
+        self.version = int(version)
         self._cache: dict[str, SettlementSkeleton] = {}
         self._env_cache: dict[tuple[int, int], object | None] = {}
 
@@ -579,6 +608,7 @@ class SettlementSkeletonPlanner:
             uid=plan_uid, settlement_id=str(settlement_id), version=self.version,
             anchor_x=region_plan.settlement_anchor[0], anchor_y=region_plan.settlement_anchor[1],
             archetype=region_plan.settlement_archetype, rank=rank,
+            atlas_version=2 if self.version>=2 else 1,
             common_cells=sorted(common_cells, key=lambda p: (p[1], p[0])),
         )
 
@@ -631,8 +661,20 @@ class SettlementSkeletonPlanner:
         occupied = set(common_cells) | road_cells
         farm_target = self._best_functional_site(common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied)
         industry_target = self._best_functional_site(common_center, bounds, kind="industry", archetype=plan.archetype, occupied=occupied)
-        farm_road = add_road("farm-access", farm_target, "path") if farm_target else ""
-        industry_road = add_road("industry-access", industry_target, "road") if industry_target else ""
+        def access_point(site: tuple[int, int] | None, clearance: int = 5):
+            if site is None:
+                return None
+            dx=common_center[0]-site[0];dy=common_center[1]-site[1]
+            if abs(dx)>=abs(dy):
+                raw=(site[0]+(clearance if dx>0 else -clearance),site[1])
+            else:
+                raw=(site[0],site[1]+(clearance if dy>0 else -clearance))
+            return self._nearest_legal(raw,bounds,radius=5) or raw
+
+        farm_access=access_point(farm_target,6)
+        industry_access=access_point(industry_target,6)
+        farm_road = add_road("farm-access", farm_access, "path") if farm_access else ""
+        industry_road = add_road("industry-access", industry_access, "road") if industry_access else ""
 
         parcels: list[LandUseParcel] = []
         common_ordered = sorted(common_cells, key=lambda p: (p[1], p[0]))
@@ -667,9 +709,10 @@ class SettlementSkeletonPlanner:
                         continue
                     candidates.append((env.slope*3 + env.flood_risk*4 + abs(center[0]-common_center[0])//2 + abs(center[1]-common_center[1])//2, center[1], center[0], road.uid))
         for _, y, x, access_id in sorted(candidates):
+            lot_size = 7 if rank in {"town", "city"} else 5
             parcel = self._parcel(
                 plan.uid, f"residential:{len([p for p in parcels if p.kind=='residential'])}",
-                "residential", "home_lot", (x, y), 5, 5,
+                "residential", "home_lot", (x, y), lot_size, lot_size,
                 forbidden=occupied, road_cells=road_cells, access_road_id=access_id,
             )
             if parcel is None:
@@ -725,11 +768,19 @@ class SettlementSkeletonPlanner:
             plan.atlas_bounds = (min(xs), min(ys), max(xs), max(ys))
 
         skeleton = SettlementSkeleton(plan, roads, parcels)
-        skeleton.fingerprint = canonical_hash({
-            "plan": asdict(plan),
-            "roads": [asdict(row) for row in roads],
-            "parcels": [asdict(row) for row in parcels],
-        })
+        if self.version >= 2 and self.registry is not None:
+            from worldseed.systems.settlement_buildings import populate_settlement_buildings
+            populate_settlement_buildings(skeleton, self.registry, self.seed)
+
+        payload = {
+            "plan": asdict(skeleton.plan),
+            "roads": [asdict(row) for row in skeleton.roads],
+            "parcels": [asdict(row) for row in skeleton.parcels],
+            "structures": [asdict(row) for row in skeleton.structures],
+            "rooms": [asdict(row) for row in skeleton.rooms],
+            "pieces": [asdict(row) for row in skeleton.pieces],
+        }
+        skeleton.fingerprint = canonical_hash(payload)
         return skeleton
 
     def read_prepared(self, settlement_id: str) -> SettlementSkeleton | None:
