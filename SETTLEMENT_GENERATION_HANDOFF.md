@@ -58,3 +58,24 @@ Implement the terrain-aware settlement skeleton generator: primary access road/c
 
 ### Next dependency
 Generate structure footprints on the new residential/civic/industrial parcels, then assemble walls/floors/doors/interior rooms/furniture/workstations from the 128-piece catalog. Structure placement should feed the existing enclosure/type detector and settlement atlas.
+
+
+## Work unit 3 - Procedural buildings and interiors
+- Added first-class `StructurePiecePlan` records so generated buildings preserve the exact catalog pieces used at each coordinate.
+- Expanded the catalog from 128 to 136 pieces by adding eight roof families; roofs are explicit settlement construction data rather than an implicit detector-only concept.
+- Residential, industrial and farm parcels can now produce physical building plans with walls, floors, roofs, exterior doors, optional interior partitions, furniture/work fixtures and stable piece IDs.
+- Larger structures receive interior partitions and internal doors, then pass through the physical enclosure/room detector. Accepted `StructurePlanState` records store detected building type, interior area, room IDs, roof coverage and entrance.
+- Mining industrial parcels generate smithies; forest/river settlements use workshops, agrarian settlements use mills, fishing settlements use fisheries, and farm land can receive barns.
+- Town/city residential parcels are widened enough for periodic multi-room homes. Smaller settlements retain compact houses.
+- Parcel `structure_ids` and settlement `structure_site_ids` bind the land-use plan to physical buildings.
+- Generated-plan persistence now round-trips structures, rooms and piece placements as part of the same deterministic settlement fingerprint.
+
+### Validation added
+- every generated piece ID exists in the settlement-piece catalog
+- generated structures are enclosed, roofed, have entrances, room IDs and piece IDs
+- multi-room structures are produced in a town fixture
+- mining work areas physically classify as smithies
+- roof pieces are first-class overlay pieces
+
+### Next dependency
+Materialize planned settlement pieces into local terrain/structure layers without changing the authoritative plan; then add dedicated settlement-atlas rendering for roads, parcels, buildings and named interior rooms.

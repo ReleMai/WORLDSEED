@@ -71,6 +71,18 @@ class RoomPlanState:
 
 
 @dataclass(slots=True)
+class StructurePiecePlan:
+    """One concrete construction/furnishing piece inside a planned building."""
+    uid: str
+    structure_plan_id: str
+    piece_id: str
+    x: int
+    y: int
+    layer: str = "structure"
+    role: str = ""
+
+
+@dataclass(slots=True)
 class StructurePlanState:
     uid: str
     settlement_plan_id: str
@@ -90,6 +102,8 @@ class StructurePlanState:
     enclosed: bool = False
     interior_area: int = 0
     room_ids: list[str] = field(default_factory=list)
+    piece_ids: list[str] = field(default_factory=list)
+    roof_percent: int = 0
 
 
 @dataclass(slots=True)
