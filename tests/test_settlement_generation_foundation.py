@@ -1,6 +1,7 @@
 import unittest
 
 from worldseed.config import DATA_DIR
+from worldseed.core.coords import WorldPos
 from worldseed.content.registry import ContentRegistry
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.building import BuildingSystem
