@@ -222,7 +222,8 @@ class Renderer:
                 elif k in carcass_by: ch = '&'
                 elif k in home_by: ch = '⌂' if self.use_unicode else 'H'
                 elif k in sign_by: ch = '·' if self.use_unicode else ','
-                elif k in pile_by: ch = '                elif k in grave_by: ch = '†' if self.use_unicode else '+'
+                elif k in pile_by: ch = 'P'
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
                 elif k in arc_by: ch = '*'
                 elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
                 elif k in structure_by:
