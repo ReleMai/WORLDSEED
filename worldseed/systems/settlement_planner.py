@@ -865,6 +865,15 @@ class SettlementSkeletonPlanner:
         )
         parcels.append(common_parcel)
         occupied = set(common_cells)
+        # Functional anchors are selected before housing and must remain
+        # physically available. Reserve their intended work/field footprints so
+        # street-fronting homes cannot consume the very land that explains why
+        # the settlement exists.
+        functional_reserve=set()
+        if farm_target:
+            functional_reserve |= self._rect(farm_target,9,7)
+        if industry_target:
+            functional_reserve |= self._rect(industry_target,7,7)
 
         # Residential lots are street-fronting by construction. Candidate lots
         # are projected to either side of the actual curved road polyline.
@@ -894,7 +903,7 @@ class SettlementSkeletonPlanner:
                 "residential", "home_lot", (x, y),
                 7 if rank in {"town","city"} else 5,
                 7 if rank in {"town","city"} else 5,
-                forbidden=occupied, road_cells=road_cells, access_road_id=access_id,
+                forbidden=occupied | functional_reserve, road_cells=road_cells, access_road_id=access_id,
             )
             if parcel is None:
                 continue
