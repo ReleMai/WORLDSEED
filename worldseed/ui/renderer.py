@@ -222,8 +222,12 @@ class Renderer:
                     ch = sd.glyph if sd else '#'
                 else:
                     wp=WorldPos(x,y,pos.z)
-                    resource=self._resource_glyph(sim,wp)
-                    ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                    settlement_glyph=sim.settlement_physicalization.glyph_at(wp)
+                    if settlement_glyph is not None:
+                        ch=settlement_glyph
+                    else:
+                        resource=self._resource_glyph(sim,wp)
+                        ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
                 if ch == '@' and self.use_color:
                     ch = f'{BOLD}\x1b[97m@{RESET}'
                 elif ch == 'X' and self.use_color:
