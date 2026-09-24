@@ -2,6 +2,9 @@ import unittest
 
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
+from worldseed.systems.physicalization import SettlementPhysicalizationSystem
+from worldseed.systems.building import BuildingSystem
+from worldseed.systems.state import LivingWorldState
 from worldseed.systems.settlement_planner import (
     SettlementSkeletonPlanner,
     analyze_building,
@@ -236,6 +239,93 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         roofs=[p for p in self.registry.settlement_pieces.values() if p.category=='roof']
         self.assertGreaterEqual(len(roofs),8)
         self.assertTrue(all(p.layer=='overlay' for p in roofs))
+
+
+    def test_local_physicalization_exposes_collision_rooms_and_road_glyphs(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(
+            open_water=False,slope=5,flood_risk=4,wetness=40,soil_fertility=72,farmland=80,
+            resources=SimpleNamespace(stone=75,timber=60,freshwater=55),resource_opportunity=64,
+        )
+        region=RegionBlockPlan(
+            uid='physical-region',region_x=0,region_y=0,version=1,
+            dominant_biome='grassland',biome_mix={'grassland':25},
+            mean_elevation=1,mean_moisture=1,mean_temperature=1,relief=1,
+            settlement_present=True,settlement_anchor=(180,180),settlement_score=82,
+            settlement_archetype='mining',control_potential='settled',
+            roads=(RegionRoadExit('north',180,'road'),RegionRoadExit('east',180,'road')),
+        )
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'physicalization-test'),
+            delta_source=Cache(),registry=self.registry,environment_at=lambda pos:env,
+        )
+        region_planner=SimpleNamespace(plan=lambda rx,ry,persist=True:region)
+        skeleton_planner=SettlementSkeletonPlanner(world)
+        physical=SettlementPhysicalizationSystem(world,self.registry,region_planner,skeleton_planner)
+        settlement=SimpleNamespace(uid='settlement:physical',region_x=0,region_y=0,population=105)
+        self.assertEqual(physical.sync([settlement],(0,0)),1)
+        cells=physical.cells()
+        self.assertTrue(cells)
+        road_cell=next(c for c in cells if c.road_ids and c.ground_piece_id)
+        self.assertEqual(physical.glyph_at(WorldPos(road_cell.x,road_cell.y,0)),'=')
+        wall_cell=next(c for c in cells if c.structure_piece_id and
+                       not self.registry.settlement_pieces[c.structure_piece_id].passable)
+        wall_pos=WorldPos(wall_cell.x,wall_cell.y,0)
+        self.assertFalse(physical.passable(wall_pos,True))
+        self.assertTrue(physical.blocks_sight(wall_pos))
+        door_cell=next(c for c in cells if c.structure_piece_id and
+                       'door' in self.registry.settlement_pieces[c.structure_piece_id].tags)
+        self.assertTrue(physical.passable(WorldPos(door_cell.x,door_cell.y,0),True))
+        room_cell=next(c for c in cells if c.room_id)
+        room=physical.room_at(WorldPos(room_cell.x,room_cell.y,0))
+        self.assertTrue(room['enclosed'])
+        self.assertTrue(room['sheltered'])
+        self.assertGreaterEqual(room['roof_percent'],60)
+        self.assertIn(room['classification'],{'room','bedroom','smithy','storage','workshop'})
+        # Generated civilization is reconstruction-only and does not duplicate
+        # its walls into player construction state.
+        state=LivingWorldState()
+        building=BuildingSystem(state,self.registry)
+        building.attach_settlement_physicalization(physical)
+        self.assertFalse(state.structures)
+        self.assertFalse(building.passable(wall_pos,True))
+        self.assertTrue(building.blocks_sight(wall_pos))
+        self.assertEqual(building.room_at(WorldPos(room_cell.x,room_cell.y,0))['room_id'],room['room_id'])
+
+    def test_physicalization_is_bounded_to_active_region(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(
+            open_water=False,slope=5,flood_risk=4,wetness=40,soil_fertility=70,farmland=75,
+            resources=SimpleNamespace(stone=50,timber=55,freshwater=50),resource_opportunity=52,
+        )
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'bounded-physical'),delta_source=Cache(),
+            registry=self.registry,environment_at=lambda pos:env,
+        )
+        regions={
+            (0,0):RegionBlockPlan('r0',0,0,1,'grassland',{'grassland':25},1,1,1,1,True,(120,120),70,'agrarian','settled'),
+            (1,0):RegionBlockPlan('r1',1,0,1,'grassland',{'grassland':25},1,1,1,1,True,(640,120),70,'forest','settled'),
+        }
+        region_planner=SimpleNamespace(plan=lambda rx,ry,persist=True:regions[(rx,ry)])
+        physical=SettlementPhysicalizationSystem(
+            world,self.registry,region_planner,SettlementSkeletonPlanner(world)
+        )
+        settlements=[
+            SimpleNamespace(uid='settlement:a',region_x=0,region_y=0,population=45),
+            SimpleNamespace(uid='settlement:b',region_x=1,region_y=0,population=45),
+        ]
+        physical.sync(settlements,(0,0),radius=0)
+        self.assertEqual(physical.active_settlement_ids,('settlement:a',))
+        self.assertTrue(all(c.settlement_id=='settlement:a' for c in physical.cells()))
+        physical.sync(settlements,(1,0),radius=0)
+        self.assertEqual(physical.active_settlement_ids,('settlement:b',))
+        self.assertTrue(all(c.settlement_id=='settlement:b' for c in physical.cells()))
 
 
 if __name__ == "__main__":
