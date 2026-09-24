@@ -1326,6 +1326,16 @@ class Simulation:
         factor=(100-bargain) if buy else (100+bargain)
         return max(1,(base*factor)//100)
 
+    def player_barter_value(self, settlement_id:str, goods:dict[str,int], offered:bool)->int:
+        return sum(
+            self.player_trade_price(settlement_id,iid,not offered)*max(0,int(qty))
+            for iid,qty in goods.items()
+            if qty>0
+        )
+
+    def player_barter_balance(self, settlement_id:str, offered:dict[str,int], requested:dict[str,int])->int:
+        return self.player_barter_value(settlement_id,offered,True)-self.player_barter_value(settlement_id,requested,False)
+
     def _buy(self,cmd:BuyCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id);inv=self.entities.get(cmd.actor,Inventory)
         if not town or abs(town.x-self.player_pos.x)+abs(town.y-self.player_pos.y)>25:self._message("You are not close enough to that market.");return
