@@ -70,9 +70,9 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
-      - name: Settlement generation population and civic regressions
+      - name: Settlement economy population and civic regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Settlement generation population and civic regressions" --timeout 150 -- python -u -m unittest -v tests.test_settlement_generation_foundation tests.test_settlement_population_bindings tests.test_civic_economy_social
+        run: python -u tools/run_ci_check.py --name "Settlement economy population and civic regressions" --timeout 180 -- python -u -m unittest -v tests.test_settlement_generation_foundation tests.test_settlement_population_bindings tests.test_civic_economy_social tests.test_economy_routines_transactions
 
       - name: Item asset catalog regressions
         shell: pwsh

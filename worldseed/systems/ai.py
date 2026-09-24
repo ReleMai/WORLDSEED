@@ -46,20 +46,53 @@ class NPCSystem:
             if target is not None:return target
         return WorldPos(int(town.x),int(town.y),0)
 
+    def _routine_bias(self,npc:NPCState,minute:int)->dict[str,int]:
+        """Soft daily rhythm. Urgent needs still override these preferences."""
+        hour=(int(minute)%1440)//60
+        out={"eat":0,"rest":0,"work":0,"socialize":0,"guard":0,"worship":0,"learn":0}
+        if npc.age<16:
+            if 8<=hour<15:out["learn"]+=55
+            if 16<=hour<20:out["socialize"]+=45
+            if hour>=21 or hour<7:out["rest"]+=100
+            return out
+        if npc.occupation=="guard":
+            shift=int(hash_u64(self.seed,"guard-shift",npc.uid)%3)
+            start=(0,8,16)[shift]
+            active=((hour-start)%24)<8
+            if active:out["guard"]+=90
+            else:out["rest"]+=35
+        else:
+            start,end={
+                "farmer":(6,15),"herder":(6,15),"merchant":(8,18),
+                "healer":(7,18),"scholar":(9,17),"priest":(7,15),
+                "miner":(7,16),"hunter":(6,14),
+            }.get(npc.occupation,(8,17))
+            if start<=hour<end:out["work"]+=55
+        if hour in (7,12,18):out["eat"]+=55
+        if 18<=hour<21:
+            out["socialize"]+=45
+            if npc.occupation=="priest" or npc.needs.get("faith",0)>45:out["worship"]+=35
+        if npc.occupation=="scholar" and 17<=hour<20:out["learn"]+=35
+        if hour>=22 or hour<6:out["rest"]+=105
+        return out
+
     def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
         war=bool(self.state.factions.get(npc.faction_id).at_war) if npc.faction_id in self.state.factions else False
         needs=npc.needs
+        routine=self._routine_bias(npc,minute)
         scores={
-            "eat":npc.hunger*3,
+            "eat":npc.hunger*3+routine["eat"],
             "drink":npc.thirst*4,
-            "rest":npc.rest*2,
-            "work":(80+(30 if "ambitious" in npc.traits else 0)-npc.hunger) if npc.workplace_id else 15,
-            "socialize":needs.get("social",0)*2+(15 if "kind" in npc.traits else 0),
-            "guard":((85 if npc.occupation=="guard" else 0)+(35 if war else 0)),
+            "rest":npc.rest*2+routine["rest"]+(80 if npc.rest>=80 else 0),
+            "work":((65+(25 if "ambitious" in npc.traits else 0)-npc.hunger)+routine["work"]) if npc.workplace_id else 10,
+            "socialize":needs.get("social",0)*2+(15 if "kind" in npc.traits else 0)+routine["socialize"],
+            "guard":((50 if npc.occupation=="guard" else 0)+(35 if war else 0)+routine["guard"]),
             "heal":max((100-npc.hp)*4,needs.get("health",0)*3),
-            "worship":needs.get("faith",0)*2 if npc.occupation=="priest" or needs.get("faith",0)>55 else 0,
-            "learn":needs.get("learning",0)*2 if npc.occupation=="scholar" or "curious" in npc.traits else 0,
+            "worship":(needs.get("faith",0)*2+routine["worship"]) if npc.occupation=="priest" or needs.get("faith",0)>55 else 0,
+            "learn":(needs.get("learning",0)*2+routine["learn"]) if npc.occupation=="scholar" or "curious" in npc.traits or npc.age<16 else 0,
         }
+        if npc.hunger>=80:scores["eat"]+=90
+        if npc.thirst>=75:scores["drink"]+=100
         if npc.hunger>=85 and npc.wealth<=1 and ("greedy" in npc.traits or town.food_stress>=70):
             scores["steal"]=npc.hunger*3+25
         best=max(scores,key=scores.get);best_score=scores[best]
@@ -94,13 +127,21 @@ class NPCSystem:
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"steal"}]
         elif best=="socialize":
             peers=[p for p in self.state.npcs.values() if p.alive and p.settlement_id==npc.settlement_id and p.uid!=npc.uid]
-            target=self._service_destination(town,("market","shrine"))
-            tasks=[{"kind":"move","x":target.x,"y":target.y}]
+            kin=set(npc.parents)|set(npc.children)|set(npc.kinship)
+            if npc.spouse_uid:kin.add(npc.spouse_uid)
+            peers.sort(key=lambda p:(0 if p.uid in kin else 1,-npc.relationships.get(p.uid,{}).get("affection",0),p.uid))
             if peers:
-                other=peers[hash_u64(self.seed,"social-target",npc.uid,minute//60)%len(peers)]
-                tasks.append({"kind":"social","target":other.uid})
-            else:tasks.append({"kind":"perform","action":"socialize"})
-            npc.tasks=tasks
+                close=[p for p in peers if p.uid in kin]
+                pool=close or peers[:max(1,min(4,len(peers)))]
+                other=pool[hash_u64(self.seed,"social-target",npc.uid,minute//60)%len(pool)]
+                if other.uid in kin:
+                    target=self._binding_destination(npc.home_id,npc.home_room_id,town)
+                else:
+                    target=self._service_destination(town,("market","shrine"))
+                npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"social","target":other.uid}]
+            else:
+                target=self._service_destination(town,("market","shrine"))
+                npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"socialize"}]
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
         if not npc.tasks:return
         task=npc.tasks[0]
@@ -123,10 +164,15 @@ class NPCSystem:
                 if food:
                     town.stocks[food]-=1;npc.hunger=max(0,npc.hunger-45)
                     if self.economy is not None and npc.wealth>0:
-                        price=min(npc.wealth,self.economy.trade_price(town.uid,food,buy=True));npc.wealth-=price;town.wealth+=price
+                        price=min(npc.wealth,self.economy.trade_price(town.uid,food,buy=True))
+                        npc.wealth-=price;town.wealth+=price
+                        self.economy.record_transaction(
+                            town.uid,"npc_purchase",npc.uid,town.uid,
+                            copper_value=price,minute=minute,requested={food:1},
+                        )
             elif action=='drink':npc.thirst=max(0,npc.thirst-55)
             elif action=='rest':npc.rest=max(0,npc.rest-55)
-            elif action=='work':self._work(npc,town);npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
+            elif action=='work':self._work(npc,town,minute);npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
             elif action=='guard':npc.rest=min(100,npc.rest+5);npc.needs['safety']=max(0,npc.needs.get('safety',0)-20)
             elif action=='heal':
                 medicine=next((iid for iid in ('core:herbal_tonic','core:medicinal_herb') if town.stocks.get(iid,0)>0),None)
@@ -145,10 +191,11 @@ class NPCSystem:
         # fabricated house/workplace identifiers.
         if self.settlement_population is not None:
             self.settlement_population.bind_settlement(town)
-    def _work(self,npc:NPCState,town)->None:
-        mapping={"farmer":("core:wheat",2),"hunter":("core:meat",1),"miner":("core:iron_ore",1),"carpenter":("core:wood",2),"herder":("core:turnip",1),"merchant":("core:wood",1)};item,amount=mapping.get(npc.occupation,(None,0))
-        if npc.occupation=='smith' and 'tech:smelting' in town.knowledge and town.stocks.get('core:iron_ore',0)>=2 and town.stocks.get('core:coal',0)>=1:town.stocks['core:iron_ore']-=2;town.stocks['core:coal']-=1;town.stocks['core:iron_bloom']=town.stocks.get('core:iron_bloom',0)+1
-        elif item:town.stocks[item]=town.stocks.get(item,0)+amount
+    def _work(self,npc:NPCState,town,minute:int=0)->None:
+        # Production belongs to the aggregate labor reservation. The named NPC
+        # is its physical representative and must not mint a second output.
+        if self.economy is not None:
+            self.economy.representative_work(npc,town,minute)
     def _socialize(self,npc:NPCState,other:NPCState,minute:int)->None:
         rel=npc.relationships.setdefault(other.uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0});rel['familiarity']=min(100,rel['familiarity']+2);rel['trust']=min(100,rel['trust']+1);rel['affection']=min(100,rel['affection']+1)
         npc.needs["social"]=max(0,npc.needs.get("social",0)-35)
