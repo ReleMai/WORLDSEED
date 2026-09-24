@@ -124,3 +124,5 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - WU18 also keeps non-materialized households explicitly in aggregate logistics mode. They are not removed from settlement-wide food demand until a real home-storage container exists, preventing named distant residents from accidentally consuming zero food. Delivery movement tasks carry their delivery identity so coarse completion can cleanly cancel obsolete travel work.
 
 - The Fast Gate settlement/economy regression step now includes `tests.test_household_economy`, so household conservation, wages, procurement, logistics tiers and save compatibility are enforced on every relevant PR rather than relying on an uninvoked standalone test file.
+
+- Aggregate settlement food demand now uses a ceiling-style population ration calculation. After exact households are removed from the aggregate pool, one or two remaining anonymous residents still consume food instead of becoming a zero-cost rounding remainder.

@@ -53,4 +53,12 @@ class HouseholdEconomyTests(unittest.TestCase):
         self.assertEqual(h.logistics_mode,"aggregate");self.assertEqual(h.last_consumed_minute,-1);self.assertEqual(h.unmet_needs,{"physical_storage":1})
 
 
+    def test_aggregate_food_need_preserves_small_population_remainder(self):
+        self.assertEqual(EconomySystem._food_need_for_population(0),0)
+        self.assertEqual(EconomySystem._food_need_for_population(1),1)
+        self.assertEqual(EconomySystem._food_need_for_population(2),1)
+        self.assertEqual(EconomySystem._food_need_for_population(3),1)
+        self.assertEqual(EconomySystem._food_need_for_population(4),2)
+
+
 if __name__=="__main__":unittest.main()
