@@ -203,8 +203,10 @@ class SettlementPopulationBinder:
                 home_room = self._home_room(skeleton, home)
                 npc.home_room_id = home_room.uid if home_room is not None else ""
                 npc.bed_fixture_id = self._bed_fixture(skeleton, home_room)
-                parcel = self._parcel_for_structure(skeleton, home.uid)
-                npc.property_id = parcel.uid if parcel is not None else ""
+                # A physical property claim uses the same stable structure ID
+                # as the settlement plan. Parcel membership remains discoverable
+                # from the skeleton and is not a second ownership identifier.
+                npc.property_id = home.uid
                 settlement.property_owners.setdefault(home.uid, npc.uid)
                 if reposition_unbound and not had_valid_home:
                     target = self._spawn_in_room(npc.uid, home_room, occupied)

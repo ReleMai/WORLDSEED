@@ -220,3 +220,35 @@ Add player-facing trade/barter presentation and ownership-aware theft interactio
 
 ### Next dependency
 Add ownership-aware player theft/trespass against real settlement structures and containers, including witness line-of-sight, property ownership, guard response, restitution/fines, and relationship consequences. Then add a compact NPC inspect window with Overview, Family, Relations, Needs, and History tabs fed from the now-stable social state.
+
+
+## Work unit 9 - Physical property authority, witnessed theft, and NPC profile UI
+- Civics now attaches to settlement physicalization. When a settlement plan is active, PropertyState records use the exact stable structure ID as their property ID instead of creating a parallel set of abstract house/shop identifiers.
+- Physical homes, markets, workshops, farms, clinics, watchhouses, shrines, archives and schools receive property claims/value/capacity metadata. Structure condition remains the physical-plan authority; property state mirrors it rather than creating a second damage/decay model.
+- Legacy aggregate property generation remains only as a Tier-C fallback for distant or unprepared settlements and is ignored while an authoritative physical plan is active.
+- NPC home_id and property_id now point to the same physical residence structure. Civics derives occupants from those bindings and no longer overwrites an active physical home assignment during monthly housing updates.
+- Added ownership lookup for physical structures so crime and later trespass/rent systems can identify the actual owner rather than a synthetic property record.
+- Player market theft now targets the generated market building and real settlement stock. It requires physical proximity, records the market structure/property source, transfers the stolen goods, and determines witnesses from actual nearby NPC positions plus line of sight.
+- Theft records now retain property/source context and explicit witness NPC IDs. Witnesses and victims can lose trust/respect toward the thief through the existing relationship state.
+- Witnessed player theft accumulates local crime heat. The law system can convert a reported theft into a settlement-specific bounty according to local theft law and guard strength. Crime heat slowly falls; bounty debt persists.
+- The market UI now includes a restrained Steal flow with item, quantity and review steps. It reports local bounty status without adding a separate crime dashboard.
+- Right-clicking a known NPC now offers a focused Inspect action. Unknown people remain strangers until spoken to, preserving the existing knowledge boundary.
+- Added a movable/resizable NPC profile window with Overview, Family, Relations, Needs and History tabs. It shows context-specific information instead of one dense stat sheet, uses qualitative relationship/need labels, hides raw stable IDs, and does not reveal undiscovered relatives by name.
+- Terminal fallback exposes the same profile sections through a text document after tab selection.
+
+### Compatibility / authority
+- New player bounty/heat and theft witness/source fields have defaults and serialize additively; no save-schema or settlement-plan bump is required.
+- Physical StructurePlanState IDs are now the active property identity. Parcel IDs remain land-use/access geometry, not ownership IDs.
+- Property maintenance does not mutate a second condition value for physical structures; future repair/destruction must continue through physical-plan deltas.
+- Distant aggregate civics remains bounded and does not force settlement materialization.
+
+### Validation added
+- active civics properties are exact generated structure IDs and include the physical market
+- monthly civics updates preserve physical NPC home bindings
+- witnessed player theft records the market property and witness IDs, moves real stock, raises heat and can become a bounty
+- NPC profile data hides undiscovered relative names and raw internal IDs
+- the graphical NPC profile stays within 800x520, 1280x800 and 1920x1080 and exposes tab, drag, resize and close targets
+- Fast Gate settlement coverage includes property/crime/profile regressions
+
+### Next dependency
+Extend ownership-aware crime from the market to private homes/workplaces and generated storage fixtures, including trespass permissions, locks, restitution and guard confrontation. Then add household budgets/consumption so families buy food, medicine and household goods from the same market ledger instead of relying only on settlement-level aggregate consumption.

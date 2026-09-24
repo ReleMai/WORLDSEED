@@ -10,10 +10,23 @@ class LawSystem:
             guard_count=sum(1 for n in self.state.npcs.values() if n.alive and n.settlement_id==town.uid and n.occupation=='guard')
             for theft in sorted(self.state.theft_records.values(),key=lambda row:(row.minute,row.uid)):
                 if theft.settlement_id!=town.uid or theft.resolved or not theft.witnessed:continue
-                thief=self.state.npcs.get(theft.thief_uid)
-                if thief is None or not thief.alive:continue
                 enforcement=min(95,town.law.get('theft',30)+guard_count*10)
                 if hash_u64(self.seed,'resolve-theft',theft.uid,minute//1440)%100>=enforcement:continue
+                if theft.thief_uid=="player":
+                    fine=max(1,theft.value*max(25,town.law.get('theft',30))//100)
+                    self.state.player_bounties[town.uid]=self.state.player_bounties.get(town.uid,0)+fine
+                    self.state.player_crime_heat[town.uid]=min(
+                        100,self.state.player_crime_heat.get(town.uid,0)+15+min(30,theft.value//4)
+                    )
+                    theft.resolved=True
+                    self.history.record(
+                        'law',f'{town.name} authorities recorded a theft charge.',
+                        minute,town.region_x,town.region_y,
+                        [town.uid,theft.uid,'player'],salience=18,
+                    )
+                    continue
+                thief=self.state.npcs.get(theft.thief_uid)
+                if thief is None or not thief.alive:continue
                 fine=min(thief.wealth,max(1,theft.value*max(25,town.law.get('theft',30))//100))
                 thief.wealth-=fine;town.wealth+=fine;theft.resolved=True
                 thief.needs['safety']=min(100,thief.needs.get('safety',0)+20)
@@ -24,6 +37,8 @@ class LawSystem:
                 if candidates:
                     good=candidates[hash_u64(self.seed,'crime-good',town.uid,minute//1440)%len(candidates)];qty=min(town.stocks[good],1+crime_pressure//20);town.stocks[good]-=qty
                     self.history.record('crime',f'Theft in {town.name}: {qty} {good} disappeared amid rising hardship.',minute,town.region_x,town.region_y,[town.uid],salience=20+crime_pressure//2)
+            if town.uid in self.state.player_crime_heat:
+                self.state.player_crime_heat[town.uid]=max(0,self.state.player_crime_heat[town.uid]-1)
             # severe law + enough guards occasionally records arrest, damping stress
             if town.food_stress>30 and guard_count and hash_u64(self.seed,'arrest',town.uid,minute//1440)%100<15:
                 town.food_stress=max(0,town.food_stress-2);self.history.record('law',f'{town.name} guards arrested a suspected thief.',minute,town.region_x,town.region_y,[town.uid],salience=12)

@@ -127,8 +127,8 @@ class SettlementPopulationBindingTests(unittest.TestCase):
             self.assertIn(npc.bed_fixture_id, pieces)
             bed = self.registry.settlement_pieces[pieces[npc.bed_fixture_id].piece_id]
             self.assertIn("bed", bed.tags)
-            self.assertIn(npc.property_id, parcels)
-            self.assertIn(npc.home_id, parcels[npc.property_id].structure_ids)
+            self.assertEqual(npc.property_id, npc.home_id)
+            self.assertTrue(any(npc.home_id in parcel.structure_ids for parcel in parcels.values()))
             self.assertIn((npc.x, npc.y), set(rooms[npc.home_room_id].cells))
             self.assertTrue(physical.passable(WorldPos(npc.x, npc.y, 0), True))
             self.assertEqual(settlement.property_owners[npc.home_id], npc.uid)

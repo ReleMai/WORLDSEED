@@ -769,6 +769,7 @@ class PygameTerminal(PointerUI):
             'crafting_index':self._present_crafting_index,
             'inventory_item_actions':self._present_inventory_item_actions,
             'world_context':self._present_context_menu,
+            'npc_profile':self._present_npc_profile,
             'crafting_home':self._present_crafting_home,
             'crafting_categories':self._present_crafting_categories,
             'crafting_recipes':self._present_crafting_recipes,
@@ -793,6 +794,90 @@ class PygameTerminal(PointerUI):
         if presentation=='crafting_tree':
             return self._present_crafting_tree(title,footer=footer,breadcrumb=breadcrumb,data=data,scroll_offset=scroll_offset)
         return self.present_document(title,lines,footer=footer,breadcrumb=breadcrumb)
+
+    def _present_npc_profile(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """Compact movable NPC profile with contextual tabs instead of a data dump."""
+        data=data or {};pg=self.pg;screen=self.screen
+        summary=data.get('summary',{});tabs=data.get('tabs',{});active=str(data.get('active_tab','overview'))
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell(
+            'npc_profile','PERSON',str(summary.get('name',title)),subtitle
+        )
+        footer_h=45;body_bottom=y+h-footer_h
+        top_h=64;gap=10
+        # Four small facts provide orientation without repeating every social field.
+        facts=[
+            ('Age',str(summary.get('age') if summary.get('age') is not None else 'Unknown')),
+            ('Role',str(summary.get('occupation','Unknown'))),
+            ('Settlement',str(summary.get('settlement','Unknown'))),
+            ('Now',str(summary.get('activity','Idle'))),
+        ]
+        fw=max(86,(cw-gap*3)//4)
+        for i,(label,value) in enumerate(facts):
+            rect=pg.Rect(cx+i*(fw+gap),cy,fw,top_h)
+            pg.draw.rect(screen,self._theme['panel'],rect,border_radius=6)
+            pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=6)
+            ls=self.small_font.render(label.upper(),True,self._theme['muted']);screen.blit(ls,(rect.x+9,rect.y+8))
+            vs=self.small_font.render(self._fit_ui_text(value,self.small_font,rect.width-18),True,self._theme['text'])
+            screen.blit(vs,(rect.x+9,rect.y+31))
+        body_y=cy+top_h+12
+        tab_w=max(132,min(172,cw//4));tab_panel=pg.Rect(cx,body_y,tab_w,max(120,body_bottom-body_y-5))
+        content=pg.Rect(tab_panel.right+12,body_y,cw-tab_w-12,tab_panel.height)
+        for panel in (tab_panel,content):
+            pg.draw.rect(screen,self._theme['panel'],panel,border_radius=7)
+            pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=7)
+
+        tab_y=tab_panel.y+10
+        for i,row in enumerate(rows):
+            rect=pg.Rect(tab_panel.x+8,tab_y,tab_panel.width-16,34)
+            self._ui_target(rect,f'UI_SELECT:{i}')
+            key=str(getattr(row,'key',''))
+            is_active=(key==active)
+            hovered=rect.collidepoint(self._last_mouse)
+            pg.draw.rect(screen,(45,51,49) if is_active or hovered else (27,32,33),rect,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if is_active else self._theme['edge'],rect,2 if is_active else 1,border_radius=5)
+            label=str(getattr(row,'label',key))
+            surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-18),True,self._theme['text'] if is_active else self._theme['muted'])
+            screen.blit(surf,(rect.x+9,rect.centery-surf.get_height()//2))
+            tab_y+=40
+
+        heading=self.font.render(active.replace('_',' ').upper(),True,self._theme['accent'])
+        screen.blit(heading,(content.x+14,content.y+12))
+        yy=content.y+44
+        entries=list(tabs.get(active,()))
+        if active=='needs':
+            for row in entries[:9]:
+                if yy+38>content.bottom-10:break
+                label,status,value=row
+                name=self.small_font.render(str(label),True,self._theme['text'])
+                stat=self.small_font.render(str(status).upper(),True,self._theme['muted'])
+                screen.blit(name,(content.x+14,yy))
+                screen.blit(stat,(content.right-stat.get_width()-14,yy))
+                gauge=pg.Rect(content.x+14,yy+20,content.width-28,7)
+                pg.draw.rect(screen,(47,52,50),gauge,border_radius=3)
+                fill=pg.Rect(gauge.x,gauge.y,round(gauge.width*max(0,min(100,int(value)))/100),gauge.height)
+                if fill.width:
+                    pg.draw.rect(screen,self._theme['accent'] if int(value)<60 else self._theme['danger'],fill,border_radius=3)
+                yy+=40
+        else:
+            for row in entries[:10]:
+                if yy+38>content.bottom-10:break
+                label,value=row[0],row[1] if len(row)>1 else ''
+                card=pg.Rect(content.x+10,yy-4,content.width-20,34)
+                pg.draw.rect(screen,(27,32,33),card,border_radius=4)
+                ls=self.small_font.render(self._fit_ui_text(str(label),self.small_font,max(90,card.width//3)),True,self._theme['muted'])
+                screen.blit(ls,(card.x+9,card.centery-ls.get_height()//2))
+                value_x=card.x+max(104,card.width//3)
+                vs=self.small_font.render(self._fit_ui_text(str(value),self.small_font,card.right-value_x-9),True,self._theme['text'])
+                screen.blit(vs,(value_x,card.centery-vs.get_height()//2))
+                yy+=39
+
+        traits=list(summary.get('traits') or [])
+        if traits and active=='overview' and yy+24<content.bottom:
+            txt='Traits: '+', '.join(traits[:4])
+            surf=self.small_font.render(self._fit_ui_text(txt,self.small_font,content.width-28),True,self._theme['muted'])
+            screen.blit(surf,(content.x+14,content.bottom-27))
+        self._draw_floating_footer(x,y,w,h,'Tabs show known information • Drag title • Resize corner • Esc closes')
+        pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Render one graphical inventory surface with inline item actions."""

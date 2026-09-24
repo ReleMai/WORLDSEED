@@ -1361,6 +1361,142 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
 
 
 
+def _npc_need_status(value:int)->str:
+    value=max(0,min(100,int(value)))
+    if value>=80:return 'urgent'
+    if value>=60:return 'high'
+    if value>=30:return 'moderate'
+    return 'low'
+
+
+def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
+    town=sim.state.settlements.get(npc.settlement_id)
+    known=sim.known_npc_ids()
+    rel_player=npc.relationships.get('player',{})
+    familiarity=int(rel_player.get('familiarity',0))
+    home=sim.settlement_physicalization.structure_by_id(npc.home_id) if npc.home_id else None
+    work=sim.settlement_physicalization.structure_by_id(npc.workplace_id) if npc.workplace_id else None
+    name=npc.name if npc.uid in known else 'Stranger'
+    occupation=npc.occupation.replace('_',' ').title() if npc.uid in known else 'Unknown'
+    summary={
+        'name':name,'age':npc.age if npc.uid in known else None,'occupation':occupation,
+        'settlement':town.name if town and town.uid in sim.known_settlement_ids() else 'Unknown',
+        'activity':str(npc.goal or 'idle').replace('_',' ').title(),
+        'home':home.function.replace('_',' ').title() if home else '',
+        'workplace':work.function.replace('_',' ').title() if work else '',
+        'traits':[str(v).title() for v in npc.traits] if familiarity>=16 else [],
+        'familiarity':familiarity,
+    }
+    tabs={}
+    overview=[
+        ('Age',str(npc.age) if npc.uid in known else 'Unknown'),
+        ('Occupation',occupation),
+        ('Settlement',summary['settlement']),
+        ('Current activity',summary['activity']),
+    ]
+    if summary['home']:overview.append(('Home',summary['home']))
+    if summary['workplace']:overview.append(('Workplace',summary['workplace']))
+    if familiarity>=16 and npc.traits:overview.append(('Traits',', '.join(x.title() for x in npc.traits)))
+    if familiarity>=24 and npc.wants:overview.append(('Wants',', '.join(str(x) for x in npc.wants[:3])))
+    if familiarity>=32 and npc.backstory:
+        for key in ('birthplace','upbringing','formative_event','ambition'):
+            if npc.backstory.get(key):
+                overview.append((key.replace('_',' ').title(),str(npc.backstory[key]).capitalize()))
+    tabs['overview']=overview
+
+    def relative_row(uid,role):
+        if not uid:return None
+        other=sim.state.npcs.get(uid)
+        if other is None:return (role,'Unknown')
+        if uid not in known:return (role,'Unknown relative')
+        return (role,f'{other.name}, age {other.age}')
+
+    family=[]
+    row=relative_row(npc.spouse_uid,'Spouse')
+    if row:family.append(row)
+    for uid in npc.parents:
+        row=relative_row(uid,'Parent')
+        if row:family.append(row)
+    for uid in npc.children:
+        row=relative_row(uid,'Child')
+        if row:family.append(row)
+    if not family:
+        family=[('Family','No known relatives')]
+    tabs['family']=family
+
+    relations=[]
+    for uid,rel in npc.relationships.items():
+        if uid!='player' and uid not in known:continue
+        if uid=='player':
+            label=sim.state.player_name or 'You'
+        else:
+            other=sim.state.npcs.get(uid);label=other.name if other else 'Unknown'
+        affection=int(rel.get('affection',0));trust=int(rel.get('trust',0))
+        score=(affection+trust)//2
+        tone='close' if score>=55 else 'friendly' if score>=20 else 'neutral' if score>=-20 else 'strained' if score>=-55 else 'hostile'
+        notes=[tone]
+        if int(rel.get('respect',0))>=45:notes.append('respect')
+        if int(rel.get('fear',0))>=45:notes.append('fear')
+        role=npc.kinship.get(uid,'').replace('_',' ').title()
+        relations.append((label,(', '.join(notes)+(f' · {role}' if role else '')).capitalize()))
+    relations.sort(key=lambda row:row[0])
+    tabs['relations']=relations[:8] or [('Relations','No known relationships')]
+
+    needs=[
+        ('Hunger',npc.hunger),('Thirst',npc.thirst),('Fatigue',npc.rest),
+        ('Health',npc.needs.get('health',max(0,100-npc.hp))),
+        ('Social',npc.needs.get('social',0)),('Safety',npc.needs.get('safety',0)),
+        ('Faith',npc.needs.get('faith',0)),('Learning',npc.needs.get('learning',0)),
+        ('Purpose',npc.needs.get('purpose',0)),
+    ]
+    tabs['needs']=[(label,_npc_need_status(value),max(0,min(100,int(value)))) for label,value in needs]
+
+    history=[]
+    if familiarity>=24:
+        for memory in sorted(npc.memories,key=lambda row:int(row.get('minute',0)),reverse=True)[:8]:
+            kind=str(memory.get('type','event')).replace('_',' ').title()
+            subject=str(memory.get('subject',''))
+            subject_label=''
+            if subject=='player':subject_label=sim.state.player_name or 'You'
+            elif subject in known and subject in sim.state.npcs:subject_label=sim.state.npcs[subject].name
+            elif subject in sim.known_settlement_ids() and subject in sim.state.settlements:subject_label=sim.state.settlements[subject].name
+            history.append((kind,subject_label or 'Known event'))
+    if not history:
+        history=[('History','No personal history has been learned yet')]
+    tabs['history']=history
+
+    return {'summary':summary,'tabs':tabs,'active_tab':active_tab}
+
+
+def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
+    sim=ctx.sim;npc=sim.state.npcs.get(npc_uid)
+    if npc is None or not npc.alive:return UI_BACK
+    if npc.uid not in sim.known_npc_ids():
+        return 'Talk to this person before viewing their profile.'
+    tabs=(('overview','Overview'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','History'))
+    active='overview'
+    while True:
+        initial=next((i for i,row in enumerate(tabs) if row[0]==active),0)
+        data=_npc_profile_data(sim,npc,active)
+        summary=data['summary']
+        subtitle=f"{summary['occupation']} · {summary['settlement']} · {summary['activity']}"
+        choice=_select(
+            term,npc.name,list(tabs),initial=initial,subtitle=subtitle,
+            presentation='npc_profile',presentation_data=data,
+        )
+        if not choice:return UI_BACK
+        active=choice
+        if not getattr(term,'mouse_ui',False):
+            page=_npc_profile_data(sim,npc,active)['tabs'].get(active,())
+            lines=[]
+            for row in page:
+                if active=='needs':
+                    lines.append(f'{row[0]}: {row[1]}')
+                else:
+                    lines.append(f'{row[0]}: {row[1]}')
+            _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{npc.name} · {active.title()}')
+
+
 def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     """Context actions for a right-clicked world tile; only mutations enforce reach."""
     sim=ctx.sim;p=sim.player_pos
@@ -1370,6 +1506,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     container=sim.building.container_at(target)
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
+    npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
     signs=sim.hunting.signs_at(target)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
@@ -1381,6 +1518,12 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if weapon and weapon.range>1 and distance<=weapon.range and sim._visible_from(p,target):
             rows.append(('aim_animal',f'Aim at {label} — {weapon.name}'))
             rows.append(('shoot_animal',f'Fire at {label} — range {distance}/{weapon.range}'))
+    if npc:
+        known=npc.uid in sim.known_npc_ids()
+        label=npc.name if known else 'Stranger'
+        if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
+        else:rows.append(('observe_npc','Observe person — identity unknown'))
+        if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
@@ -1398,6 +1541,13 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='inspect_npc' and npc:
+        return _npc_profile_menu(ctx,term,npc.uid)
+    if choice=='observe_npc' and npc:
+        return 'Talk to this person to learn who they are.'
+    if choice=='talk_npc' and npc:
+        sim.execute(TalkCommand(ctx.player_id,target.x-p.x,target.y-p.y))
+        return sim.log[-1].message if sim.log else ''
     if choice=='observe_animal':
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
     if choice=='attack_animal' and creature:
@@ -2063,15 +2213,45 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
             return UI_BACK
         sim.economy.ensure_currency(town)
         quote_name,quote_units=sim.economy.currency_quote(town.uid,10)
-        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.'
+        bounty=int(sim.state.player_bounties.get(town.uid,0))
+        heat=int(sim.state.player_crime_heat.get(town.uid,0))
+        legal=f' Local bounty: {bounty}c.' if bounty else ''
+        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}'
         while True:
             mode=_select(
                 term,f'{town.name} MARKET',
-                [('buy','Buy'),('sell','Sell'),('barter','Barter')],
+                [('buy','Buy'),('sell','Sell'),('barter','Barter'),('steal','Steal')],
                 subtitle=subtitle,
             )
             if not mode:return UI_BACK
             inv=ctx.entities.get(pid,Inventory)
+            if mode=='steal':
+                rows=[]
+                for iid,n in sorted(town.stocks.items()):
+                    if n<=0 or iid not in reg.items:continue
+                    value=sim.player_trade_price(town.uid,iid,True)
+                    rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
+                iid=_select(
+                    term,'STEAL FROM MARKET',rows,
+                    subtitle='Taking goods without payment can create witnesses and a local bounty.',
+                )
+                if not iid:continue
+                maximum=min(10,town.stocks.get(iid,0))
+                quantities=[q for q in (1,2,5,10) if q<=maximum]
+                qkey=_select(
+                    term,'STEAL · QUANTITY',
+                    [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
+                ) if quantities else None
+                if not qkey:continue
+                amount=int(qkey)
+                confirm=_select(
+                    term,'STEAL · REVIEW',
+                    [('confirm','Take goods'),('back','Cancel')],
+                    subtitle=f'{amount} × {reg.items[iid].name}. Witnesses use actual nearby line of sight.',
+                )
+                if confirm!='confirm':continue
+                sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
+                return sim.log[-1].message if sim.log else ''
             if mode=='barter':
                 offered_rows=[]
                 for iid,n in sorted(inv.items.items()):
