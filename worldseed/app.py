@@ -879,6 +879,7 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
             if action=='shaft':
                 ctx.sim.execute(ExcavateShaftCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='drink':ctx.sim.execute(DrinkCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='stalk':ctx.sim.execute(StalkCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='fish':
                 result=_fishing_action(ctx,term)
                 if result==UI_BACK:continue
