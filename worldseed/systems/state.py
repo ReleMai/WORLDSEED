@@ -929,6 +929,7 @@ class LivingWorldState:
             "player_bounties": dict(self.player_bounties), "player_crime_heat": dict(self.player_crime_heat),
             "player_stealth_mode": bool(self.player_stealth_mode),
             "player_casing_property_id": self.player_casing_property_id,
+            "player_trespass_property_id": self.player_trespass_property_id,
             "discovered_tiles": list(self.discovered_tiles[-120000:]),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
