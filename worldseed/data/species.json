@@ -529,7 +529,7 @@
         "vitality": 0,
         "bleed": 0,
         "hit_weight": 2,
-        "harvest": "none",
+        "harvest": "feather",
         "rarity": 45
       }
     }
@@ -594,7 +594,7 @@
         "vitality": 0,
         "bleed": 0,
         "hit_weight": 2,
-        "harvest": "none",
+        "harvest": "feather",
         "rarity": 45
       }
     }
@@ -1436,7 +1436,7 @@
         "vitality": 0,
         "bleed": 0,
         "hit_weight": 2,
-        "harvest": "none",
+        "harvest": "feather",
         "rarity": 45
       }
     }
@@ -1503,7 +1503,7 @@
         "vitality": 0,
         "bleed": 0,
         "hit_weight": 2,
-        "harvest": "none",
+        "harvest": "feather",
         "rarity": 45
       }
     }
