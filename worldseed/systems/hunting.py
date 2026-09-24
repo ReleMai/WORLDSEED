@@ -5,7 +5,7 @@ from typing import Any
 from worldseed.content.registry import ContentRegistry, SpeciesDef
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
-from worldseed.systems.state import AnimalSignState, CreatureState, LivingWorldState
+from worldseed.systems.state import AnimalDenState, AnimalSignState, CreatureState, LivingWorldState
 
 
 CARDINALS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -61,20 +61,39 @@ class HuntingSystem:
             "kind": kind,
         }
 
-    def movement_noise(self, pos: WorldPos) -> int:
+    def set_player_stance(self, stance:str)->str:
+        stance="stalk" if stance=="stalk" else "normal"
+        self.state.player_stance=stance
+        if stance=="stalk":
+            return "You lower your profile and begin stalking: slower movement, less noise, and better use of cover."
+        return "You rise out of the stalking stance and resume normal movement."
+
+    def movement_noise(self, pos: WorldPos, minute:int|None=None) -> int:
         tile = self.world.tile_at(pos)
         tid = tile.terrain_id.split(":")[-1]
         tags = set(tile.terrain.tags)
         noise = 26
-        if "water" in tags:
-            noise += 16
-        if any(k in tid for k in ("rock", "gravel", "rubble")):
-            noise += 10
-        if any(k in tid for k in ("forest", "grass", "moss")):
-            noise -= 4
-        if self.resources and self.resources.is_harvestable(pos):
-            noise += 3
-        return max(10, min(60, noise))
+        if "water" in tags: noise += 16
+        if any(k in tid for k in ("rock", "gravel", "rubble")): noise += 10
+        if any(k in tid for k in ("forest", "grass", "moss", "scrub")): noise -= 4
+        if self.resources and self.resources.is_harvestable(pos): noise += 3
+        # Equipment is physical noise: heavy/metal gear is harder to move quietly in.
+        for iid in self.state.player_equipment.values():
+            item=self.registry.items.get(iid)
+            if not item:continue
+            noise += min(8,max(0,int(item.mass_g)//1800))
+            if item.material and "metal" in item.material:noise += 3
+        if self.state.player_stance=="stalk":
+            skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
+            agility=int(self.state.player_attributes.get("agility",5))
+            cover=self._cover_score(pos)
+            noise -= 9 + min(14,skill) + max(0,agility-5) + min(8,cover//6)
+        if self.environment is not None:
+            when=self.state.clock_minute if minute is None else int(minute)
+            weather=self.environment.weather.at(when,pos.x,pos.y)
+            # Rain/wind mask footfall rather than making the player magically silent.
+            noise -= min(12,int(weather.get("rain",0))*2 + int(weather.get("wind_speed",0))//18)
+        return max(3, min(70, noise))
 
     def notify_attack(
         self,
