@@ -218,7 +218,307 @@ class Renderer:
                 elif k in fluid_by: ch = '~'
                 elif k in dungeon_by: ch = dungeon_by[k]
                 elif k in carcass_by: ch = '&'
-                elif k in pile_by: ch = ' ch = '†' if self.use_unicode else '+'
+                elif k in pile_by: ch = '
+                elif k in arc_by: ch = '*'
+                elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
+                elif k in structure_by:
+                    sd = self.registry.structures.get(structure_by[k].structure_id)
+                    ch = sd.glyph if sd else '#'
+                else:
+                    wp=WorldPos(x,y,pos.z)
+                    resource=self._resource_glyph(sim,wp)
+                    ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                if ch == '@' and self.use_color:
+                    ch = f'{BOLD}\x1b[97m@{RESET}'
+                elif ch == 'X' and self.use_color:
+                    ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=str(cell.get("glyph") or ANSI_RE.sub('',ch))
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch != '@':
+                    cell=combat_by[k]
+                    if cell.get("glyph") or ch != 'X':
+                        ch=str(cell.get("glyph") or ('+' if int(cell.get("chance",0))>=55 else '!'))
+                row.append(ch)
+            rows.append(''.join(row))
+        return rows
+
+    def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
+                 width: int, height: int, cursor: WorldPos | None) -> list[str]:
+        p = sim.player_pos
+        rows = [
+            'STATUS',
+            f'Stance: {sim.state.player_stance}',
+            f'HP   {self._bar(v.hp,v.max_hp)} {v.hp:>3}',
+            f'STA  {self._bar(v.stamina)} {v.stamina:>3}',
+            f'FOOD {self._bar(100-v.hunger)}',
+            f'WATR {self._bar(100-v.thirst)}',
+            f'BLD  {self._bar(v.blood)} {v.blood:>3}',
+            f'PAIN {self._bar(v.pain)} {v.pain:>3}',
+            '',
+            self._clip(sim.resources.description(p), width),
+            'Room: ' + str(room.get('classification','outside')),
+        ]
+        if cursor is not None:
+            rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
+        if alerts:
+            rows += ['', 'ALERTS']
+            for a in alerts:
+                rows.append(f'{a.severity:>3} {a.text}')
+        wounds = [w for w in sim.state.player_wounds if int(w.get('severity',0))>0 or int(w.get('bleeding',0))>0 or w.get('fracture')]
+        if wounds:
+            rows += ['', 'INJURIES']
+            for w in wounds[-2:]:
+                rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
+        rows += ['', 'NEARBY']
+        near = []
+        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
+            spec = self.registry.species.get(c.species_id)
+            label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
+            near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+            near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
+        rows += near or ['Quiet nearby']
+        rows += ['', 'GEAR']
+        gear = [f'{slot}: {self.registry.items[iid].name}' for slot,iid in sorted(sim.state.player_equipment.items()) if iid in self.registry.items]
+        rows += gear[:3] or ['None equipped']
+        rows += ['', f'Pack: {sum(n for n in inv.items.values() if n>0)} items']
+        rows = [self._clip(str(r), width) for r in rows]
+        rows += [''] * max(0, height-len(rows))
+        return rows[:height]
+
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
+                elif k in arc_by: ch = '*'
+                elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
+                elif k in structure_by:
+                    sd = self.registry.structures.get(structure_by[k].structure_id)
+                    ch = sd.glyph if sd else '#'
+                else:
+                    wp=WorldPos(x,y,pos.z)
+                    resource=self._resource_glyph(sim,wp)
+                    ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                if ch == '@' and self.use_color:
+                    ch = f'{BOLD}\x1b[97m@{RESET}'
+                elif ch == 'X' and self.use_color:
+                    ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=ANSI_RE.sub('',ch)
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch not in ('@','X'):
+                    ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
+                row.append(ch)
+            rows.append(''.join(row))
+        return rows
+
+    def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
+                 width: int, height: int, cursor: WorldPos | None) -> list[str]:
+        p = sim.player_pos
+        rows = [
+            'STATUS',
+            f'HP   {self._bar(v.hp,v.max_hp)} {v.hp:>3}',
+            f'STA  {self._bar(v.stamina)} {v.stamina:>3}',
+            f'FOOD {self._bar(100-v.hunger)}',
+            f'WATR {self._bar(100-v.thirst)}',
+            f'BLD  {self._bar(v.blood)} {v.blood:>3}',
+            f'PAIN {self._bar(v.pain)} {v.pain:>3}',
+            '',
+            self._clip(sim.resources.description(p), width),
+            'Room: ' + str(room.get('classification','outside')),
+        ]
+        if cursor is not None:
+            rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
+        if alerts:
+            rows += ['', 'ALERTS']
+            for a in alerts:
+                rows.append(f'{a.severity:>3} {a.text}')
+        wounds = [w for w in sim.state.player_wounds if int(w.get('severity',0))>0 or int(w.get('bleeding',0))>0 or w.get('fracture')]
+        if wounds:
+            rows += ['', 'INJURIES']
+            for w in wounds[-2:]:
+                rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
+        rows += ['', 'NEARBY']
+        near = []
+        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
+            spec = self.registry.species.get(c.species_id)
+            label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
+            near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+            near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
+        rows += near or ['Quiet nearby']
+        rows += ['', 'GEAR']
+        gear = [f'{slot}: {self.registry.items[iid].name}' for slot,iid in sorted(sim.state.player_equipment.items()) if iid in self.registry.items]
+        rows += gear[:3] or ['None equipped']
+        rows += ['', f'Pack: {sum(n for n in inv.items.values() if n>0)} items']
+        rows = [self._clip(str(r), width) for r in rows]
+        rows += [''] * max(0, height-len(rows))
+        return rows[:height]
+
+                elif k in den_by and pk in visible: ch = '⌂' if self.use_unicode else 'o'
+                elif k in sign_by and pk in visible: ch = '·' if self.use_unicode else ','
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
+                elif k in arc_by: ch = '*'
+                elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
+                elif k in structure_by:
+                    sd = self.registry.structures.get(structure_by[k].structure_id)
+                    ch = sd.glyph if sd else '#'
+                else:
+                    wp=WorldPos(x,y,pos.z)
+                    resource=self._resource_glyph(sim,wp)
+                    ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                if ch == '@' and self.use_color:
+                    ch = f'{BOLD}\x1b[97m@{RESET}'
+                elif ch == 'X' and self.use_color:
+                    ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=str(cell.get("glyph") or ANSI_RE.sub('',ch))
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch not in ('@','X'):
+                    ch=str(combat_by[k].get("glyph") or ('+' if int(combat_by[k].get("chance",0))>=55 else '!'))
+                row.append(ch)
+            rows.append(''.join(row))
+        return rows
+
+    def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
+                 width: int, height: int, cursor: WorldPos | None) -> list[str]:
+        p = sim.player_pos
+        rows = [
+            'STATUS',
+            f'Stance: {sim.state.player_stance}',
+            f'HP   {self._bar(v.hp,v.max_hp)} {v.hp:>3}',
+            f'STA  {self._bar(v.stamina)} {v.stamina:>3}',
+            f'FOOD {self._bar(100-v.hunger)}',
+            f'WATR {self._bar(100-v.thirst)}',
+            f'BLD  {self._bar(v.blood)} {v.blood:>3}',
+            f'PAIN {self._bar(v.pain)} {v.pain:>3}',
+            '',
+            self._clip(sim.resources.description(p), width),
+            'Room: ' + str(room.get('classification','outside')),
+        ]
+        if cursor is not None:
+            rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
+        if alerts:
+            rows += ['', 'ALERTS']
+            for a in alerts:
+                rows.append(f'{a.severity:>3} {a.text}')
+        wounds = [w for w in sim.state.player_wounds if int(w.get('severity',0))>0 or int(w.get('bleeding',0))>0 or w.get('fracture')]
+        if wounds:
+            rows += ['', 'INJURIES']
+            for w in wounds[-2:]:
+                rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
+        rows += ['', 'NEARBY']
+        near = []
+        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
+            spec = self.registry.species.get(c.species_id)
+            label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
+            near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+            near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
+        rows += near or ['Quiet nearby']
+        rows += ['', 'GEAR']
+        gear = [f'{slot}: {self.registry.items[iid].name}' for slot,iid in sorted(sim.state.player_equipment.items()) if iid in self.registry.items]
+        rows += gear[:3] or ['None equipped']
+        rows += ['', f'Pack: {sum(n for n in inv.items.values() if n>0)} items']
+        rows = [self._clip(str(r), width) for r in rows]
+        rows += [''] * max(0, height-len(rows))
+        return rows[:height]
+
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
+                elif k in arc_by: ch = '*'
+                elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
+                elif k in structure_by:
+                    sd = self.registry.structures.get(structure_by[k].structure_id)
+                    ch = sd.glyph if sd else '#'
+                else:
+                    wp=WorldPos(x,y,pos.z)
+                    resource=self._resource_glyph(sim,wp)
+                    ch = resource if resource is not None else self._ground_glyph(world.tile_at(wp))
+                if ch == '@' and self.use_color:
+                    ch = f'{BOLD}\x1b[97m@{RESET}'
+                elif ch == 'X' and self.use_color:
+                    ch = f'{BOLD}\x1b[93mX{RESET}'
+                elif k in combat_by and self.use_color:
+                    cell=combat_by[k]
+                    plain=ANSI_RE.sub('',ch)
+                    if cell.get("blocked"):code="90"
+                    else:
+                        chance=int(cell.get("chance",0))
+                        code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in combat_by and not self.use_color and ch not in ('@','X'):
+                    ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
+                row.append(ch)
+            rows.append(''.join(row))
+        return rows
+
+    def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
+                 width: int, height: int, cursor: WorldPos | None) -> list[str]:
+        p = sim.player_pos
+        rows = [
+            'STATUS',
+            f'HP   {self._bar(v.hp,v.max_hp)} {v.hp:>3}',
+            f'STA  {self._bar(v.stamina)} {v.stamina:>3}',
+            f'FOOD {self._bar(100-v.hunger)}',
+            f'WATR {self._bar(100-v.thirst)}',
+            f'BLD  {self._bar(v.blood)} {v.blood:>3}',
+            f'PAIN {self._bar(v.pain)} {v.pain:>3}',
+            '',
+            self._clip(sim.resources.description(p), width),
+            'Room: ' + str(room.get('classification','outside')),
+        ]
+        if cursor is not None:
+            rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
+        if alerts:
+            rows += ['', 'ALERTS']
+            for a in alerts:
+                rows.append(f'{a.severity:>3} {a.text}')
+        wounds = [w for w in sim.state.player_wounds if int(w.get('severity',0))>0 or int(w.get('bleeding',0))>0 or w.get('fracture')]
+        if wounds:
+            rows += ['', 'INJURIES']
+            for w in wounds[-2:]:
+                rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
+        rows += ['', 'NEARBY']
+        near = []
+        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
+            spec = self.registry.species.get(c.species_id)
+            label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
+            near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+            near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
+        rows += near or ['Quiet nearby']
+        rows += ['', 'GEAR']
+        gear = [f'{slot}: {self.registry.items[iid].name}' for slot,iid in sorted(sim.state.player_equipment.items()) if iid in self.registry.items]
+        rows += gear[:3] or ['None equipped']
+        rows += ['', f'Pack: {sum(n for n in inv.items.values() if n>0)} items']
+        rows = [self._clip(str(r), width) for r in rows]
+        rows += [''] * max(0, height-len(rows))
+        return rows[:height]
+
+                elif k in den_by and pk in visible: ch = '⌂' if self.use_unicode else 'o'
+                elif k in sign_by and pk in visible: ch = '·' if self.use_unicode else ','
+                elif k in grave_by: ch = '†' if self.use_unicode else '+'
                 elif k in arc_by: ch = '*'
                 elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
                 elif k in structure_by:
