@@ -55,6 +55,14 @@ class AimCommand: actor:int; target_uid:str; zone:str="center"
 @dataclass(frozen=True,slots=True)
 class GuardCommand: actor:int
 @dataclass(frozen=True,slots=True)
+class DodgeCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class ParryCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class BraceCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class ShieldBashCommand: actor:int; dx:int=0; dy:int=0
+@dataclass(frozen=True,slots=True)
 class ArenaSpawnItemCommand: actor:int; item_id:str; amount:int=1
 @dataclass(frozen=True,slots=True)
 class ArenaSpawnCreatureCommand: actor:int; species_id:str; dx:int=1; dy:int=0
@@ -67,14 +75,14 @@ class ArenaPresetCommand: actor:int; preset:str
 @dataclass(frozen=True,slots=True)
 class ArenaClearCommand: actor:int; heal:bool=True
 @dataclass(frozen=True,slots=True)
-class ArenaIncomingHitCommand: actor:int; attack_kind:str="melee"; damage_type:str="blunt"; damage:int=10; source_dx:int=1; source_dy:int=0; part:str="torso"
+class ArenaIncomingHitCommand: actor:int; attack_kind:str="melee"; damage_type:str="blunt"; damage:int=10; source_dx:int=1; source_dy:int=0; part:str="torso"; defense_mode:str=""
 
 @dataclass(frozen=True,slots=True)
 class PlantCommand: actor:int; crop_id:str
 @dataclass(frozen=True,slots=True)
 class HarvestCommand: actor:int
 @dataclass(frozen=True,slots=True)
-class AttackCommand: actor:int; dx:int=0; dy:int=0
+class AttackCommand: actor:int; dx:int=0; dy:int=0; mode:str="standard"
 @dataclass(frozen=True,slots=True)
 class ExperimentMagicCommand: actor:int; source:str; form:str
 @dataclass(frozen=True,slots=True)

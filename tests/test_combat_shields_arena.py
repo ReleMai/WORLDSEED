@@ -76,6 +76,80 @@ class CombatShieldArenaTests(unittest.TestCase):
         state.player_facing_dy = 0
         return state, CombatSystem(state, self.reg, b"shield-tests")
 
+    def test_melee_modes_trade_accuracy_damage_penetration_and_stamina(self):
+        club=self.reg.items["core:club"];javelin=self.reg.items["core:wooden_spear"]
+        state,combat=self.combat()
+        quick=combat.melee_mode_profile(club,"quick");standard=combat.melee_mode_profile(club,"standard");power=combat.melee_mode_profile(club,"power")
+        self.assertGreater(quick["accuracy"],standard["accuracy"]);self.assertGreater(standard["accuracy"],power["accuracy"])
+        self.assertGreater(power["damage_pct"],standard["damage_pct"]);self.assertGreater(standard["damage_pct"],quick["damage_pct"])
+        self.assertLess(combat.melee_stamina_cost(club,"quick"),combat.melee_stamina_cost(club,"power"))
+        self.assertNotIn("thrust",combat.available_melee_modes(club))
+        self.assertIn("thrust",combat.available_melee_modes(javelin))
+        self.assertGreater(combat.melee_mode_profile(javelin,"thrust")["penetration"],standard["penetration"])
+
+    def test_active_dodge_can_completely_avoid_an_attack(self):
+        state,combat=self.combat()
+        state.player_attributes["agility"]=20;state.player_skills["athletics"]=20;state.player_defense_mode="dodge"
+        vitals=Vitals();self.assertGreaterEqual(combat.active_defense_base("dodge",vitals,"melee",12),70)
+        avoided=False
+        for turn in range(1,80):
+            remaining,text=combat.active_defend(vitals,12,"torso","melee","blunt",turn,"wolf")
+            if remaining==0:
+                avoided=True;self.assertIn("evade",text.lower());break
+        self.assertTrue(avoided)
+
+    def test_parry_is_melee_only_and_uses_readied_weapon_skill(self):
+        state,combat=self.combat()
+        state.player_readied_weapon="core:club";state.player_attributes["agility"]=14;state.player_skills["melee"]=16;state.player_defense_mode="parry"
+        vitals=Vitals()
+        self.assertEqual(combat.active_defense_base("parry",vitals,"ranged",10),0)
+        remaining,text=combat.active_defend(vitals,10,"torso","ranged","pierce",1,"arrow")
+        self.assertEqual(remaining,10);self.assertEqual(text,"")
+        intercepted=False
+        for turn in range(1,80):
+            remaining,text=combat.active_defend(vitals,12,"left_arm","melee","blunt",turn,"boar")
+            if remaining<12:
+                intercepted=True;self.assertIn("parry",text.lower());break
+        self.assertTrue(intercepted)
+
+    def test_guard_prioritizes_coverage_while_brace_prioritizes_stability(self):
+        guard_state,guard=self.combat("core:steel_tower_shield")
+        brace_state,brace=self.combat("core:steel_tower_shield")
+        for state in (guard_state,brace_state):
+            state.player_skills["shield"]=8;state.player_attributes["strength"]=14;state.player_guarding=True
+        guard_state.player_defense_mode="guard";brace_state.player_defense_mode="brace"
+        vitals=Vitals()
+        guard_cov=guard.shield_coverage_chance("torso","melee",100,1,0)
+        brace_cov=brace.shield_coverage_chance("torso","melee",100,1,0)
+        self.assertGreater(guard_cov,brace_cov)
+        compared=False
+        for turn in range(1,120):
+            gr,gt,_=guard.shield_defend(22,"torso","melee","blunt",turn,100,1,0,"boar")
+            br,bt,_=brace.shield_defend(22,"torso","melee","blunt",turn,100,1,0,"boar")
+            if gt and bt:
+                compared=True;self.assertLessEqual(br,gr);break
+        self.assertTrue(compared)
+
+    def test_shield_bash_can_stagger_an_adjacent_animal(self):
+        state,combat=self.combat("core:steel_tower_shield")
+        state.player_skills["shield"]=20;state.player_attributes["strength"]=14;state.player_attributes["agility"]=12
+        boar=CreatureState("bash:boar","core:boar",1,0,0,self.reg.species["core:boar"].max_hp,stamina=105)
+        staggered=False
+        for turn in range(1,40):
+            msg=combat.shield_bash(boar,turn,100)
+            if boar.staggered_until_turn>=turn+1:
+                staggered=True;self.assertIn("stagger",msg.lower());break
+        self.assertTrue(staggered)
+        self.assertEqual(boar.behavior,"staggered")
+        self.assertLess(boar.stamina,105)
+
+    def test_active_defense_and_stagger_state_roundtrip(self):
+        state=LivingWorldState(player_defense_mode="parry",player_defense_quality=71)
+        state.creatures["wolf"]=CreatureState("wolf","core:wolf",1,0,0,20,staggered_until_turn=9)
+        restored=LivingWorldState.from_dict(state.to_dict())
+        self.assertEqual((restored.player_defense_mode,restored.player_defense_quality),("parry",71))
+        self.assertEqual(restored.creatures["wolf"].staggered_until_turn,9)
+
     def test_six_shields_are_distinct_craftable_offhand_profiles(self):
         ids = (
             "core:rawhide_buckler",

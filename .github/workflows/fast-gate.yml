@@ -84,7 +84,7 @@ jobs:
 
       - name: Combat and hunting regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Combat and hunting regressions" --timeout 90 -- python -u -m unittest -v tests.test_combat_hunting_phase tests.test_combat_shields_arena
+        run: python -u tools/run_ci_check.py --name "Combat and hunting regressions" --timeout 90 -- python -u -m unittest -v tests.test_combat_hunting_phase tests.test_combat_shields_arena tests.test_ui_rc2.UIRC2Tests.test_combat_action_hub_exposes_active_defense_without_new_global_keys
 
       - name: Dev34 inventory and storage regressions
         shell: pwsh

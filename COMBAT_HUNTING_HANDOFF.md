@@ -380,6 +380,91 @@ New persistent state is backward-compatible by defaults:
 
 Dedicated regression coverage verifies shield catalog/profile distinctness, facing-dependent coverage, buckler-vs-tower ranged behavior, Guard effects, shield-before-wound resolution, legacy skill backfill, state roundtrip, projectile partial/hard cover, deterministic miss landing, ecology-safe arena animals, arena stats/injuries/presets, and embedded-projectile recovery.
 
+## Phase 4 — active melee defense and attack decisions
+
+### Active defensive choices
+
+Combat now supports explicit one-exchange defensive actions instead of relying only on passive armor/shield coverage:
+
+- **Dodge** spends stamina and creates an active evasion window based on Agility, Athletics, leg condition, fatigue, ranged/melee context, and carried shield weight. A successful active dodge avoids the hit completely.
+- **Parry** requires a readied melee-capable weapon and only applies to melee attacks. Its interception window is driven by Melee skill, Agility, weapon handling, arm condition, fatigue, and incoming force. Successful parries can fully redirect light attacks or partially reduce heavier ones before shield/armor resolution.
+- **Shield Guard** remains the broad-coverage shield action and maximizes interception area.
+- **Shield Brace** is now mechanically distinct: it gives less coverage than Guard but increases shield stability, flat force control, and stamina efficiency against heavy impacts.
+- Defensive intent is transient. It exists for the immediate post-action combat exchange and is cleared afterward or on load so stale save state cannot grant a free defense.
+
+Incoming player-hit order is now:
+
+`active dodge/parry -> passive evasion -> shield interception -> armor -> tissue/wound`
+
+This preserves the existing wound/armor authority while making defense a player decision.
+
+### Melee attack modes
+
+The melee targeting interface now supports attack-mode choice while keeping the existing reach/difficulty overlay:
+
+- **Standard** — baseline handling, damage, penetration, and stamina.
+- **Quick** — higher accuracy and lower stamina use, but reduced damage/penetration.
+- **Power** — lower accuracy and substantially higher stamina use in exchange for more damage/penetration and a higher blunt-fracture opportunity.
+- **Thrust** — available to piercing/spear/javelin/knife-style weapons; trades some accuracy/stamina for stronger penetration and bleeding.
+
+The green→red melee overlay uses the selected mode's real hit-chance modifier, so switching from Quick to Power visibly changes the tactical field before committing the attack.
+
+### Shield bash and stagger
+
+Equipped shields can now be used offensively against adjacent animals.
+
+Shield-bash success combines Shield skill, Agility, shield stability, shield mass, fatigue, and deterministic combat RNG. Bash force uses shield block value, Strength, and Shield skill.
+
+A sufficiently effective bash can:
+
+- inflict blunt injury/pain;
+- drain animal stamina;
+- place the animal in a short **staggered** state;
+- suppress the animal's immediate movement/attack response for the current exchange.
+
+The stagger state is persisted on the creature for deterministic save/roundtrip behavior, but its duration is explicitly turn-bounded.
+
+### Test arena extensions
+
+The combat arena's incoming-hit laboratory now includes defense-specific drills:
+
+- no-defense baseline;
+- Dodge tests against melee and arrows;
+- Parry tests against melee piercing attacks;
+- Shield Guard tests against heavy frontal, side, rear, and ranged hits;
+- Shield Brace tests against heavy frontal impacts.
+
+Arena defense injection is local to the single synthetic strike and does not advance world time or mutate ecology authority.
+
+### UI / navigation
+
+All new verbs remain inside the Combat Action Hub rather than creating new global keys:
+
+- Melee Attack
+- Aim / Fire
+- Dodge
+- Parry
+- Shield Guard
+- Shield Brace
+- Shield Bash
+- Equipment / Wounds
+- Combat Test Arena
+
+This preserves the RC6 movement and navigation contract.
+
+### Validation contract
+
+Phase-4 regression coverage verifies:
+
+- Quick/Standard/Power/Thrust tradeoffs;
+- thrust legality by weapon class;
+- active Dodge producing full avoidance;
+- Parry being melee-only and weapon-dependent;
+- Guard prioritizing coverage while Brace prioritizes stability;
+- shield bash producing bounded animal stagger;
+- defense/stagger save roundtrip;
+- Combat Action Hub exposure without adding global key bindings.
+
 ## Known gaps / next coherent phase
 
 The next pass should extend tactical depth without replacing the phase-1/2 contracts.
@@ -405,11 +490,11 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - defensive threat displays before some attacks;
    - exhaustion and pain altering attack selection.
 
-4. **Melee defense beyond shields**
-   - explicit dodge/parry choices;
-   - reach control and closing distance;
-   - weapon-class specific attack modes;
-   - shield bash / bind / brace decisions.
+4. **Melee depth beyond phase 4**
+   - reach control, closing distance, and disengagement;
+   - bind/feint/counter interactions;
+   - weapon-class specific parry quality and attack animations;
+   - knockback/terrain collision for high-force impacts.
 
 5. **Expanded sign**
    - scat;

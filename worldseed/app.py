@@ -643,7 +643,8 @@ def _hunt_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
 def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
     sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);weapon=sim.combat.readied_weapon(inv)
     if weapon and 'ranged' in weapon.tags and not weapon.throwable:return f'The {weapon.name.lower()} is not suited to melee.'
-    p=sim.player_pos;reach=max(1,weapon.reach if weapon else 1);renderer=Renderer(reg)
+    p=sim.player_pos;reach=max(1,weapon.reach if weapon else 1);renderer=Renderer(reg);mode='standard'
+    mode_keys={'1':'standard','2':'quick','3':'power','4':'thrust'}
     if initial is not None:
         cursor=initial
     else:
@@ -651,12 +652,17 @@ def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=Non
         target=min(candidates,key=lambda c:abs(c.x-p.x)+abs(c.y-p.y),default=None)
         cursor=WorldPos(target.x,target.y,target.z) if target else p.moved(1,0)
     while True:
+        allowed=sim.combat.available_melee_modes(weapon)
+        if mode not in allowed:mode='standard'
+        profile=sim.combat.melee_mode_profile(weapon,mode)
         dist=abs(cursor.x-p.x)+abs(cursor.y-p.y)
         c=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(cursor.x,cursor.y,cursor.z)),None)
         desc=reg.species[c.species_id].name if c else 'Empty tile'
-        overlay=melee_overlay(sim,weapon,cursor);difficulty=overlay.get('cursor_difficulty','out of reach')
+        overlay=melee_overlay(sim,weapon,cursor,mode);difficulty=overlay.get('cursor_difficulty','out of reach')
         name=weapon.name if weapon else 'Unarmed'
-        _present_game_frame(term,ctx,renderer,f'MELEE: {desc} | {name} | reach {dist}/{reach} | {difficulty.upper()} | Enter attack | Esc',cursor,overlay)
+        mode_help=' '.join(f'{i}:{m}' for i,m in mode_keys.items() if m in allowed)
+        cost=sim.combat.melee_stamina_cost(weapon,mode)
+        _present_game_frame(term,ctx,renderer,f'MELEE: {desc} | {name} | {mode.upper()} | reach {dist}/{reach} | {difficulty.upper()} | stamina {cost} | {mode_help} | Enter attack | Esc',cursor,overlay)
         k=term.read_key();low=k.lower() if len(k)==1 else k
         if k.startswith('UI_TARGET_HOVER:'):
             _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
@@ -667,13 +673,38 @@ def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=Non
             if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
             continue
         if low in ('ESC','q'):return UI_BACK
+        if low in mode_keys and mode_keys[low] in allowed:mode=mode_keys[low];continue
         if low in DIRECTION_KEYS:
             dx,dy=DIRECTION_KEYS[low];n=cursor.moved(dx,dy)
             if 1<=abs(n.x-p.x)+abs(n.y-p.y)<=reach:cursor=n
             continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
-            sim.execute(AttackCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
+            sim.execute(AttackCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y,mode));return sim.log[-1].message if sim.log else ''
+
+def _shield_bash_action(ctx:GameContext,term:Terminal)->str:
+    sim=ctx.sim;reg=ctx.registry;shield=sim.combat.equipped_shield()
+    if not shield:return 'Equip a shield before attempting a bash.'
+    p=sim.player_pos;renderer=Renderer(reg)
+    candidates=[c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)==1]
+    target=min(candidates,key=lambda c:c.uid,default=None)
+    cursor=WorldPos(target.x,target.y,target.z) if target else p.moved(1,0)
+    while True:
+        c=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(cursor.x,cursor.y,cursor.z)),None)
+        desc=reg.species[c.species_id].name if c else 'Empty tile'
+        overlay=melee_overlay(sim,None,cursor,'standard')
+        _present_game_frame(term,ctx,renderer,f'SHIELD BASH: {desc} | {shield.name} | adjacent | Enter bash | Esc',cursor,overlay)
+        k=term.read_key();low=k.lower() if len(k)==1 else k
+        if k.startswith('UI_TARGET_HOVER:') or k.startswith('UI_WORLD:'):
+            _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
+            if abs(n.x-p.x)+abs(n.y-p.y)==1:cursor=n
+            continue
+        if low in ('ESC','q'):return UI_BACK
+        if low in DIRECTION_KEYS:
+            dx,dy=DIRECTION_KEYS[low];cursor=p.moved(dx,dy);continue
+        if low in ('ENTER',' ','\r','\n'):
+            if not c:continue
+            sim.execute(ShieldBashCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
 
 def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
     """Developer combat laboratory that uses authoritative simulation commands."""
@@ -768,25 +799,28 @@ def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
             sim.execute(ArenaInjuryCommand(pid,pick));status=sim.log[-1].message if sim.log else '';nav.back();continue
         if route.route_id=='arena:hits':
             tests=[
-                ('melee|blunt|12|front|torso','Front melee blunt — torso — 12'),
-                ('melee|pierce|12|front|torso','Front melee pierce — torso — 12'),
-                ('melee|cut|10|side|left_arm','Side melee cut — left arm — 10'),
-                ('melee|blunt|16|rear|head','Rear heavy melee — head — 16'),
-                ('ranged|pierce|12|front|torso','Front arrow — torso — 12'),
-                ('ranged|pierce|12|side|torso','Side arrow — torso — 12'),
-                ('ranged|pierce|16|rear|torso','Rear projectile — torso — 16'),
-                ('ranged|blunt|14|front|head','Front sling impact — head — 14'),
+                ('melee|blunt|12|front|torso|','Front melee blunt — no active defense'),
+                ('melee|blunt|12|front|torso|dodge','Front melee blunt — DODGE test'),
+                ('melee|pierce|12|front|torso|parry','Front melee pierce — PARRY test'),
+                ('melee|blunt|18|front|torso|guard','Front heavy impact — SHIELD GUARD test'),
+                ('melee|blunt|18|front|torso|brace','Front heavy impact — SHIELD BRACE test'),
+                ('melee|cut|10|side|left_arm|guard','Side melee cut — guard angle test'),
+                ('melee|blunt|16|rear|head|guard','Rear heavy melee — guard failure-angle test'),
+                ('ranged|pierce|12|front|torso|dodge','Front arrow — DODGE test'),
+                ('ranged|pierce|12|front|torso|guard','Front arrow — SHIELD GUARD test'),
+                ('ranged|pierce|12|side|torso|guard','Side arrow — shield angle test'),
+                ('ranged|pierce|16|rear|torso|guard','Rear projectile — shield rear coverage test'),
             ]
-            pick=_stack_menu(term,nav,tests,subtitle='Front / side / rear are resolved from your current facing direction.')
+            pick=_stack_menu(term,nav,tests,subtitle='Defense mode is injected only for this arena strike; front/side/rear follow current facing.')
             if pick=='__BACK__':continue
             if pick is None:return UI_BACK
-            kind,dtype,damage,bearing,part=pick.split('|')
+            kind,dtype,damage,bearing,part,defense=pick.split('|')
             fx=int(sim.state.player_facing_dx);fy=int(sim.state.player_facing_dy)
             if fx==0 and fy==0:fx,fy=0,1
             if bearing=='front':dx,dy=fx,fy
             elif bearing=='rear':dx,dy=-fx,-fy
             else:dx,dy=-fy,fx
-            sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),dx,dy,part));status=sim.log[-1].message if sim.log else '';nav.back();continue
+            sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),dx,dy,part,defense));status=sim.log[-1].message if sim.log else '';nav.back();continue
 
 
 def _action_palette(ctx:GameContext,term:Terminal)->str:
@@ -852,8 +886,18 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 result=_hunt_action(ctx,term);
                 if result==UI_BACK:continue
                 return result
+            if action=='dodge':
+                ctx.sim.execute(DodgeCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='parry':
+                ctx.sim.execute(ParryCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='guard':
                 ctx.sim.execute(GuardCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='brace':
+                ctx.sim.execute(BraceCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='bash':
+                result=_shield_bash_action(ctx,term)
+                if result==UI_BACK:continue
+                return result
             if action=='arena':
                 result=_combat_arena_menu(ctx,term)
                 if result==UI_BACK:continue

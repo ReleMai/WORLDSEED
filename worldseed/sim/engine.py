@@ -114,7 +114,10 @@ class Simulation:
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
         self.projectiles=ProjectileSystem(self.state,registry,self.seed,self.world,self.resources,self.building)
         self.arena=TestArenaSystem(self.state,registry,self.world,self.resources,self.building)
-        self.state.player_guarding=False
+        # Active defense stances are one-exchange runtime intent. Old saves may
+        # contain them because the fields are serialized for deterministic
+        # roundtrips, but loading a game must not resurrect a stale guard/parry.
+        self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
         self.disasters=DisasterSystem(self.state,self.seed,self.history)
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
@@ -235,6 +238,10 @@ class Simulation:
         elif isinstance(command,ClearReadyWeaponCommand):minutes=self._clear_ready_weapon(command)
         elif isinstance(command,AimCommand):minutes=self._aim(command)
         elif isinstance(command,GuardCommand):minutes=self._guard(command)
+        elif isinstance(command,DodgeCommand):minutes=self._dodge(command)
+        elif isinstance(command,ParryCommand):minutes=self._parry(command)
+        elif isinstance(command,BraceCommand):minutes=self._brace(command)
+        elif isinstance(command,ShieldBashCommand):minutes=self._shield_bash(command)
         elif isinstance(command,PlantCommand):self._plant(command)
         elif isinstance(command,HarvestCommand):self._harvest(command)
         elif isinstance(command,AttackCommand):self._attack(command);minutes=1
@@ -269,7 +276,8 @@ class Simulation:
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
         self.turn+=1;self._advance_time(minutes);self._post_action()
-        if isinstance(command,GuardCommand):self.state.player_guarding=False
+        if isinstance(command,(GuardCommand,DodgeCommand,ParryCommand,BraceCommand)):
+            self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
         return result
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
@@ -1037,9 +1045,12 @@ class Simulation:
         reach=weapon.reach if weapon else 1
         if distance<1 or distance>reach:self._message("That target is beyond your current melee reach.");return
         if distance>1 and not self._visible_from(origin,p):self._message("Something blocks the line of your thrust.");return
-        stamina_before=v.stamina;cost=max(2,weapon.stamina_cost if weapon else 4);v.stamina=max(0,v.stamina-cost)
+        mode=cmd.mode if cmd.mode in self.combat.available_melee_modes(weapon) else "standard"
+        stamina_before=v.stamina;cost=self.combat.melee_stamina_cost(weapon,mode)
+        if v.stamina<=0:self._message("You are too exhausted to attack effectively.");return
+        v.stamina=max(0,v.stamina-cost)
         before_wounds=len(target.wounds);self.combat.clear_aim()
-        msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before)
+        msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before,mode)
         if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
         self._message(msg)
     def _guard(self,cmd:GuardCommand)->int:
@@ -1047,8 +1058,50 @@ class Simulation:
         if not shield:self._message("Equip a shield in your off hand before guarding.");return 1
         cost=max(1,shield.shield_stamina_cost//2)
         if v.stamina<=0:self._message("You are too exhausted to establish a shield guard.");return 1
-        v.stamina=max(0,v.stamina-cost);self.state.player_guarding=True
-        self._message(f"You raise the {shield.name.lower()} and brace behind its {shield.shield_type} profile.");return 1
+        v.stamina=max(0,v.stamina-cost);self.state.player_guarding=True;self.state.player_defense_mode="guard";self.state.player_defense_quality=self.combat.shield_coverage_chance("torso","melee",v.stamina,self.state.player_facing_dx,self.state.player_facing_dy)
+        self._message(f"You raise the {shield.name.lower()}, widening your interception coverage.");return 1
+
+    def _dodge(self,cmd:DodgeCommand)->int:
+        v=self.entities.get(cmd.actor,Vitals)
+        if v.stamina<4:self._message("You are too exhausted to commit to an evasive step.");return 1
+        if self.combat.leg_injury_penalty()>=6:self._message("Your leg injuries make a committed dodge unsafe.");return 1
+        v.stamina=max(0,v.stamina-4);self.state.player_guarding=False;self.state.player_defense_mode="dodge"
+        self.state.player_defense_quality=self.combat.active_defense_base("dodge",v,"melee",10)
+        self._message(f"You shift your weight into an evasive stance ({self.state.player_defense_quality}% base melee evade window).");return 1
+
+    def _parry(self,cmd:ParryCommand)->int:
+        inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);weapon=self.combat.readied_weapon(inv)
+        if not weapon or ("ranged" in weapon.tags and not weapon.throwable):
+            self._message("Ready a melee-capable weapon before attempting a parry.");return 1
+        cost=max(2,self.combat.melee_stamina_cost(weapon,"quick")//2)
+        if v.stamina<cost:self._message("You are too exhausted to hold a reliable parry line.");return 1
+        v.stamina=max(0,v.stamina-cost);self.state.player_guarding=False;self.state.player_defense_mode="parry"
+        self.state.player_defense_quality=self.combat.active_defense_base("parry",v,"melee",10)
+        self._message(f"You set the {weapon.name.lower()} for a parry ({self.state.player_defense_quality}% base interception window).");return 1
+
+    def _brace(self,cmd:BraceCommand)->int:
+        shield=self.combat.equipped_shield();v=self.entities.get(cmd.actor,Vitals)
+        if not shield:self._message("Equip a shield before bracing.");return 1
+        cost=max(2,shield.shield_stamina_cost)
+        if v.stamina<cost:self._message("You are too exhausted to brace the shield firmly.");return 1
+        v.stamina=max(0,v.stamina-cost);self.state.player_guarding=True;self.state.player_defense_mode="brace"
+        self.state.player_defense_quality=min(100,shield.shield_stability+min(20,self.player_skill("shield")))
+        self._message(f"You plant your stance behind the {shield.name.lower()}, sacrificing coverage for stronger impact control.");return 1
+
+    def _shield_bash(self,cmd:ShieldBashCommand)->int:
+        shield=self.combat.equipped_shield();v=self.entities.get(cmd.actor,Vitals)
+        if not shield:self._message("Equip a shield before attempting a bash.");return 1
+        origin=self.player_pos;target_pos=origin.moved(cmd.dx,cmd.dy);distance=abs(cmd.dx)+abs(cmd.dy)
+        if distance!=1:self._message("A shield bash only reaches an adjacent target.");return 1
+        target=min((c for c in self.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target_pos.x,target_pos.y,target_pos.z)),key=lambda c:c.hp,default=None)
+        if not target:self._message("There is nothing there to bash.");return 1
+        cost=max(3,shield.shield_stamina_cost+2)
+        if v.stamina<cost:self._message("You are too exhausted to drive the shield forward.");return 1
+        self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
+        stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost);before=len(target.wounds)
+        msg=self.combat.shield_bash(target,self.turn,stamina_before)
+        if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=55,hit=len(target.wounds)>before)
+        self._message(msg);return 1
 
     def _arena_command(self,cmd)->None:
         inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);p=self.player_pos
@@ -1060,7 +1113,11 @@ class Simulation:
         elif isinstance(cmd,ArenaClearCommand):msg=self.arena.clear(v,cmd.heal)
         elif isinstance(cmd,ArenaIncomingHitCommand):
             part=cmd.part if cmd.part in self.state.player_body_parts else "torso"
+            prior_mode=self.state.player_defense_mode;prior_guard=self.state.player_guarding
+            mode=cmd.defense_mode if cmd.defense_mode in ("","guard","dodge","parry","brace") else ""
+            self.state.player_defense_mode=mode;self.state.player_guarding=mode in ("guard","brace")
             msg=self.combat.resolve_player_hit(v,part,max(1,cmd.damage),cmd.damage_type,cmd.attack_kind,self.turn,"Arena test strike","arena:launcher",cmd.source_dx,cmd.source_dy,2 if cmd.damage_type in ("cut","pierce") else 0,10 if cmd.damage_type=="blunt" else 0)
+            self.state.player_defense_mode=prior_mode;self.state.player_guarding=prior_guard
         else:msg="Unknown arena command."
         self._message(msg)
 

@@ -91,9 +91,13 @@ ACTION_WORK = [
 ]
 
 ACTION_COMBAT = [
-    ('x', 'Attack with readied melee weapon'),
+    ('x', 'Melee attack — choose quick, standard, power, or thrust'),
     ('hunt', 'Aim / fire readied ranged or thrown weapon'),
-    ('guard', 'Raise equipped shield for one defensive exchange'),
+    ('dodge', 'Dodge — active full-body evasion for one exchange'),
+    ('parry', 'Parry — intercept melee with the readied weapon'),
+    ('guard', 'Shield guard — maximize interception coverage'),
+    ('brace', 'Shield brace — trade coverage for impact stability'),
+    ('bash', 'Shield bash — strike and potentially stagger an adjacent target'),
     ('f', 'Ready / lower weapons & review wounds'),
     ('arena', 'Combat test arena / developer practice lab'),
 ]
