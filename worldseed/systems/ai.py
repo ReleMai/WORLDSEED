@@ -14,6 +14,12 @@ class NPCSystem:
         self.settlement_physicalization=physicalization
         self.settlement_population=population_binder
     def attach_economy(self,economy)->None:self.economy=economy
+    @staticmethod
+    def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
+        dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
+        npc.facing_dx=0 if dx==0 else (1 if dx>0 else -1)
+        npc.facing_dy=0 if dy==0 else (1 if dy>0 else -1)
+
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
         for npc in self.state.npcs.values():
             if not npc.alive:continue
@@ -152,11 +158,15 @@ class NPCSystem:
                 def passable(p):return self.world.is_passable(p) and (self.building.passable(p,self.world.is_passable(p)) if self.building else True)
                 path=local_path(start,goal,passable,800)
                 if len(path)>1:
+                    old_x,old_y=npc.x,npc.y
                     step=path[min(3,len(path)-1)];npc.x,npc.y=step.x,step.y
+                    self._face_step(npc,old_x,old_y)
                     if step==goal:npc.tasks.pop(0)
                     return
             # aggregate/remote travel is straight-line at coarse fidelity
+            old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
+            self._face_step(npc,old_x,old_y)
         elif task['kind']=='perform':
             action=task['action'];npc.tasks.pop(0)
             if action=='eat':

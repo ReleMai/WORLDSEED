@@ -101,7 +101,7 @@ class Renderer:
 
     def render(self, world: World, entities: EntityStore, sim: Simulation, player_id: int,
                width: int, height: int, message: str = '', cursor: WorldPos | None = None,
-               combat_overlay: dict | None = None) -> str:
+               combat_overlay: dict | None = None, stealth_overlay: dict | None = None) -> str:
         self.use_color = bool(sim.state.ui_color)
         self.use_unicode = bool(sim.state.ui_unicode)
         layout = compute_layout(width, height, sim.state.ui_density)
@@ -119,12 +119,12 @@ class Renderer:
         header = f' WORLDSEED {ENGINE_VERSION} | {sim.state.player_name} | {sim.clock.label()} | {weather["kind"].title()} | ({pos.x},{pos.y},z{pos.z}) '
         lines = ['+' + self._clip(header, layout.width-2).center(layout.width-2, '-') + '+']
 
-        map_rows = self._map_rows(world, sim, pos, layout.map_width, layout.map_height, cursor, combat_overlay)
+        map_rows = self._map_rows(world, sim, pos, layout.map_width, layout.map_height, cursor, combat_overlay, stealth_overlay)
         if layout.mode == 'wide':
             inner = layout.width - 4
             gap = 3
             side_w = max(18, inner - layout.map_width - gap)
-            side_rows = self._sidebar(sim, tile.terrain.name, inv, vit, room, side_w, layout.map_height, cursor)
+            side_rows = self._sidebar(sim, tile.terrain.name, inv, vit, room, side_w, layout.map_height, cursor, stealth_overlay)
             for i in range(layout.map_height):
                 left = self._pad_visible(map_rows[i], layout.map_width)
                 right = self._clip(side_rows[i], side_w).ljust(side_w)
@@ -164,9 +164,11 @@ class Renderer:
         return '| ' + text.ljust(inner)[:inner] + ' |'
 
     def _map_rows(self, world: World, sim: Simulation, pos: WorldPos, map_w: int, map_h: int,
-                  cursor: WorldPos | None, combat_overlay: dict | None = None) -> list[str]:
+                  cursor: WorldPos | None, combat_overlay: dict | None = None,
+                  stealth_overlay: dict | None = None) -> list[str]:
         known = sim.discovered_tiles_set
         combat_by={(int(c["x"]),int(c["y"]),int(c["z"])):c for c in (combat_overlay or {}).get("cells",())}
+        stealth_by={(int(c["x"]),int(c["y"]),int(c["z"])):c for c in (stealth_overlay or {}).get("cells",())}
         half_w, half_h = map_w//2, map_h//2
         # Keep the local-world camera centered on the player. The cursor may
         # move independently without dragging the camera away from the avatar.
@@ -242,12 +244,18 @@ class Renderer:
                     ch=f'\x1b[{code}m{plain}{RESET}'
                 elif k in combat_by and not self.use_color and ch not in ('@','X'):
                     ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
+                elif k in stealth_by and self.use_color and ch not in ('@','X'):
+                    plain=ANSI_RE.sub('',ch)
+                    code="91" if bool(stealth_by[k].get("alert")) else "93"
+                    ch=f'\x1b[{code}m{plain}{RESET}'
+                elif k in stealth_by and not self.use_color and ch not in ('@','X'):
+                    ch='!' if bool(stealth_by[k].get("alert")) else '?'
                 row.append(ch)
             rows.append(''.join(row))
         return rows
 
     def _sidebar(self, sim: Simulation, terrain: str, inv: Inventory, v: Vitals, room: dict,
-                 width: int, height: int, cursor: WorldPos | None) -> list[str]:
+                 width: int, height: int, cursor: WorldPos | None, stealth_overlay: dict | None = None) -> list[str]:
         p = sim.player_pos
         rows = [
             'STATUS',
@@ -263,6 +271,14 @@ class Renderer:
         ]
         if cursor is not None:
             rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']
+        if sim.state.player_stealth_mode:
+            snap=stealth_overlay or {}
+            seen=list(snap.get('seen_by',()))
+            rows += ['', 'STEALTH', f'Observed by: {len(seen)}', f'Skill: {sim.player_skill("stealth")}']
+            known=sim.known_npc_ids()
+            for uid in seen[:3]:
+                npc=sim.state.npcs.get(uid)
+                rows.append((npc.name if npc and uid in known else 'Stranger')+' sees you')
         alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
         if alerts:
             rows += ['', 'ALERTS']

@@ -252,3 +252,38 @@ Add ownership-aware player theft/trespass against real settlement structures and
 
 ### Next dependency
 Extend ownership-aware crime from the market to private homes/workplaces and generated storage fixtures, including trespass permissions, locks, restitution and guard confrontation. Then add household budgets/consumption so families buy food, medicine and household goods from the same market ledger instead of relying only on settlement-level aggregate consumption.
+
+
+## Work unit 10 - Building-aware stealth, visual sight cones, and theft casing
+- Added an explicit player stealth stance. It persists with the save, can be toggled from Interact actions, and is also offered contextually when casing generated settlement buildings.
+- Added a Stealth skill to character creation and legacy-save defaults. Sneaking currently trades speed for quieter movement: stealth movement takes longer and feeds reduced movement noise into the existing hunting/noise system according to Stealth and Agility.
+- NPCs now retain physical facing derived from their actual movement. Guard and civilian observation therefore uses where a person is facing instead of omnidirectional generic witnessing.
+- Added a bounded StealthSystem that computes observer cones from NPC facing, occupation, guard duty, weather, fog, lighting and exact line of sight. It reads terrain, natural features, player-built structures and generated settlement physicalization through the same obstruction layers used by gameplay.
+- Generated walls and other sight-blocking settlement pieces clip observer cones. A player on the far side of a house wall is not considered visible merely because the NPC is nearby.
+- The stealth snapshot is read-only and bounded. It reports watched cells, observers, facing/range, which observers currently see the player, and the player's current physical structure/room without realizing new settlement plans from the renderer.
+- Market theft now requires stealth mode and uses the StealthSystem witness set. Only NPCs whose current cone and unobstructed line of sight reach the player can witness the theft.
+- The market menu exposes Enter Stealth before theft and reports the number of current observers. Theft review names discovered witnesses and keeps unknown observers as Stranger.
+- Right-clicking generated buildings now uses their physical StructurePlanState. Outside stealth the player can enter stealth to case the building; in stealth the player can inspect building function, owner, room, condition, current sight coverage, known occupants and watchers. Generated markets expose their real stock theft action directly from the building context.
+- Non-market residences/workplaces do not invent loot. Their casing view explicitly states that no stealable inventory exists until a real physical storage/goods source is materialized.
+- Pygame stealth presentation draws translucent observer sight coverage over the local world. Amber cells are watched; red coverage and red observer outlines identify observers whose current cone includes the player. Observer facing is shown with a direction mark, and the sidebar names known observers who can see the player.
+- Terminal rendering receives the same snapshot. Watched cells are highlighted and the sidebar reports Stealth skill, observed-by count and known observer names without creating a separate visibility simulation.
+
+### Compatibility / authority
+- NPC facing, player stealth mode and the Stealth skill are additive save fields/defaults; no settlement-plan or save-schema bump is required.
+- Stealth does not own buildings, NPC schedules, crime, or settlement stock. It is a perception/read model over those authoritative systems.
+- Theft continues to move real settlement stock and create the existing ownership-aware TheftRecordState/market transaction records. Stealth only decides who actually observes the act.
+- Generated building geometry remains the sight-obstruction authority through SettlementPhysicalizationSystem/BuildingSystem. The renderer does not generate or mutate geometry.
+- Observer scans are bounded to nearby named NPCs and a limited vision radius so stealth mode does not become an unbounded world simulation.
+
+### Validation added
+- an actual generated settlement wall blocks a guard's stealth cone into an interior room
+- facing toward the player witnesses while facing away does not
+- stealth skill reduces movement noise
+- NPC facing follows physical movement
+- stealth state/skill/facing survive state serialization round-trip
+- Pygame sight-cone overlays alter presentation without mutating simulation state
+- existing property-crime regression now requires stealth and obtains witnesses from the stealth authority
+- Fast Gate settlement coverage includes building-stealth regressions
+
+### Next dependency
+Materialize stable property-owned storage and goods fixtures for residences, workshops and civic buildings so theft can extend beyond markets without inventing loot. After that, add trespass permissions, doors/locks and lockpicking, guard suspicion/search/confrontation, and cover/light/noise refinements while preserving the same physical LOS authority.

@@ -110,6 +110,10 @@ class StealMarketCommand:
     item_id:str
     amount:int=1
 @dataclass(frozen=True,slots=True)
+class ToggleStealthCommand:
+    actor:int
+    enabled: bool | None = None
+@dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 
 @dataclass(frozen=True,slots=True)

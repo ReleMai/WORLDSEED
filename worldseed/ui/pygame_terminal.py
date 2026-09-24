@@ -2499,7 +2499,7 @@ class PygameTerminal(PointerUI):
         draw_atlas(self, sim)
 
     def present_game(self, registry, world, entities, sim, player_id: int, message: str = '', cursor: WorldPos | None = None,
-                     combat_overlay: dict | None = None) -> None:
+                     combat_overlay: dict | None = None, stealth_overlay: dict | None = None) -> None:
         """Hybrid local-world view: sprite map + dense terminal-derived panels."""
         pg=self.pg; screen=self.screen
         if screen is None: return
@@ -2630,6 +2630,18 @@ class PygameTerminal(PointerUI):
                 local=pg.Rect((wx-left)*tile_px,(wy-top)*tile_px,tile_px,tile_px)
                 pg.draw.rect(range_fill,(*rgb,30),local.inflate(-2,-2),border_radius=max(1,tile_px//8))
             if combat_by:screen.blit(range_fill,map_rect.topleft)
+        stealth_by={}
+        stealth_observers={}
+        if stealth_overlay and stealth_overlay.get('active'):
+            stealth_by={
+                (int(cell.get('x',0)),int(cell.get('y',0)),int(cell.get('z',pos.z))):cell
+                for cell in stealth_overlay.get('cells',())
+                if _onscreen(int(cell.get('x',0)),int(cell.get('y',0)),int(cell.get('z',pos.z)))
+            }
+            stealth_observers={
+                str(row.get('uid','')):row for row in stealth_overlay.get('observers',())
+                if row.get('uid')
+            }
         npc_paths = self._visuals.npc_paths()
         proc_species = self._visuals.procedural_species_paths()
         player_sprite = self._visuals.player_path(getattr(sim.state, 'player_sex', 'male'), getattr(sim.state, 'player_sprite_index', 0))
@@ -2712,6 +2724,28 @@ class PygameTerminal(PointerUI):
                 tile_px=tile_px,elapsed_ms=now_ms,game_minute=sim.clock.minute,lighting=lighting)
         else:
             self._weather_static_snapshot=None
+        # Stealth cones are drawn after lighting so the tactical information
+        # remains legible at night. Generated settlement walls already clipped
+        # the cells in StealthSystem, so the overlay cannot see through houses.
+        if stealth_by:
+            vision_layer=pg.Surface((cols*tile_px,rows*tile_px),pg.SRCALPHA)
+            for (wx,wy,wz),cell in stealth_by.items():
+                local=pg.Rect((wx-left)*tile_px,(wy-top)*tile_px,tile_px,tile_px)
+                rgba=(196,70,58,42) if bool(cell.get('alert')) else (205,166,67,30)
+                pg.draw.rect(vision_layer,rgba,local.inflate(-2,-2),border_radius=max(1,tile_px//8))
+            screen.blit(vision_layer,map_rect.topleft)
+            for uid,row in stealth_observers.items():
+                wx,wy,wz=int(row.get('x',0)),int(row.get('y',0)),int(row.get('z',pos.z))
+                if not _onscreen(wx,wy,wz):continue
+                rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                sees=bool(row.get('sees_player'))
+                edge=self._theme['danger'] if sees else self._theme['accent']
+                pg.draw.rect(screen,edge,rect.inflate(-2,-2),2,border_radius=max(1,tile_px//7))
+                fx=int(row.get('facing_dx',0));fy=int(row.get('facing_dy',0))
+                if fx or fy:
+                    center=rect.center
+                    end=(center[0]+fx*max(5,tile_px//3),center[1]+fy*max(5,tile_px//3))
+                    pg.draw.line(screen,edge,center,end,3)
         # Combat range stays readable after world lighting/weather while its
         # translucent fill sits beneath sprites. Green is easier, red harder;
         # blocked cells use a neutral grey outline.
@@ -2746,6 +2780,22 @@ class PygameTerminal(PointerUI):
             text('Green easier  →  red harder',self._theme['muted'])
             diff=str(combat_overlay.get('cursor_difficulty','')).replace('_',' ').title()
             if diff:text(f'Cursor: {diff}',self._theme['muted'])
+        if stealth_overlay and stealth_overlay.get('active'):
+            seen=list(stealth_overlay.get('seen_by',()))
+            text('STEALTH',self._theme['accent'],gap=19)
+            if seen:
+                text(f'EXPOSED • {len(seen)} observer{"s" if len(seen)!=1 else ""}',self._theme['danger'])
+                for uid in seen[:3]:
+                    npc=sim.state.npcs.get(uid)
+                    label=npc.name if npc and uid in known_npcs else 'Stranger'
+                    text(f'{label} sees you',self._theme['danger'],gap=17)
+            else:
+                text('Hidden from current observers',self._theme['good'])
+            text(f'Stealth {sim.player_skill("stealth")} • movement quieter/slower',self._theme['muted'])
+            structure_id=str(stealth_overlay.get('structure_id',''))
+            structure=sim.settlement_physicalization.structure_by_id(structure_id) if structure_id else None
+            if structure is not None:
+                text(f'Inside: {str(structure.function).replace("_"," ").title()}',self._theme['muted'])
         if pos.z==0 and lighting is not None:
             text('WEATHER',self._theme['accent'],gap=19)
             text(f"{str(weather.get('kind','clear')).title()}  Clouds {int(weather.get('cloud_cover',0))}%")
@@ -2782,7 +2832,7 @@ class PygameTerminal(PointerUI):
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
-            'combat_by':combat_by,
+            'combat_by':combat_by,'stealth_by':stealth_by,
         }
         self._water_animation_cells=[]
         base=terrain_base

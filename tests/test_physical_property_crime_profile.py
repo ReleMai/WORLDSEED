@@ -126,11 +126,12 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
         guard.x,guard.y,guard.z=market_pos.x+1,market_pos.y,0
         inv=Inventory()
         messages=[]
+        state.player_stealth_mode=True
         harness=SimpleNamespace(
             state=state,registry=self.registry,economy=economy,civics=civics,
             settlement_physicalization=physical,entities=SimpleNamespace(get=lambda actor,typ:inv),
             player_pos=market_pos,clock=SimpleNamespace(minute=600),
-            _visible_from=lambda origin,target:True,
+            stealth=SimpleNamespace(witnesses=lambda pos,minute,settlement_id:(guard.uid,)),
             _message=lambda message:messages.append(message),
         )
         before=town.stocks['core:wheat']

@@ -48,6 +48,7 @@ from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.food import NutritionSystem, CookingSystem
 from worldseed.systems.processing import ProcessingSystem
 from worldseed.systems.fishing import FishingSystem
+from worldseed.systems.stealth import StealthSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 
@@ -138,6 +139,10 @@ class Simulation:
         )
         self.npcs.attach_economy(self.economy)
         self.civics.attach_settlement_physicalization(self.settlement_physicalization)
+        self.stealth=StealthSystem(
+            self.state,self.seed,self.world,self.resources,self.building,
+            self.settlement_physicalization,self.environment,
+        )
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
         # to crossing the corresponding spatial boundary, not to every one-cell
@@ -228,7 +233,8 @@ class Simulation:
             return result
         minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
-            self._move(command,result);minutes=MOVE_MINUTES
+            self._move(command,result)
+            minutes=MOVE_MINUTES*(2 if self.state.player_stealth_mode else 1)
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
@@ -278,6 +284,7 @@ class Simulation:
         elif isinstance(command,SellCommand):self._sell(command)
         elif isinstance(command,BarterCommand):self._barter(command)
         elif isinstance(command,StealMarketCommand):self._steal_market(command)
+        elif isinstance(command,ToggleStealthCommand):self._toggle_stealth(command);minutes=0
         elif isinstance(command,ReadBookCommand):self._read_book(command)
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
@@ -832,7 +839,10 @@ class Simulation:
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
-        self.hunting.note_player_noise(new,self.hunting.movement_noise(new),self.turn,self.clock.minute,"movement")
+        movement_noise=self.hunting.movement_noise(new)
+        if self.state.player_stealth_mode:
+            movement_noise=self.stealth.movement_noise(movement_noise)
+        self.hunting.note_player_noise(new,movement_noise,self.turn,self.clock.minute,"stealth_movement" if self.state.player_stealth_mode else "movement")
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
@@ -1413,9 +1423,29 @@ class Simulation:
         requested_name=self.registry.items[cmd.requested_item].name
         self._message(f"You barter {offered} {offered_name} for {requested} {requested_name}.")
 
+    def stealth_snapshot(self)->dict:
+        return self.stealth.snapshot(
+            self.player_pos,self.clock.minute,active=bool(self.state.player_stealth_mode)
+        )
+
+    def _toggle_stealth(self,cmd:ToggleStealthCommand)->None:
+        enabled=(not self.state.player_stealth_mode) if cmd.enabled is None else bool(cmd.enabled)
+        self.state.player_stealth_mode=enabled
+        if not enabled:
+            self._message("You leave stealth mode and move normally.")
+            return
+        snap=self.stealth.snapshot(self.player_pos,self.clock.minute,active=True)
+        seen=len(snap.get("seen_by",()))
+        if seen:
+            self._message(f"You enter stealth mode, but {seen} observer{'s' if seen!=1 else ''} currently has line of sight.")
+        else:
+            self._message("You enter stealth mode. Observer sight cones are now visible.")
+
     def _steal_market(self,cmd:StealMarketCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id)
         inv=self.entities.get(cmd.actor,Inventory)
+        if not self.state.player_stealth_mode:
+            self._message("Enter stealth mode before attempting theft.");return
         if town is None:
             self._message("That market is unavailable.");return
         target=self.settlement_physicalization.destination_for_function(town.uid,("market",))
@@ -1431,15 +1461,7 @@ class Simulation:
         cell=self.settlement_physicalization.cell_at(target)
         structure_id=cell.structure_id if cell is not None else ""
         owner=self.civics.owner_for_structure(town.uid,structure_id) if structure_id else town.uid
-        witnesses=[]
-        for npc in self.state.npcs.values():
-            if not npc.alive or npc.settlement_id!=town.uid or npc.z!=self.player_pos.z:
-                continue
-            origin=WorldPos(int(npc.x),int(npc.y),int(npc.z))
-            if abs(origin.x-self.player_pos.x)+abs(origin.y-self.player_pos.y)>10:
-                continue
-            if self._visible_from(origin,self.player_pos):
-                witnesses.append(npc.uid)
+        witnesses=list(self.stealth.witnesses(self.player_pos,self.clock.minute,town.uid))
         town.stocks[cmd.item_id]-=amount
         inv.add(cmd.item_id,amount)
         theft=self.economy.record_theft(

@@ -20,12 +20,16 @@ from worldseed.ui.terminal import Terminal
 
 
 def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None, combat_overlay=None) -> None:
+    stealth_overlay=ctx.sim.stealth_snapshot() if ctx.sim.state.player_stealth_mode else None
     presenter = getattr(term, 'present_game', None)
     if callable(presenter):
-        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor, combat_overlay)
+        presenter(ctx.registry, ctx.world, ctx.entities, ctx.sim, ctx.player_id, message, cursor, combat_overlay, stealth_overlay)
     else:
         w, h = term.size()
-        term.present(renderer.render(ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message, cursor=cursor, combat_overlay=combat_overlay))
+        term.present(renderer.render(
+            ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message,
+            cursor=cursor, combat_overlay=combat_overlay, stealth_overlay=stealth_overlay,
+        ))
 
 from worldseed.ui.widgets import select_menu, view_text
 from worldseed.ui.pointer import WindowCloseRequested
@@ -497,6 +501,45 @@ def _near_market(sim:Simulation):
         if distance<=10:candidates.append((distance,town))
     return min(candidates,key=lambda row:(row[0],row[1].uid),default=(0,None))[1]
 
+def _steal_market_action(ctx:GameContext,term:Terminal,town)->str:
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    if not sim.state.player_stealth_mode:
+        sim.execute(ToggleStealthCommand(pid,True))
+        return sim.log[-1].message if sim.log else ''
+    rows=[]
+    for iid,n in sorted(town.stocks.items()):
+        if n<=0 or iid not in reg.items:continue
+        value=sim.player_trade_price(town.uid,iid,True)
+        rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
+    iid=_select(
+        term,'STEAL FROM MARKET',rows,
+        subtitle='Sight cones use NPC facing plus real terrain, doors and generated building walls.',
+    )
+    if not iid:return UI_BACK
+    maximum=min(10,town.stocks.get(iid,0))
+    quantities=[q for q in (1,2,5,10) if q<=maximum]
+    qkey=_select(
+        term,'STEAL · QUANTITY',
+        [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
+    ) if quantities else None
+    if not qkey:return UI_BACK
+    amount=int(qkey)
+    snap=sim.stealth_snapshot();seen=list(snap.get('seen_by',()))
+    known=sim.known_npc_ids()
+    watcher_names=[
+        (sim.state.npcs[uid].name if uid in known and uid in sim.state.npcs else 'Stranger')
+        for uid in seen if uid in sim.state.npcs and sim.state.npcs[uid].settlement_id==town.uid
+    ]
+    risk='No current observer has line of sight.' if not watcher_names else 'Seen by: '+', '.join(watcher_names[:4])
+    confirm=_select(
+        term,'STEAL · REVIEW',
+        [('confirm','Take goods'),('back','Cancel')],
+        subtitle=f'{amount} × {reg.items[iid].name}. {risk}',
+    )
+    if confirm!='confirm':return UI_BACK
+    sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
+    return sim.log[-1].message if sim.log else ''
+
 def _look_mode(ctx:GameContext,term:Terminal)->None:
     sim=ctx.sim;renderer=Renderer(ctx.registry);cursor=sim.player_pos
     while True:
@@ -937,6 +980,9 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 result=_talk_action(ctx,term)
                 if result==UI_BACK:continue
                 return result
+            if action=='stealth':
+                ctx.sim.execute(ToggleStealthCommand(ctx.player_id))
+                return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='p':ctx.sim.execute(PickupCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             result=_handle_menu(ctx,term,action)
             if result==UI_BACK:
@@ -1507,6 +1553,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
     npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
+    physical=sim.settlement_physicalization.cell_at(target)
+    planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
     signs=sim.hunting.signs_at(target)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
@@ -1524,6 +1572,14 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
+    if planned is not None:
+        building_label=str(planned.function).replace('_',' ').title()
+        if not sim.state.player_stealth_mode:
+            rows.append(('enter_stealth',f'Enter stealth mode — case {building_label}'))
+        else:
+            rows.append(('case_property',f'Case {building_label} — ownership and sight coverage'))
+            if planned.function=='market' and distance<=2:
+                rows.append(('steal_market_here','Steal from market stock'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
@@ -1541,6 +1597,50 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='enter_stealth':
+        sim.execute(ToggleStealthCommand(ctx.player_id,True))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='case_property' and planned is not None and physical is not None:
+        owner=sim.civics.owner_for_structure(physical.settlement_id,planned.uid)
+        known=sim.known_npc_ids()
+        if owner in sim.state.npcs:
+            owner_label=sim.state.npcs[owner].name if owner in known else 'Private owner'
+        elif owner in sim.state.settlements:
+            town=sim.state.settlements[owner]
+            owner_label=town.name if owner in sim.known_settlement_ids() else 'Settlement authority'
+        else:
+            owner_label='Settlement authority'
+        prop=sim.state.properties.get(planned.uid)
+        snap=sim.stealth_snapshot()
+        watched=()
+        for cell in snap.get('cells',()):
+            if (int(cell.get('x',0)),int(cell.get('y',0)),int(cell.get('z',target.z)))==(target.x,target.y,target.z):
+                watched=tuple(cell.get('observer_uids',()))
+                break
+        watcher_labels=[]
+        for uid in watched:
+            n=sim.state.npcs.get(uid)
+            watcher_labels.append(n.name if n and uid in known else 'Stranger')
+        room=sim.settlement_physicalization.room_by_id(physical.room_id) if physical.room_id else None
+        lines=[
+            f'Building: {str(planned.function).replace("_"," ").title()}',
+            f'Owner: {owner_label}',
+            f'Room: {str(room.kind).replace("_"," ").title() if room else "Exterior / shared space"}',
+            f'Condition: {int(planned.condition)}%',
+            f'Current sight coverage: {len(watched)} observer(s)',
+        ]
+        if watcher_labels:lines.append('Watching this tile: '+', '.join(watcher_labels[:5]))
+        if prop and prop.occupants:
+            known_occupants=[sim.state.npcs[uid].name for uid in prop.occupants if uid in known and uid in sim.state.npcs]
+            lines.append('Known occupants: '+(', '.join(known_occupants[:5]) if known_occupants else 'none identified'))
+        if planned.function!='market':
+            lines.append('No stealable building inventory is materialized here yet; theft requires a real goods/storage source.')
+        _view_text(term,box('CASE PROPERTY',lines,screen_width(term.size()[0],96)))
+        return UI_BACK
+    if choice=='steal_market_here' and planned is not None and physical is not None:
+        town=sim.state.settlements.get(physical.settlement_id)
+        if town:return _steal_market_action(ctx,term,town)
+        return UI_BACK
     if choice=='inspect_npc' and npc:
         return _npc_profile_menu(ctx,term,npc.uid)
     if choice=='observe_npc' and npc:
@@ -2216,42 +2316,30 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
         bounty=int(sim.state.player_bounties.get(town.uid,0))
         heat=int(sim.state.player_crime_heat.get(town.uid,0))
         legal=f' Local bounty: {bounty}c.' if bounty else ''
-        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}'
+        stealth_note=''
+        if sim.state.player_stealth_mode:
+            snap=sim.stealth_snapshot();seen=len(snap.get('seen_by',()))
+            stealth_note=f' Stealth active: {seen} observer{"s" if seen!=1 else ""} can currently see you.'
+        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}{stealth_note}'
         while True:
-            mode=_select(
-                term,f'{town.name} MARKET',
-                [('buy','Buy'),('sell','Sell'),('barter','Barter'),('steal','Steal')],
-                subtitle=subtitle,
-            )
+            modes=[('buy','Buy'),('sell','Sell'),('barter','Barter')]
+            if sim.state.player_stealth_mode:
+                modes.extend([('steal','Steal'),('leave_stealth','Leave stealth mode')])
+            else:
+                modes.append(('stealth','Enter stealth mode'))
+            mode=_select(term,f'{town.name} MARKET',modes,subtitle=subtitle)
             if not mode:return UI_BACK
             inv=ctx.entities.get(pid,Inventory)
-            if mode=='steal':
-                rows=[]
-                for iid,n in sorted(town.stocks.items()):
-                    if n<=0 or iid not in reg.items:continue
-                    value=sim.player_trade_price(town.uid,iid,True)
-                    rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
-                iid=_select(
-                    term,'STEAL FROM MARKET',rows,
-                    subtitle='Taking goods without payment can create witnesses and a local bounty.',
-                )
-                if not iid:continue
-                maximum=min(10,town.stocks.get(iid,0))
-                quantities=[q for q in (1,2,5,10) if q<=maximum]
-                qkey=_select(
-                    term,'STEAL · QUANTITY',
-                    [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
-                ) if quantities else None
-                if not qkey:continue
-                amount=int(qkey)
-                confirm=_select(
-                    term,'STEAL · REVIEW',
-                    [('confirm','Take goods'),('back','Cancel')],
-                    subtitle=f'{amount} × {reg.items[iid].name}. Witnesses use actual nearby line of sight.',
-                )
-                if confirm!='confirm':continue
-                sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
+            if mode=='stealth':
+                sim.execute(ToggleStealthCommand(pid,True))
                 return sim.log[-1].message if sim.log else ''
+            if mode=='leave_stealth':
+                sim.execute(ToggleStealthCommand(pid,False))
+                return sim.log[-1].message if sim.log else ''
+            if mode=='steal':
+                result=_steal_market_action(ctx,term,town)
+                if result==UI_BACK:continue
+                return result
             if mode=='barter':
                 offered_rows=[]
                 for iid,n in sorted(inv.items.items()):
