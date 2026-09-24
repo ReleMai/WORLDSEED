@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/package-test-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/package-test-build.yml"
   workflow_dispatch:
 
 permissions:
@@ -24,6 +28,10 @@ jobs:
           short="${GITHUB_SHA::7}"
           git archive --format=zip --output="$RUNNER_TEMP/WORLDSEED_TestBuild_${short}.zip" "$GITHUB_SHA"
           echo "PACKAGE=$RUNNER_TEMP/WORLDSEED_TestBuild_${short}.zip" >> "$GITHUB_ENV"
+
+      - name: Verify source test-build ZIP
+        shell: bash
+        run: python -m zipfile -t "$PACKAGE"
 
       - name: Upload test-build package
         uses: actions/upload-artifact@v4
