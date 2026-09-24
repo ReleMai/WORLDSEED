@@ -5,7 +5,7 @@ from collections import defaultdict
 from worldseed.content.registry import ContentRegistry, SettlementProcessDef
 from worldseed.core.rng import hash_u64
 from worldseed.systems.history import HistorySystem
-from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, TradeRouteState, TheftRecordState
+from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, MarketTransactionState, TradeRouteState, TheftRecordState
 from worldseed.systems.pathfinding import HierarchicalPathfinder
 
 BASE_PRICE = {
@@ -133,12 +133,63 @@ class EconomySystem:
                 workers = min(workers, left)
                 left -= workers
                 uid = f"labor:{town.uid}:{proc.id}"
-                self.state.labor_reservations[uid] = LaborReservationState(uid, town.uid, proc.id, occ, workers, day, workers > 0)
+                self.state.labor_reservations[uid] = LaborReservationState(uid, town.uid, proc.id, occ, workers, day, workers > 0, [])
                 if workers:
                     assignments.append((proc, workers))
                 if left < min((p.workers for _, p in scores), default=1):
                     break
+        self._bind_representative_labor(town, day)
         return assignments
+
+    def _bind_representative_labor(self, town, day: int) -> None:
+        """Bind named representatives to aggregate labor slots without duplicating output."""
+        reservations=[
+            row for row in self.state.labor_reservations.values()
+            if row.settlement_id==town.uid and row.assigned_day==day and row.active and row.workers>0
+        ]
+        by_occ=defaultdict(list)
+        for row in reservations:
+            row.representative_uids=[]
+            by_occ[row.occupation].append(row)
+        for rows in by_occ.values():
+            rows.sort(key=lambda row:(row.process_id,row.uid))
+        representatives=sorted(
+            (npc for npc in self.state.npcs.values() if npc.alive and npc.settlement_id==town.uid and npc.age>=16),
+            key=lambda npc:npc.uid,
+        )
+        for npc in representatives:
+            npc.work_assignment_day=day
+            npc.work_hours_today=0
+            npc.assigned_process_id=""
+            rows=by_occ.get(npc.occupation,())
+            if not rows:
+                continue
+            row=min(
+                rows,
+                key=lambda r:(
+                    len(r.representative_uids)*1000//max(1,r.workers),
+                    -r.workers,
+                    r.process_id,
+                ),
+            )
+            row.representative_uids.append(npc.uid)
+            npc.assigned_process_id=row.process_id
+
+    def representative_work(self, npc, town, minute: int) -> str:
+        """Record physical work against today's aggregate assignment."""
+        day=int(minute)//1440
+        if npc.work_assignment_day!=day:
+            self._bind_representative_labor(town,day)
+        if not npc.assigned_process_id:
+            return ""
+        reservation=self.state.labor_reservations.get(f"labor:{town.uid}:{npc.assigned_process_id}")
+        if reservation is None or reservation.assigned_day!=day or not reservation.active:
+            npc.assigned_process_id=""
+            return ""
+        npc.work_hours_today=min(24,npc.work_hours_today+1)
+        if npc.uid not in reservation.representative_uids:
+            reservation.representative_uids.append(npc.uid)
+        return npc.assigned_process_id
 
     def _run_process(self, town, proc: SettlementProcessDef, workers: int) -> int:
         batches = workers // max(1, proc.workers)
@@ -354,6 +405,37 @@ class EconomySystem:
         return max(1, (p * 115)//100 if buy else (p * 85)//100)
 
 
+    def record_transaction(
+        self,
+        settlement_id: str,
+        kind: str,
+        actor_uid: str,
+        counterparty_uid: str,
+        *,
+        copper_value: int,
+        minute: int,
+        offered: dict[str,int] | None = None,
+        requested: dict[str,int] | None = None,
+    ) -> MarketTransactionState:
+        town=self.state.settlements[settlement_id]
+        self.ensure_currency(town)
+        uid=self.state.uid("market")
+        row=MarketTransactionState(
+            uid=uid,settlement_id=settlement_id,kind=str(kind),
+            actor_uid=str(actor_uid),counterparty_uid=str(counterparty_uid),
+            currency_id=town.currency_id,copper_value=max(0,int(copper_value)),
+            minute=int(minute),offered=dict(offered or {}),requested=dict(requested or {}),
+        )
+        self.state.market_transactions[uid]=row
+        if len(self.state.market_transactions)>400:
+            oldest=sorted(
+                self.state.market_transactions.values(),
+                key=lambda x:(x.minute,x.uid),
+            )[:-400]
+            for old in oldest:
+                self.state.market_transactions.pop(old.uid,None)
+        return row
+
     def currency_quote(self, settlement_id: str, copper_value: int) -> tuple[str,int]:
         town=self.state.settlements[settlement_id];self.ensure_currency(town)
         units=max(1,(max(0,int(copper_value))*100 + town.currency_value-1)//max(1,town.currency_value))
@@ -376,6 +458,10 @@ class EconomySystem:
         uid=self.state.uid("theft")
         row=TheftRecordState(uid,settlement_id,thief_uid,victim_uid,item_id,qty,value,int(minute),bool(witnessed),False)
         self.state.theft_records[uid]=row
+        self.record_transaction(
+            settlement_id,"theft",thief_uid,victim_uid or settlement_id,
+            copper_value=value,minute=minute,offered={},requested={item_id:qty},
+        )
         thief=self.state.npcs.get(thief_uid);victim=self.state.npcs.get(victim_uid)
         if thief is not None:
             thief.memories.append({"minute":int(minute),"type":"theft","subject":victim_uid or settlement_id,"salience":20,"valence":-10})
