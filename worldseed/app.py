@@ -2223,15 +2223,26 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
         bounty=int(sim.state.player_bounties.get(town.uid,0))
         heat=int(sim.state.player_crime_heat.get(town.uid,0))
         legal=f' Local bounty: {bounty}c.' if bounty else ''
-        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}'
+        stealth_note=''
+        if sim.state.player_stealth_mode:
+            snap=sim.stealth_snapshot();seen=len(snap.get('seen_by',()))
+            stealth_note=f' Stealth active: {seen} observer{"s" if seen!=1 else ""} can currently see you.'
+        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}{stealth_note}'
         while True:
-            mode=_select(
-                term,f'{town.name} MARKET',
-                [('buy','Buy'),('sell','Sell'),('barter','Barter'),('steal','Steal')],
-                subtitle=subtitle,
-            )
+            modes=[('buy','Buy'),('sell','Sell'),('barter','Barter')]
+            if sim.state.player_stealth_mode:
+                modes.extend([('steal','Steal'),('leave_stealth','Leave stealth mode')])
+            else:
+                modes.append(('stealth','Enter stealth mode'))
+            mode=_select(term,f'{town.name} MARKET',modes,subtitle=subtitle)
             if not mode:return UI_BACK
             inv=ctx.entities.get(pid,Inventory)
+            if mode=='stealth':
+                sim.execute(ToggleStealthCommand(pid,True))
+                return sim.log[-1].message if sim.log else ''
+            if mode=='leave_stealth':
+                sim.execute(ToggleStealthCommand(pid,False))
+                return sim.log[-1].message if sim.log else ''
             if mode=='steal':
                 rows=[]
                 for iid,n in sorted(town.stocks.items()):
@@ -2240,7 +2251,7 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
                     rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
                 iid=_select(
                     term,'STEAL FROM MARKET',rows,
-                    subtitle='Taking goods without payment can create witnesses and a local bounty.',
+                    subtitle='Sight cones use NPC facing plus real terrain, doors and generated building walls.',
                 )
                 if not iid:continue
                 maximum=min(10,town.stocks.get(iid,0))
@@ -2254,7 +2265,7 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
                 confirm=_select(
                     term,'STEAL · REVIEW',
                     [('confirm','Take goods'),('back','Cancel')],
-                    subtitle=f'{amount} × {reg.items[iid].name}. Witnesses use actual nearby line of sight.',
+                    subtitle=f'{amount} × {reg.items[iid].name}. Only NPCs whose current sight cone reaches you can witness it.',
                 )
                 if confirm!='confirm':continue
                 sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
