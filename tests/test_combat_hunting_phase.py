@@ -118,7 +118,7 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         self.assertGreater(q1,0);self.assertGreater(q2,q1);self.assertIn("aim",first.lower());self.assertIn("aim",second.lower())
 
     def test_targeted_head_and_leg_shots_use_requested_body_zone(self):
-        for zone,expected in (("head",{"head","neck"}),("legs",{"legs"})):
+        for zone,expected in (("head",{"head","neck"}),("legs",{"legs","forelegs","hindlegs"})):
             state=LivingWorldState(player_readied_weapon="core:short_bow");combat=CombatSystem(state,self.reg,("zone-"+zone).encode())
             deer=CreatureState("target:"+zone,"core:deer",3,0,0,200)
             inv=Inventory({"core:short_bow":1,"core:wood_arrow":20})
