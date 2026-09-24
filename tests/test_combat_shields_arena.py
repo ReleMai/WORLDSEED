@@ -156,6 +156,7 @@ class CombatShieldArenaTests(unittest.TestCase):
         combat=CombatSystem(state,self.reg,b"reach-charge")
         inv=Inventory({"core:wooden_spear":1})
         boar=CreatureState("charge:boar","core:boar",1,0,0,self.reg.species["core:boar"].max_hp,behavior="charge",charge_momentum=3,charge_committed_until_turn=9,stamina=80)
+        state.creatures[boar.uid]=boar
         stopped=False
         for turn in range(1,40):
             attempted,stopped,msg=combat.intercept_charge(boar,inv,turn,100)
