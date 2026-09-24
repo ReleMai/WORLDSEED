@@ -110,6 +110,10 @@ class SpeciesDef:
     defensive_aggression: int = 20; stamina: int = 100; trackability: int = 50; herd_response: int = 50
     combat_style: str = "generic"; charge_range: int = 0; charge_power: int = 0
     display_range: int = 0; pack_coordination: int = 0; herd_cohesion: int = 0
+    organs: dict[str, dict[str, Any]] = field(default_factory=dict)
+    harvest_parts: tuple[dict[str, Any], ...] = ()
+    home_kind: str = ""; home_radius: int = 0; home_storage: bool = False
+    activity_bias: dict[str, int] = field(default_factory=dict)
 
 
 
@@ -248,7 +252,7 @@ class ContentRegistry:
 
     def _load_species(self,path):
         for raw in self._json(path):
-            obj=SpeciesDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],diet=raw["diet"],mass_kg=int(raw["mass_kg"]),max_hp=int(raw["max_hp"]),damage=int(raw["damage"]),aggression=int(raw["aggression"]),speed=int(raw["speed"]),reproduction=int(raw["reproduction"]),mortality=int(raw["mortality"]),carrying_capacity=int(raw["carrying_capacity"]),habitats=_tuple(raw.get("habitats")),drops=dict(raw.get("drops",{})),body=dict(raw.get("body",{})),description=raw.get("description",""),flavor=raw.get("flavor",""),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),group_min=int(raw.get("group_min",1)),group_max=int(raw.get("group_max",3)),attacks=tuple(dict(x) for x in raw.get("attacks",[])),carcass={str(k):int(v) for k,v in raw.get("carcass",{}).items()},vision=max(1,int(raw.get("vision",8))),hearing=max(1,int(raw.get("hearing",8))),scent=max(0,int(raw.get("scent",6))),flee_threshold=max(1,min(100,int(raw.get("flee_threshold",55)))),defensive_aggression=max(0,min(100,int(raw.get("defensive_aggression",raw.get("aggression",20))))),stamina=max(20,int(raw.get("stamina",100))),trackability=max(0,min(100,int(raw.get("trackability",50)))),herd_response=max(0,min(100,int(raw.get("herd_response",50)))),combat_style=str(raw.get("combat_style","generic")),charge_range=max(0,min(12,int(raw.get("charge_range",0)))),charge_power=max(0,min(100,int(raw.get("charge_power",0)))),display_range=max(0,min(12,int(raw.get("display_range",0)))),pack_coordination=max(0,min(100,int(raw.get("pack_coordination",0)))),herd_cohesion=max(0,min(100,int(raw.get("herd_cohesion",raw.get("herd_response",0))))))
+            obj=SpeciesDef(id=raw["id"],name=raw["name"],glyph=raw["glyph"],diet=raw["diet"],mass_kg=int(raw["mass_kg"]),max_hp=int(raw["max_hp"]),damage=int(raw["damage"]),aggression=int(raw["aggression"]),speed=int(raw["speed"]),reproduction=int(raw["reproduction"]),mortality=int(raw["mortality"]),carrying_capacity=int(raw["carrying_capacity"]),habitats=_tuple(raw.get("habitats")),drops=dict(raw.get("drops",{})),body=dict(raw.get("body",{})),description=raw.get("description",""),flavor=raw.get("flavor",""),min_temp=int(raw.get("min_temp",0)),max_temp=int(raw.get("max_temp",65535)),min_moisture=int(raw.get("min_moisture",0)),max_moisture=int(raw.get("max_moisture",65535)),group_min=int(raw.get("group_min",1)),group_max=int(raw.get("group_max",3)),attacks=tuple(dict(x) for x in raw.get("attacks",[])),carcass={str(k):int(v) for k,v in raw.get("carcass",{}).items()},vision=max(1,int(raw.get("vision",8))),hearing=max(1,int(raw.get("hearing",8))),scent=max(0,int(raw.get("scent",6))),flee_threshold=max(1,min(100,int(raw.get("flee_threshold",55)))),defensive_aggression=max(0,min(100,int(raw.get("defensive_aggression",raw.get("aggression",20))))),stamina=max(20,int(raw.get("stamina",100))),trackability=max(0,min(100,int(raw.get("trackability",50)))),herd_response=max(0,min(100,int(raw.get("herd_response",50)))),combat_style=str(raw.get("combat_style","generic")),charge_range=max(0,min(12,int(raw.get("charge_range",0)))),charge_power=max(0,min(100,int(raw.get("charge_power",0)))),display_range=max(0,min(12,int(raw.get("display_range",0)))),pack_coordination=max(0,min(100,int(raw.get("pack_coordination",0)))),herd_cohesion=max(0,min(100,int(raw.get("herd_cohesion",raw.get("herd_response",0))))),organs={str(k):dict(v) for k,v in raw.get("organs",{}).items()},harvest_parts=tuple(dict(v) for v in raw.get("harvest_parts",[])),home_kind=str(raw.get("home_kind","")),home_radius=max(0,min(24,int(raw.get("home_radius",0)))),home_storage=bool(raw.get("home_storage",False)),activity_bias={str(k):max(0,min(100,int(v))) for k,v in raw.get("activity_bias",{}).items()})
             if obj.id in self.species: raise ValueError(f"Duplicate species id: {obj.id}")
             self.species[obj.id]=obj
 
@@ -350,6 +354,16 @@ class ContentRegistry:
                 raise ValueError(f"Invalid hunting behavior parameters in {sp.id}")
             if sp.combat_style not in {"generic","prey","herd_prey","charger","territorial_charger","pack_predator","solitary_predator"} or not 0<=sp.charge_range<=12 or not 0<=sp.charge_power<=100 or not 0<=sp.display_range<=12 or not 0<=sp.pack_coordination<=100 or not 0<=sp.herd_cohesion<=100:
                 raise ValueError(f"Invalid tactical animal behavior parameters in {sp.id}")
+            if sp.home_kind not in {"","burrow","form","den","sett","nest","lodge","holt","bed"} or not 0<=sp.home_radius<=24:
+                raise ValueError(f"Invalid animal-home metadata in {sp.id}")
+            for organ,meta in sp.organs.items():
+                if str(meta.get("zone","")) not in {"head","neck","torso","legs","wings"} or not 1<=int(meta.get("weight",1))<=100 or not 0<=int(meta.get("vitality",0))<=100 or not 0<=int(meta.get("bleed",0))<=100:
+                    raise ValueError(f"Invalid organ anatomy {organ} in {sp.id}")
+            for part in sp.harvest_parts:
+                iid=str(part.get("item",""))
+                if iid and iid not in self.items: raise ValueError(f"Unknown anatomy harvest item {iid} in {sp.id}")
+                if not str(part.get("name","")) or not 0<=int(part.get("rarity",100))<=100:
+                    raise ValueError(f"Invalid harvest anatomy in {sp.id}")
         for fish in self.fish.values():
             if fish.item_id not in self.items: raise ValueError(f"Unknown fish item {fish.item_id} in {fish.id}")
             if fish.min_weight_g<=0 or fish.max_weight_g<fish.min_weight_g: raise ValueError(f"Invalid fish weight range in {fish.id}")
