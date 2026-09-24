@@ -377,7 +377,7 @@ class ContentRegistry:
                     raise ValueError(f"Anatomy region {region} for {name} not present in body map of {sp.id}")
                 if not 1<=int(part.get("ratio_permille",1))<=300 or not 0<=int(part.get("vitality",0))<=100 or int(part.get("hit_weight",1))<=0:
                     raise ValueError(f"Invalid anatomy profile {name} in {sp.id}")
-                if str(part.get("harvest","offal")) not in {"offal","bone","sinew","none"}:
+                if str(part.get("harvest","offal")) not in {"offal","bone","sinew","feather","none"}:
                     raise ValueError(f"Invalid anatomy harvest class {name} in {sp.id}")
         for fish in self.fish.values():
             if fish.item_id not in self.items: raise ValueError(f"Unknown fish item {fish.item_id} in {fish.id}")
