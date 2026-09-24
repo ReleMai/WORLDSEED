@@ -117,7 +117,7 @@ class Simulation:
         # Active defense stances are one-exchange runtime intent. Old saves may
         # contain them because the fields are serialized for deterministic
         # roundtrips, but loading a game must not resurrect a stale guard/parry.
-        self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
+        self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0;self.state.player_disengage_turn=-1
         self.disasters=DisasterSystem(self.state,self.seed,self.history)
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
@@ -1224,7 +1224,7 @@ class Simulation:
             self._message("You have no clear retreat path in that direction.");return 1
         cost=5+self.combat.leg_injury_penalty()
         if v.stamina<cost:self._message("You are too exhausted to disengage cleanly.");return 1
-        v.stamina-=cost;pc.value=new;self.combat.clear_aim();self.state.player_disengage_turn=self.turn
+        v.stamina-=cost;pc.value=new;self.combat.clear_aim();self.state.player_disengage_turn=self.turn+1
         self.state.player_facing_dx=cmd.dx;self.state.player_facing_dy=cmd.dy
         self.hunting.note_player_noise(new,max(18,self.hunting.movement_noise(new)-8),self.turn,self.clock.minute,"disengage")
         self._message(f"You disengage one step, opening space from the threat ({cost} stamina).");return 1
