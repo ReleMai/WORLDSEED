@@ -486,6 +486,9 @@ def draw_atlas(term, sim):
     if not hasattr(term, '_atlas_controls'):
         begin_atlas(term, sim)
     state = term._atlas_controls
+    if state.detail is not None:
+        _draw_settlement_detail(term, sim, state)
+        return
     if not hasattr(term, '_atlas_art'):
         term._atlas_art = AtlasArt(pg)
     art = term._atlas_art
@@ -558,7 +561,7 @@ def draw_atlas(term, sim):
     label(f'Center: {state.center[0]}, {state.center[1]}', sx, sy+24)
     label('Drag: pan  |  Wheel: zoom', sx, sy+46, term._theme['muted'])
     line_h = term.small_font.get_linesize()+3
-    capacity = max(1, (side.height-245)//44)
+    capacity = max(1, (side.height-280)//44)
     pages = max(1, (len(view.markers)+capacity-1)//capacity)
     state.page = min(state.page, pages-1)
     start = state.page*capacity
@@ -570,7 +573,7 @@ def draw_atlas(term, sim):
         y += 44
     if not view.markers:
         label('No known places in this view.', sx, y, term._theme['muted'])
-    by = side.bottom-158
+    by = side.bottom-196
     term._button((sx,by,width//2-3,28), f'Prev {state.page+1}/{pages}', 'ATLAS:prev')
     term._button((sx+width//2+3,by,width//2-3,28), 'Next', 'ATLAS:next')
     selected = next((m for m in view.markers if m.uid == state.selected), None)
@@ -581,11 +584,21 @@ def draw_atlas(term, sim):
         tid = view.terrain_at(x,y)
         definition = sim.world.registry.terrains.get(tid)
         details = f'{x}, {y}: {definition.name if definition else (tid or "Uncharted / not prepared")}. Click terrain to inspect exact cells.'
-    screen.set_clip(pg.Rect(sx,by+36,width,76))
+    screen.set_clip(pg.Rect(sx,by+36,width,70))
     try:
         for i, line in enumerate(textwrap.wrap(details, max(12,width//max(1,term.small_font.size('M')[0])))):
             label(line, sx, by+36+i*line_h, term._theme['muted'])
     finally:
         screen.set_clip(old_clip)
+
+    if selected and selected.kind in ('village','city'):
+        prepared = _prepared_settlement_skeleton(sim, selected.uid)
+        if prepared is not None:
+            term._button((sx,side.bottom-74,width,28),'Open settlement plan',
+                         'ATLAS_DETAIL_OPEN:'+selected.uid)
+        else:
+            label('Detailed plan not prepared.', sx, side.bottom-70, term._theme['muted'])
+    elif state.detail_notice:
+        label(state.detail_notice, sx, side.bottom-70, term._theme['muted'])
     term._button((sx,side.bottom-38,width,28), 'Back to world', 'ESC')
     pg.display.flip()
