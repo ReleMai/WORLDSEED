@@ -150,6 +150,59 @@ class CombatShieldArenaTests(unittest.TestCase):
         self.assertEqual((restored.player_defense_mode,restored.player_defense_quality),("parry",71))
         self.assertEqual(restored.creatures["wolf"].staggered_until_turn,9)
 
+    def test_reach_parry_can_stop_committed_charge_before_contact(self):
+        state=LivingWorldState(player_readied_weapon="core:wooden_spear",player_defense_mode="parry")
+        state.player_skills["melee"]=20;state.player_attributes["agility"]=18;state.player_attributes["strength"]=12
+        combat=CombatSystem(state,self.reg,b"reach-charge")
+        inv=Inventory({"core:wooden_spear":1})
+        boar=CreatureState("charge:boar","core:boar",1,0,0,self.reg.species["core:boar"].max_hp,behavior="charge",charge_momentum=3,charge_committed_until_turn=9,stamina=80)
+        stopped=False
+        for turn in range(1,40):
+            attempted,stopped,msg=combat.intercept_charge(boar,inv,turn,100)
+            self.assertTrue(attempted)
+            if stopped:
+                self.assertIn("meet the charge",msg.lower());break
+        self.assertTrue(stopped)
+        if boar.uid in state.creatures:
+            self.assertEqual(boar.charge_momentum,0)
+            self.assertGreaterEqual(boar.staggered_until_turn,turn+1)
+
+    def test_braced_tower_shield_can_recoil_a_committed_charge(self):
+        found=False
+        for turn in range(1,100):
+            state=LivingWorldState(player_defense_mode="brace",player_guarding=True)
+            state.player_equipment["offhand"]="core:steel_tower_shield";state.player_skills["shield"]=18;state.player_attributes["strength"]=14
+            combat=CombatSystem(state,self.reg,b"brace-charge")
+            moose=CreatureState("charge:moose","core:moose",1,0,0,self.reg.species["core:moose"].max_hp,behavior="charge",charge_momentum=4,stamina=120)
+            vitals=Vitals()
+            msg=combat.creature_attack_player(moose,vitals,turn,1,0)
+            if "shield" in msg.lower():
+                found=True
+                self.assertGreaterEqual(moose.staggered_until_turn,turn+1)
+                self.assertEqual(moose.behavior,"staggered")
+                self.assertLess(moose.stamina,120)
+                break
+        self.assertTrue(found)
+
+    def test_charge_uses_charge_attack_and_spends_momentum(self):
+        state=LivingWorldState();combat=CombatSystem(state,self.reg,b"charge-impact")
+        boar=CreatureState("charge:impact","core:boar",1,0,0,self.reg.species["core:boar"].max_hp,behavior="charge",charge_momentum=3,charge_committed_until_turn=5,stamina=105)
+        vitals=Vitals()
+        msg=combat.creature_attack_player(boar,vitals,3,1,0)
+        self.assertIn("charge",msg.lower())
+        self.assertEqual(boar.charge_momentum,0)
+        self.assertEqual(boar.charge_committed_until_turn,-1)
+        self.assertLess(boar.stamina,105)
+
+    def test_tactical_arena_preset_contains_pack_chargers_and_herd(self):
+        state=LivingWorldState();arena=TestArenaSystem(state,self.reg,_World(),_Resources(),_Building());inv=Inventory();vitals=Vitals()
+        msg=arena.preset("tactics",WorldPos(0,0,0),inv,vitals)
+        ids=[c.species_id for c in state.creatures.values()]
+        self.assertIn("core:boar",ids);self.assertIn("core:moose",ids)
+        self.assertGreaterEqual(ids.count("core:wolf"),3);self.assertGreaterEqual(ids.count("core:deer"),3)
+        self.assertGreaterEqual(inv.count("core:wooden_spear"),1)
+        self.assertIn("tactical ai field",msg.lower())
+
     def test_six_shields_are_distinct_craftable_offhand_profiles(self):
         ids = (
             "core:rawhide_buckler",
