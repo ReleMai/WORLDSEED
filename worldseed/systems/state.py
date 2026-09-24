@@ -331,9 +331,60 @@ class CasingIntelState:
     room_ids: list[str] = field(default_factory=list)
     storage_uids: list[str] = field(default_factory=list)
     occupant_uids: list[str] = field(default_factory=list)
+    door_uids: list[str] = field(default_factory=list)
+    lock_uids: list[str] = field(default_factory=list)
     entrance_known: bool = False
     owner_known: bool = False
     witness_uids: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class DoorSecurityState:
+    uid: str
+    settlement_id: str
+    property_id: str
+    x: int
+    y: int
+    z: int = 0
+    role: str = "entrance"
+    owner_uid: str = ""
+    access: str = "private"
+    locked: bool = False
+    lock_level: int = 0
+    condition: int = 100
+    forced: bool = False
+    picked: bool = False
+    pick_attempts: int = 0
+    last_tampered_minute: int = -1
+
+
+@dataclass(slots=True)
+class TrespassState:
+    property_id: str
+    settlement_id: str
+    active: bool = False
+    entered_minute: int = -1
+    last_seen_minute: int = -1
+    warned: bool = False
+    warning_count: int = 0
+    search_level: int = 0
+    entry_method: str = ""
+    witness_uids: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class SecurityIncidentState:
+    uid: str
+    settlement_id: str
+    property_id: str
+    actor_uid: str
+    kind: str
+    minute: int
+    severity: int
+    witnessed: bool = False
+    witness_uids: list[str] = field(default_factory=list)
+    door_uid: str = ""
+    resolved: bool = False
 
 
 @dataclass(slots=True)
@@ -747,6 +798,9 @@ class LivingWorldState:
     theft_records: dict[str, TheftRecordState] = field(default_factory=dict)
     market_transactions: dict[str, MarketTransactionState] = field(default_factory=dict)
     properties: dict[str, PropertyState] = field(default_factory=dict)
+    door_security: dict[str, DoorSecurityState] = field(default_factory=dict)
+    trespass_states: dict[str, TrespassState] = field(default_factory=dict)
+    security_incidents: dict[str, SecurityIncidentState] = field(default_factory=dict)
     migration_cohorts: dict[str, MigrationCohortState] = field(default_factory=dict)
     history: list[HistoricEvent] = field(default_factory=list)
     history_archive: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -823,6 +877,7 @@ class LivingWorldState:
     player_crime_heat: dict[str, int] = field(default_factory=dict)
     player_stealth_mode: bool = False
     player_casing_property_id: str = ""
+    player_trespass_property_id: str = ""
     casing_intel: dict[str, CasingIntelState] = field(default_factory=dict)
     discovered_tiles: list[str] = field(default_factory=list)
     discovered_settlements: list[str] = field(default_factory=list)
@@ -867,7 +922,7 @@ class LivingWorldState:
             "clock_minute": self.clock_minute,
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
-            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
+            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
             "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
@@ -890,13 +945,13 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
-        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
+        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])
         maps = {
             "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"cohorts":PopulationCohort,
-            "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
+            "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }
         # New skills must appear on legacy saves even when the old save
