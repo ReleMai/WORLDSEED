@@ -114,7 +114,10 @@ class Simulation:
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
         self.projectiles=ProjectileSystem(self.state,registry,self.seed,self.world,self.resources,self.building)
         self.arena=TestArenaSystem(self.state,registry,self.world,self.resources,self.building)
-        self.state.player_guarding=False
+        # Active defense stances are one-exchange runtime intent. Old saves may
+        # contain them because the fields are serialized for deterministic
+        # roundtrips, but loading a game must not resurrect a stale guard/parry.
+        self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
         self.disasters=DisasterSystem(self.state,self.seed,self.history)
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
