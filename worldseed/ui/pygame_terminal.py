@@ -2814,6 +2814,14 @@ class PygameTerminal(PointerUI):
                     f"Attention {str(casing.get('attention','low')).title()} • rooms {int(casing.get('room_count',0))} • storage {int(casing.get('storage_count',0))}",
                     self._theme['danger'] if int(casing.get('alarm_level',0))>=2 else self._theme['muted']
                 )
+            security=stealth_overlay.get('security') or {}
+            if security.get('trespassing'):
+                text('TRESPASSING',self._theme['danger'],gap=19)
+                level=int(security.get('search_level',0))
+                text(
+                    'Guard response: '+('active search' if level>=2 else 'warning / observation'),
+                    self._theme['danger']
+                )
         if pos.z==0 and lighting is not None:
             text('WEATHER',self._theme['accent'],gap=19)
             text(f"{str(weather.get('kind','clear')).title()}  Clouds {int(weather.get('cloud_cover',0))}%")
