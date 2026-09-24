@@ -485,7 +485,17 @@ def _talk_action(ctx:GameContext,term:Terminal)->str:
     sim.execute(TalkCommand(ctx.player_id,dx,dy));return sim.log[-1].message if sim.log else ''
 
 def _near_market(sim:Simulation):
-    p=sim.player_pos;c=[s for s in sim.state.settlements.values() if abs(s.x-p.x)+abs(s.y-p.y)<=10 and s.uid in sim.known_settlement_ids()];return min(c,key=lambda s:abs(s.x-p.x)+abs(s.y-p.y),default=None)
+    p=sim.player_pos;candidates=[]
+    for town in sim.state.settlements.values():
+        if town.uid not in sim.known_settlement_ids():continue
+        market=sim.settlement_physicalization.destination_for_function(town.uid,("market",))
+        if market is not None:
+            distance=abs(market.x-p.x)+abs(market.y-p.y)
+            if market.z==p.z and distance<=4:candidates.append((distance,town))
+            continue
+        distance=abs(town.x-p.x)+abs(town.y-p.y)
+        if distance<=10:candidates.append((distance,town))
+    return min(candidates,key=lambda row:(row[0],row[1].uid),default=(0,None))[1]
 
 def _look_mode(ctx:GameContext,term:Terminal)->None:
     sim=ctx.sim;renderer=Renderer(ctx.registry);cursor=sim.player_pos
