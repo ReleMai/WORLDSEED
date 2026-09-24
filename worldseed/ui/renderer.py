@@ -237,14 +237,14 @@ class Renderer:
                     ch = f'{BOLD}\x1b[93mX{RESET}'
                 elif k in combat_by and self.use_color:
                     cell=combat_by[k]
-                    plain=ANSI_RE.sub('',ch)
+                    plain=str(cell.get("glyph") or ANSI_RE.sub('',ch))
                     if cell.get("blocked"):code="90"
                     else:
                         chance=int(cell.get("chance",0))
                         code="92" if chance>=75 else "93" if chance>=55 else "33" if chance>=35 else "91"
                     ch=f'\x1b[{code}m{plain}{RESET}'
                 elif k in combat_by and not self.use_color and ch not in ('@','X'):
-                    ch='+' if int(combat_by[k].get("chance",0))>=55 else '!'
+                    ch=str(combat_by[k].get("glyph") or ('+' if int(combat_by[k].get("chance",0))>=55 else '!'))
                 row.append(ch)
             rows.append(''.join(row))
         return rows
