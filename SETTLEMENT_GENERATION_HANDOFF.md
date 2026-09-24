@@ -101,3 +101,31 @@ Materialize planned settlement pieces into local terrain/structure layers withou
 
 ### Next dependency
 Expose the exact settlement atlas as a dedicated UI layer with roads, parcels, building outlines and room labels; then bind NPC homes/workplaces to generated structure/room IDs and replace random representative positions with deterministic valid settlement spawn/route points.
+
+
+## Work unit 5 - NPC physical home/workplace bindings
+- Added `SettlementPopulationBinder`, which binds realized NPC representatives to the existing physical settlement plan instead of inventing separate house/workplace identifiers.
+- Active NPCs now receive stable `home_id`, `home_room_id`, `bed_fixture_id`, `property_id`, `workplace_id` and `work_room_id` values backed by actual generated structures, rooms, fixtures and parcels.
+- Existing valid bindings survive reload/rebinding. Legacy placeholder IDs such as `settlement:...:house:...` are replaced when the authoritative plan is active.
+- Home assignment is deterministic and prefers unused generated residences. If representative count ever exceeds physical homes, the binder shares the least-loaded real home rather than fabricating one.
+- Mining smiths/miners bind to smithies; agrarian/farm labor can bind to mills/barns; herders bind to barns; carpenters bind to workshops when those structures physically exist. Professions without a matching generated workplace remain unbound rather than receiving fake stations.
+- Newly realized representatives are placed on valid passable cells inside their assigned home rooms. Representative generation itself now starts at the settlement anchor and no longer scatters NPCs randomly into a +/-6 tile box before the physical plan exists.
+- NPC AI now sends work tasks to the bound workplace room and rest tasks to the bound home room. Distant Tier-C NPCs continue to use aggregate behavior without forcing local structure generation.
+- The local physicalization layer now retains the active settlement skeleton and exposes stable structure/room destinations for simulation systems without duplicating generated civilization into `LivingWorldState.structures`.
+
+### Persistence / compatibility
+- The new NPC binding fields have defaults, so legacy saves load without a save-schema bump.
+- Binding IDs are simulation state referencing reconstructable plan IDs; the plan remains the physical authority.
+- Rebinding is idempotent and does not teleport NPCs that already have a valid home binding.
+
+### Validation added
+- representatives bind to real residences, room IDs, bed fixture IDs and parcel IDs
+- enough generated homes produce unique representative housing
+- smith/miner and farm/herder professions bind only to existing compatible workplaces
+- old placeholder IDs are replaced by plan-backed IDs
+- repeated binding preserves IDs and positions
+- AI work/rest movement targets resolve to actual workplace/home interior cells
+- Fast Gate now runs settlement generation and population binding tests together
+
+### Next dependency
+Expose `build_settlement_atlas(...)` through the atlas UI as a settlement-detail view with roads, parcel land use, building footprints and room labels. After that, expand physical workplace types (healer, guard, shrine, market, school) before RC17 exact daily schedules.
