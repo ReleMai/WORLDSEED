@@ -291,6 +291,20 @@ class HuntingSystem:
         c.activity=activity;c.activity_until_turn=turn+12
         c.activity_target_x,c.activity_target_y,c.activity_target_z=target.x,target.y,target.z
 
+    def _consume_forage(self,c:CreatureState,sp:SpeciesDef,pos:WorldPos,minute:int)->bool:
+        """Consume a real wild food feature; regrowth remains ResourceSystem-owned."""
+        if sp.diet not in ("herbivore","omnivore") or self.resources is None:return False
+        fv=self.resources.feature_at(pos)
+        if not fv or getattr(fv,"stage","mature")!="mature":return False
+        rd=self.registry.resources.get(fv.feature_id)
+        if not rd or "food" not in rd.tags:return False
+        key=f"{pos.x},{pos.y},{pos.z}"
+        if key in self.state.resource_depletion:return False
+        self.state.resource_depletion[key]=minute
+        if hasattr(self.resources,"revision"):
+            self.resources.revision+=1
+        return True
+
     def _activity_tick(self,c:CreatureState,sp:SpeciesDef,player:WorldPos,turn:int,minute:int)->bool:
         # Existing stationary activity.
         if c.activity in ("feeding","drinking","resting") and turn<=c.activity_until_turn:
@@ -325,7 +339,8 @@ class HuntingSystem:
         if c.activity in ("to_food","to_water","to_den","to_cache"):
             if c.activity_target_x is None or turn>c.activity_until_turn:
                 c.activity="";return False
-            target=WorldPos(int(c.activity_target_x),int(c.activity_target_y),int(c.activity_target_z or c.z))
+            tz=c.z if c.activity_target_z is None else int(c.activity_target_z)
+            target=WorldPos(int(c.activity_target_x),int(c.activity_target_y),tz)
             if (c.x,c.y,c.z)==(target.x,target.y,target.z):
                 if c.activity=="to_cache":
                     den=self.state.animal_dens.get(c.home_den_uid)
@@ -338,6 +353,7 @@ class HuntingSystem:
                     return True
                 next_activity={"to_food":"feeding","to_water":"drinking","to_den":"resting"}[c.activity]
                 c.activity=next_activity;c.activity_until_turn=turn+(3 if next_activity!="resting" else 5)
+                if next_activity=="feeding":self._consume_forage(c,sp,target,minute)
                 detail="feeding sign" if next_activity=="feeding" else "trampled bank at a drinking spot" if next_activity=="drinking" else "flattened bedding"
                 kind="feeding" if next_activity=="feeding" else "drink" if next_activity=="drinking" else "bed"
                 self._write_stationary_sign(c,kind,target,minute,max(25,sp.trackability),detail)
@@ -375,6 +391,7 @@ class HuntingSystem:
             if target is None:continue
             if target==WorldPos(c.x,c.y,c.z):
                 c.activity="feeding" if kind=="food" else "drinking";c.activity_until_turn=turn+3
+                if kind=="food":self._consume_forage(c,sp,target,minute)
                 sign_kind="feeding" if kind=="food" else "drink"
                 detail="feeding sign" if kind=="food" else "trampled bank at a drinking spot"
                 self._write_stationary_sign(c,sign_kind,target,minute,max(25,sp.trackability),detail)
