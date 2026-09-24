@@ -81,3 +81,12 @@ Status: implemented in this development unit.
 
 ### Next dependency
 Add physical key items bound to stable lock identities, ownership/transfer and duplicate-key/lock crafting, then expose lock/key status and guest access through the interaction UI.
+
+
+## Work Unit 15 - Physical keys
+- Doors and property containers have stable lock identities across saves and resync.
+- Individual persistent keys bind to one lock and track owner, label, copy provenance and creation time.
+- Matching key possession opens locked doors/containers without mutating property permissions.
+- Keys transfer between actors and duplicate into distinct persistent copies targeting the same lock.
+- Simulation commands support transfer and duplication; lockpicking remains the unauthorized fallback.
+- Regression coverage verifies unlocking, transfer, duplication and save roundtrip.

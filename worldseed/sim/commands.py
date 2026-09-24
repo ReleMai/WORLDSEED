@@ -148,6 +148,15 @@ class LockpickContainerCommand:
     actor:int
     container_uid:str
 @dataclass(frozen=True,slots=True)
+class TransferKeyCommand:
+    actor:int
+    key_uid:str
+    to_actor_uid:str
+@dataclass(frozen=True,slots=True)
+class DuplicateKeyCommand:
+    actor:int
+    key_uid:str
+@dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 
 @dataclass(frozen=True,slots=True)

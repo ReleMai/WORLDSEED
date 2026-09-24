@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import (
-    CasingIntelState, ContainerState, DoorSecurityState, SecurityIncidentState,
+    CasingIntelState, ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
     TrespassState, pos_key,
 )
 
@@ -48,12 +48,13 @@ class PropertyStorageSystem:
     goods are invented; once a container exists it is never reseeded.
     """
 
-    def __init__(self, state, registry, seed: bytes, physicalization, civics):
+    def __init__(self, state, registry, seed: bytes, physicalization, civics, keys=None):
         self.state=state
         self.registry=registry
         self.seed=seed
         self.physicalization=physicalization
         self.civics=civics
+        self.keys=keys or PhysicalKeySystem(state,seed)
 
     def _room_for(self, skeleton, structure):
         rooms=sorted(
@@ -154,6 +155,7 @@ class PropertyStorageSystem:
                 existing.settlement_id=town.uid
                 existing.property_id=structure.uid
                 existing.access="private"
+                self.keys.ensure_lock(existing)
                 if existing.lock_level<=0:existing.lock_level=self._lock_level(structure.function)
                 if existing.last_tampered_minute<0 and not existing.picked:existing.locked=existing.lock_level>0
                 continue
@@ -174,7 +176,7 @@ class PropertyStorageSystem:
                 items=items,name=name,kind="property",movable=False,source_id=source_id,
                 settlement_id=town.uid,property_id=structure.uid,room_id=room_id,
                 access="private",lock_level=self._lock_level(structure.function),
-                locked=self._lock_level(structure.function)>0,seeded_from_settlement=True,
+                locked=self._lock_level(structure.function)>0,lock_uid=f"lock:{uid}",seeded_from_settlement=True,
             )
             created+=1
         return PropertyStorageSync(town.uid,eligible,created,reserved)
@@ -204,7 +206,8 @@ class PropertyStorageSystem:
         return container.access=="public" or actor_uid==container.owner or actor_uid in container.keyholder_uids or (actor_uid=="player" and container.owner=="player")
 
     def blocks_actor(self,container:ContainerState,actor_uid:str)->bool:
-        return bool(container.locked and not self.authorized_actor(container,actor_uid))
+        self.keys.ensure_lock(container)
+        return bool(container.locked and not self.authorized_actor(container,actor_uid) and not self.keys.actor_has_key(actor_uid,container.lock_uid))
 
     def grant_keyholder(self,container_uid:str,actor_uid:str)->bool:
         container=self.by_id(container_uid);actor_uid=str(actor_uid or "")
@@ -225,6 +228,32 @@ class PropertyStorageSystem:
             container.locked=False;container.picked=True
             return True,"You pick the storage lock.",5
         return False,"The storage lock holds.",5
+
+
+class PhysicalKeySystem:
+    def __init__(self,state,seed:bytes):self.state=state;self.seed=seed
+    @staticmethod
+    def lock_uid(target_uid:str)->str:return f"lock:{target_uid}"
+    def ensure_lock(self,target)->str:
+        if not target.lock_uid:target.lock_uid=self.lock_uid(target.uid)
+        return target.lock_uid
+    def ensure_key(self,target,owner_uid:str,label:str="",minute:int=0)->PhysicalKeyState:
+        lock_uid=self.ensure_lock(target);owner_uid=str(owner_uid);uid=f"key:{target.uid}:{owner_uid}"
+        key=self.state.physical_keys.get(uid)
+        if key is None:key=PhysicalKeyState(uid,lock_uid,owner_uid,label or "Property key",created_minute=int(minute));self.state.physical_keys[uid]=key
+        return key
+    def actor_has_key(self,actor_uid:str,lock_uid:str)->bool:return bool(lock_uid) and any(k.owner_uid==str(actor_uid) and k.lock_uid==lock_uid for k in self.state.physical_keys.values())
+    def keys_for_actor(self,actor_uid:str):return tuple(sorted((k for k in self.state.physical_keys.values() if k.owner_uid==str(actor_uid)),key=lambda k:k.uid))
+    def transfer(self,key_uid:str,from_uid:str,to_uid:str)->bool:
+        key=self.state.physical_keys.get(str(key_uid));to_uid=str(to_uid)
+        if key is None or key.owner_uid!=str(from_uid) or not to_uid:return False
+        key.owner_uid=to_uid;return True
+    def duplicate(self,key_uid:str,owner_uid:str,minute:int=0):
+        source=self.state.physical_keys.get(str(key_uid))
+        if source is None:return None
+        serial=1
+        while f"{source.uid}:copy:{serial}" in self.state.physical_keys:serial+=1
+        uid=f"{source.uid}:copy:{serial}";key=PhysicalKeyState(uid,source.lock_uid,str(owner_uid),f"{source.label} copy",source.uid,int(minute));self.state.physical_keys[uid]=key;return key
 
 
 class PropertySecuritySystem:
@@ -248,12 +277,13 @@ class PropertySecuritySystem:
         "market":(7,20),"clinic":(7,20),"shrine":(6,22),"school":(8,16),
     }
 
-    def __init__(self,state,registry,seed:bytes,physicalization,civics):
+    def __init__(self,state,registry,seed:bytes,physicalization,civics,keys=None):
         self.state=state
         self.registry=registry
         self.seed=seed
         self.physicalization=physicalization
         self.civics=civics
+        self.keys=keys or PhysicalKeySystem(state,seed)
 
     def _function(self, property_id: str) -> str:
         structure=self.physicalization.structure_by_id(str(property_id))
@@ -298,11 +328,13 @@ class PropertySecuritySystem:
                     x=int(piece.x),y=int(piece.y),z=0,role=str(piece.role),owner_uid=owner,
                     access=access,locked=bool(initial_locked),lock_level=level,
                 )
+                door.lock_uid=self.keys.ensure_lock(door)
                 self.state.door_security[piece.uid]=door;made+=1
             else:
                 door.settlement_id=settlement_id;door.property_id=structure.uid
                 door.x=int(piece.x);door.y=int(piece.y);door.z=0;door.role=str(piece.role)
                 door.owner_uid=owner;door.access=access
+                self.keys.ensure_lock(door)
                 if door.lock_level<=0 and level>0 and not door.forced:
                     door.lock_level=level
         return made
@@ -355,7 +387,7 @@ class PropertySecuritySystem:
 
     def blocks_actor(self,pos:WorldPos,actor_uid:str,minute:int|None=None)->bool:
         door=self.door_at(pos)
-        return bool(door and door.locked and not door.forced and not self.authorized_actor(door,actor_uid))
+        return bool(door and door.locked and not door.forced and not self.authorized_actor(door,actor_uid) and not self.keys.actor_has_key(actor_uid,self.keys.ensure_lock(door)))
 
     def blocks_player(self,pos:WorldPos)->bool:
         return self.blocks_actor(pos,"player")
