@@ -242,6 +242,7 @@ class Simulation:
         elif isinstance(command,ParryCommand):minutes=self._parry(command)
         elif isinstance(command,BraceCommand):minutes=self._brace(command)
         elif isinstance(command,ShieldBashCommand):minutes=self._shield_bash(command)
+        elif isinstance(command,DisengageCommand):minutes=self._disengage(command)
         elif isinstance(command,PlantCommand):self._plant(command)
         elif isinstance(command,HarvestCommand):self._harvest(command)
         elif isinstance(command,AttackCommand):self._attack(command);minutes=1
@@ -479,6 +480,7 @@ class Simulation:
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
             for msg in self.disease.tick_player(self.clock.minute,v):self._message(msg)
         before_behavior={uid:c.behavior for uid,c in self.state.creatures.items()}
+        before_positions={uid:WorldPos(c.x,c.y,c.z) for uid,c in self.state.creatures.items()}
         attackers=self.hunting.update_local_ai(self.player_pos,self.turn,self.clock.minute)
         # Tactical tells are logged only when the local animal actually changes
         # state, keeping the behavior legible without a renderer-side mutation.
@@ -496,17 +498,36 @@ class Simulation:
             inv=self.entities.try_get(self.player_id,Inventory)
             for uid in attackers:
                 c=self.state.creatures.get(uid)
-                if c:
-                    p=self.player_pos
-                    if inv and c.behavior=="charge":
-                        attempted,stopped,msg=self.combat.intercept_charge(c,inv,self.turn,v.stamina)
-                        if attempted:
-                            self._message(msg)
-                            # The prepared parry was spent on the reach-control
-                            # attempt whether or not the point stopped the charge.
-                            self.state.player_defense_mode=""
-                            if stopped or uid not in self.state.creatures:continue
-                    self._message(self.combat.creature_attack_player(c,v,self.turn,c.x-p.x,c.y-p.y))
+                if not c:continue
+                p=self.player_pos
+                if abs(c.x-p.x)+abs(c.y-p.y)>1:continue
+                prior=before_positions.get(uid,WorldPos(c.x,c.y,c.z));prior_dist=abs(prior.x-p.x)+abs(prior.y-p.y)
+                if inv and c.behavior=="charge":
+                    attempted,stopped,msg=self.combat.intercept_charge(c,inv,self.turn,v.stamina)
+                    if attempted:
+                        self._message(msg);self.state.player_defense_mode=""
+                        if stopped or uid not in self.state.creatures:continue
+                elif inv and prior_dist>=2 and c.last_move_turn==self.turn:
+                    attempted,stopped,msg=self.combat.intercept_approach(c,inv,self.turn,v.stamina)
+                    if attempted:
+                        self._message(msg);self.state.player_defense_mode=""
+                        if stopped:
+                            if uid in self.state.creatures and self._combat_cell_free(prior,ignore_uid=uid):
+                                c.x,c.y=prior.x,prior.y;c.facing_dx,c.facing_dy=p.x-prior.x,p.y-prior.y
+                            continue
+                p=self.player_pos
+                if abs(c.x-p.x)+abs(c.y-p.y)>1:continue
+                was_charge=c.behavior=="charge";momentum=int(c.charge_momentum);mode_before=self.state.player_defense_mode
+                hp_before=v.hp;wounds_before=len(self.state.player_wounds);source=WorldPos(c.x,c.y,c.z)
+                msg=self.combat.creature_attack_player(c,v,self.turn,c.x-p.x,c.y-p.y)
+                self._message(msg)
+                hit=v.hp<hp_before or len(self.state.player_wounds)>wounds_before
+                if was_charge and hit and "evade" not in msg.lower() and not (mode_before=="brace" and "shield" in msg.lower()):
+                    sp=self.registry.species.get(c.species_id)
+                    if sp:
+                        force=sp.charge_power//2+momentum*8+sp.mass_kg//20
+                        tiles=2 if momentum>=3 and sp.mass_kg>=180 else 1
+                        for extra in self._push_player_from(source,tiles,force):self._message(extra)
             if v.hp<=0:
                 killer=self.state.creatures.get(attackers[-1]) if attackers else None
                 if killer:
@@ -698,6 +719,57 @@ class Simulation:
             self._message(f"{npc.name} tells you: {ev.summary}");return
         self._message(f"You speak with {npc.name}. They are focused on {npc.goal}.")
 
+    @staticmethod
+    def _step_sign(value:int)->int:
+        return 0 if value==0 else (1 if value>0 else -1)
+
+    def _combat_cell_free(self,pos:WorldPos,*,ignore_uid:str="")->bool:
+        terrain=self.world.tile_at(pos).terrain
+        world_pass=self.world.is_passable(pos) or "water" in terrain.tags
+        if self.resources.blocks_movement(pos):return False
+        if not self.building.passable(pos,world_pass):return False
+        if not self.environment.fluid_passable(pos) and "water" not in terrain.tags:return False
+        if pos==self.player_pos:return False
+        for c in self.state.creatures.values():
+            if c.uid!=ignore_uid and c.hp>0 and (c.x,c.y,c.z)==(pos.x,pos.y,pos.z):return False
+        return True
+
+    def _push_creature_from(self,c,source:WorldPos,tiles:int,force:int)->list[str]:
+        messages=[]
+        dx=self._step_sign(c.x-source.x);dy=self._step_sign(c.y-source.y)
+        if dx and dy:
+            if abs(c.x-source.x)>=abs(c.y-source.y):dy=0
+            else:dx=0
+        if dx==0 and dy==0:return messages
+        for _ in range(max(0,int(tiles))):
+            nxt=WorldPos(c.x+dx,c.y+dy,c.z)
+            if not self._combat_cell_free(nxt,ignore_uid=c.uid):
+                messages.append(self.combat.creature_collision_injury(c,self.turn,force,"forced displacement"))
+                break
+            c.x,c.y=nxt.x,nxt.y;c.facing_dx,c.facing_dy=dx,dy;c.last_move_turn=self.turn
+            c.stamina=max(0,c.stamina-4);self.state.player_aim_quality=max(0,self.state.player_aim_quality-18 if self.state.player_aim_target==c.uid else 0)
+            messages.append(f"The {self.registry.species[c.species_id].name.lower()} is driven back.")
+        return messages
+
+    def _push_player_from(self,source:WorldPos,tiles:int,force:int)->list[str]:
+        messages=[];pc=self.entities.get(self.player_id,Position);v=self.entities.get(self.player_id,Vitals)
+        dx=self._step_sign(pc.value.x-source.x);dy=self._step_sign(pc.value.y-source.y)
+        if dx and dy:
+            if abs(pc.value.x-source.x)>=abs(pc.value.y-source.y):dy=0
+            else:dx=0
+        if dx==0 and dy==0:return messages
+        for _ in range(max(0,int(tiles))):
+            nxt=pc.value.moved(dx,dy)
+            terrain=self.world.tile_at(nxt).terrain;world_pass=self.world.is_passable(nxt) or "water" in terrain.tags
+            occupied=any(c.hp>0 and (c.x,c.y,c.z)==(nxt.x,nxt.y,nxt.z) for c in self.state.creatures.values())
+            blocked=self.resources.blocks_movement(nxt) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
+            if blocked:
+                messages.append(self.combat.player_collision_injury(v,self.turn,force,"combat collision"))
+                break
+            old=pc.value;pc.value=nxt;self.combat.clear_aim()
+            messages.append(f"You are driven from {old.x},{old.y} to {nxt.x},{nxt.y}.")
+        return messages
+
     def _move(self,cmd:MoveCommand,result:TickResult)->None:
         pc=self.entities.get(cmd.actor,Position);old=pc.value;new=old.moved(cmd.dx,cmd.dy)
         if self.dungeons.is_locked(new):
@@ -707,6 +779,8 @@ class Simulation:
         from worldseed.systems.swimming import exposure, stroke_cost, practice
         water=exposure(self,new); old_water=exposure(self,old)
         terrain=self.world.tile_at(new).terrain
+        if any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values()):
+            self._message("A living creature blocks that space. Use a combat action or disengage around it.");return
         world_pass=self.world.is_passable(new) or 'water' in terrain.tags
         if self.resources.blocks_movement(new):
             self._message(f"{self.resources.description(new)} blocks your path. Harvest it from an adjacent tile.");return
@@ -1072,7 +1146,14 @@ class Simulation:
         v.stamina=max(0,v.stamina-cost)
         before_wounds=len(target.wounds);self.combat.clear_aim()
         msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before,mode)
-        if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=len(target.wounds)>before_wounds)
+        hit=target.uid not in self.state.creatures or len(target.wounds)>before_wounds
+        if target.uid in self.state.creatures:
+            self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=hit)
+            if hit and mode=="power":
+                mass=(weapon.mass_g if weapon else 0);strength=self.player_attribute("strength")
+                force=max(0,strength*2+mass//450+(weapon.weapon_damage if weapon else 3))
+                if force>=22:
+                    for extra in self._push_creature_from(target,origin,1,force):self._message(extra)
         self._message(msg)
     def _guard(self,cmd:GuardCommand)->int:
         shield=self.combat.equipped_shield();v=self.entities.get(cmd.actor,Vitals)
@@ -1121,8 +1202,32 @@ class Simulation:
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost);before=len(target.wounds)
         msg=self.combat.shield_bash(target,self.turn,stamina_before)
-        if target.uid in self.state.creatures:self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=55,hit=len(target.wounds)>before)
+        hit=target.uid not in self.state.creatures or len(target.wounds)>before
+        if target.uid in self.state.creatures:
+            self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=55,hit=hit)
+            if hit:
+                force=shield.shield_block*2+shield.shield_stability//4+self.player_attribute("strength")
+                if force>=18:
+                    for extra in self._push_creature_from(target,origin,1,force):self._message(extra)
         self._message(msg);return 1
+
+    def _disengage(self,cmd:DisengageCommand)->int:
+        if abs(cmd.dx)+abs(cmd.dy)!=1:self._message("Choose one adjacent retreat direction.");return 1
+        pc=self.entities.get(cmd.actor,Position);v=self.entities.get(cmd.actor,Vitals);old=pc.value;new=old.moved(cmd.dx,cmd.dy)
+        threats=[c for c in self.state.creatures.values() if c.hp>0 and c.z==old.z and abs(c.x-old.x)+abs(c.y-old.y)==1]
+        if not threats:self._message("There is no adjacent threat to disengage from.");return 1
+        old_min=min(abs(c.x-old.x)+abs(c.y-old.y) for c in threats);new_min=min(abs(c.x-new.x)+abs(c.y-new.y) for c in threats)
+        if new_min<=old_min:self._message("A disengage must create space from the adjacent threat.");return 1
+        terrain=self.world.tile_at(new).terrain;world_pass=self.world.is_passable(new) or "water" in terrain.tags
+        occupied=any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values())
+        if occupied or self.resources.blocks_movement(new) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
+            self._message("You have no clear retreat path in that direction.");return 1
+        cost=5+self.combat.leg_injury_penalty()
+        if v.stamina<cost:self._message("You are too exhausted to disengage cleanly.");return 1
+        v.stamina-=cost;pc.value=new;self.combat.clear_aim();self.state.player_disengage_turn=self.turn
+        self.state.player_facing_dx=cmd.dx;self.state.player_facing_dy=cmd.dy
+        self.hunting.note_player_noise(new,max(18,self.hunting.movement_noise(new)-8),self.turn,self.clock.minute,"disengage")
+        self._message(f"You disengage one step, opening space from the threat ({cost} stamina).");return 1
 
     def _arena_command(self,cmd)->None:
         inv=self.entities.get(cmd.actor,Inventory);v=self.entities.get(cmd.actor,Vitals);p=self.player_pos
