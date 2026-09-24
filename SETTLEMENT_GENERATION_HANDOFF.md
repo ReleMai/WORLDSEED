@@ -188,3 +188,35 @@ Expand the physical settlement planner with missing civic/service workplaces (ma
 
 ### Next dependency
 Add player-facing trade/barter presentation and ownership-aware theft interactions on real market/container/property targets, then expose NPC family/backstory/relationship detail through focused inspect views rather than a permanent data-heavy panel. Continue expanding service use with time-of-day scheduling only after these physical/service bindings remain stable.
+
+
+## Work unit 8 - Unified labor authority, daily routines, transactions, and executable barter
+- Named NPC work no longer directly creates a second copy of settlement goods. Daily aggregate labor reservations remain the production authority.
+- Labor reservations now retain the named representative NPCs physically performing that work. Active representatives receive a stable daily process assignment and record worked hours against it.
+- NPC physical work therefore explains the aggregate economy without becoming another production ledger.
+- Added a bounded market transaction ledger covering player purchases, sales, barter, NPC purchases, and theft. Transactions retain settlement, participants, local currency identity, copper-equivalent value, goods moved, and minute.
+- Transaction history is capped at 400 records so active trade does not grow save state without limit.
+- Player barter is now executable rather than valuation-only. Barter transfers actual inventory/settlement stock without minting copper and uses the same scarcity-adjusted local market authority as coin trade.
+- The market UI now exposes Buy, Sell, and Barter in one focused flow. It shows copper price plus the settlement's regional-currency value quote, but keeps copper as the physical coin until regional minted variants receive a provenance/minting system.
+- Market access uses the physical generated market building when one is active. Legacy/unprepared settlements keep the older settlement-center fallback rather than losing access.
+- NPCs now follow a soft occupation-aware daily rhythm layered under urgent needs: work shifts, meal periods, evening social activity, sleep, scholar study time, priest worship preference, and deterministic three-shift guard coverage.
+- Urgent hunger, thirst, exhaustion, injury, and similar needs can override the routine.
+- Social goal selection now prioritizes spouses/parents/children/kin and routes family social time toward home; non-kin social activity continues to prefer civic gathering places.
+
+### Compatibility / authority
+- New transaction/work fields have defaults and load through existing state serialization.
+- No save-schema or settlement-plan bump is required; this work changes simulation state and UI behavior, not settlement geometry.
+- LaborReservationState remains the economic authority for production; NPCState.assigned_process_id is only a binding to that authority.
+- Regional currency remains a quote/identity layer over copper-equivalent accounting. No duplicate price table was introduced.
+
+### Validation added
+- named workers bind to current labor reservations
+- named work does not directly alter settlement stock
+- daily routine bias produces work, meal, rest, and full guard-shift coverage
+- transaction records survive state round-trip
+- item-for-item barter transfers goods while leaving copper unchanged
+- family social selection prefers actual kin and home
+- Fast Gate settlement coverage includes economy/routine/transaction regressions
+
+### Next dependency
+Add ownership-aware player theft/trespass against real settlement structures and containers, including witness line-of-sight, property ownership, guard response, restitution/fines, and relationship consequences. Then add a compact NPC inspect window with Overview, Family, Relations, Needs, and History tabs fed from the now-stable social state.
