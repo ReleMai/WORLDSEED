@@ -106,6 +106,7 @@ class PygameTerminal(PointerUI):
         self._context_backdrop = None
         self._context_opening = False
         self._discovery_pot_center = None
+        self._last_combat_effect_uid = 0
         self._theme = {
             "bg": (13, 16, 18),
             "panel": (22, 26, 29),
@@ -2340,6 +2341,7 @@ class PygameTerminal(PointerUI):
             ('creatures',state.creatures),('npcs',state.npcs),('structures',state.structures),
             ('containers',state.containers),('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
             ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
+            ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
         )
         key=(id(sim),sim.clock.minute//60)+tuple(len(v) for _,v in collections)
         if key!=self._entity_spatial_cache_key or self._entity_spatial_cache is None:
@@ -2431,6 +2433,12 @@ class PygameTerminal(PointerUI):
         if pile:
             for iid,qty in list(pile.items.items())[:3]:
                 d=registry.items.get(iid);lines.append(f'{qty}x {d.name if d else iid}')
+        sign=ctx.get('sign_by',{}).get(k)
+        if sign:
+            lines.append(sim.hunting.describe_sign(sign,sim.player_skill('hunting'),sim.player_skill('survival'),sim.clock.minute,species_known=sign.species_id in sim.known_species_ids()))
+        home=ctx.get('home_by',{}).get(k)
+        if home:
+            lines.append(sim.hunting.describe_home(home,sim.player_skill('hunting'),sim.player_skill('survival')))
         attack=ctx.get('combat_by',{}).get(k)
         if attack:
             difficulty=str(attack.get('difficulty','')).replace('_',' ').title()
@@ -2501,6 +2509,36 @@ class PygameTerminal(PointerUI):
         from worldseed.ui.atlas_map import draw_atlas
         draw_atlas(self, sim)
 
+    def _play_combat_effects(self,sim,used,left:int,top:int,tile_px:int,z:int)->None:
+        events=[e for e in getattr(sim,'visual_effects',()) if int(e.get('uid',0))>self._last_combat_effect_uid]
+        if not events or self.screen is None:return
+        pg=self.pg
+        for event in events[-3:]:
+            uid=int(event.get('uid',0));self._last_combat_effect_uid=max(self._last_combat_effect_uid,uid)
+            src=event.get('source',(0,0,z));dst=event.get('target',(0,0,z))
+            if len(src)<3 or len(dst)<3 or int(src[2])!=z or int(dst[2])!=z:continue
+            sx=used.x+(int(src[0])-left)*tile_px+tile_px//2;sy=used.y+(int(src[1])-top)*tile_px+tile_px//2
+            tx=used.x+(int(dst[0])-left)*tile_px+tile_px//2;ty=used.y+(int(dst[1])-top)*tile_px+tile_px//2
+            if not used.collidepoint(sx,sy) and not used.collidepoint(tx,ty):continue
+            base=self.screen.subsurface(used).copy();kind=str(event.get('kind',''))
+            duration=120 if kind=='projectile' else 95;start=pg.time.get_ticks()
+            while True:
+                elapsed=pg.time.get_ticks()-start;t=min(1.0,elapsed/max(1,duration))
+                self.screen.blit(base,used.topleft)
+                if kind=='projectile':
+                    x=round(sx+(tx-sx)*t);y=round(sy+(ty-sy)*t)
+                    pg.draw.line(self.screen,(224,213,170),(sx,sy),(x,y),max(1,tile_px//14))
+                    pg.draw.circle(self.screen,(242,231,183),(x,y),max(2,tile_px//9))
+                else:
+                    dx=tx-sx;dy=ty-sy;length=max(1.0,(dx*dx+dy*dy)**0.5)
+                    reach=max(6,int(tile_px*(.45+.45*t)));ex=round(sx+dx/length*reach);ey=round(sy+dy/length*reach)
+                    col=(224,185,105) if kind in ('melee','bash') else (204,102,83)
+                    pg.draw.line(self.screen,col,(sx,sy),(ex,ey),max(2,tile_px//8))
+                    pg.draw.circle(self.screen,col,(tx,ty),max(2,round(tile_px*.18*t)),1)
+                pg.display.update(used);pg.event.pump();self.clock.tick(120)
+                if t>=1:break
+            self.screen.blit(base,used.topleft);pg.display.update(used)
+
     def present_game(self, registry, world, entities, sim, player_id: int, message: str = '', cursor: WorldPos | None = None,
                      combat_overlay: dict | None = None, stealth_overlay: dict | None = None) -> None:
         """Hybrid local-world view: sprite map + dense terminal-derived panels."""
@@ -2549,6 +2587,9 @@ class PygameTerminal(PointerUI):
         fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
         pile_by={(p.x,p.y,p.z):p for p in nearby['ground_piles'] if p.items and _onscreen(p.x,p.y,p.z)}
         carcass_by={(q.x,q.y,q.z):q for q in nearby['carcasses'] if _onscreen(q.x,q.y,q.z)}
+        hunt_skill=max(sim.player_skill('hunting'),sim.player_skill('survival'))
+        sign_by={(q.x,q.y,q.z):q for q in nearby['animal_signs'] if _onscreen(q.x,q.y,q.z) and q.strength+hunt_skill*8>=52}
+        home_by={(q.x,q.y,q.z):q for q in nearby['animal_homes'] if _onscreen(q.x,q.y,q.z) and q.discovered}
         resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
@@ -2657,7 +2698,7 @@ class PygameTerminal(PointerUI):
         # The cached base layer already contains every terrain tile. Walk only
         # cells that actually have an overlay instead of scanning the entire
         # viewport in Python every frame. Sorting by y preserves sprite depth.
-        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)
+        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)|set(sign_by)|set(home_by)
         overlay_keys.add((pos.x,pos.y,pos.z))
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
@@ -2682,6 +2723,15 @@ class PygameTerminal(PointerUI):
                 iid=next(iter(pile_by[k].items));self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('items',iid)),rect,.8)
             if k in carcass_by:
                 carc=carcass_by[k];self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('species',carc.species_id),1),rect,1.0,145)
+            if k in sign_by:
+                sign=sign_by[k]
+                mark=(145,55,47) if sign.kind=='blood' else (174,145,99)
+                rr=max(2,tile_px//10)
+                pg.draw.ellipse(screen,mark,(rect.centerx-rr*2,rect.bottom-rr*3,rr*2,rr))
+                pg.draw.ellipse(screen,mark,(rect.centerx+rr//2,rect.bottom-rr*2,rr*2,rr))
+            if k in home_by:
+                pg.draw.ellipse(screen,(24,20,17),(rect.x+tile_px//5,rect.y+tile_px//2,3*tile_px//5,tile_px//3))
+                pg.draw.arc(screen,(103,82,58),(rect.x+tile_px//6,rect.y+tile_px//3,2*tile_px//3,tile_px//2),math.pi,2*math.pi,max(1,tile_px//12))
             if k in fire_by:self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures','core:campfire')),rect,1.0)
             if k in creature_by:
                 c=creature_by[k];ref=self._visuals.ref('species',c.species_id)
@@ -2783,6 +2833,8 @@ class PygameTerminal(PointerUI):
             bw=side_rect.width-32; frac=max(0,min(1,val/max(1,maxv))); pg.draw.rect(screen,(45,50,52),(tx,ty-1,bw,6),border_radius=2); pg.draw.rect(screen,self._theme['good'] if frac>.35 else self._theme['danger'],(tx,ty-1,int(bw*frac),6),border_radius=2); ty+=11
         ty+=6
         terrain=world.tile_at(pos).terrain.name; text('LOCAL',self._theme['accent'],gap=19); text(terrain); text(f"Carried stacks: {len(inv.items)}",self._theme['muted'])
+        stance=str(getattr(sim.state,'player_hunting_stance','normal')).title()
+        if stance!='Normal':text(f'Hunting stance: {stance}',self._theme['good'],gap=18)
         if combat_overlay:
             text('ATTACK RANGE',self._theme['accent'],gap=19)
             mode=str(combat_overlay.get('mode','attack')).title();weapon_name=str(combat_overlay.get('weapon_name','Weapon'))
@@ -2853,12 +2905,14 @@ class PygameTerminal(PointerUI):
         # The snapshot lets hover repaint only a few small rectangles while the
         # main loop is blocked waiting for the next gameplay input.
         self._draw_scanlines((ox,oy,ow,oh))
+        self._play_combat_effects(sim,used,left,top,tile_px,pos.z)
         self._hover_context={
             'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'property_container_by':property_container_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
+            'sign_by':sign_by,'home_by':home_by,
             'combat_by':combat_by,'stealth_by':stealth_by,
         }
         self._water_animation_cells=[]
