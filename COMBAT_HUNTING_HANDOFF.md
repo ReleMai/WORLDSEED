@@ -863,9 +863,9 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
 ## Important caveats
 
 - Weapon readiness currently references carried stack items; dedicated per-item weapon instances/condition are still future work outside existing durable-artifact handling.
-- Aiming has four broad anatomical zones rather than species-specific named organs.
-- Only track and blood physical signs are implemented.
-- No crouch/stalk stance exists yet.
+- The targeting UI still exposes four broad anatomical aim zones; once penetration resolves, Phase 7 can record damage to species-specific named organs.
+- Hunting evidence now includes tracks, blood, scat, feeding sign, bedding, water-edge disturbance, disturbed vegetation, alarm calls, and home-use sign. Continuous trail reconstruction and richer terrain/weather interpretation remain future work.
+- Stalk and Crouch are implemented and share the settlement stealth intent; crawling/prone remains future work.
 
 ## Next starting point
 
