@@ -28,9 +28,11 @@ class FamilySystem:
             "traditional":"family continuity","kind":"close relationships","cautious":"security",
             "brave":"respect","patient":"stable work","suspicious":"trusted allies","stoic":"self reliance",
         }
-        for npc in residents:
+        for order,npc in enumerate(residents):
             if not npc.lineage_uid:
-                idx=int(hash_u64(self.seed,"lineage",town.uid,npc.uid)%lineage_count)
+                # Age-sorted round-robin keeps lineages deterministic while
+                # ensuring represented generations can actually share ancestry.
+                idx=order%lineage_count
                 npc.lineage_uid=f"lineage:{town.uid}:{idx}"
             if not npc.family_uid:npc.family_uid=npc.lineage_uid+":household"
             if not npc.backstory:
