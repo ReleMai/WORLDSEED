@@ -649,17 +649,156 @@ Phase-6 regression coverage verifies:
 - committed charges bypassing that grace;
 - Combat Action Hub exposure without new global bindings.
 
+## Phase 7 — stalking, animal needs, evidence, dens, anatomy, and basic combat animation
+
+### Stalking / concealment
+
+The player now has an explicit **Stalk** stance under the Survival Action Hub.
+
+Stalking:
+- doubles movement time instead of providing free silent speed;
+- costs a small amount of stamina while moving on dry ground;
+- lowers movement noise according to Hunting/Survival, Agility, and local cover;
+- retains equipment noise from heavy/readied gear, with extra noise for metal equipment;
+- benefits from real rain/wind masking;
+- reduces visual detection in cover;
+- does **not** suppress scent. Existing wind-aware animal scent remains authoritative, and entering Stalk reports current wind direction to help plan a downwind approach;
+- is broken by swimming.
+
+Animal perception now accounts for feeding/drinking/resting distraction, player concealment, weather visibility, hearing, and wind-aware scent rather than turning Stalk into invisibility.
+
+### Animal needs and distractions
+
+Materialized animals now accumulate hunger and thirst from elapsed game time. Calm animals can choose bounded deterministic needs/activities:
+
+- travel to and drink from real nearby water;
+- travel to and feed at real edible wild-resource features;
+- carnivores/omnivores can investigate real carcasses and edible ground piles;
+- travel to their den/bed/nest to rest;
+- opportunistically feed/drink/rest according to species activity profiles.
+
+Feeding, drinking, and resting make animals measurably less attentive, creating actual stalking windows. Perception or attack cancels the distraction immediately.
+
+Herbivores consuming a real forage feature write to the same resource-depletion authority used by player harvesting; ResourceSystem still owns regrowth.
+
+### Dens, beds, nests, wallows, lodges, holts, and cave refuges
+
+Species now have a data-driven den type. The first authored set includes burrows, bedding sites, nests, dens, wallows, beaver lodges, otter holts, and cave refuges.
+
+Dens:
+- are created only for real materialized animals;
+- derive stable deterministic identity from species + individual/cohort ownership;
+- use local terrain, cover, water, and cave context to choose a legal site;
+- are persistent save state;
+- are bounded to 320 entries, pruning only old unreferenced dens;
+- are visible evidence only when the cell is currently visible;
+- receive wounded-animal retreat pressure;
+- track last use.
+
+Applicable carnivores/omnivores can move an **existing** edible ground-pile item to their den. The item is removed from the source pile, carried by the animal, deposited into `stored_items`, and can later be physically recovered by the player. No decorative den loot is invented.
+
+### Hunting evidence
+
+Animal evidence is produced by real movement/activity, not decorative random placement.
+
+Evidence now includes:
+- tracks;
+- blood trails;
+- disturbed vegetation / ground;
+- feeding sign;
+- drinking sign;
+- bedding depressions;
+- scat;
+- short-lived alarm/contact-call evidence;
+- persistent dens/nests/beds as a separate physical layer.
+
+Each evidence class has its own bounded lifetime. The existing global sign collection remains capped at 1,200 records. Hunting/Survival changes the detail and species confidence shown to the player.
+
+### Expanded animal anatomy
+
+Species definitions now contain a detailed anatomy map layered over species-specific body regions.
+
+Baseline named organs:
+- brain;
+- heart;
+- lungs;
+- liver;
+- kidneys;
+- stomach;
+- intestines.
+
+Each anatomy element carries:
+- body region;
+- organ/part type;
+- mass ratio;
+- vitality;
+- bleeding potential;
+- hit weighting;
+- harvest class;
+- rarity/readability metadata.
+
+Species-specific exterior parts include deer/elk/moose antlers, boar tusks, mountain-goat horns, and bird feathers. Bird feathers recover to the existing `core:feather` item; antlers/horns/tusks currently recover through the existing bone material family.
+
+Body maps are no longer the old universal `torso/head/legs` template. Quadrupeds, rabbits/hares, birds, seals, and other authored groups expose more appropriate neck/forelimb/hindlimb/wing/flipper regions.
+
+Deep combat wounds can now strike named organs or specialized skeletal parts. Organ vitality and bleeding modify injury consequences, and catastrophic destruction of a critical organ can be lethal.
+
+On death, the carcass stores:
+- exact anatomy condition;
+- mass in grams derived from species body mass × anatomy ratio;
+- harvest status.
+
+Therefore the same organ has materially different size/value potential in a rabbit, deer, elk, or moose, while shot placement can ruin a valuable organ before harvest.
+
+### Anatomy harvesting
+
+Carcass processing has a dedicated **Harvest organs / specialized parts** step.
+
+Yield depends on:
+- stored anatomy mass;
+- anatomy condition after combat;
+- carcass freshness/quality;
+- Hunting skill;
+- cutting/butchering tool quality;
+- butcher-table bonus.
+
+Named anatomy is converted to existing physical inventory materials (offal, bone, sinew, feather) rather than inventing uncatalogued item assets. Detailed anatomy disables duplicate generic-offal yield from the normal butcher action.
+
+### Basic combat animations
+
+A small read-only presentation animation layer now covers:
+- ranged projectile travel;
+- melee swing/impact;
+- shield-bash impact.
+
+Animation frames use the already-computed projectile/melee geometry and wall-clock delay only for visual phase. They do not roll RNG, advance simulation time, realize world content, or mutate combat state.
+
+Visible hunting evidence/dens also render on the local map, and the wide HUD reports the player's current stance.
+
+### Phase-7 validation contract
+
+Regression coverage verifies:
+- Stalk lowers noise/visual detection while scent remains a separate channel;
+- drinking, feeding, resting, and their evidence;
+- real forage depletion and regrowth-authority handoff;
+- stable den identity + save roundtrip;
+- predator cache conservation (real source item -> carried item -> den);
+- anatomy size scaling across species;
+- organ damage persistence into carcass condition;
+- expanded body regions and specialized parts;
+- anatomy-processing yield through existing inventory items;
+- bounded presentation-only combat animation frames;
+- Stalk remaining an Action-Hub verb rather than a global key.
+
 ## Known gaps / next coherent phase
 
 The next pass should extend tactical depth without replacing the phase-1/2 contracts.
 
-1. **Stealth and stalking**
-   - crouch/stalk stance;
-   - slower/quiet movement;
-   - vegetation/terrain concealment;
-   - equipment noise;
-   - weather masking;
-   - wind-readable scent approach.
+1. **Stealth depth beyond phase 7**
+   - explicit crouch/prone postures distinct from the Stalk travel stance;
+   - line-of-sight posture exposure and silhouette against open terrain;
+   - persistent scent trail / scent age rather than only current-position wind scent;
+   - richer investigation of uncertain sound/scent locations before full identification.
 
 2. **Projectile depth beyond the phase-3 foundation**
    - target-cell posture/cover exposure;
@@ -680,13 +819,12 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - grappling / clinch behavior for appropriate actors;
    - richer knockback outcomes such as prone, wall pinning, and downhill momentum.
 
-5. **Expanded sign**
-   - scat;
-   - beds;
-   - feeding sign;
-   - disturbed vegetation;
-   - calls;
-   - dens/nests.
+5. **Evidence depth beyond phase 7**
+   - terrain-specific print morphology / stride interpretation;
+   - overlapping track-chain association;
+   - scent evidence;
+   - den occupancy/young indicators;
+   - weather-specific evidence degradation beyond fixed class TTLs.
 
 6. **Traps and snares**
    - persistent placement;
@@ -709,10 +847,11 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
 ## Important caveats
 
 - Weapon readiness currently references carried stack items; dedicated per-item weapon instances/condition are still future work outside existing durable-artifact handling.
-- Aiming has four broad anatomical zones rather than species-specific named organs.
-- Only track and blood physical signs are implemented.
-- No crouch/stalk stance exists yet.
+- Aiming still exposes four broad player-facing zones; named organs are resolved beneath those zones rather than individually selected in the aim UI.
+- Dens are local materialized-animal state, not yet a distant ecology nesting/young authority.
+- Animal feeding consumes real wild forage, while carcass feeding does not yet subtract specific carcass mass.
+- Combat animations are intentionally basic presentation frames, not a full sprite-animation/state-machine system.
 
 ## Next starting point
 
-Start with stealth/stalking + projectile flight/cover + active melee defense. Those three systems will make the existing readiness, aim, anatomy, animal perception and weapon classes interact as one coherent combat loop.
+The next coherent hunting pass should build traps/snares and meaningful Hunting progression on top of phase-7 evidence, then deepen uncertain-sound/scent investigation and predator-prey combat between non-player animals.
