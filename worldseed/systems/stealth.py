@@ -75,6 +75,12 @@ class StealthSystem:
             blocked = None if opaque_cache is None else opaque_cache.get(key)
             if blocked is None:
                 tile = self.world.tile_at(cell)
+                physical_door=self.physicalization.door_at(cell)
+                door_state=(
+                    self.state.door_security.get(physical_door.structure_piece_uid)
+                    if physical_door is not None and physical_door.structure_piece_uid
+                    else None
+                )
                 blocked = bool(
                     tile.terrain.blocks_sight
                     or (
@@ -82,6 +88,7 @@ class StealthSystem:
                         and not self.physicalization.clears_natural_feature(cell)
                     )
                     or self.building.blocks_sight(cell)
+                    or bool(door_state and door_state.locked and not door_state.forced)
                 )
                 if opaque_cache is not None:
                     opaque_cache[key] = blocked
