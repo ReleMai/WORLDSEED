@@ -264,9 +264,9 @@ class RC14HydrologyTests(unittest.TestCase):
             db.store_generated_route_plan('r1', ROUTEGEN_VERSION, {'uid':'r1','corridor':[[0,0],[1,0]]})
             db.store_physical_plan_delta('structure:abc', 'structure', 3, {'condition':42,'destroyed':False})
             db.commit_generated()
-            self.assertEqual(db.load_generated_regional_plan(1,-2,1)['settlements'], ['s1'])
-            self.assertEqual(db.load_generated_settlement_plan('s1',1)['anchor'], [5,7])
-            self.assertEqual(db.load_generated_route_plan('r1',1)['corridor'][-1], [1,0])
+            self.assertEqual(db.load_generated_regional_plan(1,-2,SETTLEMENT_PLAN_VERSION)['settlements'], ['s1'])
+            self.assertEqual(db.load_generated_settlement_plan('s1',SETTLEMENT_PLAN_VERSION)['anchor'], [5,7])
+            self.assertEqual(db.load_generated_route_plan('r1',ROUTEGEN_VERSION)['corridor'][-1], [1,0])
             self.assertEqual(db.load_physical_plan_delta('structure:abc')['payload']['condition'], 42)
             db.close()
 

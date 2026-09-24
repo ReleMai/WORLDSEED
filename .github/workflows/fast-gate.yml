@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/fast-gate.yml"
       - ".github/workflows/test-build.yml"
+      - ".github/workflows/package-test-build.yml"
       - "worldseed/**"
       - "tests/**"
       - "tools/**"
@@ -22,6 +23,7 @@ on:
     paths:
       - ".github/workflows/fast-gate.yml"
       - ".github/workflows/test-build.yml"
+      - ".github/workflows/package-test-build.yml"
       - "worldseed/**"
       - "tests/**"
       - "tools/**"

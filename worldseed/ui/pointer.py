@@ -46,6 +46,16 @@ class PointerUI:
             state=getattr(self,'_floating_panels',{}).get(panel_id)
             if state:
                 w,h=state.get('w',w),state.get('h',h)
+            elif hasattr(self,'_floating_panel_minimum'):
+                # Pagination is computed before the first panel render. Mirror
+                # the renderer's default floating-panel geometry so the caller
+                # never hands the panel more rows than it can actually expose.
+                sw,sh=w,h
+                min_w,min_h=self._floating_panel_minimum(panel_id)
+                target_w=1080 if panel_id in ('container_inventory','crafting') else 900
+                target_h=680 if panel_id in ('container_inventory','crafting') else 620
+                w=max(min_w,min(sw-16,min(sw-48,target_w)))
+                h=max(min_h,min(sh-16,min(sh-48,target_h)))
         usable=max(80,h-245)
         if presentation=='container_inventory':
             return max(4,2*max(2,usable//105))
