@@ -12,7 +12,7 @@ from worldseed.persistence.database import WorldDatabase
 from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState
 from worldseed.ui.layout import compute_layout, screen_width, regional_grid
-from worldseed.ui.navigation import WORLD_CONSOLE_ROOT, ACTION_COMBAT
+from worldseed.ui.navigation import WORLD_CONSOLE_ROOT, ACTION_COMBAT, ACTION_SURVIVAL
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.router import classify_key, DIRECT_MENUS
 from worldseed.ui.screens import help_screen
@@ -95,6 +95,11 @@ class UIRC2Tests(unittest.TestCase):
         # These are Action Hub verbs, not global movement/router bindings.
         for key in ("dodge","parry","guard","brace","bash","disengage"):
             self.assertNotIn(key,DIRECT_MENUS)
+
+    def test_stalking_is_action_hub_only(self):
+        keys={key for key,_ in ACTION_SURVIVAL}
+        self.assertIn("stalk",keys)
+        self.assertNotIn("stalk",DIRECT_MENUS)
 
     def test_primary_navigation_is_small_and_hierarchical(self):
         self.assertLessEqual(len(WORLD_CONSOLE_ROOT),9)
