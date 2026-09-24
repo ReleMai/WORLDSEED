@@ -113,6 +113,22 @@ class StealMarketCommand:
 class ToggleStealthCommand:
     actor:int
     enabled: bool | None = None
+
+@dataclass(frozen=True,slots=True)
+class StartCasingCommand:
+    actor:int
+    property_id:str
+
+@dataclass(frozen=True,slots=True)
+class StopCasingCommand:
+    actor:int
+
+@dataclass(frozen=True,slots=True)
+class StealContainerCommand:
+    actor:int
+    container_uid:str
+    item_id:str
+    amount:int=1
 @dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 
