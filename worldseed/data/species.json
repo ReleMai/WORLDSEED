@@ -54,7 +54,13 @@
     "trackability": 35,
     "herd_response": 35,
     "combat_style": "prey",
-    "herd_cohesion": 30
+    "herd_cohesion": 30,
+    "den_type": "burrow",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
+    }
   },
   {
     "id": "core:snowshoe_hare",
@@ -100,6 +106,12 @@
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
     }
   },
   {
@@ -165,7 +177,25 @@
     "trackability": 82,
     "herd_response": 85,
     "combat_style": "herd_prey",
-    "herd_cohesion": 88
+    "herd_cohesion": 88,
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
+    },
+    "anatomy": {
+      "antlers": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 7,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 3,
+        "harvest": "bone",
+        "rarity": 82
+      }
+    }
   },
   {
     "id": "core:elk",
@@ -233,7 +263,25 @@
     "herd_cohesion": 94,
     "charge_range": 4,
     "charge_power": 62,
-    "display_range": 3
+    "display_range": 3,
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
+    },
+    "anatomy": {
+      "antlers": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 14,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 5,
+        "harvest": "bone",
+        "rarity": 74
+      }
+    }
   },
   {
     "id": "core:moose",
@@ -301,7 +349,25 @@
     "herd_cohesion": 20,
     "charge_range": 5,
     "charge_power": 96,
-    "display_range": 4
+    "display_range": 4,
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
+    },
+    "anatomy": {
+      "antlers": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 24,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 7,
+        "harvest": "bone",
+        "rarity": 68
+      }
+    }
   },
   {
     "id": "core:boar",
@@ -370,7 +436,25 @@
     "charge_range": 5,
     "charge_power": 76,
     "display_range": 2,
-    "herd_cohesion": 55
+    "herd_cohesion": 55,
+    "den_type": "wallow",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 42
+    },
+    "anatomy": {
+      "tusks": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 3,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 4,
+        "harvest": "bone",
+        "rarity": 76
+      }
+    }
   },
   {
     "id": "core:turkey",
@@ -416,6 +500,24 @@
       "core:raw_poultry": 2,
       "core:feather": 4,
       "core:bone": 1
+    },
+    "den_type": "nest",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 50
+    },
+    "anatomy": {
+      "feathers": {
+        "kind": "part",
+        "region": "torso",
+        "ratio_permille": 12,
+        "vitality": 0,
+        "bleed": 0,
+        "hit_weight": 2,
+        "harvest": "none",
+        "rarity": 45
+      }
     }
   },
   {
@@ -461,6 +563,24 @@
     "carcass": {
       "core:raw_poultry": 1,
       "core:feather": 2
+    },
+    "den_type": "nest",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 50
+    },
+    "anatomy": {
+      "feathers": {
+        "kind": "part",
+        "region": "torso",
+        "ratio_permille": 12,
+        "vitality": 0,
+        "bleed": 0,
+        "hit_weight": 2,
+        "harvest": "none",
+        "rarity": 45
+      }
     }
   },
   {
@@ -515,6 +635,24 @@
       "core:fresh_hide": 2,
       "core:bone": 2,
       "core:sinew": 2
+    },
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
+    },
+    "anatomy": {
+      "horns": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 6,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 4,
+        "harvest": "bone",
+        "rarity": 78
+      }
     }
   },
   {
@@ -562,6 +700,12 @@
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "den_type": "den",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 56
     }
   },
   {
@@ -631,7 +775,13 @@
     "herd_cohesion": 86,
     "charge_range": 0,
     "charge_power": 0,
-    "display_range": 0
+    "display_range": 0,
+    "den_type": "den",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 56
+    }
   },
   {
     "id": "core:brown_bear",
@@ -699,7 +849,13 @@
     "herd_cohesion": 0,
     "charge_range": 4,
     "charge_power": 100,
-    "display_range": 4
+    "display_range": 4,
+    "den_type": "den",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 42
+    }
   },
   {
     "id": "core:badger",
@@ -754,6 +910,12 @@
       "core:fresh_hide": 1,
       "core:bone": 1,
       "core:animal_fat": 1
+    },
+    "den_type": "burrow",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 56
     }
   },
   {
@@ -805,6 +967,12 @@
     "carcass": {
       "core:raw_small_game": 2,
       "core:bone": 1
+    },
+    "den_type": "cave",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 42
     }
   },
   {
@@ -850,6 +1018,12 @@
       "core:raw_game_meat": 4,
       "core:fresh_hide": 1,
       "core:bone": 2
+    },
+    "den_type": "cave",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
     }
   },
   {
@@ -903,6 +1077,12 @@
       "core:fresh_hide": 2,
       "core:bone": 2,
       "core:sinew": 1
+    },
+    "den_type": "cave",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 56
     }
   },
   {
@@ -970,7 +1150,25 @@
     "herd_cohesion": 52,
     "charge_range": 4,
     "charge_power": 82,
-    "display_range": 2
+    "display_range": 2,
+    "den_type": "wallow",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 42
+    },
+    "anatomy": {
+      "tusks": {
+        "kind": "part",
+        "region": "head",
+        "ratio_permille": 4,
+        "vitality": 0,
+        "bleed": 4,
+        "hit_weight": 4,
+        "harvest": "bone",
+        "rarity": 72
+      }
+    }
   },
   {
     "id": "core:muskrat",
@@ -1016,6 +1214,12 @@
     "carcass": {
       "core:raw_small_game": 1,
       "core:fresh_hide": 1
+    },
+    "den_type": "burrow",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
     }
   },
   {
@@ -1065,6 +1269,12 @@
       "core:fresh_hide": 2,
       "core:bone": 1,
       "core:animal_fat": 1
+    },
+    "den_type": "lodge",
+    "activity_profile": {
+      "feed": 78,
+      "drink": 52,
+      "rest": 38
     }
   },
   {
@@ -1114,6 +1324,12 @@
       "core:raw_small_game": 2,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "den_type": "holt",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 48
     }
   },
   {
@@ -1163,6 +1379,24 @@
       "core:raw_poultry": 1,
       "core:feather": 3,
       "core:bone": 1
+    },
+    "den_type": "nest",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 50
+    },
+    "anatomy": {
+      "feathers": {
+        "kind": "part",
+        "region": "torso",
+        "ratio_permille": 12,
+        "vitality": 0,
+        "bleed": 0,
+        "hit_weight": 2,
+        "harvest": "none",
+        "rarity": 45
+      }
     }
   },
   {
@@ -1210,6 +1444,24 @@
     "carcass": {
       "core:raw_poultry": 1,
       "core:feather": 2
+    },
+    "den_type": "nest",
+    "activity_profile": {
+      "feed": 66,
+      "drink": 48,
+      "rest": 50
+    },
+    "anatomy": {
+      "feathers": {
+        "kind": "part",
+        "region": "torso",
+        "ratio_permille": 12,
+        "vitality": 0,
+        "bleed": 0,
+        "hit_weight": 2,
+        "harvest": "none",
+        "rarity": 45
+      }
     }
   },
   {
@@ -1258,6 +1510,12 @@
       "core:fresh_hide": 2,
       "core:animal_fat": 3,
       "core:bone": 2
+    },
+    "den_type": "bed",
+    "activity_profile": {
+      "feed": 52,
+      "drink": 46,
+      "rest": 48
     }
   }
 ]
