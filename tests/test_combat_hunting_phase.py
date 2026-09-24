@@ -273,6 +273,8 @@ class CombatHuntingPhaseTests(unittest.TestCase):
             "c", "core:deer", 4, 5, 0, 20,
             behavior="wounded_flee", alertness=90, stamina=44,
             threat_x=0, threat_y=0, threat_z=0, last_threat_turn=9,
+            charge_committed_until_turn=12, charge_momentum=2, pack_role="flank_left",
+            panic=71, last_display_turn=8, last_attacked_turn=9,
         )
         state.animal_signs["s"] = AnimalSignState(
             "s", "core:deer", 4, 5, 0, "blood", 500,
@@ -281,6 +283,10 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         restored = LivingWorldState.from_dict(state.to_dict())
         self.assertEqual(restored.creatures["c"].behavior, "wounded_flee")
         self.assertEqual(restored.creatures["c"].threat_x, 0)
+        self.assertEqual(restored.creatures["c"].charge_momentum,2)
+        self.assertEqual(restored.creatures["c"].pack_role,"flank_left")
+        self.assertEqual(restored.creatures["c"].panic,71)
+        self.assertEqual(restored.creatures["c"].last_attacked_turn,9)
         self.assertEqual(restored.animal_signs["s"].kind, "blood")
         self.assertEqual(restored.animal_signs["s"].source_uid, "c")
 
