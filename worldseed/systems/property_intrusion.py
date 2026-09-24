@@ -71,11 +71,18 @@ class PropertyStorageSystem:
             for p in skeleton.pieces
             if p.structure_plan_id==structure.uid and p.role=="fixture"
         }
+        occupied_npcs={
+            (int(n.x),int(n.y))
+            for n in self.state.npcs.values()
+            if n.alive and int(n.z)==0
+        }
         entrance=structure.entrance
         candidates=[]
         for x,y in room.cells:
             x=int(x);y=int(y)
-            if (x,y) in fixture_cells:
+            if (x,y) in fixture_cells or (x,y) in occupied_npcs:
+                continue
+            if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
                 continue
             p=WorldPos(x,y,0)
             if not self.physicalization.passable(p,True):
