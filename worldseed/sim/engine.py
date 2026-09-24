@@ -35,6 +35,7 @@ from worldseed.systems.disasters import DisasterSystem
 from worldseed.systems.settlements import SettlementLifecycleSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
+from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.legends import LegendSystem
 from worldseed.systems.metallurgy import MetallurgySystem
 from worldseed.systems.dungeons import DungeonSystem
@@ -128,7 +129,13 @@ class Simulation:
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner
         )
+        self.settlement_population=SettlementPopulationBinder(
+            self.state,registry,self.seed,self.settlement_physicalization
+        )
         self.building.attach_settlement_physicalization(self.settlement_physicalization)
+        self.npcs.attach_settlement_population(
+            self.settlement_physicalization,self.settlement_population
+        )
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
         # to crossing the corresponding spatial boundary, not to every one-cell
@@ -456,6 +463,7 @@ class Simulation:
             self.settlement_physicalization.sync(
                 self.state.settlements.values(),(rx,ry),radius=0
             )
+            self.settlement_population.bind_active(self.state.settlements.values())
             for settlement in self.state.settlements.values():
                 if abs(settlement.region_x-rx)<=1 and abs(settlement.region_y-ry)<=1:
                     self.civics.ensure_settlement(settlement.uid)
