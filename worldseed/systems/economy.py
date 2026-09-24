@@ -5,7 +5,7 @@ from collections import defaultdict
 from worldseed.content.registry import ContentRegistry, SettlementProcessDef
 from worldseed.core.rng import hash_u64
 from worldseed.systems.history import HistorySystem
-from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, TradeRouteState
+from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, TradeRouteState, TheftRecordState
 from worldseed.systems.pathfinding import HierarchicalPathfinder
 
 BASE_PRICE = {
@@ -46,8 +46,20 @@ class EconomySystem:
         scarcity = max(25, min(400, (target * 100) // max(1, stock)))
         return max(1, (base * scarcity) // 100)
 
+    def ensure_currency(self, settlement) -> None:
+        if settlement.currency_id:
+            return
+        culture=self.state.cultures.get(settlement.culture_id)
+        faction=self.state.factions.get(settlement.faction_id)
+        root=(culture.name.split()[0] if culture and culture.name else "Local")
+        settlement.currency_id=f"currency:{settlement.faction_id}"
+        settlement.currency_name=f"{root} Mark"
+        settlement.currency_value=80+int(hash_u64(self.seed,"currency-value",settlement.faction_id)%41)
+        settlement.barter_enabled=True
+
     def update_prices(self) -> None:
         for s in self.state.settlements.values():
+            self.ensure_currency(s)
             goods = set(BASE_PRICE) | set(s.stocks)
             s.prices = {g: self._price(g, s.stocks.get(g, 0)) for g in goods}
 
@@ -340,3 +352,48 @@ class EconomySystem:
         s = self.state.settlements[settlement_id]
         p = s.prices.get(item_id, self._price(item_id, s.stocks.get(item_id, 0)))
         return max(1, (p * 115)//100 if buy else (p * 85)//100)
+
+
+    def currency_quote(self, settlement_id: str, copper_value: int) -> tuple[str,int]:
+        town=self.state.settlements[settlement_id];self.ensure_currency(town)
+        units=max(1,(max(0,int(copper_value))*100 + town.currency_value-1)//max(1,town.currency_value))
+        return town.currency_name,units
+
+    def barter_value(self, settlement_id: str, goods: dict[str,int], *, offered: bool) -> int:
+        town=self.state.settlements[settlement_id]
+        total=0
+        for item_id,qty in goods.items():
+            if qty<=0:continue
+            total += self.trade_price(settlement_id,item_id,buy=not offered)*int(qty)
+        return total
+
+    def barter_balance(self, settlement_id: str, offered: dict[str,int], requested: dict[str,int]) -> int:
+        return self.barter_value(settlement_id,offered,offered=True)-self.barter_value(settlement_id,requested,offered=False)
+
+    def record_theft(self, settlement_id: str, thief_uid: str, victim_uid: str, item_id: str, quantity: int, minute: int, *, witnessed: bool) -> TheftRecordState:
+        qty=max(1,int(quantity))
+        value=max(1,self.trade_price(settlement_id,item_id,buy=True)*qty)
+        uid=self.state.uid("theft")
+        row=TheftRecordState(uid,settlement_id,thief_uid,victim_uid,item_id,qty,value,int(minute),bool(witnessed),False)
+        self.state.theft_records[uid]=row
+        thief=self.state.npcs.get(thief_uid);victim=self.state.npcs.get(victim_uid)
+        if thief is not None:
+            thief.memories.append({"minute":int(minute),"type":"theft","subject":victim_uid or settlement_id,"salience":20,"valence":-10})
+            thief.memories=thief.memories[-40:]
+        if witnessed and victim is not None:
+            rel=victim.relationships.setdefault(thief_uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0})
+            rel["trust"]=max(-100,rel["trust"]-25);rel["affection"]=max(-100,rel["affection"]-12)
+            rel["familiarity"]=min(100,rel["familiarity"]+8)
+        return row
+
+    def npc_steal_food(self, npc, town, minute: int) -> bool:
+        foods=[iid for iid in ("core:wheat","core:turnip","core:meat") if town.stocks.get(iid,0)>0]
+        if not foods:return False
+        item=min(foods,key=lambda iid:(self.trade_price(town.uid,iid,buy=True),iid))
+        town.stocks[item]-=1
+        guards=sum(1 for n in self.state.npcs.values() if n.alive and n.settlement_id==town.uid and n.occupation=="guard")
+        witnessed=(hash_u64(self.seed,"npc-theft-witness",npc.uid,minute//60)%100)<min(90,20+guards*18)
+        self.record_theft(town.uid,npc.uid,town.uid,item,1,minute,witnessed=witnessed)
+        npc.hunger=max(0,npc.hunger-40)
+        npc.needs["safety"]=min(100,npc.needs.get("safety",0)+(35 if witnessed else 10))
+        return True
