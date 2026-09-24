@@ -235,6 +235,28 @@ class CombatSystem:
         zone_penalty={"center":0,"vitals":11,"head":24,"legs":10}[zone]
         return max(5,min(97,35+perception*4+hunting*3+weapon.accuracy+aim_quality//3-range_penalty-motion_penalty-zone_penalty-fatigue-self.arm_injury_penalty()//2))
 
+    def _injure_anatomy(self,creature:CreatureState,sp,part:str,tissue:str,damage:int,rng:PCG32)->tuple[str,int,int]:
+        kind="organ" if tissue=="organ" else "part" if tissue=="bone" else ""
+        if not kind:return "",0,0
+        candidates=[]
+        for name,meta in sp.anatomy.items():
+            if str(meta.get("kind","organ"))!=kind or str(meta.get("region","torso"))!=part:continue
+            candidates.append((name,meta,max(1,int(meta.get("hit_weight",1)))))
+        if not candidates:return "",0,0
+        total=sum(w for _,_,w in candidates);roll=rng.randbelow(total);name,meta,_=candidates[0]
+        for n,m,w in candidates:
+            if roll<w:name,meta=n,m;break
+            roll-=w
+        vitality=max(0,min(100,int(meta.get("vitality",0))));bleed=max(0,min(100,int(meta.get("bleed",0))))
+        relative=max(4,damage*100//max(1,sp.max_hp))
+        injury=max(4,min(100,relative*(100+vitality)//100))
+        creature.organ_damage[name]=min(100,int(creature.organ_damage.get(name,0))+injury)
+        extra=max(0,damage*vitality//180) if kind=="organ" else 0
+        extra_bleed=max(0,damage*bleed//100)
+        if vitality>=95 and creature.organ_damage[name]>=90:
+            creature.hp=0
+        return name,extra,extra_bleed
+
     def attack_creature(self,creature:CreatureState,inv:Inventory,turn:int,distance:int=1,stamina:int=100,mode:str="standard")->str:
         sp=self.registry.species[creature.species_id];weapon=self.readied_weapon(inv)
         if weapon is not None and distance>weapon.reach:return f"The {sp.name.lower()} is beyond the reach of your {weapon.name.lower()}."
@@ -259,10 +281,12 @@ class CombatSystem:
         if penetration>8:tissue="muscle"
         if penetration>14:tissue="bone"
         if penetration>20 and part in ("head","neck","torso"):tissue="organ"
-        bleeding=max(0,damage//2+(4 if dtype in ("cut","pierce") else 0)+(2 if mode=="thrust" and dtype=="pierce" else 0))
+        anatomy_hit,extra_damage,extra_bleed=self._injure_anatomy(creature,sp,part,tissue,damage,rng)
+        if extra_damage:creature.hp-=extra_damage;damage+=extra_damage;severity=min(100,severity+extra_damage*4)
+        bleeding=max(0,damage//2+(4 if dtype in ("cut","pierce") else 0)+(2 if mode=="thrust" and dtype=="pierce" else 0)+extra_bleed)
         fracture=(tissue=="bone" and damage>=9) or (mode=="power" and dtype=="blunt" and damage>=8 and rng.randbelow(100)<35)
         creature.blood=max(0,creature.blood-bleeding);creature.pain=min(100,creature.pain+severity//3)
-        creature.wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id if weapon else "unarmed"})
+        creature.wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id if weapon else "unarmed","anatomy":anatomy_hit})
         if weapon is not None and self.artifact_system:
             worn=self.artifact_system.wear(weapon.id,"player",1+(1 if dtype=="blunt" else 0),turn,"combat use")
             if worn and worn.condition<=0:
@@ -271,7 +295,7 @@ class CombatSystem:
         if creature.hp<=0 or creature.blood<=0:
             self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
             return f"Your {mode} attack strikes the {sp.name.lower()}'s {part} for {damage}; it dies, leaving a carcass to process."
-        return f"Your {mode} attack strikes the {sp.name.lower()}'s {part} for {damage} {dtype} damage."
+        return f"Your {mode} attack strikes the {sp.name.lower()}'s {part}"+(f", injuring its {anatomy_hit.replace('_',' ')}" if anatomy_hit else "")+f" for {damage} {dtype} damage."
 
     def shield_bash(self,creature:CreatureState,turn:int,stamina:int=100)->str:
         shield=self.equipped_shield()
@@ -327,11 +351,13 @@ class CombatSystem:
         if penetration>13:tissue="bone"
         if penetration>19 and part in ("head","neck","torso"):tissue="organ"
         if tissue=="organ":damage=max(damage,damage*5//4)
-        bleeding=max(1,damage//3+(4 if dtype=="pierce" else 3 if dtype=="cut" else 0))
+        anatomy_hit,extra_damage,extra_bleed=self._injure_anatomy(creature,sp,part,tissue,damage,rng)
+        if extra_damage:damage+=extra_damage
+        bleeding=max(1,damage//3+(4 if dtype=="pierce" else 3 if dtype=="cut" else 0)+extra_bleed)
         if tissue=="organ":bleeding+=max(2,damage//3)
         fracture=tissue=="bone" and (damage>=7 or rng.randbelow(100)<25);severity=min(100,damage*6+max(0,penetration-6)*2)
         creature.hp-=damage;creature.blood=max(0,creature.blood-bleeding);creature.pain=min(100,creature.pain+max(2,severity//4))
-        creature.wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id,"aim_zone":zone,"aim_quality":aim_quality})
+        creature.wounds.append({"part":part,"tissue":tissue,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id,"aim_zone":zone,"aim_quality":aim_quality,"anatomy":anatomy_hit})
         creature.alertness=100
         if creature.hp<=0 or creature.blood<=0:
             self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
@@ -339,7 +365,7 @@ class CombatSystem:
             return f"Your {verb}{weapon.name.lower()} strikes the {sp.name.lower()}'s {part}; it drops, leaving a carcass."
         condition=" and fractures bone" if fracture else f" into {tissue}"
         verb="thrown " if weapon.throwable else ""
-        return f"Your {verb}{weapon.name.lower()} hits the {sp.name.lower()}'s {part}{condition} for {damage} {dtype} damage."
+        return f"Your {verb}{weapon.name.lower()} hits the {sp.name.lower()}'s {part}{condition}"+(f", injuring its {anatomy_hit.replace('_',' ')}" if anatomy_hit else "")+f" for {damage} {dtype} damage."
     @staticmethod
     def _player_part_group(part:str)->str:
         if part in ("head","neck"):return "head"
@@ -529,7 +555,12 @@ class CombatSystem:
         for row in c.embedded_projectiles:
             iid=str(row.get("item_id",""))
             if iid:embedded[iid]=embedded.get(iid,0)+1
-        self.state.carcasses[uid]=CarcassState(uid,c.species_id,c.x,c.y,c.z,self.state.clock_minute,quality,source_uid=c.uid,embedded_items=embedded)
+        anatomy_condition={};anatomy_mass={}
+        for name,meta in sp.anatomy.items():
+            ratio=max(1,int(meta.get("ratio_permille",1)))
+            anatomy_mass[name]=max(5,sp.mass_kg*ratio)
+            anatomy_condition[name]=max(0,100-int(c.organ_damage.get(name,0)))
+        self.state.carcasses[uid]=CarcassState(uid,c.species_id,c.x,c.y,c.z,self.state.clock_minute,quality,source_uid=c.uid,embedded_items=embedded,anatomy_condition=anatomy_condition,anatomy_mass_g=anatomy_mass)
 
     def _drop(self,c:CreatureState,drops:dict[str,int])->None:
         key=pos_key(c.x,c.y,c.z);pile=self.state.ground_piles.get(key)
