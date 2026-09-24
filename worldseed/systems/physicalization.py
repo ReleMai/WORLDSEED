@@ -238,6 +238,24 @@ class SettlementPhysicalizationSystem:
             return WorldPos(int(x),int(y),0)
         return None
 
+    def destination_for_function(self, settlement_id: str, functions) -> WorldPos | None:
+        skeleton=self._skeletons.get(str(settlement_id))
+        if skeleton is None:return None
+        wanted=tuple(functions) if not isinstance(functions,str) else (functions,)
+        candidates=sorted(
+            (s for s in skeleton.structures if not s.destroyed and s.function in wanted),
+            key=lambda s:(wanted.index(s.function),s.uid),
+        )
+        for structure in candidates:
+            rooms=sorted(
+                (r for r in skeleton.rooms if r.structure_plan_id==structure.uid),
+                key=lambda r:(r.kind,r.uid),
+            )
+            target=self.destination_for(structure.uid,rooms[0].uid if rooms else "")
+            if target is not None:return target
+        return None
+
+
     def cell_at(self, pos: WorldPos) -> PhysicalizedSettlementCell | None:
         if pos.z != 0:
             return None
