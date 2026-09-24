@@ -1381,6 +1381,36 @@ class Simulation:
         self.economy.update_prices();self._message(f"You sell {cmd.amount} {self.registry.items[cmd.item_id].name} for {price}c.")
 
 
+    def _barter(self,cmd:BarterCommand)->None:
+        town=self.state.settlements.get(cmd.settlement_id);inv=self.entities.get(cmd.actor,Inventory)
+        if not town or abs(town.x-self.player_pos.x)+abs(town.y-self.player_pos.y)>25:
+            self._message("You are not close enough to that market.");return
+        if not town.barter_enabled:
+            self._message("This market is not accepting barter.");return
+        offered=max(1,int(cmd.offered_amount));requested=max(1,int(cmd.requested_amount))
+        if cmd.offered_item==cmd.requested_item:
+            self._message("A barter needs different offered and requested goods.");return
+        if inv.count(cmd.offered_item)<offered:
+            self._message("You do not have the offered quantity.");return
+        if town.stocks.get(cmd.requested_item,0)<requested:
+            self._message("The market cannot supply the requested quantity.");return
+        offer={cmd.offered_item:offered};request={cmd.requested_item:requested}
+        balance=self.player_barter_balance(town.uid,offer,request)
+        if balance<0:
+            self._message(f"The offer is short by {-balance}c of local market value.");return
+        inv.remove(cmd.offered_item,offered);inv.add(cmd.requested_item,requested)
+        town.stocks[cmd.offered_item]=town.stocks.get(cmd.offered_item,0)+offered
+        town.stocks[cmd.requested_item]-=requested
+        value=self.player_barter_value(town.uid,request,False)
+        self.economy.record_transaction(
+            town.uid,"player_barter","player",town.uid,copper_value=value,
+            minute=self.clock.minute,offered=offer,requested=request,
+        )
+        self.economy.update_prices()
+        offered_name=self.registry.items[cmd.offered_item].name
+        requested_name=self.registry.items[cmd.requested_item].name
+        self._message(f"You barter {offered} {offered_name} for {requested} {requested_name}.")
+
     def _magic_reveal(self,effects:dict)->None:
         p=self.player_pos;r=8+effects.get("potency",1)*4;keys=set()
         for y in range(p.y-r,p.y+r+1):
