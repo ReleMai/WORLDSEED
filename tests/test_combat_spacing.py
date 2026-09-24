@@ -83,11 +83,11 @@ class CombatSpacingTests(unittest.TestCase):
         self.assertEqual(sim.state.player_disengage_turn,11)
         self.assertIn("disengage",sim.log[-1].message.lower())
 
-    def test_disengage_rejects_sideways_or_blocked_retreat(self):
+    def test_disengage_rejects_toward_threat_or_blocked_retreat(self):
         sim=self.make_sim(blocked={(-1,0,0)})
         wolf=CreatureState("wolf","core:wolf",1,0,0,self.reg.species["core:wolf"].max_hp)
         sim.state.creatures[wolf.uid]=wolf
-        sim._disengage(DisengageCommand(1,0,1))
+        sim._disengage(DisengageCommand(1,1,0))
         self.assertEqual(sim.player_pos,WorldPos(0,0,0))
         self.assertIn("create space",sim.log[-1].message.lower())
         sim._disengage(DisengageCommand(1,-1,0))
