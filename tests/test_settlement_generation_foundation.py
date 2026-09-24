@@ -2,7 +2,11 @@ import unittest
 
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
-from worldseed.systems.settlement_planner import analyze_building, settlement_piece_groups
+from worldseed.systems.settlement_planner import (
+    SettlementSkeletonPlanner,
+    analyze_building,
+    settlement_piece_groups,
+)
 from worldseed.world.regional_plan import (
     LandUseParcel,
     RoadSegmentPlan,
@@ -10,6 +14,8 @@ from worldseed.world.regional_plan import (
     StructurePlanState,
 )
 from worldseed.world.settlement_atlas import build_settlement_atlas
+from worldseed.world.region_blocks import RegionBlockPlan, RegionRoadExit
+from types import SimpleNamespace
 
 
 class SettlementGenerationFoundationTests(unittest.TestCase):
@@ -98,6 +104,91 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             plan, roads=[road], parcels=[parcel], structures=[structure], rooms=[room], margin=2
         )
         self.assertEqual(rebuilt.fingerprint, atlas.fingerprint)
+
+
+    def test_terrain_aware_skeleton_generates_roads_common_and_land_use(self):
+        class Cache:
+            def __init__(self): self.rows={}
+            def load_generated_settlement_plan(self,uid,version): return self.rows.get((uid,version))
+            def store_generated_settlement_plan(self,uid,version,payload): self.rows[(uid,version)]=payload
+            def commit_generated(self): pass
+
+        class Env:
+            def __init__(self,x,y):
+                # A steep/wet vertical barrier has one usable pass at y=100.
+                blocked = 96 <= x <= 99 and not 97 <= y <= 103
+                self.open_water = False
+                self.slope = 92 if blocked else 8 + abs((y % 11)-5)
+                self.flood_risk = 90 if blocked else 8
+                self.wetness = 45
+                self.soil_fertility = 82 if x < 100 else 45
+                self.farmland = 88 if x < 100 else 38
+                self.resources = SimpleNamespace(stone=86 if x > 105 else 30, timber=50, freshwater=55)
+                self.resource_opportunity = (self.resources.stone+self.resources.timber+self.resources.freshwater)//3
+
+        cache=Cache()
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'skeleton-test'),
+            delta_source=cache,
+            environment_at=lambda pos: Env(pos.x,pos.y),
+        )
+        region=RegionBlockPlan(
+            uid='region:0:0',region_x=0,region_y=0,version=1,
+            dominant_biome='grassland',biome_mix={'grassland':25},
+            mean_elevation=30000,mean_moisture=30000,mean_temperature=32000,relief=1000,
+            settlement_present=True,settlement_anchor=(100,100),settlement_score=80,
+            settlement_archetype='mining',control_potential='settled',
+            roads=(RegionRoadExit('east',100,'road'),),
+        )
+        planner=SettlementSkeletonPlanner(world)
+        skeleton=planner.plan(region,'settlement:0:0',95,persist=True)
+        self.assertEqual(skeleton.plan.rank,'town')
+        self.assertTrue(skeleton.plan.common_cells)
+        self.assertTrue(skeleton.plan.gateway_cells)
+        self.assertGreaterEqual(len(skeleton.roads),3)
+        self.assertIn('civic',skeleton.plan.land_use_summary)
+        self.assertIn('residential',skeleton.plan.land_use_summary)
+        self.assertIn('farm',skeleton.plan.land_use_summary)
+        industrial=[p for p in skeleton.parcels if p.kind=='industrial']
+        self.assertTrue(industrial)
+        self.assertEqual(industrial[0].purpose,'mine_approach')
+        # Generated roads must use the pass through the synthetic barrier rather
+        # than cutting across the steep/flooded cells.
+        for road in skeleton.roads:
+            for x,y in road.polyline:
+                self.assertFalse(96 <= x <= 99 and not 97 <= y <= 103)
+        # Every non-common parcel has a stable access road binding.
+        for parcel in skeleton.parcels:
+            if parcel.kind!='civic':
+                self.assertTrue(parcel.access_road_id)
+                self.assertIn(parcel.access_road_id,{r.uid for r in skeleton.roads})
+        rebuilt=SettlementSkeletonPlanner(world).plan(region,'settlement:0:0',95,persist=True)
+        self.assertEqual(rebuilt.fingerprint,skeleton.fingerprint)
+        self.assertEqual(rebuilt.to_dict(),skeleton.to_dict())
+
+    def test_skeleton_is_independent_of_unrelated_registry_or_rng_state(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(
+            open_water=False,slope=10,flood_risk=5,wetness=40,soil_fertility=65,farmland=70,
+            resources=SimpleNamespace(stone=40,timber=60,freshwater=50),resource_opportunity=50,
+        )
+        world=SimpleNamespace(generator=SimpleNamespace(world_seed=b'order-test'),delta_source=Cache(),environment_at=lambda pos: env)
+        region=RegionBlockPlan(
+            uid='r',region_x=0,region_y=0,version=1,dominant_biome='grassland',biome_mix={'grassland':25},
+            mean_elevation=1,mean_moisture=1,mean_temperature=1,relief=1,
+            settlement_present=True,settlement_anchor=(120,120),settlement_score=70,
+            settlement_archetype='agrarian',control_potential='settled',
+            roads=(RegionRoadExit('north',120,'road'),RegionRoadExit('south',120,'road')),
+        )
+        a=SettlementSkeletonPlanner(world).plan(region,'settlement:r',55,persist=False)
+        # An unrelated attribute/order mutation must not enter the planner's deterministic inputs.
+        world.unrelated={'z':3,'a':1}
+        b=SettlementSkeletonPlanner(world).plan(region,'settlement:r',55,persist=False)
+        self.assertEqual(a.fingerprint,b.fingerprint)
+
 
 
 if __name__ == "__main__":
