@@ -99,7 +99,7 @@ class Simulation:
         self.building.attach_resources(self.resources,self.seed)
         self.nutrition=NutritionSystem(self.state,registry)
         self.food=CookingSystem(self.state,registry,self.nutrition)
-        self.processing=ProcessingSystem(self.state,registry,self.building)
+        self.processing=ProcessingSystem(self.state,registry,self.building,self.seed)
         self.ecology=EcologySystem(self.state,registry,self.seed,self.world)
         self.economy=EconomySystem(self.state,registry,self.seed,self.history)
         self.environment=EnvironmentSystem(self.state,registry,self.seed,self.history,self.world)
@@ -119,6 +119,9 @@ class Simulation:
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
         self.projectiles=ProjectileSystem(self.state,registry,self.seed,self.world,self.resources,self.building)
         self.arena=TestArenaSystem(self.state,registry,self.world,self.resources,self.building)
+        self.visual_effects:list[dict]=[];self._visual_effect_counter=0
+        if self.state.player_stealth_mode and self.state.player_hunting_stance=="normal":
+            self.state.player_hunting_stance="stalk"
         # Active defense stances are one-exchange runtime intent. Old saves may
         # contain them because the fields are serialized for deterministic
         # roundtrips, but loading a game must not resurrect a stale guard/parry.
@@ -234,6 +237,14 @@ class Simulation:
     def has_talent(self,key:str)->bool:
         return key in self.state.player_talents
 
+    def _emit_visual_effect(self,kind:str,source:WorldPos,target:WorldPos,**meta)->None:
+        self._visual_effect_counter+=1
+        self.visual_effects.append({
+            "uid":self._visual_effect_counter,"kind":str(kind),"turn":self.turn,
+            "source":(source.x,source.y,source.z),"target":(target.x,target.y,target.z),**meta,
+        })
+        if len(self.visual_effects)>24:del self.visual_effects[:-24]
+
     def execute(self,command:object)->TickResult:
         result=TickResult()
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
@@ -245,7 +256,8 @@ class Simulation:
         minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
             self._move(command,result)
-            minutes=MOVE_MINUTES*(2 if self.state.player_stealth_mode else 1)
+            stance=str(getattr(self.state,"player_hunting_stance","normal"))
+            minutes=MOVE_MINUTES*(3 if stance=="crouch" else 2 if (stance=="stalk" or self.state.player_stealth_mode) else 1)
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
@@ -270,6 +282,8 @@ class Simulation:
         elif isinstance(command,ReadyWeaponCommand):minutes=self._ready_weapon(command)
         elif isinstance(command,ClearReadyWeaponCommand):minutes=self._clear_ready_weapon(command)
         elif isinstance(command,AimCommand):minutes=self._aim(command)
+        elif isinstance(command,SetHuntingStanceCommand):minutes=self._set_hunting_stance(command)
+        elif isinstance(command,SearchAnimalHomeCommand):minutes=self._search_animal_home(command)
         elif isinstance(command,GuardCommand):minutes=self._guard(command)
         elif isinstance(command,DodgeCommand):minutes=self._dodge(command)
         elif isinstance(command,ParryCommand):minutes=self._parry(command)
@@ -576,6 +590,7 @@ class Simulation:
                 if abs(c.x-p.x)+abs(c.y-p.y)>1:continue
                 was_charge=c.behavior=="charge";momentum=int(c.charge_momentum);mode_before=self.state.player_defense_mode
                 hp_before=v.hp;wounds_before=len(self.state.player_wounds);source=WorldPos(c.x,c.y,c.z)
+                self._emit_visual_effect("animal_attack",WorldPos(c.x,c.y,c.z),p,species_id=c.species_id)
                 msg=self.combat.creature_attack_player(c,v,self.turn,c.x-p.x,c.y-p.y)
                 self._message(msg)
                 hit=v.hp<hp_before or len(self.state.player_wounds)>wounds_before
@@ -867,7 +882,7 @@ class Simulation:
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
-        movement_noise=self.hunting.movement_noise(new)
+        movement_noise=self.hunting.movement_noise(new,self.clock.minute)
         if self.state.player_stealth_mode:
             movement_noise=self.stealth.movement_noise(movement_noise)
         self.hunting.note_player_noise(new,movement_noise,self.turn,self.clock.minute,"stealth_movement" if self.state.player_stealth_mode else "movement")
@@ -1123,6 +1138,7 @@ class Simulation:
                 if weapon.recovery_percent and hash_u64(self.seed,"projectile-recovery",self.turn,weapon.id,c.uid,impact.x,impact.y)%100<weapon.recovery_percent:
                     projectile_id=weapon.ammo_item
             if projectile_id:self._drop_projectile(projectile_id,impact)
+            self._emit_visual_effect("projectile",p,impact,weapon_id=weapon.id,hit=False,blocked=True)
             self.combat.clear_aim();self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
             obstacle=flight.cover_notes[-1] if flight.cover_notes else "cover"
             self._message(f"Your {weapon.name.lower()} strikes {obstacle} before reaching the target.");return 1
@@ -1130,7 +1146,7 @@ class Simulation:
         msg=self.combat.ranged_attack_creature(c,inv,self.turn,dist,self.player_attribute('perception'),self.player_skill('hunting'),weapon.id,aim_zone,aim_quality,stamina_before,flight.cover_penalty)
         alive=c.uid in self.state.creatures
         hit=(len(c.wounds)>before_wounds) if alive else True
-        projectile_id=None
+        projectile_id=None;visual_impact=target_pos
         if weapon.throwable:
             if inv.remove(weapon.id,1):
                 projectile_id=weapon.id
@@ -1138,6 +1154,8 @@ class Simulation:
         elif weapon.ammo_item and weapon.recovery_percent>0:
             roll=hash_u64(self.seed,"projectile-recovery",self.turn,weapon.id,c.uid,target_pos.x,target_pos.y)%100
             if roll<weapon.recovery_percent:projectile_id=weapon.ammo_item
+        if not hit:
+            visual_impact=self.projectiles.miss_landing(p,target_pos,weapon,self.turn,c.uid)
         if projectile_id:
             if hit and weapon.weapon_class in ("bow","javelin"):
                 if alive:
@@ -1149,7 +1167,8 @@ class Simulation:
             elif hit:
                 self._drop_projectile(projectile_id,target_pos)
             else:
-                self._drop_projectile(projectile_id,self.projectiles.miss_landing(p,target_pos,weapon,self.turn,c.uid))
+                self._drop_projectile(projectile_id,visual_impact)
+        self._emit_visual_effect("projectile",p,visual_impact,weapon_id=weapon.id,hit=hit,blocked=False)
         self.combat.clear_aim()
         if alive:self.hunting.notify_attack(c,p,self.turn,self.clock.minute,loudness=92,hit=hit)
         else:self.hunting.note_player_noise(p,92,self.turn,self.clock.minute,"weapon")
@@ -1160,6 +1179,28 @@ class Simulation:
         key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
         if pile is None:pile=GroundPile(pos.x,pos.y,pos.z,{});self.state.ground_piles[key]=pile
         pile.items[item_id]=pile.items.get(item_id,0)+1
+
+    def _set_hunting_stance(self,cmd:SetHuntingStanceCommand)->int:
+        self.combat.clear_aim()
+        self._message(self.hunting.set_player_stance(cmd.stance))
+        return 1
+
+    def _search_animal_home(self,cmd:SearchAnimalHomeCommand)->int:
+        home=self.state.animal_homes.get(cmd.home_uid);p=self.player_pos
+        if not home or not home.discovered:
+            self._message("You cannot identify a searchable animal shelter there.");return 1
+        if home.z!=p.z or abs(home.x-p.x)+abs(home.y-p.y)>1:
+            self._message("Move within reach of the animal shelter before searching it.");return 1
+        if not home.stored_items:
+            self._message(f"You search the {home.kind}, but find no cached items.");return 4
+        inv=self.entities.get(cmd.actor,Inventory);found=[]
+        for iid,n in sorted(list(home.stored_items.items())):
+            if n<=0:continue
+            inv.add(iid,n);item=self.registry.items.get(iid)
+            found.append(f"{n} {item.name.lower() if item else iid}")
+        home.stored_items.clear()
+        self._message(f"You search the {home.kind} and recover "+", ".join(found)+".")
+        return 6
 
     def _ready_weapon(self,cmd:ReadyWeaponCommand)->int:
         self._message(self.combat.ready_weapon(cmd.item_id,self.entities.get(cmd.actor,Inventory)));return 1
@@ -1227,6 +1268,7 @@ class Simulation:
         before_wounds=len(target.wounds);self.combat.clear_aim()
         msg=self.combat.attack_creature(target,inv,self.turn,distance,stamina_before,mode)
         hit=target.uid not in self.state.creatures or len(target.wounds)>before_wounds
+        self._emit_visual_effect("melee",origin,p,weapon_id=weapon.id if weapon else "",mode=mode,hit=hit)
         if target.uid in self.state.creatures:
             self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=42,hit=hit)
             if hit and mode=="power":
@@ -1283,6 +1325,7 @@ class Simulation:
         stamina_before=v.stamina;v.stamina=max(0,v.stamina-cost);before=len(target.wounds)
         msg=self.combat.shield_bash(target,self.turn,stamina_before)
         hit=target.uid not in self.state.creatures or len(target.wounds)>before
+        self._emit_visual_effect("bash",origin,target_pos,weapon_id=shield.id,hit=hit)
         if target.uid in self.state.creatures:
             self.hunting.notify_attack(target,origin,self.turn,self.clock.minute,loudness=55,hit=hit)
             if hit:
@@ -1475,7 +1518,7 @@ class Simulation:
 
     def _toggle_stealth(self,cmd:ToggleStealthCommand)->None:
         enabled=(not self.state.player_stealth_mode) if cmd.enabled is None else bool(cmd.enabled)
-        self.state.player_stealth_mode=enabled
+        self.hunting.set_player_stance("stalk" if enabled else "normal")
         if not enabled:
             if self.state.player_casing_property_id:
                 self.casing.stop()
