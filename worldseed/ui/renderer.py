@@ -184,6 +184,9 @@ class Renderer:
         fluid_by = {(f.x,f.y,f.z):f for f in sim.state.fluids.values() if f.amount > 20}
         pile_by = {(p.x,p.y,p.z):p for p in sim.state.ground_piles.values() if p.items}
         carcass_by = {(c.x,c.y,c.z):c for c in sim.state.carcasses.values()}
+        skill=max(sim.player_skill('hunting'),sim.player_skill('survival'))
+        sign_by={(q.x,q.y,q.z):q for q in sim.state.animal_signs.values() if pos_key(q.x,q.y,q.z) in visible and q.strength+skill*8>=52}
+        home_by={(q.x,q.y,q.z):q for q in sim.state.animal_homes.values() if q.discovered and pos_key(q.x,q.y,q.z) in visible}
         grave_by = {(g.x,g.y,g.z):g for g in sim.state.graves.values()}
         arc_by = {tuple(int(q) for q in k.split(',')):a for k,a in sim.state.arcane_contamination.items() if a.intensity > 20}
         dungeon_by: dict[tuple[int,int,int], str] = {}
@@ -216,6 +219,8 @@ class Renderer:
                 elif k in fire_by: ch = '!'
                 elif k in fluid_by: ch = '~'
                 elif k in dungeon_by: ch = dungeon_by[k]
+                elif k in home_by: ch = 'H' if not self.use_unicode else '⌂'
+                elif k in sign_by: ch = ',' if not self.use_unicode else '·'
                 elif k in carcass_by: ch = '&'
                 elif k in pile_by: ch = '$'
                 elif k in grave_by: ch = '†' if self.use_unicode else '+'
@@ -272,6 +277,7 @@ class Renderer:
             '',
             self._clip(sim.resources.description(p), width),
             'Room: ' + str(room.get('classification','outside')),
+            'Stance: ' + str(getattr(sim.state,'player_hunting_stance','normal')).title(),
         ]
         if cursor is not None:
             rows += ['', 'LOOK', f'{cursor.x},{cursor.y},z{cursor.z}']

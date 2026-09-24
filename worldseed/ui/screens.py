@@ -261,6 +261,11 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
             if tactical:body.append('Tactical read: '+', '.join(tactical))
         if hunting>=7 and creature.wounds:
             body.append(f'Observed wounds: {len(creature.wounds)}; blood reserve appears {"critical" if creature.blood<35 else "low" if creature.blood<70 else "stable"}.')
+            organs=[str(w.get("organ","")).replace("_"," ") for w in creature.wounds if w.get("organ")]
+            if organs:body.append('Suspected internal trauma: '+', '.join(dict.fromkeys(organs)))
+    home=sim.hunting.home_at(p)
+    if home and (home.discovered or max(hunting,survival)>=3):
+        body.append('Shelter sign: '+sim.hunting.describe_home(home,hunting,survival))
     signs=sim.hunting.signs_at(p)
     for sign in signs[:4]:
         body.append('Sign: '+sim.hunting.describe_sign(sign,sim.player_skill('hunting'),survival,sim.clock.minute,species_known=sign.species_id in sim.known_species_ids()))
@@ -271,6 +276,9 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
         steps.append('butchered' if carcass.butchered else 'not butchered')
         steps.append('deboned' if carcass.deboned else 'bones remain')
         body.append(f'Carcass: {sp.name if sp else carcass.species_id} — quality {carcass.quality}% — '+', '.join(steps))
+        if max(sim.player_skill('hunting'),survival)>=6 and carcass.organ_damage:
+            damaged=', '.join(f'{name.replace("_"," ")} {amount}%' for name,amount in sorted(carcass.organ_damage.items()))
+            body.append('Internal damage: '+damaged)
     if crop:
         stage='ready to harvest' if crop.mature else 'growing';body.append(f'Crop: {crop.crop_id.split(":")[-1].replace("_"," ")} — {stage}')
         if sim.player_skill('survival')>=4:body.append(f'Condition: health {crop.health}, moisture {crop.moisture}, disease {crop.disease}')
@@ -404,6 +412,12 @@ def ecology_screen(sim:Simulation,width:int=108)->str:
             if c.panic>=35:details.append(f'panic {c.panic}')
             if details:tactic=' ['+', '.join(details)+']'
         body.append(label+extra+state+tactic)
+    homes=[h for h in sim.hunting.nearby_homes(p,12) if h.discovered]
+    if homes:
+        body+=['','KNOWN DENS / NESTS / BEDS']
+        for home in homes[:6]:
+            d=abs(home.x-p.x)+abs(home.y-p.y)
+            body.append(sim.hunting.describe_home(home,sim.player_skill('hunting'),survival)+f' ({d} tiles)')
     signs=sim.hunting.nearby_signs(p,10)[:8]
     if signs:
         body+=['','RECENT SIGN']

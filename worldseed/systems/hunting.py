@@ -5,7 +5,7 @@ from typing import Any
 from worldseed.content.registry import ContentRegistry, SpeciesDef
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
-from worldseed.systems.state import AnimalSignState, CreatureState, LivingWorldState
+from worldseed.systems.state import AnimalHomeState, AnimalSignState, CreatureState, LivingWorldState
 
 
 CARDINALS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -61,20 +61,58 @@ class HuntingSystem:
             "kind": kind,
         }
 
-    def movement_noise(self, pos: WorldPos) -> int:
+    def set_player_stance(self, stance:str) -> str:
+        stance=str(stance or "normal").lower()
+        if stance not in {"normal","stalk","crouch"}:
+            return "Unknown hunting stance."
+        self.state.player_hunting_stance=stance
+        if hasattr(self.state,"player_stealth_mode"):self.state.player_stealth_mode=stance!="normal"
+        if stance=="normal":return "You return to a normal walking posture."
+        if stance=="stalk":return "You begin stalking: slower movement, quieter footfalls, and a lower visible profile."
+        return "You crouch low, maximizing concealment at the cost of movement speed."
+
+    def _equipment_noise(self)->int:
+        ids=list(self.state.player_equipment.values())
+        if self.state.player_readied_weapon:ids.append(self.state.player_readied_weapon)
+        total=0
+        for iid in ids:
+            item=self.registry.items.get(iid)
+            if not item:continue
+            hard=1 if item.material in ("core:iron","core:steel","core:copper","core:bronze") else 0
+            total += min(8,item.mass_g//1800) + hard*4
+        return min(28,total)
+
+    def movement_noise(self, pos: WorldPos, minute:int|None=None) -> int:
         tile = self.world.tile_at(pos)
         tid = tile.terrain_id.split(":")[-1]
         tags = set(tile.terrain.tags)
         noise = 26
-        if "water" in tags:
-            noise += 16
-        if any(k in tid for k in ("rock", "gravel", "rubble")):
-            noise += 10
-        if any(k in tid for k in ("forest", "grass", "moss")):
-            noise -= 4
-        if self.resources and self.resources.is_harvestable(pos):
-            noise += 3
-        return max(10, min(60, noise))
+        if "water" in tags:noise += 16
+        if any(k in tid for k in ("rock","gravel","rubble")):noise += 10
+        if any(k in tid for k in ("forest","grass","moss","mud")):noise -= 4
+        if self.resources and self.resources.is_harvestable(pos):noise += 3
+        stance=str(getattr(self.state,"player_hunting_stance","normal"))
+        noise_pct=100 if stance=="normal" else 58 if stance=="stalk" else 40
+        skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
+        noise_pct=max(25,noise_pct-min(20,skill))
+        noise=noise*noise_pct//100 + self._equipment_noise()
+        minute=self.state.clock_minute if minute is None else minute
+        if self.environment is not None:
+            weather=self.environment.weather.at(minute,pos.x,pos.y)
+            rain=int(weather.get("rain",0));wind=abs(int(weather.get("wind_dx",0)))+abs(int(weather.get("wind_dy",0)))
+            noise-=min(16,rain//7+wind*2)
+        return max(4,min(70,noise))
+
+    def player_concealment(self,pos:WorldPos,minute:int)->int:
+        stance=str(getattr(self.state,"player_hunting_stance","normal"))
+        base=0 if stance=="normal" else 14 if stance=="stalk" else 24
+        skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
+        cover=min(30,self._cover_score(pos))
+        weather_mask=0
+        if self.environment is not None:
+            weather=self.environment.weather.at(minute,pos.x,pos.y)
+            weather_mask=min(16,int(weather.get("fog",0))//8+int(weather.get("rain",0))//10)
+        return max(0,min(65,base+skill*2+cover//2+weather_mask))
 
     def notify_attack(
         self,
@@ -101,6 +139,203 @@ class HuntingSystem:
         if sp:
             self._alarm_group(creature, sp, turn, 85 if hit else 60)
 
+    def _update_needs(self,c:CreatureState,sp:SpeciesDef,minute:int)->None:
+        previous=int(getattr(c,"last_need_minute",-1))
+        if previous<0:
+            c.last_need_minute=minute
+            return
+        delta=max(0,min(180,minute-previous))
+        c.last_need_minute=minute
+        if delta<=0:return
+        c.hunger=min(100,int(c.hunger)+delta//22)
+        c.thirst=min(100,int(getattr(c,"thirst",0))+delta//16)
+        if previous//60 < minute//60:
+            roll=hash_u64(self.seed,"animal-scat",c.uid,minute//60)%100
+            if roll<min(18,5+sp.mass_kg//40):
+                p=WorldPos(c.x,c.y,c.z)
+                self._write_sign(c,"scat",p,p,minute,max(18,min(90,25+sp.mass_kg//5)),"droppings")
+
+    def _home_group_key(self,c:CreatureState)->str:
+        return c.cohort_key or c.uid
+
+    def _ensure_home(self,c:CreatureState,sp:SpeciesDef,minute:int)->AnimalHomeState|None:
+        if not sp.home_kind or c.uid.startswith("arena:"):return None
+        existing=self.state.animal_homes.get(c.home_uid) if c.home_uid else None
+        if existing:
+            if c.uid not in existing.occupant_uids and len(existing.occupant_uids)<16:existing.occupant_uids.append(c.uid)
+            return existing
+        group_key=self._home_group_key(c)
+        for home in self.state.animal_homes.values():
+            if home.species_id==c.species_id and home.group_key==group_key:
+                c.home_uid=home.uid
+                if c.uid not in home.occupant_uids and len(home.occupant_uids)<16:home.occupant_uids.append(c.uid)
+                return home
+        origin=WorldPos(c.x,c.y,c.z);radius=max(2,int(sp.home_radius or 6));candidates=[]
+        for dy in range(-radius,radius+1):
+            for dx in range(-radius,radius+1):
+                dist=abs(dx)+abs(dy)
+                if dist>radius:continue
+                q=origin.moved(dx,dy)
+                if not self._passable_for(sp,q):continue
+                tile=self.world.tile_at(q);tags=set(tile.terrain.tags)
+                if "water" in tags:continue
+                cover=self._cover_score(q)
+                water_adj=any("water" in set(self.world.tile_at(q.moved(ax,ay)).terrain.tags) for ax,ay in CARDINALS)
+                if sp.home_kind in ("lodge","holt") and not water_adj:continue
+                score=cover*3-dist*2
+                if sp.home_kind in ("den","burrow","sett","form"):score+=cover
+                if sp.home_kind=="nest":score+=12 if ("forest" in tile.terrain_id or cover>=15) else 0
+                tie=int(hash_u64(self.seed,"animal-home-site",c.species_id,group_key,q.x,q.y,q.z)&0xffff)
+                candidates.append((score,tie,q))
+        site=max(candidates,key=lambda row:(row[0],row[1]))[2] if candidates else origin
+        token=hash_u64(self.seed,"animal-home",c.species_id,group_key,site.x,site.y,site.z)
+        uid=f"home:{token:016x}"
+        home=AnimalHomeState(uid,c.species_id,site.x,site.y,site.z,sp.home_kind,minute,group_key,[c.uid],{},minute,False)
+        self.state.animal_homes[uid]=home;c.home_uid=uid
+        self._write_sign(c,"home",site,site,minute,max(45,min(100,45+sp.mass_kg//5)),sp.home_kind)
+        if len(self.state.animal_homes)>600:
+            live={x.home_uid for x in self.state.creatures.values() if x.home_uid}
+            removable=sorted((h for h in self.state.animal_homes.values() if not h.discovered and h.uid not in live),key=lambda h:(h.last_used_minute,h.uid))
+            for row in removable[:max(0,len(self.state.animal_homes)-600)]:self.state.animal_homes.pop(row.uid,None)
+        return home
+
+    def _water_bank_target(self,c:CreatureState,sp:SpeciesDef,radius:int=8)->WorldPos|None:
+        origin=WorldPos(c.x,c.y,c.z);rows=[]
+        for dy in range(-radius,radius+1):
+            for dx in range(-radius,radius+1):
+                dist=abs(dx)+abs(dy)
+                if dist>radius:continue
+                q=origin.moved(dx,dy)
+                if not self._passable_for(sp,q):continue
+                if not any("water" in set(self.world.tile_at(q.moved(ax,ay)).terrain.tags) for ax,ay in CARDINALS):continue
+                tie=hash_u64(self.seed,"drink-target",c.uid,q.x,q.y,q.z)
+                rows.append((dist,tie,q))
+        return min(rows,key=lambda row:(row[0],row[1]))[2] if rows else None
+
+    def _forage_target(self,c:CreatureState,sp:SpeciesDef,radius:int=7)->WorldPos|None:
+        if sp.diet=="carnivore" or self.resources is None:return None
+        origin=WorldPos(c.x,c.y,c.z);rows=[]
+        for dy in range(-radius,radius+1):
+            for dx in range(-radius,radius+1):
+                dist=abs(dx)+abs(dy)
+                if dist>radius:continue
+                q=origin.moved(dx,dy)
+                if not self._passable_for(sp,q):continue
+                fv=self.resources.feature_at(q)
+                if not fv or getattr(fv,"stage","mature")=="depleted":continue
+                rd=self.registry.resources.get(fv.feature_id)
+                if not rd or not ({"food","aquatic_plant"}&set(rd.tags)):continue
+                tie=hash_u64(self.seed,"forage-target",c.uid,fv.feature_id,q.x,q.y)
+                rows.append((dist,tie,q,rd.name))
+        if not rows:return None
+        row=min(rows,key=lambda x:(x[0],x[1]))
+        return row[2]
+
+    @staticmethod
+    def _set_activity_target(c:CreatureState,target:WorldPos|None)->None:
+        if target is None:
+            c.activity_target_x=c.activity_target_y=c.activity_target_z=None
+        else:
+            c.activity_target_x,c.activity_target_y,c.activity_target_z=target.x,target.y,target.z
+
+    def _activity_target(self,c:CreatureState)->WorldPos|None:
+        if c.activity_target_x is None or c.activity_target_y is None or c.activity_target_z is None:return None
+        return WorldPos(int(c.activity_target_x),int(c.activity_target_y),int(c.activity_target_z))
+
+    def _write_activity_sign(self,c:CreatureState,kind:str,minute:int,strength:int,detail:str)->None:
+        p=WorldPos(c.x,c.y,c.z)
+        self._write_sign(c,kind,p,p,minute,strength,detail)
+
+    def _activity_behavior(self,c:CreatureState,sp:SpeciesDef,turn:int,minute:int)->str:
+        active={"seeking_water","seeking_food","return_home","retreat_home","drinking","foraging","resting"}
+        if c.behavior in active and turn<=c.activity_until_turn:
+            target=self._activity_target(c)
+            if c.behavior=="seeking_water" and target and (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                c.behavior="drinking";c.activity_until_turn=turn+2;c.thirst=max(0,c.thirst-35)
+                self._write_activity_sign(c,"drink",minute,60,"water-edge disturbance")
+            elif c.behavior=="seeking_food" and target and (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                c.behavior="foraging";c.activity_until_turn=turn+2;c.hunger=max(0,c.hunger-30)
+                self._write_activity_sign(c,"feeding",minute,58,"browsed or cropped vegetation")
+            elif c.behavior in ("return_home","retreat_home") and target and (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                c.behavior="resting";c.activity_until_turn=turn+3
+                home=self.state.animal_homes.get(c.home_uid)
+                if home:
+                    home.last_used_minute=minute
+                    self._cache_nearby_food(home,sp)
+                self._write_activity_sign(c,"bed",minute,55,"flattened bedding")
+            elif c.behavior=="drinking":
+                c.thirst=max(0,c.thirst-18);c.stamina=min(sp.stamina,c.stamina+2)
+            elif c.behavior=="foraging":
+                c.hunger=max(0,c.hunger-16);c.stamina=min(sp.stamina,c.stamina+1)
+            elif c.behavior=="resting":
+                c.stamina=min(sp.stamina,c.stamina+12)
+            return c.behavior
+        if c.behavior in active:
+            c.behavior="calm";self._set_activity_target(c,None)
+
+        bias=dict(sp.activity_bias)
+        home=self.state.animal_homes.get(c.home_uid)
+        if c.thirst>=35:
+            target=self._water_bank_target(c,sp)
+            if target:
+                self._set_activity_target(c,target);c.activity_until_turn=turn+10
+                return "seeking_water"
+        if c.hunger>=35 and sp.diet!="carnivore":
+            target=self._forage_target(c,sp)
+            if target:
+                self._set_activity_target(c,target);c.activity_until_turn=turn+10
+                return "seeking_food"
+        night=(minute%1440)>=1200 or (minute%1440)<330
+        if c.stamina<65 or (night and hash_u64(self.seed,"animal-night-rest",c.uid,minute//120)%100<int(bias.get("rest",50))):
+            if home:
+                target=WorldPos(home.x,home.y,home.z);self._set_activity_target(c,target);c.activity_until_turn=turn+12
+                if (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                    c.behavior="resting";c.activity_until_turn=turn+3;home.last_used_minute=minute
+                    self._write_activity_sign(c,"bed",minute,55,"flattened bedding")
+                    return "resting"
+                return "return_home"
+            c.activity_until_turn=turn+2;self._set_activity_target(c,None);self._write_activity_sign(c,"bed",minute,40,"temporary resting place");return "resting"
+
+        if turn%4==int(hash_u64(self.seed,"animal-activity-phase",c.uid)%4):
+            roll=int(hash_u64(self.seed,"animal-activity",c.uid,minute//30)%100)
+            drink=int(bias.get("drink",45));forage=int(bias.get("forage",35))
+            if roll<drink//5:
+                target=self._water_bank_target(c,sp)
+                if target:self._set_activity_target(c,target);c.activity_until_turn=turn+8;return "seeking_water"
+            if roll<(drink+forage)//5 and sp.diet!="carnivore":
+                target=self._forage_target(c,sp)
+                if target:self._set_activity_target(c,target);c.activity_until_turn=turn+8;return "seeking_food"
+        return "calm"
+
+    def _cache_nearby_food(self,home:AnimalHomeState,sp:SpeciesDef)->None:
+        """Move only already-physical food into a cache; never invent den loot."""
+        if not sp.home_storage:return
+        for key,pile in sorted(self.state.ground_piles.items()):
+            if pile.z!=home.z or abs(pile.x-home.x)+abs(pile.y-home.y)>1:continue
+            for iid,count in sorted(list(pile.items.items())):
+                item=self.registry.items.get(iid)
+                if count<=0 or not item or not ({"raw_meat","food"}&set(item.tags)):continue
+                # Predators/omnivores cache at most one nearby physical food
+                # item per rest event. Authority transfers from pile -> home.
+                pile.items[iid]-=1
+                if pile.items[iid]<=0:pile.items.pop(iid,None)
+                home.stored_items[iid]=home.stored_items.get(iid,0)+1
+                return
+
+    def nearby_homes(self,pos:WorldPos,radius:int=10)->list[AnimalHomeState]:
+        return sorted([h for h in self.state.animal_homes.values() if h.z==pos.z and abs(h.x-pos.x)+abs(h.y-pos.y)<=radius],key=lambda h:(abs(h.x-pos.x)+abs(h.y-pos.y),h.uid))
+
+    def home_at(self,pos:WorldPos)->AnimalHomeState|None:
+        return next((h for h in self.state.animal_homes.values() if (h.x,h.y,h.z)==(pos.x,pos.y,pos.z)),None)
+
+    def describe_home(self,home:AnimalHomeState,hunting_skill:int,survival_skill:int)->str:
+        skill=max(int(hunting_skill),int(survival_skill));sp=self.registry.species.get(home.species_id)
+        animal=sp.name.lower() if sp and skill>=3 else "animal"
+        stored=sum(home.stored_items.values())
+        use="active" if home.last_used_minute>=self.state.clock_minute-360 else "old"
+        detail=f" with {stored} cached item(s)" if stored and skill>=6 else ""
+        return f"{use.title()} {animal} {home.kind}{detail}."
+
     def update_local_ai(self, player_pos: WorldPos, turn: int, minute: int) -> list[str]:
         self._prune_signs(minute)
         attackers: list[str] = []
@@ -116,8 +351,25 @@ class HuntingSystem:
             sp = self.registry.species.get(creature.species_id)
             if not sp:
                 continue
+            self._update_needs(creature,sp,minute)
+            home=self.state.animal_homes.get(creature.home_uid) if creature.home_uid else None
+            # Homes are established during ordinary life, not conjured as an
+            # escape destination in the middle of a fresh hunt. A threatened
+            # or badly wounded animal without an existing refuge must flee
+            # first; one with a previously established refuge may retreat to it.
+            can_establish_home=(
+                home is None and creature.blood>=80 and creature.pain<35
+                and turn-creature.last_threat_turn>1 and creature.alertness<45
+            )
+            if can_establish_home:
+                home=self._ensure_home(creature,sp,minute)
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
+            if home and not home.discovered:
+                skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
+                hdist=abs(home.x-player_pos.x)+abs(home.y-player_pos.y)
+                if hdist<=max(2,min(7,2+skill//2)) and self._visible(player_pos,WorldPos(home.x,home.y,home.z)):
+                    home.discovered=True
             if turn <= int(getattr(creature,"staggered_until_turn",-1)):
                 creature.behavior = "staggered"
                 creature.stamina = min(sp.stamina, creature.stamina + 2)
@@ -139,14 +391,22 @@ class HuntingSystem:
                 if creature.alertness == 0 and creature.behavior not in ("wounded_flee",):
                     creature.behavior = "calm"
 
-            creature.behavior = self._choose_behavior(creature, sp, dist, turn, player_pos)
+            tactical = self._choose_behavior(creature, sp, dist, turn, player_pos)
+            active_states={"seeking_water","seeking_food","return_home","retreat_home","drinking","foraging","resting"}
+            if tactical=="calm" or (creature.behavior in active_states and perceived<=0 and turn-creature.last_threat_turn>1):
+                creature.behavior=self._activity_behavior(creature,sp,turn,minute)
+            else:
+                creature.behavior=tactical
             if creature.behavior == "display":
                 creature.stamina = min(sp.stamina,creature.stamina+3)
+                continue
+            if creature.behavior in ("drinking","foraging","resting"):
+                self._activity_behavior(creature,sp,turn,minute)
                 continue
             if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
                 attackers.append(creature.uid)
                 continue
-            if creature.behavior in ("flee","herd_flee","wounded_flee","pursue","defend","charge","flank","disengage","regroup"):
+            if creature.behavior in ("flee","herd_flee","wounded_flee","pursue","defend","charge","flank","disengage","regroup","seeking_water","seeking_food","return_home","retreat_home"):
                 steps = self._movement_steps(creature, sp)
                 for _ in range(steps):
                     if creature.uid not in self.state.creatures:
@@ -155,6 +415,10 @@ class HuntingSystem:
                     if not moved:
                         break
                     dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
+                    if creature.behavior in ("seeking_water","seeking_food","return_home","retreat_home"):
+                        creature.behavior=self._activity_behavior(creature,sp,turn,minute)
+                        if creature.behavior in ("drinking","foraging","resting"):
+                            break
                     if creature.behavior in ("pursue","defend","charge","flank") and dist <= 1:
                         break
             else:
@@ -230,6 +494,10 @@ class HuntingSystem:
                 return "disengage"
             if sp.defensive_aggression >= 65 and dist <= 2 and c.stamina >= 15 and not severe_leg:
                 return "defend"
+            home=self.state.animal_homes.get(c.home_uid)
+            if home and dist>2:
+                self._set_activity_target(c,WorldPos(home.x,home.y,home.z));c.activity_until_turn=max(c.activity_until_turn,turn+16)
+                return "retreat_home"
             return "wounded_flee"
 
         if sp.combat_style=="pack_predator" and threatened:
@@ -287,7 +555,8 @@ class HuntingSystem:
     def _leg_penalty(c: CreatureState) -> int:
         penalty = 0
         for wound in c.wounds[-12:]:
-            if "leg" not in str(wound.get("part", "")):
+            part=str(wound.get("part",""))
+            if "leg" not in part and "flipper" not in part:
                 continue
             sev = int(wound.get("severity", 0))
             if wound.get("fracture") or sev >= 70:
@@ -307,25 +576,29 @@ class HuntingSystem:
         dist = abs(c.x - player.x) + abs(c.y - player.y)
         score = 0
 
+        distracted=28 if c.behavior=="resting" else 17 if c.behavior in ("drinking","foraging") else 7 if c.behavior in ("seeking_water","seeking_food","return_home") else 0
+        conceal=self.player_concealment(player,minute)
         if dist <= sp.vision and self._visible(WorldPos(c.x, c.y, c.z), player):
             dx, dy = player.x - c.x, player.y - c.y
             facing = c.facing_dx * dx + c.facing_dy * dy
             sight = max(8, 44 - dist * 3)
             if facing < 0 and dist > 2:
                 sight //= 2
+            sight=max(0,sight-conceal-distracted)
             score = max(score, sight)
 
         noise = self._player_noise
         if noise and noise["z"] == c.z and turn - int(noise["turn"]) <= 1:
             ndist = abs(c.x - int(noise["x"])) + abs(c.y - int(noise["y"]))
-            radius = max(1, sp.hearing * max(20, int(noise["loudness"])) // 40)
+            effective=max(4,int(noise["loudness"])-distracted//2)
+            radius = max(1, sp.hearing * max(16,effective) // 40)
             if ndist <= radius:
-                score = max(score, max(8, 38 + int(noise["loudness"]) // 3 - ndist * 3))
+                score = max(score, max(5, 38 + effective // 3 - ndist * 3 - distracted//3))
 
         scent = self._scent_score(c, sp, player, minute)
         score = max(score, scent)
         if dist <= 2:
-            score = max(score, 35)
+            score = max(score, max(18,35-conceal//3-distracted//3))
         return max(0, min(100, score))
 
     def _scent_score(self, c: CreatureState, sp: SpeciesDef, player: WorldPos, minute: int) -> int:
@@ -350,6 +623,9 @@ class HuntingSystem:
         return max(8, min(42, 30 + sp.scent - dist * 2))
 
     def _alarm_group(self, source: CreatureState, sp: SpeciesDef, turn: int, amount: int) -> None:
+        if amount>=60 and hash_u64(self.seed,"animal-alarm-call",source.uid,turn)%100<35:
+            p=WorldPos(source.x,source.y,source.z)
+            self._write_sign(source,"call",p,p,self.state.clock_minute,min(90,amount),"alarm or warning call")
         if sp.herd_response <= 0:
             return
         for other in self.state.creatures.values():
@@ -406,6 +682,13 @@ class HuntingSystem:
                 if d==1:score+=40
             elif c.behavior=="charge":
                 score=-d*42-cover//8
+            elif c.behavior in ("seeking_water","seeking_food","return_home","retreat_home"):
+                target=self._activity_target(c)
+                if target:
+                    td=abs(nxt.x-target.x)+abs(nxt.y-target.y)
+                    score=-td*(42 if c.behavior=="retreat_home" else 32)+cover//2
+                    if c.behavior=="retreat_home":score+=d*8
+                else:score=cover-d
             else:
                 score=-d*28+cover//4
             tie = int(hash_u64(self.seed, "animal-step", c.uid, turn, c.behavior, nxt.x, nxt.y) & 0xFFFF)
@@ -423,7 +706,7 @@ class HuntingSystem:
         c.last_move_turn = turn
         if c.behavior=="charge":c.charge_momentum=min(5,c.charge_momentum+1)
         elif c.behavior not in ("pursue","flank"):c.charge_momentum=max(0,c.charge_momentum-1)
-        exertion = 10 if c.behavior=="charge" else 8 if c.behavior in ("flee","herd_flee","wounded_flee","pursue","flank","disengage") else 4
+        exertion = 10 if c.behavior=="charge" else 8 if c.behavior in ("flee","herd_flee","wounded_flee","pursue","flank","disengage","retreat_home") else 3 if c.behavior in ("seeking_water","seeking_food","return_home") else 4
         c.stamina = max(0, c.stamina - exertion)
         self._leave_sign(c, sp, old, nxt, turn, minute)
         return True
@@ -503,6 +786,9 @@ class HuntingSystem:
         if bleeding > 0:
             strength = max(15, min(100, bleeding * 9 + max(0, 100 - c.blood) // 2))
             self._write_sign(c, "blood", old, new, minute, strength, "blood trail")
+        cover=self._cover_score(old)
+        if cover>=16 and hash_u64(self.seed,"animal-disturbed-cover",c.uid,turn,old.x,old.y)%100<min(75,20+sp.mass_kg//3):
+            self._write_sign(c,"disturbed",old,new,minute,max(20,min(85,cover+sp.mass_kg//6)),"bent or broken vegetation")
 
     def _write_sign(
         self,
@@ -514,6 +800,9 @@ class HuntingSystem:
         strength: int,
         detail: str,
     ) -> None:
+        for existing in self.state.animal_signs.values():
+            if existing.source_uid==c.uid and existing.kind==kind and existing.created_minute==minute and (existing.x,existing.y,existing.z)==(old.x,old.y,old.z):
+                return
         token = hash_u64(
             self.seed, "animal-sign", c.uid, kind, minute,
             old.x, old.y, new.x, new.y, len(self.state.animal_signs),
@@ -540,7 +829,7 @@ class HuntingSystem:
 
     def _prune_signs(self, minute: int) -> None:
         for uid, sign in list(self.state.animal_signs.items()):
-            ttl = 18 * 60 if sign.kind == "blood" else 36 * 60
+            ttl={"blood":18*60,"track":36*60,"scat":72*60,"feeding":48*60,"bed":72*60,"drink":12*60,"disturbed":18*60,"call":2*60,"home":7*1440}.get(sign.kind,36*60)
             if minute - sign.created_minute > ttl:
                 self.state.animal_signs.pop(uid, None)
 
@@ -578,16 +867,24 @@ class HuntingSystem:
             freshness = "aging"
         else:
             freshness = "old"
+        generic={"blood":"Blood sign.","track":"Animal tracks.","scat":"Animal droppings.","feeding":"Feeding sign.","bed":"Animal bedding.","drink":"Disturbed water edge.","disturbed":"Disturbed vegetation.","call":"Recent animal call.","home":"Animal shelter sign."}
         if skill < 2:
-            return "Blood sign." if sign.kind == "blood" else "Animal tracks."
+            return generic.get(sign.kind,"Animal sign.")
         direction = self._direction_name(sign.direction_x, sign.direction_y)
         if sign.kind == "blood":
             severity = "heavy" if sign.strength >= 65 else "clear" if sign.strength >= 35 else "faint"
             return f"{freshness.title()} {severity} blood from a {animal}, leading {direction}."
-        if skill >= 6:
+        if sign.kind=="track":
             print_strength = "deep" if sign.strength >= 70 else "clear" if sign.strength >= 40 else "faint"
             return f"{freshness.title()} {print_strength} {animal} tracks heading {direction}."
-        return f"{freshness.title()} {animal} tracks heading {direction}."
+        if sign.kind=="scat":return f"{freshness.title()} droppings from a {animal}."
+        if sign.kind=="feeding":return f"{freshness.title()} feeding sign from a {animal}: {sign.detail or 'browsed vegetation'}."
+        if sign.kind=="bed":return f"{freshness.title()} {animal} bedding: {sign.detail or 'flattened cover'}."
+        if sign.kind=="drink":return f"{freshness.title()} {animal} water-edge sign: {sign.detail or 'disturbed bank'}."
+        if sign.kind=="disturbed":return f"{freshness.title()} vegetation disturbed by a {animal}, continuing {direction}."
+        if sign.kind=="call":return f"{freshness.title()} audible sign of a {animal}: {sign.detail or 'alarm call'}."
+        if sign.kind=="home":return f"{freshness.title()} use sign around a {animal} {sign.detail or 'shelter'}."
+        return f"{freshness.title()} sign from a {animal}."
 
     @staticmethod
     def _direction_name(dx: int, dy: int) -> str:

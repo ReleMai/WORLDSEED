@@ -19,9 +19,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A small fast herbivore that relies on cover, speed, and prolific breeding.",
     "flavor": "\"A flash of white tail, then grass moving where nothing seems to be.\"",
@@ -54,7 +56,99 @@
     "trackability": 35,
     "herd_response": 35,
     "combat_style": "prey",
-    "herd_cohesion": 30
+    "herd_cohesion": 30,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "burrow",
+    "home_radius": 7,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
+    }
   },
   {
     "id": "core:snowshoe_hare",
@@ -75,9 +169,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A cold-country hare whose large feet carry it over soft ground.",
     "flavor": "\"Long legs, pale fur, and a habit of vanishing uphill.\"",
@@ -100,6 +196,98 @@
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "form",
+    "home_radius": 7,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
     }
   },
   {
@@ -121,9 +309,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A wary browser moving between woodland cover and open feeding ground.",
     "flavor": "\"It watches the wind before it watches you.\"",
@@ -165,7 +355,107 @@
     "trackability": 82,
     "herd_response": 85,
     "combat_style": "herd_prey",
-    "herd_cohesion": 88
+    "herd_cohesion": 88,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "large",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "large",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "large",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "large",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "large",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "large",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "antlers",
+        "organ": "",
+        "item": "core:bone",
+        "mass_pct": 0.01,
+        "rarity": 48,
+        "max_units": 3
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 10,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
+    }
   },
   {
     "id": "core:elk",
@@ -186,9 +476,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A massive grazing deer moving in loose herds near meadow and forest edge.",
     "flavor": "\"A herd sounds like weather when it decides to run.\"",
@@ -233,7 +525,107 @@
     "herd_cohesion": 94,
     "charge_range": 4,
     "charge_power": 62,
-    "display_range": 3
+    "display_range": 3,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "massive",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "massive",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "massive",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "massive",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "massive",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "massive",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 4
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 6
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 3
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 5
+      },
+      {
+        "name": "antlers",
+        "organ": "",
+        "item": "core:bone",
+        "mass_pct": 0.01,
+        "rarity": 65,
+        "max_units": 3
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 12,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
+    }
   },
   {
     "id": "core:moose",
@@ -254,9 +646,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A huge solitary browser, usually calm until crowded or threatened.",
     "flavor": "\"Too large to mistake for harmless once it turns toward you.\"",
@@ -301,7 +695,107 @@
     "herd_cohesion": 20,
     "charge_range": 5,
     "charge_power": 96,
-    "display_range": 4
+    "display_range": 4,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "massive",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "massive",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "massive",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "massive",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "massive",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "massive",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 4
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 8
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 3
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 5
+      },
+      {
+        "name": "antlers",
+        "organ": "",
+        "item": "core:bone",
+        "mass_pct": 0.01,
+        "rarity": 78,
+        "max_units": 5
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 12,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
+    }
   },
   {
     "id": "core:boar",
@@ -323,9 +817,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A tough rooting omnivore with poor manners and dangerous tusks.",
     "flavor": "\"Brush shakes first. Then the tusks arrive.\"",
@@ -370,7 +866,107 @@
     "charge_range": 5,
     "charge_power": 76,
     "display_range": 2,
-    "herd_cohesion": 55
+    "herd_cohesion": 55,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "large",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "large",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "large",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "large",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "large",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "large",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "tusks",
+        "organ": "",
+        "item": "core:bone",
+        "mass_pct": 0.006,
+        "rarity": 72,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 10,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
+    }
   },
   {
     "id": "core:turkey",
@@ -391,9 +987,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 24,
+      "legs": 12
     },
     "description": "A large ground bird that feeds in flocks and bursts noisily into flight.",
     "flavor": "\"A sudden thunder of wings from brush that looked empty.\"",
@@ -416,6 +1014,106 @@
       "core:raw_poultry": 2,
       "core:feather": 4,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "small",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "small",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "small",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "small",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "small",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "small",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "flight feathers",
+        "organ": "",
+        "item": "core:feather",
+        "mass_pct": 0.015,
+        "rarity": 100,
+        "max_units": 8
+      }
+    ],
+    "home_kind": "nest",
+    "home_radius": 8,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
     }
   },
   {
@@ -437,9 +1135,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 24,
+      "legs": 12
     },
     "description": "A compact ground bird relying on camouflage and explosive escape.",
     "flavor": "\"You notice it exactly one heartbeat before it leaves.\"",
@@ -461,6 +1161,106 @@
     "carcass": {
       "core:raw_poultry": 1,
       "core:feather": 2
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "flight feathers",
+        "organ": "",
+        "item": "core:feather",
+        "mass_pct": 0.015,
+        "rarity": 100,
+        "max_units": 3
+      }
+    ],
+    "home_kind": "nest",
+    "home_radius": 7,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
     }
   },
   {
@@ -482,9 +1282,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A sure-footed grazer of rocky high country, defensive when cornered.",
     "flavor": "\"Cliffs are roads to it.\"",
@@ -515,6 +1317,98 @@
       "core:fresh_hide": 2,
       "core:bone": 2,
       "core:sinew": 2
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "large",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "large",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "large",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "large",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "large",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "large",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 10,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
     }
   },
   {
@@ -537,9 +1431,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A small adaptable predator hunting rodents, birds, and carrion.",
     "flavor": "\"A bright tail passing through dusk grass.\"",
@@ -562,6 +1458,98 @@
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "small",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "small",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "small",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "small",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "small",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "small",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "den",
+    "home_radius": 10,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
     }
   },
   {
@@ -584,9 +1572,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A social endurance predator that becomes far more dangerous in a pack.",
     "flavor": "\"One wolf watches. The others use the watching.\"",
@@ -631,7 +1621,99 @@
     "herd_cohesion": 86,
     "charge_range": 0,
     "charge_power": 0,
-    "display_range": 0
+    "display_range": 0,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "medium",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "medium",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "medium",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "medium",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "medium",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "medium",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "den",
+    "home_radius": 12,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
+    }
   },
   {
     "id": "core:brown_bear",
@@ -652,9 +1734,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A huge omnivore with enormous strength and little need to bluff.",
     "flavor": "\"The forest becomes smaller when a bear stands up.\"",
@@ -699,7 +1783,99 @@
     "herd_cohesion": 0,
     "charge_range": 4,
     "charge_power": 100,
-    "display_range": 4
+    "display_range": 4,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "massive",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "massive",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "massive",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "massive",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "massive",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "massive",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 4
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 7
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 3
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 5
+      }
+    ],
+    "home_kind": "den",
+    "home_radius": 14,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
+    }
   },
   {
     "id": "core:badger",
@@ -721,9 +1897,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A low powerful digger that reacts to close threats with disproportionate confidence.",
     "flavor": "\"Small enough to underestimate exactly once.\"",
@@ -754,6 +1932,98 @@
       "core:fresh_hide": 1,
       "core:bone": 1,
       "core:animal_fat": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "small",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "small",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "small",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "small",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "small",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "small",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "sett",
+    "home_radius": 9,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
     }
   },
   {
@@ -774,9 +2044,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A pale many-limbed cave scavenger drawn to carrion and vibration.",
     "flavor": "\"Its feet click before its body clears the dark.\"",
@@ -805,6 +2077,98 @@
     "carcass": {
       "core:raw_small_game": 2,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "medium",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "medium",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "medium",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "medium",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "medium",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "medium",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "den",
+    "home_radius": 8,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
     }
   },
   {
@@ -825,9 +2189,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A blind subterranean grazer feeding on cave growths and mineral films.",
     "flavor": "\"It noses stone as if stone were grass.\"",
@@ -850,6 +2216,98 @@
       "core:raw_game_meat": 4,
       "core:fresh_hide": 1,
       "core:bone": 2
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "medium",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "medium",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "medium",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "medium",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "medium",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "medium",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 9,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
     }
   },
   {
@@ -870,9 +2328,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A vibration-hunting cave predator that waits near narrow passages.",
     "flavor": "\"Silence in a cave can be something holding still.\"",
@@ -903,6 +2363,98 @@
       "core:fresh_hide": 2,
       "core:bone": 2,
       "core:sinew": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "medium",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "medium",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "medium",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "medium",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "medium",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "medium",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "den",
+    "home_radius": 10,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
     }
   },
   {
@@ -924,9 +2476,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A heavy wetland-adapted boar feeding among reeds and muddy banks.",
     "flavor": "\"Mud hides the feet, not the tusks.\"",
@@ -970,7 +2524,107 @@
     "herd_cohesion": 52,
     "charge_range": 4,
     "charge_power": 82,
-    "display_range": 2
+    "display_range": 2,
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "large",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "large",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "large",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "large",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "large",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "large",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 4
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 3
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 3
+      },
+      {
+        "name": "tusks",
+        "organ": "",
+        "item": "core:bone",
+        "mass_pct": 0.006,
+        "rarity": 72,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 10,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
+    }
   },
   {
     "id": "core:muskrat",
@@ -992,9 +2646,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A semi-aquatic rodent feeding on wetland stems and roots.",
     "flavor": "\"Muskrat belongs to the water margin as much as the land.\"",
@@ -1016,6 +2672,98 @@
     "carcass": {
       "core:raw_small_game": 1,
       "core:fresh_hide": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "lodge",
+    "home_radius": 8,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
     }
   },
   {
@@ -1039,9 +2787,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "A heavy aquatic engineer feeding on bark and riverside vegetation.",
     "flavor": "\"Beaver belongs to the water margin as much as the land.\"",
@@ -1065,6 +2815,98 @@
       "core:fresh_hide": 2,
       "core:bone": 1,
       "core:animal_fat": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "medium",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "medium",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "medium",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "medium",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "medium",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "medium",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "lodge",
+    "home_radius": 10,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 80,
+      "rest": 50
     }
   },
   {
@@ -1089,9 +2931,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 52,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 14,
+      "hindlegs": 14
     },
     "description": "An agile fish-eating mammal of streams, wetlands, and lake margins.",
     "flavor": "\"River Otter belongs to the water margin as much as the land.\"",
@@ -1114,6 +2958,98 @@
       "core:raw_small_game": 2,
       "core:fresh_hide": 1,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "small",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "small",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "small",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "small",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "small",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "small",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      }
+    ],
+    "home_kind": "holt",
+    "home_radius": 10,
+    "home_storage": true,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
     }
   },
   {
@@ -1138,9 +3074,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 24,
+      "legs": 12
     },
     "description": "A tall wading bird stalking fish and frogs in quiet shallows.",
     "flavor": "\"Great Blue Heron belongs to the water margin as much as the land.\"",
@@ -1163,6 +3101,106 @@
       "core:raw_poultry": 1,
       "core:feather": 3,
       "core:bone": 1
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "flight feathers",
+        "organ": "",
+        "item": "core:feather",
+        "mass_pct": 0.015,
+        "rarity": 100,
+        "max_units": 5
+      }
+    ],
+    "home_kind": "nest",
+    "home_radius": 10,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
     }
   },
   {
@@ -1186,9 +3224,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 24,
+      "legs": 12
     },
     "description": "A noisy coastal scavenger common on beaches, flats, and rocky shorelines.",
     "flavor": "\"Herring Gull belongs to the water margin as much as the land.\"",
@@ -1210,6 +3250,106 @@
     "carcass": {
       "core:raw_poultry": 1,
       "core:feather": 2
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "tiny",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "tiny",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "tiny",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "tiny",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "tiny",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "tiny",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 1
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 1
+      },
+      {
+        "name": "flight feathers",
+        "organ": "",
+        "item": "core:feather",
+        "mass_pct": 0.015,
+        "rarity": 100,
+        "max_units": 3
+      }
+    ],
+    "home_kind": "nest",
+    "home_radius": 9,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 65,
+      "forage": 58,
+      "rest": 52
     }
   },
   {
@@ -1232,9 +3372,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 62,
+      "head": 14,
+      "neck": 6,
+      "fore_flippers": 10,
+      "hind_flippers": 8
     },
     "description": "A coastal marine mammal hauling out on quiet beaches and rocky ledges.",
     "flavor": "\"Harbor Seal belongs to the water margin as much as the land.\"",
@@ -1258,6 +3400,98 @@
       "core:fresh_hide": 2,
       "core:animal_fat": 3,
       "core:bone": 2
+    },
+    "organs": {
+      "heart": {
+        "zone": "torso",
+        "weight": 10,
+        "vitality": 96,
+        "bleed": 92,
+        "size_band": "large",
+        "mass_pct": 0.005
+      },
+      "lungs": {
+        "zone": "torso",
+        "weight": 20,
+        "vitality": 82,
+        "bleed": 78,
+        "size_band": "large",
+        "mass_pct": 0.012
+      },
+      "liver": {
+        "zone": "torso",
+        "weight": 16,
+        "vitality": 72,
+        "bleed": 86,
+        "size_band": "large",
+        "mass_pct": 0.02
+      },
+      "kidneys": {
+        "zone": "torso",
+        "weight": 7,
+        "vitality": 55,
+        "bleed": 68,
+        "size_band": "large",
+        "mass_pct": 0.004
+      },
+      "brain": {
+        "zone": "head",
+        "weight": 8,
+        "vitality": 100,
+        "bleed": 35,
+        "size_band": "large",
+        "mass_pct": 0.003
+      },
+      "trachea": {
+        "zone": "neck",
+        "weight": 5,
+        "vitality": 88,
+        "bleed": 72,
+        "size_band": "large",
+        "mass_pct": 0.001
+      }
+    },
+    "harvest_parts": [
+      {
+        "name": "heart",
+        "organ": "heart",
+        "item": "core:offal",
+        "mass_pct": 0.005,
+        "rarity": 100,
+        "max_units": 2
+      },
+      {
+        "name": "liver",
+        "organ": "liver",
+        "item": "core:offal",
+        "mass_pct": 0.02,
+        "rarity": 100,
+        "max_units": 3
+      },
+      {
+        "name": "kidneys",
+        "organ": "kidneys",
+        "item": "core:offal",
+        "mass_pct": 0.004,
+        "rarity": 95,
+        "max_units": 2
+      },
+      {
+        "name": "lungs",
+        "organ": "lungs",
+        "item": "core:offal",
+        "mass_pct": 0.012,
+        "rarity": 95,
+        "max_units": 2
+      }
+    ],
+    "home_kind": "bed",
+    "home_radius": 12,
+    "home_storage": false,
+    "activity_bias": {
+      "drink": 70,
+      "forage": 12,
+      "rest": 58
     }
   }
 ]

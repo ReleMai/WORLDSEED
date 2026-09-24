@@ -1,11 +1,13 @@
 from __future__ import annotations
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
+from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
 from worldseed.systems.state import LivingWorldState, CarcassState, ProcessingJobState, GroundPile, pos_key
 
 class ProcessingSystem:
-    def __init__(self,state:LivingWorldState,registry:ContentRegistry,building):self.state=state;self.registry=registry;self.building=building
+    def __init__(self,state:LivingWorldState,registry:ContentRegistry,building,seed:bytes=b""):
+        self.state=state;self.registry=registry;self.building=building;self.seed=seed or b"WORLDSEED-processing"
 
     def nearby_carcasses(self,pos:WorldPos,radius:int=1)->list[CarcassState]:
         return sorted([c for c in self.state.carcasses.values() if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=radius],key=lambda c:(abs(c.x-pos.x)+abs(c.y-pos.y),c.uid))
@@ -34,6 +36,34 @@ class ProcessingSystem:
                 if iid in self.registry.items and n>0:inv.add(iid,n)
             text=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in recovered.items() if i in self.registry.items) or 'nothing useful'
             return True,f"You extract {text} from the carcass.",4
+        if action=='anatomy':
+            q=max(self._tool_quality(inv,'butcher'),self._tool_quality(inv,'cut'))
+            if q<1:return False,"You need a cutting or butchering tool to harvest organs and anatomical parts.",0
+            pending=[dict(p) for p in sp.harvest_parts if str(p.get("name","")) not in c.harvested_parts]
+            if not pending:return False,"All recoverable anatomical parts have already been examined.",0
+            outputs=[];hunting=max(0,int(hunting_skill))
+            for part in pending:
+                name=str(part.get("name","part"));iid=str(part.get("item",""));organ=str(part.get("organ",""))
+                c.harvested_parts.append(name)
+                if iid not in self.registry.items:continue
+                rarity=max(0,min(100,int(part.get("rarity",100))))
+                roll=int(hash_u64(self.seed,"anatomy-harvest",c.uid,sp.id,name)%100)
+                if roll>=min(100,rarity+hunting*2+q*3):continue
+                damage=max(0,min(100,int(c.organ_damage.get(organ,0)))) if organ else 0
+                intact=max(0,100-damage)
+                mass_g=max(1,round(float(part.get("mass_pct",0.005))*sp.mass_kg*1000))
+                item_mass=max(1,self.registry.items[iid].mass_g)
+                max_units=max(1,int(part.get("max_units",1)))
+                base_units=max(1,min(max_units,max(1,mass_g//item_mass)))
+                units=max(0,base_units*(45+min(45,hunting*3+q*5)+intact//10)//100)
+                if damage>=85 and organ:units=max(0,units//2)
+                if units<=0:continue
+                inv.add(iid,units)
+                size="tiny" if mass_g<120 else "small" if mass_g<500 else "medium" if mass_g<1800 else "large" if mass_g<5000 else "massive"
+                condition="damaged " if damage>=55 else ""
+                outputs.append(f"{condition}{size} {name} → {units} {self.registry.items[iid].name.lower()}")
+            if not outputs:return True,f"You examine the {sp.name.lower()}'s anatomy, but no additional parts are usable.",max(8,24-hunting-q)
+            return True,"You harvest "+("; ".join(outputs))+".",max(10,32-hunting-q*2)
         if action=='skin':
             if c.skinned:return False,"The carcass has already been skinned.",0
             q=self._tool_quality(inv,'skin')
@@ -51,6 +81,7 @@ class ProcessingSystem:
             c.butchered=True;c.processed_by='player';outputs={};quality=max(20,min(120,effective_quality+hunting_skill*2+q*4+table_bonus))
             for iid,n in profile.items():
                 if iid in ('core:fresh_hide','core:bone','core:sinew'):continue
+                if iid=='core:offal' and c.harvested_parts:continue
                 got=max(0,n*quality//100)
                 if got:inv.add(iid,got);outputs[iid]=got
             text=', '.join(f'{n} {self.registry.items[i].name.lower()}' for i,n in outputs.items()) or 'little usable meat'

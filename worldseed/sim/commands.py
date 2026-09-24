@@ -53,6 +53,10 @@ class ClearReadyWeaponCommand: actor:int
 @dataclass(frozen=True,slots=True)
 class AimCommand: actor:int; target_uid:str; zone:str="center"
 @dataclass(frozen=True,slots=True)
+class SetHuntingStanceCommand: actor:int; stance:str="normal"
+@dataclass(frozen=True,slots=True)
+class SearchAnimalHomeCommand: actor:int; home_uid:str
+@dataclass(frozen=True,slots=True)
 class GuardCommand: actor:int
 @dataclass(frozen=True,slots=True)
 class DodgeCommand: actor:int

@@ -670,8 +670,10 @@ def _process_carcass_menu(ctx:GameContext,term:Terminal)->str:
     if not uid:return UI_BACK
     c=sim.state.carcasses[uid];sp=reg.species.get(c.species_id);actions=[]
     if c.embedded_items:actions.append(('recover','Recover embedded arrows / thrown weapons'))
+    if any(str(p.get('name','')) not in c.harvested_parts for p in (sp.harvest_parts if sp else ())):
+        actions.append(('anatomy','Harvest organs / anatomical parts — damage and animal size affect yield'))
     if not c.skinned:actions.append(('skin','Skin — remove hide before butchering for the best hide'))
-    if not c.butchered:actions.append(('butcher','Butcher — separate meat, organs and fat'))
+    if not c.butchered:actions.append(('butcher','Butcher — separate bulk meat and fat'))
     if c.butchered and not c.deboned:actions.append(('debone','Debone — recover bones and sinew; finishes carcass'))
     act=_select(term,(sp.name if sp else 'CARCASS').upper(),actions)
     if not act:return UI_BACK
@@ -981,6 +983,24 @@ def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
             sim.execute(ArenaIncomingHitCommand(pid,kind,dtype,int(damage),dx,dy,part,defense));status=sim.log[-1].message if sim.log else '';nav.back();continue
 
 
+def _hunting_stance_menu(ctx:GameContext,term:Terminal)->str:
+    sim=ctx.sim;current=str(getattr(sim.state,'player_hunting_stance','normal'))
+    weather=sim.environment.weather.at(sim.clock.minute,sim.player_pos.x,sim.player_pos.y)
+    wx=int(weather.get('wind_dx',0));wy=int(weather.get('wind_dy',0))
+    wind='calm'
+    if wx or wy:
+        horiz='east' if wx>0 else 'west' if wx<0 else ''
+        vert='south' if wy>0 else 'north' if wy<0 else ''
+        wind='-'.join(x for x in (vert,horiz) if x)
+    pick=_select(term,'STEALTH / STALKING',[
+        ('normal',f'Normal{" [CURRENT]" if current=="normal" else ""} — fastest; no concealment stance'),
+        ('stalk',f'Stalk{" [CURRENT]" if current=="stalk" else ""} — slower, quieter; observer cones enabled'),
+        ('crouch',f'Crouch{" [CURRENT]" if current=="crouch" else ""} — slowest, strongest visual/noise concealment'),
+    ],subtitle=f'Wind: {wind}. Scent still carries downwind; stance cannot hide scent.')
+    if not pick:return UI_BACK
+    sim.execute(SetHuntingStanceCommand(ctx.player_id,pick))
+    return sim.log[-1].message if sim.log else ''
+
 def _action_palette(ctx:GameContext,term:Terminal)->str:
     """Primary gameplay action hub with retained navigation state.
 
@@ -1069,8 +1089,9 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 if result==UI_BACK:continue
                 return result
             if action=='stealth':
-                ctx.sim.execute(ToggleStealthCommand(ctx.player_id))
-                return ctx.sim.log[-1].message if ctx.sim.log else ''
+                result=_hunting_stance_menu(ctx,term)
+                if result==UI_BACK:continue
+                return result
             if action=='p':ctx.sim.execute(PickupCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             result=_handle_menu(ctx,term,action)
             if result==UI_BACK:
@@ -1649,6 +1670,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
     door=sim.property_security.door_at(target)
     signs=sim.hunting.signs_at(target)
+    home=sim.hunting.home_at(target)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
         label=sp.name if sp and creature.species_id in sim.known_species_ids() else 'animal'
@@ -1700,6 +1722,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             rows.append(('steal_property_storage',f'Steal from {container.name}'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
+    if home and home.discovered:
+        rows.append(('inspect_home',f'Inspect {home.kind} — animal shelter'))
+        if distance<=1:rows.append(('search_home',f'Search {home.kind} — {sum(home.stored_items.values())} cached item(s)'))
     if distance<=1 and sim.resources.is_harvestable(target):
         rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
     if distance<=3 and sim.fishing.is_fishable(target):
@@ -1765,6 +1790,11 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         return sim.log[-1].message if sim.log else ''
     if choice=='inspect_sign':
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
+    if choice=='inspect_home':
+        _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
+    if choice=='search_home' and home:
+        sim.execute(SearchAnimalHomeCommand(ctx.player_id,home.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='gather':return _gather_positions(ctx,[target])
     if choice=='fish':return _fishing_action(ctx,term,target)
     if choice=='pickup':
