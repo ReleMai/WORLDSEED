@@ -111,6 +111,10 @@ class HuntingSystem:
                 continue
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
+            if turn <= int(getattr(creature,"staggered_until_turn",-1)):
+                creature.behavior = "staggered"
+                creature.stamina = min(sp.stamina, creature.stamina + 2)
+                continue
             perceived = self._perception_score(creature, sp, player_pos, turn, minute)
             if perceived > 0:
                 creature.alertness = min(100, creature.alertness + perceived)
