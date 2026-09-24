@@ -287,3 +287,35 @@ Extend ownership-aware crime from the market to private homes/workplaces and gen
 
 ### Next dependency
 Materialize stable property-owned storage and goods fixtures for residences, workshops and civic buildings so theft can extend beyond markets without inventing loot. After that, add trespass permissions, doors/locks and lockpicking, guard suspicion/search/confrontation, and cover/light/noise refinements while preserving the same physical LOS authority.
+
+
+## Work unit 11 - Materialized property storage and movement-based casing
+- Added stable local property storage tied directly to generated StructurePlanState IDs, physical rooms and civics ownership. Eligible residences, smithies, workshops, mills, fisheries, barns, clinics, watchhouses, archives and schools receive one bounded storage point when their settlement is active.
+- Initial property-storage contents are transferred out of SettlementState.stocks. The materialization never creates duplicate goods, and a stable seeded flag prevents a container from being refilled by repeated sync/load cycles. Markets continue to use the existing settlement stock ledger instead of gaining a second container ledger.
+- Private property containers carry settlement/property/room provenance plus owner/access/lock metadata. Normal storage menus exclude private containers so ordinary Take/Store actions cannot bypass theft rules.
+- Replaced the previous whole-building Case Property dossier with movement-based casing. Starting a casing session only selects a nearby physical property and enters stealth; it does not reveal the owner, layout, occupants or inventory.
+- Casing knowledge is gathered only from physical movement and line of sight: walking unique exterior perimeter cells surveys access, approaching the actual entrance identifies it, physically entering rooms learns their layout, seeing nearby occupants records them, and approaching materialized storage reveals that storage location.
+- Casing notes expose only gathered information: exterior survey progress, known entrance, learned room kinds, discovered occupants, discovered storage and owner identity only after it is learned. Unknown people remain unidentified and raw stable IDs are not shown.
+- Casing is suspicious but is not a crime. It never creates TheftRecordState, player crime heat or a bounty by itself. Repeated observed sessions and observed discovery activity accumulate suspicion against the same physical property and aggregate across properties belonging to the same owner.
+- Suspicion has low/noticed/watchful/alarmed bands. Owners, occupants and guards contribute more strongly when they observe the behavior. Higher attention gives relevant observers a modest perception-range increase; repeated high-alarm casing pushes witnessing guards toward guard duty without treating the player as convicted of theft.
+- Private storage theft requires all of the physical prerequisites: stealth active, active casing of the same property, that storage previously discovered through casing, and the player physically within reach. Theft removes the actual container item and transfers it to the player inventory.
+- Property-storage theft reuses the existing ownership-aware theft/economy records and StealthSystem witness cones. Witnessed theft therefore feeds the existing local crime heat and later bounty path, while unwitnessed theft does not fabricate a witness.
+- Pygame renders materialized storage with existing chest/box/basket structure art and keeps casing status compact in the stealth sidebar: survey percentage, attention, rooms learned and storage learned. The terminal renderer provides the same compact state and does not reveal storage through map memory when it is not currently visible.
+
+### Compatibility / authority
+- Container provenance/access fields, CasingIntelState and player_casing_property_id are additive persistent state with defaults; no settlement-plan or save-schema bump is required.
+- StructurePlanState remains the property/building authority, CivicsSystem remains ownership authority, SettlementState.stocks remains aggregate goods authority, and exact local containers are a local materialization of goods reserved from that ledger.
+- Casing is a player-knowledge/suspicion layer over physical structures and NPC perception; it does not own geometry, schedules, law or economy.
+- Storage placement is deterministic, remains inside the assigned room, avoids planned fixtures/entrances and active NPC positions, and is skipped rather than inventing an invalid location.
+
+### Validation added
+- generated property containers bind to real physical structures and civics owners
+- initial stored goods are real settlement stock and repeated synchronization does not reseed or drain stock twice
+- starting casing does not reveal whole-home storage; exterior movement increases survey knowledge and physically reaching an interior storage location reveals it
+- repeated witnessed casing raises attention while producing no theft record or bounty
+- private-storage theft removes the real stored item, transfers it to player inventory and records real LOS witnesses/property provenance
+- property container provenance and casing intelligence survive LivingWorldState serialization round-trip
+- Fast Gate settlement coverage includes the property-storage/casing regression module
+
+### Next dependency
+Add physical door permissions and locks to generated properties, then build trespass state, lockpicking/forced-entry actions and guard confrontation/search behavior on the same property, casing and LOS authorities. Household consumption/budgets can then move goods between these real storage containers and the market ledger instead of remaining only aggregate settlement consumption.

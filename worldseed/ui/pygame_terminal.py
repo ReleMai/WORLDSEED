@@ -2338,7 +2338,7 @@ class PygameTerminal(PointerUI):
         state=sim.state
         collections=(
             ('creatures',state.creatures),('npcs',state.npcs),('structures',state.structures),
-            ('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
+            ('containers',state.containers),('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
             ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
         )
         key=(id(sim),sim.clock.minute//60)+tuple(len(v) for _,v in collections)
@@ -2418,6 +2418,9 @@ class PygameTerminal(PointerUI):
         st=ctx['structure_by'].get(k)
         if st:
             d=registry.structures.get(st.structure_id);lines.append(d.name if d else st.structure_id)
+        pc=ctx.get('property_container_by',{}).get(k)
+        if pc:
+            lines.append(pc.name or 'Property storage')
         cr=ctx['crop_by'].get(k)
         if cr:
             d=registry.crops.get(cr.crop_id);lines.append((d.name if d else cr.crop_id)+(' (mature)' if cr.mature else f' ({int(cr.growth)}%)'))
@@ -2537,6 +2540,10 @@ class PygameTerminal(PointerUI):
         creature_by={(c.x,c.y,c.z):c for c in nearby['creatures'] if c.hp>0 and _onscreen(c.x,c.y,c.z)}
         npc_by={(n.x,n.y,n.z):n for n in nearby['npcs'] if n.alive and _onscreen(n.x,n.y,n.z)}
         structure_by={(s.x,s.y,s.z):s for s in nearby['structures'] if _onscreen(s.x,s.y,s.z)}
+        property_container_by={
+            (q.x,q.y,q.z):q for q in nearby['containers']
+            if q.kind=='property' and _onscreen(q.x,q.y,q.z)
+        }
         crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}
         fire_by={(f.x,f.y,f.z):f for f in nearby['fires'] if _onscreen(f.x,f.y,f.z)}
         fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
@@ -2650,7 +2657,7 @@ class PygameTerminal(PointerUI):
         # The cached base layer already contains every terrain tile. Walk only
         # cells that actually have an overlay instead of scanning the entire
         # viewport in Python every frame. Sorting by y preserves sprite depth.
-        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)
+        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)
         overlay_keys.add((pos.x,pos.y,pos.z))
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
@@ -2668,6 +2675,9 @@ class PygameTerminal(PointerUI):
                 self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
             if k in structure_by:
                 st=structure_by[k];self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',st.structure_id)),rect,1.35)
+            if k in property_container_by:
+                pc=property_container_by[k]
+                self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',pc.source_id)),rect,.95)
             if k in pile_by:
                 iid=next(iter(pile_by[k].items));self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('items',iid)),rect,.8)
             if k in carcass_by:
@@ -2796,6 +2806,14 @@ class PygameTerminal(PointerUI):
             structure=sim.settlement_physicalization.structure_by_id(structure_id) if structure_id else None
             if structure is not None:
                 text(f'Inside: {str(structure.function).replace("_"," ").title()}',self._theme['muted'])
+            casing=stealth_overlay.get('casing') or {}
+            if casing.get('active'):
+                text('CASING',self._theme['accent'],gap=19)
+                text(f"{str(casing.get('function','property')).replace('_',' ').title()} • survey {int(casing.get('survey_progress',0))}%")
+                text(
+                    f"Attention {str(casing.get('attention','low')).title()} • rooms {int(casing.get('room_count',0))} • storage {int(casing.get('storage_count',0))}",
+                    self._theme['danger'] if int(casing.get('alarm_level',0))>=2 else self._theme['muted']
+                )
         if pos.z==0 and lighting is not None:
             text('WEATHER',self._theme['accent'],gap=19)
             text(f"{str(weather.get('kind','clear')).title()}  Clouds {int(weather.get('cloud_cover',0))}%")
@@ -2831,6 +2849,7 @@ class PygameTerminal(PointerUI):
             'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
+            'property_container_by':property_container_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
             'combat_by':combat_by,'stealth_by':stealth_by,
         }

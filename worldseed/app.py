@@ -501,6 +501,85 @@ def _near_market(sim:Simulation):
         if distance<=10:candidates.append((distance,town))
     return min(candidates,key=lambda row:(row[0],row[1].uid),default=(0,None))[1]
 
+def _casing_notes(ctx:GameContext,term:Terminal,property_id:str)->str:
+    sim=ctx.sim;intel=sim.casing.intel_for(property_id);structure=sim.settlement_physicalization.structure_by_id(property_id)
+    if intel is None or structure is None:
+        return 'No casing notes have been gathered for this property.'
+    summary=sim.casing.summary(property_id);known=sim.known_npc_ids()
+    owner='Unknown'
+    if intel.owner_known:
+        if intel.owner_uid in sim.state.npcs:
+            owner=sim.state.npcs[intel.owner_uid].name if intel.owner_uid in known else 'Unidentified private owner'
+        elif intel.owner_uid in sim.state.settlements:
+            town=sim.state.settlements[intel.owner_uid]
+            owner=town.name if town.uid in sim.known_settlement_ids() else 'Settlement authority'
+        elif intel.owner_uid:
+            owner='Known institution'
+    room_labels=[]
+    for uid in intel.room_ids:
+        room=sim.settlement_physicalization.room_by_id(uid)
+        if room is not None:room_labels.append(str(room.kind).replace('_',' ').title())
+    storage_rows=[]
+    for container in sim.property_storage.for_property(property_id):
+        if container.uid in intel.storage_uids:
+            distance=abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)
+            storage_rows.append(f'{container.name} — {"within reach" if distance<=1 else "located"}')
+    known_occupants=[sim.state.npcs[uid].name for uid in intel.occupant_uids if uid in known and uid in sim.state.npcs]
+    unidentified=max(0,len(intel.occupant_uids)-len(known_occupants))
+    occupants=', '.join(known_occupants)
+    if unidentified:occupants+=((', ' if occupants else '')+f'{unidentified} unidentified')
+    lines=[
+        f'Property: {str(structure.function).replace("_"," ").title()}',
+        f'Exterior survey: {int(summary.get("survey_progress",0))}%',
+        f'Main entrance: {"identified" if intel.entrance_known else "not identified"}',
+        f'Owner: {owner}',
+        f'Attention: {str(summary.get("attention","low")).title()}',
+        f'Sessions: {int(summary.get("sessions",0))}',
+        '',
+        'Known rooms: '+(', '.join(sorted(set(room_labels))) if room_labels else 'none'),
+        'Known occupants: '+(occupants or 'none'),
+        'Known storage: '+(str(len(storage_rows)) if storage_rows else 'none'),
+    ]
+    lines.extend(f'  {row}' for row in storage_rows[:6])
+    lines+=['','Move around the exterior to survey access. Entering rooms reveals only the spaces and storage you physically reach.']
+    _view_text(term,box('CASING NOTES',lines,screen_width(term.size()[0],96)))
+    return UI_BACK
+
+
+def _steal_property_storage_action(ctx:GameContext,term:Terminal,container)->str:
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    if not sim.state.player_stealth_mode or sim.state.player_casing_property_id!=container.property_id:
+        return 'Case this property in stealth mode before attempting storage theft.'
+    intel=sim.casing.intel_for(container.property_id)
+    if intel is None or container.uid not in intel.storage_uids:
+        return 'You have not located this storage while casing the property.'
+    if abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
+        return 'Move next to the storage before attempting theft.'
+    rows=[
+        (iid,f'{reg.items[iid].name} — x{n} — value {sim.player_trade_price(container.settlement_id,iid,True)}c')
+        for iid,n in sorted(container.items.items()) if n>0 and iid in reg.items
+    ]
+    if not rows:return f'{container.name} is empty.'
+    iid=_select(term,'PROPERTY STORAGE',rows,subtitle=f'{container.name} • taking an item is theft.')
+    if not iid:return UI_BACK
+    maximum=min(10,int(container.items.get(iid,0)))
+    quantities=[q for q in (1,2,5,10) if q<=maximum]
+    qkey=_select(term,'STEAL · QUANTITY',[(str(q),f'{q} × {reg.items[iid].name}') for q in quantities]) if quantities else None
+    if not qkey:return UI_BACK
+    amount=int(qkey)
+    snap=sim.stealth_snapshot();known=sim.known_npc_ids()
+    watcher_names=[
+        (sim.state.npcs[uid].name if uid in known and uid in sim.state.npcs else 'Stranger')
+        for uid in snap.get('seen_by',())
+        if uid in sim.state.npcs and sim.state.npcs[uid].settlement_id==container.settlement_id
+    ]
+    risk='No current observer has line of sight.' if not watcher_names else 'Seen by: '+', '.join(watcher_names[:4])
+    confirm=_select(term,'STEAL · REVIEW',[('confirm','Take item'),('back','Cancel')],subtitle=f'{amount} × {reg.items[iid].name}. {risk}')
+    if confirm!='confirm':return UI_BACK
+    sim.execute(StealContainerCommand(pid,container.uid,iid,amount))
+    return sim.log[-1].message if sim.log else ''
+
+
 def _steal_market_action(ctx:GameContext,term:Terminal,town)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     if not sim.state.player_stealth_mode:
@@ -1294,6 +1373,8 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
         _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not c:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
+    if c.kind=='property' and c.owner!='player' and c.access!='public':
+        _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     nav=NavigationStack(RouteState('storage','Nearby Storage'))
     while True:
         route=nav.current
@@ -1336,6 +1417,8 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not container:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
+    if container.kind=='property' and container.owner!='player' and container.access!='public':
+        _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     uid=container.uid
     nav=NavigationStack(RouteState('container-inventory','CONTAINER STORAGE'))
     action_amount=1;last_selected=None;status=''
@@ -1572,14 +1655,25 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
+    private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
     if planned is not None:
         building_label=str(planned.function).replace('_',' ').title()
-        if not sim.state.player_stealth_mode:
-            rows.append(('enter_stealth',f'Enter stealth mode — case {building_label}'))
-        else:
-            rows.append(('case_property',f'Case {building_label} — ownership and sight coverage'))
-            if planned.function=='market' and distance<=2:
-                rows.append(('steal_market_here','Steal from market stock'))
+        active_case=str(sim.state.player_casing_property_id or '')
+        if active_case==planned.uid:
+            rows.append(('review_casing',f'Review casing notes — {building_label}'))
+            rows.append(('stop_casing','Stop casing this property'))
+        elif distance<=2:
+            rows.append(('begin_casing',f'Begin casing from here — {building_label}'))
+        if planned.function=='market' and sim.state.player_stealth_mode and distance<=2:
+            rows.append(('steal_market_here','Steal from market stock'))
+    if private_storage and distance<=1:
+        intel=sim.casing.intel_for(container.property_id)
+        if (
+            sim.state.player_stealth_mode
+            and sim.state.player_casing_property_id==container.property_id
+            and intel is not None and container.uid in intel.storage_uids
+        ):
+            rows.append(('steal_property_storage',f'Steal from {container.name}'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
@@ -1590,53 +1684,23 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if distance<=1 and pile and pile.items:
         count=sum(max(0,int(n)) for n in pile.items.values())
         rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
-    if distance<=1 and container:
+    if distance<=1 and container and not private_storage:
         rows.append(('open',f'Open {container.name or "container"}'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
-    if choice=='enter_stealth':
-        sim.execute(ToggleStealthCommand(ctx.player_id,True))
+    if choice=='begin_casing' and planned is not None:
+        sim.execute(StartCasingCommand(ctx.player_id,planned.uid))
         return sim.log[-1].message if sim.log else ''
-    if choice=='case_property' and planned is not None and physical is not None:
-        owner=sim.civics.owner_for_structure(physical.settlement_id,planned.uid)
-        known=sim.known_npc_ids()
-        if owner in sim.state.npcs:
-            owner_label=sim.state.npcs[owner].name if owner in known else 'Private owner'
-        elif owner in sim.state.settlements:
-            town=sim.state.settlements[owner]
-            owner_label=town.name if owner in sim.known_settlement_ids() else 'Settlement authority'
-        else:
-            owner_label='Settlement authority'
-        prop=sim.state.properties.get(planned.uid)
-        snap=sim.stealth_snapshot()
-        watched=()
-        for cell in snap.get('cells',()):
-            if (int(cell.get('x',0)),int(cell.get('y',0)),int(cell.get('z',target.z)))==(target.x,target.y,target.z):
-                watched=tuple(cell.get('observer_uids',()))
-                break
-        watcher_labels=[]
-        for uid in watched:
-            n=sim.state.npcs.get(uid)
-            watcher_labels.append(n.name if n and uid in known else 'Stranger')
-        room=sim.settlement_physicalization.room_by_id(physical.room_id) if physical.room_id else None
-        lines=[
-            f'Building: {str(planned.function).replace("_"," ").title()}',
-            f'Owner: {owner_label}',
-            f'Room: {str(room.kind).replace("_"," ").title() if room else "Exterior / shared space"}',
-            f'Condition: {int(planned.condition)}%',
-            f'Current sight coverage: {len(watched)} observer(s)',
-        ]
-        if watcher_labels:lines.append('Watching this tile: '+', '.join(watcher_labels[:5]))
-        if prop and prop.occupants:
-            known_occupants=[sim.state.npcs[uid].name for uid in prop.occupants if uid in known and uid in sim.state.npcs]
-            lines.append('Known occupants: '+(', '.join(known_occupants[:5]) if known_occupants else 'none identified'))
-        if planned.function!='market':
-            lines.append('No stealable building inventory is materialized here yet; theft requires a real goods/storage source.')
-        _view_text(term,box('CASE PROPERTY',lines,screen_width(term.size()[0],96)))
-        return UI_BACK
+    if choice=='review_casing' and planned is not None:
+        return _casing_notes(ctx,term,planned.uid)
+    if choice=='stop_casing':
+        sim.execute(StopCasingCommand(ctx.player_id))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='steal_property_storage' and container:
+        return _steal_property_storage_action(ctx,term,container)
     if choice=='steal_market_here' and planned is not None and physical is not None:
         town=sim.state.settlements.get(physical.settlement_id)
         if town:return _steal_market_action(ctx,term,town)
