@@ -135,6 +135,11 @@ class ContainerState:
     room_id: str = ""
     access: str = "owner"
     lock_level: int = 0
+    locked: bool = False
+    picked: bool = False
+    pick_attempts: int = 0
+    last_tampered_minute: int = -1
+    keyholder_uids: list[str] = field(default_factory=list)
     seeded_from_settlement: bool = False
 
 @dataclass(slots=True)

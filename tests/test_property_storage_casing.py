@@ -161,6 +161,25 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertEqual(stocks_before,town.stocks)
         self.assertEqual(container_before,{c.uid:dict(c.items) for c in state.containers.values() if c.kind=="property"})
         self.assertTrue(all(c.seeded_from_settlement for c in containers))
+        self.assertTrue(all(c.lock_level>0 and c.locked for c in containers))
+
+    def test_property_container_lockpick_and_keyholder_state_persist(self):
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
+        container=next(c for c in state.containers.values() if c.kind=="property")
+        self.assertTrue(storage.blocks_actor(container,"player"))
+        self.assertTrue(storage.grant_keyholder(container.uid,"npc:guest"))
+        self.assertFalse(storage.blocks_actor(container,"npc:guest"))
+        class Picks:
+            def quantity(self,item_id):return 1 if item_id=="core:lockpick" else 0
+        opened=False
+        for minute in range(100,140):
+            ok,msg,cost=storage.attempt_lockpick(container.uid,Picks(),minute,20,20)
+            if ok:opened=True;break
+        self.assertTrue(opened);self.assertTrue(container.picked);self.assertFalse(container.locked)
+        storage.sync_active();self.assertFalse(container.locked)
+        restored=LivingWorldState.from_dict(state.to_dict())
+        saved=next(c for c in restored.containers.values() if c.uid==container.uid)
+        self.assertTrue(saved.picked);self.assertFalse(saved.locked);self.assertIn("npc:guest",saved.keyholder_uids)
 
     def test_casing_learns_by_movement_not_by_starting_mode(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
@@ -244,6 +263,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
             _message=messages.append,
         )
         before=container.items[item_id]
+        container.locked=False;container.picked=True
         Simulation._steal_container(harness,StealContainerCommand(1,container.uid,item_id,1))
         self.assertEqual(container.items.get(item_id,0),before-1)
         self.assertEqual(inv.count(item_id),1)

@@ -386,3 +386,10 @@ Generalize actor-aware door permissions for resident/employee/guest keys and sch
 
 ### Next dependency
 Materialize container locks and physical keys/key ownership/crafting on top of the new access-grant substrate. Add owner reactions to discovered damage/missing goods and guard stop/search choices (surrender, flee, bribe/restitution). Then move household budgets/consumption and local hauling through the same real market/property storage authority.
+
+
+## Work unit 14 - Materialized property container locks
+- Private generated property storage now has persistent deterministic locks.
+- Store/take/theft paths consume the same lock authority; casing knowledge does not bypass a lock.
+- Picked/tamper/keyholder state persists and active sync does not repair picked storage.
+- Next: physical key ownership/transfer/crafting and interaction UI.
