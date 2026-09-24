@@ -241,6 +241,8 @@ class HuntingSystem:
                 c.last_display_turn=turn
                 return "display"
             if self._charge_possible(c,sp,player,dist):
+                if turn-c.last_attacked_turn<=1 and sp.defensive_aggression>=60:
+                    return self._start_charge(c,sp,turn)
                 threshold=max(sp.defensive_aggression,sp.charge_power//2)
                 roll=hash_u64(self.seed,"charge-decision",c.uid,c.last_threat_turn,turn//2)%100
                 if roll<threshold:
