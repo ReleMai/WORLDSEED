@@ -529,8 +529,10 @@ def _process_carcass_menu(ctx:GameContext,term:Terminal)->str:
     if not uid:return UI_BACK
     c=sim.state.carcasses[uid];sp=reg.species.get(c.species_id);actions=[]
     if c.embedded_items:actions.append(('recover','Recover embedded arrows / thrown weapons'))
+    remaining_anatomy=[name for name in c.anatomy_condition if name not in c.harvested_anatomy]
+    if remaining_anatomy:actions.append(('anatomy',f'Harvest organs / specialized parts — {len(remaining_anatomy)} remaining'))
     if not c.skinned:actions.append(('skin','Skin — remove hide before butchering for the best hide'))
-    if not c.butchered:actions.append(('butcher','Butcher — separate meat, organs and fat'))
+    if not c.butchered:actions.append(('butcher','Butcher — separate meat and fat'))
     if c.butchered and not c.deboned:actions.append(('debone','Debone — recover bones and sinew; finishes carcass'))
     act=_select(term,(sp.name if sp else 'CARCASS').upper(),actions)
     if not act:return UI_BACK
