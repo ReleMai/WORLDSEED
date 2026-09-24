@@ -384,6 +384,48 @@ class CombatSystem:
             creature.behavior="staggered"
         return True,True,f"You meet the charge at reach. {msg}"
 
+    def intercept_approach(self,creature:CreatureState,inv:Inventory,turn:int,stamina:int=100)->tuple[bool,bool,str]:
+        """Prepared reach control against an animal closing from outside adjacency."""
+        if self.state.player_defense_mode!="parry":
+            return False,False,""
+        weapon=self.readied_weapon(inv)
+        if not weapon or weapon.reach<2 or ("ranged" in weapon.tags and not weapon.throwable):
+            return False,False,""
+        mode="thrust" if weapon.damage_type=="pierce" else "quick"
+        before_wounds=len(creature.wounds);before_hp=creature.hp
+        msg=self.attack_creature(creature,inv,turn,min(2,weapon.reach),stamina,mode)
+        alive=creature.uid in self.state.creatures
+        hit=(not alive) or len(creature.wounds)>before_wounds or creature.hp<before_hp
+        if not hit:
+            return True,False,f"You try to hold the {weapon.name.lower()} at reach, but the animal gets inside the line. {msg}"
+        if alive:
+            creature.stamina=max(0,creature.stamina-8)
+            creature.alertness=100
+        return True,True,f"You stop the approach at weapon reach. {msg}"
+
+    def player_collision_injury(self,vitals:Vitals,turn:int,force:int,source_name:str="impact")->str:
+        force=max(1,int(force));damage=max(1,min(14,force//10));severity=min(100,damage*7+force//3)
+        fracture_chance=min(65,max(0,force-25))
+        rng=PCG32(derive_seed(self.seed,"player-collision",turn,source_name,force,vitals.hp))
+        fracture=rng.randbelow(100)<fracture_chance
+        part=("torso","left_arm","right_arm","left_leg","right_leg")[rng.randbelow(5)]
+        vitals.hp=max(0,vitals.hp-damage);vitals.pain=min(100,vitals.pain+max(2,severity//4))
+        self.state.player_body_parts[part]=max(0,self.state.player_body_parts.get(part,100)-damage*2)
+        self.state.player_wounds.append({"part":part,"tissue":"muscle" if damage>=5 else "skin","type":"blunt","severity":severity,"bleeding":0,"fracture":fracture,"turn":turn,"source":source_name,"attack_kind":"collision"})
+        if len(self.state.player_wounds)>80:self.state.player_wounds=self.state.player_wounds[-80:]
+        return f"You slam into solid terrain for {damage} blunt damage"+(" and suffer a fracture." if fracture else ".")
+
+    def creature_collision_injury(self,creature:CreatureState,turn:int,force:int,source_name:str="impact")->str:
+        sp=self.registry.species[creature.species_id];force=max(1,int(force));damage=max(1,min(16,force//9))
+        severity=min(100,damage*6+force//3);fracture=force>=35
+        creature.hp-=damage;creature.pain=min(100,creature.pain+max(2,severity//3))
+        creature.wounds.append({"part":"torso","tissue":"muscle" if damage>=5 else "skin","type":"blunt","severity":severity,"bleeding":0,"fracture":fracture,"turn":turn,"weapon":source_name,"mode":"collision"})
+        if creature.hp<=0:
+            self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
+            return f"The {sp.name.lower()} crashes into solid terrain and dies."
+        creature.staggered_until_turn=max(creature.staggered_until_turn,turn+1);creature.behavior="staggered"
+        return f"The {sp.name.lower()} crashes into solid terrain for {damage} blunt damage."
+
     def creature_attack_player(self,creature:CreatureState,vitals:Vitals,turn:int,source_dx:int=0,source_dy:int=0)->str:
         sp=self.registry.species[creature.species_id];rng=PCG32(derive_seed(self.seed,"creature-attack",turn,creature.uid,creature.hp,creature.behavior,creature.charge_momentum))
         attacks=list(sp.attacks) or [{"name":"attack","damage":sp.damage,"type":"bite" if sp.diet in ("carnivore","omnivore") else "blunt","bleeding":1,"fracture":0}]
