@@ -87,6 +87,14 @@ class HuntingStealthAnatomyTests(unittest.TestCase):
         state.player_stance="stalk";hidden=hunting._perception_score(deer,self.reg.species["core:deer"],pos,2,500)
         self.assertLess(hidden,seen)
 
+    def test_thirsty_calm_animal_automatically_selects_water_activity(self):
+        state=LivingWorldState();world=_World(water={(1,0,0)});hunting=self.hunting(state,world,_Resources())
+        sp=self.reg.species["core:deer"]
+        deer=CreatureState("auto:deer","core:deer",0,0,0,sp.max_hp,stamina=120,thirst=80,last_need_minute=500)
+        state.creatures[deer.uid]=deer
+        self.assertTrue(hunting._activity_tick(deer,sp,WorldPos(30,30,0),1,500))
+        self.assertIn(deer.activity,("to_water","drinking"))
+
     def test_drinking_feeding_and_resting_write_real_evidence(self):
         state=LivingWorldState();world=_World(water={(1,0,0)});resources=_Resources(food={(0,1,0)})
         hunting=self.hunting(state,world,resources);sp=self.reg.species["core:deer"]
