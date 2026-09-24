@@ -33,6 +33,8 @@ from worldseed.systems.macrohistory import MacroHistorySystem
 from worldseed.systems.artifacts import ArtifactSystem
 from worldseed.systems.disasters import DisasterSystem
 from worldseed.systems.settlements import SettlementLifecycleSystem
+from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
+from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.legends import LegendSystem
 from worldseed.systems.metallurgy import MetallurgySystem
 from worldseed.systems.dungeons import DungeonSystem
@@ -122,6 +124,11 @@ class Simulation:
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
         self.region_planner=RegionBlockPlanner(world)
+        self.settlement_planner=SettlementSkeletonPlanner(world)
+        self.settlement_physicalization=SettlementPhysicalizationSystem(
+            world,registry,self.region_planner,self.settlement_planner
+        )
+        self.building.attach_settlement_physicalization(self.settlement_physicalization)
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
         # to crossing the corresponding spatial boundary, not to every one-cell
@@ -444,6 +451,11 @@ class Simulation:
                         s=self.state.settlements[key]
                         if not any(n.alive and n.settlement_id==s.uid for n in self.state.npcs.values()):
                             for npc in self.society_gen.representatives_for_settlement(s):self.state.npcs[npc.uid]=npc
+            # Physicalize only the active region. Distant settlements remain
+            # stable plan records and never inflate local collision/render state.
+            self.settlement_physicalization.sync(
+                self.state.settlements.values(),(rx,ry),radius=0
+            )
             for settlement in self.state.settlements.values():
                 if abs(settlement.region_x-rx)<=1 and abs(settlement.region_y-ry)<=1:
                     self.civics.ensure_settlement(settlement.uid)
@@ -577,7 +589,9 @@ class Simulation:
             blocked=None if opaque_cache is None else opaque_cache.get(key)
             if blocked is None:
                 tile=self.world.tile_at(cell)
-                blocked=bool(tile.terrain.blocks_sight or self.resources.blocks_sight(cell) or self.building.blocks_sight(cell))
+                blocked=bool(tile.terrain.blocks_sight or
+                             (self.resources.blocks_sight(cell) and not self.settlement_physicalization.clears_natural_feature(cell)) or
+                             self.building.blocks_sight(cell))
                 if opaque_cache is not None:opaque_cache[key]=blocked
             if blocked:return False
         return True
@@ -726,7 +740,7 @@ class Simulation:
     def _combat_cell_free(self,pos:WorldPos,*,ignore_uid:str="")->bool:
         terrain=self.world.tile_at(pos).terrain
         world_pass=self.world.is_passable(pos) or "water" in terrain.tags
-        if self.resources.blocks_movement(pos):return False
+        if self.resources.blocks_movement(pos) and not self.settlement_physicalization.clears_natural_feature(pos):return False
         if not self.building.passable(pos,world_pass):return False
         if not self.environment.fluid_passable(pos) and "water" not in terrain.tags:return False
         if pos==self.player_pos:return False
@@ -763,7 +777,7 @@ class Simulation:
             nxt=pc.value.moved(dx,dy)
             terrain=self.world.tile_at(nxt).terrain;world_pass=self.world.is_passable(nxt) or "water" in terrain.tags
             occupied=any(c.hp>0 and (c.x,c.y,c.z)==(nxt.x,nxt.y,nxt.z) for c in self.state.creatures.values())
-            blocked=self.resources.blocks_movement(nxt) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
+            blocked=(self.resources.blocks_movement(nxt) and not self.settlement_physicalization.clears_natural_feature(nxt)) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
             if blocked:
                 messages.append(self.combat.player_collision_injury(v,self.turn,force,"combat collision"))
                 break
@@ -783,7 +797,7 @@ class Simulation:
         if any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values()):
             self._message("A living creature blocks that space. Use a combat action or disengage around it.");return
         world_pass=self.world.is_passable(new) or 'water' in terrain.tags
-        if self.resources.blocks_movement(new):
+        if self.resources.blocks_movement(new) and not self.settlement_physicalization.clears_natural_feature(new):
             self._message(f"{self.resources.description(new)} blocks your path. Harvest it from an adjacent tile.");return
         if not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and water.mode!='swimming'):
             self._message('Something solid blocks your path.');return

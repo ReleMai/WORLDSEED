@@ -79,3 +79,25 @@ Generate structure footprints on the new residential/civic/industrial parcels, t
 
 ### Next dependency
 Materialize planned settlement pieces into local terrain/structure layers without changing the authoritative plan; then add dedicated settlement-atlas rendering for roads, parcels, buildings and named interior rooms.
+
+
+## Work unit 4 - Local settlement physicalization
+- Added `SettlementPhysicalizationSystem`, a bounded reconstruction layer that projects the authoritative settlement skeleton into local playable cells without copying generated civilization into player-built structure state or terrain deltas.
+- Active-region physicalization indexes planned roads, parcel IDs, structure IDs, room IDs, walls/doors/partitions, fixtures, floors and roofs.
+- Generated walls and workstations now participate in movement collision; wall pieces participate in line-of-sight blocking; planned doors remain passable.
+- The existing `BuildingSystem` can query generated settlement rooms directly, so room classification/roof coverage comes from the same stable room plan used by the settlement atlas.
+- Local rendering now displays settlement construction pieces before natural resources/ground. Planned roads, walls, doors and workshop/furniture fixtures therefore become visible when their cells are discovered.
+- Natural resource features are suppressed on physicalized civilization cells for movement/visibility, preventing deterministic trees/boulders from blocking a road or appearing inside a planned building without creating fake depletion records.
+- Runtime materialization is bounded to the player's current 512x512 region. Distant settlement plans stay persistent but consume no local collision/render index.
+- Missing prepared environmental data causes a settlement to remain unmaterialized rather than inventing a fallback village.
+
+### Validation added
+- road glyph projection
+- wall collision and sight blocking
+- passable planned doors
+- planned room/shelter queries through `BuildingSystem`
+- no duplication into `LivingWorldState.structures`
+- active-region dematerialization/rebuild when the player changes regions
+
+### Next dependency
+Expose the exact settlement atlas as a dedicated UI layer with roads, parcels, building outlines and room labels; then bind NPC homes/workplaces to generated structure/room IDs and replace random representative positions with deterministic valid settlement spawn/route points.

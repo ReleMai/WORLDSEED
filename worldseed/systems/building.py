@@ -8,7 +8,10 @@ from worldseed.systems.state import LivingWorldState, StructureInstance, RoofSta
 
 class BuildingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry):
-        self.state=state;self.registry=registry;self.resources=None;self.seed=b""
+        self.state=state;self.registry=registry;self.resources=None;self.seed=b"";self.settlement_overlay=None
+
+    def attach_settlement_physicalization(self,overlay)->None:
+        self.settlement_overlay=overlay
 
     def attach_resources(self,resources,seed:bytes)->None:
         self.resources=resources;self.seed=seed or b""
@@ -83,12 +86,17 @@ class BuildingSystem:
         inv.add(item_id,amount);return True,f"You take {amount} {self.registry.items[item_id].name.lower()}."
     def passable(self,pos:WorldPos,world_passable:bool=True)->bool:
         s=self.structure_at(pos)
-        if s is None:return world_passable
-        sd=self.registry.structures[s.structure_id]
-        if "bridge" in sd.tags:return sd.passable
-        return world_passable and sd.passable
+        if s is not None:
+            sd=self.registry.structures[s.structure_id]
+            if "bridge" in sd.tags:return sd.passable
+            return world_passable and sd.passable
+        if self.settlement_overlay is not None:
+            return self.settlement_overlay.passable(pos,world_passable)
+        return world_passable
     def blocks_sight(self,pos:WorldPos)->bool:
-        s=self.structure_at(pos);return False if s is None else self.registry.structures[s.structure_id].blocks_sight
+        s=self.structure_at(pos)
+        if s is not None:return self.registry.structures[s.structure_id].blocks_sight
+        return bool(self.settlement_overlay and self.settlement_overlay.blocks_sight(pos))
     def place(self,structure_id:str,pos:WorldPos,inv:Inventory,owner:str="player")->tuple[bool,str]:
         if structure_id not in self.registry.structures:return False,"Unknown structure."
         key=pos_key(pos.x,pos.y,pos.z);sdef=self.registry.structures[structure_id]
@@ -206,6 +214,9 @@ class BuildingSystem:
         return {"supports":supports,"walls":walls,"roofs":len(roofs),"unsupported_roofs":unsupported,"flammable_elements":flammable,"damaged_elements":damaged,"stability":score}
 
     def room_at(self,pos:WorldPos,max_cells:int=600)->dict:
+        if self.settlement_overlay is not None:
+            planned=self.settlement_overlay.room_at(pos)
+            if planned is not None:return planned
         # flood fill through passable non-wall tiles; if search escapes bounding box, not enclosed
         start=(pos.x,pos.y);q=deque([start]);seen={start};escaped=False;doors=0;beds=0;stations=[]
         limit=12
