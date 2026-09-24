@@ -277,6 +277,7 @@ class Simulation:
         elif isinstance(command,BuyCommand):self._buy(command)
         elif isinstance(command,SellCommand):self._sell(command)
         elif isinstance(command,BarterCommand):self._barter(command)
+        elif isinstance(command,StealMarketCommand):self._steal_market(command)
         elif isinstance(command,ReadBookCommand):self._read_book(command)
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
@@ -1411,6 +1412,55 @@ class Simulation:
         offered_name=self.registry.items[cmd.offered_item].name
         requested_name=self.registry.items[cmd.requested_item].name
         self._message(f"You barter {offered} {offered_name} for {requested} {requested_name}.")
+
+    def _steal_market(self,cmd:StealMarketCommand)->None:
+        town=self.state.settlements.get(cmd.settlement_id)
+        inv=self.entities.get(cmd.actor,Inventory)
+        if town is None:
+            self._message("That market is unavailable.");return
+        target=self.settlement_physicalization.destination_for_function(town.uid,("market",))
+        if target is None:
+            self._message("There is no physical market here to steal from.");return
+        if target.z!=self.player_pos.z or abs(target.x-self.player_pos.x)+abs(target.y-self.player_pos.y)>2:
+            self._message("Move closer to the market goods.");return
+        amount=max(1,int(cmd.amount))
+        if town.stocks.get(cmd.item_id,0)<amount:
+            self._message("That quantity is not present in the market.");return
+        if cmd.item_id not in self.registry.items:
+            self._message("That market good is invalid.");return
+        cell=self.settlement_physicalization.cell_at(target)
+        structure_id=cell.structure_id if cell is not None else ""
+        owner=self.civics.owner_for_structure(town.uid,structure_id) if structure_id else town.uid
+        witnesses=[]
+        for npc in self.state.npcs.values():
+            if not npc.alive or npc.settlement_id!=town.uid or npc.z!=self.player_pos.z:
+                continue
+            origin=WorldPos(int(npc.x),int(npc.y),int(npc.z))
+            if abs(origin.x-self.player_pos.x)+abs(origin.y-self.player_pos.y)>10:
+                continue
+            if self._visible_from(origin,self.player_pos):
+                witnesses.append(npc.uid)
+        town.stocks[cmd.item_id]-=amount
+        inv.add(cmd.item_id,amount)
+        theft=self.economy.record_theft(
+            town.uid,"player",owner or town.uid,cmd.item_id,amount,self.clock.minute,
+            witnessed=bool(witnesses),property_id=structure_id,source_kind="market",
+            witness_uids=witnesses,
+        )
+        if witnesses:
+            guards=sum(1 for uid in witnesses if uid in self.state.npcs and self.state.npcs[uid].occupation=="guard")
+            self.state.player_crime_heat[town.uid]=min(
+                100,self.state.player_crime_heat.get(town.uid,0)+10+guards*15
+            )
+            self._message(
+                f"You take {amount} {self.registry.items[cmd.item_id].name} without paying. "
+                f"The theft was witnessed."
+            )
+        else:
+            self._message(
+                f"You take {amount} {self.registry.items[cmd.item_id].name} without paying. "
+                f"No witness is apparent."
+            )
 
     def _magic_reveal(self,effects:dict)->None:
         p=self.player_pos;r=8+effects.get("potency",1)*4;keys=set()
