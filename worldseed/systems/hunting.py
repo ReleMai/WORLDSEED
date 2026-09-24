@@ -78,11 +78,14 @@ class HuntingSystem:
         if any(k in tid for k in ("forest", "grass", "moss", "scrub")): noise -= 4
         if self.resources and self.resources.is_harvestable(pos): noise += 3
         # Equipment is physical noise: heavy/metal gear is harder to move quietly in.
-        for iid in self.state.player_equipment.values():
+        noisy_ids=list(self.state.player_equipment.values())
+        if self.state.player_readied_weapon and self.state.player_readied_weapon not in noisy_ids:
+            noisy_ids.append(self.state.player_readied_weapon)
+        for iid in noisy_ids:
             item=self.registry.items.get(iid)
             if not item:continue
             noise += min(8,max(0,int(item.mass_g)//1800))
-            if item.material and "metal" in item.material:noise += 3
+            if "metal" in item.tags or item.material in {"core:copper","core:bronze","core:iron","core:steel"}:noise += 3
         if self.state.player_stance=="stalk":
             skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
             agility=int(self.state.player_attributes.get("agility",5))
