@@ -214,7 +214,10 @@ class NPCState:
     children: list[str] = field(default_factory=list)
     tasks: list[dict] = field(default_factory=list)
     home_id: str = ""
+    home_room_id: str = ""
+    bed_fixture_id: str = ""
     workplace_id: str = ""
+    work_room_id: str = ""
     property_id: str = ""
     employer_id: str = ""
     culture_id: str = ""
