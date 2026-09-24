@@ -822,7 +822,8 @@ class Simulation:
             nxt=pc.value.moved(dx,dy)
             terrain=self.world.tile_at(nxt).terrain;world_pass=self.world.is_passable(nxt) or "water" in terrain.tags
             occupied=any(c.hp>0 and (c.x,c.y,c.z)==(nxt.x,nxt.y,nxt.z) for c in self.state.creatures.values())
-            blocked=(self.resources.blocks_movement(nxt) and not self.settlement_physicalization.clears_natural_feature(nxt)) or self.property_security.blocks_player(nxt) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
+            security=getattr(self,"property_security",None)
+            blocked=(self.resources.blocks_movement(nxt) and not self.settlement_physicalization.clears_natural_feature(nxt)) or bool(security and security.blocks_player(nxt)) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
             if blocked:
                 messages.append(self.combat.player_collision_injury(v,self.turn,force,"combat collision"))
                 break
@@ -844,9 +845,10 @@ class Simulation:
         world_pass=self.world.is_passable(new) or 'water' in terrain.tags
         if self.resources.blocks_movement(new) and not self.settlement_physicalization.clears_natural_feature(new):
             self._message(f"{self.resources.description(new)} blocks your path. Harvest it from an adjacent tile.");return
-        if self.property_security.blocks_player(new):
-            door=self.property_security.door_at(new)
-            band=self.property_security.lock_band(door.lock_level) if door else "locked"
+        security=getattr(self,"property_security",None)
+        if security is not None and security.blocks_player(new):
+            door=security.door_at(new)
+            band=security.lock_band(door.lock_level) if door else "locked"
             self._message(f"The {band} property lock blocks the door.");return
         if not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and water.mode!='swimming'):
             self._message('Something solid blocks your path.');return
@@ -1298,7 +1300,8 @@ class Simulation:
         if new_min<=old_min:self._message("A disengage must create space from the adjacent threat.");return 1
         terrain=self.world.tile_at(new).terrain;world_pass=self.world.is_passable(new) or "water" in terrain.tags
         occupied=any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values())
-        if occupied or self.resources.blocks_movement(new) or self.property_security.blocks_player(new) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
+        security=getattr(self,"property_security",None)
+        if occupied or self.resources.blocks_movement(new) or bool(security and security.blocks_player(new)) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
             self._message("You have no clear retreat path in that direction.");return 1
         cost=5+self.combat.leg_injury_penalty()
         if v.stamina<cost:self._message("You are too exhausted to disengage cleanly.");return 1
