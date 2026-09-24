@@ -380,7 +380,7 @@ class CombatSystem:
         if alive:
             creature.charge_momentum=0;creature.charge_committed_until_turn=-1
             creature.stamina=max(0,creature.stamina-18)
-            creature.staggered_until_turn=max(creature.staggered_until_turn,turn)
+            creature.staggered_until_turn=max(creature.staggered_until_turn,turn+1)
             creature.behavior="staggered"
         return True,True,f"You meet the charge at reach. {msg}"
 
