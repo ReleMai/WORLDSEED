@@ -50,7 +50,7 @@ class CombatSystem:
         if self.state.player_aim_target!=creature.uid or self.state.player_aim_zone!=zone:
             self.state.player_aim_quality=0
         self.state.player_aim_target=creature.uid;self.state.player_aim_zone=zone
-        motion=16 if creature.behavior in ("flee","wounded_flee") else 8 if creature.behavior in ("pursue","defend") else 3 if creature.behavior=="alert" else 0
+        motion=18 if creature.behavior in ("flee","herd_flee","wounded_flee","charge","flank","disengage") else 9 if creature.behavior in ("pursue","defend","regroup") else 3 if creature.behavior in ("alert","display") else 0
         zone_difficulty={"center":0,"vitals":10,"head":18,"legs":8}[zone]
         gain=max(6,18+perception*2+hunting*2-motion-zone_difficulty//2)
         self.state.player_aim_quality=min(100,self.state.player_aim_quality+gain)
@@ -222,14 +222,14 @@ class CombatSystem:
     def melee_hit_chance(self,weapon,distance:int,agility:int,melee:int,stamina:int,target_behavior:str="calm",mode:str="standard")->int:
         handling=0 if weapon is None else weapon.accuracy
         profile=self.melee_mode_profile(weapon,mode)
-        motion=12 if target_behavior in ("flee","wounded_flee") else 10 if target_behavior=="staggered" else 7 if target_behavior=="pursue" else 4 if target_behavior=="defend" else 0
+        motion=14 if target_behavior in ("flee","herd_flee","wounded_flee","flank","disengage") else 11 if target_behavior=="charge" else 10 if target_behavior=="staggered" else 7 if target_behavior in ("pursue","regroup") else 4 if target_behavior=="defend" else 0
         fatigue=max(0,35-stamina)//2
         reach_penalty=max(0,distance-1)*8
         return max(18,min(97,70+handling+int(profile["accuracy"])+agility*2+melee*3-motion-fatigue-reach_penalty-self.arm_injury_penalty()//2))
 
     def ranged_hit_chance(self,weapon,distance:int,perception:int,hunting:int,zone:str="center",aim_quality:int=0,stamina:int=100,target_behavior:str="calm")->int:
         zone=zone if zone in self.AIM_ZONES else "center"
-        motion_penalty=20 if target_behavior in ("flee","wounded_flee") else 11 if target_behavior in ("pursue","defend") else 6 if target_behavior=="alert" else 0
+        motion_penalty=22 if target_behavior in ("flee","herd_flee","wounded_flee","flank","disengage") else 16 if target_behavior=="charge" else 11 if target_behavior in ("pursue","defend","regroup") else 6 if target_behavior in ("alert","display") else 0
         range_penalty=max(0,distance-2)*4
         fatigue=max(0,35-stamina)//2
         zone_penalty={"center":0,"vitals":11,"head":24,"legs":10}[zone]
