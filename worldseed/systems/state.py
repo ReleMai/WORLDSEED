@@ -318,7 +318,6 @@ class CaravanState:
 
 
 @dataclass(slots=True)
-@dataclass(slots=True)
 class CasingIntelState:
     property_id: str
     settlement_id: str
@@ -337,6 +336,7 @@ class CasingIntelState:
     witness_uids: list[str] = field(default_factory=list)
 
 
+@dataclass(slots=True)
 class TheftRecordState:
     uid: str
     settlement_id: str
