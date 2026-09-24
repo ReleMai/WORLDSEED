@@ -70,9 +70,9 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
-      - name: Settlement generation foundation regressions
+      - name: Settlement generation and population regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Settlement generation foundation regressions" --timeout 90 -- python -u -m unittest -v tests.test_settlement_generation_foundation
+        run: python -u tools/run_ci_check.py --name "Settlement generation and population regressions" --timeout 120 -- python -u -m unittest -v tests.test_settlement_generation_foundation tests.test_settlement_population_bindings
 
       - name: Item asset catalog regressions
         shell: pwsh
