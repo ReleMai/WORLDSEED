@@ -173,6 +173,7 @@ class CreatureState:
     pack_role: str = ""
     panic: int = 0
     last_display_turn: int = -1000
+    last_attacked_turn: int = -1000
 
 @dataclass(slots=True)
 class PopulationCohort:
