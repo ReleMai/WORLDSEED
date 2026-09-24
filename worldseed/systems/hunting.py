@@ -273,6 +273,10 @@ class HuntingSystem:
                             ok=bool(rd and "food" in rd.tags)
                         if not ok and sp.diet in ("carnivore","omnivore"):
                             ok=any(k.z==q.z and abs(k.x-q.x)+abs(k.y-q.y)<=1 and k.quality>15 for k in self.state.carcasses.values())
+                            if not ok:
+                                pile=self.state.ground_piles.get(f"{q.x},{q.y},{q.z}")
+                                if pile:
+                                    ok=any(iid in self.registry.items and ({"food","raw_meat","animal"} & set(self.registry.items[iid].tags)) and n>0 for iid,n in pile.items.items())
                     if ok:
                         score=-r*20+self._cover_score(q)//3
                         tie=hash_u64(self.seed,"animal-activity-target",c.uid,kind,q.x,q.y)&0xffff
@@ -290,22 +294,46 @@ class HuntingSystem:
         if c.activity in ("feeding","drinking","resting") and turn<=c.activity_until_turn:
             if c.activity=="feeding":
                 c.hunger=max(0,c.hunger-10);c.stamina=min(sp.stamina,c.stamina+2)
+                if not c.carried_item_id and sp.diet in ("carnivore","omnivore") and c.home_den_uid:
+                    pile=self.state.ground_piles.get(f"{c.x},{c.y},{c.z}")
+                    if pile:
+                        for iid,n in sorted(pile.items.items()):
+                            item=self.registry.items.get(iid)
+                            if n>0 and item and ({"food","raw_meat","animal"} & set(item.tags)):
+                                pile.items[iid]-=1
+                                if pile.items[iid]<=0:pile.items.pop(iid,None)
+                                c.carried_item_id=iid
+                                break
             elif c.activity=="drinking":
                 c.thirst=max(0,c.thirst-14);c.stamina=min(sp.stamina,c.stamina+2)
             else:
                 c.stamina=min(sp.stamina,c.stamina+12);c.pain=max(0,c.pain-1)
             return True
         if c.activity in ("feeding","drinking","resting") and turn>c.activity_until_turn:
-            if c.activity=="feeding" and hash_u64(self.seed,"animal-scat",c.uid,turn//3)%100<38:
+            finished=c.activity
+            if finished=="feeding" and hash_u64(self.seed,"animal-scat",c.uid,turn//3)%100<38:
                 pos=WorldPos(c.x,c.y,c.z);self._write_stationary_sign(c,"scat",pos,minute,max(20,sp.trackability//2),"droppings")
-            c.activity="";c.activity_target_x=c.activity_target_y=c.activity_target_z=None
+            if finished=="feeding" and c.carried_item_id and c.home_den_uid in self.state.animal_dens:
+                den=self.state.animal_dens[c.home_den_uid]
+                self._set_activity_target(c,WorldPos(den.x,den.y,den.z),"to_cache",turn)
+            else:
+                c.activity="";c.activity_target_x=c.activity_target_y=c.activity_target_z=None
 
         # Continue travel toward an actual resource/den.
-        if c.activity in ("to_food","to_water","to_den"):
+        if c.activity in ("to_food","to_water","to_den","to_cache"):
             if c.activity_target_x is None or turn>c.activity_until_turn:
                 c.activity="";return False
             target=WorldPos(int(c.activity_target_x),int(c.activity_target_y),int(c.activity_target_z or c.z))
             if (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                if c.activity=="to_cache":
+                    den=self.state.animal_dens.get(c.home_den_uid)
+                    if den and c.carried_item_id:
+                        den.stored_items[c.carried_item_id]=den.stored_items.get(c.carried_item_id,0)+1
+                        den.last_used_minute=minute
+                        self._write_stationary_sign(c,"feeding",target,minute,max(25,sp.trackability),"cached food at den")
+                        c.carried_item_id=""
+                    c.activity="resting";c.activity_until_turn=turn+3
+                    return True
                 next_activity={"to_food":"feeding","to_water":"drinking","to_den":"resting"}[c.activity]
                 c.activity=next_activity;c.activity_until_turn=turn+(3 if next_activity!="resting" else 5)
                 detail="feeding sign" if next_activity=="feeding" else "trampled bank at a drinking spot" if next_activity=="drinking" else "flattened bedding"
@@ -352,7 +380,7 @@ class HuntingSystem:
         rows=[]
         for dx,dy in CARDINALS:
             q=current.moved(dx,dy)
-            if q==target or ((q.x,q.y,q.z) not in occupied and self._passable_for(sp,q)):
+            if (q.x,q.y,q.z) not in occupied and self._passable_for(sp,q):
                 d=abs(q.x-target.x)+abs(q.y-target.y)
                 score=-d*30+self._cover_score(q)//5
                 tie=hash_u64(self.seed,"animal-activity-step",c.uid,c.activity,turn,q.x,q.y)&0xffff
