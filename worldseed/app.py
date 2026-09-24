@@ -2058,22 +2058,99 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
         sim.execute(ReadBookCommand(pid));return sim.log[-1].message if sim.log else ''
     if lower=='o':
         town=_near_market(sim)
-        if not town:_view_text(term,box('MARKET',['No discovered settlement market is within 10 tiles. Open TAB > World > Settlements to browse known towns.'],screen_width(term.size()[0],92)));return UI_BACK
+        if not town:
+            _view_text(term,box('MARKET',['No discovered market is within reach.'],screen_width(term.size()[0],92)))
+            return UI_BACK
+        sim.economy.ensure_currency(town)
+        quote_name,quote_units=sim.economy.currency_quote(town.uid,10)
+        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.'
         while True:
-            mode=_select(term,f'{town.name} MARKET',[('buy','Buy'),('sell','Sell')])
+            mode=_select(
+                term,f'{town.name} MARKET',
+                [('buy','Buy'),('sell','Sell'),('barter','Barter')],
+                subtitle=subtitle,
+            )
             if not mode:return UI_BACK
-            if mode=='buy':rows=[(iid,f'{reg.items[iid].name}: stock {n}, buy {sim.player_trade_price(town.uid,iid,True)}c') for iid,n in town.stocks.items() if n>0 and iid in reg.items]
+            inv=ctx.entities.get(pid,Inventory)
+            if mode=='barter':
+                offered_rows=[]
+                for iid,n in sorted(inv.items.items()):
+                    if n<=0 or iid=='core:copper_coin' or iid not in reg.items:continue
+                    value=sim.player_barter_value(town.uid,{iid:1},True)
+                    offered_rows.append((iid,f'{reg.items[iid].name} — x{n} — offer value {value}c'))
+                offered_iid=_select(term,'BARTER · OFFER',offered_rows,subtitle='Choose one good from your pack.')
+                if not offered_iid:continue
+                offered_max=inv.count(offered_iid)
+                offer_quantities=[q for q in (1,5,10) if q<=offered_max]
+                if offered_max>0 and offered_max not in offer_quantities:offer_quantities.append(offered_max)
+                oq=_select(
+                    term,'BARTER · OFFER QUANTITY',
+                    [(str(q),f'{q} × {reg.items[offered_iid].name} — {sim.player_barter_value(town.uid,{offered_iid:q},True)}c offer value') for q in offer_quantities],
+                )
+                if not oq:continue
+                offered_amount=int(oq)
+                request_rows=[]
+                for iid,n in sorted(town.stocks.items()):
+                    if n<=0 or iid==offered_iid or iid not in reg.items:continue
+                    value=sim.player_barter_value(town.uid,{iid:1},False)
+                    request_rows.append((iid,f'{reg.items[iid].name} — stock {n} — request value {value}c'))
+                requested_iid=_select(term,'BARTER · REQUEST',request_rows,subtitle='Choose what you want from the market.')
+                if not requested_iid:continue
+                requested_max=town.stocks.get(requested_iid,0)
+                request_quantities=[q for q in (1,5,10) if q<=requested_max]
+                if requested_max>0 and requested_max not in request_quantities:request_quantities.append(requested_max)
+                rq_rows=[]
+                for q in request_quantities:
+                    balance=sim.player_barter_balance(
+                        town.uid,{offered_iid:offered_amount},{requested_iid:q}
+                    )
+                    state='acceptable' if balance>=0 else f'short {-balance}c'
+                    rq_rows.append((str(q),f'{q} × {reg.items[requested_iid].name} — {state}'))
+                rq=_select(term,'BARTER · REQUEST QUANTITY',rq_rows)
+                if not rq:continue
+                requested_amount=int(rq)
+                balance=sim.player_barter_balance(
+                    town.uid,{offered_iid:offered_amount},{requested_iid:requested_amount}
+                )
+                summary=(
+                    f'{offered_amount} {reg.items[offered_iid].name} → '
+                    f'{requested_amount} {reg.items[requested_iid].name} | '
+                    +('offer accepted by value' if balance>=0 else f'offer short {-balance}c')
+                )
+                confirm=_select(term,'BARTER · REVIEW',[('confirm','Confirm trade'),('back','Change offer')],subtitle=summary)
+                if confirm!='confirm':continue
+                sim.execute(BarterCommand(pid,town.uid,offered_iid,offered_amount,requested_iid,requested_amount))
+                return sim.log[-1].message if sim.log else ''
+            if mode=='buy':
+                rows=[]
+                for iid,n in sorted(town.stocks.items()):
+                    if n<=0 or iid not in reg.items:continue
+                    price=sim.player_trade_price(town.uid,iid,True)
+                    local_name,units=sim.economy.currency_quote(town.uid,price)
+                    rows.append((iid,f'{reg.items[iid].name} — stock {n} — {price}c / {units} {local_name}'))
             else:
-                inv=ctx.entities.get(pid,Inventory);rows=[(iid,f'{reg.items[iid].name}: x{n}, sell {sim.player_trade_price(town.uid,iid,False)}c') for iid,n in inv.items.items() if n>0 and iid!='core:copper_coin' and iid in reg.items]
-            iid=_select(term,mode.upper(),rows)
+                rows=[]
+                for iid,n in sorted(inv.items.items()):
+                    if n<=0 or iid=='core:copper_coin' or iid not in reg.items:continue
+                    price=sim.player_trade_price(town.uid,iid,False)
+                    local_name,units=sim.economy.currency_quote(town.uid,price)
+                    rows.append((iid,f'{reg.items[iid].name} — x{n} — {price}c / {units} {local_name}'))
+            iid=_select(term,mode.upper(),rows,subtitle='Select a good. Local currency is shown as a value quote; copper remains the physical coin.')
             if not iid:continue
-            inv=ctx.entities.get(pid,Inventory);price=sim.economy.trade_price(town.uid,iid,mode=='buy')
+            price=sim.player_trade_price(town.uid,iid,mode=='buy')
             maximum=min(town.stocks.get(iid,0),inv.count('core:copper_coin')//max(1,price)) if mode=='buy' else inv.count(iid)
             quantities=[q for q in (1,5,10) if q<=maximum]
             if maximum>0 and maximum not in quantities:quantities.append(maximum)
-            qkey=_select(term,'QUANTITY',[(str(q),f'{q} unit(s) — {q*price}c') for q in quantities]) if quantities else None
+            qrows=[]
+            for q in quantities:
+                total=q*price;local_name,units=sim.economy.currency_quote(town.uid,total)
+                qrows.append((str(q),f'{q} unit(s) — {total}c / {units} {local_name}'))
+            qkey=_select(term,'QUANTITY',qrows) if qrows else None
             if not qkey:continue
-            amount=int(qkey);sim.execute(BuyCommand(pid,town.uid,iid,amount) if mode=='buy' else SellCommand(pid,town.uid,iid,amount));return sim.log[-1].message if sim.log else ''
+            amount=int(qkey)
+            sim.execute(BuyCommand(pid,town.uid,iid,amount) if mode=='buy' else SellCommand(pid,town.uid,iid,amount))
+            return sim.log[-1].message if sim.log else ''
+
     return ''
 
 def _map_key(key:str,pid:int):
