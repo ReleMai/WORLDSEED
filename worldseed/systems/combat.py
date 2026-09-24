@@ -359,16 +359,75 @@ class CombatSystem:
             piece=max(0,(item.armor+material_bonus)*quality_factor//50);rating += piece;names.append(artifact.name if artifact else item.name)
         return min(30,rating),names
 
+    def intercept_charge(self,creature:CreatureState,inv:Inventory,turn:int,stamina:int=100)->tuple[bool,bool,str]:
+        """Use a prepared reach weapon to meet a committed charge.
+
+        This is only available when the player explicitly chose Parry. It turns
+        a reach-2+ piercing weapon into a point-control defense rather than an
+        automatic passive bonus.
+        """
+        if creature.behavior!="charge" or creature.charge_momentum<=0 or self.state.player_defense_mode!="parry":
+            return False,False,""
+        weapon=self.readied_weapon(inv)
+        if not weapon or weapon.reach<2 or weapon.damage_type!="pierce":
+            return False,False,""
+        before_wounds=len(creature.wounds);before_hp=creature.hp
+        msg=self.attack_creature(creature,inv,turn,min(2,weapon.reach),stamina,"thrust")
+        alive=creature.uid in self.state.creatures
+        hit=(not alive) or len(creature.wounds)>before_wounds or creature.hp<before_hp
+        if not hit:
+            return True,False,f"You set the {weapon.name.lower()} against the charge, but the animal beats the point. {msg}"
+        if alive:
+            creature.charge_momentum=0;creature.charge_committed_until_turn=-1
+            creature.stamina=max(0,creature.stamina-18)
+            creature.staggered_until_turn=max(creature.staggered_until_turn,turn+1)
+            creature.behavior="staggered"
+        return True,True,f"You meet the charge at reach. {msg}"
+
     def creature_attack_player(self,creature:CreatureState,vitals:Vitals,turn:int,source_dx:int=0,source_dy:int=0)->str:
-        sp=self.registry.species[creature.species_id];rng=PCG32(derive_seed(self.seed,"creature-attack",turn,creature.uid,creature.hp))
+        sp=self.registry.species[creature.species_id];rng=PCG32(derive_seed(self.seed,"creature-attack",turn,creature.uid,creature.hp,creature.behavior,creature.charge_momentum))
         attacks=list(sp.attacks) or [{"name":"attack","damage":sp.damage,"type":"bite" if sp.diet in ("carnivore","omnivore") else "blunt","bleeding":1,"fracture":0}]
+        if creature.behavior=="charge":
+            preferred=[a for a in attacks if any(k in str(a.get("name","")).lower() for k in ("charge","rush","trampling","goring"))]
+            if preferred:attacks=preferred
+        elif creature.behavior=="flank" and sp.combat_style=="pack_predator":
+            preferred=[a for a in attacks if any(k in str(a.get("name","")).lower() for k in ("hamstring","raking","bite"))]
+            if preferred:attacks=preferred
         attack=attacks[rng.randbelow(len(attacks))];attack_name=str(attack.get("name","attack"));base_damage=max(1,int(attack.get("damage",sp.damage)));dtype=str(attack.get("type","blunt"))
-        parts=(("head",10),("neck",4),("torso",38),("left_arm",11),("right_arm",11),("left_leg",13),("right_leg",13));roll=rng.randbelow(100);part="torso"
+
+        if creature.behavior=="flank" and sp.pack_coordination>0:
+            parts=(("head",5),("neck",4),("torso",28),("left_arm",8),("right_arm",8),("left_leg",24),("right_leg",23))
+        else:
+            parts=(("head",10),("neck",4),("torso",38),("left_arm",11),("right_arm",11),("left_leg",13),("right_leg",13))
+        roll=rng.randbelow(100);part="torso"
         for p,w in parts:
             if roll<w:part=p;break
             roll-=w
+
         raw=max(1,base_damage*(80+rng.randbelow(41))//100)
-        return self.resolve_player_hit(vitals,part,raw,dtype,"melee",turn,f"{sp.name} uses {attack_name}",creature.uid,source_dx,source_dy,int(attack.get("bleeding",0)),int(attack.get("fracture",0)))
+        fracture=int(attack.get("fracture",0))
+        charging=creature.behavior=="charge"
+        momentum=max(0,int(creature.charge_momentum))
+        if charging:
+            bonus=min(75,int(sp.charge_power)//3+momentum*10)
+            raw=max(1,raw*(100+bonus)//100)
+            fracture=min(90,fracture+int(sp.charge_power)//4+momentum*6)
+        mode_before=str(getattr(self.state,"player_defense_mode","") or "")
+        msg=self.resolve_player_hit(vitals,part,raw,dtype,"melee",turn,f"{sp.name} uses {attack_name}",creature.uid,source_dx,source_dy,int(attack.get("bleeding",0)),fracture)
+
+        if charging:
+            creature.charge_committed_until_turn=-1;creature.charge_momentum=0
+            creature.stamina=max(0,creature.stamina-(18+momentum*3))
+            lower=msg.lower()
+            if "evade" in lower:
+                creature.staggered_until_turn=max(creature.staggered_until_turn,turn+1);creature.behavior="recover"
+            elif mode_before=="brace" and "shield" in lower:
+                creature.pain=min(100,creature.pain+6+momentum*2)
+                creature.stamina=max(0,creature.stamina-18)
+                creature.staggered_until_turn=max(creature.staggered_until_turn,turn+1);creature.behavior="staggered"
+            else:
+                creature.behavior="defend" if sp.defensive_aggression>=55 else "pursue"
+        return msg
 
     def treat_player_wound(self,index:int,item_id:str,inv:Inventory)->str:
         if index<0 or index>=len(self.state.player_wounds):return "That wound no longer exists."

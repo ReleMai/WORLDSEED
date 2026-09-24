@@ -133,6 +133,75 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         self.assertEqual(restored.player_readied_weapon,"core:sling")
         self.assertEqual((restored.player_aim_target,restored.player_aim_zone,restored.player_aim_quality),("animal:1","head",73))
 
+    def test_tactical_species_profiles_are_data_driven_and_distinct(self):
+        wolf=self.reg.species["core:wolf"];boar=self.reg.species["core:boar"];moose=self.reg.species["core:moose"];deer=self.reg.species["core:deer"];bear=self.reg.species["core:brown_bear"]
+        self.assertEqual(wolf.combat_style,"pack_predator");self.assertGreaterEqual(wolf.pack_coordination,90)
+        self.assertEqual(boar.combat_style,"charger");self.assertGreaterEqual(boar.charge_range,4);self.assertGreater(boar.charge_power,60)
+        self.assertEqual(moose.combat_style,"territorial_charger");self.assertGreater(moose.charge_power,boar.charge_power)
+        self.assertEqual(deer.combat_style,"herd_prey");self.assertGreaterEqual(deer.herd_cohesion,80)
+        self.assertEqual(bear.combat_style,"solitary_predator");self.assertGreaterEqual(bear.display_range,3)
+
+    def test_attacked_boar_commits_to_charge_and_builds_momentum(self):
+        state=LivingWorldState()
+        boar=CreatureState("tactic:boar","core:boar",4,0,0,self.reg.species["core:boar"].max_hp,stamina=105)
+        state.creatures[boar.uid]=boar
+        hunting=HuntingSystem(state,self.reg,b"boar-charge",self.world)
+        hunting.notify_attack(boar,WorldPos(0,0,0),1,500,loudness=70,hit=True)
+        attackers=hunting.update_local_ai(WorldPos(0,0,0),2,501)
+        self.assertEqual(boar.behavior,"charge");self.assertGreaterEqual(boar.charge_momentum,1);self.assertGreaterEqual(boar.charge_committed_until_turn,3)
+        self.assertNotIn(boar.uid,attackers)
+        attackers=hunting.update_local_ai(WorldPos(0,0,0),3,502)
+        self.assertIn(boar.uid,attackers);self.assertEqual(boar.behavior,"charge");self.assertGreaterEqual(boar.charge_momentum,2)
+        self.assertEqual(abs(boar.x)+abs(boar.y),1)
+
+    def test_uninjured_moose_can_threat_display_before_committing(self):
+        state=LivingWorldState()
+        moose=CreatureState("tactic:moose","core:moose",4,0,0,self.reg.species["core:moose"].max_hp,alertness=100,stamina=135,last_threat_turn=4)
+        state.creatures[moose.uid]=moose
+        hunting=HuntingSystem(state,self.reg,b"moose-display",self.world)
+        hunting.update_local_ai(WorldPos(0,0,0),5,600)
+        self.assertEqual(moose.behavior,"display")
+        self.assertEqual((moose.x,moose.y),(4,0))
+        self.assertEqual(moose.last_display_turn,5)
+
+    def test_wolf_pack_assigns_anchor_and_flanking_roles(self):
+        state=LivingWorldState()
+        coords=((5,-1),(5,1),(6,0))
+        wolves=[]
+        for i,(x,y) in enumerate(coords):
+            c=CreatureState(f"pack:{i}","core:wolf",x,y,0,self.reg.species["core:wolf"].max_hp,alertness=100,stamina=125,last_threat_turn=1)
+            state.creatures[c.uid]=c;wolves.append(c)
+        hunting=HuntingSystem(state,self.reg,b"wolf-pack",self.world)
+        hunting.update_local_ai(WorldPos(0,0,0),2,700)
+        roles={c.pack_role for c in wolves}
+        self.assertIn("anchor",roles);self.assertIn("flank_left",roles);self.assertIn("flank_right",roles)
+        self.assertEqual(sum(c.behavior=="pursue" for c in wolves),1)
+        self.assertEqual(sum(c.behavior=="flank" for c in wolves),2)
+
+    def test_wolf_with_low_stamina_disengages_toward_pack(self):
+        state=LivingWorldState()
+        tired=CreatureState("pack:tired","core:wolf",3,0,0,self.reg.species["core:wolf"].max_hp,alertness=100,stamina=20,last_threat_turn=1)
+        mate=CreatureState("pack:mate","core:wolf",5,1,0,self.reg.species["core:wolf"].max_hp,alertness=100,stamina=125,last_threat_turn=1)
+        state.creatures[tired.uid]=tired;state.creatures[mate.uid]=mate
+        hunting=HuntingSystem(state,self.reg,b"wolf-disengage",self.world)
+        hunting.update_local_ai(WorldPos(0,0,0),2,710)
+        self.assertEqual(tired.behavior,"disengage")
+        self.assertGreaterEqual(abs(tired.x)+abs(tired.y),3)
+
+    def test_deer_herd_shares_panic_and_flees_as_group(self):
+        state=LivingWorldState()
+        deer=[]
+        for i,(x,y) in enumerate(((5,2),(6,2),(5,3))):
+            c=CreatureState(f"herd:{i}","core:deer",x,y,0,self.reg.species["core:deer"].max_hp,stamina=120)
+            state.creatures[c.uid]=c;deer.append(c)
+        deer[0].panic=100;deer[0].alertness=100;deer[0].last_threat_turn=1
+        hunting=HuntingSystem(state,self.reg,b"deer-herd",self.world)
+        hunting.update_local_ai(WorldPos(0,0,0),2,720)
+        self.assertTrue(all(c.panic>=70 for c in deer))
+        self.assertTrue(all(c.behavior=="herd_flee" for c in deer))
+        spread=max(c.x for c in deer)-min(c.x for c in deer)+max(c.y for c in deer)-min(c.y for c in deer)
+        self.assertLessEqual(spread,7)
+
     def test_key_hunting_species_have_distinct_behavior_profiles(self):
         rabbit = self.reg.species["core:rabbit"]
         deer = self.reg.species["core:deer"]
@@ -204,6 +273,8 @@ class CombatHuntingPhaseTests(unittest.TestCase):
             "c", "core:deer", 4, 5, 0, 20,
             behavior="wounded_flee", alertness=90, stamina=44,
             threat_x=0, threat_y=0, threat_z=0, last_threat_turn=9,
+            charge_committed_until_turn=12, charge_momentum=2, pack_role="flank_left",
+            panic=71, last_display_turn=8, last_attacked_turn=9,
         )
         state.animal_signs["s"] = AnimalSignState(
             "s", "core:deer", 4, 5, 0, "blood", 500,
@@ -212,6 +283,10 @@ class CombatHuntingPhaseTests(unittest.TestCase):
         restored = LivingWorldState.from_dict(state.to_dict())
         self.assertEqual(restored.creatures["c"].behavior, "wounded_flee")
         self.assertEqual(restored.creatures["c"].threat_x, 0)
+        self.assertEqual(restored.creatures["c"].charge_momentum,2)
+        self.assertEqual(restored.creatures["c"].pack_role,"flank_left")
+        self.assertEqual(restored.creatures["c"].panic,71)
+        self.assertEqual(restored.creatures["c"].last_attacked_turn,9)
         self.assertEqual(restored.animal_signs["s"].kind, "blood")
         self.assertEqual(restored.animal_signs["s"].source_uid, "c")
 

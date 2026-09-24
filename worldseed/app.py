@@ -736,6 +736,7 @@ def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
                 ('ranged','Ranged lane — multiple ranges + flank threat'),
                 ('injury','Injury lab — fracture, bleeding, treatment & shields'),
                 ('shield','Shield gauntlet — all shield types + opposite threats'),
+                ('tactics','Tactical AI field — charges, wolf flanks & herd panic'),
             ])
             if pick=='__BACK__':continue
             if pick is None:return UI_BACK

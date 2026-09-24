@@ -52,7 +52,9 @@
     "defensive_aggression": 0,
     "stamina": 90,
     "trackability": 35,
-    "herd_response": 35
+    "herd_response": 35,
+    "combat_style": "prey",
+    "herd_cohesion": 30
   },
   {
     "id": "core:snowshoe_hare",
@@ -161,7 +163,9 @@
     "defensive_aggression": 8,
     "stamina": 120,
     "trackability": 82,
-    "herd_response": 85
+    "herd_response": 85,
+    "combat_style": "herd_prey",
+    "herd_cohesion": 88
   },
   {
     "id": "core:elk",
@@ -216,7 +220,20 @@
       "core:bone": 6,
       "core:animal_fat": 3,
       "core:sinew": 4
-    }
+    },
+    "combat_style": "herd_prey",
+    "vision": 11,
+    "hearing": 12,
+    "scent": 12,
+    "flee_threshold": 34,
+    "defensive_aggression": 38,
+    "stamina": 130,
+    "trackability": 90,
+    "herd_response": 92,
+    "herd_cohesion": 94,
+    "charge_range": 4,
+    "charge_power": 62,
+    "display_range": 3
   },
   {
     "id": "core:moose",
@@ -271,7 +288,20 @@
       "core:bone": 8,
       "core:animal_fat": 4,
       "core:sinew": 5
-    }
+    },
+    "combat_style": "territorial_charger",
+    "vision": 10,
+    "hearing": 11,
+    "scent": 12,
+    "flee_threshold": 48,
+    "defensive_aggression": 82,
+    "stamina": 135,
+    "trackability": 96,
+    "herd_response": 35,
+    "herd_cohesion": 20,
+    "charge_range": 5,
+    "charge_power": 96,
+    "display_range": 4
   },
   {
     "id": "core:boar",
@@ -335,7 +365,12 @@
     "defensive_aggression": 72,
     "stamina": 105,
     "trackability": 92,
-    "herd_response": 65
+    "herd_response": 65,
+    "combat_style": "charger",
+    "charge_range": 5,
+    "charge_power": 76,
+    "display_range": 2,
+    "herd_cohesion": 55
   },
   {
     "id": "core:turkey",
@@ -590,7 +625,13 @@
     "defensive_aggression": 82,
     "stamina": 125,
     "trackability": 86,
-    "herd_response": 92
+    "herd_response": 92,
+    "combat_style": "pack_predator",
+    "pack_coordination": 94,
+    "herd_cohesion": 86,
+    "charge_range": 0,
+    "charge_power": 0,
+    "display_range": 0
   },
   {
     "id": "core:brown_bear",
@@ -645,7 +686,20 @@
       "core:bone": 7,
       "core:animal_fat": 5,
       "core:sinew": 3
-    }
+    },
+    "combat_style": "solitary_predator",
+    "vision": 9,
+    "hearing": 11,
+    "scent": 15,
+    "flee_threshold": 58,
+    "defensive_aggression": 78,
+    "stamina": 145,
+    "trackability": 95,
+    "herd_response": 0,
+    "herd_cohesion": 0,
+    "charge_range": 4,
+    "charge_power": 100,
+    "display_range": 4
   },
   {
     "id": "core:badger",
@@ -903,7 +957,20 @@
       "core:fresh_hide": 2,
       "core:bone": 3,
       "core:animal_fat": 3
-    }
+    },
+    "combat_style": "charger",
+    "vision": 7,
+    "hearing": 10,
+    "scent": 13,
+    "flee_threshold": 44,
+    "defensive_aggression": 76,
+    "stamina": 110,
+    "trackability": 94,
+    "herd_response": 60,
+    "herd_cohesion": 52,
+    "charge_range": 4,
+    "charge_power": 82,
+    "display_range": 2
   },
   {
     "id": "core:muskrat",

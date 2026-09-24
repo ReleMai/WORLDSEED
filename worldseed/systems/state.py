@@ -168,6 +168,12 @@ class CreatureState:
     facing_dy: int = 1
     embedded_projectiles: list[dict] = field(default_factory=list)
     staggered_until_turn: int = -1
+    charge_committed_until_turn: int = -1
+    charge_momentum: int = 0
+    pack_role: str = ""
+    panic: int = 0
+    last_display_turn: int = -1000
+    last_attacked_turn: int = -1000
 
 @dataclass(slots=True)
 class PopulationCohort:

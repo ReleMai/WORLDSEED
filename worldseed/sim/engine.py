@@ -478,13 +478,34 @@ class Simulation:
             for did in self.disease.local_player_exposure(self.player_pos,self.clock.minute):
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
             for msg in self.disease.tick_player(self.clock.minute,v):self._message(msg)
+        before_behavior={uid:c.behavior for uid,c in self.state.creatures.items()}
         attackers=self.hunting.update_local_ai(self.player_pos,self.turn,self.clock.minute)
+        # Tactical tells are logged only when the local animal actually changes
+        # state, keeping the behavior legible without a renderer-side mutation.
+        p=self.player_pos
+        for uid,c in sorted(self.state.creatures.items()):
+            if before_behavior.get(uid)==c.behavior or c.z!=p.z or abs(c.x-p.x)+abs(c.y-p.y)>12:continue
+            sp=self.registry.species.get(c.species_id);name=(sp.name if sp else c.species_id)
+            if c.behavior=="display":self._message(f"{name} turns broad and gives a threat display.")
+            elif c.behavior=="charge":self._message(f"{name} commits to a charge.")
+            elif c.behavior=="flank":self._message(f"{name} circles toward your {c.pack_role.replace('_',' ')} side.")
+            elif c.behavior=="herd_flee":self._message(f"{name} breaks with the herd in panic.")
+            elif c.behavior=="disengage":self._message(f"{name} breaks contact and tries to rejoin its group.")
         v=self.entities.try_get(self.player_id,Vitals)
         if v:
+            inv=self.entities.try_get(self.player_id,Inventory)
             for uid in attackers:
                 c=self.state.creatures.get(uid)
                 if c:
                     p=self.player_pos
+                    if inv and c.behavior=="charge":
+                        attempted,stopped,msg=self.combat.intercept_charge(c,inv,self.turn,v.stamina)
+                        if attempted:
+                            self._message(msg)
+                            # The prepared parry was spent on the reach-control
+                            # attempt whether or not the point stopped the charge.
+                            self.state.player_defense_mode=""
+                            if stopped or uid not in self.state.creatures:continue
                     self._message(self.combat.creature_attack_player(c,v,self.turn,c.x-p.x,c.y-p.y))
             if v.hp<=0:
                 killer=self.state.creatures.get(attackers[-1]) if attackers else None
