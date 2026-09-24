@@ -501,6 +501,45 @@ def _near_market(sim:Simulation):
         if distance<=10:candidates.append((distance,town))
     return min(candidates,key=lambda row:(row[0],row[1].uid),default=(0,None))[1]
 
+def _steal_market_action(ctx:GameContext,term:Terminal,town)->str:
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    if not sim.state.player_stealth_mode:
+        sim.execute(ToggleStealthCommand(pid,True))
+        return sim.log[-1].message if sim.log else ''
+    rows=[]
+    for iid,n in sorted(town.stocks.items()):
+        if n<=0 or iid not in reg.items:continue
+        value=sim.player_trade_price(town.uid,iid,True)
+        rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
+    iid=_select(
+        term,'STEAL FROM MARKET',rows,
+        subtitle='Sight cones use NPC facing plus real terrain, doors and generated building walls.',
+    )
+    if not iid:return UI_BACK
+    maximum=min(10,town.stocks.get(iid,0))
+    quantities=[q for q in (1,2,5,10) if q<=maximum]
+    qkey=_select(
+        term,'STEAL · QUANTITY',
+        [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
+    ) if quantities else None
+    if not qkey:return UI_BACK
+    amount=int(qkey)
+    snap=sim.stealth_snapshot();seen=list(snap.get('seen_by',()))
+    known=sim.known_npc_ids()
+    watcher_names=[
+        (sim.state.npcs[uid].name if uid in known and uid in sim.state.npcs else 'Stranger')
+        for uid in seen if uid in sim.state.npcs and sim.state.npcs[uid].settlement_id==town.uid
+    ]
+    risk='No current observer has line of sight.' if not watcher_names else 'Seen by: '+', '.join(watcher_names[:4])
+    confirm=_select(
+        term,'STEAL · REVIEW',
+        [('confirm','Take goods'),('back','Cancel')],
+        subtitle=f'{amount} × {reg.items[iid].name}. {risk}',
+    )
+    if confirm!='confirm':return UI_BACK
+    sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
+    return sim.log[-1].message if sim.log else ''
+
 def _look_mode(ctx:GameContext,term:Terminal)->None:
     sim=ctx.sim;renderer=Renderer(ctx.registry);cursor=sim.player_pos
     while True:
@@ -2244,32 +2283,9 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
                 sim.execute(ToggleStealthCommand(pid,False))
                 return sim.log[-1].message if sim.log else ''
             if mode=='steal':
-                rows=[]
-                for iid,n in sorted(town.stocks.items()):
-                    if n<=0 or iid not in reg.items:continue
-                    value=sim.player_trade_price(town.uid,iid,True)
-                    rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
-                iid=_select(
-                    term,'STEAL FROM MARKET',rows,
-                    subtitle='Sight cones use NPC facing plus real terrain, doors and generated building walls.',
-                )
-                if not iid:continue
-                maximum=min(10,town.stocks.get(iid,0))
-                quantities=[q for q in (1,2,5,10) if q<=maximum]
-                qkey=_select(
-                    term,'STEAL · QUANTITY',
-                    [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
-                ) if quantities else None
-                if not qkey:continue
-                amount=int(qkey)
-                confirm=_select(
-                    term,'STEAL · REVIEW',
-                    [('confirm','Take goods'),('back','Cancel')],
-                    subtitle=f'{amount} × {reg.items[iid].name}. Only NPCs whose current sight cone reaches you can witness it.',
-                )
-                if confirm!='confirm':continue
-                sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
-                return sim.log[-1].message if sim.log else ''
+                result=_steal_market_action(ctx,term,town)
+                if result==UI_BACK:continue
+                return result
             if mode=='barter':
                 offered_rows=[]
                 for iid,n in sorted(inv.items.items()):
