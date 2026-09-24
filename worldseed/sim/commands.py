@@ -129,6 +129,16 @@ class StealContainerCommand:
     container_uid:str
     item_id:str
     amount:int=1
+
+@dataclass(frozen=True,slots=True)
+class LockpickDoorCommand:
+    actor:int
+    door_uid:str
+
+@dataclass(frozen=True,slots=True)
+class ForceDoorCommand:
+    actor:int
+    door_uid:str
 @dataclass(frozen=True,slots=True)
 class ReadBookCommand: actor:int
 

@@ -319,3 +319,40 @@ Materialize stable property-owned storage and goods fixtures for residences, wor
 
 ### Next dependency
 Add physical door permissions and locks to generated properties, then build trespass state, lockpicking/forced-entry actions and guard confrontation/search behavior on the same property, casing and LOS authorities. Household consumption/budgets can then move goods between these real storage containers and the market ledger instead of remaining only aggregate settlement consumption.
+
+
+## Work unit 12 - Physical property security, locks, trespass, and response
+- Generated settlement doors now expose the stable StructurePiecePlan UID and role through the bounded physicalization layer. Dynamic security state keys directly to that UID; the settlement plan remains the geometry authority.
+- Added persistent DoorSecurityState for entrance/interior-door ownership, access class, lock state, lock level, condition, forced/picked state, attempts, and last tamper time.
+- Added deterministic security profiles by building function. Markets, clinics, shrines, and schools have public front entrances; workplaces have work access; residences, watchhouses, and archives receive private/restricted locks; some back-room doors can also carry restricted locks.
+- Door security synchronization is reconstructable and non-destructive: revisiting an active settlement updates provenance/ownership but does not relock a picked door, repair a forced door, or reroll its security state.
+- Player movement is actor-aware at the Simulation boundary. Locked unauthorized generated doors stop the player without making the underlying settlement door impassable to resident NPC pathfinding.
+- Locked, intact property doors now obstruct stealth LOS. Once unlocked/picked or forced open they stop acting as a closed security barrier.
+- Casing discovers access points only by physical proximity + LOS and assesses a lock only when the player gets within one cell. Casing notes reveal only learned door/lock information, including current lock state and door condition.
+- Added LockpickDoorCommand. Lockpicking requires a real core:lockpick, adjacency, and resolves deterministically from Stealth skill + Agility versus the stable lock level. Failed attempts can break the pick. Tampering consumes time and produces a security incident even when unwitnessed; only actual witnesses make it an immediately attributable offense.
+- Added ForceDoorCommand. Forced entry uses Strength plus the best carried axe/hammer/pick tool, damages the actual door over repeated attempts, produces high local noise, and permanently marks the doorway forced open once condition reaches zero.
+- Added persistent TrespassState. Crossing an unauthorized property boundary or a restricted interior access door activates trespass state; leaving clears the active flag without erasing the incident/history state.
+- Owners, occupants, and guards can challenge a visible trespasser. The first observed confrontation warns the player to leave. Continuing after that warning escalates to an active guard search/removal response and records a more serious security incident.
+- Guard response reuses existing NPC task primitives: guards are routed toward the affected property/player with guard goals rather than spawning a separate security actor system.
+- Added SecurityIncidentState for lock tampering, forced entry, trespass, and defied warnings. Casing itself still creates no incident, crime heat, theft record, or bounty.
+- Witnessed security incidents feed the existing local LawSystem. Law enforcement can resolve them into player bounties/recorded charges using local law strength and guard presence; unwitnessed incidents remain unattributed.
+- Pygame and terminal stealth sidebars show active trespass/search state, while right-click door actions expose inspect, lockpick, and force-entry choices. Unknown lock quality is not leaked unless casing has physically learned it.
+
+### Compatibility / authority
+- New door/trespass/security records and casing door/lock knowledge are additive state with defaults; no settlement-plan or save-schema bump is required.
+- Generated StructurePiecePlan remains door geometry authority, CivicsSystem remains owner authority, PropertySecuritySystem owns only dynamic security/access state, StealthSystem owns LOS witnesses, NPCSystem owns movement/tasks, and LawSystem owns charge/bounty resolution.
+- NPC pathfinding is intentionally not globally blocked by resident property locks in this stage. The player-specific security gate lives in Simulation movement so residents can still reach bound homes/workplaces until actor-aware permissions are generalized.
+
+### Validation added
+- secure generated residence doors have stable private locks and public civic entrances remain public/unlocked
+- security sync preserves picked/unlocked state rather than rerolling
+- casing does not reveal lock quality from a remote whole-property action; physical door observation is required
+- lock tampering and forced entry produce security incidents without fabricating theft records
+- forced entry damages and opens the actual stable door and emits noise
+- unauthorized entry creates persistent trespass state, visible warnings, and an escalating guard search after the warning is ignored
+- door/trespass/security state survives LivingWorldState serialization
+- witnessed security incidents can resolve through local law into a bounty
+- Fast Gate settlement/security coverage includes these regressions
+
+### Next dependency
+Generalize actor-aware door permissions for resident/employee/guest keys and scheduled locking, then add container locks, key ownership, lock/key crafting, guard stop/search interactions, surrender/flee/bribe choices, and property-owner reactions to discovered damage or missing goods. Household schedules can then lock/unlock the same stable doors as occupants leave, work, sleep, and return.

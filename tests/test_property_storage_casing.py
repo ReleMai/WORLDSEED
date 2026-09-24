@@ -10,8 +10,9 @@ from worldseed.sim.engine import Simulation
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.civics import CivicsSystem
 from worldseed.systems.economy import EconomySystem
+from worldseed.systems.law import LawSystem
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
-from worldseed.systems.property_intrusion import CasingSystem, PropertyStorageSystem
+from worldseed.systems.property_intrusion import CasingSystem, PropertySecuritySystem, PropertyStorageSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
 from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.state import CasingIntelState, LivingWorldState, NPCState, SettlementState
@@ -132,6 +133,16 @@ class PropertyStorageCasingTests(unittest.TestCase):
         )
         casing=CasingSystem(state,physical,civics,storage)
         return state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync
+
+    def _security_fixture(self):
+        base=self._fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        security=PropertySecuritySystem(
+            state,self.registry,b"property-storage-casing",physical,civics
+        )
+        security.sync_active()
+        casing.security=security
+        return base,security
 
     def test_property_storage_is_stable_owned_and_reserves_real_stock(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
@@ -259,6 +270,123 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertEqual(restored.casing_intel[container.property_id].suspicion,27)
         self.assertEqual(restored.casing_intel[container.property_id].storage_uids,[container.uid])
 
+
+
+    def test_generated_doors_have_stable_permissions_and_locks(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        skeleton=physical.skeleton_for(town.uid)
+        residence=next(s for s in skeleton.structures if s.function=="residence")
+        entrance=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        self.assertEqual(entrance.access,"private")
+        self.assertTrue(entrance.locked)
+        self.assertGreater(entrance.lock_level,0)
+        self.assertEqual(physical.door_at(WorldPos(entrance.x,entrance.y,0)).structure_piece_uid,entrance.uid)
+        entrance.locked=False;entrance.picked=True
+        security.sync_active()
+        self.assertFalse(state.door_security[entrance.uid].locked)
+        self.assertTrue(state.door_security[entrance.uid].picked)
+        public=[
+            d for d in state.door_security.values()
+            if d.role=="entrance" and security._function(d.property_id) in security.PUBLIC_ENTRANCES
+        ]
+        self.assertTrue(public)
+        self.assertTrue(all(d.access=="public" and not d.locked for d in public))
+
+    def test_casing_discovers_door_and_lock_only_when_physically_observed(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        skeleton=physical.skeleton_for(town.uid)
+        residence=next(s for s in skeleton.structures if s.function=="residence")
+        door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        ring=sorted(casing._perimeter(residence))
+        far=max(ring,key=lambda p:abs(p[0]-door.x)+abs(p[1]-door.y))
+        ok,_=casing.start(residence.uid,WorldPos(far[0],far[1],0),600,stealth)
+        self.assertTrue(ok)
+        casing.observe_step(WorldPos(far[0],far[1],0),600,stealth)
+        intel=casing.intel_for(residence.uid)
+        self.assertNotIn(door.uid,intel.lock_uids)
+        adjacent=[
+            WorldPos(door.x+dx,door.y+dy,0)
+            for dx,dy in ((1,0),(-1,0),(0,1),(0,-1))
+            if (door.x+dx,door.y+dy) not in set(residence.footprint)
+        ]
+        self.assertTrue(adjacent)
+        casing.observe_step(adjacent[0],610,stealth)
+        self.assertIn(door.uid,intel.door_uids)
+        self.assertIn(door.uid,intel.lock_uids)
+
+    def test_lock_tampering_and_forced_entry_create_security_not_theft(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        residence=next(
+            s for s in physical.skeleton_for(town.uid).structures if s.function=="residence"
+        )
+        door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        watcher=AlwaysWatching("npc:guard")
+        inv=Inventory({"core:lockpick":1,"core:stone_hammer":1})
+        adjacent=WorldPos(door.x+1,door.y,0)
+        security.attempt_lockpick(door.uid,inv,adjacent,700,watcher,skill=2,agility=6)
+        self.assertTrue(any(row.kind=="lock_tampering" for row in state.security_incidents.values()))
+        self.assertFalse(state.theft_records)
+        self.assertGreater(state.player_crime_heat.get(town.uid,0),0)
+        door.locked=True;door.forced=False;door.condition=18
+        ok,msg,minutes,noise=security.force_entry(
+            door.uid,inv,adjacent,710,watcher,strength=7
+        )
+        self.assertTrue(ok)
+        self.assertTrue(door.forced)
+        self.assertFalse(door.locked)
+        self.assertGreater(noise,0)
+        self.assertTrue(any(row.kind=="forced_entry" for row in state.security_incidents.values()))
+
+    def test_trespass_warning_escalates_to_guard_search(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        residence=next(
+            s for s in physical.skeleton_for(town.uid).structures if s.function=="residence"
+        )
+        door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        door.locked=False;door.picked=True
+        footprint=set(residence.footprint)
+        exterior=next(
+            WorldPos(door.x+dx,door.y+dy,0)
+            for dx,dy in ((1,0),(-1,0),(0,1),(0,-1))
+            if (door.x+dx,door.y+dy) not in footprint
+        )
+        watcher=AlwaysWatching("npc:guard")
+        messages=security.note_player_step(exterior,WorldPos(door.x,door.y,0),720,watcher)
+        self.assertEqual(state.player_trespass_property_id,residence.uid)
+        self.assertTrue(state.trespass_states[residence.uid].active)
+        first=security.update_response(WorldPos(door.x,door.y,0),721,watcher)
+        second=security.update_response(WorldPos(door.x,door.y,0),722,watcher)
+        self.assertTrue(any("orders you out" in row for row in first))
+        self.assertTrue(any("active search" in row for row in second))
+        self.assertGreaterEqual(state.trespass_states[residence.uid].search_level,2)
+        guard=state.npcs["npc:guard"]
+        self.assertEqual(guard.goal,"guard")
+        self.assertTrue(guard.tasks)
+
+    def test_security_state_roundtrips_and_law_can_resolve_witnessed_intrusion(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        residence=next(
+            s for s in physical.skeleton_for(town.uid).structures if s.function=="residence"
+        )
+        door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        state.player_trespass_property_id=residence.uid
+        security._incident(door,"forced_entry",800,("npc:guard",),14)
+        restored=LivingWorldState.from_dict(state.to_dict())
+        self.assertIn(door.uid,restored.door_security)
+        self.assertEqual(restored.player_trespass_property_id,residence.uid)
+        self.assertTrue(restored.security_incidents)
+        history=NullHistory();law=LawSystem(restored,b"property-storage-casing",history)
+        for day in range(1,40):
+            law.daily_update(800+day*1440)
+            if all(row.resolved for row in restored.security_incidents.values()):
+                break
+        self.assertTrue(all(row.resolved for row in restored.security_incidents.values()))
+        self.assertGreater(restored.player_bounties.get(town.uid,0),0)
 
 if __name__=="__main__":
     unittest.main()

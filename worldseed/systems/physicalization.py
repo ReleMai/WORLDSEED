@@ -24,6 +24,8 @@ class PhysicalizedSettlementCell:
     room_id: str = ""
     ground_piece_id: str = ""
     structure_piece_id: str = ""
+    structure_piece_uid: str = ""
+    structure_piece_role: str = ""
     fixture_piece_id: str = ""
     roof_piece_id: str = ""
 
@@ -80,7 +82,7 @@ class SettlementPhysicalizationSystem:
         base = {
             "x": changes["x"], "y": changes["y"], "settlement_id": changes["settlement_id"],
             "parcel_id": "", "road_ids": (), "structure_id": "", "room_id": "",
-            "ground_piece_id": "", "structure_piece_id": "", "fixture_piece_id": "", "roof_piece_id": "",
+            "ground_piece_id": "", "structure_piece_id": "", "structure_piece_uid": "", "structure_piece_role": "", "fixture_piece_id": "", "roof_piece_id": "",
         }
         if existing is not None:
             base.update({
@@ -88,6 +90,8 @@ class SettlementPhysicalizationSystem:
                 "structure_id": existing.structure_id, "room_id": existing.room_id,
                 "ground_piece_id": existing.ground_piece_id,
                 "structure_piece_id": existing.structure_piece_id,
+                "structure_piece_uid": existing.structure_piece_uid,
+                "structure_piece_role": existing.structure_piece_role,
                 "fixture_piece_id": existing.fixture_piece_id,
                 "roof_piece_id": existing.roof_piece_id,
             })
@@ -138,6 +142,8 @@ class SettlementPhysicalizationSystem:
             changes = {}
             if placement.role in {"wall", "partition", "entrance", "interior_door"}:
                 changes["structure_piece_id"] = placement.piece_id
+                changes["structure_piece_uid"] = placement.uid
+                changes["structure_piece_role"] = placement.role
             elif placement.role == "fixture":
                 changes["fixture_piece_id"] = placement.piece_id
             elif placement.role == "roof" or piece.category == "roof":
@@ -267,6 +273,12 @@ class SettlementPhysicalizationSystem:
             return None
         piece_id = cell.structure_piece_id or cell.fixture_piece_id
         return self.registry.settlement_pieces.get(piece_id) if piece_id else None
+
+    def door_at(self, pos: WorldPos):
+        cell = self.cell_at(pos)
+        if cell is None or cell.structure_piece_role not in {"entrance", "interior_door"}:
+            return None
+        return cell
 
     def passable(self, pos: WorldPos, world_passable: bool = True) -> bool:
         piece = self.piece_def_at(pos)

@@ -539,8 +539,17 @@ def _casing_notes(ctx:GameContext,term:Terminal,property_id:str)->str:
         'Known rooms: '+(', '.join(sorted(set(room_labels))) if room_labels else 'none'),
         'Known occupants: '+(occupants or 'none'),
         'Known storage: '+(str(len(storage_rows)) if storage_rows else 'none'),
+        'Known access points: '+str(len(intel.door_uids)),
+        'Known locks: '+str(len(intel.lock_uids)),
     ]
     lines.extend(f'  {row}' for row in storage_rows[:6])
+    lock_rows=[]
+    for uid in intel.lock_uids:
+        door=sim.property_security.door_by_id(uid)
+        if door is None:continue
+        state='forced open' if door.forced else 'unlocked' if not door.locked else 'locked'
+        lock_rows.append(f'  {door.role.replace("_"," ").title()}: {sim.property_security.lock_band(door.lock_level)} lock — {state} — condition {door.condition}%')
+    if lock_rows:lines+=['','Known security:']+lock_rows[:6]
     lines+=['','Move around the exterior to survey access. Entering rooms reveals only the spaces and storage you physically reach.']
     _view_text(term,box('CASING NOTES',lines,screen_width(term.size()[0],96)))
     return UI_BACK
@@ -1638,6 +1647,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
     physical=sim.settlement_physicalization.cell_at(target)
     planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
+    door=sim.property_security.door_at(target)
     signs=sim.hunting.signs_at(target)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
@@ -1656,6 +1666,20 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
     private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
+    if door is not None and distance<=1:
+        if door.locked and not door.forced and not sim.property_security.authorized_player(door):
+            intel=sim.casing.intel_for(door.property_id)
+            lock_known=bool(intel and door.uid in intel.lock_uids)
+            lock_label=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown'
+            rows.append(('inspect_property_door',f'Inspect locked door — lock {lock_label}'))
+            inv=ctx.entities.get(ctx.player_id,Inventory)
+            if inv.count('core:lockpick')>0:
+                rows.append(('lockpick_property_door',f'Pick lock — {lock_label}'))
+            else:
+                rows.append(('lockpick_property_door','Pick lock — requires Lockpick'))
+            rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
+        elif door.forced:
+            rows.append(('inspect_property_door',f'Inspect forced doorway — condition {door.condition}%'))
     if planned is not None:
         building_label=str(planned.function).replace('_',' ').title()
         active_case=str(sim.state.player_casing_property_id or '')
@@ -1691,6 +1715,24 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='inspect_property_door' and door is not None:
+        intel=sim.casing.intel_for(door.property_id)
+        lock_known=bool(intel and door.uid in intel.lock_uids)
+        lock_desc=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown; case the doorway closely to assess it'
+        status='forced open' if door.forced else 'locked' if door.locked else 'unlocked'
+        _view_text(term,box('PROPERTY DOOR',[
+            f'Access: {door.access.title()}',
+            f'Status: {status.title()}',
+            f'Lock: {lock_desc}',
+            f'Door condition: {door.condition}%',
+        ],screen_width(term.size()[0],92)))
+        return UI_BACK
+    if choice=='lockpick_property_door' and door is not None:
+        sim.execute(LockpickDoorCommand(ctx.player_id,door.uid))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='force_property_door' and door is not None:
+        sim.execute(ForceDoorCommand(ctx.player_id,door.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='begin_casing' and planned is not None:
         sim.execute(StartCasingCommand(ctx.player_id,planned.uid))
         return sim.log[-1].message if sim.log else ''

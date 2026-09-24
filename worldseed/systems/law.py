@@ -8,6 +8,30 @@ class LawSystem:
     def daily_update(self,minute:int)->None:
         for town in self.state.settlements.values():
             guard_count=sum(1 for n in self.state.npcs.values() if n.alive and n.settlement_id==town.uid and n.occupation=='guard')
+            for incident in sorted(self.state.security_incidents.values(),key=lambda row:(row.minute,row.uid)):
+                if incident.settlement_id!=town.uid or incident.resolved or not incident.witnessed:continue
+                enforcement=min(95,town.law.get('theft',30)+guard_count*10)
+                if hash_u64(self.seed,'resolve-security-incident',incident.uid,minute//1440)%100>=enforcement:continue
+                if incident.actor_uid=="player":
+                    fine=max(1,incident.severity*max(20,town.law.get('theft',30))//10)
+                    self.state.player_bounties[town.uid]=self.state.player_bounties.get(town.uid,0)+fine
+                    self.state.player_crime_heat[town.uid]=min(
+                        100,self.state.player_crime_heat.get(town.uid,0)+5+min(25,incident.severity)
+                    )
+                    incident.resolved=True
+                    label={
+                        'lock_tampering':'lock tampering',
+                        'forced_entry':'forced entry',
+                        'trespass':'trespass',
+                        'defied_trespass_warning':'defying a trespass warning',
+                    }.get(incident.kind,'property intrusion')
+                    self.history.record(
+                        'law',f'{town.name} authorities recorded {label}.',
+                        minute,town.region_x,town.region_y,
+                        [town.uid,incident.uid,'player'],salience=15+min(20,incident.severity),
+                    )
+                    continue
+                incident.resolved=True
             for theft in sorted(self.state.theft_records.values(),key=lambda row:(row.minute,row.uid)):
                 if theft.settlement_id!=town.uid or theft.resolved or not theft.witnessed:continue
                 enforcement=min(95,town.law.get('theft',30)+guard_count*10)
