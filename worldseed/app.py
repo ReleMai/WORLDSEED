@@ -15,6 +15,7 @@ from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
+from worldseed.ui.combat_animation import combat_animation_frames
 from worldseed.ui.screens import *
 from worldseed.ui.terminal import Terminal
 
@@ -26,6 +27,20 @@ def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None, com
     else:
         w, h = term.size()
         term.present(renderer.render(ctx.world, ctx.entities, ctx.sim, ctx.player_id, w, h, message, cursor=cursor, combat_overlay=combat_overlay))
+
+def _animate_combat(term,ctx,renderer,kind:str,origin:WorldPos,target:WorldPos)->None:
+    """Short read-only animation. Wall clock controls only visual phase."""
+    if origin.z!=target.z:return
+    if kind=="ranged":
+        preview=ctx.sim.projectiles.preview(origin,target);cells=preview.cells
+        stop=preview.stopped_at
+        if stop and stop in cells:cells=cells[:cells.index(stop)+1]
+    else:
+        cells=ctx.sim.projectiles.line(origin,target)
+    for overlay in combat_animation_frames(kind,cells,use_unicode=bool(ctx.sim.state.ui_unicode)):
+        _present_game_frame(term,ctx,renderer,kind.upper(),target,overlay)
+        time.sleep(0.045)
+
 
 from worldseed.ui.widgets import select_menu, view_text
 from worldseed.ui.pointer import WindowCloseRequested
@@ -640,6 +655,7 @@ def _hunt_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
             continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
+            _animate_combat(term,ctx,renderer,'ranged',p,cursor)
             sim.execute(RangedAttackCommand(ctx.player_id,c.uid));return sim.log[-1].message if sim.log else ''
 
 def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=None)->str:
@@ -682,6 +698,7 @@ def _melee_attack_action(ctx:GameContext,term:Terminal,initial:WorldPos|None=Non
             continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
+            _animate_combat(term,ctx,renderer,'melee',p,cursor)
             sim.execute(AttackCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y,mode));return sim.log[-1].message if sim.log else ''
 
 def _shield_bash_action(ctx:GameContext,term:Terminal)->str:
@@ -706,6 +723,7 @@ def _shield_bash_action(ctx:GameContext,term:Terminal)->str:
             dx,dy=DIRECTION_KEYS[low];cursor=p.moved(dx,dy);continue
         if low in ('ENTER',' ','\r','\n'):
             if not c:continue
+            _animate_combat(term,ctx,renderer,'bash',p,cursor)
             sim.execute(ShieldBashCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
 
 def _disengage_action(ctx:GameContext,term:Terminal)->str:
