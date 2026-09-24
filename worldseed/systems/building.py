@@ -61,8 +61,12 @@ class BuildingSystem:
     def structure_at(self,pos:WorldPos)->StructureInstance|None:return self.state.structures.get(pos_key(pos.x,pos.y,pos.z))
     def roof_at(self,pos:WorldPos)->RoofState|None:return self.state.roofs.get(pos_key(pos.x,pos.y,pos.z))
     def container_at(self,pos:WorldPos)->ContainerState|None:return self.state.containers.get(pos_key(pos.x,pos.y,pos.z))
-    def nearby_container(self,pos:WorldPos,radius:int=1)->ContainerState|None:
-        rows=[c for c in self.state.containers.values() if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=radius]
+    def nearby_container(self,pos:WorldPos,radius:int=1,include_private:bool=False)->ContainerState|None:
+        rows=[
+            c for c in self.state.containers.values()
+            if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=radius
+            and (include_private or c.kind!="property" or c.owner=="player" or c.access=="public")
+        ]
         return min(rows,key=lambda c:(abs(c.x-pos.x)+abs(c.y-pos.y),c.uid),default=None)
     def container_load(self,c:ContainerState)->tuple[int,int]:
         mass=volume=0
@@ -90,6 +94,11 @@ class BuildingSystem:
             sd=self.registry.structures[s.structure_id]
             if "bridge" in sd.tags:return sd.passable
             return world_passable and sd.passable
+        container=self.container_at(pos)
+        if container is not None and container.kind=="property":
+            sd=self.registry.structures.get(container.source_id)
+            if sd is not None and not sd.passable:
+                return False
         if self.settlement_overlay is not None:
             return self.settlement_overlay.passable(pos,world_passable)
         return world_passable
