@@ -167,6 +167,39 @@ def begin_atlas(term, sim):
 
 def atlas_input(term, sim, token):
     state = term._atlas_controls
+
+    if token.startswith('ATLAS_DETAIL_OPEN:'):
+        uid = token[len('ATLAS_DETAIL_OPEN:'):]
+        detail = read_prepared_settlement_detail(sim, uid)
+        if detail is not None:
+            state.detail = detail
+            state.detail_inspected = None
+            state.detail_notice = ''
+            term._atlas_dragging = False
+        else:
+            state.detail_notice = 'Detailed plan is not prepared for this settlement yet.'
+        return True
+    if token == 'ATLAS_DETAIL_BACK':
+        state.detail = None
+        state.detail_inspected = None
+        state.detail_notice = ''
+        return True
+    if state.detail is not None:
+        if token == 'ATLAS_DETAIL_INSPECT':
+            rect = getattr(term, '_settlement_detail_rect', None)
+            if rect is None:
+                return True
+            mx, my = term._last_mouse
+            if rect.collidepoint(mx, my):
+                snap = state.detail.snapshot
+                rx = max(0, min(rect.width - 1, mx - rect.x))
+                ry = max(0, min(rect.height - 1, my - rect.y))
+                x = snap.left + rx * snap.width // max(1, rect.width)
+                y = snap.top + ry * snap.height // max(1, rect.height)
+                state.detail_inspected = (min(snap.right, x), min(snap.bottom, y))
+            return True
+        return token in ('RESIZE','PGUP','PGDN','UP','DOWN','LEFT','RIGHT','HOME')
+
     if token == 'ATLAS:drag_start':
         term._atlas_dragging=True
         term._atlas_drag_moved=False
@@ -203,6 +236,7 @@ def atlas_input(term, sim, token):
     if token.startswith('ATLAS_POI:'):
         state.selected = token.split(':', 1)[1]
         state.inspected = None
+        state.detail_notice = ''
         return True
     if not token.startswith('ATLAS:'):
         return token == 'RESIZE'
