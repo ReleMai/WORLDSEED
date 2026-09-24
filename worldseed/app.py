@@ -2063,15 +2063,45 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
             return UI_BACK
         sim.economy.ensure_currency(town)
         quote_name,quote_units=sim.economy.currency_quote(town.uid,10)
-        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.'
+        bounty=int(sim.state.player_bounties.get(town.uid,0))
+        heat=int(sim.state.player_crime_heat.get(town.uid,0))
+        legal=f' Local bounty: {bounty}c.' if bounty else ''
+        subtitle=f'{quote_name}: {quote_units} units ≈ 10 copper value. Prices reflect local supply. Barter uses the same valuation.{legal}'
         while True:
             mode=_select(
                 term,f'{town.name} MARKET',
-                [('buy','Buy'),('sell','Sell'),('barter','Barter')],
+                [('buy','Buy'),('sell','Sell'),('barter','Barter'),('steal','Steal')],
                 subtitle=subtitle,
             )
             if not mode:return UI_BACK
             inv=ctx.entities.get(pid,Inventory)
+            if mode=='steal':
+                rows=[]
+                for iid,n in sorted(town.stocks.items()):
+                    if n<=0 or iid not in reg.items:continue
+                    value=sim.player_trade_price(town.uid,iid,True)
+                    rows.append((iid,f'{reg.items[iid].name} — stock {n} — value {value}c'))
+                iid=_select(
+                    term,'STEAL FROM MARKET',rows,
+                    subtitle='Taking goods without payment can create witnesses and a local bounty.',
+                )
+                if not iid:continue
+                maximum=min(10,town.stocks.get(iid,0))
+                quantities=[q for q in (1,2,5,10) if q<=maximum]
+                qkey=_select(
+                    term,'STEAL · QUANTITY',
+                    [(str(q),f'{q} × {reg.items[iid].name} — value {q*sim.player_trade_price(town.uid,iid,True)}c') for q in quantities],
+                ) if quantities else None
+                if not qkey:continue
+                amount=int(qkey)
+                confirm=_select(
+                    term,'STEAL · REVIEW',
+                    [('confirm','Take goods'),('back','Cancel')],
+                    subtitle=f'{amount} × {reg.items[iid].name}. Witnesses use actual nearby line of sight.',
+                )
+                if confirm!='confirm':continue
+                sim.execute(StealMarketCommand(pid,town.uid,iid,amount))
+                return sim.log[-1].message if sim.log else ''
             if mode=='barter':
                 offered_rows=[]
                 for iid,n in sorted(inv.items.items()):
