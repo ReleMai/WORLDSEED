@@ -747,7 +747,8 @@ class Simulation:
                 messages.append(self.combat.creature_collision_injury(c,self.turn,force,"forced displacement"))
                 break
             c.x,c.y=nxt.x,nxt.y;c.facing_dx,c.facing_dy=dx,dy;c.last_move_turn=self.turn
-            c.stamina=max(0,c.stamina-4);self.state.player_aim_quality=max(0,self.state.player_aim_quality-18 if self.state.player_aim_target==c.uid else 0)
+            c.stamina=max(0,c.stamina-4)
+            if self.state.player_aim_target==c.uid:self.state.player_aim_quality=max(0,self.state.player_aim_quality-18)
             messages.append(f"The {self.registry.species[c.species_id].name.lower()} is driven back.")
         return messages
 
