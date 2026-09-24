@@ -67,6 +67,11 @@ def inventory_screen(reg:ContentRegistry,inv:Inventory,width:int=96,sim:Simulati
         tm+=item.mass_g*n;tv+=item.volume_ml*n
     body += ['',f'Total mass: {tm/1000:.1f} kg',f'Estimated volume: {tv/1000:.1f} L']
     if sim is not None:
+        keys=sim.physical_keys.keys_for_actor('player') if hasattr(sim,'physical_keys') else ()
+        if keys:
+            body += ['', 'KEY RING']
+            for key in keys[:24]:
+                body.append(f'{key.label:<30} {key.lock_uid}'+(f'  copy of {key.copied_from_uid}' if key.copied_from_uid else ''))
         metal=sim.metallurgy.describe_owner_batches('player')
         if metal:body += ['', 'METAL BATCHES'] + metal[:12]
         artifacts=sim.artifacts.describe_owner('player')

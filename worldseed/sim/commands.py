@@ -148,6 +148,16 @@ class LockpickContainerCommand:
     actor:int
     container_uid:str
 @dataclass(frozen=True,slots=True)
+class SetDoorLockCommand:
+    actor:int
+    door_uid:str
+    locked:bool
+@dataclass(frozen=True,slots=True)
+class SetContainerLockCommand:
+    actor:int
+    container_uid:str
+    locked:bool
+@dataclass(frozen=True,slots=True)
 class TransferKeyCommand:
     actor:int
     key_uid:str
