@@ -120,3 +120,5 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Home container mass/volume capacity is enforced before buying. If storage changes while cargo is in transit, excess goods return to market and the household is refunded.
 - Household ledgers retain bounded wage, food, purchase, delivery and refund events; unmet needs remain explicit state for later decision/social systems.
 - Tests cover real storage consumption, market/cash reservation, physical pickup/dropoff, budget/stock limits, wages and save roundtrip.
+
+- WU18 also keeps non-materialized households explicitly in aggregate logistics mode. They are not removed from settlement-wide food demand until a real home-storage container exists, preventing named distant residents from accidentally consuming zero food. Delivery movement tasks carry their delivery identity so coarse completion can cleanly cancel obsolete travel work.

@@ -233,6 +233,7 @@ class HouseholdState:
     food_shortage: int = 0
     days_short: int = 0
     last_consumed_minute: int = -1
+    logistics_mode: str = "aggregate"
     reserve_days: int = 3
     target_stock: dict[str, int] = field(default_factory=dict)
     unmet_needs: dict[str, int] = field(default_factory=dict)

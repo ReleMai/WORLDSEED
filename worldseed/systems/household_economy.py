@@ -32,6 +32,7 @@ class HouseholdEconomySystem:
             h.settlement_id=town;h.member_uids=[n.uid for n in members]
             homes=[n.home_id for n in members if n.home_id];h.home_id=sorted(homes)[0] if homes else h.home_id
             h.storage_uids=sorted(c.uid for c in self.state.containers.values() if c.kind=="property" and c.property_id==h.home_id)
+            h.logistics_mode="exact" if h.storage_uids else "aggregate"
         return tuple(self.state.households[k] for k in sorted(groups))
 
     def _members(self,h):return [self.state.npcs[u] for u in h.member_uids if u in self.state.npcs and self.state.npcs[u].alive]
@@ -162,8 +163,8 @@ class HouseholdEconomySystem:
         delivery=HouseholdDeliveryState(uid,h.uid,town.uid,carrier.uid,item_id,qty,dest.uid,cost,int(minute),coarse_due_minute=int(minute)+max(180,min(720,120+distance*4)))
         self.state.household_deliveries[uid]=delivery
         carrier.tasks.extend([
-            {"kind":"move","x":market.x,"y":market.y},{"kind":"perform","action":"household_pickup","delivery_uid":uid},
-            {"kind":"move","x":dest.x,"y":dest.y},{"kind":"perform","action":"household_dropoff","delivery_uid":uid},
+            {"kind":"move","x":market.x,"y":market.y,"delivery_uid":uid},{"kind":"perform","action":"household_pickup","delivery_uid":uid},
+            {"kind":"move","x":dest.x,"y":dest.y,"delivery_uid":uid},{"kind":"perform","action":"household_dropoff","delivery_uid":uid},
         ])
         h.total_spent+=cost;h.last_procurement_minute=int(minute)
         self.economy.record_transaction(town.uid,"household_purchase",h.uid,town.uid,copper_value=cost,minute=minute,requested={item_id:qty})
@@ -227,4 +228,8 @@ class HouseholdEconomySystem:
         self.process_overdue(minute)
         for h in self.sync():
             if h.last_consumed_minute==int(minute):continue
-            self._pay_prior_work(h,minute);self._consume_food(h,minute);self.plan_procurement(h,minute)
+            self._pay_prior_work(h,minute)
+            if h.logistics_mode!="exact":
+                h.unmet_needs={"physical_storage":1}
+                continue
+            self._consume_food(h,minute);self.plan_procurement(h,minute)

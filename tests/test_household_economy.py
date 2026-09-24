@@ -47,4 +47,10 @@ class HouseholdEconomyTests(unittest.TestCase):
         before=town.wealth;system.daily_update(1440);h=state.households["family:1"]
         self.assertGreater(n.wealth,0);self.assertLess(town.wealth,before);self.assertGreater(h.total_income,0);self.assertTrue(any(t.kind=="household_wage" for t in state.market_transactions.values()))
 
+    def test_household_without_materialized_home_stays_in_aggregate_food_pool(self):
+        state,town,c,economy,system=self.fixture(stock=5);state.containers.clear()
+        system.daily_update(1440);h=state.households["family:1"]
+        self.assertEqual(h.logistics_mode,"aggregate");self.assertEqual(h.last_consumed_minute,-1);self.assertEqual(h.unmet_needs,{"physical_storage":1})
+
+
 if __name__=="__main__":unittest.main()
