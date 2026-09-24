@@ -35,6 +35,9 @@ class CarcassState:
     processed_by: str = ""
     source_uid: str = ""
     embedded_items: dict[str, int] = field(default_factory=dict)
+    anatomy_condition: dict[str, int] = field(default_factory=dict)
+    anatomy_mass_g: dict[str, int] = field(default_factory=dict)
+    harvested_anatomy: list[str] = field(default_factory=list)
 
 @dataclass(slots=True)
 class AnimalSignState:
@@ -49,6 +52,22 @@ class AnimalSignState:
     direction_y: int = 0
     strength: int = 50
     source_uid: str = ""
+    detail: str = ""
+
+
+@dataclass(slots=True)
+class AnimalDenState:
+    uid: str
+    species_id: str
+    x: int
+    y: int
+    z: int
+    kind: str
+    created_minute: int
+    cohort_key: str = ""
+    last_used_minute: int = 0
+    stored_items: dict[str, int] = field(default_factory=dict)
+    condition: int = 100
     detail: str = ""
 
 @dataclass(slots=True)
@@ -174,6 +193,16 @@ class CreatureState:
     panic: int = 0
     last_display_turn: int = -1000
     last_attacked_turn: int = -1000
+    thirst: int = 0
+    activity: str = ""
+    activity_until_turn: int = -1
+    activity_target_x: int | None = None
+    activity_target_y: int | None = None
+    activity_target_z: int | None = None
+    home_den_uid: str = ""
+    last_need_minute: int = -1
+    last_sign_turn: int = -1000
+    organ_damage: dict[str, int] = field(default_factory=dict)
 
 @dataclass(slots=True)
 class PopulationCohort:
@@ -661,6 +690,7 @@ class LivingWorldState:
     crops: dict[str, CropPlot] = field(default_factory=dict)
     creatures: dict[str, CreatureState] = field(default_factory=dict)
     animal_signs: dict[str, AnimalSignState] = field(default_factory=dict)
+    animal_dens: dict[str, AnimalDenState] = field(default_factory=dict)
     cohorts: dict[str, PopulationCohort] = field(default_factory=dict)
     npcs: dict[str, NPCState] = field(default_factory=dict)
     settlements: dict[str, SettlementState] = field(default_factory=dict)
@@ -734,6 +764,8 @@ class LivingWorldState:
     player_defense_mode: str = ""
     player_defense_quality: int = 0
     player_disengage_turn: int = -1
+    player_stance: str = "normal"
+    player_stalk_xp: int = 0
     player_body_parts: dict[str, int] = field(default_factory=lambda: {"head":100,"neck":100,"torso":100,"left_arm":100,"right_arm":100,"left_leg":100,"right_leg":100})
     player_wounds: list[dict] = field(default_factory=list)
     player_infections: list[str] = field(default_factory=list)
@@ -783,11 +815,11 @@ class LivingWorldState:
         return {
             "clock_minute": self.clock_minute,
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
-            "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
+            "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_dens": rows(self.animal_dens), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "settlements": rows(self.settlements),
             "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "properties": rows(self.properties), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
-            "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
+            "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_stance": self.player_stance, "player_stalk_xp": int(self.player_stalk_xp), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
             "discovered_tiles": list(self.discovered_tiles[-120000:]),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
@@ -804,12 +836,12 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
-        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
+        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_stance","player_stalk_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])
         maps = {
-            "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"cohorts":PopulationCohort,
+            "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"animal_dens":AnimalDenState,"cohorts":PopulationCohort,
             "npcs":NPCState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"properties":PropertyState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }
