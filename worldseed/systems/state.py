@@ -380,6 +380,15 @@ class DoorSecurityState:
     picked: bool = False
     pick_attempts: int = 0
     last_tampered_minute: int = -1
+    # Explicit key/access grants are sparse exceptions layered over the
+    # authoritative home/work/property bindings. Physical key items are a
+    # later consumer of this grant list rather than a second permission model.
+    keyholder_uids: list[str] = field(default_factory=list)
+    # Work entrances may be locked by the local schedule. Track that provenance
+    # so opening hours never unlock a lock changed by another authoritative
+    # action, and so picked/forced doors are not silently repaired.
+    schedule_locked: bool = False
+    last_schedule_minute: int = -1
 
 
 @dataclass(slots=True)

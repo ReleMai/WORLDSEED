@@ -200,6 +200,15 @@ class PropertySecuritySystem:
     PUBLIC_ENTRANCES={"market","clinic","shrine","school"}
     WORK_ENTRANCES={"smithy","workshop","mill","fishery","barn"}
     SECURE_FUNCTIONS={"residence","watchhouse","archive"}
+    # Exact local opening hours only exist for active physical workplaces.
+    # Distant Tier-C labor remains aggregate and never requires door updates.
+    WORK_OPEN_HOURS={
+        "barn":(5,20),"fishery":(5,17),"mill":(5,19),
+        "smithy":(7,18),"workshop":(7,18),
+    }
+    PUBLIC_OPEN_HOURS={
+        "market":(7,20),"clinic":(7,20),"shrine":(6,22),"school":(8,16),
+    }
 
     def __init__(self,state,registry,seed:bytes,physicalization,civics):
         self.state=state
@@ -215,9 +224,11 @@ class PropertySecuritySystem:
     def _profile(self, function: str, role: str) -> tuple[str,bool,int]:
         function=str(function);role=str(role)
         if role=="entrance" and function in self.PUBLIC_ENTRANCES:
-            return "public",False,0
+            # Public while open does not mean lockless. Keep a real physical
+            # lock so closing hours can secure the same stable door.
+            return "public",False,18
         if function in self.WORK_ENTRANCES and role=="entrance":
-            return "work",False,0
+            return "work",False,22
         if function in self.SECURE_FUNCTIONS:
             base={"residence":24,"archive":42,"watchhouse":52}.get(function,30)
             if role=="interior_door":base+=6
@@ -283,12 +294,78 @@ class PropertySecuritySystem:
         if level>=20:return "simple"
         return "none"
 
+    def authorized_actor(self,door:DoorSecurityState,actor_uid:str)->bool:
+        """Return whether an actor may pass a locked physical property door.
+
+        Home/work/property links remain the authority for resident and employee
+        access. ``keyholder_uids`` is only an explicit sparse exception for
+        guests/future physical keys; it does not duplicate household or labor
+        membership.
+        """
+        actor_uid=str(actor_uid or "")
+        if not actor_uid:return False
+        if actor_uid==door.owner_uid or actor_uid in door.keyholder_uids:return True
+        npc=self.state.npcs.get(actor_uid)
+        if npc is None:return False
+        if npc.home_id==door.property_id or npc.property_id==door.property_id:return True
+        if npc.workplace_id==door.property_id:return True
+        prop=self.state.properties.get(door.property_id)
+        return bool(prop and actor_uid in prop.occupants)
+
     def authorized_player(self,door:DoorSecurityState)->bool:
-        return door.owner_uid=="player" or door.access=="public"
+        return self.authorized_actor(door,"player")
+
+    def blocks_actor(self,pos:WorldPos,actor_uid:str,minute:int|None=None)->bool:
+        door=self.door_at(pos)
+        return bool(door and door.locked and not door.forced and not self.authorized_actor(door,actor_uid))
 
     def blocks_player(self,pos:WorldPos)->bool:
-        door=self.door_at(pos)
-        return bool(door and door.locked and not door.forced and not self.authorized_player(door))
+        return self.blocks_actor(pos,"player")
+
+    def grant_keyholder(self,property_id:str,actor_uid:str)->int:
+        """Grant explicit guest/key access without changing property ownership."""
+        actor_uid=str(actor_uid or "")
+        if not actor_uid:return 0
+        changed=0
+        for door in self.doors_for_property(property_id):
+            if actor_uid not in door.keyholder_uids:
+                door.keyholder_uids=sorted(set(door.keyholder_uids+[actor_uid]));changed+=1
+        return changed
+
+    def revoke_keyholder(self,property_id:str,actor_uid:str)->int:
+        actor_uid=str(actor_uid or "")
+        changed=0
+        for door in self.doors_for_property(property_id):
+            if actor_uid in door.keyholder_uids:
+                door.keyholder_uids=[uid for uid in door.keyholder_uids if uid!=actor_uid];changed+=1
+        return changed
+
+    def update_scheduled_locks(self,minute:int)->int:
+        """Apply active-workplace opening hours to stable entrance locks.
+
+        Work and public-service entrances follow bounded local opening hours;
+        private/restricted doors retain their stronger security profile. A
+        picked or forced door is never relocked here; that
+        requires a future owner repair/security action.
+        """
+        hour=(int(minute)%1440)//60;changed=0
+        for door in sorted(self.state.door_security.values(),key=lambda d:d.uid):
+            if door.role!="entrance" or door.access not in {"work","public"}:continue
+            function=self._function(door.property_id)
+            hours=(self.WORK_OPEN_HOURS if door.access=="work" else self.PUBLIC_OPEN_HOURS).get(function)
+            if hours is None:continue
+            door.last_schedule_minute=int(minute)
+            if door.forced or door.picked:
+                door.schedule_locked=False
+                continue
+            start,end=hours
+            should_lock=not (start<=hour<end)
+            if should_lock:
+                if not door.locked:
+                    door.locked=True;door.schedule_locked=True;changed+=1
+            elif door.schedule_locked:
+                door.locked=False;door.schedule_locked=False;changed+=1
+        return changed
 
     def _witnesses(self,door:DoorSecurityState,pos:WorldPos,minute:int,stealth,noise_radius:int=0):
         seen=set(stealth.witnesses(pos,minute,door.settlement_id))
@@ -353,7 +430,7 @@ class PropertySecuritySystem:
         witnesses=self._witnesses(door,player_pos,minute,stealth,noise_radius=1)
         self._incident(door,"lock_tampering",minute,witnesses,6)
         if roll<chance:
-            door.locked=False;door.picked=True
+            door.locked=False;door.picked=True;door.schedule_locked=False
             return True,f"You pick the {self.lock_band(door.lock_level)} lock.",5
         broke=(hash_u64(self.seed,"lockpick-break",door.uid,door.pick_attempts,int(minute))%100)<18
         if broke:
@@ -385,7 +462,7 @@ class PropertySecuritySystem:
         witnesses=self._witnesses(door,player_pos,minute,stealth,noise_radius=9)
         self._incident(door,"forced_entry",minute,witnesses,14)
         if door.condition<=0:
-            door.locked=False;door.forced=True
+            door.locked=False;door.forced=True;door.schedule_locked=False
             return True,f"You break the door open with {best_name}.",2,85
         return False,f"You batter the door with {best_name}; it holds at {door.condition}% condition.",2,80
 

@@ -293,6 +293,65 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertTrue(public)
         self.assertTrue(all(d.access=="public" and not d.locked for d in public))
 
+
+    def test_actor_access_uses_home_work_and_explicit_keyholder_authority(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        resident=next(n for n in state.npcs.values() if n.home_id)
+        residence=physical.structure_by_id(resident.home_id)
+        self.assertIsNotNone(residence)
+        door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
+        stranger=next(n for n in state.npcs.values() if n.uid!=resident.uid and n.home_id!=residence.uid)
+        pos=WorldPos(door.x,door.y,door.z)
+        self.assertTrue(door.locked)
+        self.assertTrue(security.authorized_actor(door,resident.uid))
+        self.assertFalse(security.blocks_actor(pos,resident.uid,23*60))
+        self.assertFalse(security.authorized_actor(door,stranger.uid))
+        self.assertTrue(security.blocks_actor(pos,stranger.uid,23*60))
+        self.assertTrue(security.blocks_player(pos))
+        self.assertGreater(security.grant_keyholder(residence.uid,"player"),0)
+        self.assertTrue(security.authorized_player(door))
+        self.assertFalse(security.blocks_player(pos))
+        restored=LivingWorldState.from_dict(state.to_dict())
+        self.assertIn("player",restored.door_security[door.uid].keyholder_uids)
+
+    def test_workplace_schedule_locks_only_intact_unpicked_work_doors(self):
+        base,security=self._security_fixture()
+        state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
+        skeleton=physical.skeleton_for(town.uid)
+        workplace=next(
+            s for s in skeleton.structures
+            if s.function in security.WORK_OPEN_HOURS and security.doors_for_property(s.uid)
+        )
+        door=next(d for d in security.doors_for_property(workplace.uid) if d.role=="entrance")
+        worker=state.npcs["npc:owner"]
+        worker.workplace_id=workplace.uid
+        pos=WorldPos(door.x,door.y,door.z)
+        security.update_scheduled_locks(23*60)
+        self.assertTrue(door.locked)
+        self.assertTrue(door.schedule_locked)
+        self.assertGreater(door.lock_level,0)
+        self.assertTrue(security.authorized_actor(door,worker.uid))
+        self.assertFalse(security.blocks_actor(pos,worker.uid,23*60))
+        self.assertTrue(security.blocks_player(pos))
+        public=next(
+            d for d in state.door_security.values()
+            if d.role=="entrance" and security._function(d.property_id) in security.PUBLIC_OPEN_HOURS
+        )
+        self.assertTrue(public.locked)
+        self.assertTrue(public.schedule_locked)
+        self.assertGreater(public.lock_level,0)
+        self.assertTrue(security.blocks_player(WorldPos(public.x,public.y,public.z)))
+        security.update_scheduled_locks(10*60)
+        self.assertFalse(door.locked)
+        self.assertFalse(door.schedule_locked)
+        security.update_scheduled_locks(23*60)
+        self.assertTrue(door.locked)
+        door.locked=False;door.picked=True;door.schedule_locked=False
+        security.update_scheduled_locks(23*60+60)
+        self.assertFalse(door.locked)
+        self.assertFalse(door.schedule_locked)
+
     def test_casing_discovers_door_and_lock_only_when_physically_observed(self):
         base,security=self._security_fixture()
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
