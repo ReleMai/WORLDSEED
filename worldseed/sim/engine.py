@@ -49,7 +49,7 @@ from worldseed.systems.food import NutritionSystem, CookingSystem
 from worldseed.systems.processing import ProcessingSystem
 from worldseed.systems.fishing import FishingSystem
 from worldseed.systems.stealth import StealthSystem
-from worldseed.systems.property_intrusion import PropertyStorageSystem, CasingSystem
+from worldseed.systems.property_intrusion import PropertyStorageSystem, PropertySecuritySystem, CasingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 
@@ -147,8 +147,12 @@ class Simulation:
         self.property_storage=PropertyStorageSystem(
             self.state,registry,self.seed,self.settlement_physicalization,self.civics
         )
+        self.property_security=PropertySecuritySystem(
+            self.state,registry,self.seed,self.settlement_physicalization,self.civics
+        )
         self.casing=CasingSystem(
-            self.state,self.settlement_physicalization,self.civics,self.property_storage
+            self.state,self.settlement_physicalization,self.civics,self.property_storage,
+            self.property_security,
         )
         self.society_gen=ProceduralSocietyGenerator(self.seed,registry,self.region_planner)
         # Runtime locality caches. Expensive region/ecology realization is tied
@@ -292,6 +296,8 @@ class Simulation:
         elif isinstance(command,BarterCommand):self._barter(command)
         elif isinstance(command,StealMarketCommand):self._steal_market(command)
         elif isinstance(command,StealContainerCommand):self._steal_container(command)
+        elif isinstance(command,LockpickDoorCommand):minutes=self._lockpick_door(command)
+        elif isinstance(command,ForceDoorCommand):minutes=self._force_door(command)
         elif isinstance(command,ToggleStealthCommand):self._toggle_stealth(command);minutes=0
         elif isinstance(command,StartCasingCommand):self._start_casing(command);minutes=0
         elif isinstance(command,StopCasingCommand):self._stop_casing(command);minutes=0
@@ -494,8 +500,11 @@ class Simulation:
                     self.civics.ensure_settlement(settlement.uid)
                     self.institutions.ensure_settlement(settlement.uid)
             self.property_storage.sync_active()
+            self.property_security.sync_active()
             if self.state.player_casing_property_id and self.settlement_physicalization.structure_by_id(self.state.player_casing_property_id) is None:
                 self.state.player_casing_property_id=""
+            if self.state.player_trespass_property_id and self.settlement_physicalization.structure_by_id(self.state.player_trespass_property_id) is None:
+                self.state.player_trespass_property_id=""
             self.magic.ensure_traditions();self.magic.ensure_rituals();self.economy.update_prices()
             self._nearby_region_key=region_key
 
@@ -813,7 +822,7 @@ class Simulation:
             nxt=pc.value.moved(dx,dy)
             terrain=self.world.tile_at(nxt).terrain;world_pass=self.world.is_passable(nxt) or "water" in terrain.tags
             occupied=any(c.hp>0 and (c.x,c.y,c.z)==(nxt.x,nxt.y,nxt.z) for c in self.state.creatures.values())
-            blocked=(self.resources.blocks_movement(nxt) and not self.settlement_physicalization.clears_natural_feature(nxt)) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
+            blocked=(self.resources.blocks_movement(nxt) and not self.settlement_physicalization.clears_natural_feature(nxt)) or self.property_security.blocks_player(nxt) or not self.building.passable(nxt,world_pass) or (not self.environment.fluid_passable(nxt) and "water" not in terrain.tags) or occupied
             if blocked:
                 messages.append(self.combat.player_collision_injury(v,self.turn,force,"combat collision"))
                 break
@@ -835,6 +844,10 @@ class Simulation:
         world_pass=self.world.is_passable(new) or 'water' in terrain.tags
         if self.resources.blocks_movement(new) and not self.settlement_physicalization.clears_natural_feature(new):
             self._message(f"{self.resources.description(new)} blocks your path. Harvest it from an adjacent tile.");return
+        if self.property_security.blocks_player(new):
+            door=self.property_security.door_at(new)
+            band=self.property_security.lock_band(door.lock_level) if door else "locked"
+            self._message(f"The {band} property lock blocks the door.");return
         if not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and water.mode!='swimming'):
             self._message('Something solid blocks your path.');return
         v=self.entities.get(cmd.actor,Vitals)
@@ -856,6 +869,10 @@ class Simulation:
         if self.state.player_stealth_mode:
             movement_noise=self.stealth.movement_noise(movement_noise)
         self.hunting.note_player_noise(new,movement_noise,self.turn,self.clock.minute,"stealth_movement" if self.state.player_stealth_mode else "movement")
+        for security_message in self.property_security.note_player_step(old,new,self.clock.minute,self.stealth):
+            self._message(security_message)
+        for security_message in self.property_security.update_response(new,self.clock.minute,self.stealth):
+            self._message(security_message)
         if self.state.player_casing_property_id:
             for casing_message in self.casing.observe_step(new,self.clock.minute,self.stealth):
                 self._message(casing_message)
@@ -1281,7 +1298,7 @@ class Simulation:
         if new_min<=old_min:self._message("A disengage must create space from the adjacent threat.");return 1
         terrain=self.world.tile_at(new).terrain;world_pass=self.world.is_passable(new) or "water" in terrain.tags
         occupied=any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values())
-        if occupied or self.resources.blocks_movement(new) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
+        if occupied or self.resources.blocks_movement(new) or self.property_security.blocks_player(new) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
             self._message("You have no clear retreat path in that direction.");return 1
         cost=5+self.combat.leg_injury_penalty()
         if v.stamina<cost:self._message("You are too exhausted to disengage cleanly.");return 1
@@ -1465,6 +1482,38 @@ class Simulation:
             self._message(f"You enter stealth mode, but {seen} observer{'s' if seen!=1 else ''} currently has line of sight.")
         else:
             self._message("You enter stealth mode. Observer sight cones are now visible.")
+
+    def _lockpick_door(self,cmd:LockpickDoorCommand)->int:
+        inv=self.entities.get(cmd.actor,Inventory)
+        ok,msg,minutes=self.property_security.attempt_lockpick(
+            cmd.door_uid,inv,self.player_pos,self.clock.minute,self.stealth,
+            self.player_skill("stealth"),self.player_attribute("agility"),
+        )
+        self._message(msg)
+        for security_message in self.property_security.update_response(
+            self.player_pos,self.clock.minute,self.stealth
+        ):
+            self._message(security_message)
+        return max(1,int(minutes or MINUTES_PER_ACTION))
+
+    def _force_door(self,cmd:ForceDoorCommand)->int:
+        inv=self.entities.get(cmd.actor,Inventory)
+        ok,msg,minutes,noise=self.property_security.force_entry(
+            cmd.door_uid,inv,self.player_pos,self.clock.minute,self.stealth,
+            self.player_attribute("strength"),
+        )
+        self._message(msg)
+        door=self.property_security.door_by_id(cmd.door_uid)
+        if door is not None and noise:
+            self.hunting.note_player_noise(
+                WorldPos(door.x,door.y,door.z),int(noise),self.turn,self.clock.minute,
+                "forced_entry",
+            )
+        for security_message in self.property_security.update_response(
+            self.player_pos,self.clock.minute,self.stealth
+        ):
+            self._message(security_message)
+        return max(1,int(minutes or MINUTES_PER_ACTION))
 
     def _start_casing(self,cmd:StartCasingCommand)->None:
         ok,msg=self.casing.start(
