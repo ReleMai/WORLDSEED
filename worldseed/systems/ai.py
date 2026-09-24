@@ -8,13 +8,14 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
         self.settlement_population=population_binder
     def attach_economy(self,economy)->None:self.economy=economy
     def attach_property_security(self,security)->None:self.property_security=security
+    def attach_households(self,households)->None:self.households=households
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -200,6 +201,8 @@ class NPCSystem:
             elif action=='worship':npc.needs['faith']=max(0,npc.needs.get('faith',0)-45)
             elif action=='learn':npc.needs['learning']=max(0,npc.needs.get('learning',0)-40);npc.literacy=min(100,npc.literacy+1)
             elif action=='steal' and self.economy is not None:self.economy.npc_steal_food(npc,town,minute)
+            elif action=='household_pickup' and self.households is not None:self.households.pickup_delivery(task.get('delivery_uid',''),npc.uid,minute)
+            elif action=='household_dropoff' and self.households is not None:self.households.dropoff_delivery(task.get('delivery_uid',''),npc.uid,minute)
             elif action=='socialize':npc.needs['social']=max(0,npc.needs.get('social',0)-35)
         elif task['kind']=='social':
             npc.tasks.pop(0);other=self.state.npcs.get(task['target'])

@@ -108,3 +108,15 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Member hunger rises on shortages and recovers when the household is fed.
 - Aggregate settlement food consumption excludes named residents processed through households, preventing double consumption.
 - This establishes the physical logistics boundary for later shopping, hauling, wages and household budgeting.
+
+
+## Work Unit 18 - Household budgets, procurement and physical delivery
+- Household money remains authoritative on individual members; the household computes spendable wealth instead of duplicating currency in a second ledger.
+- Prior-day representative work now pays occupation-sensitive wages from settlement wealth into actual NPC wealth and records market transactions.
+- Households calculate adaptive reserve targets from family size, wealth and recent shortage history, covering food plus fuel, soap and medicine.
+- Procurement is scarcity-aware and budget-constrained. Market goods and money move at reservation time, preventing duplicate purchases and preserving price pressure.
+- Bought goods become persistent HouseholdDeliveryState cargo instead of teleporting into homes. A named household member receives market-pickup/home-dropoff tasks and physically hauls the cargo when exact AI is active.
+- Tiered simulation has a bounded coarse-delivery deadline so distant/offline households cannot deadlock economically when their exact actor AI is not running.
+- Home container mass/volume capacity is enforced before buying. If storage changes while cargo is in transit, excess goods return to market and the household is refunded.
+- Household ledgers retain bounded wage, food, purchase, delivery and refund events; unmet needs remain explicit state for later decision/social systems.
+- Tests cover real storage consumption, market/cash reservation, physical pickup/dropoff, budget/stock limits, wages and save roundtrip.

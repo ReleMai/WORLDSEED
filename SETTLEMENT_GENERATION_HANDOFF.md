@@ -393,3 +393,7 @@ Materialize container locks and physical keys/key ownership/crafting on top of t
 - Store/take/theft paths consume the same lock authority; casing knowledge does not bypass a lock.
 - Picked/tamper/keyholder state persists and active sync does not repair picked storage.
 - Next: physical key ownership/transfer/crafting and interaction UI.
+
+
+## Household logistics integration
+Named settlement residents now participate in a physical household economy. Family groups bind to their generated home and its property storage; daily reserve planning creates persistent market deliveries carried by named household members to real containers. This preserves the settlement planner/physicalization layer as the location authority while allowing distant simulation to complete overdue deliveries at coarse fidelity. Market stock, NPC wealth, settlement wealth, container capacity and transaction history remain conserved across the flow.
