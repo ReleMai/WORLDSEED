@@ -352,7 +352,17 @@ class HuntingSystem:
             if not sp:
                 continue
             self._update_needs(creature,sp,minute)
-            home=self._ensure_home(creature,sp,minute)
+            home=self.state.animal_homes.get(creature.home_uid) if creature.home_uid else None
+            # Homes are established during ordinary life, not conjured as an
+            # escape destination in the middle of a fresh hunt. A threatened
+            # or badly wounded animal without an existing refuge must flee
+            # first; one with a previously established refuge may retreat to it.
+            can_establish_home=(
+                home is None and creature.blood>=80 and creature.pain<35
+                and turn-creature.last_threat_turn>1 and creature.alertness<45
+            )
+            if can_establish_home:
+                home=self._ensure_home(creature,sp,minute)
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
             if home and not home.discovered:
