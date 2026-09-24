@@ -91,10 +91,15 @@ class PropertyStorageSystem:
             candidates.append((-distance,y,x))
         if not candidates:
             for x,y in room.cells:
-                p=WorldPos(int(x),int(y),0)
+                x=int(x);y=int(y)
+                if (x,y) in fixture_cells or (x,y) in occupied_npcs:
+                    continue
+                if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
+                    continue
+                p=WorldPos(x,y,0)
                 if self.physicalization.passable(p,True):
-                    distance=0 if entrance is None else abs(int(x)-int(entrance[0]))+abs(int(y)-int(entrance[1]))
-                    candidates.append((-distance,int(y),int(x)))
+                    distance=0 if entrance is None else abs(x-int(entrance[0]))+abs(y-int(entrance[1]))
+                    candidates.append((-distance,y,x))
         if not candidates:
             return None
         _,y,x=min(candidates)
