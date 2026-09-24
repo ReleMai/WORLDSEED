@@ -127,13 +127,21 @@ class NPCSystem:
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"steal"}]
         elif best=="socialize":
             peers=[p for p in self.state.npcs.values() if p.alive and p.settlement_id==npc.settlement_id and p.uid!=npc.uid]
-            target=self._service_destination(town,("market","shrine"))
-            tasks=[{"kind":"move","x":target.x,"y":target.y}]
+            kin=set(npc.parents)|set(npc.children)|set(npc.kinship)
+            if npc.spouse_uid:kin.add(npc.spouse_uid)
+            peers.sort(key=lambda p:(0 if p.uid in kin else 1,-npc.relationships.get(p.uid,{}).get("affection",0),p.uid))
             if peers:
-                other=peers[hash_u64(self.seed,"social-target",npc.uid,minute//60)%len(peers)]
-                tasks.append({"kind":"social","target":other.uid})
-            else:tasks.append({"kind":"perform","action":"socialize"})
-            npc.tasks=tasks
+                close=[p for p in peers if p.uid in kin]
+                pool=close or peers[:max(1,min(4,len(peers)))]
+                other=pool[hash_u64(self.seed,"social-target",npc.uid,minute//60)%len(pool)]
+                if other.uid in kin:
+                    target=self._binding_destination(npc.home_id,npc.home_room_id,town)
+                else:
+                    target=self._service_destination(town,("market","shrine"))
+                npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"social","target":other.uid}]
+            else:
+                target=self._service_destination(town,("market","shrine"))
+                npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"socialize"}]
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
         if not npc.tasks:return
         task=npc.tasks[0]
