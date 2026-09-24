@@ -167,6 +167,7 @@ class Renderer:
                   cursor: WorldPos | None, combat_overlay: dict | None = None,
                   stealth_overlay: dict | None = None) -> list[str]:
         known = sim.discovered_tiles_set
+        visible = sim.visible_tiles_set
         combat_by={(int(c["x"]),int(c["y"]),int(c["z"])):c for c in (combat_overlay or {}).get("cells",())}
         stealth_by={(int(c["x"]),int(c["y"]),int(c["z"])):c for c in (stealth_overlay or {}).get("cells",())}
         half_w, half_h = map_w//2, map_h//2
@@ -177,6 +178,7 @@ class Renderer:
         creature_by = {(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp > 0}
         npc_by = {(n.x,n.y,n.z):n for n in sim.state.npcs.values() if n.alive}
         structure_by = {(s.x,s.y,s.z):s for s in sim.state.structures.values()}
+        property_container_by = {(q.x,q.y,q.z):q for q in sim.state.containers.values() if q.kind=="property"}
         crop_by = {(c.x,c.y,c.z):c for c in sim.state.crops.values()}
         fire_by = {(f.x,f.y,f.z):f for f in sim.state.fires.values()}
         fluid_by = {(f.x,f.y,f.z):f for f in sim.state.fluids.values() if f.amount > 20}
@@ -222,6 +224,8 @@ class Renderer:
                 elif k in structure_by:
                     sd = self.registry.structures.get(structure_by[k].structure_id)
                     ch = sd.glyph if sd else '#'
+                elif k in property_container_by and pk in visible:
+                    ch = '□' if self.use_unicode else 'C'
                 else:
                     wp=WorldPos(x,y,pos.z)
                     settlement_glyph=sim.settlement_physicalization.glyph_at(wp)
@@ -279,6 +283,15 @@ class Renderer:
             for uid in seen[:3]:
                 npc=sim.state.npcs.get(uid)
                 rows.append((npc.name if npc and uid in known else 'Stranger')+' sees you')
+            casing=snap.get('casing') or {}
+            if casing.get('active'):
+                rows += [
+                    '',
+                    'CASING',
+                    f"{str(casing.get('function','property')).replace('_',' ').title()} {int(casing.get('survey_progress',0))}%",
+                    f"Attention: {str(casing.get('attention','low')).title()}",
+                    f"Rooms {int(casing.get('room_count',0))} | Storage {int(casing.get('storage_count',0))}",
+                ]
         alerts = [a for a in world_alerts(sim) if a.severity >= 60][:3]
         if alerts:
             rows += ['', 'ALERTS']
