@@ -218,7 +218,7 @@ class Renderer:
                 elif k in fluid_by: ch = '~'
                 elif k in dungeon_by: ch = dungeon_by[k]
                 elif k in carcass_by: ch = '&'
-                elif k in pile_by: ch = '
+                elif k in pile_by: ch = chr(36)\n                elif k in den_by and pk in visible: ch = '⌂' if self.use_unicode else 'o'\n                elif k in sign_by and pk in visible: ch = '·' if self.use_unicode else ','\n                elif k in grave_by: ch = '†' if self.use_unicode else '+'
                 elif k in arc_by: ch = '*'
                 elif k in crop_by: ch = 'Y' if crop_by[k].mature else ';'
                 elif k in structure_by:
