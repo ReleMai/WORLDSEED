@@ -50,6 +50,7 @@ class SettlementPhysicalizationSystem:
         self._cells: dict[tuple[int, int], PhysicalizedSettlementCell] = {}
         self._rooms: dict[str, object] = {}
         self._structures: dict[str, object] = {}
+        self._skeletons: dict[str, object] = {}
         self._active_settlement_ids: tuple[str, ...] = ()
         self.revision = 0
 
@@ -61,6 +62,7 @@ class SettlementPhysicalizationSystem:
         self._cells.clear()
         self._rooms.clear()
         self._structures.clear()
+        self._skeletons.clear()
         self._active_settlement_ids = ()
         self.revision += 1
 
@@ -163,8 +165,13 @@ class SettlementPhysicalizationSystem:
         new_cells = {}
         new_rooms = {}
         new_structures = {}
-        old_cells, old_rooms, old_structures = self._cells, self._rooms, self._structures
-        self._cells, self._rooms, self._structures = new_cells, new_rooms, new_structures
+        new_skeletons = {}
+        old_cells, old_rooms, old_structures, old_skeletons = (
+            self._cells, self._rooms, self._structures, self._skeletons
+        )
+        self._cells, self._rooms, self._structures, self._skeletons = (
+            new_cells, new_rooms, new_structures, new_skeletons
+        )
         active = []
         try:
             for settlement in selected:
@@ -176,9 +183,12 @@ class SettlementPhysicalizationSystem:
                 except ValueError:
                     continue
                 active.append(settlement.uid)
+                self._skeletons[settlement.uid] = skeleton
                 self._index_skeleton(settlement.uid, skeleton)
         except Exception:
-            self._cells, self._rooms, self._structures = old_cells, old_rooms, old_structures
+            self._cells, self._rooms, self._structures, self._skeletons = (
+                old_cells, old_rooms, old_structures, old_skeletons
+            )
             raise
         self._active_settlement_ids = tuple(active)
         self.revision += 1
@@ -186,6 +196,47 @@ class SettlementPhysicalizationSystem:
 
     def cells(self) -> tuple[PhysicalizedSettlementCell, ...]:
         return tuple(self._cells[key] for key in sorted(self._cells, key=lambda p: (p[1], p[0])))
+
+    def skeleton_for(self, settlement_id: str):
+        return self._skeletons.get(str(settlement_id))
+
+    def structure_by_id(self, structure_id: str):
+        return self._structures.get(str(structure_id))
+
+    def room_by_id(self, room_id: str):
+        return self._rooms.get(str(room_id))
+
+    def destination_for(self, structure_id: str, room_id: str = "") -> WorldPos | None:
+        """Return a stable passable destination inside one active planned structure."""
+        structure = self._structures.get(str(structure_id))
+        if structure is None:
+            return None
+        room = self._rooms.get(str(room_id)) if room_id else None
+        if room is None:
+            room = next(
+                (
+                    row for row in sorted(self._rooms.values(), key=lambda value: value.uid)
+                    if row.structure_plan_id == structure.uid
+                ),
+                None,
+            )
+        if room is not None and room.cells:
+            xs=[int(p[0]) for p in room.cells];ys=[int(p[1]) for p in room.cells]
+            cx=sum(xs)//len(xs);cy=sum(ys)//len(ys)
+            candidates=[]
+            for x,y in room.cells:
+                pos=WorldPos(int(x),int(y),0)
+                if self.passable(pos,True):
+                    candidates.append((abs(int(x)-cx)+abs(int(y)-cy),int(y),int(x)))
+            if candidates:
+                _,y,x=min(candidates)
+                return WorldPos(x,y,0)
+        if structure.entrance is not None:
+            return WorldPos(int(structure.entrance[0]),int(structure.entrance[1]),0)
+        if structure.footprint:
+            x,y=structure.footprint[0]
+            return WorldPos(int(x),int(y),0)
+        return None
 
     def cell_at(self, pos: WorldPos) -> PhysicalizedSettlementCell | None:
         if pos.z != 0:
