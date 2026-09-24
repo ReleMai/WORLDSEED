@@ -203,7 +203,6 @@ class StealthConeRenderTests(unittest.TestCase):
             entities.add(pid,Position(pos));entities.add(pid,Inventory());entities.add(pid,Vitals())
             state=LivingWorldState();state.player_stealth_mode=True
             sim=Simulation(world,entities,reg,0,state,seed)
-            before=sim.state.to_dict()
             overlay={
                 "active":True,
                 "cells":(
@@ -219,6 +218,7 @@ class StealthConeRenderTests(unittest.TestCase):
                 uid="npc:watch",name="Watcher",age=30,occupation="guard",traits=[],
                 x=0,y=-2,z=0,settlement_id="",faction_id="",facing_dx=0,facing_dy=1,
             )
+            before=sim.state.to_dict()
             term=PygameTerminal();term.enter()
             try:
                 term._resize(800,520)
@@ -228,7 +228,7 @@ class StealthConeRenderTests(unittest.TestCase):
                 shown=term.pg.image.tobytes(term.screen,"RGB")
                 self.assertNotEqual(baseline,shown)
                 self.assertIn((0,-1,0),term._hover_context["stealth_by"])
-                self.assertEqual(sim.state.to_dict(),before | {"npcs":sim.state.to_dict()["npcs"]})
+                self.assertEqual(sim.state.to_dict(),before)
             finally:
                 term.restore();db.close()
 
