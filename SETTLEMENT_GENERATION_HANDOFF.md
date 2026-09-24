@@ -155,3 +155,36 @@ Expose `build_settlement_atlas(...)` through the atlas UI as a settlement-detail
 
 ### Next dependency
 Expand the physical settlement planner with missing civic/service workplaces (market, healer, guard/watch, shrine, school/archive) and bind those professions to real structures. Keep the same UI rule: expose the resulting complexity through context and inspection rather than adding more always-visible panels.
+
+
+## Work unit 7 - Civic services, regional trade foundation, and social identity
+- Settlement-plan version advances to v2 because this unit changes persistent physical layouts by adding civic/service parcels and buildings. Existing v1 generated plans remain old-version cache data and are not silently treated as v2 layouts.
+- Settlement cores can now allocate real market, clinic, watchhouse, shrine, archive and (city-scale) school parcels before housing consumes the best street frontage.
+- Civic buildings are physically assembled from the existing construction catalog and pass through the same enclosure/room detector as homes and workshops. Market/shop, clinic, watch, sanctuary and study rooms now produce distinct building classifications.
+- Merchants, healers, guards, scholars and priests bind to real market/clinic/watchhouse/archive-or-school/shrine structures instead of remaining workplace-less.
+- NPC AI now routes real needs to these buildings: eating/social contact use market space, injuries/illness use clinics, guards use watchhouses, faith uses shrines, and learning uses archives/schools. Service actions consume or affect real state where applicable (food, medicine, health, literacy).
+- NPC state now carries structured backstory, wants, needs, lineage/household IDs and explicit kinship labels. FamilySystem.ensure_settlement_identity(...) initializes these deterministically for represented residents while preserving existing saved values.
+- Initial represented lineages connect plausible generations. Existing marriage/birth simulation continues to evolve those families, and newborns inherit lineage/household identity plus parent/child kinship.
+- Existing relationship state remains authoritative for affection/trust/etc.; kinship adds the family-tree role rather than replacing relationship values.
+- The existing economy already had item base values, scarcity pricing and copper coinage. This unit adds regional currency metadata per faction/culture, local currency quoting and barter valuation while preserving copper-equivalent settlement/NPC wealth for compatibility.
+- Theft is now explicit state through TheftRecordState. Witnessed theft can damage relationships and be resolved by the existing law system with settlement-specific theft law/guard strength. Need-driven NPC petty theft can occur at markets under severe hunger/poverty pressure rather than as a free-floating random coordinate event.
+- The old aggregate law crime pressure remains for Tier-C settlement simulation; explicit active-NPC theft records coexist with it rather than replacing distant aggregate simulation.
+
+### Compatibility / authority
+- New NPC, settlement and theft fields have defaults and load from older saves without a save-schema bump.
+- Regional currency metadata does not create dynamic registry item IDs. core:copper_coin remains the physical base coin for now; local currency names/rates are simulation metadata until minted regional coin variants receive a dedicated item-variant/provenance system.
+- Barter valuation reuses the settlement market price authority. There is no second price table.
+- Civic service use consumes the same settlement stocks/economy/health state already used elsewhere; buildings do not create a parallel economy.
+
+### Validation added
+- town-scale plans contain physical market, clinic, watchhouse, shrine and archive parcels/buildings
+- civic occupations bind to compatible generated workplaces
+- represented NPCs receive stable lineages, backstories, wants, needs and real kin links
+- same-faction settlements share regional currency identity
+- barter values use market prices
+- witnessed theft persists and can be resolved through law enforcement
+- injured NPC goal selection routes to the clinic
+- Fast Gate includes civic/economy/social regressions
+
+### Next dependency
+Add player-facing trade/barter presentation and ownership-aware theft interactions on real market/container/property targets, then expose NPC family/backstory/relationship detail through focused inspect views rather than a permanent data-heavy panel. Continue expanding service use with time-of-day scheduling only after these physical/service bindings remain stable.
