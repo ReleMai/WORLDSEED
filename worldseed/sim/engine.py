@@ -29,6 +29,7 @@ from worldseed.systems.speciesgen import install_procedural_species
 from worldseed.systems.knowledge import KnowledgeSystem
 from worldseed.systems.law import LawSystem
 from worldseed.systems.family import FamilySystem
+from worldseed.systems.household_economy import HouseholdEconomySystem
 from worldseed.systems.macrohistory import MacroHistorySystem
 from worldseed.systems.artifacts import ArtifactSystem
 from worldseed.systems.disasters import DisasterSystem
@@ -114,6 +115,7 @@ class Simulation:
         self.knowledge=KnowledgeSystem(self.state,self.seed,self.history)
         self.law=LawSystem(self.state,self.seed,self.history)
         self.family=FamilySystem(self.state,self.seed,self.history)
+        self.households=HouseholdEconomySystem(self.state,self.seed)
         self.macrohistory=MacroHistorySystem(self.state,self.seed)
         self.magic=MagicSystem(self.state,self.seed,self.history,self.environment)
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
@@ -386,7 +388,7 @@ class Simulation:
                 self.ecology.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute,allow_named_mortality=(policy=="full"));self.resources.cleanup_regrown(minute)
                 for settlement in self.state.settlements.values():self.institutions.ensure_settlement(settlement.uid)
                 self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap()
-                self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
+                self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
                 summary["days"]+=1
             if "monthly" in kinds:
                 self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
@@ -423,7 +425,7 @@ class Simulation:
                     elif abs(cp.x-player.x)+abs(cp.y-player.y)<=8 and cp.z==player.z:self._message("You hear a roof collapse nearby.")
         old_day=old//1440;new_day=self.clock.minute//1440
         for day in range(old_day+1,new_day+1):
-            minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
+            minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
             if day%30==0:self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
 
