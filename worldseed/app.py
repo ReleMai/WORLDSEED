@@ -1553,6 +1553,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
     npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
+    physical=sim.settlement_physicalization.cell_at(target)
+    planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
     signs=sim.hunting.signs_at(target)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
@@ -1570,6 +1572,14 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
+    if planned is not None:
+        building_label=str(planned.function).replace('_',' ').title()
+        if not sim.state.player_stealth_mode:
+            rows.append(('enter_stealth',f'Enter stealth mode — case {building_label}'))
+        else:
+            rows.append(('case_property',f'Case {building_label} — ownership and sight coverage'))
+            if planned.function=='market' and distance<=2:
+                rows.append(('steal_market_here','Steal from market stock'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if distance<=1 and sim.resources.is_harvestable(target):
@@ -1587,6 +1597,50 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='enter_stealth':
+        sim.execute(ToggleStealthCommand(ctx.player_id,True))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='case_property' and planned is not None and physical is not None:
+        owner=sim.civics.owner_for_structure(physical.settlement_id,planned.uid)
+        known=sim.known_npc_ids()
+        if owner in sim.state.npcs:
+            owner_label=sim.state.npcs[owner].name if owner in known else 'Private owner'
+        elif owner in sim.state.settlements:
+            town=sim.state.settlements[owner]
+            owner_label=town.name if owner in sim.known_settlement_ids() else 'Settlement authority'
+        else:
+            owner_label='Settlement authority'
+        prop=sim.state.properties.get(planned.uid)
+        snap=sim.stealth_snapshot()
+        watched=()
+        for cell in snap.get('cells',()):
+            if (int(cell.get('x',0)),int(cell.get('y',0)),int(cell.get('z',target.z)))==(target.x,target.y,target.z):
+                watched=tuple(cell.get('observer_uids',()))
+                break
+        watcher_labels=[]
+        for uid in watched:
+            n=sim.state.npcs.get(uid)
+            watcher_labels.append(n.name if n and uid in known else 'Stranger')
+        room=sim.settlement_physicalization.room_by_id(physical.room_id) if physical.room_id else None
+        lines=[
+            f'Building: {str(planned.function).replace("_"," ").title()}',
+            f'Owner: {owner_label}',
+            f'Room: {str(room.kind).replace("_"," ").title() if room else "Exterior / shared space"}',
+            f'Condition: {int(planned.condition)}%',
+            f'Current sight coverage: {len(watched)} observer(s)',
+        ]
+        if watcher_labels:lines.append('Watching this tile: '+', '.join(watcher_labels[:5]))
+        if prop and prop.occupants:
+            known_occupants=[sim.state.npcs[uid].name for uid in prop.occupants if uid in known and uid in sim.state.npcs]
+            lines.append('Known occupants: '+(', '.join(known_occupants[:5]) if known_occupants else 'none identified'))
+        if planned.function!='market':
+            lines.append('No stealable building inventory is materialized here yet; theft requires a real goods/storage source.')
+        _view_text(term,box('CASE PROPERTY',lines,screen_width(term.size()[0],96)))
+        return UI_BACK
+    if choice=='steal_market_here' and planned is not None and physical is not None:
+        town=sim.state.settlements.get(physical.settlement_id)
+        if town:return _steal_market_action(ctx,term,town)
+        return UI_BACK
     if choice=='inspect_npc' and npc:
         return _npc_profile_menu(ctx,term,npc.uid)
     if choice=='observe_npc' and npc:
