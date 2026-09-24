@@ -135,6 +135,8 @@ class HuntingSystem:
             sp = self.registry.species.get(creature.species_id)
             if not sp:
                 continue
+            self._update_needs(creature,sp,minute)
+            self._ensure_den(creature,sp,minute)
 
             dist = abs(creature.x - player_pos.x) + abs(creature.y - player_pos.y)
             if turn <= int(getattr(creature,"staggered_until_turn",-1)):
@@ -146,6 +148,8 @@ class HuntingSystem:
 
             perceived = self._perception_score(creature, sp, player_pos, turn, minute)
             if perceived > 0:
+                creature.activity="";creature.activity_until_turn=-1
+                creature.activity_target_x=creature.activity_target_y=creature.activity_target_z=None
                 creature.alertness = min(100, creature.alertness + perceived)
                 creature.threat_x, creature.threat_y, creature.threat_z = player_pos.x, player_pos.y, player_pos.z
                 creature.last_threat_turn = turn
@@ -159,6 +163,9 @@ class HuntingSystem:
                     creature.behavior = "calm"
 
             creature.behavior = self._choose_behavior(creature, sp, dist, turn, player_pos)
+            if creature.behavior=="calm" and creature.alertness < max(10,sp.flee_threshold//3):
+                if self._activity_tick(creature,sp,player_pos,turn,minute):
+                    continue
             if creature.behavior == "display":
                 creature.stamina = min(sp.stamina,creature.stamina+3)
                 continue
@@ -187,6 +194,179 @@ class HuntingSystem:
                 if not (self.state.player_disengage_turn==turn and creature.last_move_turn==turn and creature.behavior!="charge"):
                     attackers.append(creature.uid)
         return list(dict.fromkeys(attackers))
+
+    def _update_needs(self,c:CreatureState,sp:SpeciesDef,minute:int)->None:
+        if c.last_need_minute<0:
+            c.last_need_minute=minute
+            return
+        elapsed=max(0,minute-c.last_need_minute)
+        if elapsed<=0:return
+        c.hunger=min(100,c.hunger+elapsed//28)
+        c.thirst=min(100,c.thirst+elapsed//20)
+        c.last_need_minute=minute
+
+    def _den_owner_token(self,c:CreatureState,sp:SpeciesDef)->str:
+        shared=sp.den_type in ("den","nest","lodge","cave") and bool(c.cohort_key)
+        return c.cohort_key if shared else c.uid
+
+    def _ensure_den(self,c:CreatureState,sp:SpeciesDef,minute:int)->AnimalDenState|None:
+        if not sp.den_type:return None
+        if c.home_den_uid and c.home_den_uid in self.state.animal_dens:
+            return self.state.animal_dens[c.home_den_uid]
+        owner=self._den_owner_token(c,sp)
+        token=hash_u64(self.seed,"animal-den",sp.id,owner,c.z)
+        uid=f"den:{token:016x}"
+        existing=self.state.animal_dens.get(uid)
+        if existing:
+            c.home_den_uid=uid;return existing
+        origin=WorldPos(c.x,c.y,c.z);candidates=[]
+        for radius in range(0,7):
+            for dx in range(-radius,radius+1):
+                for dy in range(-radius,radius+1):
+                    if abs(dx)+abs(dy)!=radius:continue
+                    pos=origin.moved(dx,dy)
+                    if not self._passable_for(sp,pos):continue
+                    terrain=self.world.tile_at(pos).terrain_id.split(":")[-1]
+                    cover=self._cover_score(pos);score=cover
+                    if sp.den_type in ("burrow","den","bed") and any(k in terrain for k in ("forest","scrub","grass","moss")):score+=18
+                    if sp.den_type=="nest" and any(k in terrain for k in ("forest","grass","marsh","shore")):score+=16
+                    if sp.den_type=="wallow" and any(k in terrain for k in ("mud","flood","wet","marsh","grass")):score+=20
+                    if sp.den_type in ("lodge","holt") and self._water_near(pos):score+=30
+                    if sp.den_type=="cave" and pos.z<0:score+=35
+                    tie=hash_u64(self.seed,"animal-den-site",uid,pos.x,pos.y,pos.z)&0xffff
+                    candidates.append((score,int(tie),pos))
+        if not candidates:return None
+        candidates.sort(key=lambda row:(row[0],row[1]),reverse=True);pos=candidates[0][2]
+        detail={"burrow":"dug burrow","bed":"flattened bedding site","nest":"nesting site","den":"sheltered den","wallow":"wallow and bedding hollow","lodge":"lodge","holt":"bank-side holt","cave":"cave refuge"}.get(sp.den_type,sp.den_type)
+        den=AnimalDenState(uid,sp.id,pos.x,pos.y,pos.z,sp.den_type,minute,c.cohort_key,minute,{},100,detail)
+        self.state.animal_dens[uid]=den;c.home_den_uid=uid
+        if len(self.state.animal_dens)>320:
+            referenced={x.home_den_uid for x in self.state.creatures.values() if x.home_den_uid}
+            old=sorted((d for d in self.state.animal_dens.values() if d.uid not in referenced),key=lambda d:(d.last_used_minute,d.created_minute,d.uid))
+            for d in old[:max(0,len(self.state.animal_dens)-320)]:self.state.animal_dens.pop(d.uid,None)
+        return den
+
+    def _water_near(self,pos:WorldPos)->bool:
+        for dx,dy in ((0,0),(1,0),(-1,0),(0,1),(0,-1)):
+            q=pos.moved(dx,dy);tile=self.world.tile_at(q)
+            if "water" in set(tile.terrain.tags):return True
+            if self.environment is not None:
+                f=self.environment.fluid_at(q)
+                if f is not None and getattr(f,"fluid","")=="water" and getattr(f,"amount",0)>10:return True
+        return False
+
+    def _find_activity_target(self,c:CreatureState,sp:SpeciesDef,kind:str,radius:int=7)->WorldPos|None:
+        origin=WorldPos(c.x,c.y,c.z);rows=[]
+        for r in range(0,radius+1):
+            for dx in range(-r,r+1):
+                for dy in range(-r,r+1):
+                    if abs(dx)+abs(dy)!=r:continue
+                    q=origin.moved(dx,dy)
+                    if not self._passable_for(sp,q):continue
+                    ok=False
+                    if kind=="water":
+                        ok=self._water_near(q)
+                    elif kind=="food":
+                        if sp.diet in ("herbivore","omnivore") and self.resources is not None:
+                            fv=self.resources.feature_at(q)
+                            rd=self.registry.resources.get(fv.feature_id) if fv else None
+                            ok=bool(rd and "food" in rd.tags)
+                        if not ok and sp.diet in ("carnivore","omnivore"):
+                            ok=any(k.z==q.z and abs(k.x-q.x)+abs(k.y-q.y)<=1 and k.quality>15 for k in self.state.carcasses.values())
+                    if ok:
+                        score=-r*20+self._cover_score(q)//3
+                        tie=hash_u64(self.seed,"animal-activity-target",c.uid,kind,q.x,q.y)&0xffff
+                        rows.append((score,int(tie),q))
+            if rows:break
+        if not rows:return None
+        rows.sort(key=lambda row:(row[0],row[1]),reverse=True);return rows[0][2]
+
+    def _set_activity_target(self,c:CreatureState,target:WorldPos,activity:str,turn:int)->None:
+        c.activity=activity;c.activity_until_turn=turn+12
+        c.activity_target_x,c.activity_target_y,c.activity_target_z=target.x,target.y,target.z
+
+    def _activity_tick(self,c:CreatureState,sp:SpeciesDef,player:WorldPos,turn:int,minute:int)->bool:
+        # Existing stationary activity.
+        if c.activity in ("feeding","drinking","resting") and turn<=c.activity_until_turn:
+            if c.activity=="feeding":
+                c.hunger=max(0,c.hunger-10);c.stamina=min(sp.stamina,c.stamina+2)
+            elif c.activity=="drinking":
+                c.thirst=max(0,c.thirst-14);c.stamina=min(sp.stamina,c.stamina+2)
+            else:
+                c.stamina=min(sp.stamina,c.stamina+12);c.pain=max(0,c.pain-1)
+            return True
+        if c.activity in ("feeding","drinking","resting") and turn>c.activity_until_turn:
+            if c.activity=="feeding" and hash_u64(self.seed,"animal-scat",c.uid,turn//3)%100<38:
+                pos=WorldPos(c.x,c.y,c.z);self._write_stationary_sign(c,"scat",pos,minute,max(20,sp.trackability//2),"droppings")
+            c.activity="";c.activity_target_x=c.activity_target_y=c.activity_target_z=None
+
+        # Continue travel toward an actual resource/den.
+        if c.activity in ("to_food","to_water","to_den"):
+            if c.activity_target_x is None or turn>c.activity_until_turn:
+                c.activity="";return False
+            target=WorldPos(int(c.activity_target_x),int(c.activity_target_y),int(c.activity_target_z or c.z))
+            if (c.x,c.y,c.z)==(target.x,target.y,target.z):
+                next_activity={"to_food":"feeding","to_water":"drinking","to_den":"resting"}[c.activity]
+                c.activity=next_activity;c.activity_until_turn=turn+(3 if next_activity!="resting" else 5)
+                detail="feeding sign" if next_activity=="feeding" else "trampled bank at a drinking spot" if next_activity=="drinking" else "flattened bedding"
+                kind="feeding" if next_activity=="feeding" else "drink" if next_activity=="drinking" else "bed"
+                self._write_stationary_sign(c,kind,target,minute,max(25,sp.trackability),detail)
+                den=self.state.animal_dens.get(c.home_den_uid)
+                if den and (den.x,den.y,den.z)==(c.x,c.y,c.z):den.last_used_minute=minute
+                return True
+            return self._move_activity_one(c,sp,target,turn,minute)
+
+        # Needs and deterministic opportunistic distractions.
+        profile=sp.activity_profile or {"feed":55,"drink":45,"rest":40}
+        day_min=minute%1440;night=day_min<300 or day_min>1200
+        choices=[]
+        if c.thirst>=38:choices.append(("water",100+c.thirst))
+        if c.hunger>=34:choices.append(("food",90+c.hunger))
+        if c.stamina<=58 or night:choices.append(("rest",80+(sp.stamina-c.stamina)+(15 if night else 0)))
+        if not choices:
+            roll=hash_u64(self.seed,"animal-distraction",c.uid,turn//3)%300
+            feed=int(profile.get("feed",55));drink=int(profile.get("drink",45));rest=int(profile.get("rest",40))
+            if roll<feed:choices=[("food",feed)]
+            elif roll<feed+drink:choices=[("water",drink)]
+            elif roll<feed+drink+rest:choices=[("rest",rest)]
+        if not choices:return False
+        choices.sort(key=lambda row:row[1],reverse=True)
+        for kind,_ in choices:
+            if kind=="rest":
+                den=self.state.animal_dens.get(c.home_den_uid)
+                target=WorldPos(den.x,den.y,den.z) if den else WorldPos(c.x,c.y,c.z)
+                if target==WorldPos(c.x,c.y,c.z):
+                    c.activity="resting";c.activity_until_turn=turn+5
+                    self._write_stationary_sign(c,"bed",target,minute,max(25,sp.trackability),"flattened bedding")
+                    if den:den.last_used_minute=minute
+                    return True
+                self._set_activity_target(c,target,"to_den",turn);return self._move_activity_one(c,sp,target,turn,minute)
+            target=self._find_activity_target(c,sp,kind)
+            if target is None:continue
+            self._set_activity_target(c,target,"to_"+kind,turn)
+            return self._move_activity_one(c,sp,target,turn,minute)
+        return False
+
+    def _move_activity_one(self,c:CreatureState,sp:SpeciesDef,target:WorldPos,turn:int,minute:int)->bool:
+        current=WorldPos(c.x,c.y,c.z);occupied={(o.x,o.y,o.z) for o in self.state.creatures.values() if o.uid!=c.uid}
+        rows=[]
+        for dx,dy in CARDINALS:
+            q=current.moved(dx,dy)
+            if q==target or ((q.x,q.y,q.z) not in occupied and self._passable_for(sp,q)):
+                d=abs(q.x-target.x)+abs(q.y-target.y)
+                score=-d*30+self._cover_score(q)//5
+                tie=hash_u64(self.seed,"animal-activity-step",c.uid,c.activity,turn,q.x,q.y)&0xffff
+                rows.append((score,int(tie),q))
+        if not rows:return False
+        rows.sort(key=lambda row:(row[0],row[1]),reverse=True);q=rows[0][2]
+        old=current;c.x,c.y=q.x,q.y;c.facing_dx,c.facing_dy=q.x-old.x,q.y-old.y;c.last_move_turn=turn
+        c.stamina=max(0,c.stamina-2);self._leave_sign(c,sp,old,q,turn,minute)
+        return True
+
+    def _write_stationary_sign(self,c:CreatureState,kind:str,pos:WorldPos,minute:int,strength:int,detail:str)->None:
+        if c.last_sign_turn==minute and kind!="blood":return
+        self._write_sign(c,kind,pos,pos,minute,strength,detail)
+        c.last_sign_turn=minute
 
     def _prepare_group_tactics(self, local:list[CreatureState], turn:int) -> None:
         groups:dict[tuple[str,str],list[CreatureState]]={}
