@@ -19,9 +19,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 14,
+      "neck": 4,
+      "forelegs": 14,
+      "hindlegs": 26
     },
     "description": "A small fast herbivore that relies on cover, speed, and prolific breeding.",
     "flavor": "\"A flash of white tail, then grass moving where nothing seems to be.\"",
@@ -81,9 +83,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 14,
+      "neck": 4,
+      "forelegs": 14,
+      "hindlegs": 26
     },
     "description": "A cold-country hare whose large feet carry it over soft ground.",
     "flavor": "\"Long legs, pale fur, and a habit of vanishing uphill.\"",
@@ -133,9 +137,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A wary browser moving between woodland cover and open feeding ground.",
     "flavor": "\"It watches the wind before it watches you.\"",
@@ -216,9 +222,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A massive grazing deer moving in loose herds near meadow and forest edge.",
     "flavor": "\"A herd sounds like weather when it decides to run.\"",
@@ -302,9 +310,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A huge solitary browser, usually calm until crowded or threatened.",
     "flavor": "\"Too large to mistake for harmless once it turns toward you.\"",
@@ -389,9 +399,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A tough rooting omnivore with poor manners and dangerous tusks.",
     "flavor": "\"Brush shakes first. Then the tusks arrive.\"",
@@ -475,9 +487,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 22,
+      "legs": 14
     },
     "description": "A large ground bird that feeds in flocks and bursts noisily into flight.",
     "flavor": "\"A sudden thunder of wings from brush that looked empty.\"",
@@ -539,9 +553,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 22,
+      "legs": 14
     },
     "description": "A compact ground bird relying on camouflage and explosive escape.",
     "flavor": "\"You notice it exactly one heartbeat before it leaves.\"",
@@ -602,9 +618,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A sure-footed grazer of rocky high country, defensive when cornered.",
     "flavor": "\"Cliffs are roads to it.\"",
@@ -675,9 +693,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A small adaptable predator hunting rodents, birds, and carrion.",
     "flavor": "\"A bright tail passing through dusk grass.\"",
@@ -728,9 +748,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A social endurance predator that becomes far more dangerous in a pack.",
     "flavor": "\"One wolf watches. The others use the watching.\"",
@@ -802,9 +824,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A huge omnivore with enormous strength and little need to bluff.",
     "flavor": "\"The forest becomes smaller when a bear stands up.\"",
@@ -877,9 +901,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A low powerful digger that reacts to close threats with disproportionate confidence.",
     "flavor": "\"Small enough to underestimate exactly once.\"",
@@ -936,9 +962,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 48,
+      "head": 14,
+      "neck": 6,
+      "forelegs": 16,
+      "hindlegs": 16
     },
     "description": "A pale many-limbed cave scavenger drawn to carrion and vibration.",
     "flavor": "\"Its feet click before its body clears the dark.\"",
@@ -993,9 +1021,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A blind subterranean grazer feeding on cave growths and mineral films.",
     "flavor": "\"It noses stone as if stone were grass.\"",
@@ -1044,9 +1074,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A vibration-hunting cave predator that waits near narrow passages.",
     "flavor": "\"Silence in a cave can be something holding still.\"",
@@ -1104,9 +1136,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A heavy wetland-adapted boar feeding among reeds and muddy banks.",
     "flavor": "\"Mud hides the feet, not the tusks.\"",
@@ -1190,9 +1224,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A semi-aquatic rodent feeding on wetland stems and roots.",
     "flavor": "\"Muskrat belongs to the water margin as much as the land.\"",
@@ -1243,9 +1279,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "A heavy aquatic engineer feeding on bark and riverside vegetation.",
     "flavor": "\"Beaver belongs to the water margin as much as the land.\"",
@@ -1299,9 +1337,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 46,
+      "head": 12,
+      "neck": 8,
+      "forelegs": 17,
+      "hindlegs": 17
     },
     "description": "An agile fish-eating mammal of streams, wetlands, and lake margins.",
     "flavor": "\"River Otter belongs to the water margin as much as the land.\"",
@@ -1354,9 +1394,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 22,
+      "legs": 14
     },
     "description": "A tall wading bird stalking fish and frogs in quiet shallows.",
     "flavor": "\"Great Blue Heron belongs to the water margin as much as the land.\"",
@@ -1420,9 +1462,11 @@
     ],
     "drops": {},
     "body": {
-      "torso": 58,
-      "head": 16,
-      "legs": 26
+      "torso": 42,
+      "head": 12,
+      "neck": 10,
+      "wings": 22,
+      "legs": 14
     },
     "description": "A noisy coastal scavenger common on beaches, flats, and rocky shorelines.",
     "flavor": "\"Herring Gull belongs to the water margin as much as the land.\"",
@@ -1485,8 +1529,10 @@
     "drops": {},
     "body": {
       "torso": 58,
-      "head": 16,
-      "legs": 26
+      "head": 14,
+      "neck": 6,
+      "foreflippers": 12,
+      "hindflippers": 10
     },
     "description": "A coastal marine mammal hauling out on quiet beaches and rocky ledges.",
     "flavor": "\"Harbor Seal belongs to the water margin as much as the land.\"",
