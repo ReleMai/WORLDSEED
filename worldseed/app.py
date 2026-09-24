@@ -1486,6 +1486,15 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
         )
         if not choice:return UI_BACK
         active=choice
+        if not getattr(term,'mouse_ui',False):
+            page=_npc_profile_data(sim,npc,active)['tabs'].get(active,())
+            lines=[]
+            for row in page:
+                if active=='needs':
+                    lines.append(f'{row[0]}: {row[1]}')
+                else:
+                    lines.append(f'{row[0]}: {row[1]}')
+            _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{npc.name} · {active.title()}')
 
 
 def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
