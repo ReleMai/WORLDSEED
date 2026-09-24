@@ -284,6 +284,9 @@ class CasingSystem:
                 )
                 rel["trust"]=max(-100,int(rel.get("trust",0))-2)
                 rel["familiarity"]=min(100,int(rel.get("familiarity",0))+2)
+            if intel.alarm_level>=3 and npc.occupation=="guard":
+                npc.goal="guard"
+                npc.goal_score=max(int(getattr(npc,"goal_score",0)),85)
         return old,intel.alarm_level
 
     def _visible_nearby(self, player_pos: WorldPos, target: WorldPos, stealth, radius: int = 2) -> bool:
