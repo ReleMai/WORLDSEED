@@ -544,6 +544,17 @@ class SettlementSkeletonPlanner:
         top = cy - height // 2
         return {(x, y) for y in range(top, top + height) for x in range(left, left + width)}
 
+    @staticmethod
+    def _approach_point(center: tuple[int,int], width: int, height: int, origin: tuple[int,int]) -> tuple[int,int]:
+        """Place a road endpoint just outside a functional parcel, facing town."""
+        cx,cy=center; ox,oy=origin
+        dx,dy=ox-cx,oy-cy
+        if abs(dx)>=abs(dy):
+            step=width//2+1
+            return (cx+(step if dx>=0 else -step),cy)
+        step=height//2+1
+        return (cx,cy+(step if dy>=0 else -step))
+
     def _parcel(
         self,
         plan_uid: str,
@@ -853,8 +864,12 @@ class SettlementSkeletonPlanner:
         occupied = set(common_cells) | road_cells
         farm_target = self._best_functional_site(common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied)
         industry_target = self._best_functional_site(common_center, bounds, kind="industry", archetype=plan.archetype, occupied=occupied)
-        farm_road = add_road("farm-access", farm_target, "path") if farm_target else ""
-        industry_road = add_road("industry-access", industry_target, "road") if industry_target else ""
+        farm_road = add_road(
+            "farm-access", self._approach_point(farm_target,9,7,common_center), "path"
+        ) if farm_target else ""
+        industry_road = add_road(
+            "industry-access", self._approach_point(industry_target,7,7,common_center), "road"
+        ) if industry_target else ""
 
         parcels: list[LandUseParcel] = []
         common_ordered = sorted(common_cells, key=lambda p: (p[1], p[0]))
