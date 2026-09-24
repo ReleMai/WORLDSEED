@@ -213,6 +213,11 @@ class EconomySystem:
             town.stocks[iid] = town.stocks.get(iid, 0) + amount
         return batches
 
+    @staticmethod
+    def _food_need_for_population(population:int)->int:
+        population=max(0,int(population))
+        return 0 if population<=0 else max(1,(population+2)//3)
+
     def daily_update(self, minute: int) -> None:
         day = minute // 1440
         for town in self.state.settlements.values():
@@ -224,7 +229,7 @@ class EconomySystem:
             # Food is physically consumed after production, so bad harvests propagate immediately.
             represented=sum(len(h.member_uids) for h in self.state.households.values() if h.settlement_id==town.uid and h.last_consumed_minute==minute)
             aggregate_population=max(0,town.population-represented)
-            food_need = max(0, aggregate_population // 3)
+            food_need = self._food_need_for_population(aggregate_population)
             eaten = min(food_need, town.stocks.get("core:wheat", 0))
             town.stocks["core:wheat"] = town.stocks.get("core:wheat", 0) - eaten
             remain = food_need - eaten

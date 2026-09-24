@@ -115,7 +115,7 @@ class Simulation:
         self.knowledge=KnowledgeSystem(self.state,self.seed,self.history)
         self.law=LawSystem(self.state,self.seed,self.history)
         self.family=FamilySystem(self.state,self.seed,self.history)
-        self.households=HouseholdEconomySystem(self.state,self.seed)
+        self.households=HouseholdEconomySystem(self.state,self.seed,registry,self.economy)
         self.macrohistory=MacroHistorySystem(self.state,self.seed)
         self.magic=MagicSystem(self.state,self.seed,self.history,self.environment)
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
@@ -144,6 +144,8 @@ class Simulation:
             self.settlement_physicalization,self.settlement_population
         )
         self.npcs.attach_economy(self.economy)
+        self.households.attach_physicalization(self.settlement_physicalization)
+        self.npcs.attach_households(self.households)
         self.civics.attach_settlement_physicalization(self.settlement_physicalization)
         self.stealth=StealthSystem(
             self.state,self.seed,self.world,self.resources,self.building,
@@ -381,7 +383,7 @@ class Simulation:
             # causality bounded without replaying every missed minute.
             if "environment" in kinds or "arrival" in kinds:
                 before_arrivals=sum(1 for c in self.state.caravans.values() if c.status=="traveling") + sum(1 for c in self.state.migration_cohorts.values() if c.status=="traveling")
-                self.disease.transport_update(minute);self.economy.process_caravans(minute);self.migration.process(minute);self.disease.transport_update(minute)
+                self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute)
                 after_arrivals=sum(1 for c in self.state.caravans.values() if c.status=="traveling") + sum(1 for c in self.state.migration_cohorts.values() if c.status=="traveling")
                 summary["arrivals"]+=max(0,before_arrivals-after_arrivals)
             if "daily" in kinds:
@@ -403,7 +405,7 @@ class Simulation:
         if current<end:
             self.environment.coarse_advance(current,end)
             self.clock.minute=end;self.state.clock_minute=end
-        self.disease.transport_update(end);self.economy.process_caravans(end);self.migration.process(end);self.disease.transport_update(end)
+        self.disease.transport_update(end);self.economy.process_caravans(end);self.households.hourly_update(end);self.migration.process(end);self.disease.transport_update(end)
         self.state.offline_policy=policy
         self.state.last_offline_minutes=minutes
         self.state.last_offline_summary=dict(summary)
@@ -416,7 +418,7 @@ class Simulation:
         old_hour=old//60;new_hour=self.clock.minute//60
         player=self.player_pos
         for hour in range(old_hour+1,new_hour+1):
-            minute=hour*60;self.environment.hourly_update(minute);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+            minute=hour*60;self.environment.hourly_update(minute);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
             pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
             if collapsed:
                 v=self.entities.try_get(self.player_id,Vitals)
