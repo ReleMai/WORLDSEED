@@ -706,6 +706,22 @@ def _shield_bash_action(ctx:GameContext,term:Terminal)->str:
             if not c:continue
             sim.execute(ShieldBashCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y));return sim.log[-1].message if sim.log else ''
 
+def _disengage_action(ctx:GameContext,term:Terminal)->str:
+    sim=ctx.sim;reg=ctx.registry;p=sim.player_pos;renderer=Renderer(reg);cursor=p.moved(1,0)
+    while True:
+        _present_game_frame(term,ctx,renderer,'DISENGAGE: choose an adjacent retreat tile that increases distance from every adjacent threat | Enter retreat | Esc',cursor)
+        k=term.read_key();low=k.lower() if len(k)==1 else k
+        if k.startswith('UI_TARGET_HOVER:') or k.startswith('UI_WORLD:'):
+            _,x,y=k.split(':');n=WorldPos(int(x),int(y),p.z)
+            if abs(n.x-p.x)+abs(n.y-p.y)==1:cursor=n
+            continue
+        if low in ('ESC','q'):return UI_BACK
+        if low in DIRECTION_KEYS:
+            dx,dy=DIRECTION_KEYS[low];cursor=p.moved(dx,dy);continue
+        if low in ('ENTER',' ','\r','\n'):
+            sim.execute(DisengageCommand(ctx.player_id,cursor.x-p.x,cursor.y-p.y))
+            return sim.log[-1].message if sim.log else ''
+
 def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
     """Developer combat laboratory that uses authoritative simulation commands."""
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
@@ -897,6 +913,10 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
                 ctx.sim.execute(BraceCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='bash':
                 result=_shield_bash_action(ctx,term)
+                if result==UI_BACK:continue
+                return result
+            if action=='disengage':
+                result=_disengage_action(ctx,term)
                 if result==UI_BACK:continue
                 return result
             if action=='arena':

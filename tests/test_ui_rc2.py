@@ -90,10 +90,10 @@ class UIRC2Tests(unittest.TestCase):
 
     def test_combat_action_hub_exposes_active_defense_without_new_global_keys(self):
         keys={key for key,_ in ACTION_COMBAT}
-        for expected in ("dodge","parry","guard","brace","bash","arena"):
+        for expected in ("dodge","parry","guard","brace","bash","disengage","arena"):
             self.assertIn(expected,keys)
         # These are Action Hub verbs, not global movement/router bindings.
-        for key in ("dodge","parry","guard","brace","bash"):
+        for key in ("dodge","parry","guard","brace","bash","disengage"):
             self.assertNotIn(key,DIRECT_MENUS)
 
     def test_primary_navigation_is_small_and_hierarchical(self):

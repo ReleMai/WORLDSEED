@@ -97,7 +97,8 @@ ACTION_COMBAT = [
     ('parry', 'Parry — intercept melee with the readied weapon'),
     ('guard', 'Shield guard — maximize interception coverage'),
     ('brace', 'Shield brace — trade coverage for impact stability'),
-    ('bash', 'Shield bash — strike and potentially stagger an adjacent target'),
+    ('bash', 'Shield bash — strike, stagger, and create physical space'),
+    ('disengage', 'Disengage — retreat one tile without giving a free closing attack'),
     ('f', 'Ready / lower weapons & review wounds'),
     ('arena', 'Combat test arena / developer practice lab'),
 ]

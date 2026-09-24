@@ -63,6 +63,8 @@ class BraceCommand: actor:int
 @dataclass(frozen=True,slots=True)
 class ShieldBashCommand: actor:int; dx:int=0; dy:int=0
 @dataclass(frozen=True,slots=True)
+class DisengageCommand: actor:int; dx:int=0; dy:int=0
+@dataclass(frozen=True,slots=True)
 class ArenaSpawnItemCommand: actor:int; item_id:str; amount:int=1
 @dataclass(frozen=True,slots=True)
 class ArenaSpawnCreatureCommand: actor:int; species_id:str; dx:int=1; dy:int=0

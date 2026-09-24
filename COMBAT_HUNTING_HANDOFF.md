@@ -571,6 +571,84 @@ Creature tactical state is save-compatible through appended defaults:
 
 Tests cover tactical profile loading, reliable attacked-boar charge commitment, threat displays, wolf role assignment/flanking, low-stamina wolf disengagement, herd panic/cohesion, tactical-state roundtrip, reach interception, braced-charge recoil, charge impact cleanup, and the tactical arena preset.
 
+## Phase 6 — combat spacing, displacement, and reach control
+
+### Physical displacement
+
+High-force combat can now change position instead of resolving every impact in place.
+
+- committed animal charges can physically drive the player backward after a real damaging impact;
+- heavier animals and higher accumulated charge momentum can move the player farther;
+- a successful Shield Brace that catches the charge suppresses that knockback path;
+- Shield Bash can drive an animal one tile away when enough force is generated;
+- Power attacks can knock animals backward when weapon mass, weapon damage, and Strength produce enough force;
+- ordinary movement can no longer step directly into a living creature's occupied tile.
+
+Displacement checks the actual local terrain, resources, structures, fluids, player position, and other materialized creatures. It never manufactures a free cell.
+
+### Collision injuries
+
+If forced displacement runs into occupied/solid terrain, movement stops and Combat owns the resulting blunt trauma.
+
+Player collision can create:
+- blunt HP damage;
+- pain;
+- body-part damage;
+- a bounded fracture chance at higher force.
+
+Animal collision can create:
+- blunt damage/pain;
+- a physical wound;
+- a short stagger;
+- death/carcass resolution through the normal combat authority if the collision is lethal.
+
+This keeps positional resolution in Simulation while wound/death resolution remains in Combat.
+
+### Prepared reach control
+
+Parry with a reach-2+ melee weapon now applies to ordinary closing pressure as well as committed charges.
+
+When a hostile animal crosses from outside adjacency into attack range during the post-action exchange:
+
+- a prepared reach weapon can make one interception attack before body contact;
+- piercing reach weapons use Thrust while other valid reach weapons use Quick;
+- a successful interception stops that approach for the exchange and attempts to restore the animal to its prior physical cell;
+- if that prior cell is no longer free, the animal remains where physical occupancy allows, but the successful interception still spends/stops the attack;
+- a failed interception spends the prepared Parry and the animal continues into its attack.
+
+Only one prepared defense is consumed; this is not an unlimited passive opportunity-attack system.
+
+### Disengage
+
+The Combat Action Hub now exposes **Disengage**.
+
+A disengage:
+- requires an adjacent threat;
+- requires a cardinal retreat tile;
+- must increase distance from every currently adjacent threat;
+- requires the destination to be physically free/passable;
+- costs stamina, with additional cost from serious leg injury;
+- creates one exchange of spacing grace against ordinary animals that must move to re-enter adjacency.
+
+Committed charges explicitly ignore disengage grace. This means disengage creates tactical space without becoming a universal escape button.
+
+### Tactical movement difficulty
+
+Aim and melee/ranged hit calculations now recognize the expanded tactical movement states. Charging, flanking, herd flight, disengagement, and regrouping are no longer treated as if the target were standing calmly.
+
+### Validation contract
+
+Phase-6 regression coverage verifies:
+- disengage distance/stamina/turn markers;
+- invalid sideways/blocked retreat rejection;
+- open creature knockback;
+- collision injury when knockback hits solid terrain;
+- player displacement followed by collision trauma;
+- ordinary reach interception;
+- disengage spacing grace;
+- committed charges bypassing that grace;
+- Combat Action Hub exposure without new global bindings.
+
 ## Known gaps / next coherent phase
 
 The next pass should extend tactical depth without replacing the phase-1/2 contracts.
@@ -596,11 +674,11 @@ The next pass should extend tactical depth without replacing the phase-1/2 contr
    - den/young defense and territorial memory;
    - predator-prey combat between non-player animals.
 
-4. **Melee depth beyond phase 4**
-   - reach control, closing distance, and disengagement;
+4. **Melee depth beyond phase 6**
    - bind/feint/counter interactions;
    - weapon-class specific parry quality and attack animations;
-   - knockback/terrain collision for high-force impacts.
+   - grappling / clinch behavior for appropriate actors;
+   - richer knockback outcomes such as prone, wall pinning, and downhill momentum.
 
 5. **Expanded sign**
    - scat;
