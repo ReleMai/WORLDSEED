@@ -1352,6 +1352,10 @@ class Simulation:
                 if b.owner in owners:
                     if library and b.uid in library.book_uids:library.book_uids.remove(b.uid)
                     b.owner="player";break
+        self.economy.record_transaction(
+            town.uid,"player_buy","player",town.uid,copper_value=price,
+            minute=self.clock.minute,requested={cmd.item_id:cmd.amount},
+        )
         self.economy.update_prices();self._message(f"You buy {cmd.amount} {self.registry.items[cmd.item_id].name} for {price}c.")
     def _sell(self,cmd:SellCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id);inv=self.entities.get(cmd.actor,Inventory)
@@ -1370,6 +1374,10 @@ class Simulation:
                     b.owner=library.uid if library else town.uid
                     if library and b.uid not in library.book_uids and len(library.book_uids)<library.capacity:library.book_uids.append(b.uid)
                     break
+        self.economy.record_transaction(
+            town.uid,"player_sell","player",town.uid,copper_value=price,
+            minute=self.clock.minute,offered={cmd.item_id:cmd.amount},
+        )
         self.economy.update_prices();self._message(f"You sell {cmd.amount} {self.registry.items[cmd.item_id].name} for {price}c.")
 
 
