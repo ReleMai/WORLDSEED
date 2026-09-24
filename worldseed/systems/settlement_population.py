@@ -32,12 +32,12 @@ class SettlementPopulationBinder:
         "miner": ("smithy",),
         "smith": ("smithy",),
         "carpenter": ("workshop",),
-        "merchant": ("workshop", "mill"),
+        "merchant": ("market",),
         "hunter": (),
-        "healer": (),
-        "guard": (),
-        "scholar": (),
-        "priest": (),
+        "healer": ("clinic",),
+        "guard": ("watchhouse",),
+        "scholar": ("archive", "school"),
+        "priest": ("shrine",),
     }
 
     def __init__(self, state, registry, seed: bytes, physicalization):
@@ -76,6 +76,12 @@ class SettlementPopulationBinder:
             "mill": ("workshop", "storage"),
             "fishery": ("workshop", "storage"),
             "barn": ("storage", "workshop"),
+            "market": ("shop", "room"),
+            "clinic": ("clinic", "storage", "room"),
+            "watchhouse": ("watch", "room"),
+            "shrine": ("sanctuary", "room"),
+            "archive": ("study", "storage", "room"),
+            "school": ("study", "room"),
         }.get(structure.function, ("workshop", "storage", "room"))
         for kind in preferred:
             found = next((room for room in rooms if room.kind == kind), None)
