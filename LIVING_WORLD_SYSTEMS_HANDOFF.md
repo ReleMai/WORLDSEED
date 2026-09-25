@@ -150,3 +150,10 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Fixed retained local-world weather/water/hover animation repainting over inventory and right-click context overlays during idle input waits.
 - Floating and context panels now explicitly suspend world-only hover animation state while they own UI input; the next local-world render reconstructs it normally.
 - This fixes the symptom where the panel visually disappeared but the hidden modal still captured input until Escape.
+
+
+### Dev UI/settlement test-start polish
+- Context menus now dismiss with right-click or a left click outside, and fishing invoked from world context stays in nested cursor-anchored context menus.
+- Inventory item context remains anchored while hovering other cards; clicked recipe selection is persisted before returning to the crafting controller.
+- Crafting categories are top tabs with NEW markers, discovery is now a five-slot Experiment Grid with red/yellow/green recipe proximity, right-click slot removal, known-combination feedback, and zero-path materials hidden.
+- New-game setup now offers a deterministic Village starting location beside a generated settlement for settlement testing.

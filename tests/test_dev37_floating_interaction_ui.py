@@ -264,5 +264,27 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertIsNone(self.term._hover_map_snapshot)
 
 
+    def test_world_context_dismisses_with_right_click_or_left_click_outside(self):
+        rows=[MenuRow("examine","Examine")]
+        self.term._context_backdrop=self.term.screen.copy();self.term._context_menu_origin=(200,160)
+        self.term.present_feature_menu("world_context","WORLD ACTIONS",rows,0,data={})
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN,button=3,pos=(20,20)))
+        self.assertEqual(self.term.read_key(),"ESC")
+        self.term._context_backdrop=self.term.screen.copy();self.term.present_feature_menu("world_context","WORLD ACTIONS",rows,0,data={})
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN,button=1,pos=(20,20)))
+        self.assertEqual(self.term.read_key(),"ESC")
+
+    def test_open_item_context_does_not_follow_hover_to_another_item(self):
+        rows=[MenuRow("core:wood","Wood"),MenuRow("core:bark","Bark")];data=self._inventory_data()
+        self.term.present_feature_menu("inventory_unified","INVENTORY",rows,0,data=data)
+        first=self._target_rect("UI_SELECT:0");second=self._target_rect("UI_SELECT:1")
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN,button=3,pos=first.center));self.assertEqual(self.term.read_key(),"UI_CONTEXT:0")
+        self.term.present_feature_menu("inventory_unified","INVENTORY",rows,0,data=data)
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEMOTION,pos=second.center,rel=(1,0),buttons=(0,0,0)))
+        self.pg.event.post(self.pg.event.Event(self.pg.KEYDOWN,key=self.pg.K_ESCAPE,unicode=""))
+        self.assertEqual(self.term.read_key(),"ESC")
+        self.assertEqual(self.term._ui_context["index"],0)
+
+
 if __name__ == "__main__":
     unittest.main()

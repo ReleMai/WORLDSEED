@@ -341,6 +341,11 @@ def new_game_wizard(term)->StartSelection|None:
         if not mode:return None
         build=_point_buy(term) if mode=='build' else _random_character_menu(term)
         if build is None:continue
+        start_mode=select_menu(term,'STARTING LOCATION',[
+            ('wilderness','Wilderness — standard survival start'),
+            ('village','Village — begin beside a generated settlement for testing and settlement play'),
+        ],subtitle='Village start uses the same seeded settlement generator; it only changes where the player begins.')
+        if not start_mode:continue
         summary=[f'World: {world}',f'Seed: {seed}',f'Character: {player}',f'Sex: {sex.title()}',f'Sprite: {PLAYER_SPRITE_LABELS[sprite_index]}','']+_build_summary(build)+['']
         while True:
             term.present(panel('BEGIN WORLD',summary,min(96,term.size()[0]-2),'Continue begins • Back cancels'))
@@ -349,7 +354,7 @@ def new_game_wizard(term)->StartSelection|None:
             if kl in ('RIGHT','\r','\n',' '):
                 path=DEFAULT_SAVE_DIR/f'{safe_name(world)}.db'
                 if path.exists():path=DEFAULT_SAVE_DIR/f'{safe_name(world)}_{secrets.token_hex(2)}.db'
-                return StartSelection(path,True,world,seed.encode().hex(),player,'custom',build,sex,sprite_index)
+                return StartSelection(path,True,world,seed.encode().hex(),player,start_mode,build,sex,sprite_index)
         # back from confirmation returns to build/random choice
 
 

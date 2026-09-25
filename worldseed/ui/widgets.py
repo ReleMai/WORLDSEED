@@ -146,7 +146,9 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             if page_start<=idx<page_start+len(page_items):
                 selected=idx
                 if state is not None:state.selected=selected
-                if k.startswith('UI_SELECT:'):return items[selected].key
+                if k.startswith('UI_SELECT:'):
+                    if state is not None:state.selected=selected
+                    return items[selected].key
             continue
         if allow_escape and k in ('ESC', 'q'):
             return None
