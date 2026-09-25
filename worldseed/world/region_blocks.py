@@ -198,7 +198,14 @@ class RegionBlockPlanner:
             return score, archetype
 
         civ = self.civilization.potential(x // REGION_SIZE, y // REGION_SIZE)
-        crossing_cost = int(self.world.crossing_cost(pos))
+        # Exact crossing value is a refinement only when hydrology for this
+        # coordinate was explicitly prepared. Regional inspection/planning must
+        # never generate a missing drainage domain as a side effect.
+        surface = None
+        hydro = getattr(self.generator, "hydrology", None)
+        if env is not None and hydro is not None:
+            surface = hydro.surface_at(pos, prepared_only=True)
+        crossing_cost = int(getattr(surface, "crossing_cost", 0) or 0)
         crossing_value = max(0, freshwater - crossing_cost // 2)
         score = (
             farmland * 4 + fertility * 2 + freshwater * 2 + timber + stone
