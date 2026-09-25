@@ -2895,11 +2895,10 @@ class PygameTerminal(PointerUI):
         sign_by={(q.x,q.y,q.z):q for q in nearby['animal_signs'] if _onscreen(q.x,q.y,q.z) and q.strength+hunt_skill*8>=52}
         home_by={(q.x,q.y,q.z):q for q in nearby['animal_homes'] if _onscreen(q.x,q.y,q.z) and q.discovered}
         resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
-        if settlement_by:
-            resource_by={
-                k:v for k,v in resource_by.items()
-                if not sim.settlement_physicalization.clears_natural_feature(WorldPos(k[0],k[1],k[2]))
-            }
+        resource_by={
+            k:v for k,v in resource_by.items()
+            if not sim.settlement_physicalization.clears_natural_feature(WorldPos(k[0],k[1],k[2]))
+        }
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
         else:
