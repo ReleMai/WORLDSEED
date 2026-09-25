@@ -38,7 +38,7 @@ class ProceduralSocietyGenerator:
             "stone": "stone compounds",
             "metal": "iron-trimmed workshops",
             "fiber": "wattle-and-thatch homes",
-        }.get(culture.material_style, f"{culture.material_style} vernacular")
+        }.get(culture.craft_bias, f"{culture.craft_bias} vernacular")
         if "trade" in culture.values:
             form = "market-facing streets"
         elif "ancestry" in culture.values:

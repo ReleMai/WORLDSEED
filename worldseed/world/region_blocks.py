@@ -336,6 +336,10 @@ class RegionBlockPlanner:
             exits = self.route_planner.road_exits_for_region(rx, ry, persist=False)
             roads = tuple(RegionRoadExit(e.direction, e.offset, e.road_class, e.route_uid) for e in exits)
         waters = self._water_edges(rx, ry)
+        road_rows = [asdict(x) for x in roads]
+        if self.version <= 3:
+            for row in road_rows:
+                row.pop("route_uid", None)
         payload = {
             "uid": f"region:{rx}:{ry}", "region_x": rx, "region_y": ry, "version": self.version,
             "dominant_biome": dominant, "biome_mix": mix,
@@ -344,7 +348,7 @@ class RegionBlockPlanner:
             "settlement_anchor": list(anchor) if anchor else None, "settlement_score": settlement_score,
             "settlement_archetype": archetype, "control_potential": control,
             "wilderness_tags": tags, "site_potential": site_potential,
-            "roads": [asdict(x) for x in roads], "waters": [asdict(x) for x in waters],
+            "roads": road_rows, "waters": [asdict(x) for x in waters],
         }
         payload["fingerprint"] = canonical_hash(payload)
         return RegionBlockPlan.from_dict(payload)
