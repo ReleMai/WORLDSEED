@@ -328,9 +328,14 @@ class ContentRegistry:
             if feature.container_structure_id and (feature.container_capacity_mass_g<0 or feature.container_capacity_volume_ml<0):
                 raise ValueError(f"Invalid container capacity in {feature.id}")
         for recipe in self.recipes.values():
-            for iid in (*recipe.inputs.keys(),*recipe.outputs.keys(),*recipe.catalysts.keys()):
+            for iid in (*recipe.inputs.keys(),*recipe.outputs.keys(),*recipe.catalysts.keys(),*recipe.discovery_items):
                 if iid not in self.items: raise ValueError(f"Unknown recipe item {iid} in {recipe.id}")
             if recipe.station and recipe.station not in self.structures: raise ValueError(f"Unknown station {recipe.station} in {recipe.id}")
+            signature=list(recipe.discovery_items)
+            if not signature:
+                for iid,n in sorted(recipe.inputs.items()): signature.extend([iid]*max(0,int(n)))
+            if not 1<=len(signature)<=5:
+                raise ValueError(f"Recipe {recipe.id} needs a 1-5 item discovery signature; author discovery_items for large recipes")
         for struct in self.structures.values():
             for iid in struct.cost:
                 if iid not in self.items: raise ValueError(f"Unknown construction item {iid} in {struct.id}")

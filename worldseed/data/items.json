@@ -1348,6 +1348,40 @@
     ]
   },
   {
+    "id": "core:crude_knife",
+    "name": "Crude Knife",
+    "asset": "crude_knife",
+    "category": "tool",
+    "material": "core:stone",
+    "mass_g": 220,
+    "volume_ml": 130,
+    "tags": [
+      "tool",
+      "knife",
+      "weapon",
+      "primitive"
+    ],
+    "description": "A sharp stone flake wrapped with bark for a safer grip. Crude, fragile, but sufficient for early carcass work.",
+    "flavor": "\"A wrapped edge is enough to turn a kill into usable food and hide.\"",
+    "utility_roles": [
+      "hunting",
+      "butchery",
+      "hide_processing"
+    ],
+    "tool_qualities": {
+      "cut": 1,
+      "skin": 1,
+      "butcher": 1,
+      "scrape": 1
+    },
+    "weapon_damage": 3,
+    "damage_type": "cut",
+    "weapon_class": "knife",
+    "reach": 1,
+    "accuracy": 4,
+    "stamina_cost": 5
+  },
+  {
     "id": "core:stone_knife",
     "name": "Stone Knife",
     "asset": "stone_knife",

@@ -329,5 +329,36 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(all(c.settlement_id=='settlement:b' for c in physical.cells()))
 
 
+    def test_village_start_uses_authoritative_gateway_and_spawns_just_outside(self):
+        from unittest.mock import patch
+        from worldseed.app import _find_village_spawn
+
+        town=SimpleNamespace(uid="settlement:0:0",x=100,y=100,region_x=0,region_y=0,population=35)
+        region=SimpleNamespace(region_x=0,region_y=0)
+        skeleton=SimpleNamespace(plan=SimpleNamespace(common_cells=[(100,100)],gateway_cells=[(120,100)]))
+        class FakeRegionPlanner:
+            def __init__(self,world): pass
+            def plan(self,rx,ry,persist=True): return region
+        class FakeSkeletonPlanner:
+            def __init__(self,world): pass
+            def plan(self,plan,uid,population,persist=True):
+                self.last=(plan,uid,population,persist);return skeleton
+        class FakeSociety:
+            def __init__(self,seed,registry,planner): pass
+            def settlement_for_cell(self,rx,ry):
+                if (rx,ry)==(0,0): return (town,[],None,None,None)
+                return None
+        terrain=SimpleNamespace(passable=True,tags=())
+        world=SimpleNamespace(
+            registry=SimpleNamespace(terrains={"land":terrain}),
+            generator=SimpleNamespace(terrain_at=lambda pos:"land"),
+        )
+        with patch("worldseed.app.RegionBlockPlanner",FakeRegionPlanner), \
+             patch("worldseed.app.SettlementSkeletonPlanner",FakeSkeletonPlanner), \
+             patch("worldseed.app.ProceduralSocietyGenerator",FakeSociety):
+            pos=_find_village_spawn(world,b"seed",self.registry)
+        self.assertEqual((pos.x,pos.y,pos.z),(122,100,0))
+
+
 if __name__ == "__main__":
     unittest.main()

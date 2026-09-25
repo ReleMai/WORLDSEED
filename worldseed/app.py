@@ -14,7 +14,7 @@ from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
-from worldseed.systems.settlement_planner import settlement_rank_for_population
+from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
@@ -204,11 +204,10 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
     return best or fallback or WorldPos(0,0,0)
 
 def _find_village_spawn(world:World,seed:bytes,reg:ContentRegistry)->WorldPos|None:
-    planner=RegionBlockPlanner(world);society=ProceduralSocietyGenerator(seed,reg,planner)
+    planner=RegionBlockPlanner(world);skeletons=SettlementSkeletonPlanner(world)
+    society=ProceduralSocietyGenerator(seed,reg,planner)
     villages=[];fallback=[]
-    # Settlement presence is common at macro scale, but one region is 512x512
-    # cells. Prefer a true village-rank population so this start is useful for
-    # settlement testing instead of silently dropping the player beside a town.
+    # Search seeded macro-regions for a genuine village-rank settlement.
     for radius in range(0,9):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
@@ -221,12 +220,42 @@ def _find_village_spawn(world:World,seed:bytes,reg:ContentRegistry)->WorldPos|No
     candidates=villages or fallback
     if not candidates:return None
     town=min(candidates,key=lambda row:(row[0],row[1],row[2]))[-1]
-    for radius in range(3,18):
-        for dy in range(-radius,radius+1):
-            for dx in range(-radius,radius+1):
-                if max(abs(dx),abs(dy))!=radius:continue
-                q=WorldPos(town.x+dx,town.y+dy,0);td=world.registry.terrains.get(world.generator.terrain_at(q))
-                if td and td.passable and 'water' not in td.tags:return q
+
+    # Use the exact settlement skeleton that runtime physicalization will read.
+    # Spawn just beyond a gateway so the first visible road leads directly into
+    # the village instead of dropping the player somewhere near its anchor.
+    region=planner.plan(town.region_x,town.region_y,persist=True)
+    skeleton=skeletons.plan(region,town.uid,town.population,persist=True)
+    commons=list(skeleton.plan.common_cells)
+    if commons:
+        cx=sum(x for x,_ in commons)//len(commons);cy=sum(y for _,y in commons)//len(commons)
+    else:cx,cy=town.x,town.y
+    gates=sorted(skeleton.plan.gateway_cells,key=lambda p:(abs(p[0]-cx)+abs(p[1]-cy),p[1],p[0]),reverse=True)
+
+    def dry(q:WorldPos)->bool:
+        td=world.registry.terrains.get(world.generator.terrain_at(q))
+        return bool(td and td.passable and 'water' not in td.tags)
+
+    for gx,gy in gates:
+        dx=0 if gx==cx else (1 if gx>cx else -1)
+        dy=0 if gy==cy else (1 if gy>cy else -1)
+        # Gate is on the planned settlement boundary. Two to six cells beyond
+        # it is visibly outside while keeping the entrance within the opening view.
+        for step in range(2,7):
+            q=WorldPos(gx+dx*step,gy+dy*step,0)
+            if dry(q):return q
+        # Terrain may block the straight continuation; search a tiny ring around
+        # the gateway rather than wandering away from the settlement.
+        for radius in range(1,5):
+            ring=[]
+            for oy in range(-radius,radius+1):
+                for ox in range(-radius,radius+1):
+                    if max(abs(ox),abs(oy))!=radius:continue
+                    q=WorldPos(gx+ox,gy+oy,0)
+                    if dry(q):ring.append((abs(ox)+abs(oy),oy,ox,q))
+            if ring:return min(ring,key=lambda row:(row[0],row[1],row[2]))[-1]
+    # A planned settlement always has a legal common; this is only a defensive
+    # fallback for malformed legacy generated plans.
     return WorldPos(town.x,town.y,0)
 
 def _pregen_bounds(center:WorldPos,radius_chunks:int)->tuple[int,int,int,int]:
@@ -298,7 +327,9 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     pp=db.load_component(player,'Position');ip=db.load_component(player,'Inventory');vp=db.load_component(player,'Vitals')
     state=LivingWorldState.from_dict(db.load_sim_state())
     if is_new:
-        state.player_name=(player_name or 'Wanderer').strip() or 'Wanderer';state.player_origin='custom';state.player_sex=(getattr(sel,'player_sex','male') or 'male').lower();state.player_sprite_index=int(getattr(sel,'player_sprite_index',0) or 0)
+        state.player_name=(player_name or 'Wanderer').strip() or 'Wanderer'
+        state.player_origin=str(origin or 'wilderness')
+        state.player_sex=(getattr(sel,'player_sex','male') or 'male').lower();state.player_sprite_index=int(getattr(sel,'player_sprite_index',0) or 0)
         state.player_crafting_discovery_enabled=True
         if build:
             state.player_attributes={str(k):int(v) for k,v in build.get('attributes',{}).items()}
@@ -2194,12 +2225,16 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
         pot_state.selected=max(0,min(pot_state.selected,len(rows)-1))
         from collections import Counter
         counts=Counter(placed);exact=sim.crafting.pot_candidates(tuple(placed),inv)
-        known_exact=[r.name for r in reg.recipes.values() if r.id in set(sim.state.player_discovered_recipes) and counts and counts==r.inputs]
+        known_exact=[r.name for r in reg.recipes.values()
+                     if r.id in set(sim.state.player_discovered_recipes) and counts
+                     and counts==Counter(sim.crafting.discovery_signature(r))]
         close=False
         if counts and not exact and not known_exact:
             for r in reg.recipes.values():
-                if r.id in set(sim.state.player_discovered_recipes) or sum(r.inputs.values())>5:continue
-                if all(counts[i]<=r.inputs.get(i,0) for i in counts):close=True;break
+                if r.id in set(sim.state.player_discovered_recipes):continue
+                if r.knowledge and r.knowledge not in sim.state.player_knowledge:continue
+                sig=Counter(sim.crafting.discovery_signature(r))
+                if sig and all(counts[i]<=sig.get(i,0) for i in counts):close=True;break
         mix_state='green' if exact else ('yellow' if close else 'red')
         data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),'known_exact':known_exact,'mix_state':mix_state}
         choice=_select(term,'EXPERIMENT GRID',rows,state=pot_state,presentation='discovery_pot',
@@ -2263,7 +2298,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
                 item=reg.items.get(iid)
                 if not item:continue
                 by_cat.setdefault(item.category or 'misc',[]).append(item)
-            body=['Handled materials give clues. Combine carried materials in the discovery pot to uncover a matching recipe.','']
+            body=['Handled materials give clues. Combine carried materials in the experiment grid to uncover a matching recipe.','']
             if not by_cat:body.append('You have not examined any craft materials yet. Gather or pick up something useful.')
             for cat,items in sorted(by_cat.items()):
                 body.append(cat.replace('_',' ').upper())
@@ -2318,7 +2353,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
 
         # Discovered-recipe tab.
         if not known:
-            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the discovery pot to uncover techniques.'],screen_width(term.size()[0],96)))
+            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the experiment grid to uncover techniques.'],screen_width(term.size()[0],96)))
             continue
         categories=sorted(set(r.category or 'general' for r in known))
         category=_select(term,'CRAFTING // RECIPES',[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})

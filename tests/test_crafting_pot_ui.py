@@ -62,6 +62,34 @@ class PotRulesTests(unittest.TestCase):
             results.update(state.player_discovered_recipes)
         self.assertGreater(len(results),1)
 
+    def test_every_recipe_has_actionable_one_to_five_item_discovery_signature(self):
+        state=LivingWorldState(player_crafting_discovery_enabled=True)
+        state.player_knowledge=sorted({r.knowledge for r in self.registry.recipes.values() if r.knowledge})
+        system=CraftingSystem(state,self.registry)
+        for recipe in self.registry.recipes.values():
+            signature=system.discovery_signature(recipe)
+            self.assertGreaterEqual(len(signature),1,recipe.id)
+            self.assertLessEqual(len(signature),5,recipe.id)
+            inv=Inventory()
+            for iid in signature:inv.add(iid,1)
+            ids={r.id for r in system.pot_candidates(signature,inv)}
+            self.assertIn(recipe.id,ids,recipe.id)
+
+    def test_cordage_recipe_outputs_cordage_and_crude_knife_opens_early_butchery(self):
+        state=LivingWorldState(player_crafting_discovery_enabled=True)
+        system=CraftingSystem(state,self.registry)
+        inv=Inventory({'core:brush':2,'core:stone_flake':1,'core:bark':1})
+        self.assertEqual(system.discovery_signature(self.registry.recipes['core:plant_cordage']),('core:brush','core:brush'))
+        ok,msg,_=system.combine_in_pot(('core:brush','core:brush'),inv,b'cordage-test')
+        self.assertTrue(ok,msg)
+        self.assertIn('core:plant_cordage',state.player_discovered_recipes)
+        state.player_discovered_recipes.append('core:crude_knife')
+        ok,msg,_=system.craft('core:crude_knife',inv,set())
+        self.assertTrue(ok,msg)
+        knife=self.registry.items['core:crude_knife']
+        self.assertGreaterEqual(knife.quality('butcher'),1)
+        self.assertGreaterEqual(knife.quality('skin'),1)
+
     def test_invalid_and_exhausted_mixes_do_not_consume_items(self):
         system,state,inv=self.make()
         before=inv.items.copy()
@@ -121,6 +149,15 @@ class CraftingWindowTests(unittest.TestCase):
 
     def target(self,token):
         return next(rect for rect,value in self.term._pointer_targets if value==token)
+
+    def test_icon_tabs_redraw_for_hover_tooltips(self):
+        rows=[MenuRow('core:stone_flake','Stone Flake')]
+        ready={'name':'Stone Flake','ready':True,'missing':[],'inputs':[],'outputs':[],'minutes':8,'skill':'crafting','description':''}
+        self.term.present_feature_menu('crafting_unified','CRAFTING',rows,0,data={'recipes':{'core:stone_flake':ready},'categories':['primitive'],'category':'primitive'})
+        tab=self.target('UI_ACTION:tab:discovery')
+        self.assertLessEqual(tab.width,40)
+        self.pg.event.post(self.pg.event.Event(self.pg.MOUSEMOTION,pos=tab.center,rel=(1,0),buttons=(0,0,0)))
+        self.assertEqual(self.term.read_key(),'UI_REDRAW')
 
     def test_tabs_share_a_floating_window_and_missing_material_is_visible(self):
         missing={'name':'Stone Axe','ready':False,'missing':['Stone Flake 0/2'],

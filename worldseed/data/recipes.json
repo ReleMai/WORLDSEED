@@ -1,19 +1,22 @@
 [
   {
     "id": "core:cordage",
-    "name": "Twist Cordage",
+    "name": "Process Brush Fiber",
     "inputs": {
-      "core:brush": 2
+      "core:brush": 1
     },
     "outputs": {
       "core:fiber": 2
     },
-    "minutes": 15,
-    "description": "Use available materials and time to produce twist cordage.",
-    "category": "general",
+    "minutes": 10,
+    "description": "Strip and tease dry brush into loose plant fiber for later cordage, padding, and utility craft.",
+    "category": "fiberwork",
     "skill": "crafting",
     "difficulty": 1,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brush"
+    ]
   },
   {
     "id": "core:waterskin",
@@ -506,7 +509,7 @@
     "minutes": 12,
     "station": null,
     "knowledge": null,
-    "description": "Twist dry fibers and bark strands into binding cord.",
+    "description": "Twist two bundles of dry brush fibers into actual binding cordage for lashings and primitive tools.",
     "category": "primitive",
     "skill": "crafting",
     "difficulty": 1,
@@ -526,6 +529,25 @@
     "knowledge": null,
     "description": "Pound and twist inner bark fibers into rough cord.",
     "category": "primitive",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:crude_knife",
+    "name": "Make Crude Knife",
+    "inputs": {
+      "core:stone_flake": 1,
+      "core:bark": 1
+    },
+    "outputs": {
+      "core:crude_knife": 1
+    },
+    "minutes": 12,
+    "station": null,
+    "knowledge": null,
+    "description": "Wrap a sharp stone flake with bark to make a hand-safe cutting edge for crude skinning and butchery before proper hafted tools.",
+    "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {}
@@ -1279,7 +1301,14 @@
     "difficulty": 2,
     "tool_qualities": {
       "cut": 1
-    }
+    },
+    "discovery_items": [
+      "core:fiber",
+      "core:fiber",
+      "core:plant_cordage",
+      "core:stout_branch",
+      "core:stout_branch"
+    ]
   },
   {
     "id": "core:wood_round_shield",
@@ -1366,6 +1395,13 @@
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 5,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:steel_billet",
+      "core:steel_billet",
+      "core:wood",
+      "core:leather",
+      "core:leather"
+    ]
   }
 ]
