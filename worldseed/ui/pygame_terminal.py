@@ -1958,9 +1958,13 @@ class PygameTerminal(PointerUI):
         if key in self._sprite_cache:return self._sprite_cache[key]
         try:
             source=self.pg.image.load(str(path)).convert_alpha()
-            pad=max(1,min(3,size//14))
-            scaled=self.pg.transform.smoothscale(source,(size+pad*2,size+pad*2))
-            surf=scaled.subsurface((pad,pad,size,size)).copy()
+            # Trim only the authored image's outer export edge.  Cropping in
+            # source space avoids the heavy zoom that output-space overscan
+            # would cause at 16-56 px gameplay sizes.
+            trim=max(1,min(4,min(source.get_width(),source.get_height())//128))
+            if source.get_width()>trim*2+2 and source.get_height()>trim*2+2:
+                source=source.subsurface((trim,trim,source.get_width()-trim*2,source.get_height()-trim*2)).copy()
+            surf=self.pg.transform.smoothscale(source,(size,size))
             self._sprite_cache[key]=surf
             return surf
         except Exception:
