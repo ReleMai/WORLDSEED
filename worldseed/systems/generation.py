@@ -46,7 +46,7 @@ class ProceduralSocietyGenerator:
         local_archetype="frontier"
         if self.region_planner is not None:
             try:
-                local_archetype=self.region_planner.plan(rx,ry,persist=False).settlement_archetype
+                local_archetype=self.region_planner.plan(fx*2,fy*2,persist=False).settlement_archetype
             except Exception:
                 pass
         preferred={
