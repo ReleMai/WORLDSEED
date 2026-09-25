@@ -400,19 +400,25 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
     def test_village_target_selection_never_builds_or_persists_region_plan(self):
         from unittest.mock import patch
         from worldseed.app import _find_village_target
-        from worldseed.core.rng import PCG32, derive_seed
+        from worldseed.systems.regional_civilization import RegionalCivilizationPlanner
 
         seed=b"target-rng-contract"
-        fields=SimpleNamespace(elevation=32000)
-        world=SimpleNamespace(generator=SimpleNamespace(sample_fields=lambda pos:fields))
+        fields=SimpleNamespace(
+            elevation=32000,moisture=36000,temperature=35000,fertility=42000
+        )
+        world=SimpleNamespace(
+            generator=SimpleNamespace(sample_fields=lambda pos:fields)
+        )
         class ForbiddenPlanner:
             def __init__(self,*args,**kwargs):
                 raise AssertionError("candidate selection must not construct RegionBlockPlanner")
         with patch("worldseed.app.RegionBlockPlanner",ForbiddenPlanner):
             target=_find_village_target(world,seed,self.registry)
         self.assertIsNotNone(target)
-        expected=25+PCG32(derive_seed(seed,"settlement",target.region_x,target.region_y)).randbelow(110)
+        civilization=RegionalCivilizationPlanner(world,version=4,world_seed=seed)
+        expected=civilization.population_for_region(target.region_x,target.region_y)
         self.assertEqual(target.population,expected)
+        self.assertTrue(civilization.potential(target.region_x,target.region_y).settlement_present)
         self.assertEqual(set(target.__dataclass_fields__),{"region_x","region_y","population"})
     def test_village_gateway_refreshes_hydrology_aware_region_plan(self):
         from unittest.mock import patch
