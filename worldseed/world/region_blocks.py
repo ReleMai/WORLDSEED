@@ -122,18 +122,59 @@ class RegionBlockPlanner:
     under the existing simulation/world authorities.
     """
 
-    def __init__(self, world, version: int = SETTLEMENT_PLAN_VERSION):
+    def __init__(self, world, version: int | None = None):
         self.world = world
         self.generator = world.generator
         self.seed = world.generator.world_seed
         self.cache_source = world.delta_source
+        if version is None:
+            version = getattr(world, "settlement_plan_version", SETTLEMENT_PLAN_VERSION)
         self.version = int(version)
         self._cache: dict[tuple[int, int], RegionBlockPlan] = {}
+        self._candidate_cache: dict[tuple[int, int], tuple[tuple[int, int], int, str]] = {}
+        self._presence_cache: dict[tuple[int, int], bool] = {}
+
+    def _candidate(self, rx: int, ry: int) -> tuple[tuple[int, int], int, str]:
+        key=(int(rx),int(ry))
+        if key not in self._candidate_cache:
+            self._candidate_cache[key]=self._best_settlement_site(*key)
+        return self._candidate_cache[key]
+
+    def _legacy_presence(self, rx: int, ry: int) -> bool:
+        return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
 
     def _presence(self, rx: int, ry: int) -> bool:
-        # Preserve Dev4's settlement-presence contract; Phase 5 changes site
-        # quality/placement, not which macro-regions rolled a settlement.
-        return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
+        """Terrain-led settlement viability for v4+ regional civilization.
+
+        Existing plan versions preserve the old presence contract. New worlds
+        require a viable site, then use deterministic competition against nearby
+        viable sites so settlement spacing emerges from geography rather than a
+        fixed per-region coin flip.
+        """
+        key=(int(rx),int(ry))
+        if key in self._presence_cache:return self._presence_cache[key]
+        if self.version < 4:
+            value=self._legacy_presence(*key);self._presence_cache[key]=value;return value
+        _,score,_=self._candidate(*key)
+        if score < 34:
+            self._presence_cache[key]=False;return False
+        roll=int(hash_u64(self.seed,"civilization-pressure",rx,ry)%100)
+        threshold=max(12,min(78,18+(score-34)*2))
+        if roll >= threshold:
+            self._presence_cache[key]=False;return False
+        priority=score*1000+int(hash_u64(self.seed,"civilization-priority",rx,ry)%1000)
+        for ny in range(ry-1,ry+2):
+            for nx in range(rx-1,rx+2):
+                if (nx,ny)==key:continue
+                _,other_score,_=self._candidate(nx,ny)
+                if other_score < 34:continue
+                other_roll=int(hash_u64(self.seed,"civilization-pressure",nx,ny)%100)
+                other_threshold=max(12,min(78,18+(other_score-34)*2))
+                if other_roll >= other_threshold:continue
+                other_priority=other_score*1000+int(hash_u64(self.seed,"civilization-priority",nx,ny)%1000)
+                if other_priority > priority+450:
+                    self._presence_cache[key]=False;return False
+        self._presence_cache[key]=True;return True
 
     def _biome_for(self, pos: WorldPos) -> str:
         f = self.generator.sample_fields(pos)
@@ -274,11 +315,12 @@ class RegionBlockPlanner:
                 f = self.generator.sample_fields(p)
                 elevations.append(f.elevation); moistures.append(f.moisture); temperatures.append(f.temperature)
         dominant = max(sorted(mix), key=lambda k: mix[k])
+        candidate_anchor, candidate_score, candidate_archetype = self._candidate(rx, ry)
         present = self._presence(rx, ry)
         if present:
-            anchor, settlement_score, archetype = self._best_settlement_site(rx, ry)
+            anchor, settlement_score, archetype = candidate_anchor, candidate_score, candidate_archetype
         else:
-            anchor, settlement_score, archetype = None, 0, "wilderness"
+            anchor, settlement_score, archetype = None, candidate_score, "wilderness"
         relief = max(elevations) - min(elevations)
         mean_m = sum(moistures) // len(moistures)
         mean_t = sum(temperatures) // len(temperatures)
