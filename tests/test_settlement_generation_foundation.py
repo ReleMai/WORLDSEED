@@ -494,5 +494,43 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(any(c.structure_piece_id for c in visible))
         self.assertTrue(any(c.ground_piece_id and c.structure_id for c in visible))
 
+
+
+class RegionalCivilizationFoundationTests(unittest.TestCase):
+    def test_sparse_route_graph_is_deterministic_and_bounded(self):
+        from types import SimpleNamespace
+        from worldseed.systems.route_planner import StrategicRoutePlanner
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b"wu22-route-graph"),
+            delta_source=SimpleNamespace(),
+        )
+        planner=StrategicRoutePlanner(world,SimpleNamespace(),SimpleNamespace())
+        towns=[
+            SimpleNamespace(uid=f"town:{i}",region_x=i%3,region_y=i//3,x=(i%3)*512+100,y=(i//3)*512+100,
+                            faction_id="faction:a" if i<3 else "faction:b",stocks={"core:wheat":20+i*7})
+            for i in range(6)
+        ]
+        a=planner.select_sparse_graph(towns)
+        b=planner.select_sparse_graph(list(reversed(towns)))
+        edges=lambda rows:{tuple(sorted((x.uid,y.uid))) for x,y,_ in rows}
+        self.assertEqual(edges(a),edges(b))
+        self.assertGreaterEqual(len(a),len(towns)-1)
+        self.assertLessEqual(len(a),(len(towns)-1)+max(1,len(towns)//4))
+        self.assertLess(len(a),len(towns)*(len(towns)-1)//2)
+
+    def test_faction_archetype_and_worldbuilding_identity_are_stable(self):
+        from worldseed.systems.generation import ProceduralSocietyGenerator
+        gen=ProceduralSocietyGenerator(b"wu22-faction",self.registry)
+        culture=gen.culture_for_region(2,-1)
+        a=gen.faction_for_region(2,-1,culture)
+        b=gen.faction_for_region(2,-1,culture)
+        self.assertEqual(a,b)
+        self.assertTrue(a.archetype)
+        self.assertTrue(a.identity_tags)
+        self.assertTrue(a.founding_myth)
+        self.assertTrue(a.banner)
+        self.assertTrue(a.seat_region)
+
+
 if __name__ == "__main__":
     unittest.main()
