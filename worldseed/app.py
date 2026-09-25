@@ -221,7 +221,7 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     water/slope/fertility fields.
     """
     civilization=RegionalCivilizationPlanner(
-        world,version=int(getattr(world,"settlement_plan_version",4))
+        world,version=int(getattr(world,"settlement_plan_version",4)),world_seed=seed
     )
     villages=[];others=[]
     for radius in range(0,9):
@@ -257,10 +257,10 @@ def _village_gateway_spawn(world:World,seed:bytes,reg:ContentRegistry,target)->W
     if not generated:raise ValueError("Selected village region no longer contains a settlement")
     town=generated[0]
     skeletons=SettlementSkeletonPlanner(world)
-    skeleton=skeletons.plan(
-        region,town.uid,town.population,persist=False,refresh=True,
-        culture_style=str(getattr(town,"culture_style","")),
-    )
+    # Gateway selection depends on the road/common geometry, not wall/roof
+    # material grammar. The authoritative active physicalization later passes
+    # the settlement culture style when it persists the actual v4 plan.
+    skeleton=skeletons.plan(region,town.uid,town.population,persist=False,refresh=True)
     commons=list(skeleton.plan.common_cells)
     if commons:
         cx=sum(x for x,_ in commons)//len(commons);cy=sum(y for _,y in commons)//len(commons)

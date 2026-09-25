@@ -96,10 +96,10 @@ class RegionalCivilizationPlanner:
 
     MIN_CAPACITY = 36
 
-    def __init__(self, world, version: int = 1):
+    def __init__(self, world, version: int = 1, world_seed: bytes | None = None):
         self.world = world
         self.generator = world.generator
-        self.seed = world.generator.world_seed
+        self.seed = bytes(world_seed) if world_seed is not None else world.generator.world_seed
         self.version = int(version)
         self._raw_cache: dict[tuple[int, int], dict[str, int]] = {}
         self._potential_cache: dict[tuple[int, int], CivilizationRegionPotential] = {}
