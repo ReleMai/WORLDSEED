@@ -197,3 +197,15 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Natural resource sprites are suppressed where physical roads/buildings clear a cell. Exterior roofs cover interior cells while the player is outside; entering a building exposes its generated floors and fixtures.
 - Hover inspection now identifies generated building functions and settlement pieces.
 - Fast-Gate regressions require graphical coverage for every settlement piece and verify the physicalized viewport contains generated roads, walls and building floors.
+
+
+### WU20 connected settlement art and doorway geometry
+- Settlement-plan contract advances to v3 for new worlds because generated doorway/frontage geometry changes. Loading now pins the planner to each save's stored `settlement_plan_version`, so older v2 saves retain their established physical layouts instead of silently regenerating.
+- Exterior building entrances can no longer occupy shell corners. The planner selects a non-corner edge cell with a cardinal interior floor immediately behind it and biases the outward side toward the nearest settlement road.
+- Each exterior doorway receives a real threshold floor plus a short parcel-contained frontage path toward its access road. Interior doors reuse the room floor rather than stacking duplicate threshold pieces.
+- Pygame settlement art now uses N/E/S/W connection masks. Wall pieces form continuous top-down runs, elbows and intersections; door tiles inherit the same wall axis and render as a framed opening inside the connected wall instead of an isolated door sprite.
+- Settlement floors share one visual plane across adjacent room cells: internal grid seams disappear and dark edge shading is reserved for exposed boundaries. Roads use connected silhouettes with transparent shoulders so dirt/gravel/cobble/plank paths blend into underlying terrain rather than reading as square strips.
+- Existing authored roof/floor/fixture assets remain integrated as texture/detail sources; generated connected geometry handles the directional wall/door/floor layer.
+- Regression coverage now requires non-corner entrances, cardinal interior access, exterior thresholds/frontage, save-pinned settlement-plan versions, and distinct connected-vs-isolated wall/floor render variants.
+
+- Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.

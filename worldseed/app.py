@@ -350,6 +350,10 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     try:gen_version=int(db.get_meta('worldgen_version'))
     except KeyError:gen_version=2
     world=World(WorldGenerator(seed,reg,version=gen_version),reg,db,auto_hydrology=False)
+    try:world.settlement_plan_version=int(db.get_meta('settlement_plan_version'))
+    except KeyError:
+        from worldseed.config import SETTLEMENT_PLAN_VERSION
+        world.settlement_plan_version=SETTLEMENT_PLAN_VERSION
     try:hydrology_version=int(db.get_meta('hydrology_version'))
     except KeyError:hydrology_version=1
     try:hydrology_morphology_version=int(db.get_meta('hydrology_morphology_version'))

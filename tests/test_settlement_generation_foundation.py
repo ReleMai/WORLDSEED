@@ -235,6 +235,36 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(any(s.building_type=='smithy' for s in skeleton.structures))
         smithy=next(s for s in skeleton.structures if s.building_type=='smithy')
         self.assertIn('smithy',{r.kind for r in skeleton.rooms if r.structure_plan_id==smithy.uid})
+        pieces_by_structure={}
+        for piece in skeleton.pieces:
+            pieces_by_structure.setdefault(piece.structure_plan_id,[]).append(piece)
+        wall_piece_ids={p.piece_id for p in skeleton.pieces if p.role in {'wall','partition'}}
+        self.assertTrue(any('straight_wall' in pid for pid in wall_piece_ids))
+        self.assertTrue(any('corner_wall' in pid for pid in wall_piece_ids))
+        self.assertTrue(all('plain_floor' in p.piece_id for p in skeleton.pieces if p.role in {'floor','threshold'}))
+        self.assertTrue(all('stone_arch_door' in p.piece_id for p in skeleton.pieces if p.role in {'entrance','interior_door'}))
+        for structure in skeleton.structures:
+            ex,ey=structure.entrance
+            xs=[x for x,_ in structure.footprint];ys=[y for _,y in structure.footprint]
+            self.assertFalse(ex in {min(xs),max(xs)} and ey in {min(ys),max(ys)},structure.uid)
+            rows=pieces_by_structure[structure.uid]
+            floor_cells={(p.x,p.y) for p in rows if p.role in {'floor','threshold'}}
+            self.assertTrue(any((ex+dx,ey+dy) in floor_cells for dx,dy in ((0,1),(1,0),(0,-1),(-1,0))),structure.uid)
+            self.assertTrue(any(p.role=='threshold' and (p.x,p.y)==structure.entrance for p in rows),structure.uid)
+            road_cells={tuple(cell) for road in skeleton.roads for cell in road.polyline}
+            self.assertTrue(
+                any(p.role=='frontage' for p in rows)
+                or any(abs(ex-rx)+abs(ey-ry)<=1 for rx,ry in road_cells),
+                structure.uid,
+            )
+
+    def test_settlement_plan_version_is_pinned_by_world_metadata(self):
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'pinned-plan'),
+            delta_source=SimpleNamespace(),
+            settlement_plan_version=2,
+        )
+        self.assertEqual(SettlementSkeletonPlanner(world).version,2)
 
     def test_roofs_are_first_class_settlement_pieces(self):
         roofs=[p for p in self.registry.settlement_pieces.values() if p.category=='roof']

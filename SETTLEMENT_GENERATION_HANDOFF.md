@@ -401,3 +401,15 @@ Named settlement residents now participate in a physical household economy. Fami
 
 ## Workplace production/logistics integration
 Active workplace bindings now feed a two-tier production model. The settlement labor reservation remains the workforce authority, while a bounded share of batches is materialized through the property storage attached to a representative worker's generated workplace. Inputs can persist as next-day buffers, outputs can remain visible at the workplace, and excess output travels as persistent worker-carried shipment cargo to the market. Distant/unmaterialized workplaces continue using the original aggregate process path.
+
+
+## Work unit 20 - Connected village construction art and doorway polish
+- Settlement plan generation advances to v3 for new worlds. Existing saves remain pinned to their stored settlement-plan version through `world.settlement_plan_version`; loading an older world therefore does not silently redraw its generated settlement geometry.
+- Exterior entrances are selected only from non-corner shell edges with a cardinal interior floor directly behind them. This removes the corner-door case where an apparently open door still had a wall blocking the actual movement path.
+- Door thresholds receive floor material, and buildings receive short parcel-contained frontage paths toward their access road when a gap exists.
+- Local graphical settlement rendering now uses directional N/E/S/W connection masks for walls, doors, floors and roads. Adjacent wall pieces mesh into continuous runs/corners, while doors inherit the surrounding wall axis and read as openings in that wall.
+- Floor shading now treats connected room tiles as one surface, reserving dark boundary shading for exposed room edges. Roads use transparent shoulders plus connected silhouettes so they blend into the underlying terrain instead of presenting as repeated square tiles.
+- Existing authored structure art remains active for roofs, plank-floor texture detail and furniture/workshop fixtures; directional geometry is generated at render time and cached by material/connectivity mask.
+- Tests cover non-corner entrances, cardinal floor access, threshold/frontage generation, pinned plan versions and different rendered variants for connected/isolated wall and floor masks.
+
+- Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.
