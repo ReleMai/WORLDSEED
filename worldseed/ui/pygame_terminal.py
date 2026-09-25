@@ -1991,14 +1991,11 @@ class PygameTerminal(PointerUI):
             return None
 
     def _settlement_piece_sprite_path(self,piece):
-        """Resolve generated settlement pieces onto authored structure sprites."""
+        """Resolve non-autotile settlement pieces onto authored structure sprites."""
         if piece is None:return None
         tags=set(getattr(piece,'tags',()) or ());cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));pid=str(getattr(piece,'id',''))
         sid=None
-        if cat=='wall':sid='core:stone_wall' if 'stone' in mat else 'core:wood_wall'
-        elif cat=='opening':sid='core:door'
-        elif cat=='roof':sid='core:stone_roof' if 'stone' in mat else 'core:wood_roof'
-        elif cat=='floor' and ('plank' in mat or 'wood' in mat):sid='core:wood_floor'
+        if cat=='roof':sid='core:stone_roof' if any(token in mat for token in ('stone','slate','clay')) else 'core:wood_roof'
         elif 'bed' in tags:sid='core:bed'
         elif {'forge','anvil','bellows'} & tags:sid='core:forge'
         elif 'butchery' in tags or 'butcher' in pid:sid='core:butcher_table'
@@ -2012,50 +2009,119 @@ class PygameTerminal(PointerUI):
             sid='core:workbench' if ({'workshop','station','desk','table'} & tags) else 'core:stone_pillar'
         return self._visuals.resolve(self._visuals.ref('structures',sid)) if sid else None
 
-    def _settlement_ground_surface(self,piece,size:int):
-        """Create top-down village road/floor art for every ground piece."""
+    @staticmethod
+    def _settlement_wall_row(piece)->int:
+        mat=str(getattr(piece,'material',''))
+        if 'stone' in mat:return 2
+        if 'wattle' in mat:return 3
+        if 'plank' in mat:return 1
+        return 0
+
+    @staticmethod
+    def _settlement_floor_row(piece)->int:
+        mat=str(getattr(piece,'material',''))
+        if 'stone' in mat:return 1
+        if 'clay' in mat:return 3
+        if 'earth' in mat or 'packed' in mat:return 2
+        return 0
+
+    @staticmethod
+    def _settlement_door_column(piece)->int:
+        mat=str(getattr(piece,'material',''))
+        if 'stone' in mat:return 3
+        if 'wattle' in mat:return 2
+        if 'iron' in mat:return 1
+        return 0
+
+    @staticmethod
+    def _settlement_structure_bits(key,cell,settlement_by)->int:
+        x,y,z=key;bits=0
+        for bit,dx,dy in ((1,0,-1),(2,1,0),(4,0,1),(8,-1,0)):
+            other=settlement_by.get((x+dx,y+dy,z))
+            if other is not None and other.structure_id==cell.structure_id and other.structure_piece_id:
+                bits|=bit
+        return bits
+
+    @staticmethod
+    def _settlement_ground_bits(key,cell,settlement_by)->int:
+        x,y,z=key;bits=0
+        for bit,dx,dy in ((1,0,-1),(2,1,0),(4,0,1),(8,-1,0)):
+            other=settlement_by.get((x+dx,y+dy,z))
+            if other is None or not other.ground_piece_id:continue
+            same_structure=bool(cell.structure_id and other.structure_id==cell.structure_id)
+            same_material=other.ground_piece_id==cell.ground_piece_id
+            road_join=bool(cell.road_ids and other.road_ids)
+            if same_structure or same_material or road_join:bits|=bit
+        return bits
+
+    def _settlement_ground_surface(self,piece,size:int,bits:int=15):
+        """Neighbor-aware settlement floor/road tile with authored floor atlas."""
         if piece is None:return None
-        sprite=self._settlement_piece_sprite_path(piece)
-        if sprite is not None and str(getattr(piece,'category',''))=='floor':return self._load_terrain_sprite(sprite,size)
-        key=('settlement-ground',str(getattr(piece,'id','')),int(size));cached=self._sprite_cache.get(key)
+        cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));tags=set(getattr(piece,'tags',()) or ())
+        if cat=='floor':
+            path=self._visuals.settlement_autotile_path('floors')
+            if path is not None:
+                return self._load_atlas_frame(
+                    path,int(bits)&15,self._settlement_floor_row(piece),
+                    self._visuals.settlement_autotile_frame_size(),size,size,smooth=False
+                )
+        key=('settlement-ground',str(getattr(piece,'id','')),int(size),int(bits)&15);cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;surf=pg.Surface((size,size),pg.SRCALPHA)
-        cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));tags=set(getattr(piece,'tags',()) or ())
         if cat=='road':
             if 'irrigation' in tags:
                 surf.fill((103,80,54));channel=max(4,size//3);x=(size-channel)//2;pg.draw.rect(surf,(64,92,91),(x,0,channel,size));pg.draw.line(surf,(73,57,41),(x-1,0),(x-1,size),max(1,size//16));pg.draw.line(surf,(73,57,41),(x+channel,0),(x+channel,size),max(1,size//16))
             elif 'cobble_road' in tags or 'stone_road' in tags or 'market_square' in tags or mat=='stone':
                 surf.fill((113,112,105));step=max(6,size//4)
-                for y in range(0,size,step):
-                    off=(step//2) if (y//step)%2 else 0
-                    for x in range(-off,size,step):pg.draw.rect(surf,(75,78,76),(x,y,step,step),1)
+                for yy in range(0,size,step):
+                    off=(step//2) if (yy//step)%2 else 0
+                    for xx in range(-off,size,step):pg.draw.rect(surf,(75,78,76),(xx,yy,step,step),1)
             elif 'gravel_road' in tags or mat=='gravel':
                 surf.fill((124,120,108))
                 for i in range(max(12,size*2)):
-                    x=(i*17+7)%size;y=(i*29+11)%size;r=1 if i%4 else 2;pg.draw.circle(surf,(91+(i%3)*16,90+(i%4)*12,84+(i%2)*18),(x,y),r)
+                    xx=(i*17+7)%size;yy=(i*29+11)%size;r=1 if i%4 else 2;pg.draw.circle(surf,(91+(i%3)*16,90+(i%4)*12,84+(i%2)*18),(xx,yy),r)
             elif 'plank_road' in tags or 'dock_walk' in tags or mat=='wood':
                 surf.fill((122,89,51));step=max(5,size//5)
-                for y in range(0,size,step):pg.draw.line(surf,(76,56,37),(0,y),(size,y),1)
+                for yy in range(0,size,step):pg.draw.line(surf,(76,56,37),(0,yy),(size,yy),1)
             elif 'footpath' in tags or 'alley' in tags:
                 surf.fill((98,82,59));margin=max(2,size//7);pg.draw.rect(surf,(123,96,62),(margin,0,size-2*margin,size));pg.draw.line(surf,(91,69,48),(size//3,0),(size//3,size),1)
             else:
                 surf.fill((126,94,60))
-                for x in (size//3,2*size//3):pg.draw.line(surf,(93,68,46),(x,0),(x,size),max(1,size//12))
-        elif cat=='floor' or str(getattr(piece,'layer',''))=='ground':
-            if 'stone' in mat:
-                surf.fill((124,124,118));step=max(7,size//4)
-                for y in range(0,size,step):
-                    off=step//2 if (y//step)%2 else 0
-                    for x in range(-off,size,step):pg.draw.rect(surf,(82,85,83),(x,y,step,step),1)
-            elif 'clay' in mat:
-                surf.fill((145,93,64))
-                for y in range(max(5,size//5),size,max(6,size//4)):pg.draw.line(surf,(111,70,50),(0,y),(size,y),1)
-            else:
-                surf.fill((105,82,55))
-                for i in range(max(8,size)):
-                    x=(i*13+3)%size;y=(i*19+5)%size;pg.draw.circle(surf,(90+(i%3)*8,70+(i%4)*6,48),(x,y),1)
-        else:return None
+                for xx in (size//3,2*size//3):pg.draw.line(surf,(93,68,46),(xx,0),(xx,size),max(1,size//12))
+            edge=max(1,size//14)
+            if not bits&1:pg.draw.rect(surf,(74,60,45,130),(0,0,size,edge))
+            if not bits&2:pg.draw.rect(surf,(74,60,45,115),(size-edge,0,edge,size))
+            if not bits&4:pg.draw.rect(surf,(62,50,38,150),(0,size-edge,size,edge))
+            if not bits&8:pg.draw.rect(surf,(74,60,45,115),(0,0,edge,size))
+        else:
+            surf.fill((105,82,55))
         self._sprite_cache[key]=surf;return surf
+
+    def _settlement_structure_surface(self,piece,size:int,bits:int,role:str):
+        if piece is None:return None
+        frame=self._visuals.settlement_autotile_frame_size()
+        if role in {'entrance','interior_door'} or str(getattr(piece,'category',''))=='opening':
+            path=self._visuals.settlement_autotile_path('doors')
+            if path is not None:
+                ew=int(bool(bits&2))+int(bool(bits&8));ns=int(bool(bits&1))+int(bool(bits&4))
+                row=0 if ew>=ns else 1
+                return self._load_atlas_frame(path,self._settlement_door_column(piece),row,frame,size,size,smooth=False)
+        path=self._visuals.settlement_autotile_path('walls')
+        if path is not None:
+            return self._load_atlas_frame(path,int(bits)&15,self._settlement_wall_row(piece),frame,size,size,smooth=False)
+        return None
+
+    def _draw_settlement_door_status(self,rect,door):
+        if door is None:return
+        pg=self.pg
+        if getattr(door,'forced',False):
+            pg.draw.line(self.screen,(173,73,59),(rect.x+5,rect.y+5),(rect.right-5,rect.bottom-5),max(2,rect.width//12))
+            pg.draw.line(self.screen,(173,73,59),(rect.right-5,rect.y+5),(rect.x+5,rect.bottom-5),max(2,rect.width//12))
+        elif getattr(door,'locked',False):
+            w=max(7,rect.width//4);h=max(6,rect.height//5);x=rect.centerx-w//2;y=rect.centery-h//2
+            pg.draw.rect(self.screen,(71,58,38),(x,y,w,h),border_radius=max(1,w//5))
+            pg.draw.rect(self.screen,(211,171,78),(x,y,w,h),1,border_radius=max(1,w//5))
+            pg.draw.arc(self.screen,(211,171,78),(x+w//4,y-h//2,w//2,h),math.pi,2*math.pi,max(1,w//7))
 
     def _draw_settlement_piece(self,piece,rect,*,roof:bool=False,fixture:bool=False):
         if piece is None:return
@@ -2068,6 +2134,7 @@ class PygameTerminal(PointerUI):
             return
         pg=self.pg;col=(151,126,82) if 'wood' in str(getattr(piece,'material','')) else (126,127,122);pad=max(3,rect.width//5);body=rect.inflate(-pad*2,-pad*2)
         pg.draw.rect(self.screen,(23,26,25),body.move(1,2),border_radius=max(1,rect.width//10));pg.draw.rect(self.screen,col,body,border_radius=max(1,rect.width//10));pg.draw.rect(self.screen,(71,66,54),body,1,border_radius=max(1,rect.width//10))
+
     def _resource_visual(self, feature_id: str, x: int, y: int, z: int):
         """Resolve a deterministic visual for a generated resource cell."""
         style=self._visuals.resource_style(feature_id)
@@ -2761,8 +2828,20 @@ class PygameTerminal(PointerUI):
                 screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
         if settlement_by:
             for (wx,wy,wz),cell in sorted(settlement_by.items(),key=lambda kv:(kv[0][1],kv[0][0])):
-                if wz!=pos.z or pos_key(wx,wy,wz) not in visible or not cell.ground_piece_id:continue
-                piece=registry.settlement_pieces.get(cell.ground_piece_id);surf=self._settlement_ground_surface(piece,tile_px)
+                if wz!=pos.z or pos_key(wx,wy,wz) not in visible:continue
+                ground_id=cell.ground_piece_id
+                # Legacy v2 plans did not stamp a floor threshold beneath an
+                # exterior doorway. Borrow the adjacent interior floor only for
+                # presentation so old saves no longer show a sand/grass hole.
+                if not ground_id and cell.structure_piece_role in {'entrance','interior_door'}:
+                    for dx,dy in ((0,-1),(1,0),(0,1),(-1,0)):
+                        other=settlement_by.get((wx+dx,wy+dy,wz))
+                        if other is not None and other.structure_id==cell.structure_id and other.ground_piece_id:
+                            ground_id=other.ground_piece_id;break
+                if not ground_id:continue
+                piece=registry.settlement_pieces.get(ground_id)
+                bits=self._settlement_ground_bits((wx,wy,wz),cell,settlement_by)
+                surf=self._settlement_ground_surface(piece,tile_px,bits)
                 if surf is not None:
                     rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px);screen.blit(surf,rect.topleft)
         if pos.z==0:
@@ -2820,7 +2899,15 @@ class PygameTerminal(PointerUI):
             if scell:
                 roofed=bool(scell.roof_piece_id and scell.structure_id and scell.structure_id!=player_structure_id and not scell.structure_piece_id)
                 if roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.roof_piece_id),rect,roof=True)
-                if scell.structure_piece_id:self._draw_settlement_piece(registry.settlement_pieces.get(scell.structure_piece_id),rect)
+                if scell.structure_piece_id:
+                    piece=registry.settlement_pieces.get(scell.structure_piece_id)
+                    bits=self._settlement_structure_bits(k,scell,settlement_by)
+                    surf=self._settlement_structure_surface(piece,tile_px,bits,scell.structure_piece_role)
+                    if surf is not None:screen.blit(surf,rect.topleft)
+                    else:self._draw_settlement_piece(piece,rect)
+                    if scell.structure_piece_role in {'entrance','interior_door'}:
+                        door=sim.property_security.door_by_id(scell.structure_piece_uid) if getattr(sim,'property_security',None) else None
+                        self._draw_settlement_door_status(rect,door)
                 if scell.fixture_piece_id and not roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.fixture_piece_id),rect,fixture=True)
             if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
             feature=resource_by.get(k)

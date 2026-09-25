@@ -26,7 +26,10 @@ ENVIRONMENT_VERSION = 1
 CLIMATE_VERSION = 1
 WEATHER_VERSION = 2
 LIGHTING_VERSION = 1
-SETTLEMENT_PLAN_VERSION = 2
+# WU19 changes persistent building geometry: cardinally valid entrances,
+# thresholds/aprons and semantic wall variants. Existing v1/v2 saves remain
+# pinned to their recorded settlement plan version; new worlds use v3.
+SETTLEMENT_PLAN_VERSION = 3
 ROUTEGEN_VERSION = 1
 RNG_PROTOCOL_VERSION = 1
 RESOURCEGEN_VERSION = 4

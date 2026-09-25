@@ -920,5 +920,11 @@
       "span_cells": 16
     }
   },
-  "item_assets_source": "data/items.json"
+  "item_assets_source": "data/items.json",
+  "settlement_autotiles": {
+    "frame_size": 32,
+    "walls": "assets/sprites/structures/settlement_wall_autotiles.png",
+    "floors": "assets/sprites/structures/settlement_floor_autotiles.png",
+    "doors": "assets/sprites/structures/settlement_door_autotiles.png"
+  }
 }

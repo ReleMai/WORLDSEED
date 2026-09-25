@@ -401,3 +401,21 @@ Named settlement residents now participate in a physical household economy. Fami
 
 ## Workplace production/logistics integration
 Active workplace bindings now feed a two-tier production model. The settlement labor reservation remains the workforce authority, while a bounded share of batches is materialized through the property storage attached to a representative worker's generated workplace. Inputs can persist as next-day buffers, outputs can remain visible at the workplace, and excess output travels as persistent worker-carried shipment cargo to the market. Distant/unmaterialized workplaces continue using the original aggregate process path.
+
+
+## Work unit 19 - Authored settlement autotiles and doorway geometry polish
+- Settlement-plan geometry advances to v3 for new worlds. Existing v1/v2 saves stay pinned to their recorded plan contract; the new geometry is not silently substituted into old physical plans.
+- Exterior entrances are no longer selected from arbitrary shell cells. The planner now considers only non-corner edge cells with a cardinal interior floor directly behind the threshold, then prefers the approach facing the nearest road. This removes the case where a door looked open but a corner wall still blocked movement.
+- New v3 buildings stamp a real floor threshold under exterior doors and can stamp a short footpath apron from the entrance toward the parcel access road.
+- Wall placement now uses the settlement catalog semantically: straight wall pieces on edges, corner pieces on corners, and reinforced pieces on internal partitions. Ordinary non-mining buildings deliberately use the wood door rather than whichever opening happened to sort first.
+- Added three authored 32px settlement autotile atlases: 16-way wall connectivity for timber/plank/stone/wattle, 16-way floor edge blending for plank/stone/packed-earth/clay, and orientation-specific doorway art for wood/ironbound/wattle/stone openings.
+- The pygame renderer derives cardinal connectivity from authoritative physicalization cells and selects the exact authored frame. Walls therefore join through corners and doorframes instead of appearing as isolated blocks; floors suppress seams between connected interior tiles and keep darker boundary shading only at exposed edges.
+- Door rendering now follows the wall axis, visually leaves the threshold passable, and overlays lock/forced-state cues from the existing PropertySecuritySystem. Legacy v2 door cells borrow the adjacent interior floor only for presentation so older saves do not show a bare terrain hole under the doorway.
+- VisualRegistry now owns and audits the settlement autotile assets, so release asset checks fail if an atlas is missing.
+
+### Validation added
+- new-world settlement plan version is v3
+- every generated exterior entrance is non-corner, has a threshold floor, and has a cardinal interior floor neighbor
+- generated buildings use straight/corner/reinforced wall semantics
+- every settlement wall/opening/floor has an authored autotile render path
+- wall connection masks, floor edge masks, and N/S versus E/W door frames render as distinct images

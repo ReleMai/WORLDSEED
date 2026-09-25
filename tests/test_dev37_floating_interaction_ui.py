@@ -304,15 +304,39 @@ class FloatingInteractionPygameTests(unittest.TestCase):
     def test_every_settlement_piece_has_graphical_render_path(self):
         registry=ContentRegistry.load(DATA_DIR)
         fallback_categories={'furniture','workshop','agriculture','mine','decoration','civic'}
+        self.assertTrue(self.term._visuals.settlement_autotile_path('walls').exists())
+        self.assertTrue(self.term._visuals.settlement_autotile_path('floors').exists())
+        self.assertTrue(self.term._visuals.settlement_autotile_path('doors').exists())
         for piece in registry.settlement_pieces.values():
             if piece.layer=='ground':
-                self.assertIsNotNone(self.term._settlement_ground_surface(piece,32),piece.id)
+                self.assertIsNotNone(self.term._settlement_ground_surface(piece,32,15),piece.id)
+                continue
+            if piece.category=='wall':
+                self.assertIsNotNone(self.term._settlement_structure_surface(piece,32,10,'wall'),piece.id)
+                continue
+            if piece.category=='opening':
+                self.assertIsNotNone(self.term._settlement_structure_surface(piece,32,10,'entrance'),piece.id)
                 continue
             path=self.term._settlement_piece_sprite_path(piece)
             if path is not None:
                 self.assertTrue(path.exists(),piece.id)
             else:
                 self.assertIn(piece.category,fallback_categories,piece.id)
+
+    def test_settlement_autotile_masks_and_door_orientations_are_visually_distinct(self):
+        registry=ContentRegistry.load(DATA_DIR)
+        timber=registry.settlement_pieces['core:timber_straight_wall_piece']
+        floor=registry.settlement_pieces['core:plank_plain_floor_piece']
+        door=registry.settlement_pieces['core:wood_door_piece']
+        wall_ns=self.term._settlement_structure_surface(timber,32,5,'wall')
+        wall_ew=self.term._settlement_structure_surface(timber,32,10,'wall')
+        floor_edge=self.term._settlement_ground_surface(floor,32,6)
+        floor_full=self.term._settlement_ground_surface(floor,32,15)
+        door_ns=self.term._settlement_structure_surface(door,32,5,'entrance')
+        door_ew=self.term._settlement_structure_surface(door,32,10,'entrance')
+        self.assertNotEqual(self.pg.image.tostring(wall_ns,'RGBA'),self.pg.image.tostring(wall_ew,'RGBA'))
+        self.assertNotEqual(self.pg.image.tostring(floor_edge,'RGBA'),self.pg.image.tostring(floor_full,'RGBA'))
+        self.assertNotEqual(self.pg.image.tostring(door_ns,'RGBA'),self.pg.image.tostring(door_ew,'RGBA'))
 
 if __name__ == "__main__":
     unittest.main()

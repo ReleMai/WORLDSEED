@@ -72,6 +72,13 @@ class VisualRegistry:
         raw = self.resource_style(content_id).get('atlas')
         return self.base_dir / str(raw) if raw else None
 
+    def settlement_autotile_path(self, kind: str) -> Path | None:
+        raw=self.manifest.get("settlement_autotiles",{}).get(str(kind))
+        return self.base_dir / str(raw) if raw else None
+
+    def settlement_autotile_frame_size(self) -> int:
+        return max(8,int(self.manifest.get("settlement_autotiles",{}).get("frame_size",32)))
+
     def player_paths(self, sex: str = 'male') -> tuple[Path, ...]:
         groups = self.manifest.get('player_variants', {})
         raw = groups.get((sex or 'male').lower()) or groups.get('male') or []
@@ -135,6 +142,10 @@ class VisualRegistry:
             raw = style.get('atlas') if isinstance(style, dict) else None
             if raw and not (self.base_dir / str(raw)).exists():
                 issues.append(f"missing resource atlas: {raw} ({cid})")
+        for kind,raw in self.manifest.get("settlement_autotiles",{}).items():
+            if kind=="frame_size":continue
+            if raw and not (self.base_dir / str(raw)).exists():
+                issues.append(f"missing settlement autotile atlas: {raw} ({kind})")
         return issues
 
     def iter_asset_paths(self) -> Iterable[Path]:
@@ -153,4 +164,7 @@ class VisualRegistry:
         for style in self.manifest.get('resource_rendering', {}).values():
             raw = style.get('atlas') if isinstance(style, dict) else None
             if raw:
+                yield self.base_dir / str(raw)
+        for kind,raw in self.manifest.get("settlement_autotiles",{}).items():
+            if kind!="frame_size" and raw:
                 yield self.base_dir / str(raw)

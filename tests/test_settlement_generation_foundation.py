@@ -27,6 +27,10 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.registry = ContentRegistry.load(DATA_DIR)
 
+    def test_new_settlement_geometry_contract_is_v3(self):
+        from worldseed.config import SETTLEMENT_PLAN_VERSION
+        self.assertEqual(SETTLEMENT_PLAN_VERSION,3)
+
     def test_settlement_piece_catalog_has_required_breadth(self):
         pieces = self.registry.settlement_pieces
         self.assertGreaterEqual(len(pieces), 100)
@@ -235,6 +239,30 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(any(s.building_type=='smithy' for s in skeleton.structures))
         smithy=next(s for s in skeleton.structures if s.building_type=='smithy')
         self.assertIn('smithy',{r.kind for r in skeleton.rooms if r.structure_plan_id==smithy.uid})
+        pieces_by_structure={}
+        for piece in skeleton.pieces:
+            pieces_by_structure.setdefault(piece.structure_plan_id,[]).append(piece)
+        for structure in skeleton.structures:
+            ex,ey=structure.entrance
+            xs=[x for x,_ in structure.footprint];ys=[y for _,y in structure.footprint]
+            # A corner doorway has no cardinal interior neighbor and was the
+            # cause of visually open doors still being blocked.
+            self.assertFalse(ex in {min(xs),max(xs)} and ey in {min(ys),max(ys)})
+            floor_cells={
+                (piece.x,piece.y) for piece in pieces_by_structure.get(structure.uid,())
+                if piece.role in {'floor','threshold'}
+            }
+            self.assertIn((ex,ey),floor_cells)
+            self.assertTrue(any((ex+dx,ey+dy) in floor_cells for dx,dy in ((0,1),(1,0),(0,-1),(-1,0))))
+        wall_tags={
+            tag
+            for piece in skeleton.pieces
+            if piece.role in {'wall','partition'}
+            for tag in self.registry.settlement_pieces[piece.piece_id].tags
+        }
+        self.assertIn('straight',wall_tags)
+        self.assertIn('corner',wall_tags)
+        self.assertIn('reinforced',wall_tags)
 
     def test_roofs_are_first_class_settlement_pieces(self):
         roofs=[p for p in self.registry.settlement_pieces.values() if p.category=='roof']

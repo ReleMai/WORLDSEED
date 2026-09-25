@@ -637,17 +637,105 @@ class SettlementSkeletonPlanner:
     def _material_choices(self, archetype: str):
         registry=getattr(self.world,"registry",None)
         wall_contains="stone" if archetype=="mining" else "timber"
-        wall=self._piece_choice(registry,"wall",contains=wall_contains) or self._piece_choice(registry,"wall")
+        wall=(
+            self._piece_choice(registry,"wall",tags=("straight",),contains=wall_contains)
+            or self._piece_choice(registry,"wall",contains=wall_contains)
+            or self._piece_choice(registry,"wall")
+        )
         floor_contains="stone" if archetype=="mining" else "plank"
-        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor")
+        floor=(
+            self._piece_choice(registry,"floor",tags=("plain",),contains=floor_contains)
+            or self._piece_choice(registry,"floor",contains=floor_contains)
+            or self._piece_choice(registry,"floor")
+        )
         roof_contains="stone" if archetype=="mining" else ("timber" if archetype in {"forest","frontier"} else "thatch")
         roof=self._piece_choice(registry,"roof",contains=roof_contains) or self._piece_choice(registry,"roof")
-        door=self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
+        door_contains="stone_arch_door" if archetype=="mining" else "wood_door"
+        door=self._piece_choice(registry,"opening",contains=door_contains) or self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
         return wall,floor,roof,door
+
+    def _wall_variant(self, base_piece, *, corner: bool=False, partition: bool=False):
+        registry=getattr(self.world,"registry",None)
+        if base_piece is None or registry is None:
+            return base_piece
+        material=str(getattr(base_piece,"material",""))
+        tag="reinforced" if partition else ("corner" if corner else "straight")
+        return (
+            self._piece_choice(registry,"wall",tags=(tag,),contains=material)
+            or base_piece
+        )
 
     @staticmethod
     def _road_cell_set(roads: Iterable[RoadSegmentPlan]) -> set[tuple[int,int]]:
         return {tuple(p) for road in roads for p in road.polyline}
+
+    def _select_entrance(
+        self,
+        shell:set[tuple[int,int]],
+        interior:set[tuple[int,int]],
+        road_cells:set[tuple[int,int]],
+        x0:int,y0:int,width:int,height:int,
+    )->tuple[int,int]:
+        """Choose a cardinally usable exterior doorway, never a shell corner."""
+        candidates=[]
+        edges=[]
+        for x in range(x0+1,x0+width-1):
+            edges.append(((x,y0),(x,y0-1),(x,y0+1)))
+            edges.append(((x,y0+height-1),(x,y0+height),(x,y0+height-2)))
+        for y in range(y0+1,y0+height-1):
+            edges.append(((x0,y),(x0-1,y),(x0+1,y)))
+            edges.append(((x0+width-1,y),(x0+width,y),(x0+width-2,y)))
+        for cell,outside,inside in edges:
+            if cell not in shell or inside not in interior:
+                continue
+            distance=min(abs(outside[0]-rx)+abs(outside[1]-ry) for rx,ry in road_cells)
+            candidates.append((0 if outside in road_cells else 1,distance,cell[1],cell[0]))
+        if not candidates:
+            raise ValueError("Generated building has no cardinally valid exterior doorway.")
+        _,_,ey,ex=min(candidates)
+        return ex,ey
+
+    @staticmethod
+    def _entrance_outside(
+        entrance:tuple[int,int],x0:int,y0:int,width:int,height:int
+    )->tuple[int,int]:
+        x,y=entrance
+        if y==y0:return x,y-1
+        if y==y0+height-1:return x,y+1
+        if x==x0:return x-1,y
+        return x+1,y
+
+    def _entrance_apron(
+        self,
+        entrance:tuple[int,int],
+        road_cells:set[tuple[int,int]],
+        parcel_cells:set[tuple[int,int]],
+        shell:set[tuple[int,int]],
+        interior:set[tuple[int,int]],
+        x0:int,y0:int,width:int,height:int,
+        max_steps:int=5,
+    )->list[tuple[int,int]]:
+        """Lay a short threshold path from a doorway toward its access road."""
+        current=self._entrance_outside(entrance,x0,y0,width,height)
+        if current in road_cells:return []
+        target=min(road_cells,key=lambda r:(abs(current[0]-r[0])+abs(current[1]-r[1]),r[1],r[0]))
+        out=[];seen={entrance}
+        for _ in range(max(1,int(max_steps))):
+            if current in road_cells:break
+            if current in shell or current in interior or current in seen:break
+            # Stay on the building parcel when possible; one-cell frontage
+            # outside the parcel is allowed only if it is the road itself.
+            if current not in parcel_cells:break
+            out.append(current);seen.add(current)
+            options=[]
+            for dx,dy in CARDINALS:
+                nxt=(current[0]+dx,current[1]+dy)
+                if nxt in shell or nxt in interior or nxt in seen:continue
+                dist=abs(nxt[0]-target[0])+abs(nxt[1]-target[1])
+                options.append((0 if nxt in road_cells else 1,dist,nxt[1],nxt[0],nxt))
+            if not options:break
+            current=min(options)[-1]
+        return out
 
     def _building_rect(self, parcel: LandUseParcel, *, large: bool) -> tuple[int,int,int,int] | None:
         left,top,right,bottom=self._parcel_bbox(parcel)
@@ -722,7 +810,7 @@ class SettlementSkeletonPlanner:
         road_cells=self._road_cell_set(roads)
         if not road_cells:
             return None
-        entrance=min(shell,key=lambda p:(min(abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),p[1],p[0]))
+        entrance=self._select_entrance(shell,interior,road_cells,x0,y0,width,height)
         walls=set(shell); walls.discard(entrance)
         doors={entrance}
         partition_cells=set()
@@ -744,12 +832,25 @@ class SettlementSkeletonPlanner:
             placements.append(StructurePiecePlan(uid,structure_uid,piece.id,cell[0],cell[1],piece.layer,role))
             return uid
         for cell in sorted(walls,key=lambda p:(p[1],p[0])):
-            place(wall_piece,cell,"partition" if cell in partition_cells else "wall")
+            is_partition=cell in partition_cells
+            is_corner=(cell[0] in {x0,x0+width-1} and cell[1] in {y0,y0+height-1})
+            variant=self._wall_variant(wall_piece,corner=is_corner,partition=is_partition)
+            place(variant,cell,"partition" if is_partition else "wall")
         for cell in sorted(doors,key=lambda p:(p[1],p[0])):
             place(door_piece,cell,"interior_door" if cell!=entrance else "entrance")
         for cell in sorted(interior,key=lambda p:(p[1],p[0])):
             place(floor_piece,cell,"floor")
             place(roof_piece,cell,"roof")
+        # Exterior doorway thresholds are part of the same floor material, so
+        # an open/unlocked door never appears to lead onto a raw terrain tile.
+        place(floor_piece,entrance,"threshold")
+        apron_piece=self._piece_choice(registry,"road",contains="footpath_piece")
+        if apron_piece is not None:
+            parcel_cells=set(parcel.cells)
+            for cell in self._entrance_apron(
+                entrance,road_cells,parcel_cells,shell,interior,x0,y0,width,height
+            ):
+                place(apron_piece,cell,"entrance_apron")
 
         fixture_tags={}
         interior_sorted=sorted(interior,key=lambda p:(p[1],p[0]))
