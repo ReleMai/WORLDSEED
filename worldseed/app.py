@@ -2298,7 +2298,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
                 item=reg.items.get(iid)
                 if not item:continue
                 by_cat.setdefault(item.category or 'misc',[]).append(item)
-            body=['Handled materials give clues. Combine carried materials in the discovery pot to uncover a matching recipe.','']
+            body=['Handled materials give clues. Combine carried materials in the experiment grid to uncover a matching recipe.','']
             if not by_cat:body.append('You have not examined any craft materials yet. Gather or pick up something useful.')
             for cat,items in sorted(by_cat.items()):
                 body.append(cat.replace('_',' ').upper())
@@ -2353,7 +2353,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
 
         # Discovered-recipe tab.
         if not known:
-            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the discovery pot to uncover techniques.'],screen_width(term.size()[0],96)))
+            _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the experiment grid to uncover techniques.'],screen_width(term.size()[0],96)))
             continue
         categories=sorted(set(r.category or 'general' for r in known))
         category=_select(term,'CRAFTING // RECIPES',[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})

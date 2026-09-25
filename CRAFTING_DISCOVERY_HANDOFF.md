@@ -17,3 +17,10 @@ The player places one to five carried items into the pot. The simulation validat
 ## Verification
 
 Focused Pygame and system tests cover cursor tabs, narrow panels, pagination, craftable/missing card states, deterministic outcomes, consumption, exhaustion, observation, legacy command rejection and state round-trip. Run `PYTHONPATH=repo python -m unittest discover -s repo/tests -p test_crafting_pot_ui.py -v`, `PYTHONPATH=repo:repo/tests python -m unittest test_dev16_caves_crafting.Dev16CraftDiscoveryTests -v`, and the Dev37 floating UI suite with dummy SDL drivers. `compileall` covers the changed Python modules. The fast gate runs the focused crafting tests after Dev37 UI tests. Full release validation remains the manual release gate.
+
+
+## WU18 experiment-grid contract
+- The player-facing discovery surface is now named Experiment Grid throughout the crafting flow.
+- Recipe discovery uses an explicit physical clue signature of 1-5 items. Full crafting cost can be larger; large recipes must author a bounded discovery signature and registry validation enforces the contract.
+- Cordage progression is unambiguous: one brush can be processed into loose Fiber, while two brush bundles reveal/craft actual plant Cordage.
+- The early Crude Knife is a bark-wrapped stone flake with minimum skin/butcher/scrape capability, bridging primitive hunting into the hafted Stone Knife.

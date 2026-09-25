@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
@@ -64,7 +65,6 @@ class CraftingSystem:
 
     def pot_candidates(self,items:tuple[str,...],inv:Inventory):
         """Read-only recipes that could result from the placed quantities."""
-        from collections import Counter
         counts=Counter(items)
         if not self.state.player_crafting_discovery_enabled or not 1<=len(items)<=5:
             return []
@@ -74,17 +74,16 @@ class CraftingSystem:
         return sorted((r for r in self.registry.recipes.values()
             if r.id not in known
             and (not r.knowledge or r.knowledge in self.state.player_knowledge)
-            and counts==__import__('collections').Counter(self.discovery_signature(r))
+            and counts==Counter(self.discovery_signature(r))
             and self.discovery_signature(r)),key=lambda r:r.id)
 
     def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes) -> tuple[bool,str,int]:
         """Consume a valid experiment and select one catalog result reproducibly."""
-        from collections import Counter
         if not self.state.player_crafting_discovery_enabled:
             return False,'This world uses the legacy crafting catalog.',5
         counts=Counter(items)
         if not 1<=len(items)<=5 or any(i not in self.registry.items or inv.count(i)<n for i,n in counts.items()):
-            return False,'Place 1–5 items you actually carry in the discovery pot.',5
+            return False,'Place 1–5 items you actually carry in the experiment grid.',5
         candidates=self.pot_candidates(items,inv)
         if not candidates:
             return False,'These materials reveal no new recipe. Try another combination.',5
@@ -115,7 +114,7 @@ class CraftingSystem:
         return []
 
     def experiment(self, recipe_id:str, inv:Inventory) -> tuple[bool,str,int]:
-        return False,'Combine carried materials in the discovery pot to learn recipes.',5
+        return False,'Combine carried materials in the experiment grid to learn recipes.',5
 
     def discovery_tree_rows(self, inv:Inventory|None=None) -> list[tuple[str,str,str]]:
         """Return stable (recipe,status,parents) rows for graphical/terminal UIs."""
