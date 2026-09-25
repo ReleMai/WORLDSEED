@@ -175,3 +175,9 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Crafting's three primary tabs are icon-only with hover tooltips; moving across a tab requests a lightweight UI redraw so the tooltip appears immediately.
 - Removed connector lines from the five-slot Experiment Grid; the isolated slots retain red/yellow/green recipe proximity feedback.
 - Fixed Village Start being overwritten to 'custom' during new-world setup. Village start now persists the selected origin, builds the same authoritative settlement skeleton used by runtime physicalization, and places the character just outside a settlement gateway.
+
+
+### Village-start load-order hotfix
+- Root cause of the village-start load failure was startup ordering: the new gateway-spawn helper asked SettlementSkeletonPlanner to build the village before hydrology had been prepared/attached. For worldgen v5+, EnvironmentalFieldSampler intentionally returns no site fields before that point, so the planner correctly raised "Settlement anchor has no legal common site inside planning bounds."
+- Village startup is now two-phase. A cheap deterministic village target is selected first, hydrology/environmental fields are prepared around its anchor, and only then is the authoritative settlement skeleton built and the player placed just outside its gateway.
+- Base-ocean strategic anchors are rejected during the cheap selection phase. Regression coverage verifies target selection never invokes the skeleton planner before environmental preparation and that final placement is two cells outside the planned gateway.

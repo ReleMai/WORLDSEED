@@ -329,9 +329,9 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(all(c.settlement_id=='settlement:b' for c in physical.cells()))
 
 
-    def test_village_start_uses_authoritative_gateway_and_spawns_just_outside(self):
+    def test_village_start_selects_target_before_environment_then_finalizes_gateway(self):
         from unittest.mock import patch
-        from worldseed.app import _find_village_spawn
+        from worldseed.app import _find_village_target, _village_gateway_spawn
 
         town=SimpleNamespace(uid="settlement:0:0",x=100,y=100,region_x=0,region_y=0,population=35)
         region=SimpleNamespace(region_x=0,region_y=0)
@@ -340,24 +340,47 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             def __init__(self,world): pass
             def plan(self,rx,ry,persist=True): return region
         class FakeSkeletonPlanner:
+            calls=0
             def __init__(self,world): pass
             def plan(self,plan,uid,population,persist=True):
-                self.last=(plan,uid,population,persist);return skeleton
+                FakeSkeletonPlanner.calls+=1;return skeleton
         class FakeSociety:
             def __init__(self,seed,registry,planner): pass
             def settlement_for_cell(self,rx,ry):
                 if (rx,ry)==(0,0): return (town,[],None,None,None)
                 return None
+        fields=SimpleNamespace(elevation=32000)
         terrain=SimpleNamespace(passable=True,tags=())
+        environment=SimpleNamespace(open_water=False)
         world=SimpleNamespace(
             registry=SimpleNamespace(terrains={"land":terrain}),
-            generator=SimpleNamespace(terrain_at=lambda pos:"land"),
+            generator=SimpleNamespace(sample_fields=lambda pos:fields,terrain_at=lambda pos:"land"),
+            environment_at=lambda pos:environment,
         )
         with patch("worldseed.app.RegionBlockPlanner",FakeRegionPlanner), \
              patch("worldseed.app.SettlementSkeletonPlanner",FakeSkeletonPlanner), \
              patch("worldseed.app.ProceduralSocietyGenerator",FakeSociety):
-            pos=_find_village_spawn(world,b"seed",self.registry)
+            target=_find_village_target(world,b"seed",self.registry)
+            self.assertIs(target,town)
+            self.assertEqual(FakeSkeletonPlanner.calls,0,"target selection must not require prepared hydrology")
+            pos=_village_gateway_spawn(world,target)
+        self.assertEqual(FakeSkeletonPlanner.calls,1)
         self.assertEqual((pos.x,pos.y,pos.z),(122,100,0))
+
+    def test_village_target_rejects_base_ocean_anchor(self):
+        from unittest.mock import patch
+        from worldseed.app import _find_village_target
+        wet=SimpleNamespace(uid="settlement:0:0",x=100,y=100,region_x=0,region_y=0,population=35)
+        dry=SimpleNamespace(uid="settlement:1:0",x=620,y=100,region_x=1,region_y=0,population=35)
+        class FakeRegionPlanner:
+            def __init__(self,world): pass
+        class FakeSociety:
+            def __init__(self,seed,registry,planner): pass
+            def settlement_for_cell(self,rx,ry):
+                return (wet,[],None,None,None) if (rx,ry)==(0,0) else ((dry,[],None,None,None) if (rx,ry)==(1,0) else None)
+        world=SimpleNamespace(generator=SimpleNamespace(sample_fields=lambda pos:SimpleNamespace(elevation=20000 if pos.x<512 else 32000)))
+        with patch("worldseed.app.RegionBlockPlanner",FakeRegionPlanner),patch("worldseed.app.ProceduralSocietyGenerator",FakeSociety):
+            self.assertIs(_find_village_target(world,b"seed",self.registry),dry)
 
 
 if __name__ == "__main__":
