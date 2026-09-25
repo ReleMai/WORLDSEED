@@ -411,3 +411,5 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Floor shading now treats connected room tiles as one surface, reserving dark boundary shading for exposed room edges. Roads use transparent shoulders plus connected silhouettes so they blend into the underlying terrain instead of presenting as repeated square tiles.
 - Existing authored structure art remains active for roofs, plank-floor texture detail and furniture/workshop fixtures; directional geometry is generated at render time and cached by material/connectivity mask.
 - Tests cover non-corner entrances, cardinal floor access, threshold/frontage generation, pinned plan versions and different rendered variants for connected/isolated wall and floor masks.
+
+- Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.

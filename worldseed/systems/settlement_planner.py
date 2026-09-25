@@ -636,15 +636,25 @@ class SettlementSkeletonPlanner:
             rows.append(piece)
         return min(rows,key=lambda p:p.id,default=None)
 
+    def _wall_piece_for(self, archetype: str, shape: str):
+        registry=getattr(self.world,"registry",None)
+        material="stone" if archetype=="mining" else "timber"
+        return (
+            self._piece_choice(registry,"wall",contains=f"{material}_{shape}")
+            or self._piece_choice(registry,"wall",contains=f"{material}_straight")
+            or self._piece_choice(registry,"wall",contains=material)
+            or self._piece_choice(registry,"wall")
+        )
+
     def _material_choices(self, archetype: str):
         registry=getattr(self.world,"registry",None)
-        wall_contains="stone" if archetype=="mining" else "timber"
-        wall=self._piece_choice(registry,"wall",contains=wall_contains) or self._piece_choice(registry,"wall")
-        floor_contains="stone" if archetype=="mining" else "plank"
-        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor")
+        wall=self._wall_piece_for(archetype,"straight")
+        floor_contains="stone_plain" if archetype=="mining" else "plank_plain"
+        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor",contains="stone" if archetype=="mining" else "plank") or self._piece_choice(registry,"floor")
         roof_contains="stone" if archetype=="mining" else ("timber" if archetype in {"forest","frontier"} else "thatch")
         roof=self._piece_choice(registry,"roof",contains=roof_contains) or self._piece_choice(registry,"roof")
-        door=self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
+        door_contains="stone_arch" if archetype=="mining" else "wood_door"
+        door=self._piece_choice(registry,"opening",contains=door_contains) or self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
         return wall,floor,roof,door
 
     @staticmethod
@@ -810,8 +820,22 @@ class SettlementSkeletonPlanner:
             uid=stable_plan_uid("piece",structure_uid,f"{piece.id}:{role}:{cell[0]}:{cell[1]}",[cell])
             placements.append(StructurePiecePlan(uid,structure_uid,piece.id,cell[0],cell[1],piece.layer,role))
             return uid
+        wall_network=walls|doors
         for cell in sorted(walls,key=lambda p:(p[1],p[0])):
-            place(wall_piece,cell,"partition" if cell in partition_cells else "wall")
+            x,y=cell
+            connected={
+                "n":(x,y-1) in wall_network,"e":(x+1,y) in wall_network,
+                "s":(x,y+1) in wall_network,"w":(x-1,y) in wall_network,
+            }
+            degree=sum(1 for value in connected.values() if value)
+            if degree>=3:
+                shape="reinforced"
+            elif (connected["n"] or connected["s"]) and (connected["e"] or connected["w"]):
+                shape="corner"
+            else:
+                shape="straight"
+            selected_wall=self._wall_piece_for(archetype,shape) or wall_piece
+            place(selected_wall,cell,"partition" if cell in partition_cells else "wall")
         for cell in sorted(doors,key=lambda p:(p[1],p[0])):
             place(door_piece,cell,"interior_door" if cell!=entrance else "entrance")
             # Exterior thresholds need a floor under the shell opening. Interior
