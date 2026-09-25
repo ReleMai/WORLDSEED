@@ -333,6 +333,24 @@ def settlement_rank_for_population(population: int) -> str:
     return "city"
 
 
+def derived_building_summary(skeleton: SettlementSkeleton) -> dict[str, int]:
+    """Compatibility summary derived only from the authoritative physical plan."""
+    summary: dict[str, int] = {}
+    ruins = 0
+    for structure in skeleton.structures:
+        if structure.destroyed:
+            ruins += 1
+            continue
+        key = "house" if structure.function == "residence" else str(structure.function)
+        summary[key] = summary.get(key, 0) + 1
+    farms = sum(1 for parcel in skeleton.parcels if parcel.kind == "farm")
+    if farms:
+        summary["farm"] = farms
+    if ruins:
+        summary["ruins"] = ruins
+    return summary
+
+
 class SettlementSkeletonPlanner:
     """Terrain-aware bounded settlement planner for RC14 Phase 8.
 
@@ -433,10 +451,10 @@ class SettlementSkeletonPlanner:
         cx, cy = center
         return {(x, y) for y in range(cy - half, cy + half + 1) for x in range(cx - half, cx + half + 1)}
 
-    def _gateway_targets(self, region_plan, common: tuple[int, int], bounds: tuple[int, int, int, int], rank: str) -> list[tuple[int, int]]:
+    def _gateway_targets(self, region_plan, common: tuple[int, int], bounds: tuple[int, int, int, int], rank: str) -> list[tuple[tuple[int, int], str]]:
         left, top, right, bottom = bounds
         region_x0, region_y0 = region_plan.region_x * 512, region_plan.region_y * 512
-        targets = []
+        targets: list[tuple[tuple[int, int], str]] = []
         for road in sorted(region_plan.roads, key=lambda row: (row.direction, row.offset, row.road_class)):
             if road.direction == "north":
                 raw = (region_x0 + int(road.offset), top)
@@ -448,14 +466,12 @@ class SettlementSkeletonPlanner:
                 raw = (right, region_y0 + int(road.offset))
             raw = (max(left, min(right, raw[0])), max(top, min(bottom, raw[1])))
             target = self._nearest_legal(raw, bounds, radius=10)
-            if target and target not in targets:
-                targets.append(target)
+            if target and target not in {row[0] for row in targets}:
+                targets.append((target, str(getattr(road, "route_uid", ""))))
 
         if targets:
             return targets[:4]
 
-        # Isolated settlements still need an outward-facing access lane. Select
-        # the best legal edge sites from terrain rather than random directions.
         edge = []
         samples = (1, 2, 3)
         for n in samples:
@@ -468,11 +484,11 @@ class SettlementSkeletonPlanner:
                 env = self._env(*target)
                 edge.append((env.slope * 2 + env.flood_risk * 3 + abs(target[0]-common[0])//4 + abs(target[1]-common[1])//4, target[1], target[0]))
         wanted = 1 if rank in {"homestead", "hamlet"} else 2
-        out = []
+        out: list[tuple[tuple[int, int], str]] = []
         for _, y, x in sorted(edge):
             p = (x, y)
-            if p not in out:
-                out.append(p)
+            if p not in {row[0] for row in out}:
+                out.append((p, ""))
             if len(out) >= wanted:
                 break
         return out
@@ -955,16 +971,17 @@ class SettlementSkeletonPlanner:
 
         roads: list[RoadSegmentPlan] = []
         road_cells: set[tuple[int, int]] = set()
-        gateways = self._gateway_targets(region_plan, common_center, bounds, rank)
+        gateway_rows = self._gateway_targets(region_plan, common_center, bounds, rank)
+        gateways = [row[0] for row in gateway_rows]
         plan.gateway_cells = list(gateways)
 
-        def add_road(slot: str, target: tuple[int, int], road_class: str, width: int = 1) -> str:
+        def add_road(slot: str, target: tuple[int, int], road_class: str, width: int = 1, route_id: str = "") -> str:
             path = self._path(common_center, target, bounds, road_cells)
             if len(path) < 2:
                 return ""
             uid = stable_plan_uid("road", plan.uid, slot, path)
             roads.append(RoadSegmentPlan(
-                uid=uid, settlement_plan_id=plan.uid, road_class=road_class,
+                uid=uid, route_id=str(route_id), settlement_plan_id=plan.uid, road_class=road_class,
                 polyline=path, width=width, surface="earth",
             ))
             road_cells.update(path)
@@ -972,8 +989,8 @@ class SettlementSkeletonPlanner:
 
         main_class = "maintained_road" if rank in {"town", "city"} else "road"
         main_width = 2 if rank in {"town", "city"} else 1
-        for i, target in enumerate(gateways):
-            add_road(f"gateway:{i}", target, main_class, main_width)
+        for i, (target, route_uid) in enumerate(gateway_rows):
+            add_road(f"gateway:{i}", target, main_class, main_width, route_id=route_uid)
 
         # Grow bounded local streets around the common. These are street seeds,
         # not arbitrary house coordinates, and provide frontage for later lots.
@@ -1142,6 +1159,18 @@ class SettlementSkeletonPlanner:
 
         structures,rooms,pieces=self._generate_buildings(plan,roads,parcels)
         plan.structure_site_ids=[row.uid for row in structures]
+        housing=0
+        workplace: dict[str,int]={}
+        for structure in structures:
+            if structure.destroyed:
+                continue
+            area=max(1,int(structure.interior_area or len(structure.footprint)))
+            if structure.function=="residence":
+                housing += max(2,min(12,area//3+1))
+            else:
+                workplace[structure.function]=workplace.get(structure.function,0)+max(1,min(12,area//4+1))
+        plan.housing_capacity=housing
+        plan.workplace_capacity=workplace
         skeleton = SettlementSkeleton(plan, roads, parcels, structures, rooms, pieces)
         skeleton.fingerprint = canonical_hash({
             "plan": asdict(plan),

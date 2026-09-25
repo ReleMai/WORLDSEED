@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from worldseed.config import CHUNK_SIZE, REGION_CHUNKS, SETTLEMENT_PLAN_VERSION
+from worldseed.config import CHUNK_SIZE, REGION_CHUNKS, SETTLEMENT_PLAN_VERSION, ROUTEGEN_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import derive_seed, hash_u64
+from worldseed.systems.regional_civilization import RegionalCivilizationPlanner
+from worldseed.systems.route_planner import RegionalRoutePlanner
 
 REGION_SIZE = CHUNK_SIZE * REGION_CHUNKS
 CARDINALS = {
@@ -44,6 +46,7 @@ class RegionRoadExit:
     direction: str
     offset: int
     road_class: str
+    route_uid: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,7 +86,11 @@ class RegionBlockPlan:
         value = asdict(self)
         value["settlement_anchor"] = list(self.settlement_anchor) if self.settlement_anchor else None
         value["wilderness_tags"] = list(self.wilderness_tags)
-        value["roads"] = [asdict(x) for x in self.roads]
+        road_rows = [asdict(x) for x in self.roads]
+        if self.version <= 3:
+            for row in road_rows:
+                row.pop("route_uid", None)
+        value["roads"] = road_rows
         value["waters"] = [asdict(x) for x in self.waters]
         return value
 
@@ -103,7 +110,9 @@ class RegionBlockPlan:
             control_potential=str(raw.get("control_potential", "wild")),
             wilderness_tags=tuple(str(x) for x in raw.get("wilderness_tags", ())),
             site_potential=bool(raw.get("site_potential", False)),
-            roads=tuple(RegionRoadExit(str(x["direction"]), int(x["offset"]), str(x["road_class"])) for x in raw.get("roads", ())),
+            roads=tuple(RegionRoadExit(
+                str(x["direction"]), int(x["offset"]), str(x["road_class"]), str(x.get("route_uid", ""))
+            ) for x in raw.get("roads", ())),
             waters=tuple(RegionWaterExit(
                 str(x["direction"]), int(x["offset"]), int(x["river_class"]),
                 str(x.get("current_heading", 'still')), int(x.get("current_strength", 0)),
@@ -122,18 +131,24 @@ class RegionBlockPlanner:
     under the existing simulation/world authorities.
     """
 
-    def __init__(self, world, version: int = SETTLEMENT_PLAN_VERSION):
+    def __init__(self, world, version: int | None = None):
         self.world = world
         self.generator = world.generator
         self.seed = world.generator.world_seed
         self.cache_source = world.delta_source
+        if version is None:
+            version = getattr(world, "settlement_plan_version", SETTLEMENT_PLAN_VERSION)
         self.version = int(version)
+        self.civilization = RegionalCivilizationPlanner(world, version=self.version)
+        route_version = int(getattr(world, "routegen_version", ROUTEGEN_VERSION))
+        self.route_planner = RegionalRoutePlanner(world, self.civilization, version=route_version)
         self._cache: dict[tuple[int, int], RegionBlockPlan] = {}
 
     def _presence(self, rx: int, ry: int) -> bool:
-        # Preserve Dev4's settlement-presence contract; Phase 5 changes site
-        # quality/placement, not which macro-regions rolled a settlement.
-        return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
+        if self.version <= 3:
+            # Frozen legacy contract for v1-v3 settlement-plan worlds.
+            return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
+        return self.civilization.potential(int(rx), int(ry)).settlement_present
 
     def _biome_for(self, pos: WorldPos) -> str:
         f = self.generator.sample_fields(pos)
@@ -166,21 +181,43 @@ class RegionBlockPlanner:
         stone = int(env.resources.stone if env else max(0, (f.elevation - 30000) * 100 // 30000))
         temperature = f.temperature * 100 // 65535
         temperate = max(0, 100 - abs(temperature - 55) * 2)
-        # Bounded causal score. Water helps strongly but never outweighs severe
-        # flooding/steepness. Resource access breaks ties between fertile sites.
-        score = (farmland * 3 + fertility * 2 + freshwater * 2 + timber + stone + temperate * 2) // 11
-        score -= slope // 2 + flood // 2
+        if self.version <= 3:
+            score = (farmland * 3 + fertility * 2 + freshwater * 2 + timber + stone + temperate * 2) // 11
+            score -= slope // 2 + flood // 2
+            score = max(0, min(100, score))
+            if freshwater >= 65 and farmland >= 45:
+                archetype = "river_market" if freshwater >= 85 else "agrarian"
+            elif stone >= 65 and slope >= 25:
+                archetype = "mining"
+            elif timber >= 70:
+                archetype = "forest"
+            elif freshwater >= 70:
+                archetype = "fishing"
+            else:
+                archetype = "frontier"
+            return score, archetype
+
+        civ = self.civilization.potential(x // REGION_SIZE, y // REGION_SIZE)
+        crossing_cost = int(self.world.crossing_cost(pos))
+        crossing_value = max(0, freshwater - crossing_cost // 2)
+        score = (
+            farmland * 4 + fertility * 2 + freshwater * 2 + timber + stone
+            + crossing_value * 2 + civ.route_value * 2 + civ.defensibility + temperate * 2
+        ) // 17
+        score -= slope // 2 + flood * 2 // 3
         score = max(0, min(100, score))
-        if freshwater >= 65 and farmland >= 45:
-            archetype = "river_market" if freshwater >= 85 else "agrarian"
-        elif stone >= 65 and slope >= 25:
+        if freshwater >= 68 and crossing_value >= 48 and civ.route_value >= 58:
+            archetype = "river_market"
+        elif stone >= 65 and (slope >= 22 or civ.defensibility >= 55):
             archetype = "mining"
-        elif timber >= 70:
+        elif timber >= 68 and farmland < 58:
             archetype = "forest"
-        elif freshwater >= 70:
+        elif freshwater >= 72 and farmland < 50:
             archetype = "fishing"
+        elif farmland >= 50:
+            archetype = "agrarian"
         else:
-            archetype = "frontier"
+            archetype = civ.archetype
         return score, archetype
 
     def _best_settlement_site(self, rx: int, ry: int) -> tuple[tuple[int, int], int, str]:
@@ -288,9 +325,16 @@ class RegionBlockPlanner:
         if mean_m < 19000: tags.append("dry")
         if mean_t < 17000: tags.append("cold")
         if "water" in mix or "coast" in mix: tags.append("waterside")
-        control = "settled" if present else ("bandit_frontier" if hash_u64(self.seed, "region-bandit-potential", rx, ry) % 100 < 11 else "wild")
-        site_potential = hash_u64(self.seed, "region-site-potential", rx, ry) % 100 < 18
-        roads = tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None)
+        if self.version <= 3:
+            control = "settled" if present else ("bandit_frontier" if hash_u64(self.seed, "region-bandit-potential", rx, ry) % 100 < 11 else "wild")
+            site_potential = hash_u64(self.seed, "region-site-potential", rx, ry) % 100 < 18
+            roads = tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None)
+        else:
+            civ = self.civilization.potential(rx, ry)
+            control = "settled" if present else ("frontier" if civ.capacity >= 28 else "wild")
+            site_potential = civ.capacity >= max(28, self.civilization.MIN_CAPACITY - 8)
+            exits = self.route_planner.road_exits_for_region(rx, ry, persist=False)
+            roads = tuple(RegionRoadExit(e.direction, e.offset, e.road_class, e.route_uid) for e in exits)
         waters = self._water_edges(rx, ry)
         payload = {
             "uid": f"region:{rx}:{ry}", "region_x": rx, "region_y": ry, "version": self.version,
@@ -316,7 +360,7 @@ class RegionBlockPlanner:
             if raw:
                 try:
                     plan = RegionBlockPlan.from_dict(raw)
-                    check = plan.to_dict(); fingerprint = check.pop("fingerprint", "")
+                    check = dict(raw); fingerprint = str(check.pop("fingerprint", ""))
                     if (plan.region_x == key[0] and plan.region_y == key[1]
                             and plan.version == self.version and fingerprint == canonical_hash(check)):
                         return plan
@@ -336,6 +380,8 @@ class RegionBlockPlanner:
             storer = getattr(self.cache_source, "store_generated_regional_plan", None)
             if callable(storer):
                 storer(key[0], key[1], self.version, plan.to_dict())
+                if self.version >= 4:
+                    self.route_planner.road_exits_for_region(key[0], key[1], persist=True)
                 commit = getattr(self.cache_source, "commit_generated", None)
                 if callable(commit): commit()
         return plan

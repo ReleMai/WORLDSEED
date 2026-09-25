@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
+from worldseed.systems.settlement_planner import derived_building_summary
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +146,11 @@ class SettlementPopulationBinder:
         skeleton = self.physicalization.skeleton_for(settlement.uid)
         if skeleton is None:
             return SettlementBindingStats(str(settlement.uid))
+
+        settlement.buildings = derived_building_summary(skeleton)
+        settlement.building_authority = "derived"
+        settlement.housing_capacity = int(skeleton.plan.housing_capacity)
+        settlement.homeless = max(0, int(settlement.population) - int(settlement.housing_capacity))
 
         representatives = sorted(
             (

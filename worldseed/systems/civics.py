@@ -138,8 +138,11 @@ class CivicsSystem:
             self._sync_physical_housing(town.uid)
             return
 
-        # Aggregate fallback for distant/unprepared settlements. These records
-        # are ignored while an authoritative physical plan is active.
+        # Only legacy settlements may synthesize aggregate properties from
+        # abstract building counts. New v4 settlements wait for their stable
+        # physical plan instead of creating a second property/building reality.
+        if getattr(town, "building_authority", "legacy") != "legacy":
+            return
         houses = max(0, town.buildings.get("house", 0))
         workshops = max(
             0,

@@ -78,6 +78,56 @@ New physical-world work must add deterministic tests and the relevant audits. At
 
 
 
+## Grand Regional Civilization generation contract
+
+New settlement/road/faction work must extend the Embodied World architecture upward from a physical village into a coherent regional civilization network.
+
+The required causal chain is:
+
+```text
+BASE GEOGRAPHY + CLIMATE
+-> REGIONAL CARRYING CAPACITY
+-> SPACED SETTLEMENT POTENTIAL
+-> SETTLEMENT HIERARCHY / FACTION SEATS
+-> SPARSE STRATEGIC ROUTE GRAPH
+-> TERRAIN-CONSTRAINED REGIONAL CORRIDORS / CROSSINGS
+-> LOCAL STREETS / PARCELS / STRUCTURES
+-> ECONOMY + HISTORY MUTATE THOSE SAME PLANS
+```
+
+### Settlement-region rules
+
+- Do not roll settlement presence independently of terrain for new plan versions. Terrain, climate, water opportunity, arable land, timber/stone access, route value and defensibility must determine regional carrying capacity; deterministic hashing may break ties only after physical suitability.
+- Settlement spacing is hierarchical. Nearby regions compete for the same catchment instead of each rolling an unrelated village. Large seats may attract smaller future daughter settlements along roads/resource frontiers, but dynamic foundations must become stable plan objects rather than random coordinates.
+- Exact settlement anchors are refined only after prepared hydrology/environmental fields exist. Cheap pre-hydrology regional potential may select a candidate region, but it must not invent a contradictory river/crossing.
+- Settlement rank/population for new civilization versions should be related to carrying capacity and regional role rather than an unrelated population roll.
+
+### Strategic-route rules
+
+- Random edge roads and straight/Bresenham strategic corridors are legacy compatibility behavior only.
+- Route planning is graph-first: choose a sparse useful network between stable settlements/faction seats, establish a connectivity backbone, add only bounded high-value redundancy, then project each selected edge through terrain.
+- Persist strategic route IDs. Local settlement gateway/access roads should retain the parent route ID when they connect to a regional route.
+- Normal roads cannot cross open ocean/deep water merely to preserve graph connectivity. Crossings must become explicit ford/bridge/ferry/port candidates when the physical transport layer reaches that feature.
+- Route generation must remain reconstructable and bounded. Never scan every realized settlement against every other settlement worldwide.
+
+### Physical settlement authority
+
+- For new settlement-plan versions, `SettlementState.buildings` is a derived compatibility summary only. New society generation must not pre-invent abstract house/farm counts and then separately generate different physical buildings.
+- Housing/workplace capacities come from stable structure/room/parcel plans. Civics, NPC binding and economy may cache those capacities, but must not create a competing building authority.
+- Legacy saves may continue using abstract building counts until their pinned physical-plan version supplies an authoritative plan.
+- History/war/collapse must not decrement derived house counts directly. Future damage/foundation work must target stable structure/route plan IDs through physical-plan deltas.
+
+### Culture and faction worldbuilding
+
+- Culture must have physical or institutional consumers. Material tradition, values, religion, economy and geography should influence settlement description, later architectural grammar, district form, public space, law and specialization.
+- Prominent factions should emerge from deterministic strategic heartlands with stable seats, regional traditions and bounded territorial domains. A faction is not merely a random name attached independently to each town.
+- Faction seats and inter-faction trunk routes are worldbuilding anchors. Later borders, claims, wars, taxation, migration and archaeology should consume those same anchors rather than drawing unrelated political rectangles.
+- Keep faction/culture generation order-independent: encountering a frontier settlement before its capital must still reconstruct the same faction identity and seat.
+
+### Morphology follow-on
+
+Once the regional graph is stable, settlement planners should gain morphology profiles (organic village, crossroads market, river town, mining settlement, fortified post, agrarian dispersed settlement, port/fishing town, planned city). These profiles may alter street hierarchy, blocks/parcels, setbacks and architectural grammar without becoming a second economy or rerolling stable plan IDs.
+
 ## Canonical GitHub repository and cross-chat synchronization rule
 
 The canonical WORLDSEED repository is:

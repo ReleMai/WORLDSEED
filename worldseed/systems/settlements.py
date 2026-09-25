@@ -14,9 +14,17 @@ class SettlementLifecycleSystem:
                 # inhabitants are marked migrant rather than deleted from history.
                 for n in self.state.npcs.values():
                     if n.settlement_id==s.uid and n.alive:n.occupation='migrant';n.goal='migrate'
-                s.population=max(0,s.population);s.buildings['ruins']=sum(s.buildings.values());s.buildings['house']=0;s.food_stress=100
+                s.population=max(0,s.population)
+                if getattr(s,"building_authority","legacy")=="legacy":
+                    s.buildings['ruins']=sum(s.buildings.values());s.buildings['house']=0
+                s.food_stress=100
                 continue
-            # large, stable settlements can seed a daughter settlement in an adjacent unrealized region.
+            # V4 physical settlements do not found random-coordinate daughter
+            # towns. Dynamic foundation must go through the regional planner and
+            # a stable plan delta; keep the legacy path only for legacy worlds.
+            if getattr(s,"building_authority","legacy")!="legacy":
+                continue
+            # large, stable legacy settlements can seed a daughter settlement in an adjacent unrealized region.
             if s.population>=180 and s.food_stress<25 and hash_u64(self.seed,'found-colony',s.uid,month)%100<12:
                 dirs=((1,0),(-1,0),(0,1),(0,-1));dx,dy=dirs[hash_u64(self.seed,'colony-dir',s.uid,month)%4];rx,ry=s.region_x+dx,s.region_y+dy
                 uid=f'settlement:{rx}:{ry}'

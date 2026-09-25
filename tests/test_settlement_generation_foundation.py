@@ -143,7 +143,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             mean_elevation=30000,mean_moisture=30000,mean_temperature=32000,relief=1000,
             settlement_present=True,settlement_anchor=(100,100),settlement_score=80,
             settlement_archetype='mining',control_potential='settled',
-            roads=(RegionRoadExit('east',100,'road'),),
+            roads=(RegionRoadExit('east',100,'road','route:test-regional'),),
         )
         planner=SettlementSkeletonPlanner(world)
         skeleton=planner.plan(region,'settlement:0:0',95,persist=True)
@@ -154,6 +154,9 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertIn('civic',skeleton.plan.land_use_summary)
         self.assertIn('residential',skeleton.plan.land_use_summary)
         self.assertIn('farm',skeleton.plan.land_use_summary)
+        self.assertGreater(skeleton.plan.housing_capacity,0)
+        self.assertTrue(skeleton.plan.workplace_capacity)
+        self.assertIn('route:test-regional',{r.route_id for r in skeleton.roads})
         industrial=[p for p in skeleton.parcels if p.kind=='industrial']
         self.assertTrue(industrial)
         self.assertEqual(industrial[0].purpose,'mine_approach')

@@ -413,3 +413,23 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Tests cover non-corner entrances, cardinal floor access, threshold/frontage generation, pinned plan versions and different rendered variants for connected/isolated wall and floor masks.
 
 - Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.
+
+
+## Work unit 22 - Grand regional civilization foundation
+- Started the Grand Regional Civilization Generation phase above the existing physical settlement layer.
+- Added `RegionalCivilizationPlanner`: new settlement-plan v4 worlds derive regional carrying capacity from immutable terrain/climate potential, then select spaced local maxima instead of the legacy 42% per-region settlement roll.
+- Regional potential now exposes carrying capacity, arable/timber/stone/water opportunity, route value, defensibility, rank hints, settlement archetype and regional role. Exact anchors are still refined by the prepared hydrology/environmental fields in `RegionBlockPlanner`.
+- Settlement population for v4 is derived from carrying capacity/rank rather than an unrelated population roll. Village-start candidate search consumes the same terrain-first potential so startup and later society realization cannot disagree about whether a settlement exists.
+- Added deterministic faction domains spanning bounded groups of regions. Each inhabited domain receives a stable prominent faction seed with a terrain-selected seat, one of five founding traditions, a stable name/motto/law profile, and generation-order-independent identity.
+- New settlements retain archetype, regional role, culture-style description and founding trait. Faction state retains tradition, seat and motto for later UI/history consumers.
+- Added `RegionalRoutePlanner` / ROUTEGEN v2. Faction domains build sparse terrain-cost backbones with bounded redundant trade links; neighboring faction seats receive inter-faction trunk routes. Strategic route plans persist through the existing generated-route cache.
+- Regional road exits now come from those strategic route plans instead of unrelated random edge rolls. `RegionRoadExit` carries the stable route UID for v4, and generated settlement gateway roads retain that route ID into `RoadSegmentPlan.route_id`.
+- Route boundary crossings are selected from actual base-geography samples, avoiding open water where possible while remaining reconstructable before hydrology. Tile-level bridge/ford/ferry geometry remains the next physical transport step.
+- Began removal of dual settlement authority. New v4 society state starts with no invented house/farm counts; settlement plans derive housing/workplace capacity from generated structures; active population binding rebuilds the compatibility `SettlementState.buildings` summary from the plan.
+- Civics no longer fabricates aggregate property from derived v4 building counts, and institution/raid/collapse code only mutates abstract building counts for legacy settlements.
+- Random-coordinate daughter settlement founding is disabled for derived v4 settlements until foundation can create a stable regional/physical plan delta instead of bypassing the planner.
+- SETTLEMENT_PLAN_VERSION advances to 4 and ROUTEGEN_VERSION to 2. Existing saves remain pinned to their stored versions; RegionBlockPlanner now reads the save-pinned settlement-plan version and preserves the legacy v1-v3 presence/road contract.
+- Added focused regional-civilization tests for terrain-ranked spacing, stable faction seats/flavor, sparse persisted route backbones and derived building authority. Fast Gate now runs those tests alongside RC14 region-block coverage.
+
+### Next dependency
+Implement the physical transport projection for ROUTEGEN v2: convert strategic region paths into chunk/tile corridors using prepared slope/wetness/hydrology cost, create stable ford/bridge/ferry/port crossing plans, and make caravan/migration travel consume those route plans. Then add dynamic settlement foundation/growth plan deltas and morphology profiles so daughter settlements, expansion, raids and collapse alter stable physical structures rather than compatibility summaries.

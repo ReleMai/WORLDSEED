@@ -17,6 +17,7 @@ from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
 from worldseed.world.region_blocks import RegionBlockPlanner
+from worldseed.systems.regional_civilization import RegionalCivilizationPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
@@ -212,34 +213,30 @@ class VillageTarget:
 
 
 def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
-    """Return deterministic settlement candidates without creating regional plans.
+    """Return deterministic terrain-selected settlement candidates.
 
-    Population is derived from the same settlement RNG position used when a real
-    regional planner supplies the anchor. Calling ProceduralSocietyGenerator
-    without a planner would consume two RNG draws for its fallback x/y and would
-    therefore choose a different population/rank than the eventual settlement.
+    RC14 v4 no longer rolls settlement presence independently of geography.
+    The cheap regional civilization layer works before hydrology preparation,
+    while the final RegionBlockPlanner later refines each anchor with prepared
+    water/slope/fertility fields.
     """
+    civilization=RegionalCivilizationPlanner(
+        world,version=int(getattr(world,"settlement_plan_version",4))
+    )
     villages=[];others=[]
-    def region_has_base_land(rx:int,ry:int)->bool:
-        x0,y0=rx*512,ry*512
-        for gy in (1,2,3,4,5):
-            for gx in (1,2,3,4,5):
-                p=WorldPos(x0+gx*512//6,y0+gy*512//6,0)
-                if int(world.generator.sample_fields(p).elevation)>=23800:return True
-        return False
     for radius in range(0,9):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
-                if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
-                rng=PCG32(derive_seed(seed,"settlement",rx,ry))
-                pop=25+rng.randbelow(110)
+                if max(abs(rx),abs(ry))!=radius:continue
+                potential=civilization.potential(rx,ry)
+                if not potential.settlement_present:continue
+                pop=civilization.population_for_region(rx,ry)
                 target=VillageTarget(rx,ry,pop)
-                row=(abs(rx)+abs(ry),ry,rx,target)
+                row=(abs(rx)+abs(ry),-potential.capacity,ry,rx,target)
                 (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
         if len(villages)>=max(3,limit//2):break
-    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
-    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
+    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2],row[3]))
+    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2],row[3]))
     return tuple(row[-1] for row in ordered[:max(1,int(limit))])
 
 def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
@@ -354,6 +351,10 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     except KeyError:
         from worldseed.config import SETTLEMENT_PLAN_VERSION
         world.settlement_plan_version=SETTLEMENT_PLAN_VERSION
+    try:world.routegen_version=int(db.get_meta('routegen_version'))
+    except KeyError:
+        from worldseed.config import ROUTEGEN_VERSION
+        world.routegen_version=ROUTEGEN_VERSION
     try:hydrology_version=int(db.get_meta('hydrology_version'))
     except KeyError:hydrology_version=1
     try:hydrology_morphology_version=int(db.get_meta('hydrology_morphology_version'))

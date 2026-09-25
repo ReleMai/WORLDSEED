@@ -31,36 +31,115 @@ class ProceduralSocietyGenerator:
             if d not in domains:domains.append(d)
         deity=rng.choice(DEITIES); uid=f"religion:{rx//4}:{ry//4}"
         return ReligionState(uid,f"Way of {deity}",deity,domains,rng.choice(TABOOS),rng.choice(RITUALS),rng.choice(["hawk","wolf","stag","raven","boar","serpent"]))
+    @staticmethod
+    def _culture_style(culture: CultureState, archetype: str) -> str:
+        material = {
+            "wood": "timber halls",
+            "stone": "stone compounds",
+            "metal": "iron-trimmed workshops",
+            "fiber": "wattle-and-thatch homes",
+        }.get(culture.material_style, f"{culture.material_style} vernacular")
+        if "trade" in culture.values:
+            form = "market-facing streets"
+        elif "ancestry" in culture.values:
+            form = "ancestral compounds"
+        elif "stewardship" in culture.values:
+            form = "green commons"
+        elif "order" in culture.values:
+            form = "formal civic lanes"
+        elif "freedom" in culture.values:
+            form = "scattered freeholds"
+        else:
+            form = "workshop lanes"
+        return f"{material}; {form}; {archetype.replace('_', ' ')} tradition"
+
+    @staticmethod
+    def _founding_trait(archetype: str, regional_role: str) -> str:
+        if regional_role == "regional_seat":
+            return "seat-town grown around civic roads and regional exchange"
+        if archetype == "river_market":
+            return "crossing-market founded where transport and freshwater meet"
+        if archetype == "mining":
+            return "quarry-road settlement built around stone and ore access"
+        if archetype == "forest":
+            return "woodland clearing linked to logging tracks"
+        if archetype == "fishing":
+            return "waterside landing organized around fish and storage"
+        if archetype == "agrarian":
+            return "field village centered on fertile working land"
+        return "frontier hold controlling a useful route or defensible site"
+
     def faction_for_region(self,rx:int,ry:int,culture:CultureState)->FactionState:
+        if self.region_planner is not None and int(getattr(self.region_planner, "version", 0)) >= 4:
+            faction_seed = self.region_planner.civilization.faction_seed_for_region(rx, ry)
+            seat_culture = self.culture_for_region(faction_seed.seat_region_x, faction_seed.seat_region_y)
+            rng=PCG32(derive_seed(self.seed,"faction-domain",faction_seed.domain_x,faction_seed.domain_y))
+            laws=dict(faction_seed.laws)
+            return FactionState(
+                uid=faction_seed.uid,
+                name=faction_seed.name,
+                culture_id=seat_culture.uid,
+                treasury=1400+rng.randbelow(2200),
+                power=55+rng.randbelow(55),
+                laws=laws,
+                tradition=faction_seed.tradition,
+                seat_region_x=faction_seed.seat_region_x,
+                seat_region_y=faction_seed.seat_region_y,
+                motto=faction_seed.motto,
+            )
         rng=PCG32(derive_seed(self.seed,"faction",rx//2,ry//2)); uid=f"faction:{rx//2}:{ry//2}"
         law={"theft":rng.randbelow(80)+20,"assault":rng.randbelow(80)+20,"trespass":rng.randbelow(60)+10,"tax":rng.randbelow(15)+5}
         return FactionState(uid,f"{culture.name} {rng.choice(['League','March','Compact','Clans','Dominion','Freeholds'])}",culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],law)
+
     def settlement_for_cell(self,rx:int,ry:int)->tuple[SettlementState,list[NPCState],CultureState,ReligionState,FactionState] | None:
-        # roughly one settlement per 3x3 regions
-        if derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:return None
+        region_plan = None
+        if self.region_planner is not None:
+            region_plan = self.region_planner.plan(rx, ry, persist=True)
+            if not region_plan.settlement_present:
+                return None
+        elif derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:
+            return None
+
         c=self.culture_for_region(rx,ry); r=self.religion_for_region(rx,ry,c.uid); f=self.faction_for_region(rx,ry,c)
         rng=PCG32(derive_seed(self.seed,"settlement",rx,ry))
-        anchor=None
-        if self.region_planner is not None:
-            plan=self.region_planner.plan(rx,ry,persist=True)
-            anchor=plan.settlement_anchor
-        if anchor is None:
+        if region_plan is None or region_plan.settlement_anchor is None:
             x=rx*512+64+rng.randbelow(384); y=ry*512+64+rng.randbelow(384)
+            archetype="frontier"; regional_role="frontier_hold"
         else:
-            x,y=anchor
-        uid=f"settlement:{rx}:{ry}"; pop=25+rng.randbelow(110)
+            x,y=region_plan.settlement_anchor
+            archetype=region_plan.settlement_archetype
+            if int(getattr(self.region_planner, "version", 0)) >= 4:
+                civ=self.region_planner.civilization.potential(rx,ry)
+                regional_role=civ.regional_role
+            else:
+                regional_role="legacy_settlement"
+
+        if self.region_planner is not None and int(getattr(self.region_planner, "version", 0)) >= 4:
+            pop=self.region_planner.civilization.population_for_region(rx,ry)
+            building_authority="derived"
+            buildings={}
+        else:
+            pop=25+rng.randbelow(110)
+            building_authority="legacy"
+            buildings={"house":max(5,pop//6),"farm":max(2,pop//12)}
+
+        uid=f"settlement:{rx}:{ry}"
         stocks={"core:wheat":60+rng.randbelow(160),"core:turnip":30+rng.randbelow(100),"core:wood":30+rng.randbelow(80),"core:stone":25+rng.randbelow(70),"core:iron_ore":rng.randbelow(35),"core:coal":rng.randbelow(30),"core:wheat_seed":15+rng.randbelow(25),"core:turnip_seed":10+rng.randbelow(20),"core:medicinal_herb":2+rng.randbelow(9),"core:herbal_tonic":rng.randbelow(5),"core:soap":2+rng.randbelow(8)}
-        s=SettlementState(uid,place_name(rng),rx,ry,x,y,pop,c.uid,r.uid,f.uid,500+rng.randbelow(1000),stocks,{}, {"house":max(5,pop//6),"farm":max(2,pop//12)},0,dict(f.laws),["craft:stoneworking","craft:leatherwork"])
+        style=self._culture_style(c,archetype)
+        s=SettlementState(
+            uid=uid,name=place_name(rng),region_x=rx,region_y=ry,x=x,y=y,population=pop,
+            culture_id=c.uid,religion_id=r.uid,faction_id=f.uid,wealth=500+rng.randbelow(1000),
+            stocks=stocks,prices={},buildings=buildings,food_stress=0,law=dict(f.laws),
+            knowledge=["craft:stoneworking","craft:leatherwork"],
+            building_authority=building_authority,archetype=archetype,regional_role=regional_role,
+            culture_style=style,founding_trait=self._founding_trait(archetype,regional_role),
+        )
         npcs=[]
         for i in range(min(12,max(4,pop//10))):
             nr=PCG32(derive_seed(self.seed,"npc",uid,i)); traits=[]
             while len(traits)<2:
                 t=nr.choice(TRAITS)
                 if t not in traits:traits.append(t)
-            # Local positions are assigned from the authoritative physical plan
-            # once the settlement is active. Until then representatives stay at
-            # the settlement anchor instead of being scattered into arbitrary
-            # walls, water, or resource cells.
             npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,x,y,0,uid,f.uid,wealth=10+nr.randbelow(60)))
         return s,npcs,c,r,f
 

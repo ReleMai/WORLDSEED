@@ -128,7 +128,9 @@ class FactionSystem:
         target.food_stress = min(100, target.food_stress + 12)
         casualties = min(max(0,target.population-5), max(0, target.population//40))
         target.population -= casualties
-        if target.buildings.get("house",0) and hash_u64(self.seed,"raid-house",target.uid,minute)%100<35:
+        if (getattr(target,"building_authority","legacy")=="legacy"
+                and target.buildings.get("house",0)
+                and hash_u64(self.seed,"raid-house",target.uid,minute)%100<35):
             target.buildings["house"] = max(0,target.buildings["house"]-1)
         claim_uid=f"claim:{winner.uid}:settlement:{target.uid}:war"
         if claim_uid in self.state.claims:

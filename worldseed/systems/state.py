@@ -391,6 +391,13 @@ class SettlementState:
     currency_name: str = ""
     currency_value: int = 100
     barter_enabled: bool = True
+    # RC14 v4: generated structures are the authority for new settlements.
+    # Legacy saves retain abstract building counts until a physical plan is active.
+    building_authority: str = "legacy"
+    archetype: str = ""
+    regional_role: str = ""
+    culture_style: str = ""
+    founding_trait: str = ""
 
 @dataclass(slots=True)
 class FactionState:
@@ -405,6 +412,10 @@ class FactionState:
     manpower: int = 0
     military_supply: int = 0
     war_exhaustion: int = 0
+    tradition: str = ""
+    seat_region_x: int = 0
+    seat_region_y: int = 0
+    motto: str = ""
 
 @dataclass(slots=True)
 class CaravanState:
