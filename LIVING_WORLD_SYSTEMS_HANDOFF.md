@@ -157,3 +157,12 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Inventory item context remains anchored while hovering other cards; clicked recipe selection is persisted before returning to the crafting controller.
 - Crafting categories are top tabs with NEW markers, discovery is now a five-slot Experiment Grid with red/yellow/green recipe proximity, right-click slot removal, known-combination feedback, and zero-path materials hidden.
 - New-game setup now offers a deterministic Village starting location beside a generated settlement for settlement testing.
+
+
+### Interaction/crafting/village playtest polish
+- World context popups are now true live overlays: water/weather/lighting continue animating behind them while the popup redraws over the current frame.
+- Right-click or left-click outside restores only the popup region and closes the menu; nested fishing choices remain cursor anchored.
+- Discovery Pot user-facing terminology is replaced by Experiment Grid. Its five-slot pentagonal circuit signals invalid/near/ready combinations in red/yellow/green, identifies already-tried exact mixes, and supports right-click slot removal.
+- Recipe category navigation is horizontal with unseen-recipe markers, and recipe click selection persists in the controller.
+- Inventory chrome is less repetitive and half-stack behavior is exposed as a visible HALF quantity selector rather than implying a second physical stack exists in the aggregate inventory model.
+- Village Start now imports its generator dependencies explicitly and preferentially chooses a true village-rank settlement before falling back to another settlement.

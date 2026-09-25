@@ -135,9 +135,9 @@ class CraftingWindowTests(unittest.TestCase):
         tab=self.target('UI_ACTION:tab:discovery')
         self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN,button=1,pos=tab.center))
         self.assertEqual(self.term.read_key(),'UI_ACTION:tab:discovery')
-        self.term.present_feature_menu('discovery_pot','DISCOVERY POT',[MenuRow('core:stone','Stone')],0,data={
+        self.term.present_feature_menu('discovery_pot','EXPERIMENT GRID',[MenuRow('core:stone','Stone')],0,data={
             'items':{'core:stone':{'name':'Stone','count':2,'pool_count':2}},
-            'selected_items':('core:stone',),'candidates':2})
+            'selected_items':('core:stone',),'candidates':2,'mix_state':'green','known_exact':[]})
         self.assertIn('UI_ACTION:mix',{token for _,token in self.term._pointer_targets})
         self.assertEqual(self.term._floating_panel_id,'crafting')
 
@@ -159,13 +159,24 @@ class CraftingWindowTests(unittest.TestCase):
     def test_five_ingredient_pot_controls_fit_minimum_panel(self):
         self.term._floating_panels['crafting']={'x':12,'y':12,'w':740,'h':500}
         data={'items':{'core:stone':{'name':'Stone','count':5,'pool_count':2}},
-              'selected_items':('core:stone',)*5,'candidates':1}
-        self.term.present_feature_menu('discovery_pot','DISCOVERY POT',[MenuRow('core:stone','Stone')],0,
-                                       subtitle='Pot',data=data)
+              'selected_items':('core:stone',)*5,'candidates':1,'mix_state':'green','known_exact':[]}
+        self.term.present_feature_menu('discovery_pot','EXPERIMENT GRID',[MenuRow('core:stone','Stone')],0,
+                                       subtitle='Experiment',data=data)
         panel=self.term._floating_panels['crafting']
         mix=self.target('UI_ACTION:mix')
         self.assertGreater(mix.y,panel['y']+200)
         self.assertLess(mix.bottom,panel['y']+panel['h']-38)
+
+
+    def test_experiment_grid_signal_controls_mix_and_zero_path_items_are_absent(self):
+        rows=[MenuRow('core:stone','Stone')]
+        base={'items':{'core:stone':{'name':'Stone','count':2,'pool_count':2}},'selected_items':('core:stone',),'known_exact':[]}
+        for state,expect_mix in (('red',False),('yellow',False),('green',True)):
+            self.term.present_feature_menu('discovery_pot','EXPERIMENT GRID',rows,0,data={**base,'mix_state':state,'candidates':1 if state=='green' else 0})
+            tokens={token for _,token in self.term._pointer_targets}
+            self.assertEqual('UI_ACTION:mix' in tokens,expect_mix)
+        self.term.present_feature_menu('discovery_pot','EXPERIMENT GRID',rows,0,data={**base,'mix_state':'red','known_exact':['Stone Flake'],'candidates':0})
+        self.assertNotIn('UI_ACTION:mix',{token for _,token in self.term._pointer_targets})
 
 
 if __name__=='__main__':unittest.main()

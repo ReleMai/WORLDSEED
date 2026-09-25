@@ -286,5 +286,16 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertEqual(self.term._ui_context["index"],0)
 
 
+    def test_world_context_keeps_live_hover_animation_state_attached(self):
+        used=self.pg.Rect(10,10,240,180)
+        self.term._hover_context={'used':used,'tile_px':28}
+        self.term._hover_map_snapshot=self.pg.Surface(used.size)
+        self.term._context_menu_origin=(100,100)
+        self.term.present_feature_menu('world_context','WORLD ACTIONS',[MenuRow('examine','Examine')],0,data={})
+        self.assertIsNotNone(self.term._hover_context)
+        self.assertIsNotNone(self.term._hover_map_snapshot)
+        self.assertIsNotNone(self.term._context_overlay_rect)
+
+
 if __name__ == "__main__":
     unittest.main()

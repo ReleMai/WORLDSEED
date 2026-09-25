@@ -13,6 +13,9 @@ from worldseed.sim.commands import *
 from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
+from worldseed.systems.generation import ProceduralSocietyGenerator
+from worldseed.systems.settlement_planner import settlement_rank_for_population
+from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
@@ -202,15 +205,20 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
 
 def _find_village_spawn(world:World,seed:bytes,reg:ContentRegistry)->WorldPos|None:
     planner=RegionBlockPlanner(world);society=ProceduralSocietyGenerator(seed,reg,planner)
-    candidates=[]
+    villages=[];fallback=[]
+    # Settlement presence is common at macro scale, but one region is 512x512
+    # cells. Prefer a true village-rank population so this start is useful for
+    # settlement testing instead of silently dropping the player beside a town.
     for radius in range(0,9):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius:continue
                 generated=society.settlement_for_cell(rx,ry)
                 if generated:
-                    town=generated[0];candidates.append((abs(rx)+abs(ry),town.y,town.x,town))
-        if candidates:break
+                    town=generated[0];row=(abs(rx)+abs(ry),town.y,town.x,town);fallback.append(row)
+                    if settlement_rank_for_population(town.population)=='village':villages.append(row)
+        if villages:break
+    candidates=villages or fallback
     if not candidates:return None
     town=min(candidates,key=lambda row:(row[0],row[1],row[2]))[-1]
     for radius in range(3,18):
@@ -2093,7 +2101,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             action_amount=count;continue
         if action=='split':
             action_amount=max(1,(count+1)//2)
-            status=f'Split amount selected: {action_amount} of {count}. Drop or store will use that amount.'
+            status=f'Quantity set to half: {action_amount} of {count}. Drop or store will use that amount.'
             continue
         if action=='drop':
             sim.execute(DropCommand(pid,selected_iid,min(action_amount,count)))
@@ -2194,8 +2202,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                 if all(counts[i]<=r.inputs.get(i,0) for i in counts):close=True;break
         mix_state='green' if exact else ('yellow' if close else 'red')
         data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),'known_exact':known_exact,'mix_state':mix_state}
-        choice=_select(term,'DISCOVERY POT',rows,state=pot_state,presentation='discovery_pot',
-                       subtitle=status or 'Place one to five carried items; the resulting technique is drawn from matching recipes.',presentation_data=data)
+        choice=_select(term,'EXPERIMENT GRID',rows,state=pot_state,presentation='discovery_pot',
+                       subtitle=status or 'Combine up to five carried materials. The grid color shows how close the mix is to a discoverable recipe.',presentation_data=data)
         status=''
         if choice is None:return UI_BACK
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
@@ -2241,7 +2249,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
         discovered_items=set(sim.state.player_discovered_items)
         rows=[
             ('recipes',f'Discovered Recipes — {len(known)} known'),
-            ('ideas','Discovery Pot — combine 1–5 carried items'),
+            ('ideas','Experiment Grid — combine 1–5 carried items'),
             ('materials',f'Materials — {len(discovered_items)} item types examined'),
             ('tree','Tech Tree — trace discovered recipes and future branches'),
         ]

@@ -103,7 +103,12 @@ class PygameTerminal(PointerUI):
         self._current_presentation = ''
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
+        # Context overlays retain only the pixels under the popup.  This lets
+        # water/weather continue animating behind the menu without baking the
+        # menu into the world frame or copying the full window every tick.
         self._context_backdrop = None
+        self._context_overlay_rect = None
+        self._context_menu_state = None
         self._context_opening = False
         self._discovery_pot_center = None
         self._last_combat_effect_uid = 0
@@ -348,10 +353,7 @@ class PygameTerminal(PointerUI):
                             # command opens another panel (for example Storage),
                             # otherwise the popup gets baked into that panel's
                             # retained backdrop.
-                            if self._context_backdrop is not None:
-                                self.screen.blit(self._context_backdrop,(0,0))
-                                pg.display.flip()
-                            self._context_backdrop=None
+                            self._restore_context_overlay(clear=True,update=True)
                     if token and token.startswith('UI_ACTION:'):
                         self._ui_context=None
                     if token=='ATLAS_DRAG_ZONE':
@@ -360,7 +362,9 @@ class PygameTerminal(PointerUI):
                         self._atlas_drag_last=self._last_mouse
                         return 'ATLAS:drag_start'
                     if token:return token
-                    if self._current_presentation=='world_context' and self._input_mode=='ui':return 'ESC'
+                    if self._current_presentation=='world_context' and self._input_mode=='ui':
+                        self._restore_context_overlay(clear=True,update=True)
+                        return 'ESC'
                     if self._input_mode=='target' and self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
                         if rect.collidepoint(self._last_mouse):
@@ -370,7 +374,9 @@ class PygameTerminal(PointerUI):
                 if event.button==3:
                     token=self._hit_token(self._last_mouse)
                     if self._input_mode!='world':
-                        if self._current_presentation=='world_context':return 'ESC'
+                        if self._current_presentation=='world_context':
+                            self._restore_context_overlay(clear=True,update=True)
+                            return 'ESC'
                         if self._current_presentation=='discovery_pot' and token and token.startswith('UI_ACTION:remove_slot:'):return token
                         # Right click inside graphical UI is contextual, never
                         # an implicit Back/Escape action.
@@ -389,7 +395,9 @@ class PygameTerminal(PointerUI):
                             x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
                             y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
                             self._context_menu_origin=self._last_mouse
-                            self._context_backdrop=self.screen.copy()
+                            self._context_backdrop=None
+                            self._context_overlay_rect=None
+                            self._context_menu_state=None
                             self._context_opening=True
                             return f'UI_WORLD_MENU:{x}:{y}'
                 continue
@@ -408,7 +416,10 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == pg.KEYDOWN:
                 if self._input_mode!='world':
-                    if event.key in key_map:return key_map[event.key]
+                    if event.key in key_map:
+                        if event.key==pg.K_ESCAPE and self._current_presentation=='world_context':
+                            self._restore_context_overlay(clear=True,update=True)
+                        return key_map[event.key]
                     if self._input_mode!='text' and event.key in (pg.K_w,pg.K_a,pg.K_s,pg.K_d):continue
                     if event.unicode:return event.unicode
                     continue
@@ -450,6 +461,8 @@ class PygameTerminal(PointerUI):
             self._floating_panel_id=None
             self._ui_context=None
             self._context_backdrop=None
+            self._context_overlay_rect=None
+            self._context_menu_state=None
         self._hover_context = None
         self._hover_map_snapshot = None
         self._hover_rect = None
@@ -660,7 +673,7 @@ class PygameTerminal(PointerUI):
         fill=pg.Rect(rect.x,rect.y,round(rect.width*ratio),rect.height)
         if fill.width:pg.draw.rect(self.screen,self._theme['danger'] if ratio>=.9 else self._theme['accent'],fill,border_radius=3)
 
-    def _paint_action_popup(self, origin, rect, title: str, actions, *, opening: bool, subtitle: str='', selected: int=-1) -> None:
+    def _paint_action_popup(self, origin, rect, title: str, actions, *, opening: bool, subtitle: str='', selected: int=-1, register_targets: bool=True) -> None:
         """Paint cursor-born buttons; only the finished layout owns hit targets."""
         pg=self.pg;screen=self.screen;x,y,w,h=rect
         surface=pg.Surface((w,h),pg.SRCALPHA)
@@ -694,8 +707,9 @@ class PygameTerminal(PointerUI):
                 if t>=1:break
                 pg.event.pump();self.clock.tick(120)
         screen.blit(surface,(x,y))
-        for i,(_,token) in enumerate(actions):
-            self._ui_target(pg.Rect(x+7,y+header+i*36,w-14,32),token)
+        if register_targets:
+            for i,(_,token) in enumerate(actions):
+                self._ui_target(pg.Rect(x+7,y+header+i*36,w-14,32),token)
 
     def _draw_item_context_popup(self, rows, data: dict, selected: int) -> None:
         ctx=self._ui_context
@@ -708,34 +722,56 @@ class PygameTerminal(PointerUI):
             iid=getattr(row,'key','') if row else '';meta=items.get(iid,{})
             amount=max(1,min(int(data.get('action_amount',1)),max(1,int(meta.get('count',1)))))
             if meta.get('can_use'):actions.append(('Use','UI_ACTION:use'))
-            actions.extend([(f'Drop x{amount}','UI_ACTION:drop'),('Half stack','UI_ACTION:split')])
+            actions.extend([(f'Drop x{amount}','UI_ACTION:drop'),('Set quantity to half','UI_ACTION:split')])
             if data.get('near_storage'):actions.append((f'Store x{amount}','UI_ACTION:store'))
         elif self._current_presentation=='container_inventory':
             entries=data.get('entries',{});row=rows[selected] if rows and 0<=selected<len(rows) else None
             meta=entries.get(getattr(row,'key','') if row else '',{})
             count=max(1,int(meta.get('count',1)))
             direction='Store all →' if meta.get('side')=='pack' else '← Take all'
-            actions.extend([(direction,'UI_ACTION:quick_transfer'),('Transfer selected amount','UI_ACTION:transfer'),('Half stack','UI_ACTION:split')])
+            actions.extend([(direction,'UI_ACTION:quick_transfer'),('Transfer selected amount','UI_ACTION:transfer'),('Set quantity to half','UI_ACTION:split')])
         if not actions:return
         pw=max(216,max(self.small_font.size(label)[0] for label,_ in actions)+34);ph=48+len(actions)*36
         sw,sh=screen.get_size();px=max(8,min(mx+8,sw-pw-8));py=max(8,min(my+8,sh-ph-8))
         self._paint_action_popup((mx,my),(px,py,pw,ph),'ITEM ACTIONS',actions,opening=not ctx.get('opened',False))
         ctx['opened']=True
 
+    def _restore_context_overlay(self, *, clear: bool, update: bool=False) -> None:
+        rect=self._context_overlay_rect
+        if self._context_backdrop is not None and rect is not None and self.screen is not None:
+            self.screen.blit(self._context_backdrop,rect.topleft)
+            if update:self.pg.display.update(rect)
+        if clear:
+            self._context_backdrop=None;self._context_overlay_rect=None;self._context_menu_state=None
+
+    def _redraw_live_context_overlay(self) -> None:
+        state=self._context_menu_state;rect=self._context_overlay_rect
+        if not state or rect is None or self.screen is None:return
+        # The world animation just repainted the underlying region. Capture the
+        # new live pixels, then put the popup back without rebuilding hit targets.
+        self._context_backdrop=self.screen.subsurface(rect).copy()
+        self._paint_action_popup(state['origin'],rect,state['title'],state['actions'],
+                                 opening=False,subtitle=state['subtitle'],selected=state['selected'],
+                                 register_targets=False)
+        self.pg.display.update(rect)
+
     def _present_context_menu(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         pg=self.pg;screen=self.screen;assert screen is not None
-        # Preserve the already captured world backdrop, then detach the live
-        # hover renderer so idle weather/water frames cannot paint over this UI.
-        if self._context_backdrop is None:self._context_backdrop=screen.copy()
-        self._suspend_world_hover_animation()
-        screen.blit(self._context_backdrop,(0,0));self._pointer_targets.clear();self._set_input_mode('ui')
+        # Remove the previous draw of this transient popup before laying it out
+        # again.  Unlike floating windows, world context menus keep live world
+        # animation state attached.
+        self._restore_context_overlay(clear=False,update=False)
+        self._pointer_targets.clear();self._set_input_mode('ui')
         labels=[getattr(r,'label',str(r)) for r in rows]
         width=max(260,min(430,max([self.small_font.size(x)[0] for x in labels]+[220])+42))
         height=(68 if subtitle else 48)+len(rows)*36
         sw,sh=screen.get_size();mx,my=self._context_menu_origin
-        x=max(8,min(sw-width-8,mx+8));y=max(8,min(sh-height-8,my+8))
+        x=max(8,min(sw-width-8,mx+8));y=max(8,min(sh-height-8,my+8));rect=pg.Rect(x,y,width,height)
         actions=[(getattr(row,'label',str(row)),f'UI_SELECT:{i}') for i,row in enumerate(rows)]
-        self._paint_action_popup((mx,my),(x,y,width,height),title,actions,opening=self._context_opening,subtitle=subtitle,selected=selected)
+        self._context_overlay_rect=rect
+        self._context_backdrop=screen.subsurface(rect).copy()
+        self._context_menu_state={'origin':(mx,my),'title':title,'actions':actions,'subtitle':subtitle,'selected':selected}
+        self._paint_action_popup((mx,my),rect,title,actions,opening=self._context_opening,subtitle=subtitle,selected=selected)
         self._context_opening=False
         pg.display.flip();self.clock.tick(120)
 
@@ -900,7 +936,7 @@ class PygameTerminal(PointerUI):
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Render one graphical inventory surface with inline item actions."""
         data=data or {};pg=self.pg;screen=self.screen;items=data.get('items',{})
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','PACK',str(data.get('player_name','Inventory')),subtitle)
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','PACK',str(data.get('player_name') or 'CARRIED GEAR'),subtitle)
         gap=9;summary_h=50
         metric_gap=8;metric_w=max(90,(cw-metric_gap*3)//4)
         metrics=[
@@ -935,7 +971,7 @@ class PygameTerminal(PointerUI):
         for panel_rect in (grid,detail):
             pg.draw.rect(screen,self._theme['panel'],panel_rect,border_radius=7)
             pg.draw.rect(screen,self._theme['edge'],panel_rect,1,border_radius=7)
-        heading=self.small_font.render('CARRIED ITEMS  /  SELECT AN ITEM',True,self._theme['accent'])
+        heading=self.small_font.render('ITEMS',True,self._theme['accent'])
         screen.blit(heading,(grid.x+12,grid.y+10))
 
         if not rows:
@@ -997,10 +1033,11 @@ class PygameTerminal(PointerUI):
 
             qty_y=action_top
             qlab=self.small_font.render(f'QTY {action_amount}/{meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))
-            bw=38;bh=28;bx=detail.right-14-(bw*3+6*2)
+            bw=44;bh=28;bx=detail.right-14-(bw*4+6*3)
             self._button((bx,qty_y+2,bw,bh),'−','UI_ACTION:qty_down')
             self._button((bx+bw+6,qty_y+2,bw,bh),'+','UI_ACTION:qty_up')
-            self._button((bx+(bw+6)*2,qty_y+2,bw,bh),'ALL','UI_ACTION:qty_all')
+            self._button((bx+(bw+6)*2,qty_y+2,bw,bh),'HALF','UI_ACTION:split')
+            self._button((bx+(bw+6)*3,qty_y+2,bw,bh),'ALL','UI_ACTION:qty_all')
 
             def action_button(rect,label,token,enabled=True):
                 rect=pg.Rect(rect);hover=enabled and rect.collidepoint(self._last_mouse)
@@ -1014,9 +1051,9 @@ class PygameTerminal(PointerUI):
             action_button((detail.x+14,ay,aw,ah),str(meta.get('use_label','Use'))+' [U]','UI_ACTION:use',bool(meta.get('can_use')))
             action_button((detail.x+14+aw+ag,ay,aw,ah),f'Drop x{action_amount} [X]','UI_ACTION:drop',True)
             ay+=ah+7
-            action_button((detail.x+14,ay,aw,ah),'Use half [H]','UI_ACTION:split',int(meta.get('count',0))>1)
             storage=bool(data.get('near_storage'))
-            action_button((detail.x+14+aw+ag,ay,aw,ah),f'Store x{action_amount} [E]' if storage else 'Store — no container','UI_ACTION:store',storage)
+            action_button((detail.x+14,ay,aw,ah),f'Store x{action_amount} [E]' if storage else 'Store — no container','UI_ACTION:store',storage)
+            action_button((detail.x+14+aw+ag,ay,aw,ah),'Inspect / actions','UI_ACTION:noop',False)
         else:
             msg=self.font.render('Select an item to inspect it.',True,self._theme['muted'])
             screen.blit(msg,msg.get_rect(center=detail.center))
@@ -1222,7 +1259,7 @@ class PygameTerminal(PointerUI):
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
 
     def _crafting_tabs(self,x,y,w,active):
-        for i,(name,token) in enumerate((('RECIPES','recipes'),('DISCOVERY POT','discovery'),('ITEM INDEX','index'))):
+        for i,(name,token) in enumerate((('RECIPES','recipes'),('EXPERIMENT','discovery'),('ITEM INDEX','index'))):
             rect=self.pg.Rect(x+i*158,y,150,30)
             chosen=active==token
             self.pg.draw.rect(self.screen,(53,49,37) if chosen else self._theme['panel2'],rect,border_radius=5)
@@ -1288,11 +1325,18 @@ class PygameTerminal(PointerUI):
             screen.blit(self.small_font.render(self._fit_ui_text(f"{m.get('name',key)}  x{m.get('count',0)}",self.small_font,r.width-100),True,self._theme['text']),(r.x+44,r.y+5));screen.blit(self.small_font.render(f"{len(m.get('known_recipes',[]))}/{m.get('pool_count',0)} recipes known",True,self._theme['muted']),(r.x+44,r.y+23));self._ui_target(r,f'UI_SELECT:{i}')
         state=str(data.get('mix_state','red'));accent={'red':self._theme['danger'],'yellow':self._theme['accent'],'green':self._theme['good']}.get(state,self._theme['danger'])
         screen.blit(self.font.render('EXPERIMENT GRID  •  1–5 ITEMS',True,accent),(right.x+14,right.y+13));gx=right.centerx;gy=right.y+145;size=54
-        for i,(dx,dy) in enumerate(((0,-62),(-62,-8),(62,-8),(-38,55),(38,55))):
-            r=pg.Rect(gx+dx-size//2,gy+dy-size//2,size,size);filled=i<len(placed);pg.draw.rect(screen,(33,40,38),r,border_radius=14);pg.draw.rect(screen,accent if filled else self._theme['edge'],r,3 if filled else 1,border_radius=14)
+        points=[(gx+dx,gy+dy) for dx,dy in ((0,-62),(-62,-8),(62,-8),(-38,55),(38,55))]
+        # A pentagonal circuit makes the five slots read as one experiment
+        # rather than a list.  Its signal color changes with recipe proximity.
+        pg.draw.circle(screen,(24,30,29),(gx,gy),105)
+        pg.draw.circle(screen,accent,(gx,gy),101,2)
+        for i in range(len(points)):
+            pg.draw.line(screen,accent,points[i],points[(i+1)%len(points)],1)
+        for i,(px,py) in enumerate(points):
+            r=pg.Rect(px-size//2,py-size//2,size,size);filled=i<len(placed);pg.draw.rect(screen,(33,40,38),r,border_radius=14);pg.draw.rect(screen,accent if filled else self._theme['edge'],r,3 if filled else 1,border_radius=14)
             if filled:self._draw_item_icon(placed[i],r.inflate(-8,-8),scale=.85);self._ui_target(r,f'UI_ACTION:remove_slot:{i}')
         self._discovery_pot_center=(gx,gy);label={'red':'No matching recipe path','yellow':'Close — add or adjust a material','green':'Ready — mix to reveal the recipe'}.get(state,'')
-        if data.get('known_exact'):label='Already discovered: '+', '.join(data.get('known_exact',[])[:2])
+        if data.get('known_exact'):label='Already tried — recorded: '+', '.join(data.get('known_exact',[])[:2])
         screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,right.width-28),True,accent),(right.x+14,right.bottom-84));self._button((right.x+14,right.bottom-61,right.width-28,28),'CLEAR GRID','UI_ACTION:clear')
         if state=='green':self._button((right.x+14,right.bottom-29,right.width-28,26),'MIX MATERIALS','UI_ACTION:mix')
         self._draw_floating_footer(x,y,w,h,'Click to add • Right-click a filled slot to remove • Color shows recipe proximity • Esc closes');pg.display.flip();self.clock.tick(120)
@@ -1316,7 +1360,7 @@ class PygameTerminal(PointerUI):
             pg.draw.rect(screen,self._theme['accent'] if i==selected else self._theme['edge'],rr,1,border_radius=5)
             label=self.small_font.render(self._fit_ui_text(getattr(row,'label',str(row)),self.small_font,rr.width-18),True,self._theme['text'])
             screen.blit(label,(rr.x+9,rr.y+8));self._ui_target(rr,f'UI_SELECT:{i}')
-        self._draw_floating_footer(x,y,w,h,'The catalog lists possible results; combine items in the discovery pot to reveal them')
+        self._draw_floating_footer(x,y,w,h,'The catalog lists possible results; combine items in the experiment grid to reveal them')
         pg.display.flip();self.clock.tick(120)
 
     def animate_discovery_pot(self,items,recipe_name):
@@ -1774,6 +1818,8 @@ class PygameTerminal(PointerUI):
         self._water_animation_phase=phase
         cells=getattr(self,'_water_animation_cells',())
         if not cells:return
+        live_context=bool(self._current_presentation=='world_context' and self._context_menu_state and self._context_backdrop is not None)
+        if live_context:self._restore_context_overlay(clear=False,update=False)
         self._restore_hover_damage()
         used=self._hover_context['used'];size=self._hover_context['tile_px']
         dirty=[]
@@ -1784,6 +1830,7 @@ class PygameTerminal(PointerUI):
             dirty.append(rect)
         self._refresh_hover_only(force=True,update_display=False)
         self.pg.display.update(dirty+([self._hover_rect] if self._hover_rect else []))
+        if live_context:self._redraw_live_context_overlay()
 
     def _animate_idle_effects(self, now):
         ctx=getattr(self,'_weather_animation_context',None)
@@ -1800,6 +1847,8 @@ class PygameTerminal(PointerUI):
                 return
             self._weather_animation_phase = phase
             self._weather_last_frame_ms = now
+            live_context=bool(self._current_presentation=='world_context' and self._context_menu_state and self._context_backdrop is not None)
+            if live_context:self._restore_context_overlay(clear=False,update=False)
             self._restore_hover_damage()
             used=self._hover_context['used']
             self.screen.blit(static,used.topleft)
@@ -1814,6 +1863,7 @@ class PygameTerminal(PointerUI):
             self._hover_rect=None;self._hover_tile_rect=None
             self._refresh_hover_only(force=True,update_display=False)
             self.pg.display.update([used]+([self._hover_rect] if self._hover_rect else []))
+            if live_context:self._redraw_live_context_overlay()
             return
         if ctx and (bool(ctx.get('night',False)) or int(ctx.get('wetness',0))>=8):return
         self._animate_idle_water(now)
