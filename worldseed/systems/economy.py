@@ -40,6 +40,9 @@ class EconomySystem:
         self.pathfinder = HierarchicalPathfinder(state, world_seed)
         self._route_town_ids: set[str] = set()
         self.workplace_logistics=None
+        self.route_planner=None
+
+    def attach_route_planner(self,planner)->None:self.route_planner=planner
 
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
 
@@ -296,6 +299,10 @@ class EconomySystem:
                 route.danger=min(95,max(0,route.distance*3+a.food_stress//5+b.food_stress//6+(45 if hostile else 0)))
             return
         self._route_town_ids=town_ids
+        strategic={}
+        if self.route_planner is not None and len(towns)>1:
+            for plan in self.route_planner.plan_network(towns,persist=True):
+                strategic[frozenset((plan.origin_id,plan.destination_id))]=plan
         valid:set[str]=set()
         for a in towns:
             ranked=[]
@@ -305,30 +312,43 @@ class EconomySystem:
                 if rough>12:continue
                 faction_a=self.state.factions.get(a.faction_id)
                 hostile=bool(faction_a and b.faction_id in faction_a.at_war)
+                pair=frozenset((a.uid,b.uid))
+                if strategic and pair not in strategic:continue
                 opportunity=self._route_opportunity(a,b)
-                # Distance remains the dominant cost; opportunity may promote a
-                # complementary market, while active war strongly demotes it.
+                # The physical strategic graph decides which partnerships are
+                # possible; market complementarity only ranks those sparse edges.
                 rank=rough*100 + (500 if hostile else 0) - min(450,opportunity//4)
                 ranked.append((rank,rough,b.uid,b))
             ranked.sort(key=lambda row:(row[0],row[1],row[2]))
             for _,_,_,b in ranked[:MAX_TRADE_PARTNERS]:
-                route_plan=self.pathfinder.regional_path((a.region_x,a.region_y),(b.region_x,b.region_y))
-                dist=route_plan.distance
+                physical_plan=strategic.get(frozenset((a.uid,b.uid))) if strategic else None
+                if physical_plan is not None:
+                    dist=max(0,len(physical_plan.region_path)-1)
+                    waypoints=[f"{rx},{ry}" for rx,ry in physical_plan.region_path]
+                    chunks=(physical_plan.road_segments[0].chunk_corridor if physical_plan.road_segments else [])
+                    chunk_waypoints=[f"{cx},{cy}" for cx,cy in chunks]
+                    travel_minutes=max(360,dist*720+physical_plan.travel_cost//4)
+                    base_danger=min(70,max(0,physical_plan.travel_cost//180))
+                else:
+                    route_plan=self.pathfinder.regional_path((a.region_x,a.region_y),(b.region_x,b.region_y))
+                    dist=route_plan.distance
+                    waypoints=[f"{rx},{ry}" for rx,ry in route_plan.regions]
+                    chunk_waypoints=[f"{cx},{cy}" for cx,cy in self.pathfinder.chunk_corridor((a.x,a.y),(b.x,b.y))]
+                    travel_minutes=route_plan.travel_minutes
+                    base_danger=route_plan.danger
                 if dist>12:continue
                 uid=f"route:{a.uid}>{b.uid}";valid.add(uid)
                 faction_a=self.state.factions.get(a.faction_id)
                 hostile=bool(faction_a and b.faction_id in faction_a.at_war)
-                danger=min(95,route_plan.danger+a.food_stress//5+b.food_stress//6+(45 if hostile else 0)+a.quarantine_level//5+b.quarantine_level//8)
+                danger=min(95,base_danger+a.food_stress//5+b.food_stress//6+(45 if hostile else 0)+a.quarantine_level//5+b.quarantine_level//8)
                 merchants=a.labor_pool.get("merchant",max(1,a.population//20))
                 capacity=max(2,(20+merchants*3)*(100-a.quarantine_level)//100)
-                waypoints=[f"{rx},{ry}" for rx,ry in route_plan.regions]
-                chunk_waypoints=[f"{cx},{cy}" for cx,cy in self.pathfinder.chunk_corridor((a.x,a.y),(b.x,b.y))]
                 if uid in self.state.trade_routes:
                     r=self.state.trade_routes[uid]
                     r.distance,r.danger,r.capacity=dist,danger,capacity
-                    r.waypoints=waypoints;r.travel_minutes=route_plan.travel_minutes;r.chunk_waypoints=chunk_waypoints
+                    r.waypoints=waypoints;r.travel_minutes=travel_minutes;r.chunk_waypoints=chunk_waypoints
                 else:
-                    self.state.trade_routes[uid]=TradeRouteState(uid,a.uid,b.uid,dist,danger,capacity,minute,0,waypoints,route_plan.travel_minutes,chunk_waypoints)
+                    self.state.trade_routes[uid]=TradeRouteState(uid,a.uid,b.uid,dist,danger,capacity,minute,0,waypoints,travel_minutes,chunk_waypoints)
         for uid in [uid for uid in self.state.trade_routes if uid not in valid]:
             self.state.trade_routes.pop(uid,None)
 
