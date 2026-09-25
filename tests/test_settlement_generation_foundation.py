@@ -393,6 +393,41 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertEqual(planner._common_center((100,100),(70,70,130,130)),(120,100))
 
 
+    def test_village_start_real_hydrology_reaches_a_legal_gateway(self):
+        import tempfile
+        from pathlib import Path
+        from worldseed.app import _village_targets, _village_gateway_spawn
+        from worldseed.persistence.database import WorldDatabase
+        from worldseed.world.generator import WorldGenerator
+        from worldseed.world.hydrology import HydrologyGenerator
+        from worldseed.world.world import World
+
+        seed=b"village-start-real-hydrology"
+        with tempfile.TemporaryDirectory() as td:
+            db=WorldDatabase.create(Path(td)/"village.db","village-test",seed.hex())
+            gen=WorldGenerator(seed,self.registry)
+            world=World(gen,self.registry,db,auto_hydrology=False)
+            hydro=HydrologyGenerator(gen,db)
+            candidates=_village_targets(world,seed,self.registry,limit=8)
+            self.assertTrue(candidates)
+            spawn=None
+            for target in candidates[:4]:
+                x0=target.region_x*512;y0=target.region_y*512
+                bounds=(x0,y0,x0+511,y0+511)
+                hydro.prepare_world_bounds(*bounds,persist=True)
+                gen.attach_hydrology(hydro)
+                world.prepare_coastal_mouths(bounds)
+                try:
+                    spawn=_village_gateway_spawn(world,seed,self.registry,target)
+                    break
+                except ValueError:
+                    continue
+            self.assertIsNotNone(spawn,"bounded village candidates should include a physically viable hydrology-resolved settlement")
+            env=world.environment_at(spawn)
+            self.assertIsNotNone(env)
+            self.assertFalse(env.open_water)
+            db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
