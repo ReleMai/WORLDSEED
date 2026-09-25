@@ -191,6 +191,19 @@ class SettlementPhysicalizationSystem:
                 active.append(settlement.uid)
                 self._skeletons[settlement.uid] = skeleton
                 self._index_skeleton(settlement.uid, skeleton)
+                # Reconcile compatibility summaries from the physical plan.
+                # The plan owns buildings/capacity; SettlementState.buildings is
+                # retained only as a derived cache for legacy consumers.
+                settlement.housing_capacity=int(skeleton.plan.housing_capacity)
+                settlement.homeless=max(0,int(settlement.population)-int(settlement.housing_capacity))
+                summary={}
+                for structure in skeleton.structures:
+                    if structure.destroyed:continue
+                    key="house" if structure.function=="residence" else structure.function
+                    summary[key]=summary.get(key,0)+1
+                farm_count=sum(1 for parcel in skeleton.parcels if parcel.kind=="farm")
+                if farm_count:summary["farm"]=farm_count
+                settlement.buildings=summary
         except Exception:
             self._cells, self._rooms, self._structures, self._skeletons = (
                 old_cells, old_rooms, old_structures, old_skeletons
