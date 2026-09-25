@@ -102,22 +102,70 @@ class HouseholdEconomySystem:
         medicine=1 if any(n.hp<70 or n.infections for n in members) else 0
         h.target_stock={"food":food,"core:wood":fuel,"core:soap":soap,"core:herbal_tonic":medicine}
 
+    def _food_group(self,item_id:str)->str:
+        item=self.registry.items.get(item_id) if self.registry is not None else None
+        groups=tuple(getattr(item,"food_groups",()) or ()) if item is not None else ()
+        if groups:return str(groups[0])
+        if item_id in {"core:meat","core:dried_meat","core:beans"}:return "protein"
+        if item_id=="core:wheat":return "grain"
+        return "produce"
+
     def _consume_food(self,h,minute:int)->None:
-        members=self._members(h);need=self._daily_food_need(h);remaining=need
-        for c in self._containers(h):
-            for iid in FOODS:
-                have=max(0,int(c.items.get(iid,0)));take=min(remaining,have)
-                if take:
-                    left=have-take
-                    if left:c.items[iid]=left
-                    else:c.items.pop(iid,None)
-                    remaining-=take
+        members=self._members(h);need=self._daily_food_need(h);remaining=need;mix={}
+        containers=self._containers(h)
+        available={iid:sum(max(0,int(c.items.get(iid,0))) for c in containers) for iid in FOODS}
+        # Prefer a varied basket before consuming duplicates. Scarcity still wins:
+        # if only one food exists the household eats it rather than starving.
+        ordered=sorted((iid for iid in FOODS if available[iid]>0),key=lambda iid:(h.diet_mix.get(self._food_group(iid),0),-available[iid],iid))
+        while remaining>0 and ordered:
+            progressed=False
+            for iid in ordered:
                 if remaining<=0:break
-            if remaining<=0:break
+                c=next((row for row in containers if row.items.get(iid,0)>0),None)
+                if c is None:continue
+                c.items[iid]-=1
+                if c.items[iid]<=0:c.items.pop(iid,None)
+                group=self._food_group(iid);mix[group]=mix.get(group,0)+1;remaining-=1;progressed=True
+            if not progressed:break
+        h.diet_mix=mix
+        variety=len([v for v in mix.values() if v>0]);h.nutrition_quality=max(10,min(100,35+variety*20-(remaining*20)))
         h.food_shortage=remaining;h.days_short=(h.days_short+1 if remaining else 0);h.last_consumed_minute=int(minute)
-        hunger_delta=(12+remaining*8) if remaining else -10
-        for npc in members:npc.hunger=max(0,min(100,npc.hunger+hunger_delta))
-        self._ledger(h,minute,"daily_food",needed=need,shortage=remaining)
+        hunger_delta=(12+remaining*8) if remaining else (-12 if h.nutrition_quality>=75 else -8)
+        for npc in members:
+            npc.hunger=max(0,min(100,npc.hunger+hunger_delta))
+            if h.nutrition_quality<45:npc.needs["health"]=min(100,npc.needs.get("health",0)+3)
+            elif h.nutrition_quality>=75:npc.needs["health"]=max(0,npc.needs.get("health",0)-2)
+        self._ledger(h,minute,"daily_food",needed=need,shortage=remaining,diet=dict(mix),quality=h.nutrition_quality)
+
+    @staticmethod
+    def _take_item(containers,item_id:str,quantity:int)->int:
+        remaining=max(0,int(quantity));taken=0
+        for c in containers:
+            have=max(0,int(c.items.get(item_id,0)));use=min(remaining,have)
+            if use:
+                left=have-use
+                if left:c.items[item_id]=left
+                else:c.items.pop(item_id,None)
+                taken+=use;remaining-=use
+            if remaining<=0:break
+        return taken
+
+    def _consume_essentials(self,h,minute:int)->None:
+        members=self._members(h);containers=self._containers(h);day=int(minute)//1440
+        fuel_need=max(1,(len(members)+3)//4) if day%2==0 else 0
+        hygiene_need=max(1,(len(members)+3)//4) if day%7==0 else 0
+        sick=sum(1 for n in members if n.hp<70 or n.infections);medicine_need=1 if sick else 0
+        h.fuel_shortage=max(0,fuel_need-self._take_item(containers,"core:wood",fuel_need))
+        h.hygiene_shortage=max(0,hygiene_need-self._take_item(containers,"core:soap",hygiene_need))
+        h.medical_shortage=max(0,medicine_need-self._take_item(containers,"core:herbal_tonic",medicine_need))
+        hardship=min(100,h.food_shortage*30+h.fuel_shortage*15+h.hygiene_shortage*8+h.medical_shortage*25+max(0,55-h.nutrition_quality)//3)
+        h.hardship_score=hardship;h.stable_days=(h.stable_days+1 if hardship==0 else 0)
+        for npc in members:
+            if h.fuel_shortage:npc.needs["safety"]=min(100,npc.needs.get("safety",0)+4)
+            if h.hygiene_shortage:npc.needs["health"]=min(100,npc.needs.get("health",0)+3)
+            if h.medical_shortage and (npc.hp<70 or npc.infections):npc.needs["health"]=min(100,npc.needs.get("health",0)+8)
+            if hardship==0:npc.needs["safety"]=max(0,npc.needs.get("safety",0)-2)
+        self._ledger(h,minute,"daily_essentials",fuel_shortage=h.fuel_shortage,hygiene_shortage=h.hygiene_shortage,medical_shortage=h.medical_shortage,hardship=hardship)
 
     def _pay_prior_work(self,h,minute:int)->None:
         if h.last_income_minute==int(minute) or self.economy is None:return
@@ -232,4 +280,4 @@ class HouseholdEconomySystem:
             if h.logistics_mode!="exact":
                 h.unmet_needs={"physical_storage":1}
                 continue
-            self._consume_food(h,minute);self.plan_procurement(h,minute)
+            self._consume_food(h,minute);self._consume_essentials(h,minute);self.plan_procurement(h,minute)

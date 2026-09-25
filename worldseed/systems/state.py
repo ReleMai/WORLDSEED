@@ -242,6 +242,13 @@ class HouseholdState:
     total_spent: int = 0
     total_income: int = 0
     ledger: list[dict] = field(default_factory=list)
+    diet_mix: dict[str, int] = field(default_factory=dict)
+    nutrition_quality: int = 50
+    fuel_shortage: int = 0
+    hygiene_shortage: int = 0
+    medical_shortage: int = 0
+    hardship_score: int = 0
+    stable_days: int = 0
 
 @dataclass(slots=True)
 class HouseholdDeliveryState:

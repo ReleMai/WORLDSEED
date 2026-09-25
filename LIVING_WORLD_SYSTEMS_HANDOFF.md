@@ -137,3 +137,10 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Excess workplace output is reserved into persistent market shipments. Named workers receive source-pickup/market-dropoff tasks; distant/offline shipments have bounded coarse completion so Tier-C simulation cannot deadlock.
 - Shipment cargo exists outside both source storage and market stock while in transit. Market availability therefore responds to real local delivery delay rather than instant stock teleportation.
 - The Fast Gate now runs dedicated workplace logistics conservation and persistence tests.
+
+
+### WU17 household resilience layer
+- Household food consumption now prefers dietary variety while remaining scarcity-safe, recording persistent diet composition and nutrition quality.
+- Physical fuel, hygiene supplies and medicine are consumed on distinct household cadences rather than acting as decorative reserve targets.
+- Food, fuel, hygiene, medicine and poor diet combine into a bounded hardship score that changes member health/safety needs and tracks stable recovery days.
+- All consumption remains attached to real home containers; no invisible duplicate household stock was introduced.
