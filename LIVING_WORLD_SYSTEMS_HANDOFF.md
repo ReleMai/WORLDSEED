@@ -190,3 +190,10 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 
 - Candidate population/rank selection now derives the settlement RNG directly rather than instantiating the society generator without a planner. The latter consumed two fallback-coordinate RNG draws and could classify a different settlement rank than the hydrology-aware settlement that would actually be created.
 - Village-start validation plans are transient (persist=False); only the normal simulation materialization path persists the region/skeleton after a candidate is known to be physically valid, so rejected candidates cannot poison the new save with invalid plans.
+
+### Village graphical materialization hotfix
+- Root cause of the invisible village was presentation-only: authoritative settlement walls, doors, floors and roads were present in the physicalization index, which is why collision, casing and NPC interactions worked, but the pygame renderer never projected those cells. Only the text renderer consumed settlement glyphs.
+- The local graphical renderer now queries only settlement cells intersecting the viewport. Generated roads and floors are painted as top-down material tiles before entities; walls, doors, roofs and fixtures reuse the authored structure sprite set, with deterministic visible fallbacks for rare civic/decorative pieces.
+- Natural resource sprites are suppressed where physical roads/buildings clear a cell. Exterior roofs cover interior cells while the player is outside; entering a building exposes its generated floors and fixtures.
+- Hover inspection now identifies generated building functions and settlement pieces.
+- Fast-Gate regressions require graphical coverage for every settlement piece and verify the physicalized viewport contains generated roads, walls and building floors.

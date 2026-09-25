@@ -1990,6 +1990,84 @@ class PygameTerminal(PointerUI):
         except Exception:
             return None
 
+    def _settlement_piece_sprite_path(self,piece):
+        """Resolve generated settlement pieces onto authored structure sprites."""
+        if piece is None:return None
+        tags=set(getattr(piece,'tags',()) or ());cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));pid=str(getattr(piece,'id',''))
+        sid=None
+        if cat=='wall':sid='core:stone_wall' if 'stone' in mat else 'core:wood_wall'
+        elif cat=='opening':sid='core:door'
+        elif cat=='roof':sid='core:stone_roof' if 'stone' in mat else 'core:wood_roof'
+        elif cat=='floor' and ('plank' in mat or 'wood' in mat):sid='core:wood_floor'
+        elif 'bed' in tags:sid='core:bed'
+        elif {'forge','anvil','bellows'} & tags:sid='core:forge'
+        elif 'butchery' in tags or 'butcher' in pid:sid='core:butcher_table'
+        elif 'tanning' in tags:sid='core:tanning_frame'
+        elif 'drying' in tags:sid='core:drying_rack'
+        elif 'hearth' in tags or 'fire' in tags or 'oven' in tags or 'kiln' in tags:sid='core:stone_hearth'
+        elif 'storage' in tags:sid='core:wood_chest'
+        elif 'bridge' in tags or 'bridge' in pid:sid='core:bridge'
+        elif 'support' in tags or 'fence' in tags:sid='core:support_beam'
+        elif cat in {'furniture','workshop','agriculture','mine','decoration','civic'} and str(getattr(piece,'layer',''))!='ground':
+            sid='core:workbench' if ({'workshop','station','desk','table'} & tags) else 'core:stone_pillar'
+        return self._visuals.resolve(self._visuals.ref('structures',sid)) if sid else None
+
+    def _settlement_ground_surface(self,piece,size:int):
+        """Create top-down village road/floor art for every ground piece."""
+        if piece is None:return None
+        sprite=self._settlement_piece_sprite_path(piece)
+        if sprite is not None and str(getattr(piece,'category',''))=='floor':return self._load_terrain_sprite(sprite,size)
+        key=('settlement-ground',str(getattr(piece,'id','')),int(size));cached=self._sprite_cache.get(key)
+        if cached is not None:return cached
+        pg=self.pg;surf=pg.Surface((size,size),pg.SRCALPHA)
+        cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));tags=set(getattr(piece,'tags',()) or ())
+        if cat=='road':
+            if 'irrigation' in tags:
+                surf.fill((103,80,54));channel=max(4,size//3);x=(size-channel)//2;pg.draw.rect(surf,(64,92,91),(x,0,channel,size));pg.draw.line(surf,(73,57,41),(x-1,0),(x-1,size),max(1,size//16));pg.draw.line(surf,(73,57,41),(x+channel,0),(x+channel,size),max(1,size//16))
+            elif 'cobble_road' in tags or 'stone_road' in tags or 'market_square' in tags or mat=='stone':
+                surf.fill((113,112,105));step=max(6,size//4)
+                for y in range(0,size,step):
+                    off=(step//2) if (y//step)%2 else 0
+                    for x in range(-off,size,step):pg.draw.rect(surf,(75,78,76),(x,y,step,step),1)
+            elif 'gravel_road' in tags or mat=='gravel':
+                surf.fill((124,120,108))
+                for i in range(max(12,size*2)):
+                    x=(i*17+7)%size;y=(i*29+11)%size;r=1 if i%4 else 2;pg.draw.circle(surf,(91+(i%3)*16,90+(i%4)*12,84+(i%2)*18),(x,y),r)
+            elif 'plank_road' in tags or 'dock_walk' in tags or mat=='wood':
+                surf.fill((122,89,51));step=max(5,size//5)
+                for y in range(0,size,step):pg.draw.line(surf,(76,56,37),(0,y),(size,y),1)
+            elif 'footpath' in tags or 'alley' in tags:
+                surf.fill((98,82,59));margin=max(2,size//7);pg.draw.rect(surf,(123,96,62),(margin,0,size-2*margin,size));pg.draw.line(surf,(91,69,48),(size//3,0,size//3,size),1)
+            else:
+                surf.fill((126,94,60))
+                for x in (size//3,2*size//3):pg.draw.line(surf,(93,68,46),(x,0),(x,size),max(1,size//12))
+        elif cat=='floor' or str(getattr(piece,'layer',''))=='ground':
+            if 'stone' in mat:
+                surf.fill((124,124,118));step=max(7,size//4)
+                for y in range(0,size,step):
+                    off=step//2 if (y//step)%2 else 0
+                    for x in range(-off,size,step):pg.draw.rect(surf,(82,85,83),(x,y,step,step),1)
+            elif 'clay' in mat:
+                surf.fill((145,93,64))
+                for y in range(max(5,size//5),size,max(6,size//4)):pg.draw.line(surf,(111,70,50),(0,y),(size,y),1)
+            else:
+                surf.fill((105,82,55))
+                for i in range(max(8,size)):
+                    x=(i*13+3)%size;y=(i*19+5)%size;pg.draw.circle(surf,(90+(i%3)*8,70+(i%4)*6,48),(x,y),1)
+        else:return None
+        self._sprite_cache[key]=surf;return surf
+
+    def _draw_settlement_piece(self,piece,rect,*,roof:bool=False,fixture:bool=False):
+        if piece is None:return
+        path=self._settlement_piece_sprite_path(piece)
+        if path is not None:
+            if roof:
+                surf=self._load_terrain_sprite(path,rect.width)
+                if surf:self.screen.blit(surf,rect.topleft)
+            else:self._draw_sprite_bottom(path,rect,.95 if fixture else 1.15,width_mult=.9 if fixture else .98)
+            return
+        pg=self.pg;col=(151,126,82) if 'wood' in str(getattr(piece,'material','')) else (126,127,122);pad=max(3,rect.width//5);body=rect.inflate(-pad*2,-pad*2)
+        pg.draw.rect(self.screen,(23,26,25),body.move(1,2),border_radius=max(1,rect.width//10));pg.draw.rect(self.screen,col,body,border_radius=max(1,rect.width//10));pg.draw.rect(self.screen,(71,66,54),body,1,border_radius=max(1,rect.width//10))
     def _resource_visual(self, feature_id: str, x: int, y: int, z: int):
         """Resolve a deterministic visual for a generated resource cell."""
         style=self._visuals.resource_style(feature_id)
@@ -2430,6 +2508,13 @@ class PygameTerminal(PointerUI):
             sp=registry.species.get(c.species_id);lines.append(sp.name if sp else 'Creature')
         n=ctx['npc_by'].get(k)
         if n:lines.append(n.name if n.uid in ctx['known_npcs'] else 'Stranger')
+        settlement=ctx.get('settlement_by',{}).get(k)
+        if settlement:
+            spid=settlement.structure_piece_id or settlement.fixture_piece_id or settlement.ground_piece_id
+            piece=registry.settlement_pieces.get(spid) if spid else None
+            structure=sim.settlement_physicalization.structure_by_id(settlement.structure_id) if settlement.structure_id else None
+            if structure is not None:lines.append(str(structure.function).replace('_',' ').title())
+            if piece is not None:lines.append(piece.name)
         st=ctx['structure_by'].get(k)
         if st:
             d=registry.structures.get(st.structure_id);lines.append(d.name if d else st.structure_id)
@@ -2595,6 +2680,7 @@ class PygameTerminal(PointerUI):
             (q.x,q.y,q.z):q for q in nearby['containers']
             if q.kind=='property' and _onscreen(q.x,q.y,q.z)
         }
+        settlement_by={(c.x,c.y,0):c for c in sim.settlement_physicalization.cells_in_bounds(left,top,right,bottom)} if pos.z==0 else {}
         crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}
         fire_by={(f.x,f.y,f.z):f for f in nearby['fires'] if _onscreen(f.x,f.y,f.z)}
         fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
@@ -2604,6 +2690,8 @@ class PygameTerminal(PointerUI):
         sign_by={(q.x,q.y,q.z):q for q in nearby['animal_signs'] if _onscreen(q.x,q.y,q.z) and q.strength+hunt_skill*8>=52}
         home_by={(q.x,q.y,q.z):q for q in nearby['animal_homes'] if _onscreen(q.x,q.y,q.z) and q.discovered}
         resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
+        if settlement_by:
+            resource_by={k:v for k,v in resource_by.items() if k not in settlement_by or not (settlement_by[k].road_ids or settlement_by[k].ground_piece_id or settlement_by[k].structure_id or settlement_by[k].structure_piece_id or settlement_by[k].fixture_piece_id)}
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
         else:
@@ -2671,6 +2759,12 @@ class PygameTerminal(PointerUI):
                 flow_speed=int(getattr(current,'speed',0) or 0) if current is not None else 0
                 water_cells.append((rect.copy(),display_id,flow_dx,flow_dy,flow_speed))
                 screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
+        if settlement_by:
+            for (wx,wy,wz),cell in sorted(settlement_by.items(),key=lambda kv:(kv[0][1],kv[0][0])):
+                if wz!=pos.z or pos_key(wx,wy,wz) not in visible or not cell.ground_piece_id:continue
+                piece=registry.settlement_pieces.get(cell.ground_piece_id);surf=self._settlement_ground_surface(piece,tile_px)
+                if surf is not None:
+                    rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px);screen.blit(surf,rect.topleft)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
 
@@ -2712,13 +2806,22 @@ class PygameTerminal(PointerUI):
         # cells that actually have an overlay instead of scanning the entire
         # viewport in Python every frame. Sorting by y preserves sprite depth.
         overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)|set(sign_by)|set(home_by)
+        overlay_keys.update(settlement_by)
         overlay_keys.add((pos.x,pos.y,pos.z))
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
+        player_settlement_cell=sim.settlement_physicalization.cell_at(pos) if pos.z==0 else None
+        player_structure_id=player_settlement_cell.structure_id if player_settlement_cell else ''
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
             if wz!=pos.z or not (left<=wx<=right and top<=wy<=bottom):continue
             if pos_key(wx,wy,pos.z) not in visible:continue
             k=(wx,wy,pos.z);sx=wx-left;sy=wy-top
             rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
+            scell=settlement_by.get(k)
+            if scell:
+                roofed=bool(scell.roof_piece_id and scell.structure_id and scell.structure_id!=player_structure_id and not scell.structure_piece_id)
+                if roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.roof_piece_id),rect,roof=True)
+                if scell.structure_piece_id:self._draw_settlement_piece(registry.settlement_pieces.get(scell.structure_piece_id),rect)
+                if scell.fixture_piece_id and not roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.fixture_piece_id),rect,fixture=True)
             if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
             feature=resource_by.get(k)
             if feature:
@@ -2923,7 +3026,7 @@ class PygameTerminal(PointerUI):
             'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
-            'property_container_by':property_container_by,
+            'property_container_by':property_container_by,'settlement_by':settlement_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
             'sign_by':sign_by,'home_by':home_by,
             'combat_by':combat_by,'stealth_by':stealth_by,
