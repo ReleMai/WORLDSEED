@@ -497,6 +497,10 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
 
 
 class RegionalCivilizationFoundationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.registry = ContentRegistry.load(DATA_DIR)
+
     def test_sparse_route_graph_is_deterministic_and_bounded(self):
         from types import SimpleNamespace
         from worldseed.systems.route_planner import StrategicRoutePlanner
