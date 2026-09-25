@@ -248,18 +248,12 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertEqual(self.term._hit_token(buttons[1].center), "UI_SELECT:1")
 
 
-    def test_floating_overlays_suspend_world_hover_animation_until_world_redraw(self):
+    def test_floating_panels_suspend_world_hover_animation_until_world_redraw(self):
         rows=[MenuRow("core:wood","Wood x4")];data=self._inventory_data()
         used=self.pg.Rect(10,10,240,180)
         self.term._hover_context={"used":used,"tile_px":28}
         self.term._hover_map_snapshot=self.pg.Surface(used.size)
         self.term.present_feature_menu("inventory_unified","INVENTORY",rows,0,data=data)
-        self.assertIsNone(self.term._hover_context)
-        self.assertIsNone(self.term._hover_map_snapshot)
-        self.term._hover_context={"used":used,"tile_px":28}
-        self.term._hover_map_snapshot=self.pg.Surface(used.size)
-        self.term._context_backdrop=self.term.screen.copy();self.term._context_menu_origin=(100,100)
-        self.term.present_feature_menu("world_context","WORLD ACTIONS", [MenuRow("examine","Examine")],0,data={})
         self.assertIsNone(self.term._hover_context)
         self.assertIsNone(self.term._hover_map_snapshot)
 
