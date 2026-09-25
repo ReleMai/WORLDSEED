@@ -36,6 +36,7 @@ from worldseed.systems.artifacts import ArtifactSystem
 from worldseed.systems.disasters import DisasterSystem
 from worldseed.systems.settlements import SettlementLifecycleSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
+from worldseed.systems.route_planner import StrategicRoutePlanner
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.legends import LegendSystem
@@ -133,6 +134,8 @@ class Simulation:
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
         self.region_planner=RegionBlockPlanner(world)
+        self.route_planner=StrategicRoutePlanner(world,self.state,self.region_planner)
+        self.economy.attach_route_planner(self.route_planner)
         self.settlement_planner=SettlementSkeletonPlanner(world)
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner
