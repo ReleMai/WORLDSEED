@@ -391,6 +391,9 @@ class SettlementState:
     currency_name: str = ""
     currency_value: int = 100
     barter_enabled: bool = True
+    regional_role: str = ""
+    style_tags: list[str] = field(default_factory=list)
+    founding_story: str = ""
 
 @dataclass(slots=True)
 class FactionState:
@@ -405,6 +408,12 @@ class FactionState:
     manpower: int = 0
     military_supply: int = 0
     war_exhaustion: int = 0
+    archetype: str = "regional_power"
+    seat_region: str = ""
+    identity_tags: list[str] = field(default_factory=list)
+    founding_myth: str = ""
+    banner: str = ""
+    prominent: bool = False
 
 @dataclass(slots=True)
 class CaravanState:
