@@ -126,3 +126,14 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - The Fast Gate settlement/economy regression step now includes `tests.test_household_economy`, so household conservation, wages, procurement, logistics tiers and save compatibility are enforced on every relevant PR rather than relying on an uninvoked standalone test file.
 
 - Aggregate settlement food demand now uses a ceiling-style population ration calculation. After exact households are removed from the aggregate pool, one or two remaining anonymous residents still consume food instead of becoming a zero-cost rounding remainder.
+
+
+## Work Unit 19 - Physical workplace production and market logistics
+- Active named workers now bridge aggregate labor reservations into exact workplace production without creating duplicate output.
+- A bounded physical share of a process consumes inputs already held in the worker's real workplace storage. Remaining labor continues through the aggregate settlement ledger, preserving scalability.
+- Workplaces replenish one-batch input buffers from settlement stock after production, creating visible next-day supply buffers rather than making every input teleport at production time.
+- Total output keeps the same culture/religion production bonus and is split between physical workplace stock and aggregate market stock while conserving the process total.
+- Persistent workplace logistics records track representatives, physical batches, staged inputs, retained outputs, overflow, market transfers, blocked reasons and a bounded event ledger.
+- Excess workplace output is reserved into persistent market shipments. Named workers receive source-pickup/market-dropoff tasks; distant/offline shipments have bounded coarse completion so Tier-C simulation cannot deadlock.
+- Shipment cargo exists outside both source storage and market stock while in transit. Market availability therefore responds to real local delivery delay rather than instant stock teleportation.
+- The Fast Gate now runs dedicated workplace logistics conservation and persistence tests.

@@ -39,6 +39,9 @@ class EconomySystem:
         self.history = history
         self.pathfinder = HierarchicalPathfinder(state, world_seed)
         self._route_town_ids: set[str] = set()
+        self.workplace_logistics=None
+
+    def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
 
     def _price(self, item: str, stock: int) -> int:
         base = BASE_PRICE.get(item, self.registry.items.get(item).base_value if item in self.registry.items else 5)
@@ -191,26 +194,22 @@ class EconomySystem:
             reservation.representative_uids.append(npc.uid)
         return npc.assigned_process_id
 
-    def _run_process(self, town, proc: SettlementProcessDef, workers: int) -> int:
+    def _production_bonus(self,town,proc:SettlementProcessDef)->int:
+        culture=self.state.cultures.get(town.culture_id);religion=self.state.religions.get(town.religion_id);bonus=100
+        if proc.occupation=="farmer" and religion and "harvest" in religion.domains:bonus+=15
+        if proc.occupation in ("smith","carpenter") and culture and "craft" in culture.values:bonus+=10
+        return bonus
+
+    def _run_process(self, town, proc: SettlementProcessDef, workers: int, day:int|None=None, minute:int=0) -> int:
+        bonus=self._production_bonus(town,proc)
+        if self.workplace_logistics is not None and day is not None:
+            return self.workplace_logistics.run_process(town,proc,workers,int(day),int(minute),bonus)
         batches = workers // max(1, proc.workers)
-        if batches <= 0:
-            return 0
-        for iid, qty in proc.inputs.items():
-            batches = min(batches, town.stocks.get(iid, 0) // max(1, qty))
-        if batches <= 0:
-            return 0
-        for iid, qty in proc.inputs.items():
-            town.stocks[iid] = town.stocks.get(iid, 0) - qty * batches
-        culture = self.state.cultures.get(town.culture_id)
-        religion = self.state.religions.get(town.religion_id)
-        bonus = 100
-        if proc.occupation == "farmer" and religion and "harvest" in religion.domains:
-            bonus += 15
-        if proc.occupation in ("smith", "carpenter") and culture and "craft" in culture.values:
-            bonus += 10
-        for iid, qty in proc.outputs.items():
-            amount = max(1, qty * batches * bonus // 100)
-            town.stocks[iid] = town.stocks.get(iid, 0) + amount
+        if batches <= 0:return 0
+        for iid,qty in proc.inputs.items():batches=min(batches,town.stocks.get(iid,0)//max(1,qty))
+        if batches<=0:return 0
+        for iid,qty in proc.inputs.items():town.stocks[iid]=town.stocks.get(iid,0)-qty*batches
+        for iid,qty in proc.outputs.items():town.stocks[iid]=town.stocks.get(iid,0)+max(1,qty*batches*bonus//100)
         return batches
 
     @staticmethod
@@ -225,7 +224,7 @@ class EconomySystem:
                 continue
             assignments = self._reserve_labor(town, day)
             for proc, workers in assignments:
-                self._run_process(town, proc, workers)
+                self._run_process(town,proc,workers,day,minute)
             # Food is physically consumed after production, so bad harvests propagate immediately.
             represented=sum(len(h.member_uids) for h in self.state.households.values() if h.settlement_id==town.uid and h.last_consumed_minute==minute)
             aggregate_population=max(0,town.population-represented)

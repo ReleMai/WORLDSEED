@@ -397,3 +397,7 @@ Materialize container locks and physical keys/key ownership/crafting on top of t
 
 ## Household logistics integration
 Named settlement residents now participate in a physical household economy. Family groups bind to their generated home and its property storage; daily reserve planning creates persistent market deliveries carried by named household members to real containers. This preserves the settlement planner/physicalization layer as the location authority while allowing distant simulation to complete overdue deliveries at coarse fidelity. Market stock, NPC wealth, settlement wealth, container capacity and transaction history remain conserved across the flow.
+
+
+## Workplace production/logistics integration
+Active workplace bindings now feed a two-tier production model. The settlement labor reservation remains the workforce authority, while a bounded share of batches is materialized through the property storage attached to a representative worker's generated workplace. Inputs can persist as next-day buffers, outputs can remain visible at the workplace, and excess output travels as persistent worker-carried shipment cargo to the market. Distant/unmaterialized workplaces continue using the original aggregate process path.
