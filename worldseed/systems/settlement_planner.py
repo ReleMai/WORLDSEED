@@ -413,7 +413,13 @@ class SettlementSkeletonPlanner:
                 score = env.slope * 3 + env.flood_risk * 4 + max(0, env.wetness - 70) * 2 + distance * 4
                 candidates.append((score, y, x))
         if not candidates:
-            legal = self._nearest_legal(anchor, bounds, radius=12)
+            # The old fallback only searched 12 cells while village/town/city
+            # planning bounds extend 42/58/76 cells. A hydrology-resolved lake or
+            # broad floodplain could therefore produce a false "no legal site"
+            # even when dry legal ground existed elsewhere inside the bounds.
+            left,top,right,bottom=bounds
+            radius=max(abs(ax-left),abs(ax-right),abs(ay-top),abs(ay-bottom))
+            legal = self._nearest_legal(anchor, bounds, radius=radius)
             if legal is None:
                 raise ValueError("Settlement anchor has no legal common site inside planning bounds")
             return legal
@@ -1069,8 +1075,8 @@ class SettlementSkeletonPlanner:
         except (KeyError, TypeError, ValueError):
             return None
 
-    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True) -> SettlementSkeleton:
-        prepared = self.read_prepared(settlement_id)
+    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
+        prepared = None if refresh else self.read_prepared(settlement_id)
         if prepared is not None:
             return prepared
         self._env_cache.clear()

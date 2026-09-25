@@ -6,6 +6,7 @@ from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VER
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
 from worldseed.core.coords import WorldPos, split_world
+from worldseed.core.rng import PCG32, derive_seed
 from worldseed.entities.components import Inventory,PlayerControlled,Position,Renderable,Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
@@ -203,38 +204,63 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
         if viable>=5:return best
     return best or fallback or WorldPos(0,0,0)
 
-def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
-    """Choose a deterministic village before expensive geography preparation.
+@dataclass(frozen=True, slots=True)
+class VillageTarget:
+    region_x:int
+    region_y:int
+    population:int
 
-    This phase must use only cheap/base world fields.  Settlement skeletons need
-    prepared hydrology/environmental fields and are therefore finalized later.
+
+def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
+    """Return deterministic settlement candidates without creating regional plans.
+
+    Population is derived from the same settlement RNG position used when a real
+    regional planner supplies the anchor. Calling ProceduralSocietyGenerator
+    without a planner would consume two RNG draws for its fallback x/y and would
+    therefore choose a different population/rank than the eventual settlement.
     """
-    planner=RegionBlockPlanner(world);society=ProceduralSocietyGenerator(seed,reg,planner)
-    villages=[];fallback=[]
+    villages=[];others=[]
+    def region_has_base_land(rx:int,ry:int)->bool:
+        x0,y0=rx*512,ry*512
+        for gy in (1,2,3,4,5):
+            for gx in (1,2,3,4,5):
+                p=WorldPos(x0+gx*512//6,y0+gy*512//6,0)
+                if int(world.generator.sample_fields(p).elevation)>=23800:return True
+        return False
     for radius in range(0,9):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
-                if max(abs(rx),abs(ry))!=radius:continue
-                generated=society.settlement_for_cell(rx,ry)
-                if not generated:continue
-                town=generated[0]
-                # Region planning can run before hydrology exists. Reject a
-                # strategic anchor that is already base-ocean rather than later
-                # asking the settlement planner to construct a village at sea.
-                fields=world.generator.sample_fields(WorldPos(town.x,town.y,0))
-                if int(fields.elevation)<23800:continue
-                row=(abs(rx)+abs(ry),town.y,town.x,town);fallback.append(row)
-                if settlement_rank_for_population(town.population)=='village':villages.append(row)
-        if villages:break
-    candidates=villages or fallback
-    return min(candidates,key=lambda row:(row[0],row[1],row[2]))[-1] if candidates else None
+                if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
+                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                rng=PCG32(derive_seed(seed,"settlement",rx,ry))
+                pop=25+rng.randbelow(110)
+                target=VillageTarget(rx,ry,pop)
+                row=(abs(rx)+abs(ry),ry,rx,target)
+                (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
+        if len(villages)>=max(3,limit//2):break
+    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
+    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
+    return tuple(row[-1] for row in ordered[:max(1,int(limit))])
+
+def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
+    rows=_village_targets(world,seed,reg,limit=1)
+    return rows[0] if rows else None
 
 
-def _village_gateway_spawn(world:World,town)->WorldPos:
-    """Place the player just outside an already-prepared settlement gateway."""
-    planner=RegionBlockPlanner(world);skeletons=SettlementSkeletonPlanner(world)
-    region=planner.plan(town.region_x,town.region_y,persist=True)
-    skeleton=skeletons.plan(region,town.uid,town.population,persist=True)
+def _village_gateway_spawn(world:World,seed:bytes,reg:ContentRegistry,target)->WorldPos:
+    """Re-score the target region with prepared hydrology, then spawn at a gateway."""
+    planner=RegionBlockPlanner(world)
+    # A failed/older village-start attempt may already have persisted a plan
+    # scored before hydrology existed. Refresh is intentional here: this is a
+    # new-world startup path and the hydrology-aware plan is the first valid
+    # physical authority for the settlement.
+    region=planner.plan(target.region_x,target.region_y,persist=False,refresh=True)
+    society=ProceduralSocietyGenerator(seed,reg,planner)
+    generated=society.settlement_for_cell(target.region_x,target.region_y)
+    if not generated:raise ValueError("Selected village region no longer contains a settlement")
+    town=generated[0]
+    skeletons=SettlementSkeletonPlanner(world)
+    skeleton=skeletons.plan(region,town.uid,town.population,persist=False,refresh=True)
     commons=list(skeleton.plan.common_cells)
     if commons:
         cx=sum(x for x,_ in commons)//len(commons);cy=sum(y for _,y in commons)//len(commons)
@@ -260,9 +286,6 @@ def _village_gateway_spawn(world:World,town)->WorldPos:
                     q=WorldPos(gx+ox,gy+oy,0)
                     if dry(q):ring.append((abs(ox)+abs(oy),oy,ox,q))
             if ring:return min(ring,key=lambda row:(row[0],row[1],row[2]))[-1]
-
-    # If every outward gateway tile is obstructed, choose the nearest legal cell
-    # immediately outside the planned common instead of aborting world creation.
     candidates=[]
     for radius in range(3,18):
         for oy in range(-radius,radius+1):
@@ -275,9 +298,9 @@ def _village_gateway_spawn(world:World,town)->WorldPos:
 
 
 def _find_village_spawn(world:World,seed:bytes,reg:ContentRegistry)->WorldPos|None:
-    """Compatibility helper for already-prepared worlds/tests."""
-    town=_find_village_target(world,seed,reg)
-    return _village_gateway_spawn(world,town) if town is not None else None
+    """Compatibility helper for worlds whose hydrology is already prepared."""
+    target=_find_village_target(world,seed,reg)
+    return _village_gateway_spawn(world,seed,reg,target) if target is not None else None
 
 def _pregen_bounds(center:WorldPos,radius_chunks:int)->tuple[int,int,int,int]:
     key,_,_=split_world(center);r=max(0,int(radius_chunks))
@@ -359,15 +382,17 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
         intellect=state.player_attributes.get('intellect',5);scholar=state.player_skills.get('scholarship',0)
         state.player_literacy=max(20,min(100,28+intellect*6+scholar*3+(10 if 'quick_study' in state.player_talents else 0)))
     spawn_resources=ResourceSystem(state,reg,seed,world)
+    village_targets=()
     village_target=None
     if pp is None:
         emit('Selecting viable starting region',0.06,'Scanning deterministic climate, terrain and primitive resources')
         if state.player_origin=='village':
-            village_target=_find_village_target(world,seed,reg)
-            # Hydrology is prepared around the settlement anchor first.  The
-            # exact gateway spawn cannot be computed until those environmental
-            # fields exist.
-            pos=WorldPos(village_target.x,village_target.y,0) if village_target is not None else None
+            village_targets=_village_targets(world,seed,reg)
+            village_target=village_targets[0] if village_targets else None
+            # Candidate discovery does not create/persist a regional anchor.
+            # Prepare geography around the region center first.
+            pos=(WorldPos(village_target.region_x*512+256,village_target.region_y*512+256,0)
+                 if village_target is not None else None)
         else:pos=None
         if pos is None:pos=_find_spawn(world,state.player_origin,spawn_resources)
     else:
@@ -376,20 +401,33 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     if is_new and prepare_world:
         radius=int(INITIAL_PREGEN_CHUNK_RADIUS)
         if hydrology is not None:
-            bounds=_pregen_bounds(pos,radius)
             def hydro_progress(i,total,detail):emit('Resolving watersheds',0.08+0.14*(i/max(1,total)),detail)
-            hydrology.prepare_world_bounds(*bounds,persist=True,progress=hydro_progress)
-            world.generator.attach_hydrology(hydrology)
-            world.prepare_coastal_mouths(bounds)
-            if village_target is not None:
-                # SettlementSkeletonPlanner intentionally refuses to plan from
-                # missing environmental fields. Finalize only after hydrology
-                # has populated and attached the startup domain.
-                pos=_village_gateway_spawn(world,village_target)
+            if village_targets:
+                chosen=None;last_error=None
+                for candidate in village_targets:
+                    center=WorldPos(candidate.region_x*512+256,candidate.region_y*512+256,0)
+                    bounds=_pregen_bounds(center,radius)
+                    hydrology.prepare_world_bounds(*bounds,persist=True,progress=hydro_progress)
+                    world.generator.attach_hydrology(hydrology)
+                    world.prepare_coastal_mouths(bounds)
+                    try:
+                        chosen=_village_gateway_spawn(world,seed,reg,candidate)
+                        village_target=candidate
+                        pos=chosen
+                        break
+                    except ValueError as exc:
+                        last_error=exc
+                        continue
+                if chosen is None:
+                    raise RuntimeError("No physically viable village start was found in the bounded candidate search.") from last_error
             else:
+                bounds=_pregen_bounds(pos,radius)
+                hydrology.prepare_world_bounds(*bounds,persist=True,progress=hydro_progress)
+                world.generator.attach_hydrology(hydrology)
+                world.prepare_coastal_mouths(bounds)
                 pos=_relocate_spawn_after_hydrology(world,pos,spawn_resources)
         elif village_target is not None:
-            pos=_village_gateway_spawn(world,village_target)
+            pos=_village_gateway_spawn(world,seed,reg,village_target)
         def terrain_progress(i,total,detail):emit('Carving rivers / shaping terrain',0.22+0.33*(i/max(1,total)),f'{detail}  •  {i}/{total} chunks')
         world_stats=world.pre_generate(pos,radius,terrain_progress,persist=True)
         def resource_progress(i,total,detail):emit('Placing natural resources',0.55+0.35*(i/max(1,total)),f'{detail}  •  {i}/{total} chunks')
