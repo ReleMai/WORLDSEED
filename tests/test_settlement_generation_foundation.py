@@ -3,7 +3,7 @@ import unittest
 from worldseed.config import DATA_DIR
 from worldseed.core.coords import WorldPos
 from worldseed.content.registry import ContentRegistry
-from worldseed.systems.physicalization import SettlementPhysicalizationSystem
+from worldseed.systems.physicalization import SettlementPhysicalizationSystem, PhysicalizedSettlementCell
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.state import LivingWorldState
 from worldseed.systems.settlement_planner import (
@@ -325,6 +325,23 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertFalse(building.passable(wall_pos,True))
         self.assertTrue(building.blocks_sight(wall_pos))
         self.assertEqual(building.room_at(WorldPos(room_cell.x,room_cell.y,0))['room_id'],room['room_id'])
+
+    def test_natural_features_respect_roads_and_one_cell_building_apron(self):
+        physical=SettlementPhysicalizationSystem(
+            SimpleNamespace(),self.registry,SimpleNamespace(),SimpleNamespace()
+        )
+        physical._cells[(10,10)]=PhysicalizedSettlementCell(
+            10,10,"settlement:test",structure_id="structure:home"
+        )
+        physical._cells[(20,20)]=PhysicalizedSettlementCell(
+            20,20,"settlement:test",road_ids=("road:test",),ground_piece_id="core:footpath_piece"
+        )
+        self.assertTrue(physical.clears_natural_feature(WorldPos(10,10,0)))
+        self.assertTrue(physical.clears_natural_feature(WorldPos(9,9,0)))
+        self.assertTrue(physical.clears_natural_feature(WorldPos(11,10,0)))
+        self.assertFalse(physical.clears_natural_feature(WorldPos(8,8,0)))
+        self.assertTrue(physical.clears_natural_feature(WorldPos(20,20,0)))
+        self.assertFalse(physical.clears_natural_feature(WorldPos(19,20,0)))
 
     def test_physicalization_is_bounded_to_active_region(self):
         class Cache:

@@ -27,6 +27,8 @@ class BuildingSystem:
         existing=self.state.containers.get(key)
         if existing:return existing
         if pos.z!=0 or self.resources is None:return None
+        if self.settlement_overlay is not None and self.settlement_overlay.clears_natural_feature(pos):
+            return None
         fv=self.resources.feature_at(pos)
         if not fv or fv.stage!="mature":return None
         rdef=self.registry.resources.get(fv.feature_id)
@@ -58,6 +60,32 @@ class BuildingSystem:
             key=pos_key(pos.x,pos.y,pos.z);existed=key in self.state.containers
             if self.materialize_natural_container_at(pos) and not existed:made+=1
         return made
+
+    def clear_conflicting_generated_natural_containers(self)->int:
+        """Remove un-moved generated caches that conflict with settlement plans.
+
+        Natural containers are realized from deterministic resource potential,
+        so a settlement plan has higher spatial authority.  Containers that the
+        player has moved are preserved: their stable generated UID still names
+        the original coordinate and therefore no longer matches their position.
+        """
+        if self.settlement_overlay is None:
+            return 0
+        removed=0
+        for key,c in list(self.state.containers.items()):
+            if c.kind!="natural" or not c.source_id:
+                continue
+            origin_uid=f"natural:{c.source_id}:{c.x}:{c.y}:{c.z}"
+            if c.uid!=origin_uid:
+                continue
+            pos=WorldPos(int(c.x),int(c.y),int(c.z))
+            if not self.settlement_overlay.clears_natural_feature(pos):
+                continue
+            self.state.containers.pop(key,None)
+            self.state.structures.pop(key,None)
+            removed+=1
+        return removed
+
     def structure_at(self,pos:WorldPos)->StructureInstance|None:return self.state.structures.get(pos_key(pos.x,pos.y,pos.z))
     def roof_at(self,pos:WorldPos)->RoofState|None:return self.state.roofs.get(pos_key(pos.x,pos.y,pos.z))
     def container_at(self,pos:WorldPos)->ContainerState|None:return self.state.containers.get(pos_key(pos.x,pos.y,pos.z))

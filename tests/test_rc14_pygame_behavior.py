@@ -124,6 +124,31 @@ class PygameBehaviorTests(unittest.TestCase):
             self.assertEqual(sim.clock.minute, minute)
             db.close()
 
+    def test_terrain_loader_trims_bright_export_border_before_scaling(self):
+        pg=self.pg
+        with tempfile.TemporaryDirectory() as td:
+            path=Path(td)/"bordered.png"
+            src=pg.Surface((32,32),pg.SRCALPHA)
+            src.fill((245,245,245,255))
+            pg.draw.rect(src,(34,45,37,255),(1,1,30,30))
+            pg.image.save(src,str(path))
+            out=self.term._load_terrain_sprite(path,28)
+            self.assertIsNotNone(out)
+            for point in ((0,0),(27,0),(0,27),(27,27),(14,0),(0,14)):
+                rgb=out.get_at(point)[:3]
+                self.assertLess(max(rgb),100,(point,rgb))
+
+    def test_connected_roof_surface_has_no_shared_tile_frame(self):
+        piece=type("Piece",(),{"id":"test:timber_roof","category":"roof","material":"timber","tags":()})()
+        isolated=self.term._settlement_roof_surface(piece,28,0)
+        connected=self.term._settlement_roof_surface(piece,28,15)
+        self.assertIsNotNone(isolated);self.assertIsNotNone(connected)
+        self.assertNotEqual(self.pg.image.tobytes(isolated,"RGBA"),self.pg.image.tobytes(connected,"RGBA"))
+        # Connected roof pixels remain opaque all the way to each cell edge;
+        # there is no transparent/white grid line between neighboring cells.
+        for point in ((0,14),(27,14),(14,0),(14,27)):
+            self.assertEqual(connected.get_at(point).a,255)
+
     def test_idle_water_animates_cached_pixels_and_stops_in_console(self):
         pg=self.pg;term=self.term
         used=pg.Rect(20,20,64,64)

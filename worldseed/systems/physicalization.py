@@ -294,13 +294,34 @@ class SettlementPhysicalizationSystem:
         return bool(piece and piece.blocks_sight)
 
     def clears_natural_feature(self, pos: WorldPos) -> bool:
-        cell = self.cell_at(pos)
-        if cell is None:
+        """Return whether planned civilization owns this cell for nature placement.
+
+        Roads, floors, walls and fixtures always win over deterministic natural
+        overlays.  Buildings also reserve a one-cell exterior apron so trees,
+        boulders and natural containers cannot seal a doorway, hug a wall, or
+        make casing/walking around a property impossible.
+        """
+        if pos.z != 0:
             return False
-        return bool(
+        x, y = int(pos.x), int(pos.y)
+        cell = self._cells.get((x, y))
+        if cell is not None and (
             cell.road_ids or cell.ground_piece_id or cell.structure_id
             or cell.structure_piece_id or cell.fixture_piece_id
-        )
+        ):
+            return True
+        # Keep only buildings buffered.  Roads already clear their occupied
+        # cells; buffering every road would erase too much settlement-edge
+        # vegetation.  A one-cell Chebyshev apron is enough for door approach,
+        # perimeter movement and casing sightlines.
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nearby = self._cells.get((x + dx, y + dy))
+                if nearby is not None and nearby.structure_id:
+                    return True
+        return False
 
     def glyph_at(self, pos: WorldPos) -> str | None:
         cell = self.cell_at(pos)
