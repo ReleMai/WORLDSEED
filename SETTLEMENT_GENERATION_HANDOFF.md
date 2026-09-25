@@ -413,3 +413,24 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Tests cover non-corner entrances, cardinal floor access, threshold/frontage generation, pinned plan versions and different rendered variants for connected/isolated wall and floor masks.
 
 - Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.
+
+
+## Work unit 22 - Grand regional civilization generation foundation
+- Advanced new-world settlement plans to v4. Existing saves remain pinned to their recorded settlement-plan version.
+- Regional settlement presence is now terrain-led for v4+: candidate viability comes from fertility, freshwater, timber/stone opportunity, climate, slope and flood risk; deterministic neighboring competition suppresses weak duplicate sites instead of using the old fixed 42% independent region roll.
+- The old random regional-road edge layer is retired for v4 plans. Legacy plan versions retain it for save compatibility.
+- Added `StrategicRoutePlanner` and persistent `StrategicRoutePlan` records. The planner builds a bounded k-nearest candidate graph, keeps a connectivity backbone, adds only a small number of redundant edges, routes selected links through terrain-cost regional paths, stores chunk corridors and creates hydrology-backed ford/bridge crossing records.
+- Economy trade-route generation now consumes the sparse strategic route network when available, including its region/chunk waypoints and travel cost, instead of constructing an unrelated complete-ish economic route layer.
+- Added procedural faction archetypes used as deterministic worldbuilding anchors: river leagues, highland marches, forest compacts, freehold confederacies, scholar principalities and iron dominions. Factions persist archetype, regional seat, identity tags, founding myth, banner motif and a bounded prominence flag.
+- Settlements now persist regional role, architectural style tags and a founding-story hook derived from terrain, culture and faction identity.
+- Culture/faction style tags now feed physical settlement material selection. Stone/metal/industrial identities bias stone construction, woodland identities bias timber roofing, and environmental settlement archetype still participates.
+- Settlement plans now derive housing and workplace capacity from the generated physical structures. Active physicalization reconciles `SettlementState.housing_capacity` and the legacy `SettlementState.buildings` dictionary from the authoritative plan; settlement lifecycle collapse no longer mutates building counts independently.
+- Added regression coverage for deterministic sparse route-graph selection and stable faction worldbuilding identity.
+- Updated AGENTS.md with the Grand Regional Civilization Generation contract so future systems preserve sparse route authority, terrain-led settlement hierarchy, culture-as-physical-consumer rules and no-dual-building-authority constraints.
+
+### Still intentionally deferred after WU22
+- Project strategic route corridors into exact local road cells outside settlement bounds and expose those same route IDs on the world atlas.
+- Feed strategic route exits into settlement gateway orientation so settlement main streets grow directly toward persistent regional roads.
+- Add route maintenance/upgrade/decay, bridge destruction/rerouting and historical road migration.
+- Replace daughter-settlement founding with explicit candidate-potential promotion through the regional civilization planner.
+- Add irregular block morphology, settlement growth stages, territory/hinterlands, ports/ferries and faction capitals/secondary seats.
