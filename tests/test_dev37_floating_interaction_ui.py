@@ -291,5 +291,13 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         self.assertIsNotNone(self.term._context_overlay_rect)
 
 
+    def test_crafting_primary_tabs_are_icon_sized(self):
+        rows=[MenuRow("core:stone_flake","Stone Flake")]
+        ready={"name":"Stone Flake","ready":True,"missing":[],"inputs":[],"outputs":[],"minutes":8,"skill":"crafting","description":""}
+        self.term.present_feature_menu("crafting_unified","CRAFTING",rows,0,data={"recipes":{"core:stone_flake":ready},"categories":["primitive"],"category":"primitive"})
+        rects=[self._target_rect(f"UI_ACTION:tab:{name}") for name in ("recipes","discovery","index")]
+        self.assertTrue(all(r.width<=40 for r in rects))
+
+
 if __name__ == "__main__":
     unittest.main()

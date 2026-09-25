@@ -166,3 +166,12 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Recipe category navigation is horizontal with unseen-recipe markers, and recipe click selection persists in the controller.
 - Inventory chrome is less repetitive and half-stack behavior is exposed as a visible HALF quantity selector rather than implying a second physical stack exists in the aggregate inventory model.
 - Village Start now imports its generator dependencies explicitly and preferentially chooses a true village-rank settlement before falling back to another settlement.
+
+
+### WU18 crafting bootstrap and village-start correction
+- Fixed the legacy Twist Cordage content collision: the old recipe is now explicitly brush-to-fiber processing, while the two-brush primitive recipe produces actual Cordage.
+- Experiment discovery now uses authored 1-5 item signatures separated from full crafting cost. Registry validation rejects any recipe with no valid 1-5 clue signature, and the two recipes whose build cost exceeds five items now define explicit five-item research signatures.
+- Added a Crude Knife from one stone flake plus bark with early cut/skin/butcher/scrape capability.
+- Crafting's three primary tabs are icon-only with hover tooltips; moving across a tab requests a lightweight UI redraw so the tooltip appears immediately.
+- Removed connector lines from the five-slot Experiment Grid; the isolated slots retain red/yellow/green recipe proximity feedback.
+- Fixed Village Start being overwritten to 'custom' during new-world setup. Village start now persists the selected origin, builds the same authoritative settlement skeleton used by runtime physicalization, and places the character just outside a settlement gateway.

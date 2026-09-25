@@ -9,8 +9,23 @@ from worldseed.systems.state import LivingWorldState
 class CraftingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry,artifact_system=None,metallurgy=None):self.state=state;self.registry=registry;self.artifact_system=artifact_system;self.metallurgy=metallurgy
 
+    def discovery_signature(self, recipe) -> tuple[str, ...]:
+        """Return the exact 1-5 item experiment signature for one recipe.
+
+        Crafting cost and discovery clues are deliberately separate. Most simple
+        recipes use their full input stack. Larger recipes author discovery_items
+        so the experiment grid never requires more than five physical samples.
+        Repeated ids are significant quantities.
+        """
+        if recipe.discovery_items:
+            return tuple(str(iid) for iid in recipe.discovery_items)
+        out=[]
+        for iid,n in sorted(recipe.inputs.items()):
+            out.extend([str(iid)]*max(0,int(n)))
+        return tuple(out)
+
     def _discovery_requirements(self, recipe) -> set[str]:
-        return set(recipe.discovery_items or recipe.inputs.keys())
+        return set(self.discovery_signature(recipe))
 
     def discovery_requirements(self, recipe) -> set[str]:
         """Return the material clues for a recipe without changing discovery state."""
@@ -43,9 +58,9 @@ class CraftingSystem:
         return new_items,[]
 
     def recipe_pool_for_item(self,item_id:str):
-        """Catalog-backed list of discoverable outcomes involving an item."""
+        """Catalog-backed outcomes for which this item is an actual experiment clue."""
         return sorted((r for r in self.registry.recipes.values()
-                       if item_id in (set(r.inputs)|self._discovery_requirements(r))),key=lambda r:r.id)
+                       if item_id in set(self.discovery_signature(r))),key=lambda r:r.id)
 
     def pot_candidates(self,items:tuple[str,...],inv:Inventory):
         """Read-only recipes that could result from the placed quantities."""
@@ -59,8 +74,8 @@ class CraftingSystem:
         return sorted((r for r in self.registry.recipes.values()
             if r.id not in known
             and (not r.knowledge or r.knowledge in self.state.player_knowledge)
-            and counts==r.inputs
-            and r.inputs),key=lambda r:r.id)
+            and counts==__import__('collections').Counter(self.discovery_signature(r))
+            and self.discovery_signature(r)),key=lambda r:r.id)
 
     def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes) -> tuple[bool,str,int]:
         """Consume a valid experiment and select one catalog result reproducibly."""

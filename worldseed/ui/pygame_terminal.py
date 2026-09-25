@@ -313,6 +313,8 @@ class PygameTerminal(PointerUI):
                     self._last_pointer_cursor=pointer
                 if self._input_mode=='ui' and token and token.startswith('UI_SELECT:'):
                     if self._ui_context is None:return token.replace('UI_SELECT:', 'UI_HOVER:')
+                if self._input_mode=='ui' and token and token.startswith('UI_ACTION:tab:'):
+                    return 'UI_REDRAW'
                 continue
             if event.type == pg.MOUSEWHEEL:
                 if self._input_mode != 'world':
@@ -1259,14 +1261,38 @@ class PygameTerminal(PointerUI):
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
 
     def _crafting_tabs(self,x,y,w,active):
-        for i,(name,token) in enumerate((('RECIPES','recipes'),('EXPERIMENT','discovery'),('ITEM INDEX','index'))):
-            rect=self.pg.Rect(x+i*158,y,150,30)
-            chosen=active==token
-            self.pg.draw.rect(self.screen,(53,49,37) if chosen else self._theme['panel2'],rect,border_radius=5)
-            self.pg.draw.rect(self.screen,self._theme['accent'] if chosen else self._theme['edge'],rect,2 if chosen else 1,border_radius=5)
-            label=self.small_font.render(name,True,self._theme['text'] if chosen else self._theme['muted'])
-            self.screen.blit(label,label.get_rect(center=rect.center))
+        pg=self.pg
+        tabs=(('Recipes','recipes'),('Experiment Grid','discovery'),('Item Index','index'))
+        hovered=None
+        for i,(name,token) in enumerate(tabs):
+            rect=pg.Rect(x+i*42,y,34,30);chosen=active==token;hover=rect.collidepoint(self._last_mouse)
+            pg.draw.rect(self.screen,(53,49,37) if chosen else self._theme['panel2'],rect,border_radius=6)
+            pg.draw.rect(self.screen,self._theme['accent'] if chosen else (self._theme['edge_hi'] if hover else self._theme['edge']),rect,2 if chosen or hover else 1,border_radius=6)
+            fg=self._theme['accent'] if chosen else self._theme['text']
+            cx,cy=rect.center
+            if token=='recipes':
+                # recipe card: page with three instruction rows
+                icon=pg.Rect(cx-9,cy-10,18,20);pg.draw.rect(self.screen,fg,icon,1,border_radius=2)
+                for oy in (-5,0,5):pg.draw.line(self.screen,fg,(cx-5,cy+oy),(cx+5,cy+oy),1)
+            elif token=='discovery':
+                # five experiment sockets arranged around a center
+                for dx,dy in ((0,-7),(-7,-1),(7,-1),(-4,7),(4,7)):
+                    pg.draw.circle(self.screen,fg,(cx+dx,cy+dy),2)
+                pg.draw.circle(self.screen,fg,(cx,cy),11,1)
+            else:
+                # index card + magnifier
+                pg.draw.rect(self.screen,fg,(cx-10,cy-9,13,17),1,border_radius=2)
+                pg.draw.line(self.screen,fg,(cx-7,cy-4),(cx,cy-4),1)
+                pg.draw.line(self.screen,fg,(cx-7,cy),(cx,cy),1)
+                pg.draw.circle(self.screen,fg,(cx+5,cy+4),5,1);pg.draw.line(self.screen,fg,(cx+9,cy+8),(cx+13,cy+12),2)
             self._ui_target(rect,f'UI_ACTION:tab:{token}')
+            if hover:hovered=(name,rect)
+        if hovered:
+            name,rect=hovered
+            tw=self.small_font.size(name)[0]+16;tip=pg.Rect(rect.x,rect.bottom+5,tw,25)
+            if tip.right>x+w:tip.right=x+w
+            pg.draw.rect(self.screen,(12,16,17),tip,border_radius=4);pg.draw.rect(self.screen,self._theme['edge_hi'],tip,1,border_radius=4)
+            s=self.small_font.render(name,True,self._theme['text']);self.screen.blit(s,s.get_rect(center=tip.center))
 
     def _present_crafting_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
@@ -1326,12 +1352,8 @@ class PygameTerminal(PointerUI):
         state=str(data.get('mix_state','red'));accent={'red':self._theme['danger'],'yellow':self._theme['accent'],'green':self._theme['good']}.get(state,self._theme['danger'])
         screen.blit(self.font.render('EXPERIMENT GRID  •  1–5 ITEMS',True,accent),(right.x+14,right.y+13));gx=right.centerx;gy=right.y+145;size=54
         points=[(gx+dx,gy+dy) for dx,dy in ((0,-62),(-62,-8),(62,-8),(-38,55),(38,55))]
-        # A pentagonal circuit makes the five slots read as one experiment
-        # rather than a list.  Its signal color changes with recipe proximity.
-        pg.draw.circle(screen,(24,30,29),(gx,gy),105)
-        pg.draw.circle(screen,accent,(gx,gy),101,2)
-        for i in range(len(points)):
-            pg.draw.line(screen,accent,points[i],points[(i+1)%len(points)],1)
+        # Five isolated sockets keep the circular layout readable without
+        # connector lines implying an ordering or graph relationship.
         for i,(px,py) in enumerate(points):
             r=pg.Rect(px-size//2,py-size//2,size,size);filled=i<len(placed);pg.draw.rect(screen,(33,40,38),r,border_radius=14);pg.draw.rect(screen,accent if filled else self._theme['edge'],r,3 if filled else 1,border_radius=14)
             if filled:self._draw_item_icon(placed[i],r.inflate(-8,-8),scale=.85);self._ui_target(r,f'UI_ACTION:remove_slot:{i}')
