@@ -90,6 +90,37 @@ class Dev34StorageContentTests(unittest.TestCase):
         self.assertEqual(a.items,before)
         self.assertEqual(building_a.materialize_natural_containers([p]),0)
 
+    def test_natural_containers_do_not_materialize_in_settlement_clearance(self):
+        state=LivingWorldState();building=BuildingSystem(state,self.reg)
+        resources=_NaturalResources("core:hollow_log_cache")
+        building.attach_resources(resources,b"dev34-settlement-clearance")
+        building.attach_settlement_physicalization(
+            type("Clearance",(),{"clears_natural_feature":lambda self,pos: True})()
+        )
+        p=WorldPos(3,4,0)
+        self.assertIsNone(building.materialize_natural_container_at(p))
+        self.assertNotIn(pos_key(p.x,p.y,p.z),state.containers)
+        self.assertNotIn(pos_key(p.x,p.y,p.z),state.structures)
+
+    def test_conflicting_generated_natural_container_cleanup_preserves_moved_cache(self):
+        p=WorldPos(3,4,0)
+        state,building,_,c=self._materialize("core:hollow_log_cache",p)
+        building.attach_settlement_physicalization(
+            type("Clearance",(),{"clears_natural_feature":lambda self,pos: True})()
+        )
+        self.assertEqual(building.clear_conflicting_generated_natural_containers(),1)
+        self.assertFalse(state.containers)
+        self.assertFalse(state.structures)
+
+        state,building,_,c=self._materialize("core:hollow_log_cache",p)
+        ok,msg=building.move_container(c,WorldPos(4,4,0))
+        self.assertTrue(ok,msg)
+        building.attach_settlement_physicalization(
+            type("Clearance",(),{"clears_natural_feature":lambda self,pos: True})()
+        )
+        self.assertEqual(building.clear_conflicting_generated_natural_containers(),0)
+        self.assertIn(pos_key(4,4,0),state.containers)
+
     def test_natural_container_can_move_and_break_into_ground_loot(self):
         old=WorldPos(3,4,0);new=WorldPos(4,4,0)
         state,building,_,c=self._materialize("core:hollow_log_cache",old)
