@@ -14,7 +14,10 @@ class SettlementLifecycleSystem:
                 # inhabitants are marked migrant rather than deleted from history.
                 for n in self.state.npcs.values():
                     if n.settlement_id==s.uid and n.alive:n.occupation='migrant';n.goal='migrate'
-                s.population=max(0,s.population);s.buildings['ruins']=sum(s.buildings.values());s.buildings['house']=0;s.food_stress=100
+                # Building counts are a derived compatibility summary. Collapse
+                # changes population/economic state here; physical ruin projection
+                # belongs to the settlement plan/history reconciliation layer.
+                s.population=max(0,s.population);s.food_stress=100
                 continue
             # large, stable settlements can seed a daughter settlement in an adjacent unrealized region.
             if s.population>=180 and s.food_stress<25 and hash_u64(self.seed,'found-colony',s.uid,month)%100<12:
