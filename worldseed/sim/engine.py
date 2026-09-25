@@ -519,6 +519,10 @@ class Simulation:
             self.settlement_physicalization.sync(
                 self.state.settlements.values(),(rx,ry),radius=0
             )
+            # Generated natural containers/resources are lower spatial
+            # authority than the stable settlement plan.  Prune only untouched
+            # generated caches that now collide with houses or their apron.
+            self.building.clear_conflicting_generated_natural_containers()
             self.settlement_population.bind_active(self.state.settlements.values())
             for settlement_id in self.settlement_physicalization.active_settlement_ids:
                 self.family.ensure_settlement_identity(settlement_id)
@@ -1364,7 +1368,7 @@ class Simulation:
         terrain=self.world.tile_at(new).terrain;world_pass=self.world.is_passable(new) or "water" in terrain.tags
         occupied=any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values())
         security=getattr(self,"property_security",None)
-        if occupied or self.resources.blocks_movement(new) or bool(security and security.blocks_player(new)) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
+        if occupied or (self.resources.blocks_movement(new) and not self.settlement_physicalization.clears_natural_feature(new)) or bool(security and security.blocks_player(new)) or not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and "water" not in terrain.tags):
             self._message("You have no clear retreat path in that direction.");return 1
         cost=5+self.combat.leg_injury_penalty()
         if v.stamina<cost:self._message("You are too exhausted to disengage cleanly.");return 1
