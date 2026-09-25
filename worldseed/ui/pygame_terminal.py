@@ -3019,7 +3019,13 @@ class PygameTerminal(PointerUI):
         overlay_keys.add((pos.x,pos.y,pos.z))
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
         player_settlement_cell=sim.settlement_physicalization.cell_at(pos) if pos.z==0 else None
-        player_structure_id=player_settlement_cell.structure_id if player_settlement_cell else ''
+        # A doorway/wall belongs to the structure footprint but is not an
+        # interior room. Keep roofs closed until the player actually steps into
+        # a room so approaching/casing a house never reveals its floor plan.
+        player_structure_id=(
+            player_settlement_cell.structure_id
+            if player_settlement_cell and player_settlement_cell.room_id else ''
+        )
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
             if wz!=pos.z or not (left<=wx<=right and top<=wy<=bottom):continue
             if pos_key(wx,wy,pos.z) not in visible:continue
