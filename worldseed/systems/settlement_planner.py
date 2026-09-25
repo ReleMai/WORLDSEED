@@ -636,9 +636,10 @@ class SettlementSkeletonPlanner:
             rows.append(piece)
         return min(rows,key=lambda p:p.id,default=None)
 
-    def _wall_piece_for(self, archetype: str, shape: str):
+    def _wall_piece_for(self, archetype: str, shape: str, style_tags=()):
         registry=getattr(self.world,"registry",None)
-        material="stone" if archetype=="mining" else "timber"
+        tags=set(style_tags or ())
+        material="stone" if archetype=="mining" or "stone" in tags or "metal" in tags or "industrial" in tags else "timber"
         return (
             self._piece_choice(registry,"wall",contains=f"{material}_{shape}")
             or self._piece_choice(registry,"wall",contains=f"{material}_straight")
@@ -646,12 +647,14 @@ class SettlementSkeletonPlanner:
             or self._piece_choice(registry,"wall")
         )
 
-    def _material_choices(self, archetype: str):
+    def _material_choices(self, archetype: str, style_tags=()):
         registry=getattr(self.world,"registry",None)
-        wall=self._wall_piece_for(archetype,"straight")
-        floor_contains="stone_plain" if archetype=="mining" else "plank_plain"
-        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor",contains="stone" if archetype=="mining" else "plank") or self._piece_choice(registry,"floor")
-        roof_contains="stone" if archetype=="mining" else ("timber" if archetype in {"forest","frontier"} else "thatch")
+        tags=set(style_tags or ())
+        stone_style=archetype=="mining" or "stone" in tags or "metal" in tags or "industrial" in tags
+        wall=self._wall_piece_for(archetype,"straight",style_tags)
+        floor_contains="stone_plain" if stone_style else "plank_plain"
+        floor=self._piece_choice(registry,"floor",contains=floor_contains) or self._piece_choice(registry,"floor",contains="stone" if stone_style else "plank") or self._piece_choice(registry,"floor")
+        roof_contains="stone" if stone_style else ("timber" if archetype in {"forest","frontier"} or "woodland" in tags else "thatch")
         roof=self._piece_choice(registry,"roof",contains=roof_contains) or self._piece_choice(registry,"roof")
         door_contains="stone_arch" if archetype=="mining" else "wood_door"
         door=self._piece_choice(registry,"opening",contains=door_contains) or self._piece_choice(registry,"opening",tags=("door",)) or self._piece_choice(registry,"opening")
@@ -810,7 +813,7 @@ class SettlementSkeletonPlanner:
             walls|=partition_cells
 
         structure_uid=stable_plan_uid("structure",parcel.uid,slot,sorted(shell|interior))
-        wall_piece,floor_piece,roof_piece,door_piece=self._material_choices(archetype)
+        wall_piece,floor_piece,roof_piece,door_piece=self._material_choices(archetype,style_tags)
         approach_piece=self._piece_choice(registry,"road",contains="cobble") if archetype=="mining" else self._piece_choice(registry,"road",contains="footpath")
         approach_piece=approach_piece or self._piece_choice(registry,"road")
         if not all((wall_piece,floor_piece,roof_piece,door_piece,approach_piece)):
@@ -834,7 +837,7 @@ class SettlementSkeletonPlanner:
                 shape="corner"
             else:
                 shape="straight"
-            selected_wall=self._wall_piece_for(archetype,shape) or wall_piece
+            selected_wall=self._wall_piece_for(archetype,shape,style_tags) or wall_piece
             place(selected_wall,cell,"partition" if cell in partition_cells else "wall")
         for cell in sorted(doors,key=lambda p:(p[1],p[0])):
             place(door_piece,cell,"interior_door" if cell!=entrance else "entrance")
@@ -901,7 +904,7 @@ class SettlementSkeletonPlanner:
         residential=[p for p in parcels if p.kind=="residential"]
         for index,parcel in enumerate(residential):
             large=plan.rank in {"town","city"} and index%3==0
-            result=self._plan_building(parcel,roads,slot=f"home:{index}",function="residence",archetype=plan.archetype,large=large)
+            result=self._plan_building(parcel,roads,slot=f"home:{index}",function="residence",archetype=plan.archetype,large=large,style_tags=plan.style_tags)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
@@ -910,7 +913,7 @@ class SettlementSkeletonPlanner:
         industrial=[p for p in parcels if p.kind=="industrial"]
         if industrial:
             function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
-            result=self._plan_building(industrial[0],roads,slot="industry:0",function=function,archetype=plan.archetype,large=True)
+            result=self._plan_building(industrial[0],roads,slot="industry:0",function=function,archetype=plan.archetype,large=True,style_tags=plan.style_tags)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
@@ -919,7 +922,7 @@ class SettlementSkeletonPlanner:
         civic=[p for p in parcels if p.kind=="civic" and p.purpose not in {"","common"}]
         for index,parcel in enumerate(civic):
             function=parcel.purpose
-            result=self._plan_building(parcel,roads,slot=f"civic:{index}:{function}",function=function,archetype=plan.archetype,large=plan.rank in {"town","city"})
+            result=self._plan_building(parcel,roads,slot=f"civic:{index}:{function}",function=function,archetype=plan.archetype,large=plan.rank in {"town","city"},style_tags=plan.style_tags)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
@@ -934,7 +937,7 @@ class SettlementSkeletonPlanner:
                 farms[0].structure_ids.append(structure.uid)
         return structures,rooms,pieces
 
-    def _generate(self, region_plan, settlement_id: str, population: int) -> SettlementSkeleton:
+    def _generate(self, region_plan, settlement_id: str, population: int, style_tags=()) -> SettlementSkeleton:
         if not region_plan.settlement_present or region_plan.settlement_anchor is None:
             raise ValueError("Cannot generate settlement skeleton for a region without a settlement anchor")
         rank = settlement_rank_for_population(population)
@@ -951,6 +954,7 @@ class SettlementSkeletonPlanner:
             anchor_x=region_plan.settlement_anchor[0], anchor_y=region_plan.settlement_anchor[1],
             archetype=region_plan.settlement_archetype, rank=rank,
             common_cells=sorted(common_cells, key=lambda p: (p[1], p[0])),
+            style_tags=sorted({str(x) for x in (style_tags or ())}),
         )
 
         roads: list[RoadSegmentPlan] = []
@@ -1186,12 +1190,12 @@ class SettlementSkeletonPlanner:
         except (KeyError, TypeError, ValueError):
             return None
 
-    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
+    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True, refresh: bool = False, style_tags=()) -> SettlementSkeleton:
         prepared = None if refresh else self.read_prepared(settlement_id)
         if prepared is not None:
             return prepared
         self._env_cache.clear()
-        skeleton = self._generate(region_plan, settlement_id, population)
+        skeleton = self._generate(region_plan, settlement_id, population, style_tags=style_tags)
         self._cache[str(settlement_id)] = skeleton
         if persist:
             storer = getattr(self.cache_source, "store_generated_settlement_plan", None)
