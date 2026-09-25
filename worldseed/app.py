@@ -6,6 +6,7 @@ from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VER
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
 from worldseed.core.coords import WorldPos, split_world
+from worldseed.core.rng import PCG32, derive_seed
 from worldseed.entities.components import Inventory,PlayerControlled,Position,Renderable,Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
@@ -203,14 +204,21 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
         if viable>=5:return best
     return best or fallback or WorldPos(0,0,0)
 
+@dataclass(frozen=True, slots=True)
+class VillageTarget:
+    region_x:int
+    region_y:int
+    population:int
+
+
 def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     """Return deterministic settlement candidates without creating regional plans.
 
-    This is deliberately hydrology-blind.  The previous implementation created
-    and persisted a RegionBlockPlan here; because hydrology was not attached yet,
-    its anchor was scored from fallback fields and later reused unchanged.
+    Population is derived from the same settlement RNG position used when a real
+    regional planner supplies the anchor. Calling ProceduralSocietyGenerator
+    without a planner would consume two RNG draws for its fallback x/y and would
+    therefore choose a different population/rank than the eventual settlement.
     """
-    society=ProceduralSocietyGenerator(seed,reg,None)
     villages=[];others=[]
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
@@ -223,15 +231,16 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                generated=society.settlement_for_cell(rx,ry)
-                if not generated:continue
-                town=generated[0];row=(abs(rx)+abs(ry),town.y,town.x,town)
-                (villages if settlement_rank_for_population(town.population)=='village' else others).append(row)
+                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                rng=PCG32(derive_seed(seed,"settlement",rx,ry))
+                pop=25+rng.randbelow(110)
+                target=VillageTarget(rx,ry,pop)
+                row=(abs(rx)+abs(ry),ry,rx,target)
+                (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
         if len(villages)>=max(3,limit//2):break
     ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
     ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
     return tuple(row[-1] for row in ordered[:max(1,int(limit))])
-
 
 def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
     rows=_village_targets(world,seed,reg,limit=1)
@@ -245,13 +254,13 @@ def _village_gateway_spawn(world:World,seed:bytes,reg:ContentRegistry,target)->W
     # scored before hydrology existed. Refresh is intentional here: this is a
     # new-world startup path and the hydrology-aware plan is the first valid
     # physical authority for the settlement.
-    region=planner.plan(target.region_x,target.region_y,persist=True,refresh=True)
+    region=planner.plan(target.region_x,target.region_y,persist=False,refresh=True)
     society=ProceduralSocietyGenerator(seed,reg,planner)
     generated=society.settlement_for_cell(target.region_x,target.region_y)
     if not generated:raise ValueError("Selected village region no longer contains a settlement")
     town=generated[0]
     skeletons=SettlementSkeletonPlanner(world)
-    skeleton=skeletons.plan(region,town.uid,town.population,persist=True,refresh=True)
+    skeleton=skeletons.plan(region,town.uid,town.population,persist=False,refresh=True)
     commons=list(skeleton.plan.common_cells)
     if commons:
         cx=sum(x for x,_ in commons)//len(commons);cy=sum(y for _,y in commons)//len(commons)

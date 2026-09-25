@@ -332,20 +332,20 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
     def test_village_target_selection_never_builds_or_persists_region_plan(self):
         from unittest.mock import patch
         from worldseed.app import _find_village_target
+        from worldseed.core.rng import PCG32, derive_seed
 
-        town=SimpleNamespace(uid="settlement:0:0",x=100,y=100,region_x=0,region_y=0,population=35)
-        class FakeSociety:
-            def __init__(self,seed,registry,planner):
-                self.planner=planner
-                self.asserted_none=(planner is None)
-            def settlement_for_cell(self,rx,ry):
-                if self.planner is not None:raise AssertionError("pre-hydrology village selection received a region planner")
-                return (town,[],None,None,None) if (rx,ry)==(0,0) else None
+        seed=b"target-rng-contract"
         fields=SimpleNamespace(elevation=32000)
         world=SimpleNamespace(generator=SimpleNamespace(sample_fields=lambda pos:fields))
-        with patch("worldseed.app.ProceduralSocietyGenerator",FakeSociety):
-            self.assertIs(_find_village_target(world,b"seed",self.registry),town)
-
+        class ForbiddenPlanner:
+            def __init__(self,*args,**kwargs):
+                raise AssertionError("candidate selection must not construct RegionBlockPlanner")
+        with patch("worldseed.app.RegionBlockPlanner",ForbiddenPlanner):
+            target=_find_village_target(world,seed,self.registry)
+        self.assertIsNotNone(target)
+        expected=25+PCG32(derive_seed(seed,"settlement",target.region_x,target.region_y)).randbelow(110)
+        self.assertEqual(target.population,expected)
+        self.assertEqual(set(target.__dataclass_fields__),{"region_x","region_y","population"})
     def test_village_gateway_refreshes_hydrology_aware_region_plan(self):
         from unittest.mock import patch
         from worldseed.app import _village_gateway_spawn
