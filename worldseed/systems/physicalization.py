@@ -203,6 +203,11 @@ class SettlementPhysicalizationSystem:
     def cells(self) -> tuple[PhysicalizedSettlementCell, ...]:
         return tuple(self._cells[key] for key in sorted(self._cells, key=lambda p: (p[1], p[0])))
 
+    def cells_in_bounds(self,left:int,top:int,right:int,bottom:int) -> tuple[PhysicalizedSettlementCell, ...]:
+        """Return only materialized settlement cells intersecting a local viewport."""
+        left,top,right,bottom=map(int,(left,top,right,bottom))
+        return tuple(cell for (x,y),cell in self._cells.items() if left<=x<=right and top<=y<=bottom)
+
     def skeleton_for(self, settlement_id: str):
         return self._skeletons.get(str(settlement_id))
 

@@ -4,6 +4,8 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 import unittest
 
+from worldseed.config import DATA_DIR
+from worldseed.content.registry import ContentRegistry
 from worldseed.ui.widgets import MenuRow, select_menu
 from worldseed.ui.pygame_terminal import PygameTerminal
 
@@ -298,6 +300,19 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         rects=[self._target_rect(f"UI_ACTION:tab:{name}") for name in ("recipes","discovery","index")]
         self.assertTrue(all(r.width<=40 for r in rects))
 
+
+    def test_every_settlement_piece_has_graphical_render_path(self):
+        registry=ContentRegistry.load(DATA_DIR)
+        fallback_categories={'furniture','workshop','agriculture','mine','decoration','civic'}
+        for piece in registry.settlement_pieces.values():
+            if piece.layer=='ground':
+                self.assertIsNotNone(self.term._settlement_ground_surface(piece,32),piece.id)
+                continue
+            path=self.term._settlement_piece_sprite_path(piece)
+            if path is not None:
+                self.assertTrue(path.exists(),piece.id)
+            else:
+                self.assertIn(piece.category,fallback_categories,piece.id)
 
 if __name__ == "__main__":
     unittest.main()

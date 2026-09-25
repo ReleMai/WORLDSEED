@@ -429,5 +429,23 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             db.close()
 
 
+    def test_physicalization_viewport_query_contains_roads_walls_and_floors(self):
+        class Cache:
+            def load_generated_settlement_plan(self,*_): return None
+            def store_generated_settlement_plan(self,*_): pass
+            def commit_generated(self): pass
+        env=SimpleNamespace(open_water=False,slope=5,flood_risk=4,wetness=40,soil_fertility=72,farmland=80,
+                            resources=SimpleNamespace(stone=75,timber=60,freshwater=55),resource_opportunity=64)
+        region=RegionBlockPlan('visible-region',0,0,1,'grassland',{'grassland':25},1,1,1,1,True,(180,180),82,'agrarian','settled')
+        world=SimpleNamespace(generator=SimpleNamespace(world_seed=b'visible-village'),delta_source=Cache(),registry=self.registry,environment_at=lambda pos:env)
+        physical=SettlementPhysicalizationSystem(world,self.registry,SimpleNamespace(plan=lambda rx,ry,persist=True:region),SettlementSkeletonPlanner(world))
+        settlement=SimpleNamespace(uid='settlement:visible',region_x=0,region_y=0,population=55)
+        self.assertEqual(physical.sync([settlement],(0,0)),1)
+        cells=physical.cells();xs=[c.x for c in cells];ys=[c.y for c in cells]
+        visible=physical.cells_in_bounds(min(xs),min(ys),max(xs),max(ys))
+        self.assertTrue(any(c.road_ids and c.ground_piece_id for c in visible))
+        self.assertTrue(any(c.structure_piece_id for c in visible))
+        self.assertTrue(any(c.ground_piece_id and c.structure_id for c in visible))
+
 if __name__ == "__main__":
     unittest.main()
