@@ -11,6 +11,15 @@ RITUALS=["first-rain feast","ancestor vigil","forge blessing","river offering","
 OCCUPATIONS=["farmer","hunter","miner","smith","carpenter","healer","merchant","guard","scholar","herder","priest"]
 TRAITS=["patient","greedy","brave","cautious","curious","traditional","kind","ambitious","suspicious","stoic"]
 
+FACTION_ARCHETYPES={
+    "river_league":("League",("mercantile","riverine","cosmopolitan"),"crossings, tolls, and shared market law","wave-and-bridge"),
+    "highland_march":("March",("fortified","clanbound","mineral"),"watchfires and oath-stones guarding the passes","tower-and-peak"),
+    "forest_compact":("Compact",("woodland","craft","stewardship"),"old grove compacts binding villages to managed forests","oak-and-axe"),
+    "freehold_confederacy":("Freeholds",("agrarian","localist","militia"),"free farms swearing mutual defense at harvest moot","sheaf-and-spear"),
+    "scholar_principality":("Principality",("scholarly","bureaucratic","ritual"),"a charter of scribes and shrine keepers preserving old law","lamp-and-scroll"),
+    "iron_dominion":("Dominion",("industrial","disciplined","expansionist"),"forge houses uniting around mines, roads, and military supply","anvil-and-crown"),
+}
+
 class ProceduralSocietyGenerator:
     def __init__(self,world_seed:bytes,registry:ContentRegistry,region_planner=None):
         self.seed=world_seed; self.registry=registry; self.region_planner=region_planner
@@ -32,18 +41,39 @@ class ProceduralSocietyGenerator:
         deity=rng.choice(DEITIES); uid=f"religion:{rx//4}:{ry//4}"
         return ReligionState(uid,f"Way of {deity}",deity,domains,rng.choice(TABOOS),rng.choice(RITUALS),rng.choice(["hawk","wolf","stag","raven","boar","serpent"]))
     def faction_for_region(self,rx:int,ry:int,culture:CultureState)->FactionState:
-        rng=PCG32(derive_seed(self.seed,"faction",rx//2,ry//2)); uid=f"faction:{rx//2}:{ry//2}"
+        fx,fy=rx//2,ry//2
+        rng=PCG32(derive_seed(self.seed,"faction",fx,fy)); uid=f"faction:{fx}:{fy}"
+        local_archetype="frontier"
+        if self.region_planner is not None:
+            try:
+                local_archetype=self.region_planner.plan(rx,ry,persist=False).settlement_archetype
+            except Exception:
+                pass
+        preferred={
+            "river_market":"river_league","fishing":"river_league","mining":"iron_dominion",
+            "forest":"forest_compact","agrarian":"freehold_confederacy",
+        }.get(local_archetype)
+        archetype=preferred or rng.choice(tuple(sorted(FACTION_ARCHETYPES)))
+        title,tags,myth,banner=FACTION_ARCHETYPES[archetype]
+        if "scholarship" in culture.values and rng.randbelow(100)<55:
+            archetype="scholar_principality";title,tags,myth,banner=FACTION_ARCHETYPES[archetype]
         law={"theft":rng.randbelow(80)+20,"assault":rng.randbelow(80)+20,"trespass":rng.randbelow(60)+10,"tax":rng.randbelow(15)+5}
-        return FactionState(uid,f"{culture.name} {rng.choice(['League','March','Compact','Clans','Dominion','Freeholds'])}",culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],law)
+        prominent=bool(derive_seed(self.seed,"faction-prominence",fx,fy)%100<28)
+        name=f"{culture.name} {title}"
+        return FactionState(
+            uid,name,culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],law,
+            archetype=archetype,seat_region=f"{fx*2},{fy*2}",identity_tags=list(tags),
+            founding_myth=myth,banner=banner,prominent=prominent,
+        )
     def settlement_for_cell(self,rx:int,ry:int)->tuple[SettlementState,list[NPCState],CultureState,ReligionState,FactionState] | None:
-        # roughly one settlement per 3x3 regions
-        if derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:return None
-        c=self.culture_for_region(rx,ry); r=self.religion_for_region(rx,ry,c.uid); f=self.faction_for_region(rx,ry,c)
-        rng=PCG32(derive_seed(self.seed,"settlement",rx,ry))
-        anchor=None
+        plan=None
         if self.region_planner is not None:
             plan=self.region_planner.plan(rx,ry,persist=True)
-            anchor=plan.settlement_anchor
+            if getattr(self.region_planner,"version",0)>=4 and not plan.settlement_present:return None
+        elif derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:return None
+        c=self.culture_for_region(rx,ry); r=self.religion_for_region(rx,ry,c.uid); f=self.faction_for_region(rx,ry,c)
+        rng=PCG32(derive_seed(self.seed,"settlement",rx,ry))
+        anchor=plan.settlement_anchor if plan is not None else None
         if anchor is None:
             x=rx*512+64+rng.randbelow(384); y=ry*512+64+rng.randbelow(384)
         else:
@@ -51,6 +81,12 @@ class ProceduralSocietyGenerator:
         uid=f"settlement:{rx}:{ry}"; pop=25+rng.randbelow(110)
         stocks={"core:wheat":60+rng.randbelow(160),"core:turnip":30+rng.randbelow(100),"core:wood":30+rng.randbelow(80),"core:stone":25+rng.randbelow(70),"core:iron_ore":rng.randbelow(35),"core:coal":rng.randbelow(30),"core:wheat_seed":15+rng.randbelow(25),"core:turnip_seed":10+rng.randbelow(20),"core:medicinal_herb":2+rng.randbelow(9),"core:herbal_tonic":rng.randbelow(5),"core:soap":2+rng.randbelow(8)}
         s=SettlementState(uid,place_name(rng),rx,ry,x,y,pop,c.uid,r.uid,f.uid,500+rng.randbelow(1000),stocks,{}, {"house":max(5,pop//6),"farm":max(2,pop//12)},0,dict(f.laws),["craft:stoneworking","craft:leatherwork"])
+        regional_role=(plan.settlement_archetype if plan is not None else "frontier")
+        style=[regional_role,c.craft_bias]
+        style.extend(tag for tag in f.identity_tags if tag not in style)
+        s.regional_role=regional_role
+        s.style_tags=style[:5]
+        s.founding_story=f"Founded where {regional_role.replace('_',' ')} opportunity met the influence of the {f.name}."
         npcs=[]
         for i in range(min(12,max(4,pop//10))):
             nr=PCG32(derive_seed(self.seed,"npc",uid,i)); traits=[]
