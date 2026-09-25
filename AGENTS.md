@@ -33,6 +33,23 @@ Never create an unrelated decorative village, road, river, building list, or loc
 - Distant history damage must alter the same plan object so the next materialization shows the consequence.
 - Never re-roll settlement layout merely because the player approaches.
 
+### Grand Regional Civilization Generation contract
+
+Regional civilization generation must explain why settlements, roads and powers exist where they do. New systems should extend the same authority chain rather than add decorative civilization layers.
+
+- Settlement presence for new plan versions is terrain-led. Use prepared suitability, resource catchments, water, slope, flood risk, spacing and neighboring competition; do not return to a fixed independent per-region settlement roll.
+- Separate **candidate viability**, **settlement realization**, **settlement rank**, and **local settlement layout**. A good site may remain unrealized until history/population promotes it.
+- Strategic roads are graph-first. Build a sparse settlement graph, ensure a connectivity backbone, add only bounded high-value redundant edges, then convert selected edges into terrain-aware regional/chunk/local corridors.
+- Trade routes, migration, armies and player travel must consume the same stable route IDs/corridors. Never maintain an economy-only route graph beside unrelated visual roads.
+- Crossings are stable route features. Fords, bridges, ferries and later ports must reference actual prepared hydrology and participate in travel cost, maintenance, destruction and history.
+- Regional plans may cache candidate scores and route geometry, but player/history changes to roads, bridges, settlements or ownership must survive generated-cache deletion.
+- Settlement morphology should vary by geography, rank, culture and history. Organic villages, river towns, mining settlements, fortified posts and planned cities should share planner primitives without collapsing into one template.
+- Culture/faction identity must have physical consumers: material preferences, roof/building choices, civic priorities, road surfaces, defenses, market organization, settlement names and historical behavior. Flavor metadata with no downstream consumer is incomplete work.
+- Prominent factions are procedural worldbuilding anchors, not hard-coded quest factions. Their archetype, seat, banner, founding myth and identity tags must be deterministic from world state/seed and compatible with save/version contracts.
+- SettlementState.buildings is compatibility-only. Physical settlement plans own structure counts and capacities; reconcile legacy summaries from the plan instead of mutating both independently.
+- Population growth creates housing/workplace pressure before it creates structures. Collapse, war and disasters alter real plan objects; daughter settlements must pass through the same regional site-selection/planning pipeline.
+- Bounded simulation remains mandatory. Do not instantiate every potential town, road, resident or faction site across unrealized infinity.
+
 ### RC14 generation/version boundaries
 
 - `HYDROLOGY_VERSION`, `SETTLEMENT_PLAN_VERSION`, and `ROUTEGEN_VERSION` are independent contracts.
