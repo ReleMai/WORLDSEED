@@ -137,6 +137,7 @@ class Simulation:
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner
         )
+        self.resources.attach_settlement_physicalization(self.settlement_physicalization)
         self.settlement_population=SettlementPopulationBinder(
             self.state,registry,self.seed,self.settlement_physicalization
         )
