@@ -306,13 +306,29 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         fallback_categories={'furniture','workshop','agriculture','mine','decoration','civic'}
         for piece in registry.settlement_pieces.values():
             if piece.layer=='ground':
-                self.assertIsNotNone(self.term._settlement_ground_surface(piece,32),piece.id)
+                self.assertIsNotNone(self.term._settlement_ground_surface(piece,32,0),piece.id)
+                continue
+            if piece.category in {'wall','opening'}:
+                surface=self.term._settlement_wall_surface(piece,32,10,'entrance' if piece.category=='opening' else 'wall')
+                self.assertIsNotNone(surface,piece.id)
+                self.assertGreater(surface.get_bounding_rect().width,0,piece.id)
                 continue
             path=self.term._settlement_piece_sprite_path(piece)
             if path is not None:
                 self.assertTrue(path.exists(),piece.id)
             else:
                 self.assertIn(piece.category,fallback_categories,piece.id)
+
+    def test_connected_wall_and_floor_variants_change_with_neighbor_mask(self):
+        registry=ContentRegistry.load(DATA_DIR)
+        wall=registry.settlement_pieces['core:timber_straight_wall_piece']
+        floor=registry.settlement_pieces['core:plank_plain_floor_piece']
+        isolated=self.term._settlement_wall_surface(wall,40,0,'wall')
+        connected=self.term._settlement_wall_surface(wall,40,10,'wall')
+        self.assertNotEqual(self.pg.image.tostring(isolated,'RGBA'),self.pg.image.tostring(connected,'RGBA'))
+        edge=self.term._settlement_ground_surface(floor,40,0)
+        interior=self.term._settlement_ground_surface(floor,40,15)
+        self.assertNotEqual(self.pg.image.tostring(edge,'RGBA'),self.pg.image.tostring(interior,'RGBA'))
 
 if __name__ == "__main__":
     unittest.main()
