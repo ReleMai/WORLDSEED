@@ -1142,6 +1142,16 @@ class SettlementSkeletonPlanner:
 
         structures,rooms,pieces=self._generate_buildings(plan,roads,parcels)
         plan.structure_site_ids=[row.uid for row in structures]
+        plan.housing_capacity=sum(
+            max(2,min(8,int(row.interior_area)//5))
+            for row in structures if row.function=="residence" and not row.destroyed
+        )
+        workplace_capacity:dict[str,int]={}
+        for row in structures:
+            if row.destroyed or row.function=="residence":continue
+            capacity=max(1,min(12,int(row.interior_area)//4))
+            workplace_capacity[row.function]=workplace_capacity.get(row.function,0)+capacity
+        plan.workplace_capacity=workplace_capacity
         skeleton = SettlementSkeleton(plan, roads, parcels, structures, rooms, pieces)
         skeleton.fingerprint = canonical_hash({
             "plan": asdict(plan),
