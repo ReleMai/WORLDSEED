@@ -324,9 +324,9 @@ class RegionBlockPlanner:
                     pass
         return None
 
-    def plan(self, rx: int, ry: int, *, persist: bool = True) -> RegionBlockPlan:
+    def plan(self, rx: int, ry: int, *, persist: bool = True, refresh: bool = False) -> RegionBlockPlan:
         key = (int(rx), int(ry))
-        prepared = self.read_prepared(*key)
+        prepared = None if refresh else self.read_prepared(*key)
         if prepared is not None:
             self._cache[key] = prepared
             return prepared
