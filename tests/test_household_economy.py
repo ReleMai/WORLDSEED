@@ -61,4 +61,16 @@ class HouseholdEconomyTests(unittest.TestCase):
         self.assertEqual(EconomySystem._food_need_for_population(4),2)
 
 
+    def test_varied_diet_and_essential_shortages_drive_household_hardship(self):
+        state,town,c,economy,system=self.fixture(wealth=0,stock=0)
+        c.items={"core:wheat":1,"core:meat":1,"core:turnip":1}
+        system.daily_update(1440);h=state.households["family:1"]
+        self.assertGreaterEqual(h.nutrition_quality,55);self.assertTrue(h.diet_mix)
+        # Day two consumes fuel; with no wood physically at home the shortage is explicit.
+        system.daily_update(2880)
+        self.assertGreater(h.fuel_shortage,0);self.assertGreater(h.hardship_score,0)
+        self.assertTrue(any(row.get("kind")=="daily_essentials" for row in h.ledger))
+        restored=LivingWorldState.from_dict(state.to_dict());self.assertEqual(restored.households[h.uid].hardship_score,h.hardship_score)
+
+
 if __name__=="__main__":unittest.main()

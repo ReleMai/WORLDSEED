@@ -13,6 +13,9 @@ from worldseed.sim.commands import *
 from worldseed.sim.engine import Simulation
 from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
+from worldseed.systems.generation import ProceduralSocietyGenerator
+from worldseed.systems.settlement_planner import settlement_rank_for_population
+from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
@@ -200,6 +203,32 @@ def _find_spawn(world:World,origin:str='wanderer',resources:ResourceSystem|None=
         if viable>=5:return best
     return best or fallback or WorldPos(0,0,0)
 
+def _find_village_spawn(world:World,seed:bytes,reg:ContentRegistry)->WorldPos|None:
+    planner=RegionBlockPlanner(world);society=ProceduralSocietyGenerator(seed,reg,planner)
+    villages=[];fallback=[]
+    # Settlement presence is common at macro scale, but one region is 512x512
+    # cells. Prefer a true village-rank population so this start is useful for
+    # settlement testing instead of silently dropping the player beside a town.
+    for radius in range(0,9):
+        for ry in range(-radius,radius+1):
+            for rx in range(-radius,radius+1):
+                if max(abs(rx),abs(ry))!=radius:continue
+                generated=society.settlement_for_cell(rx,ry)
+                if generated:
+                    town=generated[0];row=(abs(rx)+abs(ry),town.y,town.x,town);fallback.append(row)
+                    if settlement_rank_for_population(town.population)=='village':villages.append(row)
+        if villages:break
+    candidates=villages or fallback
+    if not candidates:return None
+    town=min(candidates,key=lambda row:(row[0],row[1],row[2]))[-1]
+    for radius in range(3,18):
+        for dy in range(-radius,radius+1):
+            for dx in range(-radius,radius+1):
+                if max(abs(dx),abs(dy))!=radius:continue
+                q=WorldPos(town.x+dx,town.y+dy,0);td=world.registry.terrains.get(world.generator.terrain_at(q))
+                if td and td.passable and 'water' not in td.tags:return q
+    return WorldPos(town.x,town.y,0)
+
 def _pregen_bounds(center:WorldPos,radius_chunks:int)->tuple[int,int,int,int]:
     key,_,_=split_world(center);r=max(0,int(radius_chunks))
     x0=(key.x-r)*CHUNK_SIZE;y0=(key.y-r)*CHUNK_SIZE
@@ -280,7 +309,8 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     spawn_resources=ResourceSystem(state,reg,seed,world)
     if pp is None:
         emit('Selecting viable starting region',0.06,'Scanning deterministic climate, terrain and primitive resources')
-        pos=_find_spawn(world,state.player_origin,spawn_resources)
+        pos=_find_village_spawn(world,seed,reg) if state.player_origin=='village' else None
+        if pos is None:pos=_find_spawn(world,state.player_origin,spawn_resources)
     else:
         pos=WorldPos(int(pp['x']),int(pp['y']),int(pp.get('z',0)))
 
@@ -454,8 +484,9 @@ def _fishing_action(ctx:GameContext,term:Terminal,target:WorldPos|None=None)->st
     if not methods:
         region=sim.fishing.region_at(target)
         return f'No usable fishing method for this {region.depth if region else "water"}. Craft a rod and line, fishing spear, or net, or move adjacent for hand fishing.'
+    nested=bool(getattr(term,'mouse_ui',False) and target is not None)
     method=_select(term,'FISHING METHOD',[(m,f'{m.title()} — {label}') for m,label in methods],
-                   subtitle='Method, skill, bait, water structure, rod control, and line strength all affect the catch.')
+                   subtitle='Choose how to fish this water.',presentation='world_context' if nested else '')
     if not method:return UI_BACK
     bait_id=''
     if method in ('rod','net'):
@@ -464,7 +495,7 @@ def _fishing_action(ctx:GameContext,term:Terminal,target:WorldPos|None=None)->st
             item=ctx.registry.items[iid]
             lure='reusable lure' if 'fishing_lure' in item.tags else f'x{inv.count(iid)}'
             bait_rows.append((iid,f'{item.name} — {lure}'))
-        bait_choice=_select(term,'BAIT / LURE',bait_rows,subtitle='Different fish prefer different bait. Poor bait can still catch opportunistic species.')
+        bait_choice=_select(term,'BAIT / LURE',bait_rows,subtitle='Choose bait or fish without it.',presentation='world_context' if nested else '')
         if not bait_choice:return UI_BACK
         bait_id='' if bait_choice=='__none__' else bait_choice
     dx,dy=target.x-p.x,target.y-p.y
@@ -1904,6 +1935,7 @@ def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->d
             'minutes':r.minutes,'difficulty':r.difficulty,'skill':r.skill,
             'station':reg.structures[r.station].name if r.station and r.station in reg.structures else '',
             'ready':not missing,'missing':list(missing),'outputs':outputs,'inputs':inputs,
+            'new':r.id in set(getattr(sim.state,'player_unseen_recipes',[])),
         }
     return {'recipes':rows}
 
@@ -2069,7 +2101,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             action_amount=count;continue
         if action=='split':
             action_amount=max(1,(count+1)//2)
-            status=f'Split amount selected: {action_amount} of {count}. Drop or store will use that amount.'
+            status=f'Quantity set to half: {action_amount} of {count}. Drop or store will use that amount.'
             continue
         if action=='drop':
             sim.execute(DropCommand(pid,selected_iid,min(action_amount,count)))
@@ -2108,7 +2140,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
             rows=[(r.id,r.name) for r in known] or [('__none__','No recipes in this category')]
             recipe_state.selected=max(0,min(recipe_state.selected,len(rows)-1))
             data=_recipe_ui_data(reg,sim,inv,known)
-            data.update({'categories':categories,'category':category,'category_page':category_page})
+            unseen=set(getattr(sim.state,'player_unseen_recipes',[]));new_categories=sorted({reg.recipes[rid].category or 'general' for rid in unseen if rid in reg.recipes})
+            data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories})
             choice=_select(term,'CRAFTING',rows,state=recipe_state,presentation='crafting_unified',
                            subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
             status=''
@@ -2116,12 +2149,15 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
             if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice.startswith('UI_ACTION:category_page:'):
-                page_size=max(1,(term._floating_panels.get('crafting',{}).get('h',680)-240)//34)
+                page_size=6
                 delta=1 if choice.endswith(':next') else -1
                 category_page=max(0,min(category_page+delta,max(0,(len(categories)-1)//page_size)))
                 continue
             if choice.startswith('UI_ACTION:category:'):
                 category=choice.split(':',2)[2];recipe_state.selected=0;continue
+            if choice in reg.recipes:
+                sim.state.player_unseen_recipes=[rid for rid in sim.state.player_unseen_recipes if rid!=choice]
+                continue
             if choice=='UI_ACTION:craft':
                 rid=rows[recipe_state.selected][0]
                 if rid in reg.recipes:
@@ -2151,20 +2187,31 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
         for iid,n in sorted(inv.items.items(),key=lambda pair:reg.items[pair[0]].name if pair[0] in reg.items else pair[0]):
             if iid not in reg.items or n<=0:continue
             pool=sim.crafting.recipe_pool_for_item(iid)
+            if not pool:continue
             entries[iid]={'name':reg.items[iid].name,'count':n,'pool_count':len(pool),
                           'known_recipes':[r.name for r in pool if sim.crafting.recipe_is_discovered(r.id)]}
         rows=[(iid,v['name']) for iid,v in entries.items()] or [('__none__','Gather materials to experiment')]
         pot_state.selected=max(0,min(pot_state.selected,len(rows)-1))
-        data={'items':entries,'selected_items':tuple(placed),
-              'candidates':len(sim.crafting.pot_candidates(tuple(placed),inv))}
-        choice=_select(term,'DISCOVERY POT',rows,state=pot_state,presentation='discovery_pot',
-                       subtitle=status or 'Place one to five carried items; the resulting technique is drawn from matching recipes.',presentation_data=data)
+        from collections import Counter
+        counts=Counter(placed);exact=sim.crafting.pot_candidates(tuple(placed),inv)
+        known_exact=[r.name for r in reg.recipes.values() if r.id in set(sim.state.player_discovered_recipes) and counts and counts==r.inputs]
+        close=False
+        if counts and not exact and not known_exact:
+            for r in reg.recipes.values():
+                if r.id in set(sim.state.player_discovered_recipes) or sum(r.inputs.values())>5:continue
+                if all(counts[i]<=r.inputs.get(i,0) for i in counts):close=True;break
+        mix_state='green' if exact else ('yellow' if close else 'red')
+        data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),'known_exact':known_exact,'mix_state':mix_state}
+        choice=_select(term,'EXPERIMENT GRID',rows,state=pot_state,presentation='discovery_pot',
+                       subtitle=status or 'Combine up to five carried materials. The grid color shows how close the mix is to a discoverable recipe.',presentation_data=data)
         status=''
         if choice is None:return UI_BACK
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
         if choice=='UI_ACTION:tab:index':tab='index';continue
-        if choice=='UI_ACTION:remove':
-            if placed:placed.pop()
+        if choice.startswith('UI_ACTION:remove_slot:'):
+            try:idx=int(choice.rsplit(':',1)[1])
+            except ValueError:continue
+            if 0<=idx<len(placed):placed.pop(idx)
             continue
         if choice=='UI_ACTION:clear':placed.clear();continue
         if choice=='UI_ACTION:mix':
@@ -2181,7 +2228,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                 placed.clear()
             continue
         if choice in entries:
-            if len(placed)>=5:status='The pot holds at most five items.'
+            if len(placed)>=5:status='The experiment grid holds at most five items.'
             elif placed.count(choice)>=inv.count(choice):status='You do not carry another one of those.'
             else:placed.append(choice)
 
@@ -2202,7 +2249,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
         discovered_items=set(sim.state.player_discovered_items)
         rows=[
             ('recipes',f'Discovered Recipes — {len(known)} known'),
-            ('ideas','Discovery Pot — combine 1–5 carried items'),
+            ('ideas','Experiment Grid — combine 1–5 carried items'),
             ('materials',f'Materials — {len(discovered_items)} item types examined'),
             ('tree','Tech Tree — trace discovered recipes and future branches'),
         ]

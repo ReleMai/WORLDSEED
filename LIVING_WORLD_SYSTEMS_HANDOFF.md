@@ -137,3 +137,32 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Excess workplace output is reserved into persistent market shipments. Named workers receive source-pickup/market-dropoff tasks; distant/offline shipments have bounded coarse completion so Tier-C simulation cannot deadlock.
 - Shipment cargo exists outside both source storage and market stock while in transit. Market availability therefore responds to real local delivery delay rather than instant stock teleportation.
 - The Fast Gate now runs dedicated workplace logistics conservation and persistence tests.
+
+
+### WU17 household resilience layer
+- Household food consumption now prefers dietary variety while remaining scarcity-safe, recording persistent diet composition and nutrition quality.
+- Physical fuel, hygiene supplies and medicine are consumed on distinct household cadences rather than acting as decorative reserve targets.
+- Food, fuel, hygiene, medicine and poor diet combine into a bounded hardship score that changes member health/safety needs and tracks stable recovery days.
+- All consumption remains attached to real home containers; no invisible duplicate household stock was introduced.
+
+
+### Dev UI overlay hotfix
+- Fixed retained local-world weather/water/hover animation repainting over inventory and right-click context overlays during idle input waits.
+- Floating and context panels now explicitly suspend world-only hover animation state while they own UI input; the next local-world render reconstructs it normally.
+- This fixes the symptom where the panel visually disappeared but the hidden modal still captured input until Escape.
+
+
+### Dev UI/settlement test-start polish
+- Context menus now dismiss with right-click or a left click outside, and fishing invoked from world context stays in nested cursor-anchored context menus.
+- Inventory item context remains anchored while hovering other cards; clicked recipe selection is persisted before returning to the crafting controller.
+- Crafting categories are top tabs with NEW markers, discovery is now a five-slot Experiment Grid with red/yellow/green recipe proximity, right-click slot removal, known-combination feedback, and zero-path materials hidden.
+- New-game setup now offers a deterministic Village starting location beside a generated settlement for settlement testing.
+
+
+### Interaction/crafting/village playtest polish
+- World context popups are now true live overlays: water/weather/lighting continue animating behind them while the popup redraws over the current frame.
+- Right-click or left-click outside restores only the popup region and closes the menu; nested fishing choices remain cursor anchored.
+- Discovery Pot user-facing terminology is replaced by Experiment Grid. Its five-slot pentagonal circuit signals invalid/near/ready combinations in red/yellow/green, identifies already-tried exact mixes, and supports right-click slot removal.
+- Recipe category navigation is horizontal with unseen-recipe markers, and recipe click selection persists in the controller.
+- Inventory chrome is less repetitive and half-stack behavior is exposed as a visible HALF quantity selector rather than implying a second physical stack exists in the aggregate inventory model.
+- Village Start now imports its generator dependencies explicitly and preferentially chooses a true village-rank settlement before falling back to another settlement.

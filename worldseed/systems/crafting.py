@@ -78,6 +78,7 @@ class CraftingSystem:
         recipe=candidates[choice]
         inv.consume(dict(counts))
         self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe.id})
+        self.state.player_unseen_recipes=sorted(set(self.state.player_unseen_recipes)|{recipe.id})
         self.state.player_crafting_experiments=attempt+1
         self.sync_discoveries(inv)
         return True,f'You discover {recipe.name}! The recipe is recorded; crafting it will produce '+', '.join(
