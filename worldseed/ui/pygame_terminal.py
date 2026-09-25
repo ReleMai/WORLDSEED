@@ -1945,13 +1945,22 @@ class PygameTerminal(PointerUI):
             return None
 
     def _load_terrain_sprite(self, path: Path | None, size: int):
-        """Terrain uses smooth downsampling; resource/item art keeps crisp scaling."""
-        if path is None: return None
-        key=(f'terrain:{path}',size,size)
+        """Load terrain with a tiny overscan so source-edge halos never form grid seams.
+
+        Terrain art is authored as edge-to-edge material. Smooth resampling used
+        to sample the outermost PNG pixels directly; a bright/transparent export
+        edge could therefore become a one-pixel white line around every world
+        cell. Scaling slightly past the target and cropping back to the requested
+        size keeps the material continuous without changing simulation geometry.
+        """
+        if path is None:return None
+        key=(f'terrain-v3:{path}',size,size)
         if key in self._sprite_cache:return self._sprite_cache[key]
         try:
-            surf=self.pg.image.load(str(path)).convert_alpha()
-            surf=self.pg.transform.smoothscale(surf,(size,size))
+            source=self.pg.image.load(str(path)).convert_alpha()
+            pad=max(1,min(3,size//14))
+            scaled=self.pg.transform.smoothscale(source,(size+pad*2,size+pad*2))
+            surf=scaled.subsurface((pad,pad,size,size)).copy()
             self._sprite_cache[key]=surf
             return surf
         except Exception:
@@ -2027,6 +2036,12 @@ class PygameTerminal(PointerUI):
             if 'clay' in mat:return (136,91,65),(165,116,85),(98,64,47)
             if 'packed' in mat or 'earth' in mat:return (108,85,59),(139,109,77),(75,57,41)
             return (108,81,52),(143,108,70),(72,53,35)
+        if cat=='roof':
+            if any(token in mat for token in ('stone','slate','clay')):
+                return (91,91,87),(132,130,122),(55,57,56)
+            if 'thatch' in mat:
+                return (126,103,61),(165,138,83),(78,62,38)
+            return (101,67,40),(145,99,59),(59,39,27)
         if cat in {'wall','opening'}:
             if 'stone' in mat or 'iron' in mat:return (126,125,120),(159,157,150),(74,76,74)
             if 'wattle' in mat:return (112,91,65),(145,119,86),(72,57,40)
@@ -2058,103 +2073,188 @@ class PygameTerminal(PointerUI):
         return bits
 
     def _settlement_ground_surface(self,piece,size:int,bits:int=0):
-        """Neighbor-aware top-down floor/road art with soft material edges."""
+        """Connected floor/road material with bevels only on exposed boundaries."""
         if piece is None:return None
-        key=('settlement-ground-v2',str(getattr(piece,'id','')),int(size),int(bits))
+        key=('settlement-ground-v3',str(getattr(piece,'id','')),int(size),int(bits))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));tags=set(getattr(piece,'tags',()) or ())
-        base,hi,lo=self._settlement_palette(piece)
-        surf=pg.Surface((size,size),pg.SRCALPHA)
+        base,hi,lo=self._settlement_palette(piece);surf=pg.Surface((size,size),pg.SRCALPHA)
         if cat=='road':
-            width=max(8,int(size*.72));half=width//2;mid=size//2
-            pg.draw.circle(surf,(*base,238),(mid,mid),half)
-            if bits&1:pg.draw.rect(surf,(*base,238),(mid-half,0,width,mid+1))
-            if bits&2:pg.draw.rect(surf,(*base,238),(mid,mid-half,size-mid,width))
-            if bits&4:pg.draw.rect(surf,(*base,238),(mid-half,mid,width,size-mid))
-            if bits&8:pg.draw.rect(surf,(*base,238),(0,mid-half,mid+1,width))
-            if bits==0:pg.draw.rect(surf,(*base,238),(mid-half,0,width,size))
-            # Material grain sits inside the road silhouette and leaves terrain
-            # visible around shoulders so paths blend instead of forming blocks.
+            width=max(7,int(size*.66));half=width//2;mid=size//2
+            shadow=pg.Surface((size,size),pg.SRCALPHA)
+            pg.draw.circle(shadow,(*lo,95),(mid+1,mid+1),half+1)
+            for bit,rect in (
+                (1,(mid-half+1,0,width,mid+2)),(2,(mid,mid-half+1,size-mid,width)),
+                (4,(mid-half+1,mid,width,size-mid)),(8,(0,mid-half+1,mid+2,width)),
+            ):
+                if bits&bit:pg.draw.rect(shadow,(*lo,95),rect)
+            surf.blit(shadow,(0,0))
+            pg.draw.circle(surf,(*base,242),(mid,mid),half)
+            if bits&1:pg.draw.rect(surf,(*base,242),(mid-half,0,width,mid+1))
+            if bits&2:pg.draw.rect(surf,(*base,242),(mid,mid-half,size-mid,width))
+            if bits&4:pg.draw.rect(surf,(*base,242),(mid-half,mid,width,size-mid))
+            if bits&8:pg.draw.rect(surf,(*base,242),(0,mid-half,mid+1,width))
+            if bits==0:pg.draw.rect(surf,(*base,242),(mid-half,0,width,size))
             if 'stone' in mat or 'cobble_road' in tags or 'market_square' in tags:
                 step=max(5,size//4)
                 for y in range(2,size,step):
                     off=step//2 if (y//step)%2 else 0
                     for x in range(-off,size,step):
-                        if surf.get_at((max(0,min(size-1,x+step//2)),max(0,min(size-1,y+step//2))))[3]:
-                            pg.draw.rect(surf,(*lo,150),(x,y,step,step),1)
+                        sx=max(0,min(size-1,x+step//2));sy=max(0,min(size-1,y+step//2))
+                        if surf.get_at((sx,sy))[3]:pg.draw.rect(surf,(*lo,135),(x,y,step,step),1)
             elif 'wood' in mat or 'plank_road' in tags or 'dock_walk' in tags:
-                step=max(4,size//5)
-                for y in range(step//2,size,step):pg.draw.line(surf,(*lo,175),(0,y),(size,y),1)
+                step=max(4,size//6)
+                for y in range(step//2,size,step):
+                    pg.draw.line(surf,(*lo,130),(0,y),(size-1,y),1)
+                    if y+1<size:pg.draw.line(surf,(*hi,50),(0,y+1),(size-1,y+1),1)
             else:
-                for i in range(max(8,size)):
+                for i in range(max(7,size//2)):
                     x=(i*17+7)%size;y=(i*29+11)%size
-                    if surf.get_at((x,y))[3]:pg.draw.circle(surf,(*hi,105),(x,y),1)
+                    if surf.get_at((x,y))[3]:pg.draw.circle(surf,(*hi,90),(x,y),1)
         elif cat=='floor' or str(getattr(piece,'layer',''))=='ground':
-            surf.fill((*base,246))
+            surf.fill((*base,255))
             authored=self._settlement_piece_sprite_path(piece)
             if authored is not None:
                 tex=self._load_terrain_sprite(authored,size)
                 if tex is not None:
-                    tex=tex.copy();tex.set_alpha(96);surf.blit(tex,(0,0))
+                    tex=tex.copy();tex.set_alpha(58);surf.blit(tex,(0,0))
             if 'stone' in mat:
                 step=max(6,size//4)
                 for y in range(0,size,step):
                     off=step//2 if (y//step)%2 else 0
-                    for x in range(-off,size,step):pg.draw.rect(surf,(*lo,145),(x,y,step,step),1)
+                    pg.draw.line(surf,(*lo,100),(0,y),(size-1,y),1)
+                    for x in range(-off,size,step):
+                        pg.draw.line(surf,(*lo,90),(x,y),(x,min(size-1,y+step)),1)
+                for i in range(max(3,size//9)):
+                    x=(i*13+5)%size;y=(i*19+3)%size;pg.draw.circle(surf,(*hi,35),(x,y),1)
             elif 'wood' in mat or 'plank' in mat:
-                step=max(4,size//5)
-                for x in range(step,size,step):pg.draw.line(surf,(*lo,140),(x,1),(x,size-2),1)
+                board=max(4,size//6)
+                for y in range(board,size,board):
+                    pg.draw.line(surf,(*lo,105),(0,y),(size-1,y),1)
+                    if y+1<size:pg.draw.line(surf,(*hi,38),(0,y+1),(size-1,y+1),1)
+                for row,y in enumerate(range(0,size,board)):
+                    joint=(row*11+size//3)%max(2,size)
+                    pg.draw.line(surf,(*lo,90),(joint,y),(joint,min(size-1,y+board)),1)
             elif 'clay' in mat:
-                for y in range(max(5,size//5),size,max(6,size//4)):pg.draw.line(surf,(*lo,120),(1,y),(size-2,y),1)
+                step=max(6,size//4)
+                for y in range(step,size,step):pg.draw.line(surf,(*lo,95),(1,y),(size-2,y),1)
             else:
                 for i in range(max(8,size//2)):
-                    x=(i*13+3)%size;y=(i*19+5)%size;pg.draw.circle(surf,(*hi,70),(x,y),1)
-            edge=max(2,size//12)
-            # Only exposed floor boundaries receive a dark rim; connected floor
-            # cells share one visual plane without grid seams.
-            if not bits&1:pg.draw.rect(surf,(*lo,125),(0,0,size,edge))
-            if not bits&2:pg.draw.rect(surf,(*lo,125),(size-edge,0,edge,size))
-            if not bits&4:pg.draw.rect(surf,(*lo,125),(0,size-edge,size,edge))
-            if not bits&8:pg.draw.rect(surf,(*lo,125),(0,0,edge,size))
+                    x=(i*13+3)%size;y=(i*19+5)%size;pg.draw.circle(surf,(*hi,55),(x,y),1)
+            # Thin bevels mark only the actual room perimeter; connected floor
+            # cells share one plane and never receive a per-tile frame.
+            edge=max(1,size//18)
+            if not bits&1:
+                pg.draw.rect(surf,(*lo,120),(0,0,size,edge));pg.draw.line(surf,(*hi,55),(0,edge),(size-1,edge),1)
+            if not bits&2:pg.draw.rect(surf,(*lo,115),(size-edge,0,edge,size))
+            if not bits&4:pg.draw.rect(surf,(*lo,150),(0,size-edge,size,edge))
+            if not bits&8:
+                pg.draw.rect(surf,(*lo,105),(0,0,edge,size));pg.draw.line(surf,(*hi,45),(edge,0),(edge,size-1),1)
         else:return None
         self._sprite_cache[key]=surf;return surf
 
     def _settlement_wall_surface(self,piece,size:int,bits:int,role:str='wall'):
-        """Connected top-down wall/door tile selected from N/E/S/W neighbors."""
-        key=('settlement-wall-v2',str(getattr(piece,'id','')),int(size),int(bits),str(role))
+        """Connected top-down wall/door art with material depth and clean joins."""
+        key=('settlement-wall-v3',str(getattr(piece,'id','')),int(size),int(bits),str(role))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;base,hi,lo=self._settlement_palette(piece);surf=pg.Surface((size,size),pg.SRCALPHA)
-        mid=size//2;th=max(5,size//3);half=th//2;door=role in {'entrance','interior_door'} or str(getattr(piece,'category',''))=='opening'
+        mat=str(getattr(piece,'material',''));mid=size//2;th=max(4,size//4);half=th//2
+        door=role in {'entrance','interior_door'} or str(getattr(piece,'category',''))=='opening'
         horizontal=(bool(bits&2)+bool(bits&8))>=(bool(bits&1)+bool(bits&4))
-        if door:
-            # Door jambs inherit the exact axis of connected wall neighbors, so
-            # the doorway reads as a gap in one continuous wall rather than a
-            # freestanding sprite.
-            if horizontal:
-                pg.draw.rect(surf,(*base,255),(0,mid-half,max(1,mid-th//2),th))
-                pg.draw.rect(surf,(*base,255),(mid+th//2,mid-half,size-(mid+th//2),th))
-                pg.draw.rect(surf,(*lo,255),(mid-th//2,mid-half,th,th),2)
-                pg.draw.line(surf,(*hi,255),(mid-th//2,mid-half),(mid-th//2,mid+half),2)
-                pg.draw.line(surf,(*base,235),(mid-th//2+2,mid+half-2),(mid+half+2,mid-half+2),max(2,size//12))
+        def wall_rect(rect):
+            x,y,w,h=rect
+            pg.draw.rect(surf,(*lo,125),(x+1,y+2,w,h),border_radius=max(1,th//4))
+            pg.draw.rect(surf,(*base,255),rect,border_radius=max(1,th//5))
+            if w>=h:
+                pg.draw.line(surf,(*hi,205),(x,max(0,y)),(min(size-1,x+w-1),max(0,y)),1)
+                pg.draw.line(surf,(*lo,205),(x,min(size-1,y+h-1)),(min(size-1,x+w-1),min(size-1,y+h-1)),1)
             else:
-                pg.draw.rect(surf,(*base,255),(mid-half,0,th,max(1,mid-th//2)))
-                pg.draw.rect(surf,(*base,255),(mid-half,mid+th//2,th,size-(mid+th//2)))
-                pg.draw.rect(surf,(*lo,255),(mid-half,mid-th//2,th,th),2)
-                pg.draw.line(surf,(*hi,255),(mid-half,mid-th//2),(mid+half,mid-th//2),2)
-                pg.draw.line(surf,(*base,235),(mid-half+2,mid-th//2+2),(mid+half-2,mid+half+2),max(2,size//12))
+                pg.draw.line(surf,(*hi,205),(max(0,x),y),(max(0,x),min(size-1,y+h-1)),1)
+                pg.draw.line(surf,(*lo,205),(min(size-1,x+w-1),y),(min(size-1,x+w-1),min(size-1,y+h-1)),1)
+        if door:
+            gap=max(th+2,int(size*.38));g0=mid-gap//2;g1=mid+gap//2
+            if horizontal:
+                wall_rect((0,mid-half,max(1,g0),th));wall_rect((g1,mid-half,max(1,size-g1),th))
+                pg.draw.rect(surf,(*lo,255),(g0-1,mid-half-1,3,th+2))
+                pg.draw.rect(surf,(*hi,255),(g1-1,mid-half-1,3,th+2))
+                leaf=pg.Rect(g0+2,mid-half+2,max(3,gap-5),max(3,th-4))
+                pg.draw.rect(surf,(*base,245),leaf,border_radius=1);pg.draw.rect(surf,(*lo,230),leaf,1,border_radius=1)
+                pg.draw.circle(surf,(*hi,255),(max(leaf.left+1,leaf.right-3),leaf.centery),1)
+            else:
+                wall_rect((mid-half,0,th,max(1,g0)));wall_rect((mid-half,g1,th,max(1,size-g1)))
+                pg.draw.rect(surf,(*lo,255),(mid-half-1,g0-1,th+2,3))
+                pg.draw.rect(surf,(*hi,255),(mid-half-1,g1-1,th+2,3))
+                leaf=pg.Rect(mid-half+2,g0+2,max(3,th-4),max(3,gap-5))
+                pg.draw.rect(surf,(*base,245),leaf,border_radius=1);pg.draw.rect(surf,(*lo,230),leaf,1,border_radius=1)
+                pg.draw.circle(surf,(*hi,255),(leaf.centerx,max(leaf.top+1,leaf.bottom-3)),1)
         else:
-            pg.draw.rect(surf,(*base,255),(mid-half,mid-half,th,th))
-            if bits&1:pg.draw.rect(surf,(*base,255),(mid-half,0,th,mid+1))
-            if bits&2:pg.draw.rect(surf,(*base,255),(mid,mid-half,size-mid,th))
-            if bits&4:pg.draw.rect(surf,(*base,255),(mid-half,mid,th,size-mid))
-            if bits&8:pg.draw.rect(surf,(*base,255),(0,mid-half,mid+1,th))
-            if bits==0:pg.draw.rect(surf,(*base,255),(mid-half,size//7,th,size-2*(size//7)),border_radius=max(1,size//10))
-            # Top/left highlight plus bottom/right shadow makes connected walls
-            # match the existing environmental tile lighting direction.
-            pg.draw.line(surf,(*hi,220),(mid-half,max(0,mid-half)),(mid-half,min(size-1,mid+half)),1)
-            pg.draw.line(surf,(*lo,220),(min(size-1,mid+half),max(0,mid-half)),(min(size-1,mid+half),min(size-1,mid+half)),2)
+            wall_rect((mid-half,mid-half,th,th))
+            if bits&1:wall_rect((mid-half,0,th,mid+1))
+            if bits&2:wall_rect((mid,mid-half,size-mid,th))
+            if bits&4:wall_rect((mid-half,mid,th,size-mid))
+            if bits&8:wall_rect((0,mid-half,mid+1,th))
+            if bits==0:wall_rect((mid-half,size//7,th,size-2*(size//7)))
+            # Junction cap hides branch overlap and gives corners/posts a
+            # deliberate architectural read instead of a chunky tile center.
+            if bin(bits).count('1')!=2 or ((bits&1 or bits&4) and (bits&2 or bits&8)):
+                cap=max(th+1,int(th*1.15));cr=pg.Rect(mid-cap//2,mid-cap//2,cap,cap)
+                pg.draw.rect(surf,(*base,255),cr,border_radius=max(1,cap//5));pg.draw.rect(surf,(*hi,185),cr,1,border_radius=max(1,cap//5))
+            if 'stone' in mat:
+                step=max(4,size//6)
+                for x in range(step//2,size,step):
+                    if surf.get_at((x,mid))[3]:pg.draw.line(surf,(*lo,75),(x,mid-half),(x,mid+half),1)
+            else:
+                grain_y=max(0,mid-half+2)
+                if horizontal or bits in (2,8,10):
+                    pg.draw.line(surf,(*lo,65),(1,grain_y),(size-2,grain_y),1)
+                else:
+                    grain_x=max(0,mid-half+2);pg.draw.line(surf,(*lo,65),(grain_x,1),(grain_x,size-2),1)
+        self._sprite_cache[key]=surf;return surf
+
+    def _settlement_roof_bits(self,key,cell,settlement_by):
+        wx,wy,wz=key;bits=0
+        if not cell.structure_id or not cell.roof_piece_id:return 0
+        for bit,dx,dy in ((1,0,-1),(2,1,0),(4,0,1),(8,-1,0)):
+            other=settlement_by.get((wx+dx,wy+dy,wz))
+            if other is not None and other.structure_id==cell.structure_id and other.roof_piece_id:
+                bits|=bit
+        return bits
+
+    def _settlement_roof_surface(self,piece,size:int,bits:int):
+        """Continuous roof field: shared edges disappear; eaves remain visible."""
+        if piece is None:return None
+        key=('settlement-roof-v1',str(getattr(piece,'id','')),int(size),int(bits))
+        cached=self._sprite_cache.get(key)
+        if cached is not None:return cached
+        pg=self.pg;base,hi,lo=self._settlement_palette(piece);mat=str(getattr(piece,'material',''))
+        surf=pg.Surface((size,size),pg.SRCALPHA);surf.fill((*base,255))
+        if any(token in mat for token in ('stone','slate','clay')):
+            row=max(4,size//6)
+            for y in range(row,size,row):
+                pg.draw.line(surf,(*lo,110),(0,y),(size-1,y),1)
+                off=(row//2) if (y//row)%2 else 0
+                for x in range(off,size,row):
+                    pg.draw.line(surf,(*lo,80),(x,max(0,y-row)),(x,y),1)
+        else:
+            row=max(3,size//7)
+            for y in range(row,size,row):
+                pg.draw.line(surf,(*lo,105),(0,y),(size-1,y),1)
+                if y+1<size:pg.draw.line(surf,(*hi,40),(0,y+1),(size-1,y+1),1)
+            for i in range(max(3,size//9)):
+                x=(i*17+5)%size;pg.draw.line(surf,(*hi,35),(x,2),(x,min(size-3,2+size//3)),1)
+        edge=max(2,size//10)
+        # Connected roof cells are a single visual mass. Only the outside
+        # perimeter receives eaves/shadow, removing the former brown tile grid.
+        if not bits&1:
+            pg.draw.rect(surf,(*hi,115),(0,0,size,max(1,edge//2)))
+            pg.draw.rect(surf,(*lo,120),(0,max(1,edge//2),size,1))
+        if not bits&2:pg.draw.rect(surf,(*lo,120),(size-edge,0,edge,size))
+        if not bits&4:
+            pg.draw.rect(surf,(*lo,190),(0,size-edge,size,edge))
+            pg.draw.line(surf,(25,25,23,120),(0,size-1),(size-1,size-1),1)
+        if not bits&8:pg.draw.rect(surf,(*lo,100),(0,0,edge,size))
         self._sprite_cache[key]=surf;return surf
 
     def _draw_settlement_piece(self,piece,rect,*,roof:bool=False,fixture:bool=False):
@@ -2792,7 +2892,10 @@ class PygameTerminal(PointerUI):
         home_by={(q.x,q.y,q.z):q for q in nearby['animal_homes'] if _onscreen(q.x,q.y,q.z) and q.discovered}
         resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
         if settlement_by:
-            resource_by={k:v for k,v in resource_by.items() if k not in settlement_by or not (settlement_by[k].road_ids or settlement_by[k].ground_piece_id or settlement_by[k].structure_id or settlement_by[k].structure_piece_id or settlement_by[k].fixture_piece_id)}
+            resource_by={
+                k:v for k,v in resource_by.items()
+                if not sim.settlement_physicalization.clears_natural_feature(WorldPos(k[0],k[1],k[2]))
+            }
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
         else:
@@ -2921,9 +3024,17 @@ class PygameTerminal(PointerUI):
             rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
             scell=settlement_by.get(k)
             if scell:
-                roofed=bool(scell.roof_piece_id and scell.structure_id and scell.structure_id!=player_structure_id and not scell.structure_piece_id)
-                if roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.roof_piece_id),rect,roof=True)
-                if scell.structure_piece_id:
+                roofed=bool(scell.roof_piece_id and scell.structure_id and scell.structure_id!=player_structure_id)
+                if roofed:
+                    roof_piece=registry.settlement_pieces.get(scell.roof_piece_id)
+                    roof_bits=self._settlement_roof_bits(k,scell,settlement_by)
+                    roof_surf=self._settlement_roof_surface(roof_piece,tile_px,roof_bits)
+                    if roof_surf is not None:screen.blit(roof_surf,rect.topleft)
+                # Interior partitions/doors belong below the roof and should not
+                # telegraph the floor plan while the player is outside. Exterior
+                # shell pieces have no roof cell and remain visible.
+                hide_under_roof=roofed and scell.structure_piece_role in {'partition','interior_door'}
+                if scell.structure_piece_id and not hide_under_roof:
                     piece=registry.settlement_pieces.get(scell.structure_piece_id)
                     bits=self._settlement_connection_bits(k,scell,settlement_by,registry,ground=False)
                     surf=self._settlement_wall_surface(piece,tile_px,bits,scell.structure_piece_role)
