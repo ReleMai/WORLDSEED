@@ -603,8 +603,19 @@ class PygameTerminal(PointerUI):
         state['x']=max(8,min(sw-state['w']-8,state['x']));state['y']=max(8,min(sh-state['h']-8,state['y']))
         return state
 
+    def _suspend_world_hover_animation(self) -> None:
+        """Detach world-only hover/animation state while an overlay owns input.
+
+        The retained local-world animation snapshots can otherwise repaint the
+        map during read_key() idle ticks, visually erasing a floating/context
+        panel while its UI modal remains active.
+        """
+        self._hover_context=None;self._hover_map_snapshot=None
+        self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
+
     def _floating_feature_shell(self, panel_id: str, domain: str, title: str, subtitle: str=''):
         pg=self.pg;screen=self.screen;assert screen is not None
+        self._suspend_world_hover_animation()
         if self._floating_backdrop is None or self._floating_panel_id!=panel_id:
             self._floating_backdrop=screen.copy()
             self._floating_panel_id=panel_id
@@ -710,7 +721,10 @@ class PygameTerminal(PointerUI):
 
     def _present_context_menu(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         pg=self.pg;screen=self.screen;assert screen is not None
+        # Preserve the already captured world backdrop, then detach the live
+        # hover renderer so idle weather/water frames cannot paint over this UI.
         if self._context_backdrop is None:self._context_backdrop=screen.copy()
+        self._suspend_world_hover_animation()
         screen.blit(self._context_backdrop,(0,0));self._pointer_targets.clear();self._set_input_mode('ui')
         labels=[getattr(r,'label',str(r)) for r in rows]
         width=max(260,min(430,max([self.small_font.size(x)[0] for x in labels]+[220])+42))

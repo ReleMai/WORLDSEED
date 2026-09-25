@@ -144,3 +144,9 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Physical fuel, hygiene supplies and medicine are consumed on distinct household cadences rather than acting as decorative reserve targets.
 - Food, fuel, hygiene, medicine and poor diet combine into a bounded hardship score that changes member health/safety needs and tracks stable recovery days.
 - All consumption remains attached to real home containers; no invisible duplicate household stock was introduced.
+
+
+### Dev UI overlay hotfix
+- Fixed retained local-world weather/water/hover animation repainting over inventory and right-click context overlays during idle input waits.
+- Floating and context panels now explicitly suspend world-only hover animation state while they own UI input; the next local-world render reconstructs it normally.
+- This fixes the symptom where the panel visually disappeared but the hidden modal still captured input until Escape.
