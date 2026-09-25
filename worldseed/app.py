@@ -220,7 +220,6 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=20):
     therefore choose a different population/rank than the eventual settlement.
     """
     villages=[];others=[]
-    planner=RegionBlockPlanner(world)
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
         for gy in (1,2,3,4,5):
@@ -232,8 +231,11 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=20):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                region=planner.plan(rx,ry,persist=False)
-                if not region.settlement_present:continue
+                # Startup candidate discovery stays a cheap deterministic prefilter
+                # and never constructs/persists regional plans. The candidate is
+                # accepted only after hydrology when _village_gateway_spawn runs
+                # the v4 terrain-led regional civilization planner.
+                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
