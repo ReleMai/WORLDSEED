@@ -15,12 +15,26 @@ class ProceduralSocietyGenerator:
     def __init__(self,world_seed:bytes,registry:ContentRegistry,region_planner=None):
         self.seed=world_seed; self.registry=registry; self.region_planner=region_planner
     def culture_for_region(self,rx:int,ry:int)->CultureState:
-        rng=PCG32(derive_seed(self.seed,"culture",rx//3,ry//3))
-        uid=f"culture:{rx//3}:{ry//3}"; vals=[]
+        faction_values=()
+        culture_rx,culture_ry=int(rx),int(ry)
+        if self.region_planner is not None and int(getattr(self.region_planner,"version",0))>=4:
+            faction_seed=self.region_planner.civilization.faction_seed_for_region(rx,ry)
+            # A prominent faction has one stable heartland culture regardless of
+            # which frontier settlement the player encounters first.
+            culture_rx,culture_ry=faction_seed.seat_region_x,faction_seed.seat_region_y
+            faction_values=tuple(faction_seed.values)
+        cx,cy=culture_rx//3,culture_ry//3
+        rng=PCG32(derive_seed(self.seed,"culture",cx,cy))
+        uid=f"culture:{cx}:{cy}"; vals=[]
+        for v in faction_values:
+            if v in VALUES and v not in vals:
+                vals.append(v)
+            if len(vals)>=2:
+                break
         while len(vals)<3:
             v=rng.choice(VALUES)
             if v not in vals: vals.append(v)
-        
+
         cname=culture_name(rng); syll=["ka","ve","or","en","thal","mir","sa","dor","ul","ra","ni","esh"]
         lex={concept:"".join(rng.choice(syll) for _ in range(2+rng.randbelow(2))) for concept in ("water","fire","king","home","death","iron","sun","river")}
         return CultureState(uid,cname,vals,rng.choice(["short","compound","ancestral"]),[rng.choice(TABOOS)],rng.choice(["wood","stone","metal","fiber"]),lex)

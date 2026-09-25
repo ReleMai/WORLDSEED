@@ -123,8 +123,11 @@ class RegionalCivilizationTests(unittest.TestCase):
         self.assertTrue(town.founding_trait)
         self.assertTrue(faction.tradition)
         self.assertTrue(faction.motto)
-        self.assertEqual(faction.uid, regions.civilization.faction_seed_for_region(*coords).uid)
+        seed=regions.civilization.faction_seed_for_region(*coords)
+        self.assertEqual(faction.uid, seed.uid)
         self.assertEqual(town.culture_id, culture.uid)
+        self.assertEqual(faction.culture_id, culture.uid)
+        self.assertTrue(set(seed.values[:2]).issubset(set(culture.values)))
 
 
 if __name__ == "__main__":
