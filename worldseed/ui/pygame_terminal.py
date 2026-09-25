@@ -2097,6 +2097,51 @@ class PygameTerminal(PointerUI):
             surf.fill((105,82,55))
         self._sprite_cache[key]=surf;return surf
 
+    def _settlement_wall_surface(self,piece,size:int,bits:int):
+        if piece is None:return None
+        mat=str(getattr(piece,'material',''))
+        styles=self._visuals.manifest.get('settlement_wall_styles',{})
+        style=styles.get(mat) or styles.get('timber') or {}
+        key=('settlement-wall-style',str(getattr(piece,'id','')),int(size),int(bits)&15)
+        cached=self._sprite_cache.get(key)
+        if cached is not None:return cached
+        pg=self.pg;surf=pg.Surface((size,size),pg.SRCALPHA)
+        base=tuple(style.get('base',(126,90,52)));hi=tuple(style.get('highlight',(168,125,76)));lo=tuple(style.get('shadow',(75,52,34)))
+        thickness=max(4,round(size*int(style.get('thickness',9))/32));half=max(2,thickness//2);mid=size//2;offset=max(1,size//16)
+        def arm(bit):
+            if bit==1:return pg.Rect(mid-half,0,thickness,mid+half)
+            if bit==2:return pg.Rect(mid-half,mid-half,size-mid+half,thickness)
+            if bit==4:return pg.Rect(mid-half,mid-half,thickness,size-mid+half)
+            return pg.Rect(0,mid-half,mid+half,thickness)
+        active=[bit for bit in (1,2,4,8) if bits&bit] or [1,4]
+        for bit in active:pg.draw.rect(surf,(*lo,115),arm(bit).move(offset,offset),border_radius=max(1,size//12))
+        center=pg.Rect(mid-half,mid-half,thickness,thickness)
+        pg.draw.rect(surf,(*lo,115),center.move(offset,offset),border_radius=max(1,size//12))
+        for bit in active:pg.draw.rect(surf,base,arm(bit),border_radius=max(1,size//14))
+        pg.draw.rect(surf,base,center,border_radius=max(1,size//10))
+        texture=str(style.get('texture','timber'))
+        if texture in {'timber','plank','wattle'}:
+            step=max(4,size//5)
+            for yy in range(step//2,size,step):
+                for xx in range(1,size-1):
+                    if surf.get_at((xx,yy)).a:surf.set_at((xx,yy),(*lo,210))
+            pg.draw.line(surf,hi,(max(0,mid-half+1),1),(max(0,mid-half+1),size-2),1)
+        else:
+            step=max(5,size//4)
+            for yy in range(2,size,step):
+                off=step//2 if (yy//step)%2 else 0
+                for xx in range(-off,size,step):
+                    if 0<=xx<size and surf.get_at((xx,yy)).a:
+                        pg.draw.line(surf,lo,(xx,yy),(min(size-1,xx+step-2),yy),1)
+            pg.draw.line(surf,hi,(max(0,mid-half+1),1),(max(0,mid-half+1),size-2),1)
+        tags=set(getattr(piece,'tags',()) or ())
+        if 'reinforced' in tags:
+            band=max(1,size//12);pg.draw.rect(surf,lo,(mid-half,mid-band,thickness,band*2))
+        if 'corner' in tags and len(active)>=2:
+            cap=max(2,thickness//3);pg.draw.rect(surf,hi,(mid-cap,mid-cap,cap*2,cap*2),1)
+        self._sprite_cache[key]=surf
+        return surf
+
     def _settlement_structure_surface(self,piece,size:int,bits:int,role:str):
         if piece is None:return None
         frame=self._visuals.settlement_autotile_frame_size()
@@ -2106,10 +2151,7 @@ class PygameTerminal(PointerUI):
                 ew=int(bool(bits&2))+int(bool(bits&8));ns=int(bool(bits&1))+int(bool(bits&4))
                 row=0 if ew>=ns else 1
                 return self._load_atlas_frame(path,self._settlement_door_column(piece),row,frame,size,size,smooth=False)
-        path=self._visuals.settlement_autotile_path('walls')
-        if path is not None:
-            return self._load_atlas_frame(path,int(bits)&15,self._settlement_wall_row(piece),frame,size,size,smooth=False)
-        return None
+        return self._settlement_wall_surface(piece,size,bits)
 
     def _draw_settlement_door_status(self,rect,door):
         if door is None:return

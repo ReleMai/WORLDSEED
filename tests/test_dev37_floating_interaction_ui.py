@@ -304,7 +304,7 @@ class FloatingInteractionPygameTests(unittest.TestCase):
     def test_every_settlement_piece_has_graphical_render_path(self):
         registry=ContentRegistry.load(DATA_DIR)
         fallback_categories={'furniture','workshop','agriculture','mine','decoration','civic'}
-        self.assertTrue(self.term._visuals.settlement_autotile_path('walls').exists())
+        self.assertIsNone(self.term._visuals.settlement_autotile_path('walls'))
         self.assertTrue(self.term._visuals.settlement_autotile_path('floors').exists())
         self.assertTrue(self.term._visuals.settlement_autotile_path('doors').exists())
         for piece in registry.settlement_pieces.values():

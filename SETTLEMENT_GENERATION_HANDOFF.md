@@ -408,7 +408,7 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Exterior entrances are no longer selected from arbitrary shell cells. The planner now considers only non-corner edge cells with a cardinal interior floor directly behind the threshold, then prefers the approach facing the nearest road. This removes the case where a door looked open but a corner wall still blocked movement.
 - New v3 buildings stamp a real floor threshold under exterior doors and can stamp a short footpath apron from the entrance toward the parcel access road.
 - Wall placement now uses the settlement catalog semantically: straight wall pieces on edges, corner pieces on corners, and reinforced pieces on internal partitions. Ordinary non-mining buildings deliberately use the wood door rather than whichever opening happened to sort first.
-- Added three authored 32px settlement autotile atlases: 16-way wall connectivity for timber/plank/stone/wattle, 16-way floor edge blending for plank/stone/packed-earth/clay, and orientation-specific doorway art for wood/ironbound/wattle/stone openings.
+- Added authored settlement art integration: a 16-way floor edge atlas for plank/stone/packed-earth/clay, an orientation-specific doorway atlas for wood/ironbound/wattle/stone openings, and data-authored material palettes for 16-way connected walls. Wall geometry is rendered from authoritative N/E/S/W connectivity so joins remain exact at every zoom.
 - The pygame renderer derives cardinal connectivity from authoritative physicalization cells and selects the exact authored frame. Walls therefore join through corners and doorframes instead of appearing as isolated blocks; floors suppress seams between connected interior tiles and keep darker boundary shading only at exposed edges.
 - Door rendering now follows the wall axis, visually leaves the threshold passable, and overlays lock/forced-state cues from the existing PropertySecuritySystem. Legacy v2 door cells borrow the adjacent interior floor only for presentation so older saves do not show a bare terrain hole under the doorway.
 - VisualRegistry now owns and audits the settlement autotile assets, so release asset checks fail if an atlas is missing.
@@ -419,3 +419,5 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - generated buildings use straight/corner/reinforced wall semantics
 - every settlement wall/opening/floor has an authored autotile render path
 - wall connection masks, floor edge masks, and N/S versus E/W door frames render as distinct images
+
+- CI caught a corrupted wall PNG in the first WU19 art pass. The wall layer now uses data-authored material styles plus procedural 16-way connectivity rather than retaining a fragile redundant binary atlas; floor and doorway atlases remain authored PNG assets and VisualRegistry audits them.

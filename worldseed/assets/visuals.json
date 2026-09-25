@@ -923,8 +923,85 @@
   "item_assets_source": "data/items.json",
   "settlement_autotiles": {
     "frame_size": 32,
-    "walls": "assets/sprites/structures/settlement_wall_autotiles.png",
     "floors": "assets/sprites/structures/settlement_floor_autotiles.png",
     "doors": "assets/sprites/structures/settlement_door_autotiles.png"
+  },
+  "settlement_wall_styles": {
+    "timber": {
+      "base": [
+        126,
+        90,
+        52
+      ],
+      "highlight": [
+        168,
+        125,
+        76
+      ],
+      "shadow": [
+        75,
+        52,
+        34
+      ],
+      "thickness": 9,
+      "texture": "timber"
+    },
+    "plank": {
+      "base": [
+        137,
+        96,
+        56
+      ],
+      "highlight": [
+        179,
+        132,
+        80
+      ],
+      "shadow": [
+        82,
+        56,
+        35
+      ],
+      "thickness": 9,
+      "texture": "plank"
+    },
+    "stone": {
+      "base": [
+        118,
+        119,
+        114
+      ],
+      "highlight": [
+        158,
+        158,
+        151
+      ],
+      "shadow": [
+        73,
+        76,
+        74
+      ],
+      "thickness": 10,
+      "texture": "stone"
+    },
+    "wattle": {
+      "base": [
+        117,
+        94,
+        65
+      ],
+      "highlight": [
+        151,
+        122,
+        84
+      ],
+      "shadow": [
+        74,
+        58,
+        40
+      ],
+      "thickness": 8,
+      "texture": "wattle"
+    }
   }
 }
