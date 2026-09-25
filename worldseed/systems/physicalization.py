@@ -184,7 +184,8 @@ class SettlementPhysicalizationSystem:
                 region = self.region_planner.plan(settlement.region_x, settlement.region_y, persist=True)
                 try:
                     skeleton = self.skeleton_planner.plan(
-                        region, settlement.uid, settlement.population, persist=True
+                        region, settlement.uid, settlement.population, persist=True,
+                        culture_style=str(getattr(settlement, "culture_style", "")),
                     )
                 except ValueError:
                     continue

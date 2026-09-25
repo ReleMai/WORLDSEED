@@ -257,7 +257,10 @@ def _village_gateway_spawn(world:World,seed:bytes,reg:ContentRegistry,target)->W
     if not generated:raise ValueError("Selected village region no longer contains a settlement")
     town=generated[0]
     skeletons=SettlementSkeletonPlanner(world)
-    skeleton=skeletons.plan(region,town.uid,town.population,persist=False,refresh=True)
+    skeleton=skeletons.plan(
+        region,town.uid,town.population,persist=False,refresh=True,
+        culture_style=str(getattr(town,"culture_style","")),
+    )
     commons=list(skeleton.plan.common_cells)
     if commons:
         cx=sum(x for x,_ in commons)//len(commons);cy=sum(y for _,y in commons)//len(commons)

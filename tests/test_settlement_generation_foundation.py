@@ -261,6 +261,24 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
                 structure.uid,
             )
 
+    def test_cultural_material_style_changes_generated_architecture_choices(self):
+        world=SimpleNamespace(
+            generator=SimpleNamespace(world_seed=b'culture-materials'),
+            delta_source=SimpleNamespace(),registry=self.registry,
+        )
+        planner=SettlementSkeletonPlanner(world,version=4)
+        stone_wall,stone_floor,stone_roof,_=planner._material_choices(
+            'agrarian','stone compounds; formal civic lanes'
+        )
+        wattle_wall,_,wattle_roof,_=planner._material_choices(
+            'agrarian','wattle-and-thatch homes; ancestral compounds'
+        )
+        self.assertIn('stone_',stone_wall.id)
+        self.assertIn('stone_',stone_floor.id)
+        self.assertTrue('stone' in stone_roof.id or 'slate' in stone_roof.id)
+        self.assertIn('wattle_',wattle_wall.id)
+        self.assertIn('thatch_',wattle_roof.id)
+
     def test_settlement_plan_version_is_pinned_by_world_metadata(self):
         world=SimpleNamespace(
             generator=SimpleNamespace(world_seed=b'pinned-plan'),
