@@ -211,7 +211,7 @@ class VillageTarget:
     population:int
 
 
-def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
+def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=20):
     """Return deterministic settlement candidates without creating regional plans.
 
     Population is derived from the same settlement RNG position used when a real
@@ -220,6 +220,7 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     therefore choose a different population/rank than the eventual settlement.
     """
     villages=[];others=[]
+    planner=RegionBlockPlanner(world)
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
         for gy in (1,2,3,4,5):
@@ -231,7 +232,8 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                region=planner.plan(rx,ry,persist=False)
+                if not region.settlement_present:continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
