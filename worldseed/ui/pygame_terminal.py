@@ -2037,7 +2037,7 @@ class PygameTerminal(PointerUI):
                 surf.fill((122,89,51));step=max(5,size//5)
                 for y in range(0,size,step):pg.draw.line(surf,(76,56,37),(0,y),(size,y),1)
             elif 'footpath' in tags or 'alley' in tags:
-                surf.fill((98,82,59));margin=max(2,size//7);pg.draw.rect(surf,(123,96,62),(margin,0,size-2*margin,size));pg.draw.line(surf,(91,69,48),(size//3,0,size//3,size),1)
+                surf.fill((98,82,59));margin=max(2,size//7);pg.draw.rect(surf,(123,96,62),(margin,0,size-2*margin,size));pg.draw.line(surf,(91,69,48),(size//3,0),(size//3,size),1)
             else:
                 surf.fill((126,94,60))
                 for x in (size//3,2*size//3):pg.draw.line(surf,(93,68,46),(x,0),(x,size),max(1,size//12))
