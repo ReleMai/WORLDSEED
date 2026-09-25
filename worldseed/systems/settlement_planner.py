@@ -784,6 +784,7 @@ class SettlementSkeletonPlanner:
         function: str,
         archetype: str,
         large: bool,
+        style_tags=(),
     ) -> tuple[StructurePlanState,list[RoomPlanState],list[StructurePiecePlan]] | None:
         registry=getattr(self.world,"registry",None)
         if registry is None:
