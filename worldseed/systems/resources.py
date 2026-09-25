@@ -22,6 +22,7 @@ class ResourceSystem:
     """
     def __init__(self,state:LivingWorldState,registry,world_seed:bytes,world,version:int|None=None):
         self.state=state; self.registry=registry; self.seed=world_seed; self.world=world
+        self.settlement_overlay=None
         self.version=int(getattr(world,"resourcegen_version",RESOURCEGEN_VERSION) if version is None else version)
         self.revision=0
         self._raw_cache={}
@@ -34,6 +35,15 @@ class ResourceSystem:
             for t in (f.terrains or tuple(registry.terrains)):
                 self.by_terrain.setdefault(t,[]).append(f)
         for rows in self.by_terrain.values(): rows.sort(key=lambda f:f.id)
+
+    def attach_settlement_physicalization(self,overlay)->None:
+        """Bind the active physical settlement plan as a read-time blocker.
+
+        Prepared natural-resource chunks remain deterministic cache data; this
+        only suppresses their materialization/interaction where civilization
+        owns the physical space.
+        """
+        self.settlement_overlay=overlay
 
     def _season(self,minute:int|None=None)->str:
         m=self.state.clock_minute if minute is None else minute
@@ -95,6 +105,8 @@ class ResourceSystem:
         return {'total':total,'generated':generated,'reused':reused}
     def _base_feature(self,pos:WorldPos,minute:int|None=None)->str|None:
         if pos.z != 0:return None
+        if self.settlement_overlay is not None and self.settlement_overlay.clears_natural_feature(pos):
+            return None
         key=pos_key(pos.x,pos.y,pos.z)
         if key in self.state.structures or key in self.state.containers or key in self.state.crops or key in self.state.soils:
             return None
