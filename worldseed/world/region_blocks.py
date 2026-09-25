@@ -332,7 +332,12 @@ class RegionBlockPlanner:
         if "water" in mix or "coast" in mix: tags.append("waterside")
         control = "settled" if present else ("bandit_frontier" if hash_u64(self.seed, "region-bandit-potential", rx, ry) % 100 < 11 else "wild")
         site_potential = hash_u64(self.seed, "region-site-potential", rx, ry) % 100 < 18
-        roads = tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None)
+        # Settlement-plan v4 moves strategic roads to StrategicRoutePlanner.
+        # Older regional plans retain their deterministic edge contract for save
+        # compatibility, but new civilization plans never invent a parallel
+        # random road network beside persistent route plans.
+        roads = (() if self.version >= 4 else
+                 tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None))
         waters = self._water_edges(rx, ry)
         payload = {
             "uid": f"region:{rx}:{ry}", "region_x": rx, "region_y": ry, "version": self.version,
