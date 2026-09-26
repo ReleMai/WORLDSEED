@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -17,6 +17,7 @@ class NPCSystem:
     def attach_property_security(self,security)->None:self.property_security=security
     def attach_households(self,households)->None:self.households=households
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
+    def attach_route_planner(self,system)->None:self.route_planner=system
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -120,7 +121,10 @@ class NPCSystem:
         elif best=="drink":
             npc.tasks=[{"kind":"move","x":center.x,"y":center.y},{"kind":"perform","action":"drink"}]
         elif best=="guard":
-            target=self._service_destination(town,("watchhouse",))
+            target=None
+            if self.route_planner is not None and getattr(town,"frontier_status","core") in {"frontier","contested"}:
+                target=self.route_planner.patrol_destination_for_settlement(town.uid)
+            if target is None:target=self._service_destination(town,("watchhouse",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"guard"}]
         elif best=="heal":
             target=self._service_destination(town,("clinic",))
@@ -160,6 +164,9 @@ class NPCSystem:
             if self.world and abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60:
                 def passable(p):
                     world_pass=self.world.is_passable(p)
+                    if not world_pass and self.settlement_physicalization is not None:
+                        crossing=self.settlement_physicalization.crossing_at(p)
+                        world_pass=bool(crossing and str(crossing.kind) in {"bridge","ford"} and not bool(crossing.blocked))
                     if not world_pass:return False
                     if self.building and not self.building.passable(p,world_pass):return False
                     if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
