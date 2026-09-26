@@ -44,15 +44,18 @@ class SettlementPhysicalizationSystem:
         "maintained_road": "core:cobble_road_piece",
     }
 
-    def __init__(self, world, registry, region_planner, skeleton_planner):
+    def __init__(self, world, registry, region_planner, skeleton_planner, route_planner=None):
         self.world = world
         self.registry = registry
         self.region_planner = region_planner
         self.skeleton_planner = skeleton_planner
+        self.route_planner = route_planner
         self._cells: dict[tuple[int, int], PhysicalizedSettlementCell] = {}
         self._rooms: dict[str, object] = {}
         self._structures: dict[str, object] = {}
         self._skeletons: dict[str, object] = {}
+        self._route_segments: dict[str, object] = {}
+        self._crossings: dict[str, object] = {}
         self._active_settlement_ids: tuple[str, ...] = ()
         self.revision = 0
 
@@ -65,6 +68,8 @@ class SettlementPhysicalizationSystem:
         self._rooms.clear()
         self._structures.clear()
         self._skeletons.clear()
+        self._route_segments.clear()
+        self._crossings.clear()
         self._active_settlement_ids = ()
         self.revision += 1
 
@@ -154,6 +159,27 @@ class SettlementPhysicalizationSystem:
                 old, x=placement.x, y=placement.y, settlement_id=settlement_id, **changes
             )
 
+    def _index_regional_route(self, road, crossings) -> None:
+        """Project one exact strategic road segment into the same local cell index."""
+        self._route_segments[road.uid]=road
+        ferry_cells=[(int(c.x),int(c.y)) for c in crossings if str(c.kind)=="ferry" and c.route_id==road.route_id]
+        piece_id=self._road_piece(road.road_class)
+        for x,y in road.polyline:
+            x=int(x);y=int(y)
+            env=self.world.environment_at(WorldPos(x,y,0))
+            if env is not None and env.open_water and ferry_cells:
+                if min(abs(x-cx)+abs(y-cy) for cx,cy in ferry_cells)<=8:
+                    continue
+            key=(x,y);old=self._cells.get(key)
+            road_ids=tuple(sorted(set((old.road_ids if old else ())+(road.uid,road.route_id))))
+            settlement_id=old.settlement_id if old else ""
+            self._cells[key]=self._merge_cell(
+                old,x=x,y=y,settlement_id=settlement_id,
+                road_ids=road_ids,ground_piece_id=piece_id,
+            )
+        for crossing in crossings:
+            if crossing.route_id==road.route_id:self._crossings[crossing.uid]=crossing
+
     def sync(self, settlements: Iterable, center_region: tuple[int, int], radius: int = 0) -> int:
         """Rebuild the local index from settlements near one active region.
 
@@ -172,31 +198,40 @@ class SettlementPhysicalizationSystem:
         new_rooms = {}
         new_structures = {}
         new_skeletons = {}
-        old_cells, old_rooms, old_structures, old_skeletons = (
-            self._cells, self._rooms, self._structures, self._skeletons
+        new_route_segments={}
+        new_crossings={}
+        old_cells,old_rooms,old_structures,old_skeletons,old_route_segments,old_crossings=(
+            self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings
         )
-        self._cells, self._rooms, self._structures, self._skeletons = (
-            new_cells, new_rooms, new_structures, new_skeletons
+        self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings=(
+            new_cells,new_rooms,new_structures,new_skeletons,new_route_segments,new_crossings
         )
         active = []
         try:
             for settlement in selected:
                 region = self.region_planner.plan(settlement.region_x, settlement.region_y, persist=True)
                 try:
+                    route_links=(
+                        self.route_planner.links_for_settlement(settlement.uid)
+                        if self.route_planner is not None else ()
+                    )
                     skeleton = self.skeleton_planner.plan(
                         region, settlement.uid, settlement.population,
                         culture_id=str(getattr(settlement,"culture_id","")),
                         faction_id=str(getattr(settlement,"faction_id","")),
-                        persist=True
+                        route_links=route_links,persist=True
                     )
                 except ValueError:
                     continue
                 active.append(settlement.uid)
                 self._skeletons[settlement.uid] = skeleton
                 self._index_skeleton(settlement.uid, skeleton)
+            if self.route_planner is not None:
+                route_roads,route_crossings=self.route_planner.materialize_region((rx,ry),self._skeletons)
+                for road in route_roads:self._index_regional_route(road,route_crossings)
         except Exception:
-            self._cells, self._rooms, self._structures, self._skeletons = (
-                old_cells, old_rooms, old_structures, old_skeletons
+            self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings=(
+                old_cells,old_rooms,old_structures,old_skeletons,old_route_segments,old_crossings
             )
             raise
         self._active_settlement_ids = tuple(active)
@@ -210,6 +245,15 @@ class SettlementPhysicalizationSystem:
         """Return only materialized settlement cells intersecting a local viewport."""
         left,top,right,bottom=map(int,(left,top,right,bottom))
         return tuple(cell for (x,y),cell in self._cells.items() if left<=x<=right and top<=y<=bottom)
+
+    def route_segments(self):
+        return tuple(self._route_segments[key] for key in sorted(self._route_segments))
+
+    def crossing_by_id(self,crossing_id:str):
+        return self._crossings.get(str(crossing_id))
+
+    def crossing_at(self,pos:WorldPos):
+        return next((c for c in self._crossings.values() if int(c.x)==pos.x and int(c.y)==pos.y),None)
 
     def skeleton_for(self, settlement_id: str):
         return self._skeletons.get(str(settlement_id))
