@@ -60,20 +60,24 @@ class RegionalCivilizationPlanner:
         base = self.generator.sample_fields(pos)
         env_reader = getattr(self.world, "environment_at", None)
         env = env_reader(pos) if callable(env_reader) else None
-        fertility = int(env.soil_fertility if env else base.fertility * 100 // 65535)
+        base_fertility = int(getattr(base, "fertility", 36000))
+        base_moisture = int(getattr(base, "moisture", 33000))
+        base_temperature = int(getattr(base, "temperature", 36000))
+        base_elevation = int(getattr(base, "elevation", 32000))
+        fertility = int(env.soil_fertility if env else base_fertility * 100 // 65535)
         farmland = int(env.farmland if env else max(0, fertility - 10))
         slope = int(env.slope if env else 20)
         relief = int(env.relief if env else 20)
         flood = int(env.flood_risk if env else 0)
-        moisture = base.moisture * 100 // 65535
+        moisture = base_moisture * 100 // 65535
         # Before hydrology is prepared (notably Village Start candidate search),
         # climate moisture is only a coarse water-access proxy. Prepared worlds
         # replace it with the authoritative hydrology-derived freshwater field.
         freshwater = int(env.resources.freshwater if env else max(0, min(65, moisture * 3 // 4)))
         timber = int(env.resources.timber if env else moisture)
-        stone = int(env.resources.stone if env else max(0, (base.elevation - 30000) * 100 // 30000))
+        stone = int(env.resources.stone if env else max(0, (base_elevation - 30000) * 100 // 30000))
         opportunity = int(env.resource_opportunity if env else (timber + stone + freshwater) // 3)
-        temperature = base.temperature * 100 // 65535
+        temperature = base_temperature * 100 // 65535
         temperate = max(0, 100 - abs(temperature - 55) * 2)
 
         crossing = max(0, freshwater - flood // 2 - max(0, slope - 35))
