@@ -220,7 +220,7 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     therefore choose a different population/rank than the eventual settlement.
     """
     from worldseed.world.regional_civilization import RegionalCivilizationPlanner
-    civilization=RegionalCivilizationPlanner(world,getattr(world,"settlement_plan_version",1))
+    civilization=RegionalCivilizationPlanner(world,getattr(world,"settlement_plan_version",1),seed=seed)
     villages=[];others=[]
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
