@@ -9,6 +9,14 @@ class WaterExposure:
     salinity: str = ''
 
 def exposure(sim, pos):
+    physical=getattr(sim,"settlement_physicalization",None)
+    if physical is not None:
+        crossing=physical.crossing_at(pos)
+        if crossing is not None and not bool(getattr(crossing,"blocked",False)):
+            if str(getattr(crossing,"kind",""))=="bridge":
+                return WaterExposure()
+            if str(getattr(crossing,"kind",""))=="ford":
+                return WaterExposure("wading","ford","fresh")
     structure=sim.building.structure_at(pos)
     if structure:
         definition=sim.registry.structures[structure.structure_id]
