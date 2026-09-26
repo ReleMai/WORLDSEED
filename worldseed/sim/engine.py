@@ -136,9 +136,10 @@ class Simulation:
         self.region_planner=RegionBlockPlanner(world)
         self.settlement_lifecycle.attach_region_planner(self.region_planner)
         self.route_planner=RoutePlanner(world,self.state,self.region_planner)
+        self.economy.attach_route_planner(self.route_planner)
         self.settlement_planner=SettlementSkeletonPlanner(world)
         self.settlement_physicalization=SettlementPhysicalizationSystem(
-            world,registry,self.region_planner,self.settlement_planner
+            world,registry,self.region_planner,self.settlement_planner,self.route_planner
         )
         self.resources.attach_settlement_physicalization(self.settlement_physicalization)
         self.settlement_population=SettlementPopulationBinder(
@@ -401,7 +402,7 @@ class Simulation:
                 self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
                 summary["days"]+=1
             if "monthly" in kinds:
-                self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
+                self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
                 if policy=="full":
                     self.factions.monthly_update(minute);self.family.monthly_update(minute)
                 else:
@@ -436,7 +437,7 @@ class Simulation:
         old_day=old//1440;new_day=self.clock.minute//1440
         for day in range(old_day+1,new_day+1):
             minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
-            if day%30==0:self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
+            if day%30==0:self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
 
     def _update_vitals(self,minutes:int)->None:
@@ -518,9 +519,13 @@ class Simulation:
                         s=self.state.settlements[key]
                         if not any(n.alive and n.settlement_id==s.uid for n in self.state.npcs.values()):
                             for npc in self.society_gen.representatives_for_settlement(s):self.state.npcs[npc.uid]=npc
-            # Build a bounded sparse strategic road graph for the realized
-            # civilization window before local settlement projection.
-            self.route_planner.sync(self.state.settlements.values(),(rx,ry),radius=2,persist=True)
+            # Rebuild the sparse graph only across settlements already
+            # realized by exploration. RoutePlanner remains bounded by its
+            # regional partner window and never scans Tier-E infinity.
+            if self.route_planner.version>=3:
+                self.route_planner.sync_network(self.state.settlements.values(),persist=True)
+            else:
+                self.route_planner.sync(self.state.settlements.values(),(rx,ry),radius=2,persist=True)
             # Physicalize only the active region. Distant settlements remain
             # stable plan records and never inflate local collision/render state.
             self.settlement_physicalization.sync(

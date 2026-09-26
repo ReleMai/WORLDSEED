@@ -437,3 +437,31 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Materialize selected RoutePlanner corridors as continuous physical roads across prepared regions and make settlement gateways consume those exact route edges.
 - Add audit_settlement_plans.py, audit_routes.py and a bounded regional-civilization benchmark.
 - Add faction hinterlands/territorial influence and route-centrality feedback into later settlement growth without realizing distant towns.
+
+
+## Work unit 23 - Grand Regional Civilization Phase 2: Physical Transport & Hinterlands
+- Advanced new worlds to SETTLEMENT_PLAN_VERSION 5 and ROUTEGEN_VERSION 3. Routegen v2 and earlier remain pinned to their previous graph/rebuild behavior.
+- RegionalRoutePlan v3 now owns exact adjacent boundary portals for every region transition. Portals choose terrain-aware footing and use prepared hydrology crossings where appropriate instead of sending strategic roads through arbitrary region centers.
+- Crossing records now receive stable IDs and exact world coordinates. River size selects ford, bridge or ferry semantics; exact active-region materialization can also detect interior open-water runs and create deterministic local crossings.
+- Settlement-plan v5 consumes selected strategic-route links on first generation. Gateway roads carry the actual regional route ID/road class and route crossing identity, so local streets and long-distance roads meet at one stable handoff.
+- RoutePlanner now materializes only the active prepared region into exact cell-level RoadSegmentPlan corridors. These physical route cells are indexed through SettlementPhysicalizationSystem, clear conflicting wild features through the existing authority rules, and render through the existing connected-road presentation path without rewriting terrain.
+- Added persistent RouteInfrastructureState. Condition, cumulative traffic, blocked state, crossing condition/damage and maintenance timestamps survive generated-cache deletion/rebuild.
+- Caravan traversal now wears the physical route. Route condition causally modifies travel time, danger and capacity; same-faction endpoint infrastructure can spend faction treasury on bounded monthly maintenance.
+- EconomySystem consumes RoutePlanner on routegen v3+ and removes the old independently generated market-route graph. Legacy routegen worlds retain the old economy/pathfinder contract.
+- Sparse graph refresh no longer erases retired-road infrastructure history.
+- RoutePlanner computes settlement route centrality and faction travel-cost influence across only realized/route-adjacent regions. FactionState now exposes influence_regions and winner-filtered hinterland_regions rather than rectangular ownership.
+- Stable well-connected settlements receive a small route-centrality population-growth effect, bounded by physical housing capacity when that capacity is available.
+- Added tools/audit_routes.py for bounded sparse-graph, portal, infrastructure, gateway and active-road checks.
+- Added Phase 2 tests for portal adjacency, sparse graph bounds, infrastructure round-trip, route-bound settlement gateways, active local road materialization, traffic wear/maintenance and economy use of the physical route authority.
+
+### Compatibility / authority
+- Routegen v2 cache serialization/rebuild remains on the exact Phase-1 payload shape and candidate-graph rules. Engine realization uses the old local sync for v2 worlds and v3 global realized-network sync only for v3+.
+- Missing route metadata on old saves still resolves to routegen v1.
+- Generated RegionalRoutePlan/RoadSegmentPlan/CrossingPlan geometry is reconstructable; RouteInfrastructureState is persistent simulation authority.
+- Tier-E space remains potential only. Hinterland scoring operates on settlement regions, selected route regions and a one-region realized influence fringe; it does not recursively instantiate civilization.
+
+### Next dependency
+- Add route-condition feedback from floods, fires, war and bridge destruction so blocked crossings force strategic rerouting rather than only reducing capacity.
+- Add explicit bridge/ferry physical art/interaction and player travel effects at CrossingPlan cells.
+- Feed faction hinterlands into border posts, tolls, patrol density, road investment and contested frontier settlement behavior.
+- Add a regional-civilization benchmark and route-density/centrality diagnostics to the World Console/atlas.

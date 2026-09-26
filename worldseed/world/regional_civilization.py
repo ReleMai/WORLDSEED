@@ -60,6 +60,11 @@ class RegionalCivilizationPlanner:
         base = self.generator.sample_fields(pos)
         env_reader = getattr(self.world, "environment_at", None)
         env = env_reader(pos) if callable(env_reader) else None
+        # Permanent settlement anchors must be land. Water access is valuable,
+        # but an open-water cell itself can never win the civilization-site
+        # search; fishing/river settlements are selected on adjacent dry ground.
+        if env is not None and bool(getattr(env, "open_water", False)):
+            return 0, "frontier", 0, 0, 0
         base_fertility = int(getattr(base, "fertility", 36000))
         base_moisture = int(getattr(base, "moisture", 33000))
         base_temperature = int(getattr(base, "temperature", 36000))
