@@ -53,6 +53,9 @@ class SettlementPlanState:
     rank: str = "village"
     common_cells: list[tuple[int, int]] = field(default_factory=list)
     gateway_cells: list[tuple[int, int]] = field(default_factory=list)
+    morphology: str = "organic"
+    culture_style: str = "vernacular"
+    faction_influence: str = ""
 
 
 @dataclass(slots=True)

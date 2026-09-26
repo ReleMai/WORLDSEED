@@ -33,7 +33,6 @@ class InstitutionSystem:
             lid=f"library:{town.uid}"
             if lid not in self.state.libraries:
                 self.state.libraries[lid]=LibraryState(lid,town.uid,f"{town.name} Archive",[],max(20,20+len(scholars)*15),100)
-                town.buildings['library']=town.buildings.get('library',0)+1
                 self.history.record('institution',f'{town.name} established {self.state.libraries[lid].name}.',self.state.clock_minute,town.region_x,town.region_y,[town.uid,lid],salience=20)
         if scholars:
             sid=f"school:{town.uid}:0"
@@ -52,7 +51,6 @@ class InstitutionSystem:
         if town.religion_id and iid not in self.state.religious_institutions:
             religion=self.state.religions.get(town.religion_id);name=f"Shrine of {religion.deity}" if religion else f"Shrine of {town.name}"
             self.state.religious_institutions[iid]=ReligiousInstitutionState(iid,town.uid,town.religion_id,name,[p.uid for p in priests],min(90,25+len(priests)*10+town.population//10),town.x,town.y,0,'orthodox')
-            town.buildings['shrine']=town.buildings.get('shrine',0)+1
 
     def library_for_settlement(self,settlement_id:str)->LibraryState|None:
         return next((l for l in self.state.libraries.values() if l.settlement_id==settlement_id),None)

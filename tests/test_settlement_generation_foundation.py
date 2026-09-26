@@ -458,7 +458,11 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
             candidates=_village_targets(world,seed,self.registry,limit=8)
             self.assertTrue(candidates)
             spawn=None
-            for target in candidates[:4]:
+            # The regional civilization planner intentionally ranks a bounded
+            # candidate set rather than relying on the old fixed 42% lattice.
+            # Any candidate in that bounded set may be invalidated by the
+            # authoritative hydrology pass, so exercise the complete set.
+            for target in candidates:
                 x0=target.region_x*512;y0=target.region_y*512
                 bounds=(x0,y0,x0+511,y0+511)
                 hydro.prepare_world_bounds(*bounds,persist=True)

@@ -36,6 +36,7 @@ from worldseed.systems.artifacts import ArtifactSystem
 from worldseed.systems.disasters import DisasterSystem
 from worldseed.systems.settlements import SettlementLifecycleSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
+from worldseed.systems.route_planner import RoutePlanner
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.legends import LegendSystem
@@ -133,6 +134,8 @@ class Simulation:
         self.settlement_lifecycle=SettlementLifecycleSystem(self.state,self.seed,self.history)
         self.legends=LegendSystem(self.state,self.seed,self.history)
         self.region_planner=RegionBlockPlanner(world)
+        self.settlement_lifecycle.attach_region_planner(self.region_planner)
+        self.route_planner=RoutePlanner(world,self.state,self.region_planner)
         self.settlement_planner=SettlementSkeletonPlanner(world)
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner
@@ -515,6 +518,9 @@ class Simulation:
                         s=self.state.settlements[key]
                         if not any(n.alive and n.settlement_id==s.uid for n in self.state.npcs.values()):
                             for npc in self.society_gen.representatives_for_settlement(s):self.state.npcs[npc.uid]=npc
+            # Build a bounded sparse strategic road graph for the realized
+            # civilization window before local settlement projection.
+            self.route_planner.sync(self.state.settlements.values(),(rx,ry),radius=2,persist=True)
             # Physicalize only the active region. Distant settlements remain
             # stable plan records and never inflate local collision/render state.
             self.settlement_physicalization.sync(
@@ -524,6 +530,7 @@ class Simulation:
             # authority than the stable settlement plan.  Prune only untouched
             # generated caches that now collide with houses or their apron.
             self.building.clear_conflicting_generated_natural_containers()
+            self.settlement_population.reconcile_active(self.state.settlements.values())
             self.settlement_population.bind_active(self.state.settlements.values())
             for settlement_id in self.settlement_physicalization.active_settlement_ids:
                 self.family.ensure_settlement_identity(settlement_id)

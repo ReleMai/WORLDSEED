@@ -63,6 +63,32 @@ Never create an unrelated decorative village, road, river, building list, or loc
 - Local property access must consume the stable physical door ID plus authoritative NPC home/work/property bindings. Do not create a second resident/employee roster inside security code.
 - Nearby NPC pathfinding must honor actor-aware property locks; only distant aggregate movement may omit exact doors. Scheduled local locks must never silently repair or relock a picked/forced door.
 
+### Grand regional civilization generation contract
+
+New settlement/civilization work follows a terrain-first dependency chain:
+
+```text
+GEOGRAPHY + HYDROLOGY + RESOURCES
+-> REGIONAL CIVILIZATION POTENTIAL
+-> SETTLEMENT HIERARCHY / HINTERLANDS
+-> SPARSE STRATEGIC ROUTE GRAPH
+-> TERRAIN-AWARE CORRIDORS / CROSSINGS
+-> SETTLEMENT SKELETON / PARCELS / BUILDINGS
+-> SIMULATION + HISTORY MUTATE THOSE SAME OBJECTS
+```
+
+- Do not restore independent per-region settlement probability as the primary siting authority. Permanent settlement presence must derive from bounded physical opportunity, neighboring-site competition/spacing and deterministic tie-breaking.
+- Site scoring should expose causal terms such as water access, farmland/fertility, resource opportunity, slope/flood penalties, crossing value, route value and defensibility.
+- Strategic roads are graph-first. Build a sparse candidate graph, preserve a connectivity backbone, add only bounded useful redundancy, then route selected edges through physical terrain. Never create all-to-all settlement routes.
+- Regional route plans are the common transport authority for trade, migration, armies and long-distance player travel. Renderer-only roads, straight strategic corridors and unrelated caravan routes are forbidden.
+- Fords, bridges, ferries and later ports are stable route/crossing objects. Crossing choice must respond to real hydrology; damage must raise route cost or force rerouting.
+- Settlement morphology may vary by archetype, terrain, culture and faction. Use constrained profiles/grammars such as river-spine, waterfront, field-cluster, clearing-web, compact-workyard and crossroads rather than one universal village template.
+- Culture is a physical consumer, not name flavor only. Architecture/material bias, public-space tradition, morphology and later decoration should influence generated plans without overriding terrain legality.
+- Prominent factions should emerge from deterministic high-value civilization centers and become seeds for regional worldbuilding. Faction doctrine/style may shape planning priorities but may not fabricate geography, goods or capacity.
+- `SettlementPlanState` owns housing/workplace capacity. `SettlementState.buildings` is compatibility/read-model data derived from physical plans only; society/lifecycle code must never invent authoritative house/farm counts beside the plan.
+- Daughter settlements, reconstruction and abandonment must reuse the same regional siting and physical-plan contracts. Never found a historical settlement at an arbitrary random coordinate.
+- New regional planners require deterministic/generation-order tests, sparse-graph tests, crossing validity checks and bounded performance audits before promotion.
+
 ### RC14 release gates
 
 New physical-world work must add deterministic tests and the relevant audits. At minimum preserve:

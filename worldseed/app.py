@@ -219,6 +219,8 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     without a planner would consume two RNG draws for its fallback x/y and would
     therefore choose a different population/rank than the eventual settlement.
     """
+    from worldseed.world.regional_civilization import RegionalCivilizationPlanner
+    civilization=RegionalCivilizationPlanner(world,getattr(world,"settlement_plan_version",1),seed=seed)
     villages=[];others=[]
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
@@ -231,15 +233,20 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                profile=civilization.profile(rx,ry)
+                if not profile.settlement_present:continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
-                row=(abs(rx)+abs(ry),ry,rx,target)
+                # Prefer physically strong sites before proximity. Hydrology can
+                # later lower the score of a marginal dry-climate candidate;
+                # high-quality candidates are substantially more stable after
+                # the authoritative drainage pass.
+                row=(-profile.score,-profile.route_value,abs(rx)+abs(ry),ry,rx,target)
                 (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
-        if len(villages)>=max(3,limit//2):break
-    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
-    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
+        if radius>=4 and len(villages)>=max(8,limit):break
+    ordered=sorted(villages,key=lambda row:row[:-1])
+    ordered+=sorted(others,key=lambda row:row[:-1])
     return tuple(row[-1] for row in ordered[:max(1,int(limit))])
 
 def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
@@ -354,6 +361,8 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     except KeyError:
         from worldseed.config import SETTLEMENT_PLAN_VERSION
         world.settlement_plan_version=SETTLEMENT_PLAN_VERSION
+    try:world.routegen_version=int(db.get_meta('routegen_version'))
+    except KeyError:world.routegen_version=1
     try:hydrology_version=int(db.get_meta('hydrology_version'))
     except KeyError:hydrology_version=1
     try:hydrology_morphology_version=int(db.get_meta('hydrology_morphology_version'))

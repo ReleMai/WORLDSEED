@@ -8,6 +8,7 @@ from typing import Iterable, Mapping
 from worldseed.config import SETTLEMENT_PLAN_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
+from worldseed.core.rng import hash_u64
 from worldseed.world.regional_plan import (
     LandUseParcel,
     RoadSegmentPlan,
@@ -934,7 +935,7 @@ class SettlementSkeletonPlanner:
                 farms[0].structure_ids.append(structure.uid)
         return structures,rooms,pieces
 
-    def _generate(self, region_plan, settlement_id: str, population: int) -> SettlementSkeleton:
+    def _generate(self, region_plan, settlement_id: str, population: int, culture_id: str = "", faction_id: str = "") -> SettlementSkeleton:
         if not region_plan.settlement_present or region_plan.settlement_anchor is None:
             raise ValueError("Cannot generate settlement skeleton for a region without a settlement anchor")
         rank = settlement_rank_for_population(population)
@@ -946,11 +947,20 @@ class SettlementSkeletonPlanner:
             common_cells = {common_center}
 
         plan_uid = stable_plan_uid("settlement-plan", str(settlement_id), self.version, [region_plan.settlement_anchor])
+        culture_styles=("timber_courtyard","stone_lane","wattle_common","market_green","fortified_lane","riverfront")
+        culture_style=culture_styles[hash_u64(self.seed,"settlement-culture-style",culture_id or settlement_id)%len(culture_styles)]
+        morphology=str(getattr(region_plan,"settlement_morphology","") or "") or {
+            "agrarian":"field_cluster","river_market":"river_spine","mining":"compact_workyard",
+            "forest":"clearing_web","fishing":"waterfront","frontier":"crossroads",
+        }.get(region_plan.settlement_archetype,"organic")
         plan = SettlementPlanState(
             uid=plan_uid, settlement_id=str(settlement_id), version=self.version,
             anchor_x=region_plan.settlement_anchor[0], anchor_y=region_plan.settlement_anchor[1],
             archetype=region_plan.settlement_archetype, rank=rank,
             common_cells=sorted(common_cells, key=lambda p: (p[1], p[0])),
+            morphology=morphology,culture_style=culture_style,
+            faction_influence=str(faction_id or ""),
+            orientation=int(hash_u64(self.seed,"settlement-orientation",settlement_id,culture_id)%4),
         )
 
         roads: list[RoadSegmentPlan] = []
@@ -979,14 +989,29 @@ class SettlementSkeletonPlanner:
         # not arbitrary house coordinates, and provide frontage for later lots.
         local_count = self._LOCAL_STREETS[rank]
         radius = min(22, max(10, self._RADIUS[rank] // 2))
-        local_targets = [
-            (common_center[0] + radius, common_center[1]),
-            (common_center[0] - radius, common_center[1]),
-            (common_center[0], common_center[1] + radius),
-            (common_center[0], common_center[1] - radius),
-            (common_center[0] + radius//2, common_center[1] + radius//2),
-            (common_center[0] - radius//2, common_center[1] - radius//2),
-        ]
+        if plan.morphology in {"river_spine","waterfront","linear"}:
+            local_targets=[
+                (common_center[0]+radius,common_center[1]),(common_center[0]-radius,common_center[1]),
+                (common_center[0]+radius//2,common_center[1]+radius//3),
+                (common_center[0]-radius//2,common_center[1]-radius//3),
+                (common_center[0],common_center[1]+radius//2),(common_center[0],common_center[1]-radius//2),
+            ]
+        elif plan.morphology in {"compact_workyard","courtyard"}:
+            r=max(7,radius//2)
+            local_targets=[
+                (common_center[0]+r,common_center[1]),(common_center[0]-r,common_center[1]),
+                (common_center[0],common_center[1]+r),(common_center[0],common_center[1]-r),
+                (common_center[0]+r,common_center[1]+r),(common_center[0]-r,common_center[1]-r),
+            ]
+        else:
+            local_targets = [
+                (common_center[0] + radius, common_center[1]),
+                (common_center[0] - radius, common_center[1]),
+                (common_center[0], common_center[1] + radius),
+                (common_center[0], common_center[1] - radius),
+                (common_center[0] + radius//2, common_center[1] + radius//2),
+                (common_center[0] - radius//2, common_center[1] - radius//2),
+            ]
         added = 0
         for raw in local_targets:
             target = self._nearest_legal(raw, bounds, radius=7)
@@ -1142,6 +1167,19 @@ class SettlementSkeletonPlanner:
 
         structures,rooms,pieces=self._generate_buildings(plan,roads,parcels)
         plan.structure_site_ids=[row.uid for row in structures]
+        room_by_structure={}
+        for room in rooms:room_by_structure.setdefault(room.structure_plan_id,[]).append(room)
+        housing=0;workplaces={}
+        for structure in structures:
+            if structure.destroyed:continue
+            structure_rooms=room_by_structure.get(structure.uid,[])
+            if structure.function=="residence":
+                beds=sum(1 for room in structure_rooms if room.kind=="bedroom")
+                housing+=max(1,beds*2,structure.interior_area//8)
+            elif structure.workplace_role:
+                workplaces[structure.workplace_role]=workplaces.get(structure.workplace_role,0)+max(1,structure.interior_area//5)
+        plan.housing_capacity=housing
+        plan.workplace_capacity=workplaces
         skeleton = SettlementSkeleton(plan, roads, parcels, structures, rooms, pieces)
         skeleton.fingerprint = canonical_hash({
             "plan": asdict(plan),
@@ -1176,12 +1214,12 @@ class SettlementSkeletonPlanner:
         except (KeyError, TypeError, ValueError):
             return None
 
-    def plan(self, region_plan, settlement_id: str, population: int, *, persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
+    def plan(self, region_plan, settlement_id: str, population: int, *, culture_id: str = "", faction_id: str = "", persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
         prepared = None if refresh else self.read_prepared(settlement_id)
         if prepared is not None:
             return prepared
         self._env_cache.clear()
-        skeleton = self._generate(region_plan, settlement_id, population)
+        skeleton = self._generate(region_plan, settlement_id, population, culture_id, faction_id)
         self._cache[str(settlement_id)] = skeleton
         if persist:
             storer = getattr(self.cache_source, "store_generated_settlement_plan", None)

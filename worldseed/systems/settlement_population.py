@@ -262,6 +262,24 @@ class SettlementPopulationBinder:
             homeless=homeless,
         )
 
+    def reconcile_active(self, settlements) -> None:
+        """Derive compatibility summaries from authoritative physical plans."""
+        active=set(self.physicalization.active_settlement_ids)
+        for settlement in settlements:
+            if settlement.uid not in active:continue
+            skeleton=self.physicalization.skeleton_for(settlement.uid)
+            if skeleton is None:continue
+            settlement.housing_capacity=int(skeleton.plan.housing_capacity)
+            settlement.homeless=max(0,int(settlement.population)-settlement.housing_capacity)
+            summary={}
+            for structure in skeleton.structures:
+                if structure.destroyed:continue
+                key=str(structure.function or structure.building_type or "building")
+                summary[key]=summary.get(key,0)+1
+            farms=sum(1 for parcel in skeleton.parcels if parcel.kind=="farm")
+            if farms:summary["farm"]=farms
+            settlement.buildings=summary
+
     def bind_active(self, settlements) -> tuple[SettlementBindingStats, ...]:
         active = set(self.physicalization.active_settlement_ids)
         rows = []

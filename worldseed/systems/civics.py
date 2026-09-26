@@ -138,13 +138,15 @@ class CivicsSystem:
             self._sync_physical_housing(town.uid)
             return
 
-        # Aggregate fallback for distant/unprepared settlements. These records
-        # are ignored while an authoritative physical plan is active.
-        houses = max(0, town.buildings.get("house", 0))
-        workshops = max(
-            0,
-            sum(v for k, v in town.buildings.items() if k not in ("house", "farm", "ruins")),
-        )
+        # Aggregate fallback for distant/unprepared settlements. Do not consult
+        # SettlementState.buildings as a second structure authority. Until the
+        # physical plan is prepared, bounded property LOD is estimated from
+        # population/occupations and is discarded in favor of plan IDs locally.
+        houses = max(1, int(town.housing_capacity)//4) if town.housing_capacity > 0 else max(1, int(town.population)//4)
+        workshops = max(0, len({
+            n.occupation for n in self.state.npcs.values()
+            if n.alive and n.settlement_id == town.uid and n.occupation in {"smith","carpenter","merchant","healer","scholar","priest"}
+        }))
         for i in range(houses):
             uid = f"property:{town.uid}:home:{i}"
             if uid not in self.state.properties:
