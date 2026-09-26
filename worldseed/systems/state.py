@@ -597,6 +597,7 @@ class RouteInfrastructureState:
     last_hazard_hour: int = -1
     hazard_level: int = 0
     hazard_reason: str = ""
+    hazard_regions: list[str] = field(default_factory=list)
     closed_until_minute: int = 0
     crossing_conditions: dict[str, int] = field(default_factory=dict)
     blocked_crossings: list[str] = field(default_factory=list)
