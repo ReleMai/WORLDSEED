@@ -478,6 +478,34 @@ class SettlementSkeletonPlanner:
                 break
         return out
 
+    def _route_gateway_targets(
+        self,
+        route_links,
+        bounds: tuple[int,int,int,int],
+    ) -> list[dict]:
+        """Project selected strategic-route portals onto settlement-plan edges."""
+        left,top,right,bottom=bounds
+        out=[]
+        for link in sorted(route_links or (),key=lambda row:(str(row.get("route_id","")),str(row.get("direction","")))):
+            direction=str(link.get("direction",""))
+            portal=tuple(map(int,link.get("portal_cell",(0,0))))
+            if direction=="north":raw=(portal[0],top)
+            elif direction=="south":raw=(portal[0],bottom)
+            elif direction=="west":raw=(left,portal[1])
+            elif direction=="east":raw=(right,portal[1])
+            else:continue
+            raw=(max(left,min(right,raw[0])),max(top,min(bottom,raw[1])))
+            target=self._nearest_legal(raw,bounds,radius=12)
+            if target is None:continue
+            out.append({
+                "target":target,
+                "route_id":str(link.get("route_id","")),
+                "road_class":str(link.get("road_class","road")),
+                "crossing_id":str(link.get("crossing_id","")),
+            })
+            if len(out)>=4:break
+        return out
+
     def _path(
         self,
         start: tuple[int, int],
@@ -935,7 +963,7 @@ class SettlementSkeletonPlanner:
                 farms[0].structure_ids.append(structure.uid)
         return structures,rooms,pieces
 
-    def _generate(self, region_plan, settlement_id: str, population: int, culture_id: str = "", faction_id: str = "") -> SettlementSkeleton:
+    def _generate(self, region_plan, settlement_id: str, population: int, culture_id: str = "", faction_id: str = "", route_links=()) -> SettlementSkeleton:
         if not region_plan.settlement_present or region_plan.settlement_anchor is None:
             raise ValueError("Cannot generate settlement skeleton for a region without a settlement anchor")
         rank = settlement_rank_for_population(population)
@@ -965,25 +993,49 @@ class SettlementSkeletonPlanner:
 
         roads: list[RoadSegmentPlan] = []
         road_cells: set[tuple[int, int]] = set()
-        gateways = self._gateway_targets(region_plan, common_center, bounds, rank)
-        plan.gateway_cells = list(gateways)
+        route_gateways=self._route_gateway_targets(route_links,bounds) if self.version>=5 else []
+        if route_gateways:
+            gateway_specs=route_gateways
+        else:
+            gateway_specs=[
+                {"target":target,"route_id":"","road_class":"","crossing_id":""}
+                for target in self._gateway_targets(region_plan, common_center, bounds, rank)
+            ]
+        plan.gateway_cells=[tuple(spec["target"]) for spec in gateway_specs]
+        plan.crossing_ids=sorted({str(spec["crossing_id"]) for spec in gateway_specs if spec.get("crossing_id")})
 
-        def add_road(slot: str, target: tuple[int, int], road_class: str, width: int = 1) -> str:
+        def add_road(
+            slot: str,
+            target: tuple[int, int],
+            road_class: str,
+            width: int = 1,
+            *,
+            route_id: str = "",
+            crossing_ids=(),
+        ) -> str:
             path = self._path(common_center, target, bounds, road_cells)
             if len(path) < 2:
                 return ""
             uid = stable_plan_uid("road", plan.uid, slot, path)
             roads.append(RoadSegmentPlan(
-                uid=uid, settlement_plan_id=plan.uid, road_class=road_class,
+                uid=uid, route_id=str(route_id), settlement_plan_id=plan.uid, road_class=road_class,
                 polyline=path, width=width, surface="earth",
+                crossing_ids=[str(x) for x in crossing_ids if x],
             ))
             road_cells.update(path)
             return uid
 
         main_class = "maintained_road" if rank in {"town", "city"} else "road"
         main_width = 2 if rank in {"town", "city"} else 1
-        for i, target in enumerate(gateways):
-            add_road(f"gateway:{i}", target, main_class, main_width)
+        for i,spec in enumerate(gateway_specs):
+            route_id=str(spec.get("route_id",""))
+            road_class=str(spec.get("road_class","")) or main_class
+            crossing_id=str(spec.get("crossing_id",""))
+            add_road(
+                f"gateway:{route_id or i}",tuple(spec["target"]),road_class,
+                2 if road_class=="maintained_road" else main_width,
+                route_id=route_id,crossing_ids=(crossing_id,) if crossing_id else (),
+            )
 
         # Grow bounded local streets around the common. These are street seeds,
         # not arbitrary house coordinates, and provide frontage for later lots.
@@ -1214,12 +1266,12 @@ class SettlementSkeletonPlanner:
         except (KeyError, TypeError, ValueError):
             return None
 
-    def plan(self, region_plan, settlement_id: str, population: int, *, culture_id: str = "", faction_id: str = "", persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
+    def plan(self, region_plan, settlement_id: str, population: int, *, culture_id: str = "", faction_id: str = "", route_links=(), persist: bool = True, refresh: bool = False) -> SettlementSkeleton:
         prepared = None if refresh else self.read_prepared(settlement_id)
         if prepared is not None:
             return prepared
         self._env_cache.clear()
-        skeleton = self._generate(region_plan, settlement_id, population, culture_id, faction_id)
+        skeleton = self._generate(region_plan, settlement_id, population, culture_id, faction_id, route_links)
         self._cache[str(settlement_id)] = skeleton
         if persist:
             storer = getattr(self.cache_source, "store_generated_settlement_plan", None)
