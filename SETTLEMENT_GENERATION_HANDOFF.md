@@ -465,3 +465,32 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Add explicit bridge/ferry physical art/interaction and player travel effects at CrossingPlan cells.
 - Feed faction hinterlands into border posts, tolls, patrol density, road investment and contested frontier settlement behavior.
 - Add a regional-civilization benchmark and route-density/centrality diagnostics to the World Console/atlas.
+
+
+## Work unit 24 - Grand Regional Civilization Phase 3: Dynamic Routes, Crossings & Frontiers
+- Advanced new worlds to ROUTEGEN_VERSION 4 while keeping SETTLEMENT_PLAN_VERSION 5. Routegen v1-v3 remain pinned to their historical behavior and payload contracts.
+- RouteInfrastructureState now persists route hazard level/reason, affected regions, temporary crossing closures, exact crossing locations, detour regions/portals/crossings, reroute count, faction control, contest status, tolls and patrol strength. Generated route geometry remains rebuildable cache data.
+- Flood, fire and war can now damage the same physical road/crossing authority used by caravans and local materialization. Hard crossing failures and severe corridor damage trigger a bounded regional detour search around the original endpoints instead of merely increasing an abstract danger score.
+- Resolved damage can restore the route to its stable base corridor without changing route identity. Temporary storm/flood closures expire; repairs clear hard crossing blocks and persistent hazard-region state.
+- Physical crossing projection now distinguishes bridge spans, ford/wading spans and ferry water. Bridge/ford cells carry crossing identity/condition and bridge pieces can override water collision only while the crossing is open. Ferries retain water between prepared landing cells and use an explicit interaction command.
+- Added player crossing interactions: inspect, use ferry, repair crossing and pay border-post toll. Repair consumes real wood/stone from player inventory and updates the authoritative crossing condition. Ferry use respects closures, prepared landings and toll collection.
+- SettlementPhysicalizationSystem exposes crossing and border-post metadata to right-click interactions and look/read models. Existing road rendering receives bridge approach/plank/dock piece IDs without mutating terrain.
+- Faction travel-cost influence now drives frontier/core/contested settlement status. Influence boundaries along active strategic routes can materialize BorderPostState records with controlling/rival factions, toll, patrol strength and collected treasury.
+- NPC guards in frontier/contested settlements can patrol the physical border-post destination rather than only standing at a watchhouse.
+- Caravan routes now carry toll/patrol/contested metadata. Tolls transfer part of trade proceeds into controlling faction treasury; patrol strength reduces route danger; contested borders increase danger and settlement growth pressure.
+- Faction road investment spends existing treasury on monthly route/crossing maintenance. War battles/raids request damage through RoutePlanner, and deterministic regional flood disasters can damage roads/crossings where geography supports flooding.
+- Hourly weather/fire transport checks consume authoritative weather, flood-risk fields and active fire state. Storms can close ferries; flood pressure can close fords or damage bridges; fire can damage bridge/road infrastructure.
+- Phase 3 tests cover severe-route detours/restoration, competing-faction frontier posts/tolls/patrols, war damage and persistence round-trips. Fast Gate now runs these before the older Phase 2 transport regressions.
+
+### Compatibility / authority
+- Routegen v4 is used only by new v4-route worlds. v3 saves keep the Phase-2 route graph, crossing IDs, maintenance semantics and economy integration unchanged.
+- Route identity remains stable while a detour is active. Mutable condition/detour/toll state persists in LivingWorldState; generated route plans remain disposable caches.
+- Dynamic route search is bounded around already-realized route endpoints and never scans or instantiates the infinite world.
+- Border posts derive from existing faction influence and strategic-route transitions. They are not a second territorial simulation.
+- Player/NPC movement never treats arbitrary water as a bridge: only a materialized, open CrossingPlan bridge/ford may override ordinary water traversal.
+
+### Next dependency
+- Expand dedicated graphical art/animation for bridge decks, ferries, toll posts and damaged/closed crossing variants beyond the current settlement-piece projection.
+- Add World Console/atlas overlays for route condition, detours, faction borders, toll posts and contested frontier pressure.
+- Let longer-term history create abandoned roads, rebuilt bridges and changed strategic priorities while preserving stable plan/delta history.
+- Add explicit player choices at hostile/contested border posts (submit, evade, bribe, fight) after guard stop/search behavior is implemented.
