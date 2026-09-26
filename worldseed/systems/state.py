@@ -391,6 +391,7 @@ class SettlementState:
     currency_name: str = ""
     currency_value: int = 100
     barter_enabled: bool = True
+    route_centrality: int = 0
 
 @dataclass(slots=True)
 class FactionState:
@@ -410,6 +411,8 @@ class FactionState:
     banner_style: str = ""
     doctrine: str = ""
     prominence: int = 0
+    hinterland_regions: list[str] = field(default_factory=list)
+    influence_regions: dict[str, int] = field(default_factory=dict)
 
 @dataclass(slots=True)
 class CaravanState:
@@ -571,6 +574,18 @@ class TradeRouteState:
     waypoints: list[str] = field(default_factory=list)
     travel_minutes: int = 0
     chunk_waypoints: list[str] = field(default_factory=list)
+    physical_route_id: str = ""
+
+@dataclass(slots=True)
+class RouteInfrastructureState:
+    route_id: str
+    condition: int = 100
+    traffic: int = 0
+    blocked: bool = False
+    last_used_minute: int = 0
+    last_maintenance_minute: int = 0
+    crossing_conditions: dict[str, int] = field(default_factory=dict)
+    blocked_crossings: list[str] = field(default_factory=list)
 
 @dataclass(slots=True)
 class PropertyState:
@@ -933,6 +948,7 @@ class LivingWorldState:
     caravans: dict[str, CaravanState] = field(default_factory=dict)
     labor_reservations: dict[str, LaborReservationState] = field(default_factory=dict)
     trade_routes: dict[str, TradeRouteState] = field(default_factory=dict)
+    route_infrastructure: dict[str, RouteInfrastructureState] = field(default_factory=dict)
     theft_records: dict[str, TheftRecordState] = field(default_factory=dict)
     market_transactions: dict[str, MarketTransactionState] = field(default_factory=dict)
     properties: dict[str, PropertyState] = field(default_factory=dict)
@@ -1064,7 +1080,7 @@ class LivingWorldState:
             "clock_minute": self.clock_minute,
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_homes": rows(self.animal_homes), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "households": rows(self.households), "household_deliveries": rows(self.household_deliveries), "workplace_logistics": rows(self.workplace_logistics), "workplace_shipments": rows(self.workplace_shipments), "settlements": rows(self.settlements),
-            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "physical_keys": rows(self.physical_keys), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
+            "factions": rows(self.factions), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "trade_routes": rows(self.trade_routes), "route_infrastructure": rows(self.route_infrastructure), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "physical_keys": rows(self.physical_keys), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_unseen_recipes": sorted(set(self.player_unseen_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
             "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_hunting_stance": self.player_hunting_stance, "player_hunting_xp": int(self.player_hunting_xp), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
@@ -1094,7 +1110,7 @@ class LivingWorldState:
                 setattr(s, key, raw[key])
         maps = {
             "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"animal_homes":AnimalHomeState,"cohorts":PopulationCohort,
-            "npcs":NPCState,"households":HouseholdState,"household_deliveries":HouseholdDeliveryState,"workplace_logistics":WorkplaceLogisticsState,"workplace_shipments":WorkplaceShipmentState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"physical_keys":PhysicalKeyState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
+            "npcs":NPCState,"households":HouseholdState,"household_deliveries":HouseholdDeliveryState,"workplace_logistics":WorkplaceLogisticsState,"workplace_shipments":WorkplaceShipmentState,"settlements":SettlementState,"factions":FactionState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"trade_routes":TradeRouteState,"route_infrastructure":RouteInfrastructureState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"physical_keys":PhysicalKeyState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,
             "diseases":DiseaseState,"infections":InfectionState,"magic_laws":MagicLaw,"magic_traditions":MagicTraditionState,"spells":SpellState,"rituals":RitualState,"arcane_contamination":ArcaneContaminationState,"myths":MythState,"cultures":CultureState,"religions":ReligionState,"libraries":LibraryState,"knowledge_schools":KnowledgeSchoolState,"religious_institutions":ReligiousInstitutionState,"artifacts":ArtifactState,"books":BookState,"metal_batches":MetalBatchState,
         }
         # New skills must appear on legacy saves even when the old save
