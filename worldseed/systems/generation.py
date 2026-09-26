@@ -78,14 +78,17 @@ class ProceduralSocietyGenerator:
         return FactionState(uid,f"{culture.name} {suffix}",culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],laws,
                             archetype=archetype,seat_region=seat_region,banner_style=banner,doctrine=doctrine,prominence=prominence)
     def settlement_for_cell(self,rx:int,ry:int)->tuple[SettlementState,list[NPCState],CultureState,ReligionState,FactionState] | None:
-        # roughly one settlement per 3x3 regions
-        if derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:return None
-        c=self.culture_for_region(rx,ry); r=self.religion_for_region(rx,ry,c.uid); f=self.faction_for_region(rx,ry,c)
-        rng=PCG32(derive_seed(self.seed,"settlement",rx,ry))
-        anchor=None
+        plan=None
         if self.region_planner is not None:
             plan=self.region_planner.plan(rx,ry,persist=True)
-            anchor=plan.settlement_anchor
+            if not plan.settlement_present:return None
+        elif derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:
+            # Legacy/fallback callers without the regional physical planner keep
+            # the historical contract; active v4 worlds never use this branch.
+            return None
+        c=self.culture_for_region(rx,ry); r=self.religion_for_region(rx,ry,c.uid); f=self.faction_for_region(rx,ry,c)
+        rng=PCG32(derive_seed(self.seed,"settlement",rx,ry))
+        anchor=plan.settlement_anchor if plan is not None else None
         if anchor is None:
             x=rx*512+64+rng.randbelow(384); y=ry*512+64+rng.randbelow(384)
         else:
