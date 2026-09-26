@@ -101,7 +101,10 @@ class WorldDatabase:
             # repainting an existing v8 world under Phase-5 rules.
             "coast_morphology_version":0,
             "settlement_plan_version":SETTLEMENT_PLAN_VERSION,
-            "routegen_version":ROUTEGEN_VERSION,
+            # A save missing route metadata predates the graph-first v2 route
+            # contract. Keep its legacy transport generation instead of silently
+            # introducing a new regional road network on load.
+            "routegen_version":1,
         }
         changed=False
         for key,value in defaults.items():
