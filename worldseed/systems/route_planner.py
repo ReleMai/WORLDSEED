@@ -557,6 +557,7 @@ class RoutePlanner:
         if blocked or infra.condition<=25 or int(infra.closed_until_minute)>minute or int(infra.hazard_level)>=60:
             return False
         infra.detour_regions=[];infra.detour_portals=[];infra.detour_crossings=[]
+        infra.hazard_regions=[]
         infra.hazard_reason="";infra.hazard_level=max(0,infra.hazard_level-20)
         self._refresh_blocked(plan,infra,minute);self._material_cache.clear();return True
 
