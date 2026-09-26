@@ -1817,6 +1817,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
     physical=sim.settlement_physicalization.cell_at(target)
     planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
+    crossing=sim.settlement_physicalization.crossing_at(target)
+    border_post=sim.settlement_physicalization.border_post_at(target)
     door=sim.property_security.door_at(target)
     signs=sim.hunting.signs_at(target)
     home=sim.hunting.home_at(target)
@@ -1869,6 +1871,22 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             and intel is not None and container.uid in intel.storage_uids
         ):
             rows.append(('steal_property_storage',f'Steal from {container.name}'))
+    if crossing is not None:
+        condition=sim.route_planner.crossing_condition(crossing.route_id,crossing.uid)
+        status='closed' if sim.route_planner.crossing_blocked(crossing.route_id,crossing.uid,sim.clock.minute) else 'open'
+        rows.append(('inspect_crossing',f'Inspect {crossing.kind} — {condition}% / {status}'))
+        if crossing.kind=='ferry' and distance<=3:
+            toll=sim.route_planner.crossing_toll(crossing.route_id,crossing.x,crossing.y)
+            rows.append(('use_crossing',f'Use ferry'+(f' — toll {toll}c' if toll else '')))
+        if condition<100 and distance<=2:
+            rows.append(('repair_crossing',f'Repair {crossing.kind} — condition {condition}%'))
+    if border_post is not None:
+        faction=sim.state.factions.get(border_post.controlling_faction_id)
+        name=faction.name if faction else 'local authority'
+        paid=int(sim.state.player_toll_passes.get(border_post.uid,0))>sim.clock.minute
+        rows.append(('inspect_border_post',f'Border post — {name}'+(' / passage paid' if paid else f' / toll {border_post.toll_copper}c')))
+        if distance<=1 and not paid:
+            rows.append(('pay_road_toll',f'Pay road toll — {border_post.toll_copper}c'))
     if signs:
         rows.append(('inspect_sign',f'Inspect animal sign — {len(signs)} trace(s) on this tile'))
     if home and home.discovered:
@@ -1921,6 +1939,41 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         town=sim.state.settlements.get(physical.settlement_id)
         if town:return _steal_market_action(ctx,term,town)
         return UI_BACK
+    if choice=='inspect_crossing' and crossing is not None:
+        condition=sim.route_planner.crossing_condition(crossing.route_id,crossing.uid)
+        blocked=sim.route_planner.crossing_blocked(crossing.route_id,crossing.uid,sim.clock.minute)
+        infra=sim.state.route_infrastructure.get(crossing.route_id)
+        _view_text(term,box('ROUTE CROSSING',[
+            f'Type: {crossing.kind.title()}',
+            f'Condition: {condition}%',
+            f'Status: {"Closed" if blocked else "Open"}',
+            f'River class: {crossing.river_class}',
+            f'Route hazard: {getattr(infra,"hazard_reason","") or "none"}',
+            f'Patrol strength: {crossing.patrol_strength}',
+            f'Toll: {crossing.toll_copper}c',
+        ],screen_width(term.size()[0],92)))
+        return UI_BACK
+    if choice=='use_crossing' and crossing is not None:
+        sim.execute(UseCrossingCommand(ctx.player_id,crossing.uid))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='repair_crossing' and crossing is not None:
+        sim.execute(RepairCrossingCommand(ctx.player_id,crossing.uid))
+        return sim.log[-1].message if sim.log else ''
+    if choice=='inspect_border_post' and border_post is not None:
+        faction=sim.state.factions.get(border_post.controlling_faction_id)
+        rival=sim.state.factions.get(border_post.rival_faction_id)
+        _view_text(term,box('BORDER POST',[
+            f'Controller: {faction.name if faction else border_post.controlling_faction_id or "unclaimed"}',
+            f'Rival: {rival.name if rival else border_post.rival_faction_id or "none"}',
+            f'Toll: {border_post.toll_copper}c',
+            f'Patrol: {border_post.patrol_strength}/100',
+            f'Status: {"Contested" if border_post.contested else "Controlled"}',
+            f'Collected: {border_post.treasury_collected}c',
+        ],screen_width(term.size()[0],92)))
+        return UI_BACK
+    if choice=='pay_road_toll' and border_post is not None:
+        sim.execute(PayRoadTollCommand(ctx.player_id,border_post.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='inspect_npc' and npc:
         return _npc_profile_menu(ctx,term,npc.uid)
     if choice=='observe_npc' and npc:
