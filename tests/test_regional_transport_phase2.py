@@ -73,6 +73,14 @@ class RegionalTransportPhase2Tests(unittest.TestCase):
         plans=planner.sync_network(state.settlements.values(),persist=True)
         endpoint=next(t for t in towns if any(t.uid in (p.origin,p.destination) for p in plans))
         skeletons=SettlementSkeletonPlanner(world)
+        region=regions.plan(endpoint.region_x,endpoint.region_y,persist=True)
+        links=planner.links_for_settlement(endpoint.uid)
+        direct=skeletons.plan(
+            region,endpoint.uid,endpoint.population,
+            culture_id=endpoint.culture_id,faction_id=endpoint.faction_id,
+            route_links=links,persist=False,
+        )
+        self.assertIsNotNone(direct)
         physical=SettlementPhysicalizationSystem(world,reg,regions,skeletons,planner)
         physical.sync(state.settlements.values(),(endpoint.region_x,endpoint.region_y),radius=0)
         skeleton=physical.skeleton_for(endpoint.uid)
