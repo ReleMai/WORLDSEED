@@ -213,6 +213,8 @@ class RoutePlanner:
             )
 
     def sync(self,settlements,center_region:tuple[int,int],radius:int=2,*,persist:bool=True)->tuple[RegionalRoutePlan,...]:
+        if self.version < 2:
+            return ()
         rx,ry=map(int,center_region)
         selected=sorted((s for s in settlements if abs(int(s.region_x)-rx)<=radius and abs(int(s.region_y)-ry)<=radius),key=lambda s:s.uid)[:24]
         plans=[]
