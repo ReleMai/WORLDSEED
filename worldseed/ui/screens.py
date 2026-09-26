@@ -290,6 +290,17 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
     if soil and sim.player_skill('survival')>=6:body.append(f'Soil: N {soil.nitrogen} / P {soil.phosphorus} / K {soil.potassium}, organic {soil.organic}')
     if container:
         mass,volume=sim.building.container_load(container);body.append(f'Storage: {sum(container.items.values())} item(s), {mass/1000:.1f} kg')
+    crossing=sim.settlement_physicalization.crossing_at(p) if p.z==0 else None
+    border_post=sim.settlement_physicalization.border_post_at(p) if p.z==0 else None
+    if crossing:
+        condition=sim.route_planner.crossing_condition(crossing.route_id,crossing.uid)
+        blocked=sim.route_planner.crossing_blocked(crossing.route_id,crossing.uid,sim.clock.minute)
+        body.append(f'Crossing: {crossing.kind} — condition {condition}% — {"closed" if blocked else "open"}')
+        if crossing.toll_copper:body.append(f'Crossing toll: {crossing.toll_copper} copper')
+    if border_post:
+        faction=sim.state.factions.get(border_post.controlling_faction_id)
+        body.append(f'Border post: {faction.name if faction else "unclaimed"} — patrol {border_post.patrol_strength} — toll {border_post.toll_copper}c')
+        if border_post.contested:body.append('Border status: contested')
     if fluid:body.append('Water: shallow' if fluid.amount<80 else 'Water: deep' if fluid.amount>=120 else 'Water: knee-deep')
     if fire:body.append('Fire: weak' if fire.intensity<35 else 'Fire: strong' if fire.intensity<75 else 'Fire: raging')
     if arc and (sim.player_skill('arcana')>=3 or sim.has_talent('arcane_attuned')):body.append(f'You sense {arc.kind} residue here.')
