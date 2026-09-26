@@ -23,6 +23,10 @@ class ProceduralSocietyGenerator:
         
         cname=culture_name(rng); syll=["ka","ve","or","en","thal","mir","sa","dor","ul","ra","ni","esh"]
         lex={concept:"".join(rng.choice(syll) for _ in range(2+rng.randbelow(2))) for concept in ("water","fire","king","home","death","iron","sun","river")}
+        # Preserve the pre-v4 RNG draw order for existing culture fields;
+        # flavor fields consume only subsequent draws.
+        naming_style=rng.choice(["short","compound","ancestral"])
+        taboo=rng.choice(TABOOS)
         craft=rng.choice(["wood","stone","metal","fiber"])
         architecture={"wood":"timber_courtyard","stone":"stone_lane","metal":"fortified_workyard","fiber":"wattle_common"}[craft]
         morphology=rng.choice(["organic","crossroads","courtyard","linear"])
@@ -31,7 +35,7 @@ class ProceduralSocietyGenerator:
         while len(colors)<2:
             color=rng.choice(["ochre","river-blue","pine-green","ash-grey","iron-red","cream","charcoal"])
             if color not in colors:colors.append(color)
-        return CultureState(uid,cname,vals,rng.choice(["short","compound","ancestral"]),[rng.choice(TABOOS)],craft,lex,
+        return CultureState(uid,cname,vals,naming_style,[taboo],craft,lex,
                             architecture,morphology,public_space,colors)
     def religion_for_region(self,rx:int,ry:int,culture_id:str)->ReligionState:
         rng=PCG32(derive_seed(self.seed,"religion",rx//4,ry//4,culture_id)); domains=[]
