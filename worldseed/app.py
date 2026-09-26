@@ -219,6 +219,8 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
     without a planner would consume two RNG draws for its fallback x/y and would
     therefore choose a different population/rank than the eventual settlement.
     """
+    from worldseed.world.regional_civilization import RegionalCivilizationPlanner
+    civilization=RegionalCivilizationPlanner(world,getattr(world,"settlement_plan_version",1))
     villages=[];others=[]
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
@@ -231,7 +233,7 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                if not civilization.profile(rx,ry).settlement_present:continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
