@@ -30,8 +30,10 @@ LIGHTING_VERSION = 1
 # introduces the first authoritative sparse regional route planner.
 # Phase 2 binds settlement gateways to selected strategic routes and gives
 # routes exact local physical corridors/infrastructure state.
+# Phase 3 adds dynamic hazard rerouting, frontier control/tolls/patrols and
+# interactive physical crossings. Settlement geometry remains v5-compatible.
 SETTLEMENT_PLAN_VERSION = 5
-ROUTEGEN_VERSION = 3
+ROUTEGEN_VERSION = 4
 RNG_PROTOCOL_VERSION = 1
 RESOURCEGEN_VERSION = 4
 CHUNK_SIZE = 32
