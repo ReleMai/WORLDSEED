@@ -74,7 +74,7 @@ jobs:
 
       - name: Settlement economy property crime stealth security and civic regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Settlement economy property crime stealth security and civic regressions" --timeout 300 -- python -u -m unittest -v tests.test_settlement_generation_foundation tests.test_settlement_population_bindings tests.test_regional_civilization_routes tests.test_civic_economy_social tests.test_economy_routines_transactions tests.test_physical_property_crime_profile tests.test_building_stealth tests.test_property_storage_casing tests.test_household_economy tests.test_workplace_logistics
+        run: python -u tools/run_ci_check.py --name "Settlement economy property crime stealth security and civic regressions" --timeout 300 -- python -u -m unittest -v tests.test_settlement_generation_foundation tests.test_settlement_population_bindings tests.test_regional_civilization_routes tests.test_regional_transport_phase2 tests.test_civic_economy_social tests.test_economy_routines_transactions tests.test_physical_property_crime_profile tests.test_building_stealth tests.test_property_storage_casing tests.test_household_economy tests.test_workplace_logistics
 
       - name: Item asset catalog regressions
         shell: pwsh
