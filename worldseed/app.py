@@ -354,6 +354,10 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     except KeyError:
         from worldseed.config import SETTLEMENT_PLAN_VERSION
         world.settlement_plan_version=SETTLEMENT_PLAN_VERSION
+    try:world.routegen_version=int(db.get_meta('routegen_version'))
+    except KeyError:
+        from worldseed.config import ROUTEGEN_VERSION
+        world.routegen_version=ROUTEGEN_VERSION
     try:hydrology_version=int(db.get_meta('hydrology_version'))
     except KeyError:hydrology_version=1
     try:hydrology_morphology_version=int(db.get_meta('hydrology_morphology_version'))
