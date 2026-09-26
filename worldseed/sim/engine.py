@@ -522,7 +522,10 @@ class Simulation:
             # Rebuild the sparse graph only across settlements already
             # realized by exploration. RoutePlanner remains bounded by its
             # regional partner window and never scans Tier-E infinity.
-            self.route_planner.sync_network(self.state.settlements.values(),persist=True)
+            if self.route_planner.version>=3:
+                self.route_planner.sync_network(self.state.settlements.values(),persist=True)
+            else:
+                self.route_planner.sync(self.state.settlements.values(),(rx,ry),radius=2,persist=True)
             # Physicalize only the active region. Distant settlements remain
             # stable plan records and never inflate local collision/render state.
             self.settlement_physicalization.sync(
