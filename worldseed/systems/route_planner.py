@@ -38,6 +38,8 @@ class RegionalRoutePlan:
 
     def to_dict(self) -> dict:
         raw = asdict(self)
+        if self.version<3:
+            raw.pop("portals",None)
         raw["fingerprint"] = self.fingerprint or canonical_hash({k:v for k,v in raw.items() if k!="fingerprint"})
         return raw
 
@@ -230,7 +232,36 @@ class RoutePlanner:
         infra.blocked=bool(infra.blocked or infra.condition<=10 or infra.blocked_crossings)
         return infra
 
+    def _legacy_crossings(self,regions)->list[dict]:
+        out=[];opposite={"north":"south","south":"north","east":"west","west":"east"}
+        for a,b in zip(regions,regions[1:]):
+            direction=self._direction(a,b)
+            plan=self.region_planner.plan(*a,persist=True)
+            water=next((w for w in plan.waters if w.direction==direction),None)
+            if water is None:
+                mate=self.region_planner.plan(*b,persist=True)
+                water=next((w for w in mate.waters if w.direction==opposite[direction]),None)
+            if water is None or water.water_kind=="ocean":continue
+            kind="ford" if int(water.river_class)<=1 else ("bridge_candidate" if int(water.river_class)<=3 else "ferry_candidate")
+            out.append({"from_region":[a[0],a[1]],"to_region":[b[0],b[1]],"kind":kind,
+                        "river_class":int(water.river_class),"offset":int(water.offset)})
+        return out
+
     def _build_plan(self,a,b)->RegionalRoutePlan:
+        if self.version<3:
+            uid=self._edge_uid(a.uid,b.uid)
+            cached=self.read_prepared(uid)
+            if cached is not None:return cached
+            regions=self._region_path((a.region_x,a.region_y),(b.region_x,b.region_y))
+            cost=sum(self._region_cost(*r) for r in regions[1:])
+            crossings=self._legacy_crossings(regions)
+            danger=min(95,max(0,cost//max(1,len(regions))//4+len(crossings)*4))
+            route_class="maintained_road" if max(a.population,b.population)>=150 else ("road" if a.population+b.population>=80 else "trail")
+            payload={"uid":uid,"version":self.version,"origin":min(a.uid,b.uid),"destination":max(a.uid,b.uid),
+                     "region_path":regions,"chunk_corridor":self._chunk_corridor(a,b,regions),"crossings":crossings,
+                     "route_class":route_class,"cost":int(cost),"danger":int(danger)}
+            plan=RegionalRoutePlan(**payload,fingerprint=canonical_hash(payload));self._cache[uid]=plan;return plan
+
         if a.uid>b.uid:a,b=b,a
         uid=self._edge_uid(a.uid,b.uid)
         cached=self.read_prepared(uid)
@@ -238,7 +269,7 @@ class RoutePlanner:
             self._ensure_infrastructure(cached)
             return cached
         regions=self._region_path((a.region_x,a.region_y),(b.region_x,b.region_y))
-        portals,crossings=self._portals_and_crossings(uid,regions) if self.version>=3 else ([],[])
+        portals,crossings=self._portals_and_crossings(uid,regions)
         cost=sum(self._region_cost(*r) for r in regions[1:])
         danger=min(95,max(0,cost//max(1,len(regions))//4+len(crossings)*4))
         route_class="maintained_road" if max(a.population,b.population)>=150 else ("road" if a.population+b.population>=80 else "trail")
@@ -254,8 +285,27 @@ class RoutePlanner:
 
     def _candidate_edges(self,settlements):
         rows=sorted(settlements,key=lambda s:s.uid)
+        if self.version<3:
+            candidates={}
+            for a in rows:
+                nearby=sorted(
+                    (b for b in rows if b.uid!=a.uid),
+                    key=lambda b:(abs(a.region_x-b.region_x)+abs(a.region_y-b.region_y),
+                                  (a.region_x-b.region_x)**2+(a.region_y-b.region_y)**2,b.uid),
+                )[:3]
+                for b in nearby:
+                    lo,hi=sorted((a.uid,b.uid))
+                    if (lo,hi) in candidates:continue
+                    pa=self.region_planner.plan(a.region_x,a.region_y,persist=True)
+                    pb=self.region_planner.plan(b.region_x,b.region_y,persist=True)
+                    distance=abs(a.region_x-b.region_x)+abs(a.region_y-b.region_y)
+                    utility=int(getattr(pa,"route_value",0))+int(getattr(pb,"route_value",0))
+                    utility+=min(60,a.population+b.population)//2
+                    candidates[(lo,hi)]=(distance*100-utility,lo,hi,a,b)
+            return sorted(candidates.values(),key=lambda row:(row[0],row[1],row[2]))
+
         by_region={}
-        for s in rows:by_region.setdefault((int(s.region_x),int(s.region_y)),[]).append(s)
+        for row in rows:by_region.setdefault((int(row.region_x),int(row.region_y)),[]).append(row)
         out={}
         for a in rows:
             nearby=[]
@@ -300,6 +350,21 @@ class RoutePlanner:
         return selected
 
     def _mirror_trade_route(self,plan,a,b)->None:
+        if self.version<3:
+            minutes=max(180,int(plan.cost)*5)
+            capacity=160 if plan.route_class=="maintained_road" else 100 if plan.route_class=="road" else 55
+            for origin,destination,path,chunks,suffix in (
+                (a,b,plan.region_path,plan.chunk_corridor,"a"),
+                (b,a,list(reversed(plan.region_path)),list(reversed(plan.chunk_corridor)),"b"),
+            ):
+                uid=f"{plan.uid}:{suffix}";old=self.state.trade_routes.get(uid)
+                self.state.trade_routes[uid]=TradeRouteState(
+                    uid,origin.uid,destination.uid,max(1,len(path)-1),int(plan.danger),capacity,
+                    int(old.last_used_minute) if old else 0,int(old.traffic) if old else 0,
+                    [f"{rx},{ry}" for rx,ry in path],minutes,[f"{cx},{cy}" for cx,cy in chunks],
+                )
+            return
+
         infra=self._ensure_infrastructure(plan)
         base_minutes=max(180,int(plan.cost)*5)
         condition=max(10,int(infra.condition))
@@ -307,9 +372,11 @@ class RoutePlanner:
         class_capacity=160 if plan.route_class=="maintained_road" else 100 if plan.route_class=="road" else 55
         capacity=0 if infra.blocked else max(1,class_capacity*condition//100)
         danger=min(100,int(plan.danger)+(100-condition)//3+(35 if infra.blocked else 0))
+        by_uid={s.uid:s for s in self.state.settlements.values()}
+        canonical_a=by_uid.get(plan.origin,a);canonical_b=by_uid.get(plan.destination,b)
         for origin,destination,path,chunks,suffix in (
-            (a,b,plan.region_path,plan.chunk_corridor,"a"),
-            (b,a,list(reversed(plan.region_path)),list(reversed(plan.chunk_corridor)),"b"),
+            (canonical_a,canonical_b,plan.region_path,plan.chunk_corridor,"a"),
+            (canonical_b,canonical_a,list(reversed(plan.region_path)),list(reversed(plan.chunk_corridor)),"b"),
         ):
             uid=f"{plan.uid}:{suffix}";old=self.state.trade_routes.get(uid)
             self.state.trade_routes[uid]=TradeRouteState(
