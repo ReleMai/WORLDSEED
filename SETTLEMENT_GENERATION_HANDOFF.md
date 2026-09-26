@@ -413,3 +413,27 @@ Active workplace bindings now feed a two-tier production model. The settlement l
 - Tests cover non-corner entrances, cardinal floor access, threshold/frontage generation, pinned plan versions and different rendered variants for connected/isolated wall and floor masks.
 
 - Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.
+
+
+## Work unit 22 - Grand Regional Civilization Phase 1
+- Replaced the legacy fixed per-region settlement-presence roll for new settlement-plan v4 worlds with a bounded terrain-first RegionalCivilizationPlanner. Candidate sites now compete on physical opportunity and neighboring quality; high-value valleys can cluster while weaker adjacent sites become hinterland/frontier.
+- Regional civilization profiles persist carrying capacity, rank hint, morphology, route value, defensibility, crossing value, culture seed and prominent-faction-seed metadata inside generated regional plans.
+- Regional road-edge selection now requires civilization utility and chooses symmetric boundary footing from prepared slope/flood/water conditions instead of a probability threshold plus arbitrary offset.
+- Added RoutePlanner v2. Nearby realized settlements form a bounded nearest-neighbor candidate graph, receive a minimum connectivity backbone plus limited redundancy, and selected edges are routed through a terrain-cost regional A* corridor. Plans persist in generated_route_plans and mirror into existing TradeRouteState in both directions.
+- Route plans retain stable region/chunk corridors and hydrology-derived ford/bridge/ferry candidates for later exact road materialization.
+- Settlement-plan v4 adds morphology, culture style and faction influence. Local street seed shapes vary by morphology and plans compute housing/workplace capacities from actual structures/rooms.
+- SettlementPopulationBinder now derives SettlementState.housing_capacity, homelessness and the legacy buildings dictionary from the active physical plan. Procedural society and daughter-settlement creation no longer invent house/farm counts.
+- Daughter settlements require a terrain-scored regional settlement anchor; collapse no longer rewrites an abstract building-count authority.
+- Cultures now carry architectural style, morphology/public-space preferences and palette words. Factions select deterministic regional seats and geography-informed archetypes such as river league, iron march, greenward, tide freeholds, granary compact and border march, plus banner/doctrine/prominence metadata.
+- Village Start candidate selection now consumes the same terrain-first civilization potential without constructing/persisting RegionBlockPlanner plans.
+- AGENTS.md now treats terrain-first civilization potential, sparse graph-first roads, physical crossings, cultural morphology and no-dual-authority capacities as binding constraints.
+
+### Versioning
+- SETTLEMENT_PLAN_VERSION = 4.
+- ROUTEGEN_VERSION = 2.
+- Existing saves remain pinned to stored settlement/route generation versions; world loading now reads routegen_version onto World.
+
+### Next dependency
+- Materialize selected RoutePlanner corridors as continuous physical roads across prepared regions and make settlement gateways consume those exact route edges.
+- Add audit_settlement_plans.py, audit_routes.py and a bounded regional-civilization benchmark.
+- Add faction hinterlands/territorial influence and route-centrality feedback into later settlement growth without realizing distant towns.
