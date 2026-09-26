@@ -151,6 +151,8 @@ class RegionBlockPlanner:
         self.civilization = RegionalCivilizationPlanner(world, self.version)
 
     def _presence(self, rx: int, ry: int) -> bool:
+        if self.version < 4:
+            return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
         return self.civilization.profile(int(rx), int(ry)).settlement_present
 
     def _biome_for(self, pos: WorldPos) -> str:
@@ -202,11 +204,37 @@ class RegionBlockPlanner:
         return score, archetype
 
     def _best_settlement_site(self, rx: int, ry: int) -> tuple[tuple[int, int], int, str]:
-        profile = self.civilization.profile(int(rx), int(ry))
-        return profile.anchor, profile.score, profile.archetype
+        if self.version >= 4:
+            profile = self.civilization.profile(int(rx), int(ry))
+            return profile.anchor, profile.score, profile.archetype
+        x0, y0 = rx * REGION_SIZE, ry * REGION_SIZE
+        best: tuple[int, int, int, str] | None = None
+        for gy in range(1, 7):
+            for gx in range(1, 7):
+                jx = int(hash_u64(self.seed, "region-site-x", rx, ry, gx, gy) % 33) - 16
+                jy = int(hash_u64(self.seed, "region-site-y", rx, ry, gx, gy) % 33) - 16
+                x = max(x0 + 64, min(x0 + REGION_SIZE - 65, x0 + 64 + gx * 55 + jx))
+                y = max(y0 + 64, min(y0 + REGION_SIZE - 65, y0 + 64 + gy * 55 + jy))
+                score, archetype = self._candidate_score(x, y)
+                tie = int(hash_u64(self.seed, "region-site-tie", rx, ry, x, y) % 1000)
+                row = (score * 1000 + tie, x, y, archetype)
+                if best is None or row[0] > best[0]:
+                    best = row
+        assert best is not None
+        return (best[1], best[2]), best[0] // 1000, best[3]
 
     def _road_edge(self, rx: int, ry: int, direction: str) -> RegionRoadExit | None:
         dx, dy = CARDINALS[direction]
+        if self.version < 4:
+            nx, ny = rx + dx, ry + dy
+            a, b = sorted(((rx, ry), (nx, ny)))
+            both = int(self._presence(rx, ry)) + int(self._presence(nx, ny))
+            threshold = 16 if both == 0 else 46 if both == 1 else 78
+            roll = hash_u64(self.seed, "regional-road-edge", a[0], a[1], b[0], b[1]) % 100
+            if roll >= threshold:
+                return None
+            offset = 64 + int(hash_u64(self.seed, "regional-road-offset", a[0], a[1], b[0], b[1]) % (REGION_SIZE - 128))
+            return RegionRoadExit(direction, offset, "road" if both == 2 else "trail")
         nx, ny = rx + dx, ry + dy
         a_profile = self.civilization.profile(rx, ry)
         b_profile = self.civilization.profile(nx, ny)
@@ -305,12 +333,17 @@ class RegionBlockPlanner:
                 f = self.generator.sample_fields(p)
                 elevations.append(f.elevation); moistures.append(f.moisture); temperatures.append(f.temperature)
         dominant = max(sorted(mix), key=lambda k: mix[k])
-        profile = self.civilization.profile(rx, ry)
-        present = profile.settlement_present
+        profile = self.civilization.profile(rx, ry) if self.version >= 4 else None
+        present = profile.settlement_present if profile is not None else self._presence(rx, ry)
         if present:
-            anchor, settlement_score, archetype = profile.anchor, profile.score, profile.archetype
+            if profile is not None:
+                anchor, settlement_score, archetype = profile.anchor, profile.score, profile.archetype
+            else:
+                anchor, settlement_score, archetype = self._best_settlement_site(rx, ry)
         else:
-            anchor, settlement_score, archetype = None, profile.score, "wilderness"
+            anchor = None
+            settlement_score = profile.score if profile is not None else 0
+            archetype = "wilderness"
         relief = max(elevations) - min(elevations)
         mean_m = sum(moistures) // len(moistures)
         mean_t = sum(temperatures) // len(temperatures)
@@ -321,7 +354,7 @@ class RegionBlockPlanner:
         if mean_t < 17000: tags.append("cold")
         if "water" in mix or "coast" in mix: tags.append("waterside")
         control = "settled" if present else ("bandit_frontier" if hash_u64(self.seed, "region-bandit-potential", rx, ry) % 100 < 11 else "wild")
-        site_potential = bool(profile.score >= 34)
+        site_potential = bool(profile.score >= 34) if profile is not None else hash_u64(self.seed, "region-site-potential", rx, ry) % 100 < 18
         roads = tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None)
         waters = self._water_edges(rx, ry)
         payload = {
@@ -333,14 +366,14 @@ class RegionBlockPlanner:
             "settlement_archetype": archetype, "control_potential": control,
             "wilderness_tags": tags, "site_potential": site_potential,
             "roads": [asdict(x) for x in roads], "waters": [asdict(x) for x in waters],
-            "carrying_capacity": profile.carrying_capacity,
-            "settlement_rank_hint": profile.rank_hint,
-            "settlement_morphology": profile.morphology,
-            "route_value": profile.route_value,
-            "defensibility": profile.defensibility,
-            "crossing_value": profile.crossing_value,
-            "culture_seed": profile.culture_seed,
-            "prominent_faction_seed": profile.prominent_faction_seed,
+            "carrying_capacity": profile.carrying_capacity if profile is not None else 0,
+            "settlement_rank_hint": profile.rank_hint if profile is not None else "homestead",
+            "settlement_morphology": profile.morphology if profile is not None else "organic",
+            "route_value": profile.route_value if profile is not None else 0,
+            "defensibility": profile.defensibility if profile is not None else 0,
+            "crossing_value": profile.crossing_value if profile is not None else 0,
+            "culture_seed": profile.culture_seed if profile is not None else 0,
+            "prominent_faction_seed": profile.prominent_faction_seed if profile is not None else False,
         }
         payload["fingerprint"] = canonical_hash(payload)
         return RegionBlockPlan.from_dict(payload)
