@@ -137,6 +137,9 @@ class Simulation:
         self.settlement_lifecycle.attach_region_planner(self.region_planner)
         self.route_planner=RoutePlanner(world,self.state,self.region_planner)
         self.economy.attach_route_planner(self.route_planner)
+        self.factions.attach_route_planner(self.route_planner)
+        self.disasters.attach_transport(self.route_planner,self.region_planner)
+        self.npcs.attach_route_planner(self.route_planner)
         self.settlement_planner=SettlementSkeletonPlanner(world)
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner,self.route_planner
@@ -345,6 +348,9 @@ class Simulation:
         elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
         elif isinstance(command,TalkCommand):self._talk(command)
+        elif isinstance(command,UseCrossingCommand):minutes=self._use_crossing(command,result)
+        elif isinstance(command,RepairCrossingCommand):minutes=self._repair_crossing(command)
+        elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
         elif isinstance(command,TreatDiseaseCommand):self._message(self.disease.treat_player(self.entities.get(command.actor,Inventory),self.clock.minute,self.player_skill('medicine'),self.has_talent('field_medic')))
         else:raise TypeError(f"Unknown command: {type(command).__name__}")
         # Inventory-changing commands can reveal material families and simple
@@ -392,7 +398,7 @@ class Simulation:
             # causality bounded without replaying every missed minute.
             if "environment" in kinds or "arrival" in kinds:
                 before_arrivals=sum(1 for c in self.state.caravans.values() if c.status=="traveling") + sum(1 for c in self.state.migration_cohorts.values() if c.status=="traveling")
-                self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute)
+                self.route_planner.hourly_hazard_update(minute,self.environment);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute)
                 after_arrivals=sum(1 for c in self.state.caravans.values() if c.status=="traveling") + sum(1 for c in self.state.migration_cohorts.values() if c.status=="traveling")
                 summary["arrivals"]+=max(0,before_arrivals-after_arrivals)
             if "daily" in kinds:
@@ -427,7 +433,8 @@ class Simulation:
         old_hour=old//60;new_hour=self.clock.minute//60
         player=self.player_pos
         for hour in range(old_hour+1,new_hour+1):
-            minute=hour*60;self.environment.hourly_update(minute);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+            minute=hour*60;self.environment.hourly_update(minute);affected_routes=self.route_planner.hourly_hazard_update(minute,self.environment);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+            if affected_routes:self._refresh_active_transport()
             pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
             if collapsed:
                 v=self.entities.try_get(self.player_id,Vitals)
@@ -879,6 +886,91 @@ class Simulation:
             messages.append(f"You are driven from {old.x},{old.y} to {nxt.x},{nxt.y}.")
         return messages
 
+    def _refresh_active_transport(self)->None:
+        if not hasattr(self,"settlement_physicalization"):return
+        p=self.player_pos
+        self.settlement_physicalization.sync(
+            self.state.settlements.values(),(p.x//512,p.y//512),radius=0
+        )
+
+    def _use_crossing(self,cmd:UseCrossingCommand,result:TickResult)->int:
+        crossing=self.settlement_physicalization.crossing_by_id(cmd.crossing_uid)
+        if crossing is None:
+            self._message("That crossing is not physically present here.");return 0
+        if str(crossing.kind)!="ferry":
+            self._message("Walk across this crossing normally.");return 0
+        if self.route_planner.crossing_blocked(crossing.route_id,crossing.uid,self.clock.minute):
+            self._message("The ferry crossing is closed by current conditions.");return 0
+        pc=self.entities.get(cmd.actor,Position);here=pc.value
+        a=getattr(crossing,"landing_a",None);b=getattr(crossing,"landing_b",None)
+        if a is None or b is None:
+            self._message("This ferry has no safe landing prepared.");return 0
+        a=tuple(map(int,a));b=tuple(map(int,b))
+        da=abs(here.x-a[0])+abs(here.y-a[1]);db=abs(here.x-b[0])+abs(here.y-b[1])
+        if min(da,db)>1:
+            self._message("Move to a ferry landing first.");return 0
+        dest=b if da<=db else a
+        toll=self.route_planner.crossing_toll(crossing.route_id,crossing.x,crossing.y)
+        inv=self.entities.get(cmd.actor,Inventory)
+        if toll>0 and inv.count("core:copper_coin")<toll:
+            self._message(f"The ferryman asks {toll} copper coin(s). You cannot pay.");return 0
+        if toll>0:
+            inv.remove("core:copper_coin",toll)
+            self.route_planner.collect_crossing_toll(crossing.route_id,crossing.x,crossing.y,toll)
+        old=pc.value;pc.value=WorldPos(dest[0],dest[1],old.z)
+        result.events.append(MovedEvent(cmd.actor,old,pc.value))
+        self.route_planner.record_usage(crossing.route_id,self.clock.minute,1)
+        self._message(f"You cross by ferry"+(f" and pay {toll}c." if toll else "."))
+        return max(MINUTES_PER_ACTION,8+int(crossing.river_class)*4)
+
+    def _repair_crossing(self,cmd:RepairCrossingCommand)->int:
+        crossing=self.settlement_physicalization.crossing_by_id(cmd.crossing_uid)
+        if crossing is None:
+            self._message("That crossing is not physically present here.");return 0
+        p=self.player_pos
+        cells=list(getattr(crossing,"cells",()) or [(crossing.x,crossing.y)])
+        cells += [q for q in (getattr(crossing,"landing_a",None),getattr(crossing,"landing_b",None)) if q is not None]
+        if min(abs(p.x-int(x))+abs(p.y-int(y)) for x,y in cells)>1:
+            self._message("Move beside the damaged crossing to repair it.");return 0
+        condition=self.route_planner.crossing_condition(crossing.route_id,crossing.uid)
+        if condition>=100:
+            self._message("The crossing is already in full repair.");return 0
+        costs={"bridge":{"core:wood":4,"core:stone":2},"ferry":{"core:wood":3},"ford":{"core:stone":2}}.get(str(crossing.kind),{"core:wood":2})
+        inv=self.entities.get(cmd.actor,Inventory)
+        if not inv.has(costs):
+            needed=", ".join(f"{n} {iid.split(':')[-1].replace('_',' ')}" for iid,n in costs.items())
+            self._message(f"Repair requires {needed}.");return 0
+        inv.consume(costs)
+        skill=self.player_skill("crafting")
+        amount=min(45,20+skill*3)
+        self.route_planner.repair_route(crossing.route_id,amount,self.clock.minute,crossing_id=crossing.uid)
+        self._refresh_active_transport()
+        new_condition=self.route_planner.crossing_condition(crossing.route_id,crossing.uid)
+        self._message(f"You repair the {crossing.kind}; condition rises to {new_condition}%.")
+        return 30
+
+    def _pay_road_toll(self,cmd:PayRoadTollCommand)->int:
+        post=self.state.border_posts.get(cmd.border_post_uid)
+        if post is None or not post.active:
+            self._message("There is no active toll post here.");return 0
+        if abs(self.player_pos.x-post.x)+abs(self.player_pos.y-post.y)>1:
+            self._message("Move beside the toll post first.");return 0
+        current=int(self.state.player_toll_passes.get(post.uid,0))
+        if current>self.clock.minute:
+            self._message("Your road passage is already paid.");return 0
+        due=max(0,int(post.toll_copper))
+        if due<=0:
+            self.state.player_toll_passes[post.uid]=self.clock.minute+240
+            self._message("The post waves you through.");return 0
+        inv=self.entities.get(cmd.actor,Inventory)
+        if inv.count("core:copper_coin")<due:
+            self._message(f"The road toll is {due} copper coin(s). You cannot pay.");return 0
+        inv.remove("core:copper_coin",due)
+        collected=self.route_planner.collect_crossing_toll(post.route_id,post.x,post.y,due)
+        self.state.player_toll_passes[post.uid]=self.clock.minute+240
+        self._message(f"You pay {collected}c at the border post.")
+        return MINUTES_PER_ACTION
+
     def _move(self,cmd:MoveCommand,result:TickResult)->None:
         pc=self.entities.get(cmd.actor,Position);old=pc.value;new=old.moved(cmd.dx,cmd.dy)
         if self.dungeons.is_locked(new):
@@ -886,6 +978,9 @@ class Simulation:
             self._message(msg)
             if not ok:return
         from worldseed.systems.swimming import exposure, stroke_cost, practice
+        post=self.settlement_physicalization.border_post_at(new)
+        if post is not None and int(post.toll_copper)>0 and int(self.state.player_toll_passes.get(post.uid,0))<=self.clock.minute:
+            self._message(f"A border post blocks the road and demands {post.toll_copper} copper coin(s). Right-click it to pay.");return
         water=exposure(self,new); old_water=exposure(self,old)
         terrain=self.world.tile_at(new).terrain
         if any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values()):
