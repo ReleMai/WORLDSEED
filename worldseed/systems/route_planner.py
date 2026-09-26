@@ -452,6 +452,12 @@ class RoutePlanner:
                 [f"{rx},{ry}" for rx,ry in rpath],minutes,[f"{cx},{cy}" for cx,cy in rchunks],
                 plan.uid,toll,patrol,contested)
 
+    def refresh_trade_route(self,plan_or_uid)->None:
+        plan=plan_or_uid if isinstance(plan_or_uid,RegionalRoutePlan) else self.plan_by_uid(str(plan_or_uid))
+        if plan is None:return
+        a=self.state.settlements.get(plan.origin);b=self.state.settlements.get(plan.destination)
+        if a is not None and b is not None:self._mirror_trade_route(plan,a,b)
+
     def _persist(self,plans:Iterable[RegionalRoutePlan],persist:bool)->None:
         if not persist:return
         storer=getattr(self.cache_source,"store_generated_route_plan",None)
@@ -770,6 +776,7 @@ class RoutePlanner:
         if self.version>=4 and changed:
             self._reroute_route(plan,int(minute),reason)
         self._refresh_blocked(plan,infra,int(minute));self._material_cache.clear()
+        if changed:self.refresh_trade_route(plan)
         return changed
 
     def repair_route(self,route_id:str,amount:int,minute:int,*,crossing_id:str="")->None:
@@ -785,7 +792,7 @@ class RoutePlanner:
         else:infra.condition=min(100,infra.condition+amount)
         infra.last_maintenance_minute=int(minute);infra.hazard_level=max(0,infra.hazard_level-amount*2)
         if infra.condition>25 and not infra.blocked_crossings:infra.hazard_reason=""
-        self._maybe_restore_base(plan,int(minute));self._refresh_blocked(plan,infra,int(minute));self._material_cache.clear()
+        self._maybe_restore_base(plan,int(minute));self._refresh_blocked(plan,infra,int(minute));self._material_cache.clear();self.refresh_trade_route(plan)
 
     def close_crossing_temporarily(self,route_id:str,crossing_id:str,until_minute:int,reason:str)->bool:
         plan=self.plan_by_uid(route_id)
@@ -886,6 +893,7 @@ class RoutePlanner:
             elif infra.detour_regions:self._maybe_restore_base(plan,minute)
             infra.hazard_level=max(0,infra.hazard_level-1)
             self._refresh_blocked(plan,infra,minute)
+            if changed:self.refresh_trade_route(plan)
         return tuple(sorted(set(affected)))
 
     def _region_control(self,region:tuple[int,int])->tuple[str,int,str,int]:
