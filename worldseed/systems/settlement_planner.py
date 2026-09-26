@@ -1002,6 +1002,7 @@ class SettlementSkeletonPlanner:
                 for target in self._gateway_targets(region_plan, common_center, bounds, rank)
             ]
         plan.gateway_cells=[tuple(spec["target"]) for spec in gateway_specs]
+        gateways=set(plan.gateway_cells)
         plan.crossing_ids=sorted({str(spec["crossing_id"]) for spec in gateway_specs if spec.get("crossing_id")})
 
         def add_road(
