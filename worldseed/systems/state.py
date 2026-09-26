@@ -405,6 +405,11 @@ class FactionState:
     manpower: int = 0
     military_supply: int = 0
     war_exhaustion: int = 0
+    archetype: str = "regional_power"
+    seat_region: str = ""
+    banner_style: str = ""
+    doctrine: str = ""
+    prominence: int = 0
 
 @dataclass(slots=True)
 class CaravanState:
@@ -795,6 +800,10 @@ class CultureState:
     taboos: list[str]
     craft_bias: str
     lexicon: dict[str, str] = field(default_factory=dict)
+    architecture_style: str = "vernacular"
+    settlement_morphology: str = "organic"
+    public_space_tradition: str = "common"
+    color_words: list[str] = field(default_factory=list)
 
 @dataclass(slots=True)
 class ReligionState:
