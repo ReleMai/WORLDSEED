@@ -211,6 +211,9 @@ class RoutePlanner:
             self._cache[uid]=plan;return plan
         except (KeyError,TypeError,ValueError):return None
 
+    def active_plans(self) -> tuple[RegionalRoutePlan,...]:
+        return tuple(self._active_plans[key] for key in sorted(self._active_plans))
+
     def plan_by_uid(self, uid: str) -> RegionalRoutePlan | None:
         return self._active_plans.get(str(uid)) or self._cache.get(str(uid)) or self.read_prepared(str(uid))
 
