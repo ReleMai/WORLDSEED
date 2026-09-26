@@ -472,6 +472,8 @@ class RoutePlanner:
             else:path,local_crossings=cached
             infra=self._ensure_infrastructure(plan)
             crossing_ids=[c.uid for c in local_crossings]
+            for crossing_id in crossing_ids:
+                infra.crossing_conditions.setdefault(crossing_id,100)
             blocked=infra.blocked or any(uid in infra.blocked_crossings for uid in crossing_ids)
             uid=stable_plan_uid("regional-road-segment",plan.uid,f"{rx},{ry}",path)
             roads.append(RoadSegmentPlan(
@@ -520,12 +522,12 @@ class RoutePlanner:
         month=int(minute)//(30*1440)
         for plan in sorted(self._active_plans.values(),key=lambda p:p.uid):
             infra=self._ensure_infrastructure(plan)
-            marker=f"_route_month:{plan.uid}"
-            last=int(getattr(infra,"last_used_minute",0))//(30*1440)
+            if int(infra.last_update_month)==month:
+                continue
+            infra.last_update_month=month
             # Passive exposure is intentionally mild; traffic wear is charged by
-            # record_usage. Avoid repeated decay when offline/full cadence lands
-            # on the same monthly boundary.
-            if last<month and infra.condition>0:infra.condition=max(0,infra.condition-1)
+            # record_usage. One condition tick is applied per monthly boundary.
+            if infra.condition>0:infra.condition=max(0,infra.condition-1)
             a=self.state.settlements.get(plan.origin);b=self.state.settlements.get(plan.destination)
             same_faction=bool(a and b and a.faction_id and a.faction_id==b.faction_id)
             faction=self.state.factions.get(a.faction_id) if same_faction and a else None
