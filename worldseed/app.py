@@ -233,15 +233,20 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=12):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                if not civilization.profile(rx,ry).settlement_present:continue
+                profile=civilization.profile(rx,ry)
+                if not profile.settlement_present:continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
-                row=(abs(rx)+abs(ry),ry,rx,target)
+                # Prefer physically strong sites before proximity. Hydrology can
+                # later lower the score of a marginal dry-climate candidate;
+                # high-quality candidates are substantially more stable after
+                # the authoritative drainage pass.
+                row=(-profile.score,-profile.route_value,abs(rx)+abs(ry),ry,rx,target)
                 (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
-        if len(villages)>=max(3,limit//2):break
-    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
-    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
+        if radius>=4 and len(villages)>=max(8,limit):break
+    ordered=sorted(villages,key=lambda row:row[:-1])
+    ordered+=sorted(others,key=lambda row:row[:-1])
     return tuple(row[-1] for row in ordered[:max(1,int(limit))])
 
 def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
