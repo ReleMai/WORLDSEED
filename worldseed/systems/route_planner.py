@@ -337,8 +337,9 @@ class RoutePlanner:
             valid={p.uid for p in plans}
             for uid,route in list(self.state.trade_routes.items()):
                 if route.physical_route_id and route.physical_route_id not in valid:self.state.trade_routes.pop(uid,None)
-            for uid in list(self.state.route_infrastructure):
-                if uid not in valid:self.state.route_infrastructure.pop(uid,None)
+            # Infrastructure is authoritative mutable history. A graph refresh
+            # may stop selecting an old road, but it must not erase its damage,
+            # repairs or player/history consequences.
         self._active_plans={p.uid:p for p in plans}
         self._update_centrality_and_hinterlands(settlement_by_uid,plans)
         return tuple(sorted(plans,key=lambda p:p.uid))
