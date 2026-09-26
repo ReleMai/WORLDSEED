@@ -584,6 +584,7 @@ class RouteInfrastructureState:
     blocked: bool = False
     last_used_minute: int = 0
     last_maintenance_minute: int = 0
+    last_update_month: int = -1
     crossing_conditions: dict[str, int] = field(default_factory=dict)
     blocked_crossings: list[str] = field(default_factory=list)
 
