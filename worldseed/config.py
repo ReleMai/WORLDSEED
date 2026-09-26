@@ -28,8 +28,10 @@ WEATHER_VERSION = 2
 LIGHTING_VERSION = 1
 # Regional civilization Phase 1 changes settlement siting/morphology and
 # introduces the first authoritative sparse regional route planner.
-SETTLEMENT_PLAN_VERSION = 4
-ROUTEGEN_VERSION = 2
+# Phase 2 binds settlement gateways to selected strategic routes and gives
+# routes exact local physical corridors/infrastructure state.
+SETTLEMENT_PLAN_VERSION = 5
+ROUTEGEN_VERSION = 3
 RNG_PROTOCOL_VERSION = 1
 RESOURCEGEN_VERSION = 4
 CHUNK_SIZE = 32
