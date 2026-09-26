@@ -7,6 +7,7 @@ from worldseed.config import CHUNK_SIZE, REGION_CHUNKS, SETTLEMENT_PLAN_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import derive_seed, hash_u64
+from worldseed.world.regional_civilization import RegionalCivilizationPlanner
 
 REGION_SIZE = CHUNK_SIZE * REGION_CHUNKS
 CARDINALS = {
@@ -77,6 +78,14 @@ class RegionBlockPlan:
     site_potential: bool = False
     roads: tuple[RegionRoadExit, ...] = ()
     waters: tuple[RegionWaterExit, ...] = ()
+    carrying_capacity: int = 0
+    settlement_rank_hint: str = "homestead"
+    settlement_morphology: str = "organic"
+    route_value: int = 0
+    defensibility: int = 0
+    crossing_value: int = 0
+    culture_seed: int = 0
+    prominent_faction_seed: bool = False
     fingerprint: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -109,6 +118,14 @@ class RegionBlockPlan:
                 str(x.get("current_heading", 'still')), int(x.get("current_strength", 0)),
                 str(x.get("water_kind", 'river')),
             ) for x in raw.get("waters", ())),
+            carrying_capacity=int(raw.get("carrying_capacity", 0)),
+            settlement_rank_hint=str(raw.get("settlement_rank_hint", "homestead")),
+            settlement_morphology=str(raw.get("settlement_morphology", "organic")),
+            route_value=int(raw.get("route_value", 0)),
+            defensibility=int(raw.get("defensibility", 0)),
+            crossing_value=int(raw.get("crossing_value", 0)),
+            culture_seed=int(raw.get("culture_seed", 0)),
+            prominent_faction_seed=bool(raw.get("prominent_faction_seed", False)),
             fingerprint=str(raw.get("fingerprint", "")),
         )
 
@@ -129,11 +146,10 @@ class RegionBlockPlanner:
         self.cache_source = world.delta_source
         self.version = int(version)
         self._cache: dict[tuple[int, int], RegionBlockPlan] = {}
+        self.civilization = RegionalCivilizationPlanner(world, self.version)
 
     def _presence(self, rx: int, ry: int) -> bool:
-        # Preserve Dev4's settlement-presence contract; Phase 5 changes site
-        # quality/placement, not which macro-regions rolled a settlement.
-        return derive_seed(self.seed, "settlement-presence", int(rx), int(ry)) % 100 < 42
+        return self.civilization.profile(int(rx), int(ry)).settlement_present
 
     def _biome_for(self, pos: WorldPos) -> str:
         f = self.generator.sample_fields(pos)
@@ -184,37 +200,50 @@ class RegionBlockPlanner:
         return score, archetype
 
     def _best_settlement_site(self, rx: int, ry: int) -> tuple[tuple[int, int], int, str]:
-        x0, y0 = rx * REGION_SIZE, ry * REGION_SIZE
-        # Sample local maxima rather than evaluating all 262,144 cells. A small
-        # deterministic jitter avoids visible 64-cell settlement lattices.
-        best: tuple[int, int, int, str] | None = None
-        for gy in range(1, 7):
-            for gx in range(1, 7):
-                jx = int(hash_u64(self.seed, "region-site-x", rx, ry, gx, gy) % 33) - 16
-                jy = int(hash_u64(self.seed, "region-site-y", rx, ry, gx, gy) % 33) - 16
-                x = x0 + 64 + gx * 55 + jx
-                y = y0 + 64 + gy * 55 + jy
-                x = max(x0 + 64, min(x0 + REGION_SIZE - 65, x))
-                y = max(y0 + 64, min(y0 + REGION_SIZE - 65, y))
-                score, archetype = self._candidate_score(x, y)
-                tie = int(hash_u64(self.seed, "region-site-tie", rx, ry, x, y) % 1000)
-                row = (score * 1000 + tie, x, y, archetype)
-                if best is None or row[0] > best[0]:
-                    best = row
-        assert best is not None
-        return (best[1], best[2]), best[0] // 1000, best[3]
+        profile = self.civilization.profile(int(rx), int(ry))
+        return profile.anchor, profile.score, profile.archetype
 
     def _road_edge(self, rx: int, ry: int, direction: str) -> RegionRoadExit | None:
         dx, dy = CARDINALS[direction]
         nx, ny = rx + dx, ry + dy
-        a, b = sorted(((rx, ry), (nx, ny)))
-        both = int(self._presence(rx, ry)) + int(self._presence(nx, ny))
-        threshold = 16 if both == 0 else 46 if both == 1 else 78
-        roll = hash_u64(self.seed, "regional-road-edge", a[0], a[1], b[0], b[1]) % 100
-        if roll >= threshold:
+        a_profile = self.civilization.profile(rx, ry)
+        b_profile = self.civilization.profile(nx, ny)
+        if not (a_profile.settlement_present or b_profile.settlement_present):
             return None
-        offset = 64 + int(hash_u64(self.seed, "regional-road-offset", a[0], a[1], b[0], b[1]) % (REGION_SIZE - 128))
-        road_class = "road" if both == 2 else "trail"
+        both = a_profile.settlement_present and b_profile.settlement_present
+        utility = (a_profile.route_value + b_profile.route_value) // 2
+        utility += 18 if both else 0
+        utility += (a_profile.crossing_value + b_profile.crossing_value) // 8
+        if utility < (42 if both else 58):
+            return None
+        pair = sorted(((rx, ry), (nx, ny)))
+        candidates = []
+        for offset in range(64, REGION_SIZE - 63, 32):
+            if direction in {"north", "south"}:
+                x = rx * REGION_SIZE + offset
+                y = ry * REGION_SIZE if direction == "north" else (ry + 1) * REGION_SIZE - 1
+                ax, ay = x, y
+                bx, by = x, y - 1 if direction == "north" else y + 1
+            else:
+                x = rx * REGION_SIZE if direction == "west" else (rx + 1) * REGION_SIZE - 1
+                y = ry * REGION_SIZE + offset
+                ax, ay = x, y
+                bx, by = x - 1 if direction == "west" else x + 1, y
+            ea = self.world.environment_at(WorldPos(ax, ay, 0))
+            eb = self.world.environment_at(WorldPos(bx, by, 0))
+            if ea is None or eb is None:
+                continue
+            penalty = int(ea.slope) + int(eb.slope) + int(ea.flood_risk) + int(eb.flood_risk)
+            if ea.open_water or eb.open_water:
+                penalty += 120
+            tie = int(hash_u64(self.seed, "regional-road-footing", pair[0][0], pair[0][1], pair[1][0], pair[1][1], offset) % 1000)
+            candidates.append((penalty, tie, offset))
+        if candidates:
+            offset = min(candidates)[2]
+        else:
+            offset = 64 + int(hash_u64(self.seed, "regional-road-offset", pair[0][0], pair[0][1], pair[1][0], pair[1][1]) % (REGION_SIZE - 128))
+        high_rank = {"town", "city"}
+        road_class = "maintained_road" if a_profile.rank_hint in high_rank and b_profile.rank_hint in high_rank else ("road" if both else "trail")
         return RegionRoadExit(direction, offset, road_class)
 
     def _water_edges(self, rx: int, ry: int) -> tuple[RegionWaterExit, ...]:
@@ -274,11 +303,12 @@ class RegionBlockPlanner:
                 f = self.generator.sample_fields(p)
                 elevations.append(f.elevation); moistures.append(f.moisture); temperatures.append(f.temperature)
         dominant = max(sorted(mix), key=lambda k: mix[k])
-        present = self._presence(rx, ry)
+        profile = self.civilization.profile(rx, ry)
+        present = profile.settlement_present
         if present:
-            anchor, settlement_score, archetype = self._best_settlement_site(rx, ry)
+            anchor, settlement_score, archetype = profile.anchor, profile.score, profile.archetype
         else:
-            anchor, settlement_score, archetype = None, 0, "wilderness"
+            anchor, settlement_score, archetype = None, profile.score, "wilderness"
         relief = max(elevations) - min(elevations)
         mean_m = sum(moistures) // len(moistures)
         mean_t = sum(temperatures) // len(temperatures)
@@ -289,7 +319,7 @@ class RegionBlockPlanner:
         if mean_t < 17000: tags.append("cold")
         if "water" in mix or "coast" in mix: tags.append("waterside")
         control = "settled" if present else ("bandit_frontier" if hash_u64(self.seed, "region-bandit-potential", rx, ry) % 100 < 11 else "wild")
-        site_potential = hash_u64(self.seed, "region-site-potential", rx, ry) % 100 < 18
+        site_potential = bool(profile.score >= 34)
         roads = tuple(x for d in CARDINALS if (x := self._road_edge(rx, ry, d)) is not None)
         waters = self._water_edges(rx, ry)
         payload = {
@@ -301,6 +331,14 @@ class RegionBlockPlanner:
             "settlement_archetype": archetype, "control_potential": control,
             "wilderness_tags": tags, "site_potential": site_potential,
             "roads": [asdict(x) for x in roads], "waters": [asdict(x) for x in waters],
+            "carrying_capacity": profile.carrying_capacity,
+            "settlement_rank_hint": profile.rank_hint,
+            "settlement_morphology": profile.morphology,
+            "route_value": profile.route_value,
+            "defensibility": profile.defensibility,
+            "crossing_value": profile.crossing_value,
+            "culture_seed": profile.culture_seed,
+            "prominent_faction_seed": profile.prominent_faction_seed,
         }
         payload["fingerprint"] = canonical_hash(payload)
         return RegionBlockPlan.from_dict(payload)
