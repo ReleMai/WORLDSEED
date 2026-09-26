@@ -981,6 +981,11 @@ class Simulation:
         post=self.settlement_physicalization.border_post_at(new)
         if post is not None and int(post.toll_copper)>0 and int(self.state.player_toll_passes.get(post.uid,0))<=self.clock.minute:
             self._message(f"A border post blocks the road and demands {post.toll_copper} copper coin(s). Right-click it to pay.");return
+        crossing=self.settlement_physicalization.crossing_at(new)
+        crossing_walkable=bool(
+            crossing and str(crossing.kind) in {"bridge","ford"}
+            and not self.route_planner.crossing_blocked(crossing.route_id,crossing.uid,self.clock.minute)
+        )
         water=exposure(self,new); old_water=exposure(self,old)
         terrain=self.world.tile_at(new).terrain
         if any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values()):
@@ -993,7 +998,11 @@ class Simulation:
             door=security.door_at(new)
             band=security.lock_band(door.lock_level) if door else "locked"
             self._message(f"The {band} property lock blocks the door.");return
-        if not self.building.passable(new,world_pass) or (not self.environment.fluid_passable(new) and water.mode!='swimming'):
+        if not self.building.passable(new,world_pass) or (
+            not crossing_walkable and not self.environment.fluid_passable(new) and water.mode!='swimming'
+        ):
+            if crossing and self.route_planner.crossing_blocked(crossing.route_id,crossing.uid,self.clock.minute):
+                self._message(f"The {crossing.kind} crossing is closed or too damaged to use.");return
             self._message('Something solid blocks your path.');return
         v=self.entities.get(cmd.actor,Vitals)
         if water.mode=='swimming':
