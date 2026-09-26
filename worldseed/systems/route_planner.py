@@ -624,6 +624,9 @@ class RoutePlanner:
             s.route_centrality=min(100,degree.get(uid,0)*24+sum(1 for p in plans if (int(s.region_x),int(s.region_y)) in p.region_path[1:-1])*12)
 
         factions={s.faction_id for s in settlements.values() if s.faction_id in self.state.factions}
+        for faction in self.state.factions.values():
+            faction.influence_regions={}
+            faction.hinterland_regions=[]
         for faction_id in factions:
             faction=self.state.factions[faction_id];sources=[s for s in settlements.values() if s.faction_id==faction_id]
             if not sources:continue
