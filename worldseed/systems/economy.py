@@ -267,6 +267,11 @@ class EconomySystem:
                 # graph: connected market towns attract slightly more growth,
                 # but housing still bounds exact active settlements.
                 growth+=max(0,int(getattr(s,"route_centrality",0))//45)
+                frontier=str(getattr(s,"frontier_status","core"))
+                if frontier=="contested":
+                    growth=max(0,growth-1-int(getattr(s,"border_pressure",0))//50)
+                elif frontier=="frontier":
+                    growth=max(0,growth-1)
                 if s.housing_capacity>0:growth=min(growth,max(0,s.housing_capacity-s.population))
                 s.population += max(0,growth)
             elif s.food_stress > 80:
@@ -370,7 +375,7 @@ class EconomySystem:
         for route in sorted(self.state.trade_routes.values(), key=lambda r: r.uid):
             a = self.state.settlements.get(route.origin)
             b = self.state.settlements.get(route.destination)
-            if not a or not b or route.danger >= 90 or a.quarantine_level >= 90 or b.quarantine_level >= 95:
+            if not a or not b or route.capacity<=0 or route.danger >= 90 or a.quarantine_level >= 90 or b.quarantine_level >= 95:
                 continue
             if any(c.origin == a.uid and c.status == "traveling" for c in self.state.caravans.values()):
                 continue
@@ -426,14 +431,21 @@ class EconomySystem:
                 revenue += qty * max(1, dest.prices.get(good, BASE_PRICE.get(good, 5)))
             paid = min(dest.wealth, revenue)
             dest.wealth -= paid
+            toll=0
+            if route and route.physical_route_id and self.route_planner is not None and int(getattr(self.route_planner,"version",0))>=4:
+                requested_toll=min(paid,max(0,int(getattr(route,"toll_copper",0))))
+                payer_faction=getattr(origin,"faction_id","") if origin is not None else ""
+                toll=self.route_planner.collect_toll(route.physical_route_id,requested_toll,payer_faction)
             if origin:
-                origin.wealth += paid
-            c.wealth = paid
+                origin.wealth += max(0,paid-toll)
+            c.wealth = max(0,paid-toll)
+            c.toll_paid = int(getattr(c,"toll_paid",0))+toll
             c.status = "arrived"
             if route:
                 route.traffic += 1
                 route.danger = max(0, route.danger - 1)
-            self.history.record("trade", f"A caravan reached {dest.name}; cargo sold for {paid}c.", minute, dest.region_x, dest.region_y, [c.uid,dest.uid], salience=12)
+            toll_note=f"; {toll}c paid in road tolls" if toll else ""
+            self.history.record("trade", f"A caravan reached {dest.name}; cargo sold for {paid}c{toll_note}.", minute, dest.region_x, dest.region_y, [c.uid,dest.uid], salience=12)
         # Completed caravan objects are transient logistics state. Their causal
         # outcome already lives in route traffic, settlement ledgers and history.
         cutoff=minute-30*1440
