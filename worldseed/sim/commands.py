@@ -200,4 +200,9 @@ class RepairCrossingCommand:
     crossing_uid:str
 
 @dataclass(frozen=True,slots=True)
+class PayRoadTollCommand:
+    actor:int
+    border_post_uid:str
+
+@dataclass(frozen=True,slots=True)
 class TreatDiseaseCommand: actor:int
