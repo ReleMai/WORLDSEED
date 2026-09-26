@@ -40,8 +40,10 @@ class EconomySystem:
         self.pathfinder = HierarchicalPathfinder(state, world_seed)
         self._route_town_ids: set[str] = set()
         self.workplace_logistics=None
+        self.route_planner=None
 
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
+    def attach_route_planner(self,system)->None:self.route_planner=system
 
     def _price(self, item: str, stock: int) -> int:
         base = BASE_PRICE.get(item, self.registry.items.get(item).base_value if item in self.registry.items else 5)
@@ -260,7 +262,13 @@ class EconomySystem:
     def monthly_update(self, minute: int) -> None:
         for s in self.state.settlements.values():
             if s.food_stress < 20 and s.population < 600:
-                s.population += max(1, s.population // 50)
+                growth=max(1,s.population//50)
+                # Route centrality is a consequence of the physical transport
+                # graph: connected market towns attract slightly more growth,
+                # but housing still bounds exact active settlements.
+                growth+=max(0,int(getattr(s,"route_centrality",0))//45)
+                if s.housing_capacity>0:growth=min(growth,max(0,s.housing_capacity-s.population))
+                s.population += max(0,growth)
             elif s.food_stress > 80:
                 s.population = max(5, s.population - max(1, s.population // 40))
 
@@ -285,6 +293,32 @@ class EconomySystem:
     def _ensure_routes(self, minute: int) -> None:
         towns = sorted(self.state.settlements.values(), key=lambda t:t.uid)
         town_ids={t.uid for t in towns}
+        if self.route_planner is not None and int(getattr(self.route_planner,"version",0))>=3:
+            refresh=(town_ids!=self._route_town_ids) or not self.route_planner.active_plans() or ((minute//1440)%30==0)
+            plans=self.route_planner.sync_network(towns,persist=True) if refresh else self.route_planner.active_plans()
+            self._route_town_ids=town_ids
+            valid={p.uid for p in plans}
+            # v3 removes the old independently-planned economy route graph.
+            for uid,route in list(self.state.trade_routes.items()):
+                if not route.physical_route_id or route.physical_route_id not in valid:
+                    self.state.trade_routes.pop(uid,None)
+                    continue
+                a=self.state.settlements.get(route.origin);b=self.state.settlements.get(route.destination)
+                plan=self.route_planner.plan_by_uid(route.physical_route_id)
+                infra=self.state.route_infrastructure.get(route.physical_route_id)
+                if not a or not b or plan is None or infra is None:continue
+                faction_a=self.state.factions.get(a.faction_id)
+                hostile=bool(faction_a and b.faction_id in faction_a.at_war)
+                merchants=a.labor_pool.get("merchant",max(1,a.population//20))
+                market_capacity=max(2,(20+merchants*3)*(100-a.quarantine_level)//100)
+                road_cap=160 if plan.route_class=="maintained_road" else 100 if plan.route_class=="road" else 55
+                physical_capacity=0 if infra.blocked else max(1,road_cap*max(10,infra.condition)//100)
+                route.capacity=min(market_capacity,physical_capacity) if physical_capacity else 0
+                route.danger=min(100,int(plan.danger)+(100-infra.condition)//3+a.food_stress//5+b.food_stress//6+
+                                 (45 if hostile else 0)+a.quarantine_level//5+b.quarantine_level//8+
+                                 (35 if infra.blocked else 0))
+                route.travel_minutes=max(180,int(plan.cost)*5)*100//max(10,infra.condition)
+            return
         full_refresh=(town_ids!=self._route_town_ids) or not self.state.trade_routes or ((minute//1440)%30==0)
         if not full_refresh:
             # Daily scarcity/war changes route danger, but expensive macro path
@@ -375,6 +409,8 @@ class EconomySystem:
                 c.status = "lost"
                 continue
             route = self.state.trade_routes.get(c.route_id)
+            if route and route.physical_route_id and self.route_planner is not None:
+                self.route_planner.record_usage(route.physical_route_id,minute,1)
             danger = route.danger if route else 20
             effective_danger = max(0, danger - c.guards * 4)
             roll = hash_u64(self.seed, "caravan-risk", c.uid) % 100
