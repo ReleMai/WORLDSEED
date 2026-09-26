@@ -58,7 +58,8 @@ class RegionalCivilizationPlanner:
     def _site_score(self, x: int, y: int) -> tuple[int, str, int, int, int]:
         pos = WorldPos(int(x), int(y), 0)
         base = self.generator.sample_fields(pos)
-        env = self.world.environment_at(pos)
+        env_reader = getattr(self.world, "environment_at", None)
+        env = env_reader(pos) if callable(env_reader) else None
         fertility = int(env.soil_fertility if env else base.fertility * 100 // 65535)
         farmland = int(env.farmland if env else max(0, fertility - 10))
         slope = int(env.slope if env else 20)
