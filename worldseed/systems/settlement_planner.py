@@ -824,9 +824,15 @@ class SettlementSkeletonPlanner:
         road_cells=self._road_cell_set(roads)
         if not road_cells:
             return None
-        entrance,entrance_outside,entrance_inside=self._select_entrance(
-            shell,interior,road_cells,x0,y0,width,height
-        )
+        try:
+            entrance,entrance_outside,entrance_inside=self._select_entrance(
+                shell,interior,road_cells,x0,y0,width,height
+            )
+        except ValueError:
+            # One unsuitable lot must not invalidate the entire settlement plan.
+            # Route-bound gateway geometry can change frontage opportunities; a
+            # parcel with no cardinal legal entrance is simply left undeveloped.
+            return None
         walls=set(shell); walls.discard(entrance)
         doors={entrance}
         partition_cells=set()
