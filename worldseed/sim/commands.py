@@ -190,4 +190,19 @@ class FertilizeCommand: actor:int
 class TalkCommand: actor:int; dx:int=0; dy:int=0
 
 @dataclass(frozen=True,slots=True)
+class UseCrossingCommand:
+    actor:int
+    crossing_uid:str
+
+@dataclass(frozen=True,slots=True)
+class RepairCrossingCommand:
+    actor:int
+    crossing_uid:str
+
+@dataclass(frozen=True,slots=True)
+class PayRoadTollCommand:
+    actor:int
+    border_post_uid:str
+
+@dataclass(frozen=True,slots=True)
 class TreatDiseaseCommand: actor:int

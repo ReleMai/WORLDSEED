@@ -10,6 +10,10 @@ class FactionSystem:
         self.state = state
         self.seed = seed
         self.history = history
+        self.route_planner = None
+
+    def attach_route_planner(self, route_planner) -> None:
+        self.route_planner = route_planner
 
     def monthly_update(self, minute: int) -> None:
         factions = list(self.state.factions.values())
@@ -55,7 +59,12 @@ class FactionSystem:
         for f in factions:
             towns = [s for s in self.state.settlements.values() if s.faction_id == f.uid and s.population > 0]
             population = sum(s.population for s in towns)
-            target = max(3, population // 12)
+            border_posts = [
+                p for p in self.state.border_posts.values()
+                if p.active and p.controlling_faction_id == f.uid
+            ]
+            contested_towns = sum(1 for s in towns if getattr(s,"frontier_status","core")=="contested")
+            target = max(3, population // 12 + len(border_posts) + contested_towns * 2)
             if f.manpower < target:
                 f.manpower += min(target - f.manpower, max(1, population // 80))
             # Armies consume actual food/metal from settlements to create an aggregate military supply pool.
@@ -107,6 +116,16 @@ class FactionSystem:
                 loser.power = max(1, loser.power - 3)
                 winner.power = min(200, winner.power + 2)
                 self.history.record("battle", f"Forces of {winner.name} defeated {loser.name}; casualties were {winner_loss} and {loser_loss}.", minute, subjects=[winner.uid,loser.uid], salience=65)
+                if self.route_planner is not None:
+                    damaged=self.route_planner.apply_war_damage(
+                        winner.uid,loser.uid,minute,severity=min(70,18+winner_loss*3+loser_loss*4)
+                    )
+                    if damaged:
+                        self.history.record(
+                            "road_war_damage",
+                            f"Fighting between {winner.name} and {loser.name} damaged strategic transport.",
+                            minute,subjects=[winner.uid,loser.uid,*damaged],salience=42,
+                        )
                 if hash_u64(self.seed,"raid",winner.uid,loser.uid,month)%100 < 45:
                     self._raid_settlement(winner, loser, minute)
 
@@ -128,8 +147,16 @@ class FactionSystem:
         target.food_stress = min(100, target.food_stress + 12)
         casualties = min(max(0,target.population-5), max(0, target.population//40))
         target.population -= casualties
-        if target.buildings.get("house",0) and hash_u64(self.seed,"raid-house",target.uid,minute)%100<35:
-            target.buildings["house"] = max(0,target.buildings["house"]-1)
+        if self.route_planner is not None:
+            damaged=self.route_planner.apply_region_hazard(
+                (target.region_x,target.region_y),"war",35,minute
+            )
+            if damaged:
+                self.history.record(
+                    "raid_road_damage",
+                    f"The raid around {target.name} disrupted roads and crossings.",
+                    minute,target.region_x,target.region_y,[winner.uid,loser.uid,target.uid,*damaged],salience=40,
+                )
         claim_uid=f"claim:{winner.uid}:settlement:{target.uid}:war"
         if claim_uid in self.state.claims:
             self.state.claims[claim_uid].strength=min(100,self.state.claims[claim_uid].strength+10);self.state.claims[claim_uid].active=True

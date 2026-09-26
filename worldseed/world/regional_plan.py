@@ -152,6 +152,12 @@ class CrossingPlan:
     river_class: int = 0
     condition: int = 100
     blocked: bool = False
+    cells: list[tuple[int, int]] = field(default_factory=list)
+    landing_a: tuple[int, int] | None = None
+    landing_b: tuple[int, int] | None = None
+    controller_faction_id: str = ""
+    toll_copper: int = 0
+    patrol_strength: int = 0
 
 
 def plan_to_dict(value: Any) -> dict[str, Any]:
