@@ -28,6 +28,11 @@ class PhysicalizedSettlementCell:
     structure_piece_role: str = ""
     fixture_piece_id: str = ""
     roof_piece_id: str = ""
+    crossing_id: str = ""
+    crossing_kind: str = ""
+    crossing_condition: int = 100
+    crossing_blocked: bool = False
+    border_post_id: str = ""
 
     @property
     def occupied(self) -> bool:
@@ -88,6 +93,7 @@ class SettlementPhysicalizationSystem:
             "x": changes["x"], "y": changes["y"], "settlement_id": changes["settlement_id"],
             "parcel_id": "", "road_ids": (), "structure_id": "", "room_id": "",
             "ground_piece_id": "", "structure_piece_id": "", "structure_piece_uid": "", "structure_piece_role": "", "fixture_piece_id": "", "roof_piece_id": "",
+            "crossing_id": "", "crossing_kind": "", "crossing_condition": 100, "crossing_blocked": False, "border_post_id": "",
         }
         if existing is not None:
             base.update({
@@ -99,6 +105,11 @@ class SettlementPhysicalizationSystem:
                 "structure_piece_role": existing.structure_piece_role,
                 "fixture_piece_id": existing.fixture_piece_id,
                 "roof_piece_id": existing.roof_piece_id,
+                "crossing_id": existing.crossing_id,
+                "crossing_kind": existing.crossing_kind,
+                "crossing_condition": existing.crossing_condition,
+                "crossing_blocked": existing.crossing_blocked,
+                "border_post_id": existing.border_post_id,
             })
         base.update({k: v for k, v in changes.items() if k not in ("x", "y", "settlement_id")})
         base["x"] = int(changes["x"]); base["y"] = int(changes["y"])
@@ -160,25 +171,68 @@ class SettlementPhysicalizationSystem:
             )
 
     def _index_regional_route(self, road, crossings) -> None:
-        """Project one exact strategic road segment into the same local cell index."""
+        """Project one exact strategic road segment into the local cell index."""
         self._route_segments[road.uid]=road
-        ferry_cells=[(int(c.x),int(c.y)) for c in crossings if str(c.kind)=="ferry" and c.route_id==road.route_id]
+        route_crossings=[c for c in crossings if c.route_id==road.route_id]
+        crossing_cells={}
+        landing_cells={}
+        for crossing in route_crossings:
+            self._crossings[crossing.uid]=crossing
+            cells=list(getattr(crossing,"cells",()) or [(int(crossing.x),int(crossing.y))])
+            for cell in cells:crossing_cells[tuple(map(int,cell))]=crossing
+            for landing in (getattr(crossing,"landing_a",None),getattr(crossing,"landing_b",None)):
+                if landing is not None:landing_cells[tuple(map(int,landing))]=crossing
+
         piece_id=self._road_piece(road.road_class)
         for x,y in road.polyline:
-            x=int(x);y=int(y)
-            env=self.world.environment_at(WorldPos(x,y,0))
-            if env is not None and env.open_water and ferry_cells:
-                if min(abs(x-cx)+abs(y-cy) for cx,cy in ferry_cells)<=8:
-                    continue
-            key=(x,y);old=self._cells.get(key)
+            x=int(x);y=int(y);key=(x,y);old=self._cells.get(key)
+            crossing=crossing_cells.get(key);landing=landing_cells.get(key)
             road_ids=tuple(sorted(set((old.road_ids if old else ())+(road.uid,road.route_id))))
             settlement_id=old.settlement_id if old else ""
+            ground_piece=piece_id
+            changes={}
+            if crossing is not None:
+                kind=str(crossing.kind)
+                if kind=="bridge":
+                    ground_piece="core:plank_road_piece" if "core:plank_road_piece" in self.registry.settlement_pieces else piece_id
+                elif kind=="ferry":
+                    # Water between ferry landings remains water; the local cell
+                    # exists for interaction/hover but never receives a fake road.
+                    env=self.world.environment_at(WorldPos(x,y,0))
+                    if env is not None and env.open_water:ground_piece=""
+                elif kind=="ford":
+                    ground_piece="core:bridge_approach_piece" if "core:bridge_approach_piece" in self.registry.settlement_pieces else piece_id
+                changes.update(
+                    crossing_id=str(crossing.uid),crossing_kind=kind,
+                    crossing_condition=int(crossing.condition),crossing_blocked=bool(crossing.blocked),
+                )
+            elif landing is not None:
+                kind=str(landing.kind)
+                if kind=="ferry":
+                    ground_piece="core:dock_walk_piece" if "core:dock_walk_piece" in self.registry.settlement_pieces else piece_id
+                elif kind=="bridge":
+                    ground_piece="core:bridge_approach_piece" if "core:bridge_approach_piece" in self.registry.settlement_pieces else piece_id
+                changes.update(
+                    crossing_id=str(landing.uid),crossing_kind=kind,
+                    crossing_condition=int(landing.condition),crossing_blocked=bool(landing.blocked),
+                )
             self._cells[key]=self._merge_cell(
                 old,x=x,y=y,settlement_id=settlement_id,
-                road_ids=road_ids,ground_piece_id=piece_id,
+                road_ids=road_ids,ground_piece_id=ground_piece,**changes,
             )
-        for crossing in crossings:
-            if crossing.route_id==road.route_id:self._crossings[crossing.uid]=crossing
+
+        if self.route_planner is not None:
+            for post in self.route_planner.border_posts_for_route(road.route_id):
+                key=(int(post.x),int(post.y))
+                # Only index a post in the region currently represented by this
+                # segment. Posts remain simulation state even when not local.
+                if key not in set((int(x),int(y)) for x,y in road.polyline):
+                    continue
+                old=self._cells.get(key);settlement_id=old.settlement_id if old else ""
+                self._cells[key]=self._merge_cell(
+                    old,x=key[0],y=key[1],settlement_id=settlement_id,
+                    border_post_id=str(post.uid),
+                )
 
     def sync(self, settlements: Iterable, center_region: tuple[int, int], radius: int = 0) -> int:
         """Rebuild the local index from settlements near one active region.
@@ -253,7 +307,19 @@ class SettlementPhysicalizationSystem:
         return self._crossings.get(str(crossing_id))
 
     def crossing_at(self,pos:WorldPos):
-        return next((c for c in self._crossings.values() if int(c.x)==pos.x and int(c.y)==pos.y),None)
+        cell=self._cells.get((int(pos.x),int(pos.y)))
+        if cell is not None and cell.crossing_id:
+            return self._crossings.get(cell.crossing_id)
+        for crossing in self._crossings.values():
+            cells=set(tuple(map(int,p)) for p in (getattr(crossing,"cells",()) or ()))
+            landings={tuple(map(int,p)) for p in (getattr(crossing,"landing_a",None),getattr(crossing,"landing_b",None)) if p is not None}
+            if (pos.x,pos.y) in cells|landings:return crossing
+        return None
+
+    def border_post_at(self,pos:WorldPos):
+        cell=self._cells.get((int(pos.x),int(pos.y)))
+        if cell is None or not cell.border_post_id:return None
+        return self.route_planner.state.border_posts.get(cell.border_post_id) if self.route_planner is not None else None
 
     def skeleton_for(self, settlement_id: str):
         return self._skeletons.get(str(settlement_id))
