@@ -953,6 +953,24 @@ class RoutePlanner:
             total+=max(0,int(post.toll_copper))
         return total
 
+    def crossing_toll(self,route_id:str,x:int,y:int,payer_faction_id:str="")->int:
+        posts=self.border_posts_for_route(route_id)
+        if not posts:return 0
+        post=min(posts,key=lambda p:abs(int(p.x)-int(x))+abs(int(p.y)-int(y)))
+        if payer_faction_id and post.controlling_faction_id==payer_faction_id:return 0
+        return max(0,int(post.toll_copper)) if abs(post.x-int(x))+abs(post.y-int(y))<=REGION_SIZE else 0
+
+    def collect_crossing_toll(self,route_id:str,x:int,y:int,amount:int,payer_faction_id:str="")->int:
+        posts=self.border_posts_for_route(route_id)
+        if not posts:return 0
+        post=min(posts,key=lambda p:abs(int(p.x)-int(x))+abs(int(p.y)-int(y)))
+        if payer_faction_id and post.controlling_faction_id==payer_faction_id:return 0
+        due=min(max(0,int(amount)),max(0,int(post.toll_copper)))
+        faction=self.state.factions.get(post.controlling_faction_id)
+        if faction is not None:faction.treasury+=due
+        post.treasury_collected+=due
+        return due
+
     def collect_toll(self,route_id:str,amount:int,payer_faction_id:str="")->int:
         remaining=max(0,int(amount));collected=0
         for post in self.border_posts_for_route(route_id):
