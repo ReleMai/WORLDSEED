@@ -6,7 +6,7 @@ from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VER
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
 from worldseed.core.coords import WorldPos, split_world
-from worldseed.core.rng import PCG32, derive_seed
+from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.entities.components import Inventory,PlayerControlled,Position,Renderable,Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
@@ -220,6 +220,7 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=20):
     therefore choose a different population/rank than the eventual settlement.
     """
     villages=[];others=[]
+    preview_scores={}
     def region_has_base_land(rx:int,ry:int)->bool:
         x0,y0=rx*512,ry*512
         for gy in (1,2,3,4,5):
@@ -227,23 +228,66 @@ def _village_targets(world:World,seed:bytes,reg:ContentRegistry,limit:int=20):
                 p=WorldPos(x0+gx*512//6,y0+gy*512//6,0)
                 if int(world.generator.sample_fields(p).elevation)>=23800:return True
         return False
+    def preview_candidate_score(rx:int,ry:int)->int:
+        """Pure pre-hydrology mirror of the v4 candidate score.
+
+        This intentionally samples generator fields only: village-start scanning
+        must not construct, persist or cache a RegionBlockPlan. Hydrology later
+        performs the authoritative re-score before a candidate is accepted.
+        """
+        key=(int(rx),int(ry))
+        if key in preview_scores:return preview_scores[key]
+        x0,y0=rx*512,ry*512
+        best=0
+        for gy in range(1,7):
+            for gx in range(1,7):
+                jx=int(hash_u64(seed,"region-site-x",rx,ry,gx,gy)%33)-16
+                jy=int(hash_u64(seed,"region-site-y",rx,ry,gx,gy)%33)-16
+                x=max(x0+64,min(x0+447,x0+64+gx*55+jx))
+                y=max(y0+64,min(y0+447,y0+64+gy*55+jy))
+                fields=world.generator.sample_fields(WorldPos(x,y,0))
+                if int(fields.elevation)<23800:continue
+                fertility=int(fields.fertility)*100//65535
+                farmland=max(0,fertility-10)
+                timber=int(fields.moisture)*100//65535
+                stone=max(0,(int(fields.elevation)-30000)*100//30000)
+                temperature=int(fields.temperature)*100//65535
+                temperate=max(0,100-abs(temperature-55)*2)
+                score=(farmland*3+fertility*2+timber+stone+temperate*2)//11
+                score=max(0,min(100,score-9))  # pre-hydrology fallback slope=18
+                best=max(best,score)
+        preview_scores[key]=best
+        return best
+    def preview_presence(rx:int,ry:int)->bool:
+        score=preview_candidate_score(rx,ry)
+        if score<34:return False
+        threshold=max(12,min(78,18+(score-34)*2))
+        if int(hash_u64(seed,"civilization-pressure",rx,ry)%100)>=threshold:return False
+        priority=score*1000+int(hash_u64(seed,"civilization-priority",rx,ry)%1000)
+        for ny in range(ry-1,ry+2):
+            for nx in range(rx-1,rx+2):
+                if (nx,ny)==(rx,ry):continue
+                other=preview_candidate_score(nx,ny)
+                if other<34:continue
+                other_threshold=max(12,min(78,18+(other-34)*2))
+                if int(hash_u64(seed,"civilization-pressure",nx,ny)%100)>=other_threshold:continue
+                other_priority=other*1000+int(hash_u64(seed,"civilization-priority",nx,ny)%1000)
+                if other_priority>priority+450:return False
+        return True
     for radius in range(0,9):
         for ry in range(-radius,radius+1):
             for rx in range(-radius,radius+1):
                 if max(abs(rx),abs(ry))!=radius or not region_has_base_land(rx,ry):continue
-                # Startup candidate discovery stays a cheap deterministic prefilter
-                # and never constructs/persists regional plans. The candidate is
-                # accepted only after hydrology when _village_gateway_spawn runs
-                # the v4 terrain-led regional civilization planner.
-                if derive_seed(seed,"settlement-presence",rx,ry)%100>=42:continue
+                if not preview_presence(rx,ry):continue
                 rng=PCG32(derive_seed(seed,"settlement",rx,ry))
                 pop=25+rng.randbelow(110)
                 target=VillageTarget(rx,ry,pop)
-                row=(abs(rx)+abs(ry),ry,rx,target)
+                score=preview_candidate_score(rx,ry)
+                row=(abs(rx)+abs(ry),-score,ry,rx,target)
                 (villages if settlement_rank_for_population(pop)=='village' else others).append(row)
         if len(villages)>=max(3,limit//2):break
-    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2]))
-    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2]))
+    ordered=sorted(villages,key=lambda row:(row[0],row[1],row[2],row[3]))
+    ordered+=sorted(others,key=lambda row:(row[0],row[1],row[2],row[3]))
     return tuple(row[-1] for row in ordered[:max(1,int(limit))])
 
 def _find_village_target(world:World,seed:bytes,reg:ContentRegistry):
