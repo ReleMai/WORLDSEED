@@ -47,10 +47,10 @@ class RegionalCivilizationPlanner:
         "frontier": "crossroads",
     }
 
-    def __init__(self, world, version: int = 1):
+    def __init__(self, world, version: int = 1, seed: bytes | None = None):
         self.world = world
         self.generator = world.generator
-        self.seed = world.generator.world_seed
+        self.seed = seed if seed is not None else getattr(world.generator, "world_seed", b"")
         self.version = int(version)
         self._raw_cache: dict[tuple[int, int], dict] = {}
         self._profile_cache: dict[tuple[int, int], RegionalCivilizationProfile] = {}
@@ -168,7 +168,10 @@ class RegionalCivilizationPlanner:
             raw["score"] >= 68 and raw["route"] >= 58 and
             hash_u64(self.seed, "civil-cluster", key[0], key[1]) % 100 < 58
         )
-        present = bool(raw["score"] >= 40 and (better <= 1 or strong_cluster))
+        # Two stronger neighboring sites may suppress a marginal location, but
+        # good terrain remains viable enough for natural settlement clusters and
+        # Village Start to survive the later hydrology-aware refinement pass.
+        present = bool(raw["score"] >= 35 and (better <= 2 or strong_cluster))
         rank = self._rank_hint(raw["carrying"])
         morphology = self._MORPHOLOGY.get(raw["archetype"], "organic")
         faction_seed = bool(
