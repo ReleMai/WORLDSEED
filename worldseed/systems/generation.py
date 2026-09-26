@@ -23,7 +23,16 @@ class ProceduralSocietyGenerator:
         
         cname=culture_name(rng); syll=["ka","ve","or","en","thal","mir","sa","dor","ul","ra","ni","esh"]
         lex={concept:"".join(rng.choice(syll) for _ in range(2+rng.randbelow(2))) for concept in ("water","fire","king","home","death","iron","sun","river")}
-        return CultureState(uid,cname,vals,rng.choice(["short","compound","ancestral"]),[rng.choice(TABOOS)],rng.choice(["wood","stone","metal","fiber"]),lex)
+        craft=rng.choice(["wood","stone","metal","fiber"])
+        architecture={"wood":"timber_courtyard","stone":"stone_lane","metal":"fortified_workyard","fiber":"wattle_common"}[craft]
+        morphology=rng.choice(["organic","crossroads","courtyard","linear"])
+        public_space=rng.choice(["common","market_green","shrine_square","meeting_hall"])
+        colors=[]
+        while len(colors)<2:
+            color=rng.choice(["ochre","river-blue","pine-green","ash-grey","iron-red","cream","charcoal"])
+            if color not in colors:colors.append(color)
+        return CultureState(uid,cname,vals,rng.choice(["short","compound","ancestral"]),[rng.choice(TABOOS)],craft,lex,
+                            architecture,morphology,public_space,colors)
     def religion_for_region(self,rx:int,ry:int,culture_id:str)->ReligionState:
         rng=PCG32(derive_seed(self.seed,"religion",rx//4,ry//4,culture_id)); domains=[]
         while len(domains)<2:
@@ -32,9 +41,42 @@ class ProceduralSocietyGenerator:
         deity=rng.choice(DEITIES); uid=f"religion:{rx//4}:{ry//4}"
         return ReligionState(uid,f"Way of {deity}",deity,domains,rng.choice(TABOOS),rng.choice(RITUALS),rng.choice(["hawk","wolf","stag","raven","boar","serpent"]))
     def faction_for_region(self,rx:int,ry:int,culture:CultureState)->FactionState:
-        rng=PCG32(derive_seed(self.seed,"faction",rx//2,ry//2)); uid=f"faction:{rx//2}:{ry//2}"
-        law={"theft":rng.randbelow(80)+20,"assault":rng.randbelow(80)+20,"trespass":rng.randbelow(60)+10,"tax":rng.randbelow(15)+5}
-        return FactionState(uid,f"{culture.name} {rng.choice(['League','March','Compact','Clans','Dominion','Freeholds'])}",culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],law)
+        fx,fy=rx//2,ry//2
+        rng=PCG32(derive_seed(self.seed,"faction",fx,fy)); uid=f"faction:{fx}:{fy}"
+        candidates=[]
+        if self.region_planner is not None:
+            for cy in range(fy*2,fy*2+2):
+                for cx in range(fx*2,fx*2+2):
+                    plan=self.region_planner.plan(cx,cy,persist=True)
+                    candidates.append((int(plan.settlement_score),int(getattr(plan,"route_value",0)),cy,cx,plan))
+        seat_plan=max(candidates,key=lambda row:(row[0],row[1],-row[2],-row[3]))[-1] if candidates else None
+        archetype={
+            "river_market":"river_league","mining":"iron_march","forest":"greenward",
+            "fishing":"tide_freeholds","agrarian":"granary_compact","frontier":"border_march",
+        }.get(getattr(seat_plan,"settlement_archetype",""),"regional_power")
+        suffix={
+            "river_league":"League","iron_march":"March","greenward":"Wardens",
+            "tide_freeholds":"Freeholds","granary_compact":"Compact","border_march":"March",
+            "regional_power":"Dominion",
+        }[archetype]
+        laws={"theft":rng.randbelow(80)+20,"assault":rng.randbelow(80)+20,"trespass":rng.randbelow(60)+10,"tax":rng.randbelow(15)+5}
+        if archetype=="river_league":laws["tax"]=max(5,laws["tax"]-3)
+        elif archetype=="iron_march":laws["assault"]=min(100,laws["assault"]+12)
+        elif archetype=="greenward":laws["trespass"]=min(100,laws["trespass"]+14)
+        seat_region=f"{seat_plan.region_x},{seat_plan.region_y}" if seat_plan is not None else f"{fx*2},{fy*2}"
+        prominence=min(100,35+(int(seat_plan.settlement_score) if seat_plan else 30)//2+(int(getattr(seat_plan,"route_value",0)) if seat_plan else 20)//3)
+        banner=rng.choice(["split-field","river-chevron","sun-disc","tower-and-road","tree-knot","hammer-stripe"])
+        doctrine={
+            "river_league":"protect crossings and keep trade moving",
+            "iron_march":"control ore, roads and fortified uplands",
+            "greenward":"hold timberlands and guarded commons",
+            "tide_freeholds":"bind waterfront settlements through exchange",
+            "granary_compact":"secure farmland, stores and market roads",
+            "border_march":"fortify frontier routes and daughter settlements",
+            "regional_power":"bind nearby settlements through roads and law",
+        }[archetype]
+        return FactionState(uid,f"{culture.name} {suffix}",culture.uid,1000+rng.randbelow(2500),40+rng.randbelow(60),{},[],laws,
+                            archetype=archetype,seat_region=seat_region,banner_style=banner,doctrine=doctrine,prominence=prominence)
     def settlement_for_cell(self,rx:int,ry:int)->tuple[SettlementState,list[NPCState],CultureState,ReligionState,FactionState] | None:
         # roughly one settlement per 3x3 regions
         if derive_seed(self.seed,"settlement-presence",rx,ry)%100 >= 42:return None
@@ -50,7 +92,9 @@ class ProceduralSocietyGenerator:
             x,y=anchor
         uid=f"settlement:{rx}:{ry}"; pop=25+rng.randbelow(110)
         stocks={"core:wheat":60+rng.randbelow(160),"core:turnip":30+rng.randbelow(100),"core:wood":30+rng.randbelow(80),"core:stone":25+rng.randbelow(70),"core:iron_ore":rng.randbelow(35),"core:coal":rng.randbelow(30),"core:wheat_seed":15+rng.randbelow(25),"core:turnip_seed":10+rng.randbelow(20),"core:medicinal_herb":2+rng.randbelow(9),"core:herbal_tonic":rng.randbelow(5),"core:soap":2+rng.randbelow(8)}
-        s=SettlementState(uid,place_name(rng),rx,ry,x,y,pop,c.uid,r.uid,f.uid,500+rng.randbelow(1000),stocks,{}, {"house":max(5,pop//6),"farm":max(2,pop//12)},0,dict(f.laws),["craft:stoneworking","craft:leatherwork"])
+        # Physical settlement plans own buildings/capacity. This dictionary is
+        # derived after physical planning and starts empty.
+        s=SettlementState(uid,place_name(rng),rx,ry,x,y,pop,c.uid,r.uid,f.uid,500+rng.randbelow(1000),stocks,{}, {},0,dict(f.laws),["craft:stoneworking","craft:leatherwork"])
         npcs=[]
         for i in range(min(12,max(4,pop//10))):
             nr=PCG32(derive_seed(self.seed,"npc",uid,i)); traits=[]
