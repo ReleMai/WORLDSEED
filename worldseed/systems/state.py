@@ -1080,6 +1080,7 @@ class LivingWorldState:
     player_stealth_mode: bool = False
     player_casing_property_id: str = ""
     player_trespass_property_id: str = ""
+    player_toll_passes: dict[str, int] = field(default_factory=dict)
     casing_intel: dict[str, CasingIntelState] = field(default_factory=dict)
     discovered_tiles: list[str] = field(default_factory=list)
     discovered_settlements: list[str] = field(default_factory=list)
@@ -1132,6 +1133,7 @@ class LivingWorldState:
             "player_stealth_mode": bool(self.player_stealth_mode),
             "player_casing_property_id": self.player_casing_property_id,
             "player_trespass_property_id": self.player_trespass_property_id,
+            "player_toll_passes": dict(self.player_toll_passes),
             "discovered_tiles": list(self.discovered_tiles[-120000:]),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
@@ -1148,7 +1150,7 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
-        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_unseen_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_hunting_stance","player_hunting_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
+        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_unseen_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_hunting_stance","player_hunting_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","player_toll_passes","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])
