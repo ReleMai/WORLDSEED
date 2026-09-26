@@ -64,8 +64,12 @@ class RegionalCivilizationPlanner:
         slope = int(env.slope if env else 20)
         relief = int(env.relief if env else 20)
         flood = int(env.flood_risk if env else 0)
-        freshwater = int(env.resources.freshwater if env else 0)
-        timber = int(env.resources.timber if env else base.moisture * 100 // 65535)
+        moisture = base.moisture * 100 // 65535
+        # Before hydrology is prepared (notably Village Start candidate search),
+        # climate moisture is only a coarse water-access proxy. Prepared worlds
+        # replace it with the authoritative hydrology-derived freshwater field.
+        freshwater = int(env.resources.freshwater if env else max(0, min(65, moisture * 3 // 4)))
+        timber = int(env.resources.timber if env else moisture)
         stone = int(env.resources.stone if env else max(0, (base.elevation - 30000) * 100 // 30000))
         opportunity = int(env.resource_opportunity if env else (timber + stone + freshwater) // 3)
         temperature = base.temperature * 100 // 65535
@@ -80,7 +84,7 @@ class RegionalCivilizationPlanner:
         score = (
             farmland * 4 + fertility * 2 + freshwater * 2 + timber + stone
             + temperate * 2 + crossing + route_value
-        ) // 14
+        ) // 13
         score -= slope // 2 + flood // 2
         score = max(0, min(100, score))
 
@@ -116,9 +120,9 @@ class RegionalCivilizationPlanner:
                 candidates.append((score, route, crossing, defense, tie, x, y, archetype))
 
         refined = list(candidates)
-        for _, _, _, _, _, sx, sy, _ in sorted(candidates, reverse=True)[:4]:
-            for dy in (-24, -12, 0, 12, 24):
-                for dx in (-24, -12, 0, 12, 24):
+        for _, _, _, _, _, sx, sy, _ in sorted(candidates, reverse=True)[:3]:
+            for dy in (-18, 0, 18):
+                for dx in (-18, 0, 18):
                     x = max(x0 + 64, min(x0 + REGION_SIZE - 65, sx + dx))
                     y = max(y0 + 64, min(y0 + REGION_SIZE - 65, sy + dy))
                     score, archetype, route, defense, crossing = self._site_score(x, y)
