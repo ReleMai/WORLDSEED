@@ -105,6 +105,8 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - Long waits/offline-style advances must remain bounded. They may fold exact local ticks into coarse updates rather than replaying every simulation tick across days or months.
 - Until activities gain explicit durations/reservations, only locomotion moves to the fixed tick; work/eating/social effects retain coarse cadence so the tick cannot multiply economic output.
 - Nearby NPC actions must consume the same terrain, doors, crossings, structures, inventories and authority seen by the player. Decisions may be abstract; local consequences may not teleport through physical constraints.
+- Activity affordances are transient read models derived from stable physical-plan objects. Exclusive use is represented by persistent activity reservations; never create a second free-floating station/workplace authority in AI code.
+- Physical named-worker activity must reconcile with existing labor/economy authority exactly once. A forge animation or station reservation may explain production, but must never mint a duplicate batch beside the aggregate labor reservation.
 - Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
 
 ### RC14 release gates

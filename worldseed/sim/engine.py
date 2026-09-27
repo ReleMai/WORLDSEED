@@ -17,6 +17,7 @@ from worldseed.systems.hunting import HuntingSystem
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.environment import EnvironmentSystem
 from worldseed.systems.ai import NPCSystem
+from worldseed.systems.activities import ActivitySystem
 from worldseed.systems.factions import FactionSystem
 from worldseed.systems.magic import MagicSystem
 from worldseed.systems.combat import CombatSystem
@@ -145,6 +146,8 @@ class Simulation:
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner,self.route_planner
         )
+        self.activities=ActivitySystem(self.state,registry,self.settlement_physicalization,self.world)
+        self.npcs.attach_activity_system(self.activities)
         self.resources.attach_settlement_physicalization(self.settlement_physicalization)
         self.settlement_population=SettlementPopulationBinder(
             self.state,registry,self.seed,self.settlement_physicalization
