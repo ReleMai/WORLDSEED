@@ -209,3 +209,39 @@ Add physical key items bound to stable lock identities, ownership/transfer and d
 - Regression coverage now requires non-corner entrances, cardinal interior access, exterior thresholds/frontage, save-pinned settlement-plan versions, and distinct connected-vs-isolated wall/floor render variants.
 
 - Wall piece identity now follows generated topology as well as rendering: straight runs use straight wall catalog pieces, orthogonal joins use corner pieces, high-degree joins use reinforced pieces, mining construction defaults to stone-arch doors, and ordinary buildings use wood doors instead of the previous alphabetical ironbound-door fallback. Default generated floors explicitly choose the plain material variants.
+
+## Revised Phase 4 - Grand Regional Civilization: Living Populations & Territorial Sovereignty
+
+Primary rule:
+
+> NPC decisions may be abstract, but NPC actions near the player must occur physically in the same world the player occupies. Territory may be strategic, but every change in control must ultimately be explainable by settlements, monuments, people, roads, supply, or conflict.
+
+Implementation order:
+
+1. Introduce the fixed WORLDSEED simulation tick and move active NPC locomotion off hourly_update.
+2. Split NPC AI into utility selection, plan generation, and tick execution.
+3. Add activity/affordance and reservation systems.
+4. Convert jobs into physical multi-step activities.
+5. Create generated claim-monument sites with strategic + blue-noise placement.
+6. Build persistent ClaimMonumentState, control propagation and contested-region calculations.
+7. Add scout/capture/defend/supply/attack faction missions.
+8. Materialize monument structures, garrisons, repairs, destruction and rebuilding.
+9. Tie monument supply into the Phase 3 road network.
+10. Add knowledge-aware political borders and monument/frontier overlays to the atlas.
+11. Allow player capture, sabotage, repair, defense and eventual faction ownership.
+12. Expand NPC social, family, market, religious, criminal, military and emergency activities.
+
+### Phase 4 Work Unit 1 - Fixed local simulation tick + staged NPC AI
+
+Status: implemented on the Phase 4 development branch.
+
+- Added a deterministic 5-game-minute WORLDSEED simulation tick anchored to absolute world minutes.
+- Normal advances up to six game-hours replay exact active ticks; larger waits fall back to bounded coarse/hourly progression rather than iterating thousands of local ticks.
+- Tier-A NPC locomotion is no longer driven by hourly_update during normal play. Hour boundaries update needs/utility state; fixed ticks advance physical movement.
+- Split NPC AI into select_utility_goal(), generate_plan(), execute_tick(), decision_update() and tick_update(), retaining _choose_goal_and_plan()/hourly_update() compatibility shims for callers not yet migrated.
+- Physical movement still uses the existing local passability, building collision, crossing and actor-aware property-lock checks.
+- Non-movement effects such as work/eating/social actions deliberately remain on coarse cadence for this work unit. Moving them to every 5-minute tick would multiply production/consumption before Phase 4 activity durations and reservations exist.
+- Added regression coverage for absolute tick boundaries, bounded replay, AI-stage separation and active locomotion staying out of the decision update.
+
+Next coherent work unit: activity/affordance + reservation authority, followed by converting at least one job (recommended: farmer or smith) into a physical multi-step activity using reserved stations/inputs and explicit durations.
+
