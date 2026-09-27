@@ -751,6 +751,60 @@ class SettlementSkeletonPlanner:
         out.reverse()
         return out
 
+    def _service_path(
+        self,
+        start: tuple[int,int],
+        road_cells: set[tuple[int,int]],
+        blocked: set[tuple[int,int]],
+        *,
+        limit: int = 32,
+    ) -> list[tuple[int,int]]:
+        """Terrain-aware fallback from a doorway apron to the nearest real street."""
+        if not road_cells:
+            return [start]
+        ranked=sorted(
+            road_cells,
+            key=lambda p:(abs(p[0]-start[0])+abs(p[1]-start[1]),p[1],p[0]),
+        )
+        targets=[p for p in ranked[:12] if abs(p[0]-start[0])+abs(p[1]-start[1])<=limit]
+        if not targets:
+            return [start]
+        target_set=set(targets)
+        minx=min([start[0]]+[p[0] for p in targets])-5
+        maxx=max([start[0]]+[p[0] for p in targets])+5
+        miny=min([start[1]]+[p[1] for p in targets])-5
+        maxy=max([start[1]]+[p[1] for p in targets])+5
+        queue=[(0,0,start[1],start[0],start)]
+        came={start:None};cost={start:0}
+        found=None
+        while queue:
+            _,g,_,_,cell=heapq.heappop(queue)
+            if cell in target_set:
+                found=cell;break
+            x,y=cell
+            for nxt in ((x,y-1),(x+1,y),(x,y+1),(x-1,y)):
+                if nxt in blocked or nxt in came:
+                    continue
+                if not (minx<=nxt[0]<=maxx and miny<=nxt[1]<=maxy):
+                    continue
+                if abs(nxt[0]-start[0])+abs(nxt[1]-start[1])>limit:
+                    continue
+                if nxt not in road_cells and not self._legal(*nxt):
+                    continue
+                env=self._env(*nxt)
+                step=1 if nxt in road_cells else 2+(0 if env is None else env.slope//18+env.flood_risk//25)
+                ng=g+step
+                came[nxt]=cell;cost[nxt]=ng
+                h=min(abs(nxt[0]-tx)+abs(nxt[1]-ty) for tx,ty in targets)
+                heapq.heappush(queue,(ng+h,ng,nxt[1],nxt[0],nxt))
+        if found is None:
+            return [start]
+        out=[];cur=found
+        while cur is not None:
+            out.append(cur);cur=came[cur]
+        out.reverse()
+        return out
+
     def _building_rect(self, parcel: LandUseParcel, *, large: bool) -> tuple[int,int,int,int] | None:
         left,top,right,bottom=self._parcel_bbox(parcel)
         available_w=right-left+1; available_h=bottom-top+1
@@ -925,6 +979,8 @@ class SettlementSkeletonPlanner:
         frontage=self._frontage_path(
             entrance_outside,road_cells,set(parcel.cells),shell|interior,
         )
+        if not any(cell in road_cells for cell in frontage):
+            frontage=self._service_path(entrance_outside,road_cells,shell|interior)
         # Promote every building approach into the authoritative settlement road
         # graph. NPC/player routing, atlas presentation and the local renderer now
         # agree that the door is connected to a real service path rather than a
