@@ -213,7 +213,7 @@ class ActivitySystem:
             },
         ]
 
-    def plan_work(self, npc, town, minute: int) -> list[dict]:
+    def supports_physical_work(self, npc, town) -> bool:\n        """Whether this nearby job has a real activity authority to obey."""\n        return npc.occupation == "smith" and bool(self.work_affordances(npc, town))\n\n    def plan_work(self, npc, town, minute: int) -> list[dict]:
         """Return an exact work plan for occupations promoted to physical work.
 
         WU2 promotes smiths first: heat at a forge, then shape at an anvil.
