@@ -3504,5 +3504,157 @@
       "arms": 94,
       "legs": 88
     }
+  },
+  {
+    "id": "core:flour",
+    "name": "Flour",
+    "asset": "wheat",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 500,
+    "volume_ml": 800,
+    "tags": [
+      "food",
+      "grain",
+      "ingredient"
+    ],
+    "description": "Stone-ground flour used by bakers and household cooks.",
+    "utility_roles": [
+      "baking_input",
+      "trade_good"
+    ],
+    "base_value": 6
+  },
+  {
+    "id": "core:bread",
+    "name": "Rustic Bread",
+    "asset": "cooked_meat",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 500,
+    "volume_ml": 900,
+    "nutrition": 28,
+    "tags": [
+      "food",
+      "prepared",
+      "grain"
+    ],
+    "description": "A dense settlement loaf baked from milled flour.",
+    "utility_roles": [
+      "prepared_food",
+      "travel_food",
+      "trade_good"
+    ],
+    "calories": 950,
+    "food_groups": [
+      "grain"
+    ],
+    "protein": 18,
+    "carbs": 175,
+    "fat": 6,
+    "fiber": 10,
+    "base_value": 11
+  },
+  {
+    "id": "core:woven_cloth",
+    "name": "Woven Cloth",
+    "asset": "fiber",
+    "category": "material",
+    "material": "core:fiber",
+    "mass_g": 700,
+    "volume_ml": 1300,
+    "tags": [
+      "craft",
+      "textile",
+      "cloth"
+    ],
+    "description": "Tightly woven cloth for clothing, furnishings, bandaging, and trade.",
+    "utility_roles": [
+      "textile_input",
+      "trade_good"
+    ],
+    "base_value": 14
+  },
+  {
+    "id": "core:small_ale",
+    "name": "Small Ale",
+    "asset": "berries",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 1000,
+    "volume_ml": 1000,
+    "nutrition": 5,
+    "hydration": 10,
+    "tags": [
+      "food",
+      "drink",
+      "fermented"
+    ],
+    "description": "A weak grain-and-fruit ale produced from farm surplus.",
+    "utility_roles": [
+      "drink",
+      "trade_good"
+    ],
+    "calories": 180,
+    "food_groups": [
+      "grain"
+    ],
+    "protein": 1,
+    "carbs": 22,
+    "fat": 0,
+    "fiber": 0,
+    "base_value": 12
+  },
+  {
+    "id": "core:dressed_stone",
+    "name": "Dressed Stone",
+    "asset": "stone",
+    "category": "material",
+    "material": "core:stone",
+    "mass_g": 2400,
+    "volume_ml": 900,
+    "tags": [
+      "construction",
+      "masonry",
+      "craft"
+    ],
+    "description": "Squared stone prepared for durable walls, roads, and civic construction.",
+    "utility_roles": [
+      "construction",
+      "masonry",
+      "trade_good"
+    ],
+    "base_value": 9
+  },
+  {
+    "id": "core:smoked_fish",
+    "name": "Smoked Fish",
+    "asset": "cooked_meat",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 500,
+    "volume_ml": 550,
+    "nutrition": 24,
+    "tags": [
+      "food",
+      "fish",
+      "preserved",
+      "protein"
+    ],
+    "description": "Cleaned fish preserved over low smoke for transport and storage.",
+    "utility_roles": [
+      "prepared_food",
+      "preserved_food",
+      "trade_good"
+    ],
+    "calories": 620,
+    "food_groups": [
+      "protein"
+    ],
+    "protein": 48,
+    "carbs": 0,
+    "fat": 22,
+    "fiber": 0,
+    "base_value": 18
   }
 ]
