@@ -11,6 +11,7 @@ from worldseed.systems.pathfinding import HierarchicalPathfinder
 BASE_PRICE = {
     "core:wheat": 4, "core:turnip": 5, "core:meat": 9, "core:hide": 12,
     "core:wood": 5, "core:stone": 4, "core:iron_ore": 14, "core:coal": 10,
+    "core:wooden_bowl": 7, "core:cooked_meat": 13,
     "core:wheat_seed": 3, "core:turnip_seed": 3, "core:relic": 120,
     "core:iron_bloom": 28, "core:steel_billet": 55,
     "core:medicinal_herb": 5, "core:herbal_tonic": 18, "core:soap": 10,
@@ -18,6 +19,7 @@ BASE_PRICE = {
 TARGET = {
     "core:wheat": 120, "core:turnip": 80, "core:meat": 35, "core:hide": 20,
     "core:wood": 70, "core:stone": 70, "core:iron_ore": 30, "core:coal": 30,
+    "core:wooden_bowl": 18, "core:cooked_meat": 28,
     "core:wheat_seed": 25, "core:turnip_seed": 20, "core:iron_bloom": 15,
     "core:medicinal_herb": 20, "core:herbal_tonic": 16, "core:soap": 24,
 }
@@ -26,8 +28,9 @@ TARGET = {
 MAX_TRADE_PARTNERS = 6
 
 LABOR_SHARES = {
-    "farmer": 32, "miner": 12, "carpenter": 8, "hunter": 7, "smith": 5,
-    "merchant": 7, "guard": 8, "healer": 4, "scholar": 4, "herder": 5,
+    "farmer": 32, "miner": 12, "lumberjack": 5, "carpenter": 5, "cook": 4,
+    "hunter": 7, "smith": 5, "merchant": 7, "guard": 8, "healer": 4,
+    "scholar": 4, "herder": 5,
 }
 
 
