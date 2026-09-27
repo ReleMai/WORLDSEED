@@ -624,93 +624,82 @@
   },
   "species": {
     "core:rabbit": [
-      "assets/sprites/species/_dev17/wildlife_05.png",
-      "assets/sprites/species/rabbit/variant_0.png",
-      "assets/sprites/species/rabbit/variant_1.png",
-      "assets/sprites/species/rabbit/variant_2.png",
-      "assets/sprites/species/rabbit/variant_3.png"
+      "assets/sprites/species/illustrated/rabbit_0.png",
+      "assets/sprites/species/illustrated/rabbit_1.png",
+      "assets/sprites/species/illustrated/rabbit_2.png",
+      "assets/sprites/species/illustrated/rabbit_3.png"
     ],
     "core:snowshoe_hare": [
-      "assets/sprites/species/_dev17/wildlife_05.png",
-      "assets/sprites/species/snowshoe_hare/variant_0.png",
-      "assets/sprites/species/snowshoe_hare/variant_1.png",
-      "assets/sprites/species/snowshoe_hare/variant_2.png",
-      "assets/sprites/species/snowshoe_hare/variant_3.png"
+      "assets/sprites/species/illustrated/snowshoe_hare_0.png",
+      "assets/sprites/species/illustrated/snowshoe_hare_1.png",
+      "assets/sprites/species/illustrated/snowshoe_hare_2.png",
+      "assets/sprites/species/illustrated/snowshoe_hare_3.png"
     ],
     "core:deer": [
-      "assets/sprites/species/_dev17/wildlife_00.png",
-      "assets/sprites/species/_dev17/wildlife_01.png",
-      "assets/sprites/species/deer/variant_0.png",
-      "assets/sprites/species/deer/variant_1.png",
-      "assets/sprites/species/deer/variant_2.png",
-      "assets/sprites/species/deer/variant_3.png"
+      "assets/sprites/species/illustrated/deer_0.png",
+      "assets/sprites/species/illustrated/deer_1.png",
+      "assets/sprites/species/illustrated/deer_2.png",
+      "assets/sprites/species/illustrated/deer_3.png"
     ],
     "core:elk": [
-      "assets/sprites/species/_dev17/wildlife_00.png",
-      "assets/sprites/species/elk/variant_0.png",
-      "assets/sprites/species/elk/variant_1.png",
-      "assets/sprites/species/elk/variant_2.png",
-      "assets/sprites/species/elk/variant_3.png"
+      "assets/sprites/species/illustrated/elk_0.png",
+      "assets/sprites/species/illustrated/elk_1.png",
+      "assets/sprites/species/illustrated/elk_2.png",
+      "assets/sprites/species/illustrated/elk_3.png"
     ],
     "core:moose": [
-      "assets/sprites/species/moose/variant_0.png",
-      "assets/sprites/species/moose/variant_1.png",
-      "assets/sprites/species/moose/variant_2.png",
-      "assets/sprites/species/moose/variant_3.png"
+      "assets/sprites/species/illustrated/moose_0.png",
+      "assets/sprites/species/illustrated/moose_1.png",
+      "assets/sprites/species/illustrated/moose_2.png",
+      "assets/sprites/species/illustrated/moose_3.png"
     ],
     "core:boar": [
-      "assets/sprites/species/_dev17/wildlife_02.png",
-      "assets/sprites/species/boar/variant_0.png",
-      "assets/sprites/species/boar/variant_1.png",
-      "assets/sprites/species/boar/variant_2.png",
-      "assets/sprites/species/boar/variant_3.png"
+      "assets/sprites/species/illustrated/boar_0.png",
+      "assets/sprites/species/illustrated/boar_1.png",
+      "assets/sprites/species/illustrated/boar_2.png",
+      "assets/sprites/species/illustrated/boar_3.png"
     ],
     "core:turkey": [
-      "assets/sprites/species/turkey/variant_0.png",
-      "assets/sprites/species/turkey/variant_1.png",
-      "assets/sprites/species/turkey/variant_2.png",
-      "assets/sprites/species/turkey/variant_3.png"
+      "assets/sprites/species/illustrated/turkey_0.png",
+      "assets/sprites/species/illustrated/turkey_1.png",
+      "assets/sprites/species/illustrated/turkey_2.png",
+      "assets/sprites/species/illustrated/turkey_3.png"
     ],
     "core:grouse": [
-      "assets/sprites/species/grouse/variant_0.png",
-      "assets/sprites/species/grouse/variant_1.png",
-      "assets/sprites/species/grouse/variant_2.png",
-      "assets/sprites/species/grouse/variant_3.png"
+      "assets/sprites/species/illustrated/grouse_0.png",
+      "assets/sprites/species/illustrated/grouse_1.png",
+      "assets/sprites/species/illustrated/grouse_2.png",
+      "assets/sprites/species/illustrated/grouse_3.png"
     ],
     "core:mountain_goat": [
-      "assets/sprites/species/_dev17/wildlife_09.png",
-      "assets/sprites/species/mountain_goat/variant_0.png",
-      "assets/sprites/species/mountain_goat/variant_1.png",
-      "assets/sprites/species/mountain_goat/variant_2.png",
-      "assets/sprites/species/mountain_goat/variant_3.png"
+      "assets/sprites/species/illustrated/mountain_goat_0.png",
+      "assets/sprites/species/illustrated/mountain_goat_1.png",
+      "assets/sprites/species/illustrated/mountain_goat_2.png",
+      "assets/sprites/species/illustrated/mountain_goat_3.png"
     ],
     "core:red_fox": [
-      "assets/sprites/species/_dev17/wildlife_04.png",
-      "assets/sprites/species/red_fox/variant_0.png",
-      "assets/sprites/species/red_fox/variant_1.png",
-      "assets/sprites/species/red_fox/variant_2.png",
-      "assets/sprites/species/red_fox/variant_3.png"
+      "assets/sprites/species/illustrated/red_fox_0.png",
+      "assets/sprites/species/illustrated/red_fox_1.png",
+      "assets/sprites/species/illustrated/red_fox_2.png",
+      "assets/sprites/species/illustrated/red_fox_3.png"
     ],
     "core:wolf": [
-      "assets/sprites/species/_dev17/wildlife_03.png",
-      "assets/sprites/species/_dev17/monster_07.png",
-      "assets/sprites/species/wolf/variant_0.png",
-      "assets/sprites/species/wolf/variant_1.png",
-      "assets/sprites/species/wolf/variant_2.png",
-      "assets/sprites/species/wolf/variant_3.png"
+      "assets/sprites/species/illustrated/wolf_0.png",
+      "assets/sprites/species/illustrated/wolf_1.png",
+      "assets/sprites/species/illustrated/wolf_2.png",
+      "assets/sprites/species/illustrated/wolf_3.png"
     ],
     "core:brown_bear": [
-      "assets/sprites/species/_dev17/wildlife_06.png",
-      "assets/sprites/species/brown_bear/variant_0.png",
-      "assets/sprites/species/brown_bear/variant_1.png",
-      "assets/sprites/species/brown_bear/variant_2.png",
-      "assets/sprites/species/brown_bear/variant_3.png"
+      "assets/sprites/species/illustrated/brown_bear_0.png",
+      "assets/sprites/species/illustrated/brown_bear_1.png",
+      "assets/sprites/species/illustrated/brown_bear_2.png",
+      "assets/sprites/species/illustrated/brown_bear_3.png"
     ],
     "core:badger": [
-      "assets/sprites/species/badger/variant_0.png",
-      "assets/sprites/species/badger/variant_1.png",
-      "assets/sprites/species/badger/variant_2.png",
-      "assets/sprites/species/badger/variant_3.png"
+      "assets/sprites/species/illustrated/badger_0.png",
+      "assets/sprites/species/illustrated/badger_1.png",
+      "assets/sprites/species/illustrated/badger_2.png",
+      "assets/sprites/species/illustrated/badger_3.png"
     ],
     "core:cave_crawler": [
       "assets/sprites/species/_dev17/monster_00.png",
@@ -720,12 +709,10 @@
       "assets/sprites/species/cave_crawler/variant_3.png"
     ],
     "core:cave_grazer": [
-      "assets/sprites/species/_dev17/wildlife_09.png",
-      "assets/sprites/species/_dev17/wildlife_10.png",
-      "assets/sprites/species/cave_grazer/variant_0.png",
-      "assets/sprites/species/cave_grazer/variant_1.png",
-      "assets/sprites/species/cave_grazer/variant_2.png",
-      "assets/sprites/species/cave_grazer/variant_3.png"
+      "assets/sprites/species/illustrated/cave_grazer_0.png",
+      "assets/sprites/species/illustrated/cave_grazer_1.png",
+      "assets/sprites/species/illustrated/cave_grazer_2.png",
+      "assets/sprites/species/illustrated/cave_grazer_3.png"
     ],
     "core:cave_stalker": [
       "assets/sprites/species/_dev17/monster_09.png",
@@ -736,29 +723,46 @@
       "assets/sprites/species/cave_stalker/variant_3.png"
     ],
     "core:marsh_boar": [
-      "assets/sprites/species/_dev17/wildlife_02.png",
-      "assets/sprites/species/marsh_boar/variant_0.png",
-      "assets/sprites/species/marsh_boar/variant_1.png",
-      "assets/sprites/species/marsh_boar/variant_2.png",
-      "assets/sprites/species/marsh_boar/variant_3.png"
+      "assets/sprites/species/illustrated/marsh_boar_0.png",
+      "assets/sprites/species/illustrated/marsh_boar_1.png",
+      "assets/sprites/species/illustrated/marsh_boar_2.png",
+      "assets/sprites/species/illustrated/marsh_boar_3.png"
     ],
     "core:muskrat": [
-      "assets/sprites/species/muskrat/variant_0.png"
+      "assets/sprites/species/illustrated/muskrat_0.png",
+      "assets/sprites/species/illustrated/muskrat_1.png",
+      "assets/sprites/species/illustrated/muskrat_2.png",
+      "assets/sprites/species/illustrated/muskrat_3.png"
     ],
     "core:beaver": [
-      "assets/sprites/species/beaver/variant_0.png"
+      "assets/sprites/species/illustrated/beaver_0.png",
+      "assets/sprites/species/illustrated/beaver_1.png",
+      "assets/sprites/species/illustrated/beaver_2.png",
+      "assets/sprites/species/illustrated/beaver_3.png"
     ],
     "core:river_otter": [
-      "assets/sprites/species/river_otter/variant_0.png"
+      "assets/sprites/species/illustrated/river_otter_0.png",
+      "assets/sprites/species/illustrated/river_otter_1.png",
+      "assets/sprites/species/illustrated/river_otter_2.png",
+      "assets/sprites/species/illustrated/river_otter_3.png"
     ],
     "core:great_blue_heron": [
-      "assets/sprites/species/great_blue_heron/variant_0.png"
+      "assets/sprites/species/illustrated/great_blue_heron_0.png",
+      "assets/sprites/species/illustrated/great_blue_heron_1.png",
+      "assets/sprites/species/illustrated/great_blue_heron_2.png",
+      "assets/sprites/species/illustrated/great_blue_heron_3.png"
     ],
     "core:herring_gull": [
-      "assets/sprites/species/herring_gull/variant_0.png"
+      "assets/sprites/species/illustrated/herring_gull_0.png",
+      "assets/sprites/species/illustrated/herring_gull_1.png",
+      "assets/sprites/species/illustrated/herring_gull_2.png",
+      "assets/sprites/species/illustrated/herring_gull_3.png"
     ],
     "core:harbor_seal": [
-      "assets/sprites/species/harbor_seal/variant_0.png"
+      "assets/sprites/species/illustrated/harbor_seal_0.png",
+      "assets/sprites/species/illustrated/harbor_seal_1.png",
+      "assets/sprites/species/illustrated/harbor_seal_2.png",
+      "assets/sprites/species/illustrated/harbor_seal_3.png"
     ]
   },
   "crops": {
