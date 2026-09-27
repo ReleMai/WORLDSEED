@@ -311,7 +311,7 @@ Next profession work should broaden the same contract to millers/bakers, butcher
 Status: implemented on the profession-yard development branch pending Fast Gate publication.
 
 - Settlement plan version advanced to v6 for the new authored exterior layout. This work intentionally prioritizes the current game over preserving the prior settlement-plan cache.
-- Every generated building frontage now becomes a first-class `RoadSegmentPlan` with road class `service_path`. The service path runs from the exterior door approach to the existing settlement street/path network, and the owning parcel's `access_road_id` points at that exact connection.
+- Every generated building entrance now joins the authoritative settlement road graph. Set-back buildings receive a first-class `RoadSegmentPlan` with road class `service_path`; buildings already opening directly onto a street reuse that street instead of creating a redundant one-cell segment. The owning parcel's `access_road_id` points at the exact connection.
 - Service paths materialize as ordinary footpaths, so NPC/player pathing, atlas geometry, local rendering, natural-feature clearing and road inspection all see the same access route.
 - Added authored profession-yard pieces: split-rail fence, yard gate, hanging trade sign, stone well, stacked woodpile, chopping block, ore pile, coal bin, haystack, grain sacks, water barrel and smoke rack.
 - Smithies now receive ore/coal/well/sign yards; forest workshops receive lumber/chopping/sign yards; mills and barns receive grain/hay/well/sign yards; fisheries receive water/smoke/sign yards; residences receive a restrained domestic water-barrel detail.
