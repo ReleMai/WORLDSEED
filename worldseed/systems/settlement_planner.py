@@ -907,7 +907,7 @@ class SettlementSkeletonPlanner:
             "residence":("core:domestic_crockery_piece","core:laundry_basket_piece","core:pantry_crate_piece","core:hearth_wood_piece"),
             "smithy":("core:smith_tool_rack_piece","core:metal_scrap_piece"),
             "workshop":("core:carpenter_offcuts_piece","core:wood_shavings_piece"),
-            "mill":("core:flour_sacks_piece","core:grain_sacks_piece"),
+            "mill":("core:flour_sacks_piece","core:grain_baskets_piece"),
             "bakery":("core:flour_sacks_piece","core:bread_rack_piece"),
             "butcher":("core:butcher_hooks_piece","core:cutting_board_piece"),
             "weavery":("core:yarn_basket_piece","core:cloth_roll_piece"),
@@ -917,7 +917,7 @@ class SettlementSkeletonPlanner:
             "clinic":("core:herb_bundle_piece","core:bottle_shelf_piece"),
             "mason_yard":("core:stone_chips_piece","core:mason_tools_piece"),
             "fishery":("core:net_rack_piece","core:fish_basket_piece"),
-            "barn":("core:grain_sacks_piece","core:hearth_wood_piece"),
+            "barn":("core:grain_baskets_piece","core:hearth_wood_piece"),
         }
         return profiles.get(str(function),())
 
