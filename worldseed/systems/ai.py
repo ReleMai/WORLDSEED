@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None;self.mining=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -19,6 +19,7 @@ class NPCSystem:
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
     def attach_route_planner(self,system)->None:self.route_planner=system
     def attach_activity_system(self,system)->None:self.activities=system
+    def attach_mining_profession(self,system)->None:self.mining=system
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -29,6 +30,18 @@ class NPCSystem:
         if self.lod is not None:
             return self.lod.npc_tier(player_pos,npc)=="A"
         return npc.z==player_pos.z and max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=64
+
+    def _tick_managed(self,npc:NPCState,player_pos:WorldPos)->bool:
+        if self._is_active_local(npc,player_pos):
+            return True
+        if self.mining is None or not self.mining.has_active_trip(npc):
+            return False
+        # A miner can leave immediate sight while traveling to a nearby cave.
+        # Tier B keeps that bounded explicit trip on the fixed tick; once the
+        # player leaves the area entirely, ordinary LOD/coarse cadence resumes.
+        if self.lod is not None:
+            return self.lod.npc_tier(player_pos,npc)=="B"
+        return max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=256
 
     def _advance_needs(self,npc:NPCState,town)->None:
         npc.hunger=min(100,npc.hunger+3);npc.thirst=min(100,npc.thirst+5);npc.rest=min(100,npc.rest+2)
@@ -60,18 +73,20 @@ class NPCSystem:
             self._advance_needs(npc,town)
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
-            active=(tier=="A") if tier is not None else self._is_active_local(npc,player_pos)
+            active=self._tick_managed(npc,player_pos)
             # Normal Tier-A movement is owned by the fixed simulation tick, but
             # non-movement actions keep their coarse decision cadence until the
             # later activity/reservation work gives them explicit durations.
-            task_kind=npc.tasks[0].get("kind") if npc.tasks else ""
-            if execute_active or not active or task_kind not in {"move","activity"}:self._execute_task(npc,town,minute,player_pos)
+            task=npc.tasks[0] if npc.tasks else {}
+            task_kind=task.get("kind","")
+            physical_task=task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action")=="mining_deposit")
+            if execute_active or not active or not physical_task:self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
         if self.activities is not None:self.activities.cleanup(minute)
         for npc in self.state.npcs.values():
-            if not npc.alive or not self._is_active_local(npc,player_pos):continue
+            if not npc.alive or not self._tick_managed(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
@@ -79,7 +94,10 @@ class NPCSystem:
             # Phase 4 WU1 moves locomotion onto the fixed tick without making
             # work/eating/social effects fire every few minutes. Those actions
             # remain coarse until activity durations/reservations are added.
-            if npc.tasks and npc.tasks[0].get("kind") in {"move","activity"}:self.execute_tick(npc,town,minute,player_pos)
+            if npc.tasks:
+                task=npc.tasks[0];kind=task.get("kind")
+                if kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action")=="mining_deposit"):
+                    self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
         """Compatibility entry point for older callers/tests."""
@@ -155,6 +173,15 @@ class NPCSystem:
         goal=npc.goal if goal is None else goal
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
+            if self.mining is not None and self.mining.supports_physical_work(npc,town):
+                physical_tasks=self.mining.plan_work(npc,town,minute)
+                if physical_tasks:
+                    npc.tasks=physical_tasks
+                    return
+                # A realized miner with a real workplace/cave authority must
+                # wait for a viable vein/reservation rather than mint abstract ore.
+                npc.tasks=[]
+                return
             if self.activities is not None:
                 physical_required=self.activities.supports_physical_work(npc,town)
                 physical_tasks=self.activities.plan_work(npc,town,minute)
@@ -223,9 +250,19 @@ class NPCSystem:
         if not npc.tasks:return
         task=npc.tasks[0]
         if task['kind']=='move':
-            goal=WorldPos(int(task['x']),int(task['y']),npc.z);start=WorldPos(npc.x,npc.y,npc.z)
-            if abs(npc.x-goal.x)+abs(npc.y-goal.y)<=1:npc.tasks.pop(0);return
-            if self.world and abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60:
+            goal=WorldPos(int(task['x']),int(task['y']),int(task.get('z',npc.z)));start=WorldPos(npc.x,npc.y,npc.z)
+            if goal.z!=npc.z:
+                # Vertical movement must use an explicit connector activity.
+                return
+            exact=bool(task.get('exact',False))
+            distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
+            reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
+            if reached:
+                npc.tasks.pop(0);return
+            if self.world and (
+                bool(task.get('physical_path',False))
+                or (abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60 and npc.z==player_pos.z)
+            ):
                 def passable(p):
                     world_pass=self.world.is_passable(p)
                     if not world_pass and self.settlement_physicalization is not None:
@@ -235,20 +272,42 @@ class NPCSystem:
                     if self.building and not self.building.passable(p,world_pass):return False
                     if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
                     return True
-                path=local_path(start,goal,passable,800)
+                # Long exact trips (notably settlement -> cave) are advanced
+                # through a nearby physical waypoint so local A* stays bounded.
+                path_goal=goal
+                cheb=max(abs(goal.x-npc.x),abs(goal.y-npc.y))
+                if cheb>28:
+                    dx=goal.x-npc.x;dy=goal.y-npc.y
+                    px=npc.x+(dx*24//cheb);py=npc.y+(dy*24//cheb)
+                    proxy=[]
+                    for radius in range(0,5):
+                        for oy in range(-radius,radius+1):
+                            for ox in range(-radius,radius+1):
+                                if max(abs(ox),abs(oy))!=radius:continue
+                                p=WorldPos(px+ox,py+oy,npc.z)
+                                if passable(p):
+                                    proxy.append((abs(p.x-goal.x)+abs(p.y-goal.y),abs(ox)+abs(oy),p.y,p.x,p))
+                        if proxy:break
+                    if proxy:path_goal=min(proxy,key=lambda row:row[:4])[4]
+                path=local_path(start,path_goal,passable,1000)
                 if len(path)>1:
                     old_x,old_y=npc.x,npc.y
                     step=path[min(3,len(path)-1)];npc.x,npc.y=step.x,step.y
                     self._face_step(npc,old_x,old_y)
-                    if step==goal:npc.tasks.pop(0)
-                # Exact nearby actors may wait/replan when a locked door or
-                # other physical obstacle blocks the route. Never fall through
-                # to coarse straight-line movement and ghost through it.
+                    if (npc.x,npc.y)==(goal.x,goal.y):npc.tasks.pop(0)
+                # Never fall through to coarse movement while physically local.
                 return
             # aggregate/remote travel is straight-line at coarse fidelity
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
+            if (npc.x,npc.y)==(goal.x,goal.y):npc.tasks.pop(0)
+        elif task['kind']=='mining_transition':
+            if self.mining is None:
+                npc.tasks.pop(0);return
+            status=self.mining.transition(npc,task,minute)
+            if status in {'completed','failed'}:npc.tasks.pop(0)
+            return
         elif task['kind']=='activity':
             if self.activities is None:
                 npc.tasks.pop(0)
@@ -259,6 +318,9 @@ class NPCSystem:
                 if task.get('on_complete')=='work':
                     self._work(npc,town,minute)
                     npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
+                elif task.get('on_complete')=='mining_extract' and self.mining is not None:
+                    self.mining.complete_extract(npc,task.get('trip_uid',''),minute)
+                    npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-12)
             elif status in {'failed','cancelled'}:
                 npc.tasks.pop(0)
             return
@@ -290,6 +352,7 @@ class NPCSystem:
             elif action=='household_dropoff' and self.households is not None:self.households.dropoff_delivery(task.get('delivery_uid',''),npc.uid,minute)
             elif action=='workplace_pickup' and self.workplace_logistics is not None:self.workplace_logistics.pickup_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='workplace_dropoff' and self.workplace_logistics is not None:self.workplace_logistics.dropoff_shipment(task.get('shipment_uid',''),npc.uid,minute)
+            elif action=='mining_deposit' and self.mining is not None:self.mining.deposit(npc,town,task.get('trip_uid',''),task.get('container_uid',''),minute)
             elif action=='socialize':npc.needs['social']=max(0,npc.needs.get('social',0)-35)
         elif task['kind']=='social':
             npc.tasks.pop(0);other=self.state.npcs.get(task['target'])

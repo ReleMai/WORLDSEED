@@ -95,6 +95,26 @@ class CaveGeneratorV7:
         ent = self._entrance_for_cell(x // cell, y // cell)
         return ent if ent and ent.x == x and ent.y == y else None
 
+    def entrances_near(self, x: int, y: int, radius: int) -> tuple[CaveEntrance, ...]:
+        """Return deterministic natural entrances inside a bounded surface radius.
+
+        Profession AI uses this query instead of scanning realized chunks or
+        reaching into the generator's private macro-cell cache.
+        """
+        x=int(x);y=int(y);radius=max(0,int(radius));cell=max(1,int(self.ENTRANCE_CELL))
+        min_cx=(x-radius)//cell;max_cx=(x+radius)//cell
+        min_cy=(y-radius)//cell;max_cy=(y+radius)//cell
+        rows=[]
+        for cy in range(min_cy,max_cy+1):
+            for cx in range(min_cx,max_cx+1):
+                ent=self._entrance_for_cell(cx,cy)
+                if ent is None:continue
+                distance=abs(int(ent.x)-x)+abs(int(ent.y)-y)
+                if distance<=radius:
+                    rows.append((distance,int(ent.y),int(ent.x),ent))
+        rows.sort(key=lambda row:row[:3])
+        return tuple(row[3] for row in rows)
+
     def connector_span(self, x: int, y: int) -> int:
         ent = self.entrance(x, y)
         return ent.depth if ent else 0

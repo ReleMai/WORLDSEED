@@ -18,6 +18,8 @@ from worldseed.systems.economy import EconomySystem
 from worldseed.systems.environment import EnvironmentSystem
 from worldseed.systems.ai import NPCSystem
 from worldseed.systems.activities import ActivitySystem
+from worldseed.systems.physical_goods import SettlementPhysicalGoodsSystem
+from worldseed.systems.mining_profession import MiningProfessionSystem
 from worldseed.systems.factions import FactionSystem
 from worldseed.systems.magic import MagicSystem
 from worldseed.systems.combat import CombatSystem
@@ -147,7 +149,14 @@ class Simulation:
             world,registry,self.region_planner,self.settlement_planner,self.route_planner
         )
         self.activities=ActivitySystem(self.state,registry,self.settlement_physicalization,self.world)
+        self.physical_goods=SettlementPhysicalGoodsSystem(self.state,registry)
+        self.mining_profession=MiningProfessionSystem(
+            self.state,registry,self.seed,self.world,self.settlement_physicalization,
+            self.activities,self.physical_goods,
+        )
         self.npcs.attach_activity_system(self.activities)
+        self.npcs.attach_mining_profession(self.mining_profession)
+        self.economy.attach_physical_labor_authority(self.mining_profession)
         self.resources.attach_settlement_physicalization(self.settlement_physicalization)
         self.settlement_population=SettlementPopulationBinder(
             self.state,registry,self.seed,self.settlement_physicalization

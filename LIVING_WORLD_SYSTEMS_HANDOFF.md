@@ -247,7 +247,7 @@ Next coherent work unit: activity/affordance + reservation authority, followed b
 
 ### Phase 4 Work Unit 2 - Physical activity affordances, reservations, and smith work
 
-Status: implemented on the Phase 4 development branch pending Fast Gate publication.
+Status: merged to canonical main in Phase 4 Work Unit 2.
 
 - Added `ActivitySystem` as the authority for nearby physical activity opportunities and exclusive station reservations.
 - Affordances are reconstructed from the active settlement skeleton and authored settlement-piece metadata. They are not serialized as a second world model.
@@ -262,3 +262,23 @@ Status: implemented on the Phase 4 development branch pending Fast Gate publicat
 
 Next coherent work unit: extend the activity framework to input/output affordances and physical hauling so a smith (and then farmer/carpenter) must acquire reserved inputs from real workplace storage, use the reserved station chain, and place outputs into real storage before aggregate market logistics can move them.
 
+### Phase 4 Work Unit 3 - Physical miners and settlement goods flow
+
+Status: implemented on the Phase 4 miner development branch pending Fast Gate publication.
+
+- Added persistent named-NPC carried inventory plus profession-specific skills and skill XP. Miners currently develop mining, prospecting, hauling and cavecraft.
+- Added a bounded public cave-entrance query so profession AI can prospect deterministic natural cave systems without scanning realized chunks or using private cave-generator caches.
+- Miners now select a real cave and a real underground material face from authoritative cave geology. Prospecting skill expands search range/depth and biases target selection toward valuable material while travel cost still matters.
+- Ore/material value is recorded from base item value, vein rarity, hauling distance and depth. This value is attached to the mining trip/physical transfer rather than changing geological spawn probability.
+- Added explicit surface-to-cave connector activities. Miners physically travel to a natural cave mouth, descend its real connector, path to an adjacent mining position, reserve the mineral face, spend activity time extracting it, and ascend the same connector.
+- Extraction mutates the same cave terrain delta used by player mining. A mined vein/wall becomes its authored depleted terrain and the yielded material enters the named miner's carried inventory.
+- Added SettlementPhysicalGoodsSystem as the generic authority for NPC cargo to/from physical settlement-container transfers. Transfers are persisted with item quantities, source, direction and valuation.
+- A miner returns carried ore/coal/stone to a dedicated Mining House Ore Bin in the miner's bound industrial workplace. The miner stands beside the container and deposits the real carried stacks; the transfer does not also add them to SettlementState.stocks.
+- Added a generic physical-labor reconciliation hook to the economy. A named exact miner claims/replaces the matching represented aggregate labor batch, preventing the daily economy from minting duplicate abstract ore while that miner is physically extracting cave material.
+- Active miner trips remain fixed-tick physical work through Tier B so a miner does not freeze merely by walking outside the immediate viewport or descending one cave level. Once the player leaves the nearby area entirely, normal bounded LOD cadence resumes.
+- Physical mining travel uses passability/pathfinding even outside the viewport, with bounded local waypoints for longer cave trips.
+- Added regression coverage for persistent miner skills/inventory, rarity/distance/depth valuation, cave/vein selection and reservations, real terrain depletion, carried cargo, mining-house deposits, physical-transfer ledgers, future physical input withdrawal and aggregate-labor replacement.
+
+The current mining-house implementation intentionally uses the miner's already-stable bound mining industrial property and adds a dedicated ore-bin authority inside it. It does not silently change the settlement-plan version or re-roll existing structure IDs. A future settlement-plan migration can promote this into a separately generated minehouse/workyard structure without invalidating current save geography.
+
+Next coherent work unit: connect smithing to the new physical-goods authority. Smiths should reserve/withdraw iron ore and coal from real settlement/mining storage, carry those inputs to the forge, consume them during the physical forge/anvil chain, and deposit the resulting bloom/product into physical smithy storage before market logistics can aggregate it.
