@@ -41,9 +41,25 @@ class EconomySystem:
         self._route_town_ids: set[str] = set()
         self.workplace_logistics=None
         self.route_planner=None
+        self.physical_labor_authorities=[]
 
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
     def attach_route_planner(self,system)->None:self.route_planner=system
+    def attach_physical_labor_authority(self,system)->None:
+        if system is not None and system not in self.physical_labor_authorities:
+            self.physical_labor_authorities.append(system)
+
+    def _physical_worker_claim(self,town,proc,workers:int,day:int)->int:
+        claimed=0
+        remaining=max(0,int(workers))
+        for authority in self.physical_labor_authorities:
+            fn=getattr(authority,"abstract_worker_claim",None)
+            if not callable(fn):continue
+            amount=max(0,int(fn(town,proc,int(day),remaining)))
+            amount=min(remaining,amount)
+            claimed+=amount;remaining-=amount
+            if remaining<=0:break
+        return claimed
 
     def _price(self, item: str, stock: int) -> int:
         base = BASE_PRICE.get(item, self.registry.items.get(item).base_value if item in self.registry.items else 5)
@@ -204,6 +220,9 @@ class EconomySystem:
 
     def _run_process(self, town, proc: SettlementProcessDef, workers: int, day:int|None=None, minute:int=0) -> int:
         bonus=self._production_bonus(town,proc)
+        if day is not None and self.physical_labor_authorities:
+            workers=max(0,int(workers)-self._physical_worker_claim(town,proc,int(workers),int(day)))
+            if workers<=0:return 0
         if self.workplace_logistics is not None and day is not None:
             return self.workplace_logistics.run_process(town,proc,workers,int(day),int(minute),bonus)
         batches = workers // max(1, proc.workers)
