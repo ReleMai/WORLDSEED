@@ -101,6 +101,7 @@ STATION_PIECE_ALIASES = {
     "core:stone_cutting_yard_piece": "core:masonry_bench",
     "core:smoke_rack_piece": "core:smoke_rack",
     "core:fish_cleaning_table_piece": "core:smoke_rack",
+    "core:fish_smoker_piece": "core:smoke_rack",
     "core:net_mending_bench_piece": "core:smoke_rack",
 }
 
