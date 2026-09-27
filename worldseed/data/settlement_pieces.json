@@ -5626,5 +5626,41 @@
     "comfort": 0,
     "work_bonus": 0,
     "materialization_family": "clutter"
+  },
+  {
+    "id": "core:fish_smoker_piece",
+    "name": "Fish Smoke Hearth",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "W",
+    "tags": [
+      "fish",
+      "smoking",
+      "preservation",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "fish",
+      "smoking",
+      "station"
+    ],
+    "settlement_roles": [
+      "industrial",
+      "market",
+      "civic"
+    ],
+    "material": "mixed",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "fisher",
+    "interior_allowed": true,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 12,
+    "materialization_family": "workshop"
   }
 ]
