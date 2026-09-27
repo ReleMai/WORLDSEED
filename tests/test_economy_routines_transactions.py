@@ -7,6 +7,7 @@ from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory
 from worldseed.sim.commands import BarterCommand
 from worldseed.sim.engine import Simulation
+from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.ai import NPCSystem
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.state import CultureState, LivingWorldState, NPCState, SettlementState
@@ -44,6 +45,50 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         economy=EconomySystem(state,self.registry,b'ledger-test',NullHistory())
         economy.update_prices()
         return state,town,economy
+
+    def test_phase4_fixed_tick_boundaries_are_absolute_and_bounded(self):
+        self.assertEqual(list(crossed_simulation_ticks(1,14)),[5,10])
+        self.assertEqual(list(crossed_simulation_ticks(10,15)),[15])
+        self.assertEqual(list(crossed_simulation_ticks(15,15)),[])
+        self.assertTrue(should_replay_active_ticks(360))
+        self.assertFalse(should_replay_active_ticks(361))
+
+    def test_phase4_utility_selection_and_plan_generation_are_separate(self):
+        state,town,economy=self._economy()
+        npc=NPCState(
+            uid='npc:phase4-plan',name='Planner',age=29,occupation='merchant',
+            traits=[],x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
+            home_id='home:phase4',workplace_id='work:phase4',hunger=90,
+        )
+        state.npcs[npc.uid]=npc
+        ai=NPCSystem(state,b'phase4-plan',NullHistory())
+        goal,score=ai.select_utility_goal(npc,town,8*60)
+        self.assertEqual(goal,'eat')
+        self.assertGreater(score,0)
+        self.assertEqual(npc.tasks,[])
+        ai.generate_plan(npc,town,8*60,goal)
+        self.assertTrue(npc.tasks)
+        self.assertEqual(npc.tasks[-1].get('action'),'eat')
+
+    def test_phase4_active_npc_locomotion_runs_on_tick_not_decision_update(self):
+        state,town,economy=self._economy()
+        npc=NPCState(
+            uid='npc:phase4-move',name='Walker',age=29,occupation='merchant',
+            traits=[],x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
+            home_id='home:phase4',workplace_id='work:phase4',
+            tasks=[{'kind':'move','x':3,'y':0}],
+        )
+        state.npcs[npc.uid]=npc
+        ai=NPCSystem(state,b'phase4-move',NullHistory())
+        player=WorldPos(0,0,0)
+        ai.tick_update(5,player)
+        self.assertEqual((npc.x,npc.y),(1,0))
+        hunger=npc.hunger
+        ai.decision_update(60,player,execute_active=False)
+        self.assertEqual((npc.x,npc.y),(1,0))
+        self.assertGreater(npc.hunger,hunger)
+        ai.tick_update(65,player)
+        self.assertEqual((npc.x,npc.y),(2,0))
 
     def test_named_worker_binds_to_daily_labor_without_duplicate_output(self):
         state,town,economy=self._economy()
