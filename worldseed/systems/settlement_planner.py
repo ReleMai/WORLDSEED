@@ -801,6 +801,51 @@ class SettlementSkeletonPlanner:
             return self._piece_choice(registry,"workshop",contains="scribe_desk") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="wall_shelf")
         return self._piece_choice(registry,"furniture",contains="small_table")
 
+    @staticmethod
+    def _yard_profile(function: str) -> tuple[tuple[str, ...], bool]:
+        """Authored exterior identity for the current profession buildings."""
+        profiles = {
+            "smithy": (
+                ("core:profession_sign_piece","core:ore_pile_piece","core:coal_bin_piece","core:stone_well_piece"),
+                True,
+            ),
+            "workshop": (
+                ("core:profession_sign_piece","core:woodpile_piece","core:chopping_block_piece"),
+                True,
+            ),
+            "mill": (
+                ("core:profession_sign_piece","core:grain_sacks_piece","core:stone_well_piece"),
+                True,
+            ),
+            "barn": (
+                ("core:profession_sign_piece","core:haystack_piece","core:grain_sacks_piece","core:stone_well_piece"),
+                True,
+            ),
+            "fishery": (
+                ("core:profession_sign_piece","core:water_barrel_piece","core:smoke_rack_piece"),
+                True,
+            ),
+            "residence": (
+                ("core:water_barrel_piece",),
+                False,
+            ),
+        }
+        return profiles.get(str(function), ((), False))
+
+    @staticmethod
+    def _yard_ring(
+        x0: int, y0: int, width: int, height: int,
+        parcel_cells: set[tuple[int,int]],
+    ) -> list[tuple[int,int]]:
+        """One-cell exterior apron inside the authored parcel."""
+        left=x0-1;right=x0+width;top=y0-1;bottom=y0+height
+        rows=[]
+        for x in range(left,right+1):
+            rows.append((x,top));rows.append((x,bottom))
+        for y in range(top+1,bottom):
+            rows.append((left,y));rows.append((right,y))
+        return sorted({p for p in rows if p in parcel_cells},key=lambda p:(p[1],p[0]))
+
     def _plan_building(
         self,
         parcel: LandUseParcel,
@@ -880,9 +925,66 @@ class SettlementSkeletonPlanner:
         frontage=self._frontage_path(
             entrance_outside,road_cells,set(parcel.cells),shell|interior,
         )
-        for cell in frontage:
-            if cell not in road_cells:
-                place(approach_piece,cell,"frontage")
+        # Promote every building approach into the authoritative settlement road
+        # graph. NPC/player routing, atlas presentation and the local renderer now
+        # agree that the door is connected to a real service path rather than a
+        # decorative strip owned only by the structure.
+        if len(frontage)>=2:
+            service_uid=stable_plan_uid("road",parcel.settlement_plan_id,f"service:{structure_uid}",frontage)
+            if not any(row.uid==service_uid for row in roads):
+                roads.append(RoadSegmentPlan(
+                    uid=service_uid,settlement_plan_id=parcel.settlement_plan_id,
+                    road_class="service_path",polyline=list(frontage),width=1,
+                    surface="packed_earth",
+                ))
+            road_cells.update(frontage)
+            parcel.access_road_id=service_uid
+
+        yard_ids,use_fence=self._yard_profile(function)
+        yard_ring=self._yard_ring(x0,y0,width,height,set(parcel.cells))
+        yard_blocked=(shell|interior|set(frontage)|road_cells)
+        yard_open=[p for p in yard_ring if p not in yard_blocked and self._legal(*p)]
+        if yard_open:
+            # Trade sign nearest the door; bulky work materials farther away.
+            available=list(yard_open)
+            sign_id="core:profession_sign_piece" if "core:profession_sign_piece" in yard_ids else ""
+            if sign_id and sign_id in registry.settlement_pieces:
+                sign_cell=min(available,key=lambda p:(abs(p[0]-entrance_outside[0])+abs(p[1]-entrance_outside[1]),p[1],p[0]))
+                place(registry.settlement_pieces[sign_id],sign_cell,"yard_fixture")
+                available.remove(sign_cell)
+
+            for piece_id in [pid for pid in yard_ids if pid!=sign_id]:
+                piece=registry.settlement_pieces.get(piece_id)
+                if piece is None or not available:
+                    continue
+                cell=max(
+                    available,
+                    key=lambda p:(
+                        min(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in frontage),
+                        abs(p[0]-entrance_outside[0])+abs(p[1]-entrance_outside[1]),
+                        -p[1],-p[0],
+                    ),
+                )
+                place(piece,cell,"yard_fixture")
+                available.remove(cell)
+
+            if use_fence:
+                fence=registry.settlement_pieces.get("core:split_rail_fence_piece")
+                gate=registry.settlement_pieces.get("core:yard_gate_piece")
+                # The gate sits on the apron closest to the service path. Sparse
+                # fence runs frame the yard without turning tiny lots into cages.
+                gate_cell=None
+                fence_cells=[p for p in yard_ring if p not in road_cells and p not in shell and self._legal(*p)]
+                if fence_cells:
+                    gate_cell=min(fence_cells,key=lambda p:(min(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in frontage),p[1],p[0]))
+                    if gate is not None and gate_cell not in {p for p in yard_open if p not in available}:
+                        place(gate,gate_cell,"yard_gate")
+                    if fence is not None:
+                        candidates=[p for p in fence_cells if p!=gate_cell and p not in {q for q in yard_open if q not in available}]
+                        for index,cell in enumerate(candidates):
+                            if index%2==0:
+                                place(fence,cell,"yard_fence")
+
         for cell in sorted(interior,key=lambda p:(p[1],p[0])):
             place(floor_piece,cell,"floor")
             place(roof_piece,cell,"roof")
@@ -1225,6 +1327,7 @@ class SettlementSkeletonPlanner:
             plan.atlas_bounds = (min(xs), min(ys), max(xs), max(ys))
 
         structures,rooms,pieces=self._generate_buildings(plan,roads,parcels)
+        plan.road_segment_ids=[row.uid for row in roads]
         plan.structure_site_ids=[row.uid for row in structures]
         room_by_structure={}
         for room in rooms:room_by_structure.setdefault(room.structure_plan_id,[]).append(room)
