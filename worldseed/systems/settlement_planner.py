@@ -1027,16 +1027,29 @@ class SettlementSkeletonPlanner:
             if use_fence:
                 fence=registry.settlement_pieces.get("core:split_rail_fence_piece")
                 gate=registry.settlement_pieces.get("core:yard_gate_piece")
-                # The gate sits on the apron closest to the service path. Sparse
-                # fence runs frame the yard without turning tiny lots into cages.
+                # The gate sits on the apron closest to the service path. Yard
+                # fixtures get first choice of useful corners, so select the gate
+                # only from still-free apron cells instead of silently dropping it
+                # when a sign or work pile happened to take the closest cell.
+                used_yard=set(yard_open)-set(available)
                 gate_cell=None
-                fence_cells=[p for p in yard_ring if p not in road_cells and p not in shell and self._legal(*p)]
+                fence_cells=[
+                    p for p in yard_ring
+                    if p not in road_cells and p not in shell and p not in used_yard and self._legal(*p)
+                ]
                 if fence_cells:
-                    gate_cell=min(fence_cells,key=lambda p:(min(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in frontage),p[1],p[0]))
-                    if gate is not None and gate_cell not in {p for p in yard_open if p not in available}:
+                    gate_cell=min(
+                        fence_cells,
+                        key=lambda p:(
+                            min(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in frontage),
+                            abs(p[0]-entrance_outside[0])+abs(p[1]-entrance_outside[1]),
+                            p[1],p[0],
+                        ),
+                    )
+                    if gate is not None:
                         place(gate,gate_cell,"yard_gate")
                     if fence is not None:
-                        candidates=[p for p in fence_cells if p!=gate_cell and p not in {q for q in yard_open if q not in available}]
+                        candidates=[p for p in fence_cells if p!=gate_cell]
                         for index,cell in enumerate(candidates):
                             if index%2==0:
                                 place(fence,cell,"yard_fence")
