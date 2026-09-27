@@ -15,6 +15,9 @@ BASE_PRICE = {
     "core:wheat_seed": 3, "core:turnip_seed": 3, "core:relic": 120,
     "core:iron_bloom": 28, "core:steel_billet": 55,
     "core:medicinal_herb": 5, "core:herbal_tonic": 18, "core:soap": 10,
+    "core:fiber": 4, "core:bark": 3, "core:clay_lump": 4, "core:largemouth_bass": 20,
+    "core:flour": 6, "core:bread": 11, "core:woven_cloth": 14, "core:leather": 18,
+    "core:small_ale": 12, "core:clay_pot": 9, "core:dressed_stone": 9, "core:smoked_fish": 18,
 }
 TARGET = {
     "core:wheat": 120, "core:turnip": 80, "core:meat": 35, "core:hide": 20,
@@ -22,15 +25,19 @@ TARGET = {
     "core:wooden_bowl": 18, "core:cooked_meat": 28,
     "core:wheat_seed": 25, "core:turnip_seed": 20, "core:iron_bloom": 15,
     "core:medicinal_herb": 20, "core:herbal_tonic": 16, "core:soap": 24,
+    "core:fiber": 36, "core:bark": 28, "core:clay_lump": 30, "core:largemouth_bass": 24,
+    "core:flour": 36, "core:bread": 28, "core:woven_cloth": 18, "core:leather": 18,
+    "core:small_ale": 24, "core:clay_pot": 14, "core:dressed_stone": 24, "core:smoked_fish": 18,
 }
 
 # Aggregate labor composition. Named NPCs are representatives; this pool models the rest of a town.
 MAX_TRADE_PARTNERS = 6
 
 LABOR_SHARES = {
-    "farmer": 32, "miner": 12, "lumberjack": 5, "carpenter": 5, "cook": 4,
-    "hunter": 7, "smith": 5, "merchant": 7, "guard": 8, "healer": 4,
-    "scholar": 4, "herder": 5,
+    "farmer": 22, "miner": 8, "lumberjack": 5, "carpenter": 4, "cook": 3,
+    "hunter": 5, "smith": 4, "merchant": 6, "guard": 6, "healer": 4,
+    "scholar": 3, "herder": 4, "miller": 3, "baker": 3, "butcher": 3,
+    "fisher": 3, "weaver": 3, "tanner": 2, "brewer": 2, "potter": 2, "mason": 3,
 }
 
 
