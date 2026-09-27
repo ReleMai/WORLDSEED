@@ -217,7 +217,10 @@ class MiningProfessionSystem:
 
     @staticmethod
     def _move_task(pos: WorldPos, **extra) -> dict:
-        return {"kind": "move", "x": int(pos.x), "y": int(pos.y), "z": int(pos.z), "exact": True, **extra}
+        return {
+            "kind": "move", "x": int(pos.x), "y": int(pos.y), "z": int(pos.z),
+            "exact": True, "physical_path": True, **extra,
+        }
 
     def _cargo_items(self, npc) -> dict[str, int]:
         return {
@@ -255,6 +258,12 @@ class MiningProfessionSystem:
         # process batch; preserve that accounting boundary while moving its
         # output into the physical cave/inventory/storage loop.
         return min(max(0,int(available_workers)),exact*max(1,int(proc.workers)))
+
+    def has_active_trip(self, npc) -> bool:
+        return any(
+            row.miner_uid==npc.uid and row.status in {"planned","mined","returning"}
+            for row in self.state.mining_trips.values()
+        )
 
     def supports_physical_work(self, npc, town) -> bool:
         caves = getattr(self.world.generator, "caves", None)
