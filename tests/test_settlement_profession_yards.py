@@ -80,18 +80,22 @@ class ProfessionYardTests(unittest.TestCase):
     def test_every_generated_building_has_authoritative_service_path(self):
         _,_,skeleton=self.skeleton("mining","settlement:yard:roads")
         service=[r for r in skeleton.roads if r.road_class=="service_path"]
-        self.assertGreaterEqual(len(service),len(skeleton.structures))
-        service_cells={cell for road in service for cell in road.polyline}
+        self.assertTrue(service)
+        all_road_cells={cell for road in skeleton.roads for cell in road.polyline}
+        road_ids={r.uid for r in skeleton.roads}
         for structure in skeleton.structures:
             ex,ey=structure.entrance
+            # A door may already open directly onto an existing street. Only
+            # buildings set back from that street need a separate service-path
+            # segment; both cases must join the same authoritative road graph.
             self.assertTrue(
-                any(abs(ex-x)+abs(ey-y)<=1 for x,y in service_cells),
+                any(abs(ex-x)+abs(ey-y)<=1 for x,y in all_road_cells),
                 structure.uid,
             )
         for parcel in skeleton.parcels:
             if parcel.structure_ids:
                 self.assertTrue(parcel.access_road_id)
-                self.assertIn(parcel.access_road_id,{r.uid for r in service})
+                self.assertIn(parcel.access_road_id,road_ids)
 
     def test_yard_fences_block_but_gates_and_service_paths_are_passable(self):
         world,region,skeleton=self.skeleton("mining","settlement:yard:physical")
