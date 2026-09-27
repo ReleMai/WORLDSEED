@@ -1,0 +1,7 @@
+# Settlement and building material art
+
+- Added 24 generated 128 × 128 material tiles: timber, plank, stone and wattle walls; wood, ironbound, stone and iron openings; packed dirt, gravel, cobble and plank paths; plank, stone, packed earth and clay floors; and eight roof coverings (thatch, reed, shingles, planks, slate, clay, sod and stone).
+- The existing settlement connection masks now clip those textures to road intersections, wall corners and junctions, doorways, connected floors, and roof perimeters. Materials remain presentation-only; physical plans, collision, ownership, save data and world generation are unchanged.
+- Player-built wood/stone walls, reed screens, doors, wood floors and wood/stone roofs now draw with the same connected renderer. Their seven 48 × 48 build-menu icons were refreshed from that artwork.
+- Roofs retain the existing visibility rule that hides covered interiors until the player enters a room. Textures and composed tile surfaces use existing sprite caches keyed by size, piece and connection bits.
+- Validation: `python -m unittest tests.test_settlement_materials tests.test_dev37_floating_interaction_ui tests.test_rc12_renderer` (24 tests), JSON parsing and compilation, and headless visual inspection of representative connected roof, wall, door, floor and road layouts. Full visual coverage may require unrelated binary assets absent from this local source snapshot.

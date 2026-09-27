@@ -883,6 +883,43 @@
       "assets/sprites/characters/dev20_21.png"
     ]
   },
+  "settlement_materials": {
+    "wall": {
+      "timber": "assets/sprites/settlement_materials/wall_timber.png",
+      "plank": "assets/sprites/settlement_materials/wall_plank.png",
+      "stone": "assets/sprites/settlement_materials/wall_stone.png",
+      "wattle": "assets/sprites/settlement_materials/wall_wattle.png"
+    },
+    "opening": {
+      "wood": "assets/sprites/settlement_materials/opening_wood.png",
+      "wood_iron": "assets/sprites/settlement_materials/opening_wood_iron.png",
+      "stone": "assets/sprites/settlement_materials/opening_stone.png",
+      "iron": "assets/sprites/settlement_materials/opening_iron.png",
+      "wattle": "assets/sprites/settlement_materials/wall_wattle.png"
+    },
+    "floor": {
+      "plank": "assets/sprites/settlement_materials/floor_plank.png",
+      "stone": "assets/sprites/settlement_materials/floor_stone.png",
+      "packed_earth": "assets/sprites/settlement_materials/floor_packed_earth.png",
+      "clay": "assets/sprites/settlement_materials/floor_clay.png"
+    },
+    "road": {
+      "earth": "assets/sprites/settlement_materials/road_earth.png",
+      "gravel": "assets/sprites/settlement_materials/road_gravel.png",
+      "stone": "assets/sprites/settlement_materials/road_stone.png",
+      "wood": "assets/sprites/settlement_materials/road_wood.png"
+    },
+    "roof": {
+      "thatch": "assets/sprites/settlement_materials/roof_thatch.png",
+      "reed": "assets/sprites/settlement_materials/roof_reed.png",
+      "wood": "assets/sprites/settlement_materials/roof_timber_shingle.png",
+      "plank": "assets/sprites/settlement_materials/roof_plank.png",
+      "slate": "assets/sprites/settlement_materials/roof_slate.png",
+      "clay": "assets/sprites/settlement_materials/roof_clay.png",
+      "earth": "assets/sprites/settlement_materials/roof_sod.png",
+      "stone": "assets/sprites/settlement_materials/roof_stone.png"
+    }
+  },
   "resource_rendering": {
     "core:pine_tree": {
       "width": 1.65,

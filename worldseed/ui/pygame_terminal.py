@@ -4,6 +4,7 @@ import importlib.util
 import math
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from worldseed.core.coords import WorldPos
@@ -2205,16 +2206,67 @@ class PygameTerminal(PointerUI):
             if connected:bits|=bit
         return bits
 
+    def _settlement_material_overlay(self, surf, piece, size: int, opacity: int) -> None:
+        """Clip an authored material to the connected surface's actual silhouette."""
+        if piece is None:return
+        category=str(getattr(piece,'category',''))
+        material=str(getattr(piece,'material',''))
+        path=self._visuals.settlement_material_path(category,material,getattr(piece,'tags',()),str(getattr(piece,'id','')))
+        if path is None:return
+        texture=self._load_terrain_sprite(path,size)
+        if texture is None:return
+        pg=self.pg
+        mask=pg.mask.from_surface(surf).to_surface(
+            setcolor=(255,255,255,255),unsetcolor=(0,0,0,0)).convert_alpha()
+        overlay=texture.copy()
+        overlay.blit(mask,(0,0),special_flags=pg.BLEND_RGBA_MULT)
+        overlay.set_alpha(opacity)
+        surf.blit(overlay,(0,0))
+
+    @staticmethod
+    def _placed_building_piece(structure_id: str):
+        """Present player-built shells through the same material renderer as towns."""
+        materials={
+            'core:wood_wall':('wall','timber'),
+            'core:stone_wall':('wall','stone'),
+            'core:reed_screen':('wall','wattle'),
+            'core:door':('opening','wood'),
+            'core:wood_floor':('floor','plank'),
+            'core:wood_roof':('roof','wood'),
+            'core:stone_roof':('roof','stone'),
+        }
+        choice=materials.get(structure_id)
+        if choice is None:return None
+        category,material=choice
+        return SimpleNamespace(id=structure_id,category=category,material=material,tags=())
+
+    def _placed_building_bits(self,key,structure_by,piece):
+        x,y,z=key;bits=0
+        for bit,dx,dy in ((1,0,-1),(2,1,0),(4,0,1),(8,-1,0)):
+            other=structure_by.get((x+dx,y+dy,z))
+            neighbor=self._placed_building_piece(other.structure_id) if other else None
+            if neighbor is None:continue
+            if piece.category in {'wall','opening'}:
+                connected=neighbor.category in {'wall','opening'}
+            else:
+                connected=(neighbor.category==piece.category)
+            if connected:bits|=bit
+        return bits
+
     def _settlement_ground_surface(self,piece,size:int,bits:int=0):
         """Connected floor/road material with bevels only on exposed boundaries."""
         if piece is None:return None
-        key=('settlement-ground-v3',str(getattr(piece,'id','')),int(size),int(bits))
+        key=('settlement-ground-v4',str(getattr(piece,'id','')),int(size),int(bits))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));tags=set(getattr(piece,'tags',()) or ())
         base,hi,lo=self._settlement_palette(piece);surf=pg.Surface((size,size),pg.SRCALPHA)
         if cat=='road':
-            width=max(7,int(size*.66));half=width//2;mid=size//2
+            pid=str(getattr(piece,'id',''))
+            span=(.48 if 'footpath' in pid else .56 if 'alley' in pid else
+                  .84 if 'cart_road' in pid or 'market_square' in tags else
+                  .78 if 'stone' in mat or 'cobble_road' in tags else .66)
+            width=min(size,max(5,int(size*span)));half=width//2;mid=size//2
             shadow=pg.Surface((size,size),pg.SRCALPHA)
             pg.draw.circle(shadow,(*lo,95),(mid+1,mid+1),half+1)
             for bit,rect in (
@@ -2285,11 +2337,12 @@ class PygameTerminal(PointerUI):
             if not bits&8:
                 pg.draw.rect(surf,(*lo,105),(0,0,edge,size));pg.draw.line(surf,(*hi,45),(edge,0),(edge,size-1),1)
         else:return None
+        self._settlement_material_overlay(surf,piece,size,215 if cat=='road' else 225)
         self._sprite_cache[key]=surf;return surf
 
     def _settlement_wall_surface(self,piece,size:int,bits:int,role:str='wall'):
         """Connected top-down wall/door art with material depth and clean joins."""
-        key=('settlement-wall-v3',str(getattr(piece,'id','')),int(size),int(bits),str(role))
+        key=('settlement-wall-v4',str(getattr(piece,'id','')),int(size),int(bits),str(role))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;base,hi,lo=self._settlement_palette(piece);surf=pg.Surface((size,size),pg.SRCALPHA)
@@ -2344,6 +2397,7 @@ class PygameTerminal(PointerUI):
                     pg.draw.line(surf,(*lo,65),(1,grain_y),(size-2,grain_y),1)
                 else:
                     grain_x=max(0,mid-half+2);pg.draw.line(surf,(*lo,65),(grain_x,1),(grain_x,size-2),1)
+        self._settlement_material_overlay(surf,piece,size,205 if door else 180)
         self._sprite_cache[key]=surf;return surf
 
     def _settlement_roof_bits(self,key,cell,settlement_by):
@@ -2358,7 +2412,7 @@ class PygameTerminal(PointerUI):
     def _settlement_roof_surface(self,piece,size:int,bits:int):
         """Continuous roof field: shared edges disappear; eaves remain visible."""
         if piece is None:return None
-        key=('settlement-roof-v1',str(getattr(piece,'id','')),int(size),int(bits))
+        key=('settlement-roof-v2',str(getattr(piece,'id','')),int(size),int(bits))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
         pg=self.pg;base,hi,lo=self._settlement_palette(piece);mat=str(getattr(piece,'material',''))
@@ -2388,6 +2442,7 @@ class PygameTerminal(PointerUI):
             pg.draw.rect(surf,(*lo,190),(0,size-edge,size,edge))
             pg.draw.line(surf,(25,25,23,120),(0,size-1),(size-1,size-1),1)
         if not bits&8:pg.draw.rect(surf,(*lo,100),(0,0,edge,size))
+        self._settlement_material_overlay(surf,piece,size,225)
         self._sprite_cache[key]=surf;return surf
 
     def _draw_settlement_yard_piece(self,piece,rect)->bool:
@@ -3323,6 +3378,15 @@ class PygameTerminal(PointerUI):
                 surf=self._settlement_ground_surface(piece,tile_px,bits)
                 if surf is not None:
                     rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px);screen.blit(surf,rect.topleft)
+        for key,placed in structure_by.items():
+            piece=self._placed_building_piece(placed.structure_id)
+            if piece is None or piece.category!='floor' or pos_key(*key) not in visible:continue
+            wx,wy,wz=key
+            bits=self._placed_building_bits(key,structure_by,piece)
+            surf=self._settlement_ground_surface(piece,tile_px,bits)
+            if surf is not None:
+                rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                screen.blit(surf,rect.topleft)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
 
@@ -3406,7 +3470,16 @@ class PygameTerminal(PointerUI):
                 crop=crop_by[k];ref=self._visuals.ref('crops',crop.crop_id);stage=2 if crop.mature else (1 if crop.growth>=45 else 0)
                 self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
             if k in structure_by:
-                st=structure_by[k];self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',st.structure_id)),rect,1.35)
+                st=structure_by[k];piece=self._placed_building_piece(st.structure_id)
+                if piece is not None:
+                    bits=self._placed_building_bits(k,structure_by,piece)
+                    if piece.category in {'wall','opening'}:
+                        surf=self._settlement_wall_surface(piece,tile_px,bits,'entrance' if piece.category=='opening' else 'wall')
+                    elif piece.category=='roof':
+                        surf=self._settlement_roof_surface(piece,tile_px,bits)
+                    else:surf=None  # Floors are drawn under the actors.
+                    if surf is not None:screen.blit(surf,rect.topleft)
+                else:self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',st.structure_id)),rect,1.35)
             if k in property_container_by:
                 pc=property_container_by[k]
                 self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',pc.source_id)),rect,.95)

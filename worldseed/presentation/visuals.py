@@ -62,6 +62,33 @@ class VisualRegistry:
     def resource_style(self, content_id: str) -> dict:
         return self.manifest.get('resource_rendering', {}).get(content_id, {})
 
+    def settlement_material_path(self, category: str, material: str, tags=(), piece_id: str = '') -> Path | None:
+        """Resolve a building surface without changing its physical piece ID."""
+        group = self.manifest.get('settlement_materials', {}).get(category, {})
+        tags = set(tags or ())
+        if category == 'road':
+            if 'cobble_road' in tags or 'stone_road' in tags or 'market_square' in tags:
+                material = 'stone'
+            elif 'gravel_road' in tags:
+                material = 'gravel'
+            elif 'plank_road' in tags or 'dock_walk' in tags or 'bridge_approach' in tags:
+                material = 'wood'
+            elif material not in group:
+                material = 'earth'
+        elif category == 'floor' and material not in group:
+            material = 'packed_earth'
+        elif category == 'roof':
+            if 'plank_roof' in piece_id:
+                material = 'plank'
+            elif material not in group:
+                material = 'wood'
+        elif category == 'wall' and material not in group:
+            material = 'timber'
+        elif category == 'opening' and material not in group:
+            material = 'wood'
+        raw = group.get(material)
+        return self.base_dir / raw if raw else None
+
     def resource_atlas_path(self, content_id: str) -> Path | None:
         """Return an optional presentation atlas for one resource type.
 
