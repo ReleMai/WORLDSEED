@@ -150,6 +150,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/bone_awl.png" width="48" height="48"> | Bone Awl | `core:bone_awl` | `bone_awl.png` |
 | <img src="sprites/items/bone_needle.png" width="48" height="48"> | Bone Needle | `core:bone_needle` | `bone_needle.png` |
 | <img src="sprites/items/crafted_pick.png" width="48" height="48"> | Crafted Pick | `core:crafted_pick` | `crafted_pick.png` |
+| <img src="sprites/items/crude_knife.png" width="48" height="48"> | Crude Knife | `core:crude_knife` | `crude_knife.png` |
 | <img src="sprites/items/digging_stick.png" width="48" height="48"> | Digging Stick | `core:digging_stick` | `digging_stick.png` |
 | <img src="sprites/items/fishing_net.png" width="48" height="48"> | Fishing Net | `core:fishing_net` | `fishing_net.png` |
 | <img src="sprites/items/fishing_spear.png" width="48" height="48"> | Fishing Spear | `core:fishing_spear` | `fishing_spear.png` |
@@ -171,10 +172,10 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 |---|---|---|---|
 | <img src="sprites/items/club.png" width="48" height="48"> | Club | `core:club` | `club.png` |
 | <img src="sprites/items/crafted_sword.png" width="48" height="48"> | Crafted Sword | `core:crafted_sword` | `crafted_sword.png` |
+| <img src="sprites/items/spear.png" width="48" height="48"> | Fire-Hardened Javelin | `core:wooden_spear` | `spear.png` |
 | <img src="sprites/items/iron_sword.png" width="48" height="48"> | Iron Sword | `core:iron_sword` | `iron_sword.png` |
-| <img src="sprites/items/short_bow.png" width="48" height="48"> | Short Bow | `core:short_bow` | `short_bow.png` |
+| <img src="sprites/items/short_bow.png" width="48" height="48"> | Primitive Self Bow | `core:short_bow` | `short_bow.png` |
 | <img src="sprites/items/sling.png" width="48" height="48"> | Sling | `core:sling` | `sling.png` |
-| <img src="sprites/items/spear.png" width="48" height="48"> | Spear | `core:wooden_spear` | `spear.png` |
 | <img src="sprites/items/steel_sword.png" width="48" height="48"> | Steel Sword | `core:steel_sword` | `steel_sword.png` |
 
 ## Ammo
@@ -188,14 +189,19 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 
 | Icon | Item | Stable ID | Asset |
 |---|---|---|---|
-| <img src="sprites/items/buckler.png" width="48" height="48"> | Buckler | `core:rawhide_buckler` | `buckler.png` |
 | <img src="sprites/items/crafted_helmet.png" width="48" height="48"> | Crafted Helmet | `core:crafted_helmet` | `crafted_helmet.png` |
+| <img src="sprites/items/hide_kite_shield.png" width="48" height="48"> | Hide Kite Shield | `core:hide_kite_shield` | `hide_kite_shield.png` |
+| <img src="sprites/items/iron_heater_shield.png" width="48" height="48"> | Iron Heater Shield | `core:iron_heater_shield` | `iron_heater_shield.png` |
 | <img src="sprites/items/iron_helmet.png" width="48" height="48"> | Iron Helmet | `core:iron_helmet` | `iron_helmet.png` |
 | <img src="sprites/items/leather_bracers.png" width="48" height="48"> | Leather Bracers | `core:leather_bracers` | `leather_bracers.png` |
 | <img src="sprites/items/leather_hood.png" width="48" height="48"> | Leather Hood | `core:leather_hood` | `leather_hood.png` |
 | <img src="sprites/items/leather_leggings.png" width="48" height="48"> | Leather Leggings | `core:leather_leggings` | `leather_leggings.png` |
 | <img src="sprites/items/leather_vest.png" width="48" height="48"> | Leather Vest | `core:leather_vest` | `leather_vest.png` |
+| <img src="sprites/items/buckler.png" width="48" height="48"> | Rawhide Buckler | `core:rawhide_buckler` | `buckler.png` |
 | <img src="sprites/items/steel_helmet.png" width="48" height="48"> | Steel Helmet | `core:steel_helmet` | `steel_helmet.png` |
+| <img src="sprites/items/steel_tower_shield.png" width="48" height="48"> | Steel Tower Shield | `core:steel_tower_shield` | `steel_tower_shield.png` |
+| <img src="sprites/items/wicker_shield.png" width="48" height="48"> | Wicker Shield | `core:wicker_shield` | `wicker_shield.png` |
+| <img src="sprites/items/wood_round_shield.png" width="48" height="48"> | Wooden Round Shield | `core:wood_round_shield` | `wood_round_shield.png` |
 
 ## Utility & Containers
 
