@@ -113,6 +113,15 @@ class SettlementPopulationBinder:
             ),
         )
 
+    def _structure_has_role(self,skeleton,structure_uid:str,occupation:str)->bool:
+        for piece in skeleton.pieces:
+            if piece.structure_plan_id!=str(structure_uid):
+                continue
+            definition=self.registry.settlement_pieces.get(piece.piece_id)
+            if definition is not None and str(definition.workplace_role)==str(occupation):
+                return True
+        return False
+
     def _spawn_in_room(self, npc_uid: str, room, occupied: set[tuple[int, int]]) -> tuple[int, int] | None:
         if room is None:
             return None
@@ -242,9 +251,9 @@ class SettlementPopulationBinder:
                 npc.workplace_id = ""
                 npc.work_room_id = ""
             if not npc.workplace_id and workplace_candidates:
-                workplace = self._ranked(
-                    npc.uid, workplace_candidates, "npc-workplace-structure"
-                )[0]
+                ranked=self._ranked(npc.uid,workplace_candidates,"npc-workplace-structure")
+                role_ready=[row for row in ranked if self._structure_has_role(skeleton,row.uid,npc.occupation)]
+                workplace=(role_ready or ranked)[0]
                 npc.workplace_id = workplace.uid
             workplace = structures.get(npc.workplace_id)
             if workplace is not None and workplace.function in preferences:
