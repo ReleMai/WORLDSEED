@@ -9,6 +9,7 @@ from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import *
+from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.state import LivingWorldState, GroundPile, CropPlot, SoilState, pos_key
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.ecology import EcologySystem
@@ -430,17 +431,25 @@ class Simulation:
 
     def _advance_time(self,minutes:int)->None:
         old=self.clock.minute;self.clock.advance(minutes);self.state.clock_minute=self.clock.minute
-        old_hour=old//60;new_hour=self.clock.minute//60
         player=self.player_pos
-        for hour in range(old_hour+1,new_hour+1):
-            minute=hour*60;self.environment.hourly_update(minute);affected_routes=self.route_planner.hourly_hazard_update(minute,self.environment);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.hourly_update(minute,player);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
-            if affected_routes:self._refresh_active_transport()
-            pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
-            if collapsed:
-                v=self.entities.try_get(self.player_id,Vitals)
-                for cp in collapsed:
-                    if cp==self.player_pos and v:v.hp=max(0,v.hp-12);v.pain=min(100,v.pain+20);self._message("An unsupported roof collapses onto you!")
-                    elif abs(cp.x-player.x)+abs(cp.y-player.y)<=8 and cp.z==player.z:self._message("You hear a roof collapse nearby.")
+        replay_active=should_replay_active_ticks(minutes)
+        tick_minutes=set(crossed_simulation_ticks(old,self.clock.minute)) if replay_active else set()
+        old_hour=old//60;new_hour=self.clock.minute//60
+        hourly_minutes={hour*60 for hour in range(old_hour+1,new_hour+1)}
+        # Fixed local ticks and coarse hourly systems share one ordered game-time
+        # boundary stream. At a coincident hour/tick boundary, needs/utility
+        # decisions run first and physical Tier-A execution follows.
+        for minute in sorted(hourly_minutes|tick_minutes):
+            if minute in hourly_minutes:
+                self.environment.hourly_update(minute);affected_routes=self.route_planner.hourly_hazard_update(minute,self.environment);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.decision_update(minute,player,execute_active=not replay_active);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+                if affected_routes:self._refresh_active_transport()
+                pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
+                if collapsed:
+                    v=self.entities.try_get(self.player_id,Vitals)
+                    for cp in collapsed:
+                        if cp==self.player_pos and v:v.hp=max(0,v.hp-12);v.pain=min(100,v.pain+20);self._message("An unsupported roof collapses onto you!")
+                        elif abs(cp.x-player.x)+abs(cp.y-player.y)<=8 and cp.z==player.z:self._message("You hear a roof collapse nearby.")
+            if minute in tick_minutes:self.npcs.tick_update(minute,player)
         old_day=old//1440;new_day=self.clock.minute//1440
         for day in range(old_day+1,new_day+1):
             minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)

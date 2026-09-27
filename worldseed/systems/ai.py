@@ -24,26 +24,64 @@ class NPCSystem:
         npc.facing_dx=0 if dx==0 else (1 if dx>0 else -1)
         npc.facing_dy=0 if dy==0 else (1 if dy>0 else -1)
 
-    def hourly_update(self,minute:int,player_pos:WorldPos)->None:
+    def _is_active_local(self,npc:NPCState,player_pos:WorldPos)->bool:
+        if self.lod is not None:
+            return self.lod.npc_tier(player_pos,npc)=="A"
+        return npc.z==player_pos.z and max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=64
+
+    def _advance_needs(self,npc:NPCState,town)->None:
+        npc.hunger=min(100,npc.hunger+3);npc.thirst=min(100,npc.thirst+5);npc.rest=min(100,npc.rest+2)
+        defaults={"social":20,"safety":15,"health":0,"faith":10,"learning":10,"purpose":20}
+        for key,value in defaults.items():npc.needs.setdefault(key,value)
+        npc.needs["social"]=min(100,npc.needs["social"]+2)
+        npc.needs["health"]=min(100,max(npc.needs["health"],100-npc.hp)+(8 if npc.infections else 0))
+        if npc.occupation=="priest":npc.needs["faith"]=min(100,npc.needs["faith"]+3)
+        if npc.occupation=="scholar" or "curious" in npc.traits:npc.needs["learning"]=min(100,npc.needs["learning"]+2)
+        if town.food_stress>55:npc.needs["safety"]=min(100,npc.needs["safety"]+2)
+
+    def decision_update(self,minute:int,player_pos:WorldPos,execute_active:bool=False)->None:
+        """Run coarse need/decision cadence without driving active locomotion.
+
+        Tier-A execution belongs to tick_update during normal play. Long
+        fast-forwards may request execute_active to retain bounded legacy
+        coarse progress instead of replaying every exact local tick.
+        """
         for npc in self.state.npcs.values():
             if not npc.alive:continue
+            tier=None
             if self.lod is not None:
                 tier=self.lod.npc_tier(player_pos,npc)
                 if not self.lod.should_update(tier,minute,"ai"):continue
             elif abs(npc.x-player_pos.x)+abs(npc.y-player_pos.y)>1200:continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
-            npc.hunger=min(100,npc.hunger+3);npc.thirst=min(100,npc.thirst+5);npc.rest=min(100,npc.rest+2)
-            defaults={"social":20,"safety":15,"health":0,"faith":10,"learning":10,"purpose":20}
-            for key,value in defaults.items():npc.needs.setdefault(key,value)
-            npc.needs["social"]=min(100,npc.needs["social"]+2)
-            npc.needs["health"]=min(100,max(npc.needs["health"],100-npc.hp)+(8 if npc.infections else 0))
-            if npc.occupation=="priest":npc.needs["faith"]=min(100,npc.needs["faith"]+3)
-            if npc.occupation=="scholar" or "curious" in npc.traits:npc.needs["learning"]=min(100,npc.needs["learning"]+2)
-            if town.food_stress>55:npc.needs["safety"]=min(100,npc.needs["safety"]+2)
+            self._advance_needs(npc,town)
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
-            self._execute_task(npc,town,minute,player_pos)
+            active=(tier=="A") if tier is not None else self._is_active_local(npc,player_pos)
+            # Normal Tier-A movement is owned by the fixed simulation tick, but
+            # non-movement actions keep their coarse decision cadence until the
+            # later activity/reservation work gives them explicit durations.
+            task_kind=npc.tasks[0].get("kind") if npc.tasks else ""
+            if execute_active or not active or task_kind!="move":self._execute_task(npc,town,minute,player_pos)
+
+    def tick_update(self,minute:int,player_pos:WorldPos)->None:
+        """Execute one deterministic action slice for physically active NPCs."""
+        for npc in self.state.npcs.values():
+            if not npc.alive or not self._is_active_local(npc,player_pos):continue
+            town=self.state.settlements.get(npc.settlement_id)
+            if not town:continue
+            if not npc.home_id:self._assign_property(npc,town)
+            if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
+            # Phase 4 WU1 moves locomotion onto the fixed tick without making
+            # work/eating/social effects fire every few minutes. Those actions
+            # remain coarse until activity durations/reservations are added.
+            if npc.tasks and npc.tasks[0].get("kind")=="move":self.execute_tick(npc,town,minute,player_pos)
+
+    def hourly_update(self,minute:int,player_pos:WorldPos)->None:
+        """Compatibility entry point for older callers/tests."""
+        self.decision_update(minute,player_pos,execute_active=True)
+
     def _binding_destination(self,structure_id:str,room_id:str,town)->WorldPos:
         if self.settlement_physicalization is not None and structure_id:
             target=self.settlement_physicalization.destination_for(structure_id,room_id)
@@ -86,7 +124,7 @@ class NPCSystem:
         if hour>=22 or hour<6:out["rest"]+=105
         return out
 
-    def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
+    def select_utility_goal(self,npc:NPCState,town,minute:int)->tuple[str,int]:
         war=bool(self.state.factions.get(npc.faction_id).at_war) if npc.faction_id in self.state.factions else False
         needs=npc.needs
         routine=self._routine_bias(npc,minute)
@@ -108,37 +146,41 @@ class NPCSystem:
         best=max(scores,key=scores.get);best_score=scores[best]
         if npc.goal_score*110//100>=best_score and npc.goal in scores:best=npc.goal;best_score=npc.goal_score
         npc.goal=best;npc.goal_score=best_score
+        return best,best_score
+
+    def generate_plan(self,npc:NPCState,town,minute:int,goal:str|None=None)->None:
+        goal=npc.goal if goal is None else goal
         center=WorldPos(int(town.x),int(town.y),0)
-        if best=="work":
+        if goal=="work":
             target=self._binding_destination(npc.workplace_id,npc.work_room_id,town)
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"work"}]
-        elif best=="rest":
+        elif goal=="rest":
             target=self._binding_destination(npc.home_id,npc.home_room_id,town)
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"rest"}]
-        elif best=="eat":
+        elif goal=="eat":
             target=self._service_destination(town,("market",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"eat"}]
-        elif best=="drink":
+        elif goal=="drink":
             npc.tasks=[{"kind":"move","x":center.x,"y":center.y},{"kind":"perform","action":"drink"}]
-        elif best=="guard":
+        elif goal=="guard":
             target=None
             if self.route_planner is not None and getattr(town,"frontier_status","core") in {"frontier","contested"}:
                 target=self.route_planner.patrol_destination_for_settlement(town.uid)
             if target is None:target=self._service_destination(town,("watchhouse",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"guard"}]
-        elif best=="heal":
+        elif goal=="heal":
             target=self._service_destination(town,("clinic",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"heal"}]
-        elif best=="worship":
+        elif goal=="worship":
             target=self._service_destination(town,("shrine",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"worship"}]
-        elif best=="learn":
+        elif goal=="learn":
             target=self._service_destination(town,("archive","school"))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"learn"}]
-        elif best=="steal":
+        elif goal=="steal":
             target=self._service_destination(town,("market",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"steal"}]
-        elif best=="socialize":
+        elif goal=="socialize":
             peers=[p for p in self.state.npcs.values() if p.alive and p.settlement_id==npc.settlement_id and p.uid!=npc.uid]
             kin=set(npc.parents)|set(npc.children)|set(npc.kinship)
             if npc.spouse_uid:kin.add(npc.spouse_uid)
@@ -155,6 +197,13 @@ class NPCSystem:
             else:
                 target=self._service_destination(town,("market","shrine"))
                 npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"socialize"}]
+    def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
+        goal,_score=self.select_utility_goal(npc,town,minute)
+        self.generate_plan(npc,town,minute,goal)
+
+    def execute_tick(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
+        self._execute_task(npc,town,minute,player_pos)
+
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
         if not npc.tasks:return
         task=npc.tasks[0]
