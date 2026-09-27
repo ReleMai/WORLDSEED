@@ -154,15 +154,40 @@ class MiningProfessionSystem:
         cavecraft = max(1, int(npc.skills.get("cavecraft", 1)))
         search_radius = min(240, 72 + prospecting * 24)
         entrances = caves.entrances_near(int(town.x), int(town.y), search_radius)[:8]
-        candidates = []
-        for entrance in entrances:
+        ore_candidates = []
+        rock_candidates = []
+
+        def add_candidate(entrance, depth, pos, generated_terrain_id):
+            # Consult the live world only after geology identifies a useful
+            # face. Player/NPC excavation deltas therefore remain authoritative.
+            terrain = self.world.tile_at(pos).terrain
+            terrain_id = str(terrain.id)
+            if terrain_id != str(generated_terrain_id) or not terrain.gather_item or not terrain.depleted_to:
+                return
+            tags = set(terrain.tags)
+            if "ore" not in tags and "rock" not in tags:
+                return
+            stand = self._standing_cell(pos, int(entrance.x), int(entrance.y))
+            if stand is None:
+                return
             surface_distance = self._surface_distance(town, entrance)
+            underground_distance = abs(stand.x - int(entrance.x)) + abs(stand.y - int(entrance.y))
+            trip_distance = surface_distance + underground_distance + depth * 3
+            value = self.ore_unit_value(terrain.gather_item, terrain_id, trip_distance, depth)
+            rarity = int(self.RARITY.get(terrain_id, 1))
+            score = value * 100 + rarity * prospecting * 20 - trip_distance * max(3, 11 - prospecting)
+            tie = int(hash_u64(self.seed, "miner-target", npc.uid, pos.x, pos.y, pos.z) % 100)
+            row = (
+                -score, -rarity, trip_distance, -depth, tie,
+                entrance, pos, stand, terrain_id, str(terrain.gather_item), value,
+            )
+            (ore_candidates if "ore" in tags else rock_candidates).append(row)
+
+        for entrance in entrances:
             max_depth = min(int(entrance.depth), 2 + prospecting + cavecraft // 2)
             for depth in range(1, max_depth + 1):
                 z = -depth
-                scan_radius = min(20, 8 + prospecting * 2)
-                # Manhattan rings keep the query bounded and favor material that
-                # can plausibly be reached from the natural shaft.
+                scan_radius = min(18, 8 + prospecting * 2)
                 for radius in range(2, scan_radius + 1):
                     ring = []
                     for dx in range(-radius, radius + 1):
@@ -170,39 +195,23 @@ class MiningProfessionSystem:
                         ring.append((dx, dy))
                         if dy:
                             ring.append((dx, -dy))
-                    ring = sorted(set(ring), key=lambda p: (p[1], p[0]))
-                    for dx, dy in ring:
+                    for dx, dy in sorted(set(ring), key=lambda p: (p[1], p[0])):
                         pos = WorldPos(int(entrance.x) + dx, int(entrance.y) + dy, z)
-                        terrain = self.world.tile_at(pos).terrain
-                        terrain_id = str(terrain.id)
-                        if not terrain.gather_item or not terrain.depleted_to:
-                            continue
-                        tags = set(terrain.tags)
-                        if "ore" not in tags and "rock" not in tags:
-                            continue
-                        stand = self._standing_cell(pos, int(entrance.x), int(entrance.y))
-                        if stand is None:
-                            continue
-                        underground_distance = abs(stand.x - int(entrance.x)) + abs(stand.y - int(entrance.y))
-                        trip_distance = surface_distance + underground_distance + depth * 3
-                        value = self.ore_unit_value(terrain.gather_item, terrain_id, trip_distance, depth)
-                        rarity = int(self.RARITY.get(terrain_id, 1))
-                        # Better prospectors recognize richer material, but long
-                        # hauling still reduces net attractiveness.
-                        score = value * 100 + rarity * prospecting * 20 - trip_distance * max(3, 11 - prospecting)
-                        tie = int(hash_u64(self.seed, "miner-target", npc.uid, pos.x, pos.y, pos.z) % 100)
-                        candidates.append((
-                            -score, -rarity, trip_distance, -depth, tie,
-                            entrance, pos, stand, terrain_id, str(terrain.gather_item), value,
-                        ))
-                        if len(candidates) >= 48:
-                            break
-                    if len(candidates) >= 48:
+                        generated_id = str(caves.terrain_at(pos))
+                        if generated_id in self.RARITY:
+                            add_candidate(entrance, depth, pos, generated_id)
+                            if len(ore_candidates) >= 32:
+                                break
+                        elif generated_id == "core:cave_wall" and len(rock_candidates) < 12:
+                            add_candidate(entrance, depth, pos, generated_id)
+                    if len(ore_candidates) >= 32:
                         break
-                if len(candidates) >= 48:
+                if len(ore_candidates) >= 32:
                     break
-            if len(candidates) >= 48:
+            if len(ore_candidates) >= 32:
                 break
+
+        candidates = ore_candidates or rock_candidates
         candidates.sort(key=lambda row: row[:5])
         return candidates
 
