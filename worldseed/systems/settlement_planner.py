@@ -1177,7 +1177,14 @@ class SettlementSkeletonPlanner:
         primary_function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
         for index,parcel in enumerate(industrial):
             function=parcel.purpose if parcel.purpose in workshop_functions else primary_function
-            result=self._plan_building(parcel,roads,slot=f"industry:{index}:{function}",function=function,archetype=plan.archetype,large=True)
+            slot=f"industry:{index}:{function}"
+            result=self._plan_building(parcel,roads,slot=slot,function=function,archetype=plan.archetype,large=True)
+            if result is None and function in workshop_functions:
+                # Road cells may clip an otherwise valid 7x7 craft lot enough that
+                # no 7x5 rectangular shell fits. Preserve the real street-fronting
+                # parcel and fall back to a compact 5x5 shop instead of silently
+                # dropping the profession from the settlement.
+                result=self._plan_building(parcel,roads,slot=slot,function=function,archetype=plan.archetype,large=False)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
