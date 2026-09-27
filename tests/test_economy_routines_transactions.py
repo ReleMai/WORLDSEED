@@ -90,6 +90,24 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         ai.tick_update(65,player)
         self.assertEqual((npc.x,npc.y),(2,0))
 
+    def test_phase4_fixed_tick_does_not_multiply_nonmovement_effects(self):
+        state,town,economy=self._economy()
+        npc=NPCState(
+            uid='npc:phase4-rest',name='Sleeper',age=29,occupation='merchant',
+            traits=[],x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
+            home_id='home:phase4',workplace_id='work:phase4',rest=90,
+            tasks=[{'kind':'perform','action':'rest'}],
+        )
+        state.npcs[npc.uid]=npc
+        ai=NPCSystem(state,b'phase4-rest',NullHistory())
+        player=WorldPos(0,0,0)
+        ai.tick_update(5,player)
+        self.assertEqual(npc.rest,90)
+        self.assertTrue(npc.tasks)
+        ai.decision_update(60,player,execute_active=False)
+        self.assertLess(npc.rest,90)
+        self.assertFalse(npc.tasks)
+
     def test_named_worker_binds_to_daily_labor_without_duplicate_output(self):
         state,town,economy=self._economy()
         npc=NPCState(
