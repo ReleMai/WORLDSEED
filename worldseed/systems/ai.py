@@ -156,9 +156,16 @@ class NPCSystem:
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
             if self.activities is not None:
+                physical_required=self.activities.supports_physical_work(npc,town)
                 physical_tasks=self.activities.plan_work(npc,town,minute)
                 if physical_tasks:
                     npc.tasks=physical_tasks
+                    return
+                if physical_required:
+                    # A real nearby workplace exists but every compatible slot
+                    # is reserved. Wait and retry on a later tick; never ghost
+                    # through the reservation with abstract representative work.
+                    npc.tasks=[]
                     return
             target=self._binding_destination(npc.workplace_id,npc.work_room_id,town)
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"work"}]
