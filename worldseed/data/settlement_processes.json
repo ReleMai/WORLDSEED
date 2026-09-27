@@ -28,7 +28,8 @@
     "workers": 1,
     "inputs": {},
     "outputs": {
-      "core:wood": 3
+      "core:wood": 3,
+      "core:bark": 1
     },
     "priority_good": "core:wood"
   },
@@ -182,5 +183,157 @@
       "core:cooked_meat": 1
     },
     "priority_good": "core:cooked_meat"
+  },
+  {
+    "id": "core:fiber_gathering",
+    "name": "Gather textile fiber",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:fiber": 2
+    },
+    "priority_good": "core:fiber"
+  },
+  {
+    "id": "core:clay_gathering",
+    "name": "Gather workable clay",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:clay_lump": 2
+    },
+    "priority_good": "core:clay_lump"
+  },
+  {
+    "id": "core:grain_milling",
+    "name": "Mill grain into flour",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:wheat": 2
+    },
+    "outputs": {
+      "core:flour": 2
+    },
+    "priority_good": "core:flour"
+  },
+  {
+    "id": "core:bread_baking",
+    "name": "Bake settlement bread",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:flour": 2
+    },
+    "outputs": {
+      "core:bread": 2
+    },
+    "priority_good": "core:bread"
+  },
+  {
+    "id": "core:butcher_portions",
+    "name": "Butcher meat and recover fat",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:meat": 2
+    },
+    "outputs": {
+      "core:meat": 2,
+      "core:animal_fat": 1
+    },
+    "priority_good": "core:animal_fat"
+  },
+  {
+    "id": "core:fishing_catch",
+    "name": "Fish local waters",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:largemouth_bass": 2
+    },
+    "priority_good": "core:largemouth_bass"
+  },
+  {
+    "id": "core:fish_smoking",
+    "name": "Smoke fresh fish",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:largemouth_bass": 1
+    },
+    "outputs": {
+      "core:smoked_fish": 1
+    },
+    "priority_good": "core:smoked_fish"
+  },
+  {
+    "id": "core:cloth_weaving",
+    "name": "Weave settlement cloth",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:fiber": 4
+    },
+    "outputs": {
+      "core:woven_cloth": 1
+    },
+    "priority_good": "core:woven_cloth"
+  },
+  {
+    "id": "core:leather_tanning",
+    "name": "Bark-tan hides",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:hide": 1,
+      "core:bark": 2
+    },
+    "outputs": {
+      "core:leather": 1
+    },
+    "priority_good": "core:leather"
+  },
+  {
+    "id": "core:small_ale_brewing",
+    "name": "Brew small ale",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:wheat": 2
+    },
+    "outputs": {
+      "core:small_ale": 2
+    },
+    "priority_good": "core:small_ale"
+  },
+  {
+    "id": "core:pottery_work",
+    "name": "Throw and fire pottery",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:clay_lump": 2
+    },
+    "outputs": {
+      "core:clay_pot": 1
+    },
+    "priority_good": "core:clay_pot"
+  },
+  {
+    "id": "core:masonry_work",
+    "name": "Dress construction stone",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 2
+    },
+    "outputs": {
+      "core:dressed_stone": 1
+    },
+    "priority_good": "core:dressed_stone"
   }
 ]
