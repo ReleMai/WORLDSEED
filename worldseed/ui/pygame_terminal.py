@@ -496,6 +496,12 @@ class PygameTerminal(PointerUI):
 
     def _animate_menu_effects(self, now, *, force=False):
         if self.screen is None or self._input_mode not in ('ui','text'):return
+        # Atlas and other static UI surfaces share input mode with menus but
+        # have no animated menu backdrop. Painting a cursor into their saved
+        # frame makes a mouse move alter the map while input is pending.
+        if getattr(self, '_static_atlas_view', False) or (self._menu_header_base is None and not self._menu_ambient_rects):
+            self.pg.mouse.set_visible(True)
+            return
         self.pg.mouse.set_visible(False)
         phase=int(now)//80
         if not force and phase==self._menu_animation_phase:return
@@ -535,6 +541,7 @@ class PygameTerminal(PointerUI):
 
     def _draw_chrome(self, title: str = "WORLDSEED") -> tuple[int, int, int, int]:
         pg = self.pg; screen = self.screen; assert screen is not None
+        self._static_atlas_view = 'ATLAS' in title
         self._pointer_targets.clear()
         self._hud_tooltips.clear()
         self._hud_tooltip_hover = None

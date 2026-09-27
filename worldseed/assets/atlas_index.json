@@ -1144,7 +1144,7 @@
             64
           ]
         },
-        "core:digging_stick": {
+        "core:crude_knife": {
           "cell": [
             3,
             11
@@ -1156,7 +1156,7 @@
             64
           ]
         },
-        "core:fishing_net": {
+        "core:digging_stick": {
           "cell": [
             4,
             11
@@ -1168,7 +1168,7 @@
             64
           ]
         },
-        "core:fishing_spear": {
+        "core:fishing_net": {
           "cell": [
             5,
             11
@@ -1180,7 +1180,7 @@
             64
           ]
         },
-        "core:iron_pick": {
+        "core:fishing_spear": {
           "cell": [
             6,
             11
@@ -1192,7 +1192,7 @@
             64
           ]
         },
-        "core:lockpick": {
+        "core:iron_pick": {
           "cell": [
             7,
             11
@@ -1204,7 +1204,7 @@
             64
           ]
         },
-        "core:reed_rod": {
+        "core:lockpick": {
           "cell": [
             8,
             11
@@ -1216,7 +1216,7 @@
             64
           ]
         },
-        "core:steel_pick": {
+        "core:reed_rod": {
           "cell": [
             9,
             11
@@ -1228,7 +1228,7 @@
             64
           ]
         },
-        "core:stone_axe": {
+        "core:steel_pick": {
           "cell": [
             10,
             11
@@ -1240,7 +1240,7 @@
             64
           ]
         },
-        "core:stone_flake": {
+        "core:stone_axe": {
           "cell": [
             11,
             11
@@ -1252,7 +1252,7 @@
             64
           ]
         },
-        "core:stone_hammer": {
+        "core:stone_flake": {
           "cell": [
             12,
             11
@@ -1264,7 +1264,7 @@
             64
           ]
         },
-        "core:crude_hoe": {
+        "core:stone_hammer": {
           "cell": [
             13,
             11
@@ -1276,7 +1276,7 @@
             64
           ]
         },
-        "core:stone_knife": {
+        "core:crude_hoe": {
           "cell": [
             14,
             11
@@ -1288,7 +1288,7 @@
             64
           ]
         },
-        "core:stone_pick": {
+        "core:stone_knife": {
           "cell": [
             15,
             11
@@ -1300,13 +1300,25 @@
             64
           ]
         },
-        "core:wood_rod": {
+        "core:stone_pick": {
           "cell": [
             0,
             12
           ],
           "rect": [
             0,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:wood_rod": {
+          "cell": [
+            1,
+            12
+          ],
+          "rect": [
+            64,
             768,
             64,
             64
@@ -1336,7 +1348,7 @@
             64
           ]
         },
-        "core:iron_sword": {
+        "core:wooden_spear": {
           "cell": [
             2,
             13
@@ -1348,7 +1360,7 @@
             64
           ]
         },
-        "core:short_bow": {
+        "core:iron_sword": {
           "cell": [
             3,
             13
@@ -1360,7 +1372,7 @@
             64
           ]
         },
-        "core:sling": {
+        "core:short_bow": {
           "cell": [
             4,
             13
@@ -1372,7 +1384,7 @@
             64
           ]
         },
-        "core:wooden_spear": {
+        "core:sling": {
           "cell": [
             5,
             13
@@ -1420,7 +1432,7 @@
             64
           ]
         },
-        "core:rawhide_buckler": {
+        "core:crafted_helmet": {
           "cell": [
             0,
             15
@@ -1432,7 +1444,7 @@
             64
           ]
         },
-        "core:crafted_helmet": {
+        "core:hide_kite_shield": {
           "cell": [
             1,
             15
@@ -1444,7 +1456,7 @@
             64
           ]
         },
-        "core:iron_helmet": {
+        "core:iron_heater_shield": {
           "cell": [
             2,
             15
@@ -1456,7 +1468,7 @@
             64
           ]
         },
-        "core:leather_bracers": {
+        "core:iron_helmet": {
           "cell": [
             3,
             15
@@ -1468,7 +1480,7 @@
             64
           ]
         },
-        "core:leather_hood": {
+        "core:leather_bracers": {
           "cell": [
             4,
             15
@@ -1480,7 +1492,7 @@
             64
           ]
         },
-        "core:leather_leggings": {
+        "core:leather_hood": {
           "cell": [
             5,
             15
@@ -1492,7 +1504,7 @@
             64
           ]
         },
-        "core:leather_vest": {
+        "core:leather_leggings": {
           "cell": [
             6,
             15
@@ -1504,13 +1516,73 @@
             64
           ]
         },
-        "core:steel_helmet": {
+        "core:leather_vest": {
           "cell": [
             7,
             15
           ],
           "rect": [
             448,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:rawhide_buckler": {
+          "cell": [
+            8,
+            15
+          ],
+          "rect": [
+            512,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:steel_helmet": {
+          "cell": [
+            9,
+            15
+          ],
+          "rect": [
+            576,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:steel_tower_shield": {
+          "cell": [
+            10,
+            15
+          ],
+          "rect": [
+            640,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:wicker_shield": {
+          "cell": [
+            11,
+            15
+          ],
+          "rect": [
+            704,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:wood_round_shield": {
+          "cell": [
+            12,
+            15
+          ],
+          "rect": [
+            768,
             960,
             64,
             64
@@ -1766,7 +1838,7 @@
           "subcategory": "",
           "label": "Tools",
           "start_row": 11,
-          "count": 17,
+          "count": 18,
           "rows": 2
         },
         {
@@ -1793,7 +1865,7 @@
           "subcategory": "",
           "label": "Armor",
           "start_row": 15,
-          "count": 8,
+          "count": 13,
           "rows": 1
         },
         {
