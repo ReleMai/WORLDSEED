@@ -5662,5 +5662,37 @@
     "comfort": 0,
     "work_bonus": 12,
     "materialization_family": "workshop"
+  },
+  {
+    "id": "core:grain_baskets_piece",
+    "name": "Grain Baskets",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "·",
+    "tags": [
+      "clutter",
+      "grain_baskets",
+      "milling",
+      "farm",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm"
+    ],
+    "material": "fiber",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": true,
+    "exterior_allowed": false,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "clutter"
   }
 ]
