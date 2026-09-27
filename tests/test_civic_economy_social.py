@@ -82,7 +82,7 @@ class CivicEconomySocialTests(unittest.TestCase):
         self.assertEqual(roles['watchhouse'],'guard')
         self.assertEqual(roles['shrine'],'priest')
         self.assertEqual(roles['archive'],'scholar')
-        self.assertEqual(SETTLEMENT_PLAN_VERSION,5)
+        self.assertEqual(SETTLEMENT_PLAN_VERSION,6)
 
         physical=SettlementPhysicalizationSystem(world,self.registry,region_planner,planner)
         town=SettlementState(

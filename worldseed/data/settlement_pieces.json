@@ -4314,5 +4314,408 @@
     "comfort": 0,
     "work_bonus": 0,
     "materialization_family": "roof"
+  },
+  {
+    "id": "core:split_rail_fence_piece",
+    "name": "Split-Rail Fence",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "F",
+    "tags": [
+      "fence",
+      "yard",
+      "wood",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 18,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:yard_gate_piece",
+    "name": "Yard Gate",
+    "category": "opening",
+    "layer": "structure",
+    "glyph": "+",
+    "tags": [
+      "gate",
+      "fence",
+      "yard",
+      "wood",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "door",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 14,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:profession_sign_piece",
+    "name": "Hanging Trade Sign",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "!",
+    "tags": [
+      "sign",
+      "trade_sign",
+      "yard",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": true,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 6,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:stone_well_piece",
+    "name": "Stone Well",
+    "category": "civic",
+    "layer": "structure",
+    "glyph": "O",
+    "tags": [
+      "well",
+      "water",
+      "yard",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "water"
+    ],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 40,
+    "comfort": 0,
+    "work_bonus": 0,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:woodpile_piece",
+    "name": "Stacked Woodpile",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "w",
+    "tags": [
+      "woodpile",
+      "lumber",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "lumberjack",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 2,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:chopping_block_piece",
+    "name": "Chopping Block",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "C",
+    "tags": [
+      "chopping_block",
+      "woodcutting",
+      "station",
+      "yard",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "woodcutting",
+      "station"
+    ],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "lumberjack",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 8,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:ore_pile_piece",
+    "name": "Ore Pile",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "o",
+    "tags": [
+      "ore_pile",
+      "ore",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "stone",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "miner",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 2,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:coal_bin_piece",
+    "name": "Coal Bin",
+    "category": "mine",
+    "layer": "structure",
+    "glyph": "c",
+    "tags": [
+      "coal_bin",
+      "coal",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "smith",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 2,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:haystack_piece",
+    "name": "Haystack",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "h",
+    "tags": [
+      "haystack",
+      "hay",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "straw",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 1,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:grain_sacks_piece",
+    "name": "Grain Sacks",
+    "category": "agriculture",
+    "layer": "structure",
+    "glyph": "g",
+    "tags": [
+      "grain_sacks",
+      "grain",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "fiber",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "farmer",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 1,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:water_barrel_piece",
+    "name": "Water Barrel",
+    "category": "decoration",
+    "layer": "structure",
+    "glyph": "b",
+    "tags": [
+      "barrel",
+      "water",
+      "yard",
+      "storage_visual",
+      "worldgen_piece"
+    ],
+    "room_tags": [],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "cook",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": false,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 1,
+    "materialization_family": "yard"
+  },
+  {
+    "id": "core:smoke_rack_piece",
+    "name": "Smoke Rack",
+    "category": "workshop",
+    "layer": "structure",
+    "glyph": "S",
+    "tags": [
+      "smoke_rack",
+      "cooking",
+      "drying",
+      "yard",
+      "station",
+      "worldgen_piece"
+    ],
+    "room_tags": [
+      "cooking",
+      "drying",
+      "station"
+    ],
+    "settlement_roles": [
+      "residential",
+      "industrial",
+      "farm",
+      "civic"
+    ],
+    "material": "wood",
+    "passable": false,
+    "blocks_sight": false,
+    "enclosure_role": "",
+    "workplace_role": "cook",
+    "interior_allowed": false,
+    "exterior_allowed": true,
+    "road_access_required": true,
+    "support_strength": 0,
+    "comfort": 0,
+    "work_bonus": 8,
+    "materialization_family": "yard"
   }
 ]

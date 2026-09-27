@@ -2261,8 +2261,115 @@ class PygameTerminal(PointerUI):
         if not bits&8:pg.draw.rect(surf,(*lo,100),(0,0,edge,size))
         self._sprite_cache[key]=surf;return surf
 
+    def _draw_settlement_yard_piece(self,piece,rect)->bool:
+        """Draw authored profession-yard props without requiring bitmap assets."""
+        if piece is None:return False
+        tags=set(getattr(piece,'tags',()) or ());pid=str(getattr(piece,'id',''))
+        if not ({'yard','trade_sign','well','woodpile','ore_pile','coal_bin','haystack','grain_sacks','barrel','smoke_rack','chopping_block'} & tags):
+            return False
+        pg=self.pg;size=rect.width;cx=rect.centerx;bottom=rect.bottom
+        wood=(126,89,52);wood_hi=(164,122,73);wood_lo=(77,51,31)
+        stone=(118,119,114);stone_hi=(158,158,150);stone_lo=(69,71,69)
+        straw=(181,151,72);straw_hi=(220,190,104);straw_lo=(111,86,42)
+        iron=(91,96,101);coal=(43,45,47);ore=(135,112,91)
+        shadow=(20,22,21,95)
+        pad=max(2,size//8)
+        if 'fence' in tags:
+            y=rect.centery+size//7
+            if 'gate' in tags:
+                pg.draw.line(self.screen,wood_lo,(rect.left+pad,y),(rect.right-pad,y),max(2,size//10))
+                pg.draw.line(self.screen,wood_hi,(rect.left+pad+2,y-2),(rect.right-pad-2,y-2),1)
+                for x in (rect.left+pad,rect.right-pad):
+                    pg.draw.line(self.screen,wood_lo,(x,rect.top+pad),(x,bottom-pad),max(2,size//9))
+                pg.draw.line(self.screen,wood,(rect.left+pad+2,bottom-pad-2),(rect.right-pad-2,rect.top+pad+2),max(1,size//14))
+            else:
+                for x in (rect.left+pad,rect.right-pad):
+                    pg.draw.line(self.screen,wood_lo,(x,rect.top+pad),(x,bottom-pad),max(2,size//9))
+                    pg.draw.line(self.screen,wood_hi,(x-1,rect.top+pad),(x-1,bottom-pad-2),1)
+                for off in (-size//9,size//9):
+                    pg.draw.line(self.screen,wood,(rect.left+pad,y+off),(rect.right-pad,y+off),max(2,size//11))
+            return True
+        if 'trade_sign' in tags:
+            post_x=rect.left+size//3
+            pg.draw.line(self.screen,wood_lo,(post_x,rect.top+pad),(post_x,bottom-pad),max(2,size//9))
+            board=pg.Rect(post_x,rect.top+pad,size//2,max(5,size//4))
+            pg.draw.rect(self.screen,wood_lo,board.move(1,2),border_radius=2)
+            pg.draw.rect(self.screen,wood,board,border_radius=2);pg.draw.rect(self.screen,wood_hi,board,1,border_radius=2)
+            pg.draw.circle(self.screen,iron,(board.centerx,board.centery),max(1,size//16),1)
+            return True
+        if 'well' in tags:
+            base=pg.Rect(rect.left+pad,rect.centery-size//8,size-2*pad,size//3)
+            pg.draw.ellipse(self.screen,shadow,base.move(1,3))
+            pg.draw.ellipse(self.screen,stone_lo,base);pg.draw.ellipse(self.screen,stone,base.inflate(-2,-2))
+            inner=base.inflate(-max(4,size//4),-max(3,size//7))
+            pg.draw.ellipse(self.screen,(38,61,66),inner)
+            for x in (rect.left+pad+2,rect.right-pad-2):
+                pg.draw.line(self.screen,wood_lo,(x,rect.top+pad),(x,rect.centery),max(2,size//11))
+            pg.draw.line(self.screen,wood,(rect.left+pad,rect.top+pad),(rect.right-pad,rect.top+pad),max(2,size//12))
+            return True
+        if 'woodpile' in tags:
+            y0=bottom-pad
+            for row in range(3):
+                count=4-row;yy=y0-row*max(3,size//7)
+                for i in range(count):
+                    x=rect.left+pad+i*max(4,(size-2*pad)//4)+row*2
+                    r=max(2,size//10)
+                    pg.draw.circle(self.screen,wood_lo,(x+r,yy-r),r)
+                    pg.draw.circle(self.screen,wood_hi,(x+r,yy-r),max(1,r-1))
+                    pg.draw.circle(self.screen,wood,(x+r,yy-r),max(1,r-2))
+            return True
+        if 'chopping_block' in tags:
+            stump=pg.Rect(cx-size//5,rect.centery-size//8,size*2//5,size//3)
+            pg.draw.ellipse(self.screen,wood_lo,(stump.left,stump.top-3,stump.width,7))
+            pg.draw.rect(self.screen,wood,stump);pg.draw.ellipse(self.screen,wood_hi,(stump.left,stump.top-3,stump.width,7))
+            pg.draw.line(self.screen,wood_lo,(cx,stump.top-1),(cx+size//7,stump.top+size//9),1)
+            return True
+        if 'ore_pile' in tags:
+            pts=[(cx-size//3,bottom-pad),(cx-size//4,rect.centery),(cx,rect.centery-size//6),(cx+size//3,bottom-pad)]
+            pg.draw.polygon(self.screen,stone_lo,pts)
+            for dx,dy,col in [(-7,4,ore),(2,7,stone_hi),(7,1,iron),(-1,-2,ore)]:
+                pg.draw.circle(self.screen,col,(cx+dx*size//28,rect.centery+dy*size//28),max(2,size//11))
+            return True
+        if 'coal_bin' in tags:
+            box=pg.Rect(rect.left+pad,rect.centery-size//8,size-2*pad,size//3)
+            pg.draw.rect(self.screen,wood_lo,box);pg.draw.rect(self.screen,wood,box.inflate(-2,-2))
+            for i in range(7):
+                x=box.left+3+(i*11)%(max(4,box.width-6));y=box.top+2+(i*7)%(max(3,box.height//2))
+                pg.draw.circle(self.screen,coal,(x,y),max(1,size//16))
+            return True
+        if 'haystack' in tags:
+            mound=pg.Rect(rect.left+pad,rect.centery-size//5,size-2*pad,size//2)
+            pg.draw.ellipse(self.screen,straw_lo,mound.move(1,2));pg.draw.ellipse(self.screen,straw,mound)
+            for i in range(8):
+                x=mound.left+2+(i*13)%(max(3,mound.width-4))
+                pg.draw.line(self.screen,straw_hi,(x,mound.top+3),(min(mound.right-1,x+size//8),mound.bottom-3),1)
+            return True
+        if 'grain_sacks' in tags:
+            for i,(dx,dy) in enumerate(((0,0),(size//5,2),(-size//6,3))):
+                sack=pg.Rect(cx-size//7+dx,rect.centery-size//10+dy,size//4,size//3)
+                pg.draw.ellipse(self.screen,straw_lo,sack);pg.draw.ellipse(self.screen,(174,145,96),sack.inflate(-2,-2))
+                pg.draw.line(self.screen,straw_hi,(sack.left+2,sack.top+3),(sack.right-3,sack.top+3),1)
+            return True
+        if 'barrel' in tags:
+            barrel=pg.Rect(cx-size//5,rect.centery-size//5,size*2//5,size//2)
+            pg.draw.ellipse(self.screen,wood_lo,barrel);pg.draw.ellipse(self.screen,wood,barrel.inflate(-2,-1))
+            for y in (barrel.top+size//8,barrel.bottom-size//8):
+                pg.draw.line(self.screen,iron,(barrel.left+2,y),(barrel.right-2,y),max(1,size//18))
+            return True
+        if 'smoke_rack' in tags:
+            left=rect.left+pad;right=rect.right-pad;top=rect.top+pad;low=bottom-pad
+            pg.draw.line(self.screen,wood_lo,(left,low),(left+size//7,top),max(2,size//11))
+            pg.draw.line(self.screen,wood_lo,(right,low),(right-size//7,top),max(2,size//11))
+            pg.draw.line(self.screen,wood,(left+size//7,top),(right-size//7,top),max(2,size//12))
+            for x in (cx-size//6,cx,cx+size//6):
+                pg.draw.line(self.screen,wood_hi,(x,top),(x,rect.centery),1)
+                pg.draw.ellipse(self.screen,(126,65,48),(x-size//12,rect.centery-size//14,size//6,size//4))
+            return True
+        return False
+
     def _draw_settlement_piece(self,piece,rect,*,roof:bool=False,fixture:bool=False):
         if piece is None:return
+        if not roof and self._draw_settlement_yard_piece(piece,rect):return
         path=self._settlement_piece_sprite_path(piece)
         if path is not None:
             if roof:
