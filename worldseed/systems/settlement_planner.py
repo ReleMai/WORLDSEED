@@ -840,7 +840,7 @@ class SettlementSkeletonPlanner:
         if function=="mill":
             return self._piece_choice(registry,"workshop",contains="millstone") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
         if function=="fishery":
-            return self._piece_choice(registry,"workshop",contains="fish_cleaning_table") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="net_mending_bench")
+            return self._piece_choice(registry,"workshop",contains="fish_cleaning_table") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="fish_smoker")
         if function=="bakery":
             return self._piece_choice(registry,"workshop",contains="bakery_oven") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="large_table")
         if function=="butcher":
