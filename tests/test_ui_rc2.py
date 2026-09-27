@@ -88,6 +88,12 @@ class UIRC2Tests(unittest.TestCase):
         self.assertEqual(classify_key('QUIT').kind,'quit')
         self.assertNotIn('d',DIRECT_MENUS)
 
+    def test_hud_stance_tokens_use_existing_simulation_intent(self):
+        for stance in ('normal','stalk','crouch'):
+            intent=classify_key('UI_STANCE:'+stance)
+            self.assertEqual((intent.kind,intent.value),('stance',stance))
+        self.assertEqual(classify_key('UI_STANCE:fly').kind,'none')
+
     def test_combat_action_hub_exposes_active_defense_without_new_global_keys(self):
         keys={key for key,_ in ACTION_COMBAT}
         for expected in ("dodge","parry","guard","brace","bash","disengage","arena"):

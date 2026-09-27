@@ -39,6 +39,30 @@ class MouseUITests(unittest.TestCase):
         self.pg.event.post(self.pg.event.Event(self.pg.MOUSEWHEEL,x=0,y=-1))
         self.assertEqual(self.t.read_key(),'PGDN');self.assertEqual(self.t._tile_px,zoom)
         self.t._resize(800,520);self.assertEqual(self.t._pointer_targets,[])
+
+    def test_hud_actions_fit_sidebar_and_show_delayed_tooltips(self):
+        from worldseed.ui.router import HUD_BUTTONS
+        for width,height in ((800,520),(1280,800)):
+            self.t._resize(width,height)
+            self.t._draw_chrome('WORLDSEED // LOCAL')
+            side=self.pg.Rect(width-18-280,57,280,height-75)
+            self.t._draw_hud_actions(side,'stalk')
+            expected={token for _,token in HUD_BUTTONS}|{'UI_STANCE:normal','UI_STANCE:stalk','UI_STANCE:crouch'}
+            targets={token:rect for rect,token in self.t._pointer_targets}
+            self.assertEqual(set(targets),expected)
+            for rect in targets.values():self.assertTrue(side.contains(rect))
+            button=targets['i'];now=self.pg.time.get_ticks()
+            self.t._last_mouse=button.center
+            self.t._update_hud_tooltip_hover(now)
+            self.t._tick_hud_tooltip(now+1199)
+            self.assertIsNone(self.t._hud_tooltip_rect)
+            self.t._tick_hud_tooltip(now+1200)
+            self.assertIsNotNone(self.t._hud_tooltip_rect)
+            self.t._last_mouse=(0,0)
+            self.t._update_hud_tooltip_hover(now+1201)
+            self.assertIsNone(self.t._hud_tooltip_rect)
+            self.click('UI_STANCE:stalk')
+            self.assertEqual(self.t.read_key(),'UI_STANCE:stalk')
     def test_mouse_paging_reaches_offscreen_items_and_retains_state(self):
         from worldseed.ui.session import RouteState
         state=RouteState('test','Test');sequence=iter(['PGDN','UI_SELECT:1'])

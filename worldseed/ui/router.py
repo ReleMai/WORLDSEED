@@ -32,6 +32,9 @@ def classify_key(key: str) -> Intent:
     if key == '\t': return Intent('console')
     if key == '~': return Intent('settings')
     if key == 'QUIT': return Intent('quit')
+    if key.startswith('UI_STANCE:'):
+        stance = key.partition(':')[2]
+        return Intent('stance', stance) if stance in ('normal', 'stalk', 'crouch') else Intent('none')
     if k in DIRECT_MENUS: return Intent('direct_menu', k)
     if k == 'g': return Intent('gather')
     if k == 'p': return Intent('pickup')

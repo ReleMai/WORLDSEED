@@ -2818,6 +2818,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             if choice=='saved':last='Game saved.'
             continue
         if intent.kind=='actions':last=_action_palette(ctx,term);continue
+        if intent.kind=='stance':
+            ctx.sim.execute(SetHuntingStanceCommand(ctx.player_id,str(intent.value)))
+            last=ctx.sim.log[-1].message if ctx.sim.log else ''
+            continue
         if intent.kind=='console':_world_console(ctx,term);continue
         if intent.kind=='settings':_settings(ctx,term);continue
         if intent.kind=='direct_menu':

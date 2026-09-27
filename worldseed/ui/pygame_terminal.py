@@ -79,6 +79,12 @@ class PygameTerminal(PointerUI):
         self._character_sprite_paths = frozenset(self._visuals.player_paths("male") + self._visuals.player_paths("female") + self._visuals.npc_paths())
         self._camera: tuple[int, int, int] | None = None
         self._last_mouse = (0, 0)
+        self._hud_tooltips = []
+        self._hud_tooltip_hover = None
+        self._hud_tooltip_since = 0
+        self._hud_tooltip_backdrop = None
+        self._hud_tooltip_rect = None
+        self._hud_tooltip_bounds = None
         self._atlas_dragging = False
         self._atlas_drag_moved = False
         self._atlas_drag_last = (0, 0)
@@ -275,6 +281,7 @@ class PygameTerminal(PointerUI):
                 pending = pg.event.get(pg.MOUSEMOTION)
                 if pending:
                     self._last_mouse = pending[-1].pos
+                self._update_hud_tooltip_hover(pg.time.get_ticks())
                 if self._ui_window_dragging or self._ui_window_resizing:
                     panel_id=self._ui_window_dragging or self._ui_window_resizing
                     state=self._floating_panels.get(str(panel_id))
@@ -456,6 +463,10 @@ class PygameTerminal(PointerUI):
     def _draw_chrome(self, title: str = "WORLDSEED") -> tuple[int, int, int, int]:
         pg = self.pg; screen = self.screen; assert screen is not None
         self._pointer_targets.clear()
+        self._hud_tooltips.clear()
+        self._hud_tooltip_hover = None
+        self._hud_tooltip_rect = None
+        self._hud_tooltip_backdrop = None
         mode=('target' if getattr(self,'_drawing_target',False) else 'world') if title=='WORLDSEED // LOCAL' else 'ui'
         self._set_input_mode(mode)
         if mode in ('world','target'):
@@ -1855,6 +1866,7 @@ class PygameTerminal(PointerUI):
         if live_context:self._redraw_live_context_overlay()
 
     def _animate_idle_effects(self, now):
+        self._tick_hud_tooltip(now)
         ctx=getattr(self,'_weather_animation_context',None)
         static=getattr(self,'_weather_static_snapshot',None)
         # Include the previous sample so a completed fade paints its final frame.
@@ -2891,28 +2903,137 @@ class PygameTerminal(PointerUI):
             damage=new_damage if damage is None else damage.union(new_damage)
         if update_display and damage is not None:self.pg.display.update(damage)
 
-    def _draw_footer(self, rect, message: str) -> None:
-        """Fit the log and wrap every control hint inside the footer panel."""
-        screen = self.screen
-        previous_clip = screen.get_clip()
-        screen.set_clip(rect.inflate(-8, -8))
+    def _draw_footer(self, rect, message: str, sim=None) -> None:
+        """Show recent simulation events, with the latest action at the bottom."""
+        screen=self.screen;th=self._theme
+        old_clip=screen.get_clip();screen.set_clip(rect.inflate(-8,-6))
         try:
-            width = rect.width - 28
-            msg = str(message).replace('\n', ' ')
-            if self.font.size(msg)[0] > width:
-                limit = max(0, width // max(1, self.font.size('M')[0]) - 3)
-                msg = msg[:limit] + '...'
-            screen.blit(self.font.render(msg, True, self._theme['text']), (rect.x + 14, rect.y + 7))
-            from worldseed.ui.router import HUD_BUTTONS
-            buttons=HUD_BUTTONS if self._input_mode=='world' else [('Confirm','\r'),('Cancel','ESC')]
-            cols=5;gap=5;bw=(rect.width-24-gap*(cols-1))//cols
-            for i,(label,token) in enumerate(buttons):
-                self._button((rect.x+12+(i%cols)*(bw+gap),rect.y+36+(i//cols)*35,bw,30),label,token)
-            hint='WASD moves • Mouse opens UI • Wheel zooms' if self._input_mode=='world' else 'Click a tile, then Confirm • Right-click cancels'
-            surf=self.small_font.render(self._fit_ui_text(hint,self.small_font,width),True,self._theme['muted'])
-            screen.blit(surf,(rect.x+14,rect.bottom-25))
-        finally:
-            screen.set_clip(previous_clip)
+            screen.blit(self.small_font.render('WORLD ACTIVITY',True,th['accent']),(rect.x+14,rect.y+9))
+            screen.blit(self.small_font.render('RECENT EVENTS',True,th['muted']),(rect.right-115,rect.y+9))
+            self.pg.draw.line(screen,th['edge'],(rect.x+14,rect.y+30),(rect.right-14,rect.y+30))
+            events=[str(e.message).replace('\n',' ') for e in list(getattr(sim,'log',()))[-5:]] if sim is not None else []
+            latest=str(message).replace('\n',' ').strip()
+            if latest and (not events or latest!=events[-1]):events.append(latest)
+            if not events:events=['The world continues around you.']
+            max_lines=max(1,(rect.height-44)//22)
+            for i,line in enumerate(events[-max_lines:]):
+                current=i==len(events[-max_lines:])-1
+                y=rect.y+38+i*22
+                if current:
+                    self.pg.draw.rect(screen,(45,47,42),(rect.x+9,y-2,rect.width-18,21),border_radius=3)
+                dot=th['accent'] if current else th['muted']
+                self.pg.draw.circle(screen,dot,(rect.x+18,y+8),3)
+                label=self._fit_ui_text(line,self.small_font,rect.width-52)
+                screen.blit(self.small_font.render(label,True,th['text'] if current else th['muted']),(rect.x+30,y))
+        finally:screen.set_clip(old_clip)
+
+    def _draw_hud_icon(self, name, rect, color):
+        """Small vector glyphs stay sharp at every supported window size."""
+        pg=self.pg;s=self.screen;cx,cy=rect.center;w=rect.width
+        if name=='Inventory':
+            pg.draw.rect(s,color,(cx-10,cy-6,20,16),2,border_radius=2)
+            pg.draw.arc(s,color,(cx-5,cy-11,10,11),0,math.pi,2)
+        elif name=='Crafting':
+            pg.draw.line(s,color,(cx-10,cy+8),(cx+8,cy-10),3)
+            pg.draw.line(s,color,(cx-8,cy-10),(cx+10,cy+8),3)
+            pg.draw.circle(s,color,(cx-9,cy-10),3,1)
+        elif name=='Build':
+            pg.draw.polygon(s,color,[(cx-11,cy-2),(cx,cy-11),(cx+11,cy-2)],2)
+            pg.draw.rect(s,color,(cx-8,cy-2,16,13),2)
+            pg.draw.rect(s,color,(cx-2,cy+4,5,7),1)
+        elif name=='Health':
+            pg.draw.line(s,color,(cx-10,cy),(cx+10,cy),3)
+            pg.draw.line(s,color,(cx,cy-10),(cx,cy+10),3)
+            pg.draw.rect(s,color,(cx-13,cy-13,26,26),1,border_radius=4)
+        elif name=='Map':
+            pg.draw.polygon(s,color,[(cx-12,cy-9),(cx-4,cy-12),(cx+4,cy-8),(cx+12,cy-11),(cx+12,cy+9),(cx+4,cy+12),(cx-4,cy+8),(cx-12,cy+11)],2)
+            for dx in (-4,4):pg.draw.line(s,color,(cx+dx,cy-9),(cx+dx,cy+9),1)
+        elif name=='Actions':
+            pg.draw.circle(s,color,(cx,cy),10,2)
+            pg.draw.line(s,color,(cx-5,cy),(cx+5,cy),2)
+            pg.draw.line(s,color,(cx,cy-5),(cx,cy+5),2)
+        elif name=='World':
+            pg.draw.circle(s,color,(cx,cy),11,2)
+            pg.draw.ellipse(s,color,(cx-5,cy-11,10,22),1)
+            pg.draw.line(s,color,(cx-10,cy),(cx+10,cy),1)
+        elif name=='Look':
+            pg.draw.ellipse(s,color,(cx-12,cy-7,24,14),2)
+            pg.draw.circle(s,color,(cx,cy),4)
+        elif name=='Help':
+            pg.draw.circle(s,color,(cx,cy),11,2)
+            mark=self.font.render('?',True,color);s.blit(mark,(cx-mark.get_width()//2,cy-mark.get_height()//2))
+        else:
+            pg.draw.rect(s,color,(cx-9,cy-10,18,20),2,border_radius=3)
+            pg.draw.line(s,color,(cx-4,cy-3),(cx+4,cy-3),2)
+            pg.draw.line(s,color,(cx-4,cy+3),(cx+4,cy+3),2)
+
+    def _draw_hud_actions(self, rect, stance='normal'):
+        from worldseed.ui.router import HUD_BUTTONS
+        pg=self.pg;screen=self.screen;th=self._theme
+        bar=pg.Rect(rect.x+9,rect.bottom-177,rect.width-18,168)
+        self._hud_tooltip_bounds=pg.Rect(rect.x+9,rect.y+3,rect.width-18,rect.height-6)
+        pg.draw.rect(screen,(19,23,25),bar,border_radius=5)
+        pg.draw.rect(screen,th['edge'],bar,1,border_radius=5)
+        screen.blit(self.small_font.render('TOOLS & ACTIONS',True,th['accent']),(bar.x+11,bar.y+7))
+        cols=5;gap=6;bw=(bar.width-22-gap*4)//cols
+        buttons=HUD_BUTTONS if self._input_mode=='world' else (('Confirm','\r'),('Cancel','ESC'))
+        descriptions={
+            'Inventory':'Manage carried items and equipment', 'Crafting':'Recipes and discovery',
+            'Build':'Construction and placement', 'Health':'Health and condition',
+            'Map':'Explore the world map', 'Actions':'Interact with the world',
+            'World':'Open the World Console', 'Look':'Inspect a nearby tile',
+            'Help':'Controls and help', 'Pause':'Save, settings, and exit',
+            'Confirm':'Confirm target', 'Cancel':'Cancel target',
+        }
+        for i,(name,token) in enumerate(buttons):
+            box=pg.Rect(bar.x+11+(i%cols)*(bw+gap),bar.y+28+(i//cols)*46,bw,40)
+            hovered=box.collidepoint(self._last_mouse)
+            pg.draw.rect(screen,(53,58,55) if hovered else th['panel2'],box,border_radius=4)
+            pg.draw.rect(screen,th['edge_hi'] if hovered else th['edge'],box,1,border_radius=4)
+            self._draw_hud_icon(name,box,th['accent'] if hovered else th['text'])
+            self._pointer_targets.append((box,token))
+            hint={'\r':'Enter','\t':'Tab','ESC':'Esc'}.get(token,token.upper())
+            self._hud_tooltips.append((box,name,f'{descriptions[name]}  [{hint}]'))
+        if self._input_mode=='world':
+            pg.draw.line(screen,th['edge'],(bar.x+11,bar.y+122),(bar.right-11,bar.y+122))
+            for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'))):
+                slot=pg.Rect(bar.x+11+i*(bar.width-22)//3,bar.y+130,(bar.width-28)//3,29)
+                active=stance==name
+                pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
+                pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
+                label=self.small_font.render(name.title(),True,th['text'] if active else th['muted'])
+                screen.blit(label,(slot.centerx-label.get_width()//2,slot.y+6))
+                self._pointer_targets.append((slot,'UI_STANCE:'+name))
+                self._hud_tooltips.append((slot,name.title()+' movement',detail+'; changes movement stance'))
+        self._hud_tooltip_hover=None;self._hud_tooltip_since=self.pg.time.get_ticks()
+
+    def _update_hud_tooltip_hover(self, now):
+        target=next(((r,name,description) for r,name,description in self._hud_tooltips if r.collidepoint(self._last_mouse)),None)
+        if target==self._hud_tooltip_hover:return
+        if self._hud_tooltip_rect is not None and self._hud_tooltip_backdrop is not None:
+            self.screen.blit(self._hud_tooltip_backdrop,self._hud_tooltip_rect.topleft)
+            self.pg.display.update(self._hud_tooltip_rect)
+        self._hud_tooltip_rect=None;self._hud_tooltip_backdrop=None
+        self._hud_tooltip_hover=target;self._hud_tooltip_since=now
+
+    def _tick_hud_tooltip(self, now):
+        if self._hud_tooltip_hover is None or self._hud_tooltip_rect is not None or now-self._hud_tooltip_since<1200:return
+        _,name,description=self._hud_tooltip_hover
+        bounds=self.screen.get_rect();font=self.small_font
+        bar=self._hud_tooltip_bounds
+        width=min(bar.width,max(font.size(name)[0],font.size(description)[0])+22)
+        height=49
+        action_rect=self._hud_tooltip_hover[0]
+        x=max(bar.x,min(action_rect.centerx-width//2,bar.right-width))
+        y=max(58,action_rect.top-height-8)
+        rect=self.pg.Rect(x,y,width,height)
+        self._hud_tooltip_backdrop=self.screen.subsurface(rect).copy();self._hud_tooltip_rect=rect
+        self.pg.draw.rect(self.screen,(18,22,24),rect,border_radius=4)
+        self.pg.draw.rect(self.screen,self._theme['edge_hi'],rect,1,border_radius=4)
+        self.screen.blit(font.render(name,True,self._theme['accent']),(x+10,y+5))
+        label=self._fit_ui_text(description,font,width-20)
+        self.screen.blit(font.render(label,True,self._theme['text']),(x+10,y+25))
+        self.pg.display.update(rect)
 
     def present_region_map(self, sim) -> None:
         """Present authoritative prepared terrain without realization."""
@@ -3272,9 +3393,14 @@ class PygameTerminal(PointerUI):
         # Mouse movement no longer causes a complete game-frame rebuild.
         # Sidebar: information-dense but legible.
         tx=side_rect.x+16; ty=side_rect.y+14
+        status_bottom=side_rect.bottom-186
+        sidebar_clip=screen.get_clip()
+        screen.set_clip(pg.Rect(side_rect.x+8,side_rect.y+6,side_rect.width-16,max(1,status_bottom-side_rect.y-6)))
         def text(s,color=None,font=None,gap=20):
             nonlocal ty
-            f=font or self.small_font; surf=f.render(str(s),True,color or self._theme['text']); screen.blit(surf,(tx,ty)); ty+=gap
+            f=font or self.small_font
+            surf=f.render(self._fit_ui_text(str(s),f,side_rect.width-32),True,color or self._theme['text'])
+            screen.blit(surf,(tx,ty)); ty+=gap
         text(sim.state.player_name,self._theme['accent'],self.title_font,28)
         text(sim.clock.label(),self._theme['muted'])
         text(f"Position  {pos.x}, {pos.y}, z{pos.z}",self._theme['muted'],gap=26)
@@ -3343,14 +3469,16 @@ class PygameTerminal(PointerUI):
         for n in npc_by.values():
             if abs(n.x-pos.x)+abs(n.y-pos.y)<=5:
                 near.append(n.name if n.uid in known_npcs else 'Stranger')
-        nearby_limit=min(7,max(0,(side_rect.bottom-12-ty-27)//18))
+        nearby_limit=min(7,max(0,(status_bottom-ty-27)//18))
         if near and nearby_limit:
             ty+=8; text('NEARBY',self._theme['accent'],gap=19)
             for n in near[:nearby_limit]: text('• '+n,self._theme['text'],gap=18)
+        screen.set_clip(sidebar_clip)
+        self._draw_hud_actions(side_rect,str(getattr(sim.state,'player_hunting_stance','normal')))
 
-        # Footer log + control strip.
+        # Footer keeps the recent world and player action history.
         msg=message or (sim.log[-1].message if sim.log else 'The world continues around you.')
-        self._draw_footer(foot_rect, msg)
+        self._draw_footer(foot_rect,msg,sim)
         # Apply the presentation overlay before snapshotting the clean map.
         # The snapshot lets hover repaint only a few small rectangles while the
         # main loop is blocked waiting for the next gameplay input.
