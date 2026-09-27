@@ -24,6 +24,16 @@ class SettlementProfessionSystem:
         "smith": {"core:iron_smelt"},
         "carpenter": {"core:woodcraft"},
         "cook": {"core:hearth_roast"},
+        "miller": {"core:grain_milling"},
+        "baker": {"core:bread_baking"},
+        "butcher": {"core:butcher_portions"},
+        "fisher": {"core:fish_smoking"},
+        "weaver": {"core:cloth_weaving"},
+        "tanner": {"core:leather_tanning"},
+        "healer": {"core:town_tonic", "core:town_soap"},
+        "brewer": {"core:small_ale_brewing"},
+        "potter": {"core:pottery_work"},
+        "mason": {"core:masonry_work"},
     }
     SKILLS = {
         "lumberjack": ("woodcutting", "forestry", "hauling"),
@@ -31,6 +41,16 @@ class SettlementProfessionSystem:
         "smith": ("smithing", "metallurgy", "hauling"),
         "carpenter": ("carpentry", "joinery", "hauling"),
         "cook": ("cooking", "hearthcraft", "hauling"),
+        "miller": ("milling", "graincraft", "hauling"),
+        "baker": ("baking", "cooking", "hauling"),
+        "butcher": ("butchery", "hunting", "hauling"),
+        "fisher": ("fishcraft", "preservation", "hauling"),
+        "weaver": ("weaving", "textiles", "hauling"),
+        "tanner": ("tanning", "leatherwork", "hauling"),
+        "healer": ("medicine", "herbalism", "hauling"),
+        "brewer": ("brewing", "fermentation", "hauling"),
+        "potter": ("pottery", "kilncraft", "hauling"),
+        "mason": ("masonry", "stonecutting", "hauling"),
     }
     OUTPUT_TAGS = {
         "lumberjack": {"core:wood", "core:bark", "core:stout_branch"},
@@ -38,6 +58,35 @@ class SettlementProfessionSystem:
         "smith": {"core:iron_bloom"},
         "carpenter": {"core:wooden_bowl"},
         "cook": {"core:cooked_meat"},
+        "miller": {"core:flour"},
+        "baker": {"core:bread"},
+        "butcher": {"core:meat", "core:animal_fat"},
+        "fisher": {"core:smoked_fish"},
+        "weaver": {"core:woven_cloth"},
+        "tanner": {"core:leather"},
+        "healer": {"core:herbal_tonic", "core:soap"},
+        "brewer": {"core:small_ale"},
+        "potter": {"core:clay_pot"},
+        "mason": {"core:dressed_stone"},
+    }
+    WORKSHOP_TAGS = {
+        "carpenter": ("carpentry", "workshop"),
+        "cook": ("cooking", "hearth", "kitchen", "oven"),
+        "miller": ("milling",),
+        "baker": ("oven", "kitchen"),
+        "butcher": ("butchery",),
+        "fisher": ("smoking", "fish"),
+        "weaver": ("loom", "textile"),
+        "tanner": ("tanning",),
+        "healer": ("healing",),
+        "brewer": ("brewing",),
+        "potter": ("pottery",),
+        "mason": ("masonry", "quarry"),
+    }
+    WORKSHOP_DURATION = {
+        "carpenter": 35, "cook": 25, "miller": 30, "baker": 45,
+        "butcher": 30, "fisher": 50, "weaver": 55, "tanner": 70,
+        "healer": 35, "brewer": 65, "potter": 50, "mason": 45,
     }
 
     def __init__(self, state, registry, seed: bytes, world, physicalization, activities, goods, resources):
@@ -238,7 +287,7 @@ class SettlementProfessionSystem:
         )
         return row is not None
 
-    # ---------- workshop professions: blacksmith, carpenter, cook ----------
+    # ---------- physical workshop professions ----------
 
     def _choose_station(self,npc,town,minute:int,tags:tuple[str,...],exclude:set[str]|None=None):
         exclude=exclude or set()
@@ -276,12 +325,14 @@ class SettlementProfessionSystem:
                 (t.get("reservation_uid") for t in reversed(tasks) if t.get("kind")=="activity"),""
             )
         else:
-            tags=("carpentry","workshop") if npc.occupation=="carpenter" else ("cooking","hearth","kitchen","oven")
+            tags=self.WORKSHOP_TAGS.get(str(npc.occupation),("workshop",))
             station=self._choose_station(npc,town,minute,tags)
             if station is None:return []
-            skill=int(npc.skills.get("carpentry" if npc.occupation=="carpenter" else "cooking",1))
-            duration=max(10,35-skill*2) if npc.occupation=="carpenter" else max(10,25-skill)
-            row=self.activities.reserve(npc,station,minute,duration_minutes=duration,lease_minutes=240,phase="produce")
+            skill_name=self.SKILLS.get(str(npc.occupation),("crafting",))[0]
+            skill=int(npc.skills.get(skill_name,1))
+            base=max(15,int(self.WORKSHOP_DURATION.get(str(npc.occupation),35)))
+            duration=max(10,base-skill*2)
+            row=self.activities.reserve(npc,station,minute,duration_minutes=duration,lease_minutes=max(240,duration+120),phase="produce")
             if row is None:return []
             tasks=withdraw+self.activities._tasks_for(row,f"{npc.occupation}_work")
             final_reservation=row.uid
@@ -322,11 +373,11 @@ class SettlementProfessionSystem:
                 storage=self._work_storage(npc,town)
                 if storage is not None:
                     storage.items[iid]=storage.items.get(iid,0)+(qty-made)
-        primary={"smith":"smithing","carpenter":"carpentry","cook":"cooking"}.get(npc.occupation,"crafting")
+        skills=self.SKILLS.get(str(npc.occupation),("crafting",))
+        primary=skills[0] if skills else "crafting"
         self._gain_xp(npc,primary,18)
-        if npc.occupation=="smith":self._gain_xp(npc,"metallurgy",10)
-        elif npc.occupation=="carpenter":self._gain_xp(npc,"joinery",8)
-        elif npc.occupation=="cook":self._gain_xp(npc,"hearthcraft",8)
+        if len(skills)>1:self._gain_xp(npc,skills[1],8)
+        if len(skills)>2:self._gain_xp(npc,skills[2],4)
         return True
 
     # ---------- lumberjack ----------
