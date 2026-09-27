@@ -305,3 +305,20 @@ Status: implemented on the Phase 4 profession development branch pending Fast Ga
 This work unit does not yet add completely new settlement-plan building types for cookhouses, lumber yards or carpentry halls. It deliberately reuses stable existing residence/workshop/barn/smithy plan IDs so current saves are not silently re-rolled. Dedicated profession buildings should be introduced later behind an explicit settlement-plan migration.
 
 Next profession work should broaden the same contract to millers/bakers, butchers, weavers/tanners, healers/herbalists and fishers, then add demand/market routing so physical profession outputs move from workplace storage into household, market and downstream-craft inputs through visible carriers.
+
+### Phase 4 Work Unit 5 - Profession yards and building access
+
+Status: implemented on the profession-yard development branch pending Fast Gate publication.
+
+- Settlement plan version advanced to v6 for the new authored exterior layout. This work intentionally prioritizes the current game over preserving the prior settlement-plan cache.
+- Every generated building frontage now becomes a first-class `RoadSegmentPlan` with road class `service_path`. The service path runs from the exterior door approach to the existing settlement street/path network, and the owning parcel's `access_road_id` points at that exact connection.
+- Service paths materialize as ordinary footpaths, so NPC/player pathing, atlas geometry, local rendering, natural-feature clearing and road inspection all see the same access route.
+- Added authored profession-yard pieces: split-rail fence, yard gate, hanging trade sign, stone well, stacked woodpile, chopping block, ore pile, coal bin, haystack, grain sacks, water barrel and smoke rack.
+- Smithies now receive ore/coal/well/sign yards; forest workshops receive lumber/chopping/sign yards; mills and barns receive grain/hay/well/sign yards; fisheries receive water/smoke/sign yards; residences receive a restrained domestic water-barrel detail.
+- Fences and gates are physical settlement pieces. Fences block movement; yard gates remain passable. Bulky yard props also occupy real cells, preventing NPCs from walking through them.
+- Yard placement is deterministic, parcel-bounded, terrain-legal and kept clear of the service path/door approach. Sparse fence runs frame small lots without sealing them.
+- The pygame local renderer now has dedicated procedural top-down art for the new yard assets rather than mapping them all onto generic pillars/workbenches. This keeps the assets lightweight while giving each profession exterior a distinct visual read.
+- Added Fast Gate regression coverage for profession-specific yard identity, authoritative service-road connectivity, parcel access bindings and fence/gate passability.
+
+Next coherent exterior pass: give residential homes profession-linked domestic details and add small shared settlement amenities (crossroads wells, lamp/sign posts, benches, drying lines, cart/handbarrow parking) while preserving clear movement corridors and avoiding decorative clutter.
+
