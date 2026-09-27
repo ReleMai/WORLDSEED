@@ -59,7 +59,11 @@ class NPCSystem:
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
             active=(tier=="A") if tier is not None else self._is_active_local(npc,player_pos)
-            if execute_active or not active:self._execute_task(npc,town,minute,player_pos)
+            # Normal Tier-A movement is owned by the fixed simulation tick, but
+            # non-movement actions keep their coarse decision cadence until the
+            # later activity/reservation work gives them explicit durations.
+            task_kind=npc.tasks[0].get("kind") if npc.tasks else ""
+            if execute_active or not active or task_kind!="move":self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
@@ -69,7 +73,10 @@ class NPCSystem:
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
-            self.execute_tick(npc,town,minute,player_pos)
+            # Phase 4 WU1 moves locomotion onto the fixed tick without making
+            # work/eating/social effects fire every few minutes. Those actions
+            # remain coarse until activity durations/reservations are added.
+            if npc.tasks and npc.tasks[0].get("kind")=="move":self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
         """Compatibility entry point for older callers/tests."""
