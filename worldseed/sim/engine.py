@@ -156,6 +156,7 @@ class Simulation:
         )
         self.npcs.attach_activity_system(self.activities)
         self.npcs.attach_mining_profession(self.mining_profession)
+        self.economy.attach_physical_labor_authority(self.mining_profession)
         self.resources.attach_settlement_physicalization(self.settlement_physicalization)
         self.settlement_population=SettlementPopulationBinder(
             self.state,registry,self.seed,self.settlement_physicalization
