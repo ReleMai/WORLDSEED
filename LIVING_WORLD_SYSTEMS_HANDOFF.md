@@ -245,3 +245,20 @@ Status: implemented on the Phase 4 development branch.
 
 Next coherent work unit: activity/affordance + reservation authority, followed by converting at least one job (recommended: farmer or smith) into a physical multi-step activity using reserved stations/inputs and explicit durations.
 
+### Phase 4 Work Unit 2 - Physical activity affordances, reservations, and smith work
+
+Status: implemented on the Phase 4 development branch pending Fast Gate publication.
+
+- Added `ActivitySystem` as the authority for nearby physical activity opportunities and exclusive station reservations.
+- Affordances are reconstructed from the active settlement skeleton and authored settlement-piece metadata. They are not serialized as a second world model.
+- Added persistent `ActivityReservationState` records keyed to stable physical fixture IDs, exact use cells, actor, phase, duration, lease/expiry and completion state.
+- Reservation conflicts cover both the physical target fixture and its standing cell so two nearby named actors cannot occupy the same station slot simultaneously.
+- Promoted smith work to the first explicit multi-step physical job: reserve forge -> walk to forge -> heat -> reserve/walk to anvil -> shape -> reconcile representative work exactly once.
+- Smith activity duration now advances on the fixed Phase 4 simulation tick. The actor remains physically at the reserved station while the phase is active.
+- Existing aggregate labor/production remains authoritative. Completing the physical smith chain calls the existing representative-work reconciliation and does not mint a parallel output batch.
+- Other occupations intentionally retain the existing coarse work path until their own station/resource/activity chains are defined.
+- Reservations persist across save/load, expire when abandoned, and are derived from stable settlement-plan fixtures rather than renderer state.
+- Added Fast Gate coverage for affordance derivation, reservation exclusivity/persistence, the forge-to-anvil task chain and exactly-once smith work reconciliation.
+
+Next coherent work unit: extend the activity framework to input/output affordances and physical hauling so a smith (and then farmer/carpenter) must acquire reserved inputs from real workplace storage, use the reserved station chain, and place outputs into real storage before aggregate market logistics can move them.
+
