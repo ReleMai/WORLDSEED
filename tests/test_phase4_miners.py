@@ -5,9 +5,10 @@ from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.systems.activities import ActivitySystem
+from worldseed.systems.economy import EconomySystem
 from worldseed.systems.mining_profession import MiningProfessionSystem
 from worldseed.systems.physical_goods import SettlementPhysicalGoodsSystem
-from worldseed.systems.state import LivingWorldState, NPCState, SettlementState
+from worldseed.systems.state import LaborReservationState, LivingWorldState, NPCState, SettlementState
 
 
 class FakeEntrance:
@@ -171,6 +172,29 @@ class Phase4MinerProfessionTests(unittest.TestCase):
         self.assertEqual(transfer.source_kind,"mining_trip")
         self.assertEqual(transfer.container_uid,storage.uid)
         self.assertGreater(transfer.total_value,0)
+
+    def test_exact_miner_replaces_matching_aggregate_labor_batch(self):
+        state,town,npc,world,physical,activities,goods,mining=self.fixture()
+        proc=self.registry.settlement_processes["core:iron_mining"]
+        day=1
+        reservation=LaborReservationState(
+            uid=f"labor:{town.uid}:{proc.id}",
+            settlement_id=town.uid,
+            process_id=proc.id,
+            occupation="miner",
+            workers=proc.workers,
+            assigned_day=day,
+            active=True,
+            representative_uids=[npc.uid],
+        )
+        state.labor_reservations[reservation.uid]=reservation
+        economy=EconomySystem(state,self.registry,b"phase4-miner-test",SimpleNamespace(record=lambda *a,**k:None))
+        economy.attach_physical_labor_authority(mining)
+        town.stocks["core:iron_ore"]=0
+        batches=economy._run_process(town,proc,proc.workers,day,day*1440)
+        self.assertEqual(batches,0)
+        self.assertEqual(town.stocks["core:iron_ore"],0)
+        self.assertEqual(mining.abstract_worker_claim(town,proc,day,proc.workers),proc.workers)
 
     def test_physical_goods_support_future_settlement_input_withdrawal(self):
         state,town,npc,world,physical,activities,goods,mining=self.fixture()
