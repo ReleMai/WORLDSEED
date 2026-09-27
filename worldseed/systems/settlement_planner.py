@@ -1475,7 +1475,11 @@ class SettlementSkeletonPlanner:
                 min_legal_ratio=70,
             )
             if parcel is not None:
-                parcels.append(parcel); occupied.update(parcel.cells)
+                # Preserve the settlement's terrain-explaining primary industry
+                # as the first industrial parcel. Specialist workshop lots are
+                # supporting craft district parcels rather than replacements.
+                first_industrial=next((i for i,row in enumerate(parcels) if row.kind=="industrial"),len(parcels))
+                parcels.insert(first_industrial,parcel);occupied.update(parcel.cells)
 
         plan.road_segment_ids = [row.uid for row in roads]
         plan.parcel_ids = [row.uid for row in parcels]
