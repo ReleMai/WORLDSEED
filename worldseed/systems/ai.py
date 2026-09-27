@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -18,6 +18,7 @@ class NPCSystem:
     def attach_households(self,households)->None:self.households=households
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
     def attach_route_planner(self,system)->None:self.route_planner=system
+    def attach_activity_system(self,system)->None:self.activities=system
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -63,7 +64,7 @@ class NPCSystem:
             # non-movement actions keep their coarse decision cadence until the
             # later activity/reservation work gives them explicit durations.
             task_kind=npc.tasks[0].get("kind") if npc.tasks else ""
-            if execute_active or not active or task_kind!="move":self._execute_task(npc,town,minute,player_pos)
+            if execute_active or not active or task_kind not in {"move","activity"}:self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
@@ -76,7 +77,7 @@ class NPCSystem:
             # Phase 4 WU1 moves locomotion onto the fixed tick without making
             # work/eating/social effects fire every few minutes. Those actions
             # remain coarse until activity durations/reservations are added.
-            if npc.tasks and npc.tasks[0].get("kind")=="move":self.execute_tick(npc,town,minute,player_pos)
+            if npc.tasks and npc.tasks[0].get("kind") in {"move","activity"}:self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
         """Compatibility entry point for older callers/tests."""
@@ -152,6 +153,11 @@ class NPCSystem:
         goal=npc.goal if goal is None else goal
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
+            if self.activities is not None:
+                physical_tasks=self.activities.plan_work(npc,town,minute)
+                if physical_tasks:
+                    npc.tasks=physical_tasks
+                    return
             target=self._binding_destination(npc.workplace_id,npc.work_room_id,town)
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"work"}]
         elif goal=="rest":
@@ -234,6 +240,19 @@ class NPCSystem:
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
+        elif task['kind']=='activity':
+            if self.activities is None:
+                npc.tasks.pop(0)
+                return
+            status=self.activities.progress(task.get('reservation_uid',''),npc.uid,minute)
+            if status=='completed':
+                npc.tasks.pop(0)
+                if task.get('on_complete')=='work':
+                    self._work(npc,town,minute)
+                    npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
+            elif status in {'failed','cancelled'}:
+                npc.tasks.pop(0)
+            return
         elif task['kind']=='perform':
             action=task['action'];npc.tasks.pop(0)
             if action=='eat':
