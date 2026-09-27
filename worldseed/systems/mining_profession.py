@@ -198,7 +198,7 @@ class MiningProfessionSystem:
                     for dx, dy in sorted(set(ring), key=lambda p: (p[1], p[0])):
                         pos = WorldPos(int(entrance.x) + dx, int(entrance.y) + dy, z)
                         generated_id = str(caves.terrain_at(pos))
-                        if generated_id in self.RARITY:
+                        if generated_id in {"core:coal_seam","core:copper_vein","core:iron_vein"}:
                             add_candidate(entrance, depth, pos, generated_id)
                             if len(ore_candidates) >= 32:
                                 break
