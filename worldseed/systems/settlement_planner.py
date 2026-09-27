@@ -840,7 +840,21 @@ class SettlementSkeletonPlanner:
         if function=="mill":
             return self._piece_choice(registry,"workshop",contains="millstone") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
         if function=="fishery":
+            return self._piece_choice(registry,"workshop",contains="fish_cleaning_table") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="net_mending_bench")
+        if function=="bakery":
+            return self._piece_choice(registry,"workshop",contains="bakery_oven") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="large_table")
+        if function=="butcher":
             return self._piece_choice(registry,"workshop",contains="butcher_table") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="weavery":
+            return self._piece_choice(registry,"workshop",contains="loom_piece") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="spinning_wheel")
+        if function=="tannery":
+            return self._piece_choice(registry,"workshop",contains="tanning_rack") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="pottery":
+            return self._piece_choice(registry,"workshop",contains="pottery_wheel") if room_side=="primary" else self._piece_choice(registry,"workshop",contains="kiln")
+        if function=="brewery":
+            return self._piece_choice(registry,"workshop",contains="brewery_vat") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
+        if function=="mason_yard":
+            return self._piece_choice(registry,"workshop",contains="masonry_bench") if room_side=="primary" else self._piece_choice(registry,"mine",contains="stone_cutting_yard")
         if function=="barn":
             return self._piece_choice(registry,"agriculture",contains="barn_stall") if room_side=="primary" else self._piece_choice(registry,"agriculture",contains="hay_rack")
         if function=="market":
@@ -885,6 +899,27 @@ class SettlementSkeletonPlanner:
             ),
         }
         return profiles.get(str(function), ((), False))
+
+    @staticmethod
+    def _clutter_profile(function: str) -> tuple[str, ...]:
+        """Passable tile decorations that visually explain household/workshop use."""
+        profiles={
+            "residence":("core:domestic_crockery_piece","core:laundry_basket_piece","core:pantry_crate_piece","core:hearth_wood_piece"),
+            "smithy":("core:smith_tool_rack_piece","core:metal_scrap_piece"),
+            "workshop":("core:carpenter_offcuts_piece","core:wood_shavings_piece"),
+            "mill":("core:flour_sacks_piece","core:grain_sacks_piece"),
+            "bakery":("core:flour_sacks_piece","core:bread_rack_piece"),
+            "butcher":("core:butcher_hooks_piece","core:cutting_board_piece"),
+            "weavery":("core:yarn_basket_piece","core:cloth_roll_piece"),
+            "tannery":("core:hide_stack_piece","core:bark_tub_piece"),
+            "pottery":("core:clay_jars_piece","core:potter_shelf_piece"),
+            "brewery":("core:keg_stack_piece","core:brew_bucket_piece"),
+            "clinic":("core:herb_bundle_piece","core:bottle_shelf_piece"),
+            "mason_yard":("core:stone_chips_piece","core:mason_tools_piece"),
+            "fishery":("core:net_rack_piece","core:fish_basket_piece"),
+            "barn":("core:grain_sacks_piece","core:hearth_wood_piece"),
+        }
+        return profiles.get(str(function),())
 
     @staticmethod
     def _yard_ring(
@@ -1076,6 +1111,24 @@ class SettlementSkeletonPlanner:
                 place(fixture,cell,"fixture")
                 fixture_tags.setdefault(cell,set()).update(fixture.room_tags or fixture.tags)
 
+        # Decorative clutter is persistent plan content, but remains passable so
+        # homes/workshops read as occupied without turning their interiors into
+        # pathfinding mazes. Keep the doorway, partition door and work fixtures clear.
+        occupied_decor={(p.x,p.y) for p in placements if p.role in {"fixture","entrance","interior_door","partition"}}
+        decor_cells=[
+            cell for cell in interior_sorted
+            if cell not in occupied_decor and cell!=entrance_inside
+        ]
+        clutter_ids=list(self._clutter_profile(function))
+        for index,piece_id in enumerate(clutter_ids):
+            piece=registry.settlement_pieces.get(piece_id)
+            if piece is None or not decor_cells:
+                continue
+            # Stable hash spreads repeated home clutter without consuming RNG state.
+            pick_index=hash_u64(self.seed,"settlement-tile-clutter",structure_uid,piece_id,index)%len(decor_cells)
+            cell=decor_cells.pop(int(pick_index))
+            place(piece,cell,"tile_decor")
+
         analysis=analyze_building(
             structure_uid,wall_cells=walls,door_cells=doors,roof_cells=interior,
             floor_cells=interior,fixture_tags=fixture_tags,
@@ -1093,7 +1146,13 @@ class SettlementSkeletonPlanner:
             entrance=entrance,building_type=analysis.building_type,enclosed=analysis.enclosed,
             interior_area=analysis.interior_area,room_ids=[r.uid for r in rooms],
             piece_ids=[p.uid for p in placements],roof_percent=analysis.roof_percent,
-            workplace_role=({"smithy":"smith","workshop":"carpenter","mill":"miller","fishery":"fisher","barn":"farmer","market":"merchant","clinic":"healer","watchhouse":"guard","shrine":"priest","archive":"scholar","school":"scholar"}.get(function,"")),
+            workplace_role=({
+                "smithy":"smith","workshop":"carpenter","mill":"miller","fishery":"fisher",
+                "bakery":"baker","butcher":"butcher","weavery":"weaver","tannery":"tanner",
+                "pottery":"potter","brewery":"brewer","mason_yard":"mason",
+                "barn":"farmer","market":"merchant","clinic":"healer","watchhouse":"guard",
+                "shrine":"priest","archive":"scholar","school":"scholar",
+            }.get(function,"")),
         )
         return structure,rooms,placements
 
@@ -1114,13 +1173,15 @@ class SettlementSkeletonPlanner:
                 parcel.structure_ids.append(structure.uid)
 
         industrial=[p for p in parcels if p.kind=="industrial"]
-        if industrial:
-            function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
-            result=self._plan_building(industrial[0],roads,slot="industry:0",function=function,archetype=plan.archetype,large=True)
+        workshop_functions={"bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill","fishery"}
+        primary_function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
+        for index,parcel in enumerate(industrial):
+            function=parcel.purpose if parcel.purpose in workshop_functions else primary_function
+            result=self._plan_building(parcel,roads,slot=f"industry:{index}:{function}",function=function,archetype=plan.archetype,large=True)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
-                industrial[0].structure_ids.append(structure.uid)
+                parcel.structure_ids.append(structure.uid)
 
         civic=[p for p in parcels if p.kind=="civic" and p.purpose not in {"","common"}]
         for index,parcel in enumerate(civic):
@@ -1332,6 +1393,38 @@ class SettlementSkeletonPlanner:
                 )
                 if parcel is None:continue
                 parcels.append(parcel);occupied.update(parcel.cells);placed=(sx,sy,access_id)
+                remaining_candidates=[row for row in remaining_candidates if (row[2],row[1])!=(sx,sy)]
+                break
+
+        # Purpose-built craft districts consume street-fronting lots before
+        # ordinary housing. Ranks phase in specialist trades; clinics already
+        # provide the healer/apothecary station and archetype-primary industry
+        # supplies smithy/carpentry/milling/fishery as appropriate.
+        workshops_by_rank={
+            "homestead":(),
+            "hamlet":("bakery",),
+            "village":("bakery","butcher","weavery"),
+            "town":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard"),
+            "city":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill"),
+        }
+        primary_for_archetype={
+            "mining":"smithy","forest":"workshop","agrarian":"mill",
+            "fishing":"fishery","river_market":"workshop",
+        }.get(plan.archetype,"workshop")
+        desired=list(workshops_by_rank[rank])
+        if plan.archetype in {"fishing","river_market"} and "fishery" not in desired:
+            desired.append("fishery")
+        desired=[name for name in desired if name!=primary_for_archetype]
+        for function in desired:
+            for _,sy,sx,access_id in list(remaining_candidates):
+                size=7 if rank in {"town","city"} else 5
+                parcel=self._parcel(
+                    plan.uid,f"workshop:{function}","industrial",function,(sx,sy),size,size,
+                    forbidden=occupied|functional_reserve,road_cells=road_cells,access_road_id=access_id,
+                )
+                if parcel is None:
+                    continue
+                parcels.append(parcel);occupied.update(parcel.cells)
                 remaining_candidates=[row for row in remaining_candidates if (row[2],row[1])!=(sx,sy)]
                 break
 
