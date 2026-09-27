@@ -42,6 +42,12 @@ DEFAULT_CACHE_CHUNKS = 384
 AUTOSAVE_TURNS = 40
 MINUTES_PER_ACTION = 5
 MOVE_MINUTES = 1
+# Phase 4 living-population contract: exact nearby NPC action execution advances
+# on deterministic game-time boundaries, never on render frames or hourly AI.
+SIMULATION_TICK_MINUTES = 5
+# Long explicit waits retain bounded coarse simulation instead of replaying tens
+# of thousands of exact local ticks. Normal play remains on the fixed tick.
+ACTIVE_TICK_REPLAY_LIMIT_MINUTES = 360
 ACTIVE_REGION_RADIUS = 1
 OFFLINE_CAP_DAYS = 30
 DEFAULT_OFFLINE_POLICY = "safe"
