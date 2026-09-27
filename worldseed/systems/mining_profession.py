@@ -208,7 +208,7 @@ class MiningProfessionSystem:
 
     @staticmethod
     def _move_task(pos: WorldPos, **extra) -> dict:
-        return {"kind": "move", "x": int(pos.x), "y": int(pos.y), "z": int(pos.z), **extra}
+        return {"kind": "move", "x": int(pos.x), "y": int(pos.y), "z": int(pos.z), "exact": True, **extra}
 
     def _cargo_items(self, npc) -> dict[str, int]:
         return {
@@ -223,6 +223,16 @@ class MiningProfessionSystem:
             self._move_task(target, mining_trip_uid=trip_uid),
             {"kind": "perform", "action": "mining_deposit", "trip_uid": str(trip_uid), "container_uid": storage.uid},
         ]
+
+    def supports_physical_work(self, npc, town) -> bool:
+        caves = getattr(self.world.generator, "caves", None)
+        skeleton = self.physicalization.skeleton_for(town.uid) if self.physicalization is not None else None
+        return bool(
+            npc.occupation == "miner"
+            and caves is not None
+            and skeleton is not None
+            and npc.workplace_id
+        )
 
     def plan_work(self, npc, town, minute: int) -> list[dict]:
         if npc.occupation != "miner":
