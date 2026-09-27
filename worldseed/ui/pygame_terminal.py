@@ -2744,6 +2744,10 @@ class PygameTerminal(PointerUI):
             h ^= b; h=(h*16777619)&0xffffffff
         return h % max(1,n)
 
+    def _npc_sprite_path(self, npc):
+        paths=self._visuals.npc_paths(getattr(npc,'sex',None))
+        return paths[self._stable_variant(npc.uid or npc.name,len(paths))] if paths else None
+
     def _terrain_variant_index(self, terrain_id: str, x: int, y: int, z: int, count: int) -> int:
         """Choose a deterministic alternative tile for repeated natural terrain."""
         if count <= 1:return 0
@@ -3351,7 +3355,6 @@ class PygameTerminal(PointerUI):
                 str(row.get('uid','')):row for row in stealth_overlay.get('observers',())
                 if row.get('uid')
             }
-        npc_paths = self._visuals.npc_paths()
         proc_species = self._visuals.procedural_species_paths()
         player_sprite = self._visuals.player_path(getattr(sim.state, 'player_sex', 'male'), getattr(sim.state, 'player_sprite_index', 0))
         cursor_sprite = self._visuals.special('cursor')
@@ -3426,7 +3429,7 @@ class PygameTerminal(PointerUI):
                 ap=self._visuals.resolve(ref,self._stable_variant(c.uid,len(ref.paths))) if ref.paths else (proc_species[self._stable_variant(c.species_id+c.uid,len(proc_species))] if proc_species else None)
                 self._draw_sprite_bottom(ap,rect,1.25)
             if k in npc_by:
-                n=npc_by[k];np=npc_paths[self._stable_variant(n.uid or n.name,len(npc_paths))] if npc_paths else None;self._draw_sprite_bottom(np,rect,1.45)
+                n=npc_by[k];self._draw_sprite_bottom(self._npc_sprite_path(n),rect,1.45)
             if wx==pos.x and wy==pos.y:
                 from worldseed.systems.swimming import exposure
                 if exposure(sim,pos).mode=='swimming':

@@ -829,6 +829,12 @@
     "assets/sprites/characters/npc_rework/female_10.png",
     "assets/sprites/characters/npc_rework/female_11.png"
   ],
+  "npc_variant_sexes": [
+    "male", "male", "male", "male", "male", "male",
+    "male", "male", "male", "male", "male", "male",
+    "female", "female", "female", "female", "female", "female",
+    "female", "female", "female", "female", "female", "female"
+  ],
   "procedural_species": [
     "assets/sprites/species/_dev17/monster_00.png",
     "assets/sprites/species/_dev17/monster_01.png",

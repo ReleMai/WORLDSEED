@@ -2,6 +2,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from worldseed.systems.names import npc_sex_for_identity
+
 @dataclass(slots=True)
 class StructureInstance:
     structure_id: str
@@ -310,6 +312,7 @@ class NPCState:
     z: int
     settlement_id: str
     faction_id: str
+    sex: str = ""
     hp: int = 100
     hunger: int = 0
     thirst: int = 0
@@ -357,6 +360,10 @@ class NPCState:
     routine_phase: str = ""
     facing_dx: int = 0
     facing_dy: int = 1
+
+    def __post_init__(self) -> None:
+        if self.sex not in ('male','female'):
+            self.sex=npc_sex_for_identity(self.name,self.uid)
 
 @dataclass(slots=True)
 class SettlementState:

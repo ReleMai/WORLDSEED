@@ -83,8 +83,13 @@ class VisualRegistry:
             return paths[index % len(paths)]
         return self.special('player')
 
-    def npc_paths(self) -> tuple[Path, ...]:
-        return tuple(self.base_dir / p for p in self.manifest.get("npc_variants", []))
+    def npc_paths(self, sex: str | None = None) -> tuple[Path, ...]:
+        paths=self.manifest.get("npc_variants", [])
+        if sex in ('male','female'):
+            labels=self.manifest.get('npc_variant_sexes', [])
+            if len(labels)==len(paths):
+                return tuple(self.base_dir / p for p,label in zip(paths,labels) if label==sex)
+        return tuple(self.base_dir / p for p in paths)
 
     def procedural_species_paths(self) -> tuple[Path, ...]:
         return tuple(self.base_dir / p for p in self.manifest.get('procedural_species', []))
@@ -123,6 +128,10 @@ class VisualRegistry:
                     issues.append(f'missing {sex} player visual file: {raw}')
         if len(self.manifest.get("npc_variants", [])) < 12:
             issues.append("fewer than 12 NPC variants")
+        labels=self.manifest.get('npc_variant_sexes', [])
+        if labels and (len(labels)!=len(self.manifest.get('npc_variants', [])) or
+                       set(labels)-{'male','female'} or not {'male','female'}<=set(labels)):
+            issues.append('NPC sex labels must match every variant and include both sexes')
         for raw in self.manifest.get("npc_variants", []):
             if not (self.base_dir / raw).exists():
                 issues.append(f"missing NPC visual file: {raw}")
