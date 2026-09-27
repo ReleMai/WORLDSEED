@@ -63,6 +63,42 @@ class MouseUITests(unittest.TestCase):
             self.assertIsNone(self.t._hud_tooltip_rect)
             self.click('UI_STANCE:stalk')
             self.assertEqual(self.t.read_key(),'UI_STANCE:stalk')
+
+    def test_centered_menu_cursor_and_page_controls(self):
+        from worldseed.ui.widgets import MenuRow
+        rows=[MenuRow(str(i),f'Choice {i}') for i in range(5)]
+        for size in ((800,520),(1280,800)):
+            self.t._resize(*size)
+            self.t._last_mouse=(size[0]//2,size[1]//2)
+            self.t.present_menu('WORLDSEED 1.0',rows,0,subtitle='A living-world sandbox')
+            cards=[rect for rect,token in self.t._pointer_targets if token.startswith('UI_SELECT:')]
+            self.assertEqual(len(cards),5)
+            self.assertAlmostEqual(cards[0].centerx,size[0]//2,delta=4)
+            self.assertFalse(any(token in ('PGUP','PGDN','ESC') for _,token in self.t._pointer_targets))
+            self.t._animate_menu_effects(self.pg.time.get_ticks()+240,force=True)
+            self.assertIsNotNone(self.t._menu_cursor_rect)
+            self.assertTrue(self.t.screen.get_rect().contains(self.t._menu_cursor_rect))
+            self.t._last_mouse=(size[0]//2+30,size[1]//2+10)
+            self.t._animate_menu_effects(self.pg.time.get_ticks()+320,force=True)
+            self.assertEqual(self.t._menu_cursor_rect.center,(size[0]//2+40,size[1]//2+20))
+            self.t.present_menu('LOAD GAME',rows,0,total=5)
+            self.assertIn('ESC',[token for _,token in self.t._pointer_targets])
+            self.assertNotIn('PGDN',[token for _,token in self.t._pointer_targets])
+
+    def test_new_character_roster_is_transparent_and_gender_balanced(self):
+        from worldseed.presentation.visuals import VisualRegistry
+        visuals=VisualRegistry.load_default()
+        paths=visuals.npc_paths()
+        self.assertEqual(len(paths),24)
+        self.assertEqual(sum('male_' in p.name and 'female_' not in p.name for p in paths),12)
+        self.assertEqual(sum('female_' in p.name for p in paths),12)
+        for path in paths:
+            self.assertTrue(path.is_file(),path)
+            sprite=self.pg.image.load(str(path))
+            self.assertEqual(sprite.get_size(),(100,144))
+            self.assertEqual(sprite.get_at((0,0)).a,0)
+        for sex in ('male','female'):
+            self.assertTrue(all('npc_rework' in str(p) for p in visuals.player_paths(sex)[:3]))
     def test_mouse_paging_reaches_offscreen_items_and_retains_state(self):
         from worldseed.ui.session import RouteState
         state=RouteState('test','Test');sequence=iter(['PGDN','UI_SELECT:1'])

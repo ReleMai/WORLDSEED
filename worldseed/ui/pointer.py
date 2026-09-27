@@ -30,14 +30,19 @@ class PointerUI:
         self.screen.blit(text,text.get_rect(center=rect.center))
         self._ui_target(rect,token)
 
-    def _ui_navigation(self, *, confirm=False, extra=None, back=True):
+    def _ui_navigation(self, *, confirm=False, extra=None, back=True, paging=True):
         w,h=self.screen.get_size();y=h-52
         buttons=[('Back','ESC')] if back else []
         if confirm:buttons.append(('Continue','\r'))
-        else:buttons.extend([('Previous','PGUP'),('Next','PGDN')])
+        elif paging:buttons.extend([('Previous','PGUP'),('Next','PGDN')])
         if extra:buttons.append(extra)
+        panel=getattr(self,'_menu_nav_rect',None)
+        if panel is not None:
+            y=panel.bottom-43
+            first_x=panel.centerx-(len(buttons)*104+(len(buttons)-1)*8)//2
+        else:first_x=36
         for i,(label,token) in enumerate(buttons):
-            self._button((36+i*112,y,104,30),label,token)
+            self._button((first_x+i*112,y,104,30),label,token)
 
     def menu_page_size(self, presentation=''):
         w,h=self.screen.get_size()

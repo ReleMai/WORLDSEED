@@ -85,6 +85,13 @@ class PygameTerminal(PointerUI):
         self._hud_tooltip_backdrop = None
         self._hud_tooltip_rect = None
         self._hud_tooltip_bounds = None
+        self._menu_backdrop_cache = {}
+        self._menu_ambient_rects = ()
+        self._menu_header_base = None
+        self._menu_cursor_rect = None
+        self._menu_cursor_backdrop = None
+        self._menu_animation_phase = None
+        self._menu_nav_rect = None
         self._atlas_dragging = False
         self._atlas_drag_moved = False
         self._atlas_drag_last = (0, 0)
@@ -147,6 +154,7 @@ class PygameTerminal(PointerUI):
         self._active_movement_key = None
         self._movement_next_repeat_ms = 0
         self._rebuild_fonts()
+        pg.mouse.set_visible(True)
         # Reuse a generated asset as a recognizable app icon.
         icon_path = self._visuals.special("player")
         if icon_path and icon_path.exists():
@@ -155,6 +163,7 @@ class PygameTerminal(PointerUI):
 
     def restore(self) -> None:
         try:
+            self.pg.mouse.set_visible(True)
             self.pg.quit()
         except Exception:
             pass
@@ -181,6 +190,7 @@ class PygameTerminal(PointerUI):
         self.screen = self.pg.display.set_mode((self.width, self.height), self.pg.RESIZABLE)
         self._base_layer_cache.clear(); self._base_scroll_state=None; self._resource_view_cache.clear(); self._terrain_transition_cache.clear(); self._terrain_transition_masks.clear()
         self._hover_context=None; self._hover_map_snapshot=None; self._hover_rect=None; self._hover_tile_rect=None; self._hover_cell=None
+        self._menu_backdrop_cache.clear();self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
 
     def discard_pending_input(self) -> None:
         """Discard startup keys and prevent a held key from repeating into play.
@@ -281,6 +291,7 @@ class PygameTerminal(PointerUI):
                 pending = pg.event.get(pg.MOUSEMOTION)
                 if pending:
                     self._last_mouse = pending[-1].pos
+                if self._input_mode in ('ui','text'):self._animate_menu_effects(pg.time.get_ticks(),force=True)
                 self._update_hud_tooltip_hover(pg.time.get_ticks())
                 if self._ui_window_dragging or self._ui_window_resizing:
                     panel_id=self._ui_window_dragging or self._ui_window_resizing
@@ -460,6 +471,67 @@ class PygameTerminal(PointerUI):
                 if event.unicode:
                     return event.unicode
 
+    def _menu_scene(self, size):
+        """Cached painted backdrop; the small light motes animate separately."""
+        cached=self._menu_backdrop_cache.get(size)
+        if cached is not None:return cached
+        pg=self.pg;w,h=size
+        scene=pg.Surface(size)
+        for yy in range(h):
+            t=yy/max(1,h-1)
+            color=(int(14+8*t),int(23+12*t),int(25+7*t))
+            pg.draw.line(scene,color,(0,yy),(w,yy))
+        horizon=int(h*.59)
+        pg.draw.polygon(scene,(29,45,43),[(0,horizon),(w//8,horizon-80),(w//4,horizon-22),(w//3,horizon-130),(w//2,horizon-30),(2*w//3,horizon-125),(5*w//6,horizon-45),(w,horizon-100),(w,h)])
+        pg.draw.polygon(scene,(19,35,33),[(0,horizon+80),(w//7,horizon-18),(w//4,horizon+74),(w//2,horizon-20),(3*w//4,horizon+65),(w,horizon-15),(w,h)])
+        for i in range(22):
+            xx=(i*197+71)%max(1,w); yy=horizon+18+(i*71)%max(1,h-horizon+15)
+            height=30+(i*31)%90
+            pg.draw.line(scene,(13,28,27),(xx,yy),(xx,yy-height),2)
+            pg.draw.polygon(scene,(13,30,28),[(xx-18,yy-height//3),(xx,yy-height-17),(xx+18,yy-height//3)])
+        pg.draw.line(scene,(79,91,71),(0,horizon+22),(w,horizon+22),1)
+        self._menu_backdrop_cache[size]=scene
+        return scene
+
+    def _animate_menu_effects(self, now, *, force=False):
+        if self.screen is None or self._input_mode not in ('ui','text'):return
+        self.pg.mouse.set_visible(False)
+        phase=int(now)//80
+        if not force and phase==self._menu_animation_phase:return
+        self._menu_animation_phase=phase
+        pg=self.pg;dirty=[]
+        if self._menu_cursor_rect is not None and self._menu_cursor_backdrop is not None:
+            self.screen.blit(self._menu_cursor_backdrop,self._menu_cursor_rect.topleft)
+            dirty.append(self._menu_cursor_rect)
+        if self._menu_header_base is not None:
+            header=pg.Rect(18,18,self._menu_header_base.get_width(),self._menu_header_base.get_height())
+            self.screen.blit(self._menu_header_base,header.topleft)
+            for i in range(10):
+                x=header.x+((i*173+phase*2)%max(1,header.width));y=header.y+6+(i*11)%20
+                if x<header.right-8:pg.draw.circle(self.screen,(174,143,86),(x,y),1+(i%2))
+            dirty.append(header)
+        for rect in self._menu_ambient_rects:
+            if rect.width<=0 or rect.height<=0:continue
+            scene=self._menu_scene((self.screen.get_width()-36,self.screen.get_height()-75))
+            self.screen.blit(scene,rect.topleft,rect.move(-18,-57))
+            for i in range(13):
+                x=rect.x+(i*83+phase*(1+i%2))%rect.width
+                y=rect.y+(i*101-phase*(1+i%3))%rect.height
+                pg.draw.circle(self.screen,(101,110,72) if i%3 else (175,135,65),(x,y),1+(i%4==0))
+            dirty.append(rect)
+        mx,my=self._last_mouse
+        if self.screen.get_rect().collidepoint((mx,my)):
+            cursor=pg.Rect(mx-8,my-8,36,36).clip(self.screen.get_rect())
+            self._menu_cursor_rect=cursor
+            self._menu_cursor_backdrop=self.screen.subsurface(cursor).copy()
+            pg.draw.circle(self.screen,(159,126,66),(mx+6,my+6),10+(phase%3),1)
+            pg.draw.polygon(self.screen,(223,192,115),[(mx,my),(mx+3,my+17),(mx+7,my+12),(mx+12,my+14)],0)
+            pg.draw.lines(self.screen,(35,28,20),True,[(mx,my),(mx+3,my+17),(mx+7,my+12),(mx+12,my+14)],1)
+            pg.draw.circle(self.screen,(244,224,164),(mx+6,my+6),2)
+            dirty.append(cursor)
+        else:self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
+        if dirty:pg.display.update(dirty)
+
     def _draw_chrome(self, title: str = "WORLDSEED") -> tuple[int, int, int, int]:
         pg = self.pg; screen = self.screen; assert screen is not None
         self._pointer_targets.clear()
@@ -467,8 +539,11 @@ class PygameTerminal(PointerUI):
         self._hud_tooltip_hover = None
         self._hud_tooltip_rect = None
         self._hud_tooltip_backdrop = None
+        self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
+        self._menu_ambient_rects=();self._menu_nav_rect=None;self._menu_animation_phase=None
         mode=('target' if getattr(self,'_drawing_target',False) else 'world') if title=='WORLDSEED // LOCAL' else 'ui'
         self._set_input_mode(mode)
+        pg.mouse.set_visible(mode not in ('ui','text'))
         if mode in ('world','target'):
             self._floating_backdrop=None
             self._floating_panel_id=None
@@ -492,6 +567,10 @@ class PygameTerminal(PointerUI):
         screen.blit(label, (29, 22))
         sub = self.small_font.render("LIVING WORLD // HYBRID DISPLAY", True, th["muted"])
         screen.blit(sub, (w-sub.get_width()-29, 27))
+        if mode=='ui':
+            scene=self._menu_scene((w-36,h-75));screen.blit(scene,(18,57))
+            self._menu_header_base=screen.subsurface(pg.Rect(18,18,w-36,31)).copy()
+        else:self._menu_header_base=None
         return 18, 57, w-36, h-75
 
     def present_loading(self, phase: str, progress: float, detail: str = '', subtitle: str = 'PREPARING SEEDED WORLD') -> None:
@@ -535,7 +614,7 @@ class PygameTerminal(PointerUI):
         pg = self.pg; screen = self.screen
         if screen is None: return
         x, y, w, h = self._draw_chrome("WORLDSEED // CONSOLE")
-        pg.draw.rect(screen, (15,18,20), (x, y, w, h), border_radius=2)
+        self._paint_menu_veil((x,y,w,h))
         lines = ANSI_RE.sub('', text).splitlines()
         top = y + 10
         for i, raw in enumerate(lines):
@@ -588,6 +667,12 @@ class PygameTerminal(PointerUI):
             else:hi=mid-1
         return text[:lo]+suffix
 
+    def _paint_menu_veil(self, rect):
+        veil=self.pg.Surface((rect[2],rect[3]),self.pg.SRCALPHA)
+        veil.fill((15,20,21,204))
+        self.screen.blit(veil,rect[:2])
+        self.pg.draw.rect(self.screen,(94,92,67),rect,1,border_radius=4)
+
     def _draw_ui_tabs(self, title: str, x: int, y: int, w: int) -> int:
         # Read-only location label: navigation is provided by actual menu cards.
         domain,tabs,active=self._ui_domain(title)
@@ -606,7 +691,7 @@ class PygameTerminal(PointerUI):
     def _feature_shell(self, domain: str, title: str, subtitle: str=''):
         pg=self.pg;screen=self.screen
         x,y,w,h=self._draw_chrome(f'WORLDSEED // {domain}')
-        pg.draw.rect(screen,(15,18,20),(x,y,w,h),border_radius=3)
+        self._paint_menu_veil((x,y,w,h))
         cx=x+18;cy=y+14;cw=w-36
         heading=self.title_font.render(title,True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+7
         if subtitle:
@@ -649,6 +734,7 @@ class PygameTerminal(PointerUI):
             self._floating_backdrop=screen.copy()
             self._floating_panel_id=panel_id
         screen.blit(self._floating_backdrop,(0,0))
+        self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
         self._pointer_targets.clear();self._set_input_mode('ui')
         state=self._floating_panel_state(panel_id)
         x,y,w,h=state['x'],state['y'],state['w'],state['h']
@@ -1683,17 +1769,32 @@ class PygameTerminal(PointerUI):
         pg=self.pg;screen=self.screen
         if screen is None:return
         domain,_,_=self._ui_domain(title)
-        x,y,w,h=self._draw_chrome(f'WORLDSEED // {domain}')
-        pg.draw.rect(screen,(15,18,20),(x,y,w,h),border_radius=3)
-        pad=18;cx=x+pad;cy=y+14;cw=w-pad*2
+        is_main=title.upper().startswith('WORLDSEED ')
+        x,y,w,h=self._draw_chrome('WORLDSEED' if is_main else f'WORLDSEED // {domain}')
+        panel_w=min(w-32,690 if is_main else 780)
+        panel_h=min(h-24,max(285,145+len(rows)*39+(24 if subtitle else 0)+(20 if breadcrumb else 0)))
+        panel=pg.Rect(x+(w-panel_w)//2,y+(h-panel_h)//2,panel_w,panel_h)
+        self._menu_ambient_rects=(pg.Rect(x,y,max(0,panel.x-x-10),h),pg.Rect(panel.right+10,y,max(0,x+w-panel.right-10),h))
+        shadow=pg.Surface((panel_w+16,panel_h+16),pg.SRCALPHA)
+        pg.draw.rect(shadow,(0,0,0,110),shadow.get_rect(),border_radius=12)
+        screen.blit(shadow,(panel.x-8,panel.y+5))
+        pg.draw.rect(screen,(25,31,31),panel,border_radius=8)
+        pg.draw.rect(screen,(119,105,72),panel,2,border_radius=8)
+        pg.draw.rect(screen,(57,72,67),panel.inflate(-12,-12),1,border_radius=5)
+        pg.draw.line(screen,self._theme['accent'],(panel.x+26,panel.y+8),(panel.right-26,panel.y+8),2)
+        pad=29;cx=panel.x+pad;cy=panel.y+(27 if is_main else 21);cw=panel_w-pad*2
         # strong title hierarchy replaces the ASCII border/title line
-        title_surf=self.title_font.render(title,True,self._theme['text']);screen.blit(title_surf,(cx,cy));cy+=title_surf.get_height()+9
+        heading='WORLDSEED' if is_main else title
+        title_font=self.title_font
+        title_surf=title_font.render(heading,True,self._theme['accent'] if is_main else self._theme['text'])
+        screen.blit(title_surf,(panel.centerx-title_surf.get_width()//2,cy));cy+=title_surf.get_height()+9
         cy=self._draw_ui_tabs(title,cx,cy,cw)
         if breadcrumb:
             crumb=self.small_font.render(self._fit_ui_text('‹ '+breadcrumb,self.small_font,cw),True,self._theme['muted']);screen.blit(crumb,(cx,cy));cy+=21
         if subtitle:
-            sub=self.small_font.render(self._fit_ui_text(subtitle,self.small_font,cw),True,self._theme['muted']);screen.blit(sub,(cx,cy));cy+=23
-        bottom=y+h-44
+            sub=self.small_font.render(self._fit_ui_text(subtitle,self.small_font,cw),True,self._theme['muted'])
+            screen.blit(sub,(panel.centerx-sub.get_width()//2,cy));cy+=23
+        bottom=panel.bottom-54
         count=max(1,len(rows));available=max(1,bottom-cy)
         row_h=max(22,min(34,available//count))
         row_gap=4 if row_h>=28 else 2
@@ -1719,8 +1820,12 @@ class PygameTerminal(PointerUI):
             cy+=row_h
         if total is not None and total>len(rows):
             page=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted'])
-            screen.blit(page,(x+w-page.get_width()-22,y+h-31))
-        self._ui_navigation(back=not footer or 'Esc back' in footer)
+            screen.blit(page,(panel.right-page.get_width()-20,panel.bottom-29))
+        if is_main:
+            motto=self.small_font.render('SEED  ·  SURVIVE  ·  SHAPE THE WORLD',True,self._theme['muted'])
+            screen.blit(motto,(panel.centerx-motto.get_width()//2,panel.bottom-34))
+        self._menu_nav_rect=panel
+        if not is_main:self._ui_navigation(back=not footer or 'Esc back' in footer,paging=bool(total is not None and total>len(rows)))
         self._draw_scanlines((x,y,w,h));pg.display.flip();self.clock.tick(120)
 
     def present_sprite_gallery(self, title: str, *, sex: str, selected: int, labels: list[str] | tuple[str, ...], subtitle: str='', footer: str='') -> None:
@@ -1729,7 +1834,7 @@ class PygameTerminal(PointerUI):
         pg=self.pg;screen=self.screen
         if screen is None:return
         x,y,w,h=self._draw_chrome('WORLDSEED // CHARACTER CREATION')
-        pg.draw.rect(screen,(15,18,20),(x,y,w,h),border_radius=3)
+        self._paint_menu_veil((x,y,w,h))
         pad=18;cx=x+pad;cy=y+14;cw=w-pad*2
         heading=self.title_font.render(title,True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+8
         if subtitle:
@@ -1805,7 +1910,7 @@ class PygameTerminal(PointerUI):
         if screen is None:return
         domain,_,_=self._ui_domain(title)
         x,y,w,h=self._draw_chrome(f'WORLDSEED // {domain}')
-        pg.draw.rect(screen,(15,18,20),(x,y,w,h),border_radius=3)
+        self._paint_menu_veil((x,y,w,h))
         pad=18;cx=x+pad;cy=y+14;cw=w-pad*2
         heading=self.title_font.render(title,True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+9
         cy=self._draw_ui_tabs(title,cx,cy,cw)
@@ -1866,7 +1971,14 @@ class PygameTerminal(PointerUI):
         if live_context:self._redraw_live_context_overlay()
 
     def _animate_idle_effects(self, now):
-        self._tick_hud_tooltip(now)
+        menu_pointer=self._input_mode in ('ui','text')
+        if menu_pointer and self._menu_header_base is not None:
+            self._animate_menu_effects(now)
+            return
+        if menu_pointer and self._menu_cursor_rect is not None and self._menu_cursor_backdrop is not None:
+            self.screen.blit(self._menu_cursor_backdrop,self._menu_cursor_rect.topleft)
+            self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
+        if not menu_pointer:self._tick_hud_tooltip(now)
         ctx=getattr(self,'_weather_animation_context',None)
         static=getattr(self,'_weather_static_snapshot',None)
         # Include the previous sample so a completed fade paints its final frame.
@@ -1878,6 +1990,7 @@ class PygameTerminal(PointerUI):
         if active:
             phase = int(now) // 33
             if phase == getattr(self, '_weather_animation_phase', None):
+                if menu_pointer:self._animate_menu_effects(now,force=True)
                 return
             self._weather_animation_phase = phase
             self._weather_last_frame_ms = now
@@ -1898,9 +2011,13 @@ class PygameTerminal(PointerUI):
             self._refresh_hover_only(force=True,update_display=False)
             self.pg.display.update([used]+([self._hover_rect] if self._hover_rect else []))
             if live_context:self._redraw_live_context_overlay()
+            if menu_pointer:self._animate_menu_effects(now,force=True)
             return
-        if ctx and (bool(ctx.get('night',False)) or int(ctx.get('wetness',0))>=8):return
+        if ctx and (bool(ctx.get('night',False)) or int(ctx.get('wetness',0))>=8):
+            if menu_pointer:self._animate_menu_effects(now,force=True)
+            return
         self._animate_idle_water(now)
+        if menu_pointer:self._animate_menu_effects(now,force=True)
     def _fluid_overlay(self,tile_px:int):
         key=("water",tile_px);overlay=self._overlay_cache.get(key)
         if overlay is None:
