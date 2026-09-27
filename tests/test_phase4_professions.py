@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
-from worldseed.systems.activities import ActivitySystem, FeatureView if False else ActivitySystem
+from worldseed.systems.activities import ActivitySystem
 from worldseed.systems.economy import EconomySystem
 from worldseed.systems.physical_goods import SettlementPhysicalGoodsSystem
 from worldseed.systems.professions import SettlementProfessionSystem
