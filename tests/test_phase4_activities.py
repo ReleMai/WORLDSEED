@@ -139,6 +139,37 @@ class Phase4ActivityTests(unittest.TestCase):
         self.assertEqual([row.phase for row in reservations], ["heat", "shape"])
         self.assertEqual(len({row.target_uid for row in reservations}), 2)
 
+    def test_busy_physical_smithy_never_falls_back_to_ghost_work(self):
+        state, town, npc, physical, activities = self.fixture()
+        first_tasks = activities.plan_work(npc, town, 600)
+        self.assertTrue(first_tasks)
+
+        other = NPCState(
+            uid="npc:smith:waiting",
+            name="Waiting Smith",
+            age=29,
+            occupation="smith",
+            traits=[],
+            x=8,
+            y=9,
+            z=0,
+            settlement_id=town.uid,
+            faction_id=town.faction_id,
+            workplace_id=npc.workplace_id,
+            home_id="home:waiting",
+        )
+        state.npcs[other.uid] = other
+        calls = []
+        ai = NPCSystem(state, b"phase4-busy-test", NullHistory())
+        ai.attach_settlement_population(physical, SimpleNamespace(bind_settlement=lambda town: None))
+        ai.attach_activity_system(activities)
+        ai.attach_economy(SimpleNamespace(
+            representative_work=lambda actor, settlement, minute: calls.append(actor.uid)
+        ))
+        ai.generate_plan(other, town, 600, "work")
+        self.assertEqual(other.tasks, [])
+        self.assertEqual(calls, [])
+
     def test_ai_completes_smith_work_only_after_both_physical_activities(self):
         state, town, npc, physical, activities = self.fixture()
         calls = []
