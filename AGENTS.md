@@ -107,6 +107,10 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - Nearby NPC actions must consume the same terrain, doors, crossings, structures, inventories and authority seen by the player. Decisions may be abstract; local consequences may not teleport through physical constraints.
 - Activity affordances are transient read models derived from stable physical-plan objects. Exclusive use is represented by persistent activity reservations; never create a second free-floating station/workplace authority in AI code.
 - Physical named-worker activity must reconcile with existing labor/economy authority exactly once. A forge animation or station reservation may explain production, but must never mint a duplicate batch beside the aggregate labor reservation.
+- Named NPC inventory is authoritative carried cargo. Goods cannot exist simultaneously in an NPC inventory, a physical container and the aggregate settlement stock ledger unless an explicit transfer/logistics step accounts for each boundary.
+- When a named profession replaces an aggregate labor slot, subtract that represented slot before aggregate production. Exact mining, farming or workshop output must replace rather than supplement the corresponding anonymous batch.
+- Physical extraction changes the same world authority the player sees. Mining a generated cave vein must consume/deplete that terrain face through the normal world delta path; profession AI may not keep a private ore counter disconnected from cave state.
+- Profession planners may use bounded public read queries over deterministic generators (for example nearby cave entrances/geology), but must not scan infinite realized space or reach into private generator caches as a second authority.
 - Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
 
 ### RC14 release gates
