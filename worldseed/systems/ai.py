@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None;self.mining=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None;self.mining=None;self.professions=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -20,6 +20,7 @@ class NPCSystem:
     def attach_route_planner(self,system)->None:self.route_planner=system
     def attach_activity_system(self,system)->None:self.activities=system
     def attach_mining_profession(self,system)->None:self.mining=system
+    def attach_profession_system(self,system)->None:self.professions=system
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -34,11 +35,12 @@ class NPCSystem:
     def _tick_managed(self,npc:NPCState,player_pos:WorldPos)->bool:
         if self._is_active_local(npc,player_pos):
             return True
-        if self.mining is None or not self.mining.has_active_trip(npc):
+        mining_active=self.mining is not None and self.mining.has_active_trip(npc)
+        profession_active=self.professions is not None and self.professions.has_active_work(npc)
+        if not (mining_active or profession_active):
             return False
-        # A miner can leave immediate sight while traveling to a nearby cave.
-        # Tier B keeps that bounded explicit trip on the fixed tick; once the
-        # player leaves the area entirely, ordinary LOD/coarse cadence resumes.
+        # Explicit profession trips may cross the immediate viewport boundary.
+        # Tier B keeps those bounded physical plans on the fixed tick.
         if self.lod is not None:
             return self.lod.npc_tier(player_pos,npc)=="B"
         return max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=256
@@ -79,7 +81,8 @@ class NPCSystem:
             # later activity/reservation work gives them explicit durations.
             task=npc.tasks[0] if npc.tasks else {}
             task_kind=task.get("kind","")
-            physical_task=task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action")=="mining_deposit")
+            profession_task=self.professions is not None and self.professions.is_physical_task(task)
+            physical_task=profession_task or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action")=="mining_deposit")
             if execute_active or not active or not physical_task:self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
@@ -96,7 +99,8 @@ class NPCSystem:
             # remain coarse until activity durations/reservations are added.
             if npc.tasks:
                 task=npc.tasks[0];kind=task.get("kind")
-                if kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action")=="mining_deposit"):
+                profession_task=self.professions is not None and self.professions.is_physical_task(task)
+                if profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action")=="mining_deposit"):
                     self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
@@ -134,7 +138,8 @@ class NPCSystem:
             start,end={
                 "farmer":(6,15),"herder":(6,15),"merchant":(8,18),
                 "healer":(7,18),"scholar":(9,17),"priest":(7,15),
-                "miner":(7,16),"hunter":(6,14),
+                "miner":(7,16),"lumberjack":(6,15),"carpenter":(7,16),
+                "smith":(7,16),"cook":(6,18),"hunter":(6,14),
             }.get(npc.occupation,(8,17))
             if start<=hour<end:out["work"]+=55
         if hour in (7,12,18):out["eat"]+=55
@@ -180,6 +185,13 @@ class NPCSystem:
                     return
                 # A realized miner with a real workplace/cave authority must
                 # wait for a viable vein/reservation rather than mint abstract ore.
+                npc.tasks=[]
+                return
+            if self.professions is not None and self.professions.supports_physical_work(npc,town):
+                physical_tasks=self.professions.plan_work(npc,town,minute)
+                if physical_tasks:
+                    npc.tasks=physical_tasks
+                    return
                 npc.tasks=[]
                 return
             if self.activities is not None:
@@ -321,6 +333,9 @@ class NPCSystem:
                 elif task.get('on_complete')=='mining_extract' and self.mining is not None:
                     self.mining.complete_extract(npc,task.get('trip_uid',''),minute)
                     npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-12)
+                elif str(task.get('on_complete','')).startswith('profession_') and self.professions is not None:
+                    if self.professions.complete_activity(npc,town,task,minute):
+                        npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-14)
             elif status in {'failed','cancelled'}:
                 npc.tasks.pop(0)
             return
@@ -353,6 +368,8 @@ class NPCSystem:
             elif action=='workplace_pickup' and self.workplace_logistics is not None:self.workplace_logistics.pickup_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='workplace_dropoff' and self.workplace_logistics is not None:self.workplace_logistics.dropoff_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='mining_deposit' and self.mining is not None:self.mining.deposit(npc,town,task.get('trip_uid',''),task.get('container_uid',''),minute)
+            elif action=='profession_withdraw' and self.professions is not None:self.professions.withdraw(npc,town,task,minute)
+            elif action=='profession_deposit' and self.professions is not None:self.professions.deposit(npc,town,task,minute)
             elif action=='socialize':npc.needs['social']=max(0,npc.needs.get('social',0)-35)
         elif task['kind']=='social':
             npc.tasks.pop(0);other=self.state.npcs.get(task['target'])

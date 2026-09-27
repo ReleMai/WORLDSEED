@@ -111,6 +111,8 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - When a named profession replaces an aggregate labor slot, subtract that represented slot before aggregate production. Exact mining, farming or workshop output must replace rather than supplement the corresponding anonymous batch.
 - Physical extraction changes the same world authority the player sees. Mining a generated cave vein must consume/deplete that terrain face through the normal world delta path; profession AI may not keep a private ore counter disconnected from cave state.
 - Profession planners may use bounded public read queries over deterministic generators (for example nearby cave entrances/geology), but must not scan infinite realized space or reach into private generator caches as a second authority.
+- Phase 4 profession priority is miner -> lumberjack/farmer -> blacksmith/carpenter/cook, then additional settlement crafts. New exact professions must use the shared carried-inventory, activity-reservation, physical-container, and aggregate-labor reconciliation contracts rather than creating profession-specific hidden stock ledgers.
+- Exact farmers operate on persistent `CropPlot`/soil cells inside generated farm parcels; exact lumberjacks deplete the same natural-resource overlay the player sees; exact workshop professions must withdraw real inputs, occupy a real fixture for a duration, and place outputs into real storage.
 - Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
 
 ### RC14 release gates

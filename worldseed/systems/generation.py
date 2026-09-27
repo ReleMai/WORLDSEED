@@ -1,6 +1,6 @@
 from __future__ import annotations
 from worldseed.content.registry import ContentRegistry
-from worldseed.core.rng import PCG32, derive_seed
+from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.systems.names import culture_name, place_name, person_name, DEITIES
 from worldseed.systems.state import CultureState, ReligionState, FactionState, SettlementState, NPCState, MagicLaw
 
@@ -9,6 +9,17 @@ TABOOS=["oathbreaking","grave robbery","waste of food","killing sacred beasts","
 DOMAINS=["harvest","storms","war","hearth","death","craft","rivers","knowledge","wilds","justice"]
 RITUALS=["first-rain feast","ancestor vigil","forge blessing","river offering","winter lanterns","oath circle","harvest procession"]
 OCCUPATIONS=["farmer","hunter","miner","smith","carpenter","healer","merchant","guard","scholar","herder","priest"]
+
+def specialize_occupation(base:str,settlement_uid:str,index:int)->str:
+    """Add Phase-4 specializations without changing the legacy RNG draw order."""
+    base=str(base)
+    token=int(hash_u64(b"worldseed-profession-v1",settlement_uid,int(index),base)%100)
+    if base=="carpenter" and token<58:
+        return "lumberjack"
+    if base=="farmer" and token<16:
+        return "cook"
+    return base
+
 TRAITS=["patient","greedy","brave","cautious","curious","traditional","kind","ambitious","suspicious","stoic"]
 
 class ProceduralSocietyGenerator:
@@ -112,7 +123,8 @@ class ProceduralSocietyGenerator:
             # once the settlement is active. Until then representatives stay at
             # the settlement anchor instead of being scattered into arbitrary
             # walls, water, or resource cells.
-            npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,x,y,0,uid,f.uid,wealth=10+nr.randbelow(60)))
+            base_occ=nr.choice(OCCUPATIONS);occ=specialize_occupation(base_occ,uid,i)
+            npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),occ,traits,x,y,0,uid,f.uid,wealth=10+nr.randbelow(60)))
         return s,npcs,c,r,f
 
     def representatives_for_settlement(self,s:SettlementState,count:int|None=None)->list[NPCState]:
@@ -123,7 +135,8 @@ class ProceduralSocietyGenerator:
             while len(traits)<2:
                 t=nr.choice(TRAITS)
                 if t not in traits:traits.append(t)
-            out.append(NPCState(f"npc:{s.uid}:r{i}",person_name(nr),18+nr.randbelow(48),nr.choice(OCCUPATIONS),traits,s.x,s.y,0,s.uid,s.faction_id,wealth=10+nr.randbelow(60)))
+            base_occ=nr.choice(OCCUPATIONS);occ=specialize_occupation(base_occ,s.uid,i)
+            out.append(NPCState(f"npc:{s.uid}:r{i}",person_name(nr),18+nr.randbelow(48),occ,traits,s.x,s.y,0,s.uid,s.faction_id,wealth=10+nr.randbelow(60)))
         return out
 
 class MagicGenerator:

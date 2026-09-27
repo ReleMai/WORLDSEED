@@ -20,12 +20,12 @@ from worldseed.systems.state import (
 
 
 _STORAGE_FUNCTIONS = {
-    "residence": ("Household Chest", "core:wood_chest", ("core:wheat","core:turnip","core:dried_meat","core:clean_water","core:soap"), 3),
-    "smithy": ("Smithy Stores", "core:wood_storage_box", ("core:iron_bloom","core:stone","core:wood"), 3),
-    "workshop": ("Workshop Stores", "core:wood_storage_box", ("core:wood","core:leather","core:stone"), 3),
-    "mill": ("Mill Stores", "core:wood_storage_box", ("core:wheat","core:wood"), 3),
+    "residence": ("Household Chest", "core:wood_chest", ("core:wheat","core:turnip","core:meat","core:dried_meat","core:clean_water","core:soap"), 4),
+    "smithy": ("Smithy Stores", "core:wood_storage_box", ("core:iron_ore","core:coal","core:iron_bloom","core:wood","core:stone"), 5),
+    "workshop": ("Workshop Stores", "core:wood_storage_box", ("core:wood","core:plant_cordage","core:leather","core:stone"), 4),
+    "mill": ("Mill Stores", "core:wood_storage_box", ("core:wheat","core:wheat_seed","core:turnip_seed","core:wood"), 4),
     "fishery": ("Fishery Stores", "core:wood_storage_box", ("core:dried_meat","core:clean_water","core:wood"), 3),
-    "barn": ("Barn Stores", "core:storage_basket", ("core:wheat","core:turnip","core:wood"), 4),
+    "barn": ("Barn Stores", "core:storage_basket", ("core:wheat_seed","core:turnip_seed","core:wheat","core:turnip","core:wood"), 5),
     "clinic": ("Clinic Cabinet", "core:wood_storage_box", ("core:herbal_tonic","core:soap","core:clean_water"), 3),
     "watchhouse": ("Watchhouse Locker", "core:wood_chest", ("core:dried_meat","core:clean_water","core:wood"), 2),
     "archive": ("Archive Cabinet", "core:wood_chest", ("core:book","core:soap"), 2),

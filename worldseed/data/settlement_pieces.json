@@ -1714,13 +1714,13 @@
     "passable": true,
     "blocks_sight": false,
     "enclosure_role": "",
-    "workplace_role": "",
+    "workplace_role": "cook",
     "interior_allowed": true,
     "exterior_allowed": false,
     "road_access_required": false,
     "support_strength": 0,
     "comfort": 3,
-    "work_bonus": 0,
+    "work_bonus": 6,
     "materialization_family": "furniture"
   },
   {

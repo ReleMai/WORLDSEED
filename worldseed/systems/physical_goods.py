@@ -124,6 +124,75 @@ class SettlementPhysicalGoodsSystem:
         self.state.physical_goods_transfers[uid] = row
         return row
 
+    def stage_from_settlement(
+        self,
+        town,
+        container,
+        minute: int,
+        *,
+        items: dict[str, int],
+        source_kind: str = "settlement_stock",
+        source_uid: str = "",
+        metadata: dict | None = None,
+    ) -> PhysicalGoodsTransferState | None:
+        """Move aggregate settlement stock into one exact physical container.
+
+        This is an authority transition, not a copy: quantities leave town.stocks
+        as soon as they become locally materialized.
+        """
+        moved: dict[str, int] = {}
+        for item_id in sorted(items):
+            available=max(0,int(town.stocks.get(item_id,0)))
+            wanted=min(available,max(0,int(items[item_id])))
+            qty=min(wanted,self.container_fit(container,item_id))
+            if qty<=0:continue
+            town.stocks[item_id]=available-qty
+            container.items[item_id]=container.items.get(item_id,0)+qty
+            moved[item_id]=qty
+        if not moved:return None
+        uid=self.state.uid("physical-goods")
+        row=PhysicalGoodsTransferState(
+            uid=uid,settlement_id=str(town.uid),actor_uid="settlement",
+            container_uid=str(container.uid),direction="materialize",minute=int(minute),
+            items=moved,source_kind=str(source_kind),source_uid=str(source_uid),
+            metadata=dict(metadata or {}),
+        )
+        self.state.physical_goods_transfers[uid]=row
+        return row
+
+    def return_to_settlement(
+        self,
+        town,
+        container,
+        minute: int,
+        *,
+        items: dict[str, int],
+        source_kind: str = "market_delivery",
+        source_uid: str = "",
+        metadata: dict | None = None,
+    ) -> PhysicalGoodsTransferState | None:
+        """Aggregate exact stored goods back into settlement stock exactly once."""
+        moved: dict[str,int]={}
+        for item_id in sorted(items):
+            available=max(0,int(container.items.get(item_id,0)))
+            qty=min(available,max(0,int(items[item_id])))
+            if qty<=0:continue
+            left=available-qty
+            if left:container.items[item_id]=left
+            else:container.items.pop(item_id,None)
+            town.stocks[item_id]=town.stocks.get(item_id,0)+qty
+            moved[item_id]=qty
+        if not moved:return None
+        uid=self.state.uid("physical-goods")
+        row=PhysicalGoodsTransferState(
+            uid=uid,settlement_id=str(town.uid),actor_uid="settlement",
+            container_uid=str(container.uid),direction="aggregate",minute=int(minute),
+            items=moved,source_kind=str(source_kind),source_uid=str(source_uid),
+            metadata=dict(metadata or {}),
+        )
+        self.state.physical_goods_transfers[uid]=row
+        return row
+
     def withdraw(
         self,
         actor,

@@ -24,7 +24,7 @@
   {
     "id": "core:logging",
     "name": "Logging",
-    "occupation": "carpenter",
+    "occupation": "lumberjack",
     "workers": 1,
     "inputs": {},
     "outputs": {
@@ -156,5 +156,31 @@
       "core:soap": 1
     },
     "priority_good": "core:soap"
+  },
+  {
+    "id": "core:woodcraft",
+    "name": "Woodcraft production",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:wooden_bowl": 1
+    },
+    "priority_good": "core:wooden_bowl"
+  },
+  {
+    "id": "core:hearth_roast",
+    "name": "Hearth cooking",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:meat": 1
+    },
+    "outputs": {
+      "core:cooked_meat": 1
+    },
+    "priority_good": "core:cooked_meat"
   }
 ]
