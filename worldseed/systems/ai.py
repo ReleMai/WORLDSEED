@@ -47,6 +47,7 @@ class NPCSystem:
         fast-forwards may request execute_active to retain bounded legacy
         coarse progress instead of replaying every exact local tick.
         """
+        if self.activities is not None:self.activities.cleanup(minute)
         for npc in self.state.npcs.values():
             if not npc.alive:continue
             tier=None
@@ -68,6 +69,7 @@ class NPCSystem:
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
+        if self.activities is not None:self.activities.cleanup(minute)
         for npc in self.state.npcs.values():
             if not npc.alive or not self._is_active_local(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
