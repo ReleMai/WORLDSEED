@@ -244,7 +244,8 @@ class NPCSystem:
                 return
             exact=bool(task.get('exact',False))
             distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
-            if ((npc.x,npc.y)==(goal.x,goal.y)) if exact else (distance<=1):
+            reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
+            if reached:
                 npc.tasks.pop(0);return
             if self.world and abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60 and npc.z==player_pos.z:
                 def passable(p):
