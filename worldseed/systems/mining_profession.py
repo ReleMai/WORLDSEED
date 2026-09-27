@@ -233,6 +233,29 @@ class MiningProfessionSystem:
             {"kind": "perform", "action": "mining_deposit", "trip_uid": str(trip_uid), "container_uid": storage.uid},
         ]
 
+    def abstract_worker_claim(self, town, proc, day: int, available_workers: int) -> int:
+        """Remove exact named miners from the matching anonymous production slot.
+
+        A representative miner physically extracting ore replaces, rather than
+        supplements, the aggregate batch represented by that labor reservation.
+        """
+        if str(getattr(proc,"occupation",""))!="miner" or available_workers<=0:
+            return 0
+        reservation=self.state.labor_reservations.get(f"labor:{town.uid}:{proc.id}")
+        if reservation is None or not reservation.active or reservation.assigned_day!=int(day):
+            return 0
+        exact=0
+        for uid in sorted(reservation.representative_uids):
+            npc=self.state.npcs.get(uid)
+            if npc is None or not npc.alive or npc.occupation!="miner":
+                continue
+            if self.supports_physical_work(npc,town):
+                exact+=1
+        # The legacy representative materialization maps one named worker to one
+        # process batch; preserve that accounting boundary while moving its
+        # output into the physical cave/inventory/storage loop.
+        return min(max(0,int(available_workers)),exact*max(1,int(proc.workers)))
+
     def supports_physical_work(self, npc, town) -> bool:
         caves = getattr(self.world.generator, "caves", None)
         skeleton = self.physicalization.skeleton_for(town.uid) if self.physicalization is not None else None
