@@ -90,6 +90,22 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         ai.tick_update(65,player)
         self.assertEqual((npc.x,npc.y),(2,0))
 
+    def test_phase4_engine_replays_fixed_ticks_during_normal_advance(self):
+        class Harness:
+            pass
+        sim=Harness()
+        sim.clock=SimpleNamespace(minute=0)
+        sim.clock.advance=lambda minutes:setattr(sim.clock,'minute',sim.clock.minute+minutes)
+        sim.state=SimpleNamespace(clock_minute=0)
+        sim.player_pos=WorldPos(0,0,0)
+        calls=[]
+        sim.npcs=SimpleNamespace(tick_update=lambda minute,player:calls.append(minute))
+        sim._update_vitals=lambda minutes:None
+        Simulation._advance_time(sim,12)
+        self.assertEqual(calls,[5,10])
+        self.assertEqual(sim.clock.minute,12)
+        self.assertEqual(sim.state.clock_minute,12)
+
     def test_phase4_fixed_tick_does_not_multiply_nonmovement_effects(self):
         state,town,economy=self._economy()
         npc=NPCState(
