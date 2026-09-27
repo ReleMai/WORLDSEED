@@ -282,3 +282,26 @@ Status: implemented on the Phase 4 miner development branch pending Fast Gate pu
 The current mining-house implementation intentionally uses the miner's already-stable bound mining industrial property and adds a dedicated ore-bin authority inside it. It does not silently change the settlement-plan version or re-roll existing structure IDs. A future settlement-plan migration can promote this into a separately generated minehouse/workyard structure without invalidating current save geography.
 
 Next coherent work unit: connect smithing to the new physical-goods authority. Smiths should reserve/withdraw iron ore and coal from real settlement/mining storage, carry those inputs to the forge, consume them during the physical forge/anvil chain, and deposit the resulting bloom/product into physical smithy storage before market logistics can aggregate it.
+
+### Phase 4 Work Unit 4 - Settlement profession expansion
+
+Status: implemented on the Phase 4 profession development branch pending Fast Gate publication.
+
+- Expanded the exact-profession focus from miners to lumberjacks, farmers, blacksmiths/smiths, carpenters and cooks.
+- Added lumberjack and cook as deterministic NPC specializations without changing the legacy occupation RNG draw itself; some existing generated carpenter/farmer roles specialize by stable hash while already-saved NPC occupations remain authoritative.
+- Split settlement logging from carpenter labor into the lumberjack occupation. Added physical carpenter woodcraft and cook hearth-roast settlement processes.
+- Added shared `SettlementProfessionSystem` so new professions reuse the same persistent NPC inventory, skill XP, `ActivityReservationState`, physical storage and aggregate-labor reconciliation contracts instead of adding hidden profession ledgers.
+- Lumberjacks search a bounded area around their physical workplace for mature real trees, reserve a standing cell, spend timed work, deplete the same natural-resource overlay used by the player, carry wood/bark/branches, and deposit them into workplace storage.
+- Farmers work the real generated farm parcels. They withdraw real seed, plant persistent `CropPlot` cells, tend growing crops, harvest mature crops using crop yield/health state, carry the harvest, and deposit it into their physical farm workplace store.
+- Blacksmiths now require real ore/coal inputs. Inputs are withdrawn from physical settlement containers (including miner output bins when available), the actor performs reserved forge work, inputs are consumed from carried inventory, and the bloom is carried back to physical smithy storage.
+- Carpenters withdraw real wood, use a reserved carpenter fixture, produce woodcraft output, and return it to workshop storage.
+- Cooks are bound preferentially to residences that contain a real hearth fixture. They withdraw real meat, occupy the hearth for a timed cooking activity, create cooked food, and return it to household/workplace storage.
+- Added explicit aggregate-stock -> exact-container and exact-container -> aggregate-stock transfer APIs. Materialization subtracts from `SettlementState.stocks` immediately, preventing the same input from existing in both authorities.
+- Exact profession labor replaces the corresponding anonymous settlement production slot through the existing physical-labor authority hook. Physical production is never added on top of the same aggregate batch.
+- Added profession-specific persistent skills: woodcutting/forestry, farming/soilcraft, smithing/metallurgy, carpentry/joinery and cooking/hearthcraft, with hauling shared across physical goods jobs.
+- Nearby profession plans remain fixed-tick physical work and can continue through Tier B while the explicit trip is active, using bounded physical pathfinding rather than straight-line teleportation.
+- Property-storage seeding now includes the profession inputs needed by smithies, workshops, barns/mills and household cooks, but all staged quantities are transferred out of aggregate settlement stock.
+
+This work unit does not yet add completely new settlement-plan building types for cookhouses, lumber yards or carpentry halls. It deliberately reuses stable existing residence/workshop/barn/smithy plan IDs so current saves are not silently re-rolled. Dedicated profession buildings should be introduced later behind an explicit settlement-plan migration.
+
+Next profession work should broaden the same contract to millers/bakers, butchers, weavers/tanners, healers/herbalists and fishers, then add demand/market routing so physical profession outputs move from workplace storage into household, market and downstream-craft inputs through visible carriers.
