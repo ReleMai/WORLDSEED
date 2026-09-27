@@ -31,6 +31,18 @@ class NPCSystem:
             return self.lod.npc_tier(player_pos,npc)=="A"
         return npc.z==player_pos.z and max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=64
 
+    def _tick_managed(self,npc:NPCState,player_pos:WorldPos)->bool:
+        if self._is_active_local(npc,player_pos):
+            return True
+        if self.mining is None or not self.mining.has_active_trip(npc):
+            return False
+        # A miner can leave immediate sight while traveling to a nearby cave.
+        # Tier B keeps that bounded explicit trip on the fixed tick; once the
+        # player leaves the area entirely, ordinary LOD/coarse cadence resumes.
+        if self.lod is not None:
+            return self.lod.npc_tier(player_pos,npc)=="B"
+        return max(abs(npc.x-player_pos.x),abs(npc.y-player_pos.y))<=256
+
     def _advance_needs(self,npc:NPCState,town)->None:
         npc.hunger=min(100,npc.hunger+3);npc.thirst=min(100,npc.thirst+5);npc.rest=min(100,npc.rest+2)
         defaults={"social":20,"safety":15,"health":0,"faith":10,"learning":10,"purpose":20}
@@ -61,7 +73,7 @@ class NPCSystem:
             self._advance_needs(npc,town)
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
-            active=(tier=="A") if tier is not None else self._is_active_local(npc,player_pos)
+            active=self._tick_managed(npc,player_pos)
             # Normal Tier-A movement is owned by the fixed simulation tick, but
             # non-movement actions keep their coarse decision cadence until the
             # later activity/reservation work gives them explicit durations.
@@ -74,7 +86,7 @@ class NPCSystem:
         """Execute one deterministic action slice for physically active NPCs."""
         if self.activities is not None:self.activities.cleanup(minute)
         for npc in self.state.npcs.values():
-            if not npc.alive or not self._is_active_local(npc,player_pos):continue
+            if not npc.alive or not self._tick_managed(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
@@ -247,7 +259,10 @@ class NPCSystem:
             reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
             if reached:
                 npc.tasks.pop(0);return
-            if self.world and abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60 and npc.z==player_pos.z:
+            if self.world and (
+                bool(task.get('physical_path',False))
+                or (abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60 and npc.z==player_pos.z)
+            ):
                 def passable(p):
                     world_pass=self.world.is_passable(p)
                     if not world_pass and self.settlement_physicalization is not None:
