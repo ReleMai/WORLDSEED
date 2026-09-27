@@ -98,6 +98,15 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - Daughter settlements, reconstruction and abandonment must reuse the same regional siting and physical-plan contracts. Never found a historical settlement at an arbitrary random coordinate.
 - New regional planners require deterministic/generation-order tests, sparse-graph tests, crossing validity checks and bounded performance audits before promotion.
 
+### Grand Regional Civilization Phase 4 execution contract
+
+- NPC utility choice, plan construction and action execution are separate stages. Do not put pathfinding/movement side effects back inside utility scoring.
+- Physically active Tier-A NPC locomotion executes on the fixed WORLDSEED simulation tick anchored to absolute game minutes, not render frames and not the hourly scheduler.
+- Long waits/offline-style advances must remain bounded. They may fold exact local ticks into coarse updates rather than replaying every simulation tick across days or months.
+- Until activities gain explicit durations/reservations, only locomotion moves to the fixed tick; work/eating/social effects retain coarse cadence so the tick cannot multiply economic output.
+- Nearby NPC actions must consume the same terrain, doors, crossings, structures, inventories and authority seen by the player. Decisions may be abstract; local consequences may not teleport through physical constraints.
+- Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
+
 ### RC14 release gates
 
 New physical-world work must add deterministic tests and the relevant audits. At minimum preserve:
