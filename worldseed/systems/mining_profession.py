@@ -222,6 +222,22 @@ class MiningProfessionSystem:
             "exact": True, "physical_path": True, **extra,
         }
 
+    def _storage_use_position(self, storage) -> WorldPos:
+        rows=[]
+        room_id=str(getattr(storage,"room_id","") or "")
+        for dx,dy in ((0,-1),(-1,0),(1,0),(0,1)):
+            pos=WorldPos(int(storage.x)+dx,int(storage.y)+dy,int(storage.z))
+            if not self.world.is_passable(pos):
+                continue
+            if self.physicalization is not None and not self.physicalization.passable(pos,True):
+                continue
+            if room_id:
+                cell=self.physicalization.cell_at(pos) if self.physicalization is not None else None
+                if cell is not None and str(getattr(cell,"room_id","") or "") not in {"",room_id}:
+                    continue
+            rows.append((pos.y,pos.x,pos))
+        return min(rows,key=lambda row:row[:2])[2] if rows else WorldPos(int(storage.x),int(storage.y),int(storage.z))
+
     def _cargo_items(self, npc) -> dict[str, int]:
         return {
             item_id: int(qty)
@@ -230,7 +246,7 @@ class MiningProfessionSystem:
         }
 
     def _return_plan(self, npc, town, storage, *, trip_uid: str = "") -> list[dict]:
-        target = WorldPos(int(storage.x), int(storage.y), int(storage.z))
+        target = self._storage_use_position(storage)
         return [
             self._move_task(target, mining_trip_uid=trip_uid),
             {"kind": "perform", "action": "mining_deposit", "trip_uid": str(trip_uid), "container_uid": storage.uid},
@@ -345,7 +361,7 @@ class MiningProfessionSystem:
         self.state.mining_trips[trip_uid] = trip
         mouth = WorldPos(int(entrance.x), int(entrance.y), 0)
         shaft = WorldPos(int(entrance.x), int(entrance.y), target.z)
-        storage_pos = WorldPos(int(storage.x), int(storage.y), int(storage.z))
+        storage_pos = self._storage_use_position(storage)
         return [
             self._move_task(mouth, mining_trip_uid=trip_uid),
             {"kind": "mining_transition", "x": mouth.x, "y": mouth.y, "target_z": target.z, "trip_uid": trip_uid},
