@@ -45,6 +45,7 @@ class SettlementPhysicalizationSystem:
     ROAD_PIECES = {
         "path": "core:footpath_piece",
         "trail": "core:footpath_piece",
+        "service_path": "core:footpath_piece",
         "road": "core:dirt_lane_piece",
         "maintained_road": "core:cobble_road_piece",
     }
@@ -156,11 +157,11 @@ class SettlementPhysicalizationSystem:
             if piece is None:
                 continue
             changes = {}
-            if placement.role in {"wall", "partition", "entrance", "interior_door"}:
+            if placement.role in {"wall", "partition", "entrance", "interior_door", "yard_fence", "yard_gate"}:
                 changes["structure_piece_id"] = placement.piece_id
                 changes["structure_piece_uid"] = placement.uid
                 changes["structure_piece_role"] = placement.role
-            elif placement.role == "fixture":
+            elif placement.role in {"fixture", "yard_fixture"}:
                 changes["fixture_piece_id"] = placement.piece_id
             elif placement.role == "roof" or piece.category == "roof":
                 changes["roof_piece_id"] = placement.piece_id
