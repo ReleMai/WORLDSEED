@@ -86,7 +86,7 @@ class PropertyStorageSystem:
             x=int(x);y=int(y)
             if (x,y) in fixture_cells or (x,y) in occupied_npcs:
                 continue
-            if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
+            if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                 continue
             p=WorldPos(x,y,0)
             if not self.physicalization.passable(p,True):
@@ -98,7 +98,7 @@ class PropertyStorageSystem:
                 x=int(x);y=int(y)
                 if (x,y) in fixture_cells or (x,y) in occupied_npcs:
                     continue
-                if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
+                if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                     continue
                 p=WorldPos(x,y,0)
                 if self.physicalization.passable(p,True):
