@@ -441,7 +441,13 @@ class PygameTerminal(PointerUI):
                         if event.key==pg.K_ESCAPE and self._current_presentation=='world_context':
                             self._restore_context_overlay(clear=True,update=True)
                         return key_map[event.key]
-                    if self._input_mode!='text' and event.key in (pg.K_w,pg.K_a,pg.K_s,pg.K_d):continue
+                    if self._input_mode!='text' and event.key in (pg.K_w,pg.K_a,pg.K_s,pg.K_d):
+                        if self._current_presentation in {
+                            'inventory_unified','container_inventory','crafting_unified',
+                            'workshop_station','discovery_pot','crafting_index'
+                        }:
+                            return movement_keys[event.key]
+                        continue
                     if event.unicode:return event.unicode
                     continue
                 if not self._input_repeat_armed:
