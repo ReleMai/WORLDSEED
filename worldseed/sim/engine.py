@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass, field
-from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES
+import time
+from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES, ENGINE_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
@@ -60,6 +61,7 @@ from worldseed.systems.stealth import StealthSystem
 from worldseed.systems.property_intrusion import PhysicalKeySystem, PropertyStorageSystem, PropertySecuritySystem, CasingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
+from worldseed.debug import SessionDebugLog
 
 @dataclass(slots=True)
 class TickResult:
@@ -74,6 +76,8 @@ class Simulation:
         self.log:list[GameEvent]=[]
         self.state=state or LivingWorldState()
         self.seed=world_seed or world.generator.world_seed
+        self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
+        self.debug.event("simulation_init",turn=int(turn),clock_minute=int(self.state.clock_minute))
         # Runtime discovery index. Persisted state remains an ordered list for
         # stable saves, but membership checks and per-step updates use a set.
         self._discovered_tile_set=set(self.state.discovered_tiles)
@@ -284,6 +288,11 @@ class Simulation:
         if len(self.visual_effects)>24:del self.visual_effects[:-24]
 
     def execute(self,command:object)->TickResult:
+        command_started=time.perf_counter()
+        self.debug.event(
+            "command_start",command=type(command).__name__,turn=int(self.turn),
+            minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
+        )
         result=TickResult()
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
             # Developer arena commands deliberately bypass world time, ecology
@@ -380,6 +389,12 @@ class Simulation:
         self.turn+=1;self._advance_time(minutes);self._post_action()
         if isinstance(command,(GuardCommand,DodgeCommand,ParryCommand,BraceCommand)):
             self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
+        elapsed=(time.perf_counter()-command_started)*1000
+        self.debug.event(
+            "command_end",command=type(command).__name__,turn=int(self.turn),
+            minute=int(self.clock.minute),elapsed_ms=round(elapsed,3),slow=elapsed>=75.0,
+            position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
+        )
         return result
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
@@ -449,6 +464,7 @@ class Simulation:
         return summary
 
     def _advance_time(self,minutes:int)->None:
+        advance_started=time.perf_counter()
         old=self.clock.minute;self.clock.advance(minutes);self.state.clock_minute=self.clock.minute
         player=self.player_pos
         replay_active=should_replay_active_ticks(minutes)
@@ -460,7 +476,10 @@ class Simulation:
         # decisions run first and physical Tier-A execution follows.
         for minute in sorted(hourly_minutes|tick_minutes):
             if minute in hourly_minutes:
+                hourly_started=time.perf_counter()
                 self.environment.hourly_update(minute);affected_routes=self.route_planner.hourly_hazard_update(minute,self.environment);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.decision_update(minute,player,execute_active=not replay_active);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+                hourly_ms=(time.perf_counter()-hourly_started)*1000
+                if hourly_ms>=35:self.debug.event("hourly_tick",minute=int(minute),elapsed_ms=round(hourly_ms,3),slow=hourly_ms>=100)
                 if affected_routes:self._refresh_active_transport()
                 pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
                 if collapsed:
@@ -474,6 +493,13 @@ class Simulation:
             minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
             if day%30==0:self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
+        advance_ms=(time.perf_counter()-advance_started)*1000
+        if advance_ms>=20 or minutes>=60:
+            self.debug.event(
+                "time_advance",minutes=int(minutes),elapsed_ms=round(advance_ms,3),
+                hourly_boundaries=len(hourly_minutes),fixed_ticks=len(tick_minutes),
+                day_boundaries=max(0,new_day-old_day),slow=advance_ms>=100,
+            )
 
     def _update_vitals(self,minutes:int)->None:
         v=self.entities.try_get(self.player_id,Vitals)
@@ -524,82 +550,103 @@ class Simulation:
         if v.body_temp<20 or v.body_temp>85:v.hp=max(0,v.hp-1)
 
     def _ensure_nearby_world(self,pos:WorldPos,force:bool=False)->None:
-        """Realize coarse systems only when their spatial cell changes.
+        """Realize local civilization in bounded stages and log their cost.
 
-        RC9 called settlement generation, institution setup, economy repricing
-        and ecology materialization after *every* movement step.  Those systems
-        are spatially coarse, so rerunning them at 20-30 Hz was pure latency.
+        Strategic region plans may exist around the player, but named society,
+        physical buildings and NPC binding are materialized only for the active
+        512-cell region. This prevents entering a village from synchronously
+        constructing up to nine neighboring settlements on the UI thread.
         """
         rx,ry=pos.x//512,pos.y//512
         region_key=(rx,ry)
         if force or region_key!=self._nearby_region_key:
-            realized=set(self.state.realized_regions)
-            for ax in range(rx-1,rx+2):
-                for ay in range(ry-1,ry+2):realized.add(f"{ax},{ay}")
-            self.state.realized_regions=sorted(realized)
-            for ax in range(rx-1,rx+2):
-                for ay in range(ry-1,ry+2):
-                    # Persist the cheap strategic block before society is
-                    # materialized. This gives terrain/roads/site selection one
-                    # stable regional authority without spawning local content.
-                    self.region_planner.plan(ax,ay,persist=True)
-                    key=f"settlement:{ax}:{ay}"
-                    if key not in self.state.settlements:
-                        generated=self.society_gen.settlement_for_cell(ax,ay)
-                        if generated:
-                            s,npcs,c,r,f=generated;self.state.cultures.setdefault(c.uid,c);self.state.religions.setdefault(r.uid,r);self.state.factions.setdefault(f.uid,f);self.state.settlements[s.uid]=s
-                            for npc in npcs:self.state.npcs[npc.uid]=npc
-                            self.macrohistory.ensure_region(ax,ay,s.name,c.name)
-                    elif key in self.state.settlements:
-                        s=self.state.settlements[key]
-                        if not any(n.alive and n.settlement_id==s.uid for n in self.state.npcs.values()):
-                            for npc in self.society_gen.representatives_for_settlement(s):self.state.npcs[npc.uid]=npc
-            # Rebuild the sparse graph only across settlements already
-            # realized by exploration. RoutePlanner remains bounded by its
-            # regional partner window and never scans Tier-E infinity.
-            if self.route_planner.version>=3:
-                self.route_planner.sync_network(self.state.settlements.values(),persist=True)
-            else:
+            self.debug.event("region_activation_start",region=region_key,force=bool(force),
+                             settlements=len(self.state.settlements),npcs=len(self.state.npcs))
+            generated_new=False
+            with self.debug.stage("region_plans",region=region_key):
+                realized=set(self.state.realized_regions)
+                for ax in range(rx-1,rx+2):
+                    for ay in range(ry-1,ry+2):
+                        realized.add(f"{ax},{ay}")
+                        # Neighbor blocks are cheap strategic context only.
+                        self.region_planner.plan(ax,ay,persist=True)
+                self.state.realized_regions=sorted(realized)
+
+            with self.debug.stage("active_society",region=region_key,warn_ms=120):
+                key=f"settlement:{rx}:{ry}"
+                if key not in self.state.settlements:
+                    generated=self.society_gen.settlement_for_cell(rx,ry)
+                    if generated:
+                        s,npcs,culture,religion,faction=generated
+                        self.state.cultures.setdefault(culture.uid,culture)
+                        self.state.religions.setdefault(religion.uid,religion)
+                        self.state.factions.setdefault(faction.uid,faction)
+                        self.state.settlements[s.uid]=s
+                        for npc in npcs:self.state.npcs[npc.uid]=npc
+                        self.macrohistory.ensure_region(rx,ry,s.name,culture.name)
+                        generated_new=True
+                elif key in self.state.settlements:
+                    settlement=self.state.settlements[key]
+                    if not any(n.alive and n.settlement_id==settlement.uid for n in self.state.npcs.values()):
+                        for npc in self.society_gen.representatives_for_settlement(settlement):
+                            self.state.npcs[npc.uid]=npc
+
+            # Movement-time route work is strictly local. Full-network cleanup
+            # belongs to monthly/background simulation, not a one-tile step.
+            with self.debug.stage("local_routes",region=region_key,warn_ms=120):
                 self.route_planner.sync(self.state.settlements.values(),(rx,ry),radius=2,persist=True)
-            # Physicalize only the active region. Distant settlements remain
-            # stable plan records and never inflate local collision/render state.
-            self.settlement_physicalization.sync(
-                self.state.settlements.values(),(rx,ry),radius=0
-            )
-            # Generated natural containers/resources are lower spatial
-            # authority than the stable settlement plan.  Prune only untouched
-            # generated caches that now collide with houses or their apron.
-            self.building.clear_conflicting_generated_natural_containers()
-            self.settlement_population.reconcile_active(self.state.settlements.values())
-            self.settlement_population.bind_active(self.state.settlements.values())
-            for settlement_id in self.settlement_physicalization.active_settlement_ids:
-                self.family.ensure_settlement_identity(settlement_id)
-                town=self.state.settlements.get(settlement_id)
-                if town is not None:self.economy.ensure_currency(town)
-            for settlement in self.state.settlements.values():
-                if abs(settlement.region_x-rx)<=1 and abs(settlement.region_y-ry)<=1:
-                    self.civics.ensure_settlement(settlement.uid)
-                    self.institutions.ensure_settlement(settlement.uid)
-            self.property_storage.sync_active()
-            self.property_security.sync_active()
-            self.property_security.update_scheduled_locks(self.clock.minute)
+
+            with self.debug.stage("settlement_physicalization",region=region_key,warn_ms=150):
+                self.settlement_physicalization.sync(
+                    self.state.settlements.values(),(rx,ry),radius=0
+                )
+            with self.debug.stage("settlement_collision_cleanup",region=region_key):
+                self.building.clear_conflicting_generated_natural_containers()
+            with self.debug.stage("settlement_population",region=region_key,warn_ms=120):
+                self.settlement_population.reconcile_active(self.state.settlements.values())
+                self.settlement_population.bind_active(self.state.settlements.values())
+
+            active_ids=tuple(self.settlement_physicalization.active_settlement_ids)
+            with self.debug.stage("active_settlement_identity",region=region_key):
+                for settlement_id in active_ids:
+                    self.family.ensure_settlement_identity(settlement_id)
+                    town=self.state.settlements.get(settlement_id)
+                    if town is not None:
+                        self.economy.ensure_currency(town)
+                        self.civics.ensure_settlement(town.uid)
+                        self.institutions.ensure_settlement(town.uid)
+
+            with self.debug.stage("property_sync",region=region_key,warn_ms=120):
+                self.property_storage.sync_active()
+                self.property_security.sync_active()
+                self.property_security.update_scheduled_locks(self.clock.minute)
+
             if self.state.player_casing_property_id and self.settlement_physicalization.structure_by_id(self.state.player_casing_property_id) is None:
                 self.state.player_casing_property_id=""
             if self.state.player_trespass_property_id and self.settlement_physicalization.structure_by_id(self.state.player_trespass_property_id) is None:
                 self.state.player_trespass_property_id=""
-            self.magic.ensure_traditions();self.magic.ensure_rituals();self.economy.update_prices()
+
+            if force or generated_new:
+                with self.debug.stage("region_global_refresh",region=region_key,warn_ms=120):
+                    self.magic.ensure_traditions()
+                    self.magic.ensure_rituals()
+                    self.economy.update_prices()
             self._nearby_region_key=region_key
+            self.debug.event("region_activation_end",region=region_key,active_settlements=list(active_ids),
+                             generated_new=generated_new,settlements=len(self.state.settlements),npcs=len(self.state.npcs))
 
         eco_key=(pos.x//256,pos.y//256,0 if pos.z>=0 else pos.z)
         if force or eco_key!=self._nearby_ecology_key:
-            self.ecology.materialize_near(pos,0)
-            self.ecology.dematerialize_far(pos)
+            with self.debug.stage("ecology_activation",cell=eco_key,warn_ms=100):
+                self.ecology.materialize_near(pos,0)
+                self.ecology.dematerialize_far(pos)
             self._nearby_ecology_key=eco_key
 
         if pos.z<0:
             dungeon_key=(pos.x//32,pos.y//32,pos.z)
             if force or dungeon_key!=self._nearby_dungeon_key:
-                self.dungeons.activate_at(pos,self.clock.minute)
+                with self.debug.stage("dungeon_activation",cell=dungeon_key,warn_ms=100):
+                    self.dungeons.activate_at(pos,self.clock.minute)
                 self._nearby_dungeon_key=dungeon_key
         else:
             self._nearby_dungeon_key=None
@@ -1075,8 +1122,11 @@ class Simulation:
                 plan=self.region_planner.plan(rx,ry,persist=True)
                 label=plan.dominant_biome.replace('_',' ')
                 self._message(f"You enter a {label} region from the {side}.")
+            # Ordinary one-tile movement is intentionally silent. Terrain is
+            # already visible in the HUD/hover UI; logging every step drowned
+            # meaningful discoveries, hazards, security and combat events.
             else:
-                self._message(f"You move across {self.world.tile_at(new).terrain.name.lower()}.")
+                pass
     def _vertical(self,cmd:VerticalMoveCommand,result:TickResult)->None:
         pc=self.entities.get(cmd.actor,Position);here=self.world.tile_at(pc.value)
         if "shaft" not in here.terrain.tags:
@@ -1889,5 +1939,8 @@ class Simulation:
         v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100
         self.entities.get(self.player_id,Position).value=WorldPos(0,0,0);self._message("Your character dies. The world continues. A successor enters the same timeline.")
     def _message(self,message:str)->None:
-        self.log.append(GameEvent(self.turn,message));
+        self.log.append(GameEvent(self.turn,message))
         if len(self.log)>150:del self.log[:-150]
+        # Messages are useful for reconstructing a bad playtest but routine
+        # movement no longer emits one line per terrain cell.
+        self.debug.event("game_message",turn=int(self.turn),minute=int(self.clock.minute),message=str(message))

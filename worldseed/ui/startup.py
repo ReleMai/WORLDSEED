@@ -4,7 +4,7 @@ import random
 from pathlib import Path
 import json, sqlite3, time, secrets
 from worldseed.config import DEFAULT_SAVE_DIR, ENGINE_VERSION
-from worldseed.ui.widgets import select_menu, prompt_text, panel, view_text
+from worldseed.ui.widgets import MenuRow, select_menu, prompt_text, panel, view_text
 
 @dataclass(frozen=True, slots=True)
 class StartSelection:
@@ -96,12 +96,12 @@ def _load_menu(term,saves:list[SaveSummary])->StartSelection|None:
 
 
 ATTRIBUTE_DEFS = [
-    ('strength','Strength','Melee force and physical work.'),
-    ('agility','Agility','Movement, reactions and weapon handling.'),
-    ('endurance','Endurance','Health, stamina and exposure tolerance.'),
-    ('intellect','Intellect','Learning, crafting and technical understanding.'),
-    ('perception','Perception','Sight, tracking and environmental awareness.'),
-    ('will','Will','Pain tolerance, fear resistance and difficult magic.'),
+    ('strength','Strength','Raises melee force, carrying/physical-work performance, and tasks that depend on raw power.'),
+    ('agility','Agility','Improves movement control, reactions, dodging and precise weapon handling.'),
+    ('endurance','Endurance','Supports health, stamina, swimming/travel efficiency and resistance to exposure or exhaustion.'),
+    ('intellect','Intellect','Improves learning, research, crafting judgment and technical or scholarly work.'),
+    ('perception','Perception','Improves sight radius, tracking, observation, ranged awareness and noticing environmental details.'),
+    ('will','Will','Improves pain/fear resistance, concentration under pressure and demanding magical actions.'),
 ]
 SKILL_DEFS = [
     ('athletics','Athletics','Travel and physical endurance.'),
@@ -216,9 +216,16 @@ def _allocate_talents(term,selected_keys:list[str])->list[str]|None:
             if i==idx:body.append(f'    {hint}')
         body+=['','↑/↓ select   Enter buy   ← remove   Esc back', 'When all talent points are spent, Enter on an owned talent continues.']
         if getattr(term,'mouse_ui',False):
-            rows=[(key,f"{'Selected' if key in selected else 'Buy'} — {label} ({cost} points)") for key,label,cost,_ in TALENT_DEFS]
-            if remaining==0:rows.append(('__continue__','Continue'))
-            choice=select_menu(term,'TALENTS',rows,subtitle=f'{remaining} points left. Click a talent to buy or remove it.')
+            rows=[
+                MenuRow(
+                    key,
+                    f"{'Selected' if key in selected else 'Buy'} — {label} ({cost} points)",
+                    hint,
+                )
+                for key,label,cost,hint in TALENT_DEFS
+            ]
+            if remaining==0:rows.append(MenuRow('__continue__','Continue','Finish character creation with the selected talents.'))
+            choice=select_menu(term,'TALENTS',rows,subtitle=f'{remaining} points left. Select a talent to see exactly what it changes.')
             if choice is None:return None
             if choice=='__continue__':return sorted(selected)
             cost=next(c for key,_,c,_ in TALENT_DEFS if key==choice)
@@ -341,21 +348,58 @@ def new_game_wizard(term)->StartSelection|None:
         if not mode:return None
         build=_point_buy(term) if mode=='build' else _random_character_menu(term)
         if build is None:continue
+
+        overview=getattr(term,'present_creation_overview',None)
+        if callable(overview):
+            attrs=[
+                {'name':label,'value':build['attributes'][key],'description':hint}
+                for key,label,hint in ATTRIBUTE_DEFS
+            ]
+            skills=[
+                {'name':label,'value':build['skills'][key],'description':hint}
+                for key,label,hint in SKILL_DEFS if build['skills'][key]>0
+            ]
+            talents=[
+                {'name':label,'description':hint}
+                for key,label,_,hint in TALENT_DEFS if key in set(build['talents'])
+            ]
+            overview('character',{
+                'name':player,'sex':sex,'sprite_index':sprite_index,
+                'sprite_label':PLAYER_SPRITE_LABELS[sprite_index],
+                'attributes':attrs,'skills':skills,'talents':talents,
+            })
+            k=term.read_key()
+            if k=='ESC':continue
+
         start_mode=select_menu(term,'STARTING LOCATION',[
-            ('wilderness','Wilderness — standard survival start'),
-            ('village','Village — begin beside a generated settlement for testing and settlement play'),
-        ],subtitle='Village start uses the same seeded settlement generator; it only changes where the player begins.')
+            MenuRow('wilderness','Wilderness — standard survival start','Begin away from organized settlement life and establish yourself through exploration and survival.'),
+            MenuRow('village','Village — settlement-focused start','Begin beside a generated settlement so homes, professions, trade and civilization are immediately accessible.'),
+        ],subtitle='Starting location changes only where this survivor begins; the seeded world remains the same.')
         if not start_mode:continue
+
         summary=[f'World: {world}',f'Seed: {seed}',f'Character: {player}',f'Sex: {sex.title()}',f'Sprite: {PLAYER_SPRITE_LABELS[sprite_index]}','']+_build_summary(build)+['']
         while True:
-            term.present(panel('BEGIN WORLD',summary,min(96,term.size()[0]-2),'Continue begins • Back cancels'))
+            if callable(overview):
+                overview('world',{
+                    'world_name':world,'seed':seed,'start_mode':start_mode,
+                    'character_name':player,'sex':sex,'sprite_label':PLAYER_SPRITE_LABELS[sprite_index],
+                    'attributes':[
+                        {'name':label,'value':build['attributes'][key]}
+                        for key,label,_ in ATTRIBUTE_DEFS
+                    ],
+                    'talents':[
+                        label for key,label,_,_ in TALENT_DEFS if key in set(build['talents'])
+                    ],
+                })
+            else:
+                term.present(panel('BEGIN WORLD',summary,min(96,term.size()[0]-2),'Continue begins • Back cancels'))
             k=term.read_key();kl=k.lower() if len(k)==1 else k
             if k=='ESC':break
             if kl in ('RIGHT','\r','\n',' '):
                 path=DEFAULT_SAVE_DIR/f'{safe_name(world)}.db'
                 if path.exists():path=DEFAULT_SAVE_DIR/f'{safe_name(world)}_{secrets.token_hex(2)}.db'
                 return StartSelection(path,True,world,seed.encode().hex(),player,start_mode,build,sex,sprite_index)
-        # back from confirmation returns to build/random choice
+        # back from world overview returns to build/random choice
 
 
 def main_menu(term)->StartSelection|None:

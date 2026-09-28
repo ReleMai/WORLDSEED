@@ -1089,22 +1089,44 @@ class SettlementSkeletonPlanner:
                             if index%2==0:
                                 place(fence,cell,"yard_fence")
 
-        for cell in sorted(interior,key=lambda p:(p[1],p[0])):
-            place(floor_piece,cell,"floor")
+        # Floors and roofs visually fill the entire footprint, including the
+        # wall shell. Collision still comes from the wall/door pieces, but the
+        # ground no longer shows a one-tile moat around walls and exterior roofs
+        # now read as continuous eaves instead of stopping inside the shell.
+        for cell in sorted(shell|interior,key=lambda p:(p[1],p[0])):
+            if cell!=entrance:
+                place(floor_piece,cell,"floor")
             place(roof_piece,cell,"roof")
-
+        # Entrance already received a threshold floor above.
+        
         fixture_tags={}
         interior_sorted=sorted(interior,key=lambda p:(p[1],p[0]))
         if interior_sorted:
+            # Reserve a two-cell circulation corridor from the exterior door.
+            # Workstations, market stalls and furniture must never claim the
+            # entrance-side cells required to walk into or out of the building.
+            door_clearance={
+                cell for cell in interior_sorted
+                if abs(cell[0]-entrance_inside[0])+abs(cell[1]-entrance_inside[1])<=1
+            }
+            safe_cells=[cell for cell in interior_sorted if cell not in door_clearance]
+            if not safe_cells:safe_cells=list(interior_sorted)
             if large and partition_cells:
                 px=x0+width//2
-                left_cells=[p for p in interior_sorted if p[0]<px]
-                right_cells=[p for p in interior_sorted if p[0]>px]
-                fixture_slots=[("primary",left_cells[0] if left_cells else interior_sorted[0]),
-                               ("secondary",right_cells[-1] if right_cells else interior_sorted[-1])]
+                left_cells=[p for p in safe_cells if p[0]<px]
+                right_cells=[p for p in safe_cells if p[0]>px]
+                primary_pool=left_cells or safe_cells
+                secondary_pool=right_cells or safe_cells
+                fixture_slots=[
+                    ("primary",max(primary_pool,key=lambda p:(abs(p[0]-entrance_inside[0])+abs(p[1]-entrance_inside[1]),-p[1],-p[0]))),
+                    ("secondary",max(secondary_pool,key=lambda p:(abs(p[0]-entrance_inside[0])+abs(p[1]-entrance_inside[1]),p[1],p[0]))),
+                ]
             else:
-                fixture_slots=[("primary",interior_sorted[0])]
+                fixture_slots=[("primary",max(safe_cells,key=lambda p:(abs(p[0]-entrance_inside[0])+abs(p[1]-entrance_inside[1]),-p[1],-p[0])))]
+            used_fixture_cells=set()
             for side,cell in fixture_slots:
+                if cell in used_fixture_cells:continue
+                used_fixture_cells.add(cell)
                 fixture=self._fixture_piece(function,side)
                 if fixture is None:
                     continue
@@ -1117,7 +1139,8 @@ class SettlementSkeletonPlanner:
         occupied_decor={(p.x,p.y) for p in placements if p.role in {"fixture","entrance","interior_door","partition"}}
         decor_cells=[
             cell for cell in interior_sorted
-            if cell not in occupied_decor and cell!=entrance_inside
+            if cell not in occupied_decor
+            and abs(cell[0]-entrance_inside[0])+abs(cell[1]-entrance_inside[1])>1
         ]
         clutter_ids=list(self._clutter_profile(function))
         for index,piece_id in enumerate(clutter_ids):

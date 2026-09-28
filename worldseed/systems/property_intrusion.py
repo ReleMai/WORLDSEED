@@ -86,7 +86,7 @@ class PropertyStorageSystem:
             x=int(x);y=int(y)
             if (x,y) in fixture_cells or (x,y) in occupied_npcs:
                 continue
-            if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
+            if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                 continue
             p=WorldPos(x,y,0)
             if not self.physicalization.passable(p,True):
@@ -98,7 +98,7 @@ class PropertyStorageSystem:
                 x=int(x);y=int(y)
                 if (x,y) in fixture_cells or (x,y) in occupied_npcs:
                     continue
-                if entrance is not None and (x,y)==(int(entrance[0]),int(entrance[1])):
+                if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                     continue
                 p=WorldPos(x,y,0)
                 if self.physicalization.passable(p,True):
@@ -711,8 +711,8 @@ class CasingSystem:
         structure=self._structure(property_id)
         if structure is None:
             return False,"That property is not physically present."
-        if self._distance_to_structure(player_pos,structure)>2:
-            return False,"Move next to the property before casing it."
+        if self._distance_to_structure(player_pos,structure)>5:
+            return False,"Move within sight of the property before casing it."
         settlement_id=self._settlement_id(property_id)
         if not settlement_id:
             return False,"That property is outside the active settlement."
@@ -785,6 +785,24 @@ class CasingSystem:
                     ring.add(q)
         return ring
 
+    def _survey_targets(self, structure) -> set[tuple[int,int]]:
+        """Exterior cells that can meaningfully be surveyed.
+
+        Dense villages can place another home's wall immediately beside a
+        property. Those occupied cells are not required for a complete casing
+        survey because no person could physically stand there. Remaining
+        exterior cells can be learned by sightline from nearby streets/yards.
+        """
+        out=set()
+        for x,y in self._perimeter(structure):
+            p=WorldPos(int(x),int(y),0)
+            cell=self.physicalization.cell_at(p)
+            if cell is not None and cell.structure_id and cell.structure_id!=structure.uid:
+                continue
+            if self.physicalization.passable(p,True):
+                out.add((int(x),int(y)))
+        return out or self._perimeter(structure)
+
     def observe_step(self, player_pos: WorldPos, minute: int, stealth) -> list[str]:
         property_id=str(self.state.player_casing_property_id or "")
         if not property_id:
@@ -800,13 +818,22 @@ class CasingSystem:
 
         messages=[]
         changed=False
-        perimeter=self._perimeter(structure)
+        perimeter=self._survey_targets(structure)
         surveyed=set(intel.surveyed_cells)
-        if (player_pos.x,player_pos.y) in perimeter:
-            token=f"{player_pos.x},{player_pos.y}"
+        # Casing is an observation activity, not a requirement to squeeze the
+        # avatar into every alley around a building. Every exposed exterior cell
+        # within a short sightline can be surveyed from the current vantage.
+        for x,y in sorted(perimeter):
+            if abs(player_pos.x-x)+abs(player_pos.y-y)>6:
+                continue
+            target=WorldPos(x,y,player_pos.z)
+            if not stealth.visible_from(player_pos,target):
+                continue
+            token=f"{x},{y}"
             if token not in surveyed:
                 surveyed.add(token);changed=True
-                intel.surveyed_cells=sorted(surveyed)[-96:]
+        if changed:
+            intel.surveyed_cells=sorted(surveyed)[-160:]
 
         if structure.entrance is not None:
             entrance=WorldPos(int(structure.entrance[0]),int(structure.entrance[1]),0)
@@ -885,7 +912,7 @@ class CasingSystem:
         structure=self._structure(property_id) if property_id else None
         if intel is None or structure is None:
             return {"active":False}
-        perimeter=self._perimeter(structure)
+        perimeter=self._survey_targets(structure)
         surveyed={
             tuple(int(v) for v in token.split(",",1))
             for token in intel.surveyed_cells if "," in token

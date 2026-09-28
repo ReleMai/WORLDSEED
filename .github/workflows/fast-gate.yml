@@ -116,6 +116,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui
 
+      - name: WU7 village stability and debugger regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "WU7 village stability and debugger regressions" --timeout 90 -- python -u -m unittest -v tests.test_wu7_village_stability_debug
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

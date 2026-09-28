@@ -335,3 +335,25 @@ Status: implementation complete on the workshop expansion branch pending final F
 - NPC settlement representatives can specialize into miller, baker, butcher, fisher, weaver, tanner, brewer, potter and mason. Their exact work uses the shared physical profession contract with inventory, input withdrawal, reserved station duration, output cargo/storage and aggregate-labor reconciliation.
 - Item-art contract tightened: every item now carries a unique sprite_tag equal to its unique asset basename; newly created items must include a custom PNG in the same work unit.
 - Final art closure adds unique custom sprites for Flour, Rustic Bread, Woven Cloth, Small Ale, Dressed Stone and Smoked Fish rather than reusing Wheat, Cooked Meat, Fiber, Berries or Stone art.
+
+
+### Work Unit 7 - Village stability, interaction polish, and continuous debugger
+
+Status: implementation complete on `wu7-village-stability-debug-ux`; targeted Fast Gate coverage added under the updated main testing contract.
+
+- Added an append-only rotating JSONL `SessionDebugLog` that records command timing, UI inputs, activation-stage timings, saves, slow simulation advances and full exception tracebacks. Crash summaries now point directly to the session debug log so a playtest freeze/crash has a shareable causal trace instead of only a final stack trace.
+- Village activation is bounded to the active 512-cell region. Neighboring regions receive only cheap strategic plans; named society creation, settlement physicalization, population binding, property synchronization and other exact work happen only for the active region. Movement-time route work uses bounded local `RoutePlanner.sync(... radius=2)` instead of rebuilding the complete realized network.
+- Added named stage timings around regional planning, active society creation, local routes, settlement physicalization, population binding, property sync, ecology activation and dungeon activation so debugger logs identify the exact stall source.
+- Nearby named NPC movement caches its local path on the active task and consumes several valid steps per fixed tick, avoiding repeated A* work for the same goal while preserving collision/path validity checks.
+- Routine one-tile movement no longer floods the activity feed with terrain-repeat messages; meaningful region entries, discoveries, hazards, security, combat and interaction messages remain visible.
+- Generated buildings reserve a two-cell circulation area around entrances for fixtures/clutter and property storage also avoids the entrance-adjacent cells. Roof/floor presentation now covers the full shell footprint so exterior architecture reads as a continuous building rather than an inset interior patch.
+- Property casing now surveys exposed exterior cells by short physical sightline and excludes exterior cells occupied by neighboring structures. Dense settlements no longer require the player to stand in inaccessible one-tile gaps to complete a survey.
+- The graphical renderer keeps discovered static settlement/player-built architecture as dimmed map memory outside current LOS while live actors, wildlife, fluids, fires, crops, tracks and loose piles remain current-visibility-only.
+- Right-click world interactions now expose generated workshop fixtures, market trading, and private property-storage inspection/lock interaction from the physical tile itself.
+- Retained inventory, storage and crafting panels allow live WASD world movement while open and provide cross-panel controls without turning UI focus into a second movement/navigation authority.
+- Character creation received dedicated graphical text-entry/point-allocation presentation, and gameplay now includes graphical character/world overview screens exposing the build and current-world state more directly.
+- Validation follows the revised repository contract: bounded targeted checks plus the automatic Fast Gate once the coherent PR is published. Long release/nightly suites are not part of this ordinary work unit.
+
+Known limitation: static map memory intentionally remembers only physical architecture. Dynamic fixture/container contents, moving NPCs, weather effects and changing loose-world objects are never frozen into remembered snapshots.
+
+Next dependency: use the new JSONL stage timings from real playtests to identify any remaining long-tail village stalls, then move the most expensive confirmed stage off the immediate input path only if profiling shows it is still necessary.
