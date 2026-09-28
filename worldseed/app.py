@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass
 from pathlib import Path
-import secrets,sys,time,traceback
+import json,secrets,sys,time,traceback
 from worldseed.debug import debug_log_path
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
@@ -496,6 +496,7 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     emit('World ready',1.0,f'Spawn {pos.x}, {pos.y}  •  prepared exploration area loaded')
     sim.state.last_offline_wall_time=time.time();return GameContext(db,reg,world,entities,sim,player)
 def _save(ctx:GameContext, *, backup:bool=True)->None:
+    started=time.perf_counter()
     p=ctx.entities.get(ctx.player_id,Position).value;inv=ctx.entities.get(ctx.player_id,Inventory);v=ctx.entities.get(ctx.player_id,Vitals);ctx.sim.state.last_offline_wall_time=time.time()
     # Rotating full-database backups are intentionally reserved for explicit
     # save/menu/quit checkpoints. Copying an ever-growing generated-world DB on
@@ -505,6 +506,10 @@ def _save(ctx:GameContext, *, backup:bool=True)->None:
         ctx.db.backup(3)
     ctx.db.set_meta('last_saved_at',time.time());ctx.db.set_meta('player_name',ctx.sim.state.player_name);ctx.db.set_meta('player_origin',ctx.sim.state.player_origin);ctx.db.set_meta('player_sex',ctx.sim.state.player_sex);ctx.db.set_meta('player_sprite_index',int(ctx.sim.state.player_sprite_index))
     ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=ctx.world.drain_dirty_tiles(),player_id=ctx.player_id,position=p,inventory=inv.items,vitals=asdict(v),sim_state=ctx.sim.state.to_dict())
+    try:
+        ctx.sim.debug.event("save",backup=bool(backup),elapsed_ms=round((time.perf_counter()-started)*1000,3),turn=int(ctx.sim.turn),world=str(ctx.db.path))
+        ctx.sim.debug.flush()
+    except Exception:pass
 
 def _select(terminal:Terminal,title:str,rows:list[tuple[str,str]],allow_escape=True,**kwargs)->str|None:
     return select_menu(terminal,title,rows,allow_escape=allow_escape,**kwargs)
@@ -2983,12 +2988,61 @@ def _map_key(key:str,pid:int):
     if k=='j':return HarvestCommand(pid)
     return None
 
+def _diagnostics_view(ctx:GameContext,term:Terminal)->str:
+    """Show the exact playtest log users can hand back for diagnosis."""
+    path=Path(debug_log_path(ctx.sim))
+    try:ctx.sim.debug.flush()
+    except Exception:pass
+    slow=[]
+    recent_errors=[]
+    if path.exists():
+        try:
+            lines=path.read_text(encoding='utf-8',errors='replace').splitlines()[-600:]
+            for raw in lines:
+                try:row=json.loads(raw)
+                except Exception:continue
+                if row.get('kind')=='stage' and row.get('slow'):
+                    slow.append(f"{row.get('name','stage')}: {row.get('elapsed_ms',0)} ms")
+                elif row.get('kind')=='command_end' and row.get('slow'):
+                    slow.append(f"{row.get('command','command')}: {row.get('elapsed_ms',0)} ms")
+                elif row.get('kind')=='exception':
+                    recent_errors.append(f"{row.get('where','runtime')}: {row.get('error','')}")
+        except OSError:pass
+    size=path.stat().st_size if path.exists() else 0
+    lines=[
+        'WORLDSEED writes one bounded JSONL diagnostics stream for this play session.',
+        '',
+        'DEBUG LOG',
+        str(path),
+        f'Size: {size/1024:.1f} KB',
+        f'Turn: {ctx.sim.turn}  Minute: {ctx.sim.clock.minute}',
+        f'Position: {ctx.sim.player_pos.x}, {ctx.sim.player_pos.y}, z{ctx.sim.player_pos.z}',
+        '',
+        'WHAT IT RECORDS',
+        '• engine commands and elapsed time',
+        '• region/village activation stages and slow-stage flags',
+        '• UI actions and gameplay messages',
+        '• saves and performance timing',
+        '• crashes/exceptions with full Python traceback',
+    ]
+    if slow:lines+=['','RECENT SLOW OPERATIONS']+['• '+row for row in slow[-12:]]
+    if recent_errors:lines+=['','RECENT ERRORS']+['• '+row for row in recent_errors[-6:]]
+    lines+=['','If a freeze or crash occurs, send this JSONL file together with WORLDSEED_CRASH.log if one was created.']
+    _view_text(term,box('SESSION DIAGNOSTICS',lines,screen_width(term.size()[0],112)))
+    return UI_BACK
+
 def _pause_menu(ctx:GameContext,term:Terminal)->str:
     while True:
-        choice=_select(term,'PAUSED',[('resume','Resume game'),('save','Save game'),('console','Open World Console'),('menu','Save & return to main menu'),('quit','Save & quit WORLDSEED')],allow_escape=True)
+        choice=_select(term,'PAUSED',[
+            ('resume','Resume game'),('save','Save game'),
+            ('diagnostics','Session diagnostics / debug log'),
+            ('console','Open World Console'),('menu','Save & return to main menu'),
+            ('quit','Save & quit WORLDSEED')
+        ],allow_escape=True)
         if not choice:return 'resume'
         if choice=='resume':return 'resume'
         if choice=='save':_save(ctx);return 'saved'
+        if choice=='diagnostics':_diagnostics_view(ctx,term);continue
         if choice=='console':_world_console(ctx,term);continue
         if choice=='menu':_save(ctx);return 'menu'
         if choice=='quit':_save(ctx);return 'quit'
