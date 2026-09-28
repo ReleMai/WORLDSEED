@@ -3668,7 +3668,8 @@
       "trade_good"
     ],
     "base_value": 6,
-    "sprite_tag": "flour"
+    "sprite_tag": "flour",
+    "flavor": "Fine dust clings to the sack seams and every careless sleeve."
   },
   {
     "id": "core:bread",
@@ -3699,7 +3700,8 @@
     "fat": 6,
     "fiber": 10,
     "base_value": 11,
-    "sprite_tag": "rustic_bread"
+    "sprite_tag": "rustic_bread",
+    "flavor": "A dark crust, a dense crumb, and enough weight to count as a meal."
   },
   {
     "id": "core:woven_cloth",
@@ -3720,7 +3722,8 @@
       "trade_good"
     ],
     "base_value": 14,
-    "sprite_tag": "woven_cloth"
+    "sprite_tag": "woven_cloth",
+    "flavor": "Warp and weft pulled tight enough to survive hard use."
   },
   {
     "id": "core:small_ale",
@@ -3751,7 +3754,8 @@
     "fat": 0,
     "fiber": 0,
     "base_value": 12,
-    "sprite_tag": "small_ale"
+    "sprite_tag": "small_ale",
+    "flavor": "Weak enough for the workday, valuable enough to trade."
   },
   {
     "id": "core:dressed_stone",
@@ -3773,7 +3777,8 @@
       "trade_good"
     ],
     "base_value": 9,
-    "sprite_tag": "dressed_stone"
+    "sprite_tag": "dressed_stone",
+    "flavor": "Chisel lines make rough rock fit where a wall needs certainty."
   },
   {
     "id": "core:smoked_fish",
@@ -3805,6 +3810,7 @@
     "fat": 22,
     "fiber": 0,
     "base_value": 18,
-    "sprite_tag": "smoked_fish"
+    "sprite_tag": "smoked_fish",
+    "flavor": "Smoke and salt turn a day's catch into food that can travel."
   }
 ]
