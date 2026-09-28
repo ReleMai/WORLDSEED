@@ -126,6 +126,90 @@ class PointerUI:
         self._ui_navigation(confirm=True)
         pg.display.flip();self.clock.tick(120)
 
+    def present_creation_overview(self,kind,data):
+        """Graphical review screens for character and world creation."""
+        pg=self.pg;screen=self.screen
+        label='CHARACTER OVERVIEW' if kind=='character' else 'WORLD OVERVIEW'
+        x,y,w,h=self._draw_chrome(f'WORLDSEED // {label}')
+        self._paint_menu_veil((x,y,w,h));self._set_input_mode('ui')
+        panel_w=max(860,min(1180,w-70));panel_h=max(540,min(720,h-80))
+        panel=pg.Rect(x+(w-panel_w)//2,y+(h-panel_h)//2,panel_w,panel_h)
+        pg.draw.rect(screen,(17,22,23),panel,border_radius=10)
+        pg.draw.rect(screen,self._theme['accent'],panel,2,border_radius=10)
+        heading=self.title_font.render(label,True,self._theme['accent']);screen.blit(heading,(panel.x+24,panel.y+20))
+        pg.draw.line(screen,self._theme['edge'],(panel.x+20,panel.y+60),(panel.right-20,panel.y+60),1)
+        body=pg.Rect(panel.x+20,panel.y+76,panel.width-40,panel.height-150)
+
+        if kind=='character':
+            left=pg.Rect(body.x,body.y,240,body.height)
+            right=pg.Rect(left.right+16,body.y,body.right-left.right-16,body.height)
+            for rr in (left,right):
+                pg.draw.rect(screen,self._theme['panel'],rr,border_radius=7);pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=7)
+            name=str(data.get('name','Wanderer'));sex=str(data.get('sex','male'));index=int(data.get('sprite_index',0))
+            ns=self.title_font.render(self._fit_ui_text(name,self.title_font,left.width-28),True,self._theme['text']);screen.blit(ns,(left.x+14,left.y+14))
+            meta=self.small_font.render(f"{sex.title()} · {data.get('sprite_label','Appearance')}",True,self._theme['muted']);screen.blit(meta,(left.x+14,left.y+45))
+            paths=getattr(self,'_visuals',None)
+            sprite_paths=paths.player_paths(sex) if paths is not None else ()
+            if sprite_paths:
+                frame=pg.Rect(left.x+24,left.y+82,left.width-48,260)
+                pg.draw.rect(screen,(12,17,18),frame,border_radius=6);pg.draw.rect(screen,self._theme['edge_hi'],frame,1,border_radius=6)
+                sprite=self._load_sprite(sprite_paths[max(0,min(index,len(sprite_paths)-1))],frame.width-18,frame.height-18)
+                if sprite is not None:screen.blit(sprite,(frame.centerx-sprite.get_width()//2,frame.bottom-sprite.get_height()-8))
+            note=self.small_font.render('This is the build that will enter the world.',True,self._theme['muted']);screen.blit(note,(left.x+14,left.bottom-30))
+
+            cols=3;gap=10;col_w=(right.width-gap*2-24)//3
+            sections=[
+                ('ATTRIBUTES',data.get('attributes',[])),
+                ('TRAINED SKILLS',data.get('skills',[])),
+                ('TALENTS',data.get('talents',[])),
+            ]
+            for ci,(section,rows) in enumerate(sections):
+                rr=pg.Rect(right.x+8+ci*(col_w+gap),right.y+8,col_w,right.height-16)
+                pg.draw.rect(screen,(24,29,30),rr,border_radius=6);pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=6)
+                hs=self.small_font.render(section,True,self._theme['accent']);screen.blit(hs,(rr.x+10,rr.y+10));yy=rr.y+38
+                for row in list(rows)[:12]:
+                    if yy+42>rr.bottom-8:break
+                    if isinstance(row,dict):
+                        nm=str(row.get('name',''));val=row.get('value',None);desc=str(row.get('description',''))
+                    else:nm=str(row);val=None;desc=''
+                    label=nm+(f'  {val}' if val is not None else '')
+                    ls=self.small_font.render(self._fit_ui_text(label,self.small_font,rr.width-20),True,self._theme['text']);screen.blit(ls,(rr.x+10,yy));yy+=18
+                    if desc:
+                        ds=self.small_font.render(self._fit_ui_text(desc,self.small_font,rr.width-20),True,self._theme['muted']);screen.blit(ds,(rr.x+10,yy));yy+=20
+                    else:yy+=8
+        else:
+            left=pg.Rect(body.x,body.y,int(body.width*.55),body.height)
+            right=pg.Rect(left.right+16,body.y,body.right-left.right-16,body.height)
+            for rr in (left,right):
+                pg.draw.rect(screen,self._theme['panel'],rr,border_radius=7);pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=7)
+            world=str(data.get('world_name','New World'));seed=str(data.get('seed',''));start=str(data.get('start_mode','wilderness')).replace('_',' ').title()
+            ws=self.title_font.render(self._fit_ui_text(world,self.title_font,left.width-30),True,self._theme['text']);screen.blit(ws,(left.x+15,left.y+16))
+            cards=[('WORLD SEED',seed),('START',start),('SURVIVOR',str(data.get('character_name','Wanderer'))),('APPEARANCE',f"{str(data.get('sex','male')).title()} · {data.get('sprite_label','')}")]
+            yy=left.y+62
+            for lab,val in cards:
+                rr=pg.Rect(left.x+14,yy,left.width-28,62)
+                pg.draw.rect(screen,(24,29,30),rr,border_radius=5);pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=5)
+                screen.blit(self.small_font.render(lab,True,self._theme['muted']),(rr.x+10,rr.y+8))
+                vv=self.font.render(self._fit_ui_text(str(val),self.font,rr.width-20),True,self._theme['text']);screen.blit(vv,(rr.x+10,rr.y+30));yy+=72
+            screen.blit(self.small_font.render('BEGINNING PROFILE',True,self._theme['accent']),(right.x+12,right.y+12))
+            yy=right.y+42
+            for row in data.get('attributes',[]):
+                nm=str(row.get('name',''));val=int(row.get('value',0))
+                screen.blit(self.small_font.render(nm,True,self._theme['text']),(right.x+12,yy))
+                bar=pg.Rect(right.x+112,yy+4,right.width-136,8);pg.draw.rect(screen,(45,50,49),bar,border_radius=3)
+                fill=pg.Rect(bar.x,bar.y,round(bar.width*max(0,min(10,val))/10),bar.height)
+                if fill.width:pg.draw.rect(screen,self._theme['accent'],fill,border_radius=3)
+                yy+=28
+            yy+=10;screen.blit(self.small_font.render('TALENTS',True,self._theme['accent']),(right.x+12,yy));yy+=25
+            for talent in data.get('talents',[])[:8]:
+                screen.blit(self.small_font.render('• '+str(talent),True,self._theme['text']),(right.x+15,yy));yy+=22
+
+        self._menu_nav_rect=panel
+        self._ui_navigation(confirm=True)
+        footer=self.small_font.render('Review the choices above. Continue confirms this stage; Back returns to edit.',True,self._theme['muted'])
+        screen.blit(footer,(panel.centerx-footer.get_width()//2,panel.bottom-34))
+        pg.display.flip();self.clock.tick(120)
+
     def present_allocation(self,title,rows,selected,remaining):
         """Two-pane point allocation with controls separate from row hit targets."""
         pg=self.pg;screen=self.screen
