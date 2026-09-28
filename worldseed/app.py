@@ -2422,6 +2422,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             )
             status=''
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
             if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
@@ -2452,6 +2456,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                            subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
             status=''
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
             if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice.startswith('UI_ACTION:category_page:'):
@@ -2486,6 +2494,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                                               'known':sum(sim.crafting.recipe_is_discovered(r.id) for r in pool)},
                            subtitle='Possible recipes for the selected carried item.')
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes'
             elif choice=='UI_ACTION:tab:workshops':tab='workshops'
             elif choice=='UI_ACTION:tab:discovery':tab='discovery'
@@ -2517,6 +2529,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                        subtitle=status or 'Combine up to five carried materials. The grid color shows how close the mix is to a discoverable recipe.',presentation_data=data)
         status=''
         if choice is None:return UI_BACK
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:status=moved;continue
+        if choice=='UI_ACTION:open_inventory':
+            _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
         if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
         if choice=='UI_ACTION:tab:index':tab='index';continue
