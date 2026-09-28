@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from pathlib import Path
 import secrets,sys,time,traceback
+from worldseed.debug import debug_log_path
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
@@ -2904,6 +2905,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     while True:
         _present_game_frame(term,ctx,renderer,last);last=''
         key=term.read_key()
+        try:
+            ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
+        except Exception:
+            pass
         if key.startswith('UI_WORLD_MENU:'):
             _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
         intent=classify_key(key)
@@ -2998,25 +3003,33 @@ def main()->int:
                 outcome=run_game(ctx,term)
             except WindowCloseRequested:
                 _save(ctx);return 0
-            except Exception:
-                # Preserve an actionable traceback instead of leaving a playtest
-                # with only a transient window freeze/close. Do not claim
-                # recovery of corrupted state; return to the world selector
-                # after recording diagnostics.
+            except Exception as exc:
+                # Session diagnostics are continuous, so a crash adds the full
+                # traceback and state location to the same shareable JSONL log.
+                try:
+                    ctx.sim.debug.exception(
+                        "run_game",exc,turn=int(ctx.sim.turn),minute=int(ctx.sim.clock.minute),
+                        position=(ctx.sim.player_pos.x,ctx.sim.player_pos.y,ctx.sim.player_pos.z),
+                        world=str(ctx.db.path),
+                    )
+                except Exception:
+                    pass
                 report=Path.cwd()/'WORLDSEED_CRASH.log'
                 report.write_text(
                     f'WORLDSEED {ENGINE_VERSION} crash at {time.ctime()}\n'
                     f'world={ctx.db.path}\nturn={ctx.sim.turn}\n'
-                    f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n\n'
+                    f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n'
+                    f'debug_log={debug_log_path(ctx.sim)}\n\n'
                     +traceback.format_exc(),
                     encoding='utf-8',
                 )
                 try:
                     _view_text(term,box('WORLDSEED ERROR',[
                         'The current session stopped because of an unexpected error.',
-                        f'Crash details were written to {report.name}.',
-                        'Please keep that file with the seed/coordinates when reporting the issue.'
-                    ],min(96,term.size()[0]-2)))
+                        f'Crash summary: {report.name}',
+                        f'Session debug log: {debug_log_path(ctx.sim)}',
+                        'Send both files with the seed/coordinates when reporting the issue.'
+                    ],min(110,term.size()[0]-2)))
                 except Exception:
                     pass
                 outcome='menu'
