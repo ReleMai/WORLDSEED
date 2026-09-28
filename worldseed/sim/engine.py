@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass, field
-from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES
+import time
+from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES, ENGINE_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
@@ -60,6 +61,7 @@ from worldseed.systems.stealth import StealthSystem
 from worldseed.systems.property_intrusion import PhysicalKeySystem, PropertyStorageSystem, PropertySecuritySystem, CasingSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
+from worldseed.debug import SessionDebugLog
 
 @dataclass(slots=True)
 class TickResult:
@@ -74,6 +76,8 @@ class Simulation:
         self.log:list[GameEvent]=[]
         self.state=state or LivingWorldState()
         self.seed=world_seed or world.generator.world_seed
+        self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
+        self.debug.event("simulation_init",turn=int(turn),clock_minute=int(self.state.clock_minute))
         # Runtime discovery index. Persisted state remains an ordered list for
         # stable saves, but membership checks and per-step updates use a set.
         self._discovered_tile_set=set(self.state.discovered_tiles)
@@ -284,6 +288,11 @@ class Simulation:
         if len(self.visual_effects)>24:del self.visual_effects[:-24]
 
     def execute(self,command:object)->TickResult:
+        command_started=time.perf_counter()
+        self.debug.event(
+            "command_start",command=type(command).__name__,turn=int(self.turn),
+            minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
+        )
         result=TickResult()
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
             # Developer arena commands deliberately bypass world time, ecology
@@ -380,6 +389,12 @@ class Simulation:
         self.turn+=1;self._advance_time(minutes);self._post_action()
         if isinstance(command,(GuardCommand,DodgeCommand,ParryCommand,BraceCommand)):
             self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
+        elapsed=(time.perf_counter()-command_started)*1000
+        self.debug.event(
+            "command_end",command=type(command).__name__,turn=int(self.turn),
+            minute=int(self.clock.minute),elapsed_ms=round(elapsed,3),slow=elapsed>=75.0,
+            position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
+        )
         return result
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
@@ -1075,8 +1090,11 @@ class Simulation:
                 plan=self.region_planner.plan(rx,ry,persist=True)
                 label=plan.dominant_biome.replace('_',' ')
                 self._message(f"You enter a {label} region from the {side}.")
+            # Ordinary one-tile movement is intentionally silent. Terrain is
+            # already visible in the HUD/hover UI; logging every step drowned
+            # meaningful discoveries, hazards, security and combat events.
             else:
-                self._message(f"You move across {self.world.tile_at(new).terrain.name.lower()}.")
+                pass
     def _vertical(self,cmd:VerticalMoveCommand,result:TickResult)->None:
         pc=self.entities.get(cmd.actor,Position);here=self.world.tile_at(pc.value)
         if "shaft" not in here.terrain.tags:
@@ -1889,5 +1907,8 @@ class Simulation:
         v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100
         self.entities.get(self.player_id,Position).value=WorldPos(0,0,0);self._message("Your character dies. The world continues. A successor enters the same timeline.")
     def _message(self,message:str)->None:
-        self.log.append(GameEvent(self.turn,message));
+        self.log.append(GameEvent(self.turn,message))
         if len(self.log)>150:del self.log[:-150]
+        # Messages are useful for reconstructing a bad playtest but routine
+        # movement no longer emits one line per terrain cell.
+        self.debug.event("game_message",turn=int(self.turn),minute=int(self.clock.minute),message=str(message))
