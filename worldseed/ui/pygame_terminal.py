@@ -3540,23 +3540,37 @@ class PygameTerminal(PointerUI):
                 flow_speed=int(getattr(current,'speed',0) or 0) if current is not None else 0
                 water_cells.append((rect.copy(),display_id,flow_dx,flow_dy,flow_speed))
                 screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
+        def _blit_static_memory(surf, dest, key):
+            """Render discovered static world geometry outside current LOS dimmed."""
+            if surf is None:return
+            if pos_key(*key) in visible:
+                screen.blit(surf,dest);return
+            cached_key=('remembered-static',id(surf))
+            remembered=self._overlay_cache.get(cached_key)
+            if remembered is None:
+                remembered=surf.copy();remembered.set_alpha(138)
+                self._overlay_cache[cached_key]=remembered
+            screen.blit(remembered,dest)
+
         if settlement_by:
             for (wx,wy,wz),cell in sorted(settlement_by.items(),key=lambda kv:(kv[0][1],kv[0][0])):
-                if wz!=pos.z or pos_key(wx,wy,wz) not in visible or not cell.ground_piece_id:continue
+                key=(wx,wy,wz)
+                if wz!=pos.z or pos_key(wx,wy,wz) not in known or not cell.ground_piece_id:continue
                 piece=registry.settlement_pieces.get(cell.ground_piece_id)
-                bits=self._settlement_connection_bits((wx,wy,wz),cell,settlement_by,registry,ground=True)
+                bits=self._settlement_connection_bits(key,cell,settlement_by,registry,ground=True)
                 surf=self._settlement_ground_surface(piece,tile_px,bits)
                 if surf is not None:
-                    rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px);screen.blit(surf,rect.topleft)
+                    rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                    _blit_static_memory(surf,rect.topleft,key)
         for key,placed in structure_by.items():
             piece=self._placed_building_piece(placed.structure_id)
-            if piece is None or piece.category!='floor' or pos_key(*key) not in visible:continue
+            if piece is None or piece.category!='floor' or pos_key(*key) not in known:continue
             wx,wy,wz=key
             bits=self._placed_building_bits(key,structure_by,piece)
             surf=self._settlement_ground_surface(piece,tile_px,bits)
             if surf is not None:
                 rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
-                screen.blit(surf,rect.topleft)
+                _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
 
@@ -3610,8 +3624,10 @@ class PygameTerminal(PointerUI):
         )
         for wx,wy,wz in sorted(overlay_keys,key=lambda q:(q[1],q[0])):
             if wz!=pos.z or not (left<=wx<=right and top<=wy<=bottom):continue
-            if pos_key(wx,wy,pos.z) not in visible:continue
-            k=(wx,wy,pos.z);sx=wx-left;sy=wy-top
+            k=(wx,wy,pos.z);pk=pos_key(*k)
+            if pk not in known:continue
+            is_visible=pk in visible
+            sx=wx-left;sy=wy-top
             rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
             scell=settlement_by.get(k)
             if scell:
@@ -3620,7 +3636,7 @@ class PygameTerminal(PointerUI):
                     roof_piece=registry.settlement_pieces.get(scell.roof_piece_id)
                     roof_bits=self._settlement_roof_bits(k,scell,settlement_by)
                     roof_surf=self._settlement_roof_surface(roof_piece,tile_px,roof_bits)
-                    if roof_surf is not None:screen.blit(roof_surf,rect.topleft)
+                    _blit_static_memory(roof_surf,rect.topleft,k)
                 # Interior partitions/doors belong below the roof and should not
                 # telegraph the floor plan while the player is outside. Exterior
                 # shell pieces have no roof cell and remain visible.
@@ -3629,16 +3645,19 @@ class PygameTerminal(PointerUI):
                     piece=registry.settlement_pieces.get(scell.structure_piece_id)
                     bits=self._settlement_connection_bits(k,scell,settlement_by,registry,ground=False)
                     surf=self._settlement_wall_surface(piece,tile_px,bits,scell.structure_piece_role)
-                    if surf is not None:screen.blit(surf,rect.topleft)
-                if scell.fixture_piece_id and not roofed:self._draw_settlement_piece(registry.settlement_pieces.get(scell.fixture_piece_id),rect,fixture=True)
-            if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
-            feature=resource_by.get(k)
-            if feature:
-                fv,rp=feature
-                self._draw_resource_feature(fv,rp,rect)
-            if k in crop_by:
-                crop=crop_by[k];ref=self._visuals.ref('crops',crop.crop_id);stage=2 if crop.mature else (1 if crop.growth>=45 else 0)
-                self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
+                    _blit_static_memory(surf,rect.topleft,k)
+                if scell.fixture_piece_id and not roofed:
+                    if is_visible:
+                        self._draw_settlement_piece(registry.settlement_pieces.get(scell.fixture_piece_id),rect,fixture=True)
+                    else:
+                        # Draw remembered fixtures to a temporary tile so their
+                        # dim state does not mutate the shared sprite cache.
+                        mem_tile=pg.Surface((tile_px,tile_px),pg.SRCALPHA)
+                        old_screen=self.screen;self.screen=mem_tile
+                        try:self._draw_settlement_piece(registry.settlement_pieces.get(scell.fixture_piece_id),pg.Rect(0,0,tile_px,tile_px),fixture=True)
+                        finally:self.screen=old_screen
+                        mem_tile.set_alpha(138);screen.blit(mem_tile,rect.topleft)
+            # Player-built structures and property storage are static memory too.
             if k in structure_by:
                 st=structure_by[k];piece=self._placed_building_piece(st.structure_id)
                 if piece is not None:
@@ -3647,12 +3666,35 @@ class PygameTerminal(PointerUI):
                         surf=self._settlement_wall_surface(piece,tile_px,bits,'entrance' if piece.category=='opening' else 'wall')
                     elif piece.category=='roof':
                         surf=self._settlement_roof_surface(piece,tile_px,bits)
-                    else:surf=None  # Floors are drawn under the actors.
-                    if surf is not None:screen.blit(surf,rect.topleft)
-                else:self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',st.structure_id)),rect,1.35)
+                    else:surf=None
+                    _blit_static_memory(surf,rect.topleft,k)
+                else:
+                    path=self._visuals.resolve(self._visuals.ref('structures',st.structure_id))
+                    surf=self._load_sprite(path,int(tile_px*1.35),int(tile_px*1.35))
+                    if surf is not None:
+                        copy=surf if is_visible else surf.copy()
+                        if not is_visible:copy.set_alpha(138)
+                        screen.blit(copy,(rect.centerx-copy.get_width()//2,rect.bottom-copy.get_height()))
             if k in property_container_by:
-                pc=property_container_by[k]
-                self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures',pc.source_id)),rect,.95)
+                pc=property_container_by[k];path=self._visuals.resolve(self._visuals.ref('structures',pc.source_id))
+                surf=self._load_sprite(path,int(tile_px*1.35),int(tile_px*.95))
+                if surf is not None:
+                    copy=surf if is_visible else surf.copy()
+                    if not is_visible:copy.set_alpha(138)
+                    screen.blit(copy,(rect.centerx-copy.get_width()//2,rect.bottom-copy.get_height()))
+            if not is_visible:
+                # Never remember live actors, fires, fluids, wildlife, crop
+                # growth, tracks or loose piles as if their old positions were
+                # still current. Static architecture alone persists in memory.
+                continue
+            if k in fluid_by:screen.blit(self._fluid_overlay(tile_px),rect.topleft)
+            feature=resource_by.get(k)
+            if feature:
+                fv,rp=feature
+                self._draw_resource_feature(fv,rp,rect)
+            if k in crop_by:
+                crop=crop_by[k];ref=self._visuals.ref('crops',crop.crop_id);stage=2 if crop.mature else (1 if crop.growth>=45 else 0)
+                self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
             if k in pile_by:
                 iid=next(iter(pile_by[k].items));self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('items',iid)),rect,.8)
             if k in carcass_by:
