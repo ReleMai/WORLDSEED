@@ -322,3 +322,16 @@ Status: implemented on the profession-yard development branch pending Fast Gate 
 
 Next coherent exterior pass: give residential homes profession-linked domestic details and add small shared settlement amenities (crossroads wells, lamp/sign posts, benches, drying lines, cart/handbarrow parking) while preserving clear movement corridors and avoiding decorative clutter.
 
+### Phase 4 Work Unit 6 - Specialist workshops, clutter, and station UI
+
+Status: implementation complete on the workshop expansion branch pending final Fast Gate.
+
+- Settlement plan v7 adds dedicated baker, butcher, weaver, tanner, potter, brewer, mason, miller and fishery workshop footprints alongside existing smithy, carpentry, cook/healer and farm infrastructure.
+- Homes and workshops now receive persistent passable tile-clutter placements derived from function: smith tools/scrap, carpentry offcuts/shavings, grain/flour sacks, bread racks, yarn/cloth, hides/tannin tubs, butcher hooks/boards, pottery shelves/jars, kegs/buckets, herbs/bottles, masonry chips/tools, nets/fish baskets, and domestic crockery/laundry/pantry/hearth wood.
+- Generated workshop fixtures are exposed as the same usable crafting stations as player-built structures through stable station aliases.
+- Added dedicated workshop presentation profiles and graphical UI with workshop tabs, station switching, purpose text, station-specific action labels, recipe readiness, material counts, outputs, skill/difficulty/time, and actual CraftCommand execution.
+- Added player-buildable station authorities for millstone, bakery oven, loom, pottery wheel, brewery vat, herbalist table, masonry bench and fish smoke rack.
+- Added workshop production goods and chains: flour/bread, woven cloth, small ale, dressed stone and smoked fish, plus existing leather, pottery, medicine, butchery and smith/carpentry outputs.
+- NPC settlement representatives can specialize into miller, baker, butcher, fisher, weaver, tanner, brewer, potter and mason. Their exact work uses the shared physical profession contract with inventory, input withdrawal, reserved station duration, output cargo/storage and aggregate-labor reconciliation.
+- Item-art contract tightened: every item now carries a unique sprite_tag equal to its unique asset basename; newly created items must include a custom PNG in the same work unit.
+- Final art closure adds unique custom sprites for Flour, Rustic Bread, Woven Cloth, Small Ale, Dressed Stone and Smoked Fish rather than reusing Wheat, Cooked Meat, Fiber, Berries or Stone art.

@@ -18,7 +18,8 @@
       "fuel",
       "construction",
       "craft_input"
-    ]
+    ],
+    "sprite_tag": "wood"
   },
   {
     "id": "core:stone",
@@ -38,7 +39,8 @@
       "construction",
       "primitive_craft",
       "masonry"
-    ]
+    ],
+    "sprite_tag": "stone"
   },
   {
     "id": "core:brush",
@@ -59,7 +61,8 @@
       "fuel",
       "cordage_input",
       "bedding"
-    ]
+    ],
+    "sprite_tag": "brush"
   },
   {
     "id": "core:fiber",
@@ -77,7 +80,8 @@
     "utility_roles": [
       "cordage",
       "craft_input"
-    ]
+    ],
+    "sprite_tag": "fiber"
   },
   {
     "id": "core:berries",
@@ -107,7 +111,8 @@
     "protein": 2,
     "carbs": 18,
     "fat": 0,
-    "fiber": 4
+    "fiber": 4,
+    "sprite_tag": "berries"
   },
   {
     "id": "core:meat",
@@ -135,7 +140,8 @@
     "protein": 12,
     "carbs": 0,
     "fat": 5,
-    "fiber": 0
+    "fiber": 0,
+    "sprite_tag": "meat"
   },
   {
     "id": "core:cooked_meat",
@@ -161,7 +167,8 @@
     "protein": 12,
     "carbs": 0,
     "fat": 5,
-    "fiber": 0
+    "fiber": 0,
+    "sprite_tag": "cooked_meat"
   },
   {
     "id": "core:hide",
@@ -178,7 +185,8 @@
     "flavor": "\"Hide: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "legacy_leather_input"
-    ]
+    ],
+    "sprite_tag": "hide"
   },
   {
     "id": "core:bone",
@@ -198,7 +206,8 @@
       "broth",
       "craft_input",
       "fertilizer"
-    ]
+    ],
+    "sprite_tag": "bone"
   },
   {
     "id": "core:iron_ore",
@@ -216,7 +225,8 @@
     "flavor": "\"Iron Ore: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "smelting"
-    ]
+    ],
+    "sprite_tag": "iron_ore"
   },
   {
     "id": "core:coal",
@@ -235,7 +245,8 @@
     "utility_roles": [
       "fuel",
       "smelting"
-    ]
+    ],
+    "sprite_tag": "coal"
   },
   {
     "id": "core:iron_bloom",
@@ -252,7 +263,8 @@
     "flavor": "\"Iron Bloom: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "metalworking"
-    ]
+    ],
+    "sprite_tag": "iron_bloom"
   },
   {
     "id": "core:steel_billet",
@@ -269,7 +281,8 @@
     "flavor": "\"Steel Billet: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "metalworking"
-    ]
+    ],
+    "sprite_tag": "steel_billet"
   },
   {
     "id": "core:stone_axe",
@@ -300,7 +313,8 @@
     "weapon_class": "axe",
     "reach": 1,
     "accuracy": -2,
-    "stamina_cost": 8
+    "stamina_cost": 8,
+    "sprite_tag": "stone_axe"
   },
   {
     "id": "core:iron_pick",
@@ -327,7 +341,8 @@
     ],
     "tool_qualities": {
       "mine": 4
-    }
+    },
+    "sprite_tag": "iron_pick"
   },
   {
     "id": "core:iron_sword",
@@ -353,7 +368,8 @@
     "weapon_class": "sword",
     "reach": 1,
     "accuracy": 5,
-    "stamina_cost": 6
+    "stamina_cost": 6,
+    "sprite_tag": "iron_sword"
   },
   {
     "id": "core:waterskin",
@@ -371,7 +387,8 @@
     "flavor": "\"Waterskin: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "drink"
-    ]
+    ],
+    "sprite_tag": "waterskin"
   },
   {
     "id": "core:wheat_seed",
@@ -388,7 +405,8 @@
     "flavor": "\"Wheat Seed: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "seed"
-    ]
+    ],
+    "sprite_tag": "wheat_seed"
   },
   {
     "id": "core:wheat",
@@ -417,7 +435,8 @@
     "protein": 2,
     "carbs": 18,
     "fat": 0,
-    "fiber": 4
+    "fiber": 4,
+    "sprite_tag": "wheat"
   },
   {
     "id": "core:turnip_seed",
@@ -434,7 +453,8 @@
     "flavor": "\"Turnip Seed: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "seed"
-    ]
+    ],
+    "sprite_tag": "turnip_seed"
   },
   {
     "id": "core:turnip",
@@ -464,7 +484,8 @@
     "protein": 2,
     "carbs": 18,
     "fat": 0,
-    "fiber": 4
+    "fiber": 4,
+    "sprite_tag": "turnip"
   },
   {
     "id": "core:relic",
@@ -484,7 +505,8 @@
     "utility_roles": [
       "relic",
       "trade"
-    ]
+    ],
+    "sprite_tag": "relic"
   },
   {
     "id": "core:copper_coin",
@@ -502,7 +524,8 @@
     "flavor": "\"Copper Coin: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "currency"
-    ]
+    ],
+    "sprite_tag": "copper_coin"
   },
   {
     "id": "core:book",
@@ -521,7 +544,8 @@
     "flavor": "\"Book: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "knowledge"
-    ]
+    ],
+    "sprite_tag": "book"
   },
   {
     "id": "core:leather_hood",
@@ -547,7 +571,8 @@
     "utility_roles": [
       "armor",
       "clothing"
-    ]
+    ],
+    "sprite_tag": "leather_hood"
   },
   {
     "id": "core:leather_vest",
@@ -573,7 +598,8 @@
     "utility_roles": [
       "armor",
       "clothing"
-    ]
+    ],
+    "sprite_tag": "leather_vest"
   },
   {
     "id": "core:leather_bracers",
@@ -599,7 +625,8 @@
     "utility_roles": [
       "armor",
       "clothing"
-    ]
+    ],
+    "sprite_tag": "leather_bracers"
   },
   {
     "id": "core:leather_leggings",
@@ -625,7 +652,8 @@
     "utility_roles": [
       "armor",
       "clothing"
-    ]
+    ],
+    "sprite_tag": "leather_leggings"
   },
   {
     "id": "core:iron_helmet",
@@ -649,7 +677,8 @@
     "flavor": "\"Iron Helmet: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "armor"
-    ]
+    ],
+    "sprite_tag": "iron_helmet"
   },
   {
     "id": "core:bandage",
@@ -667,7 +696,8 @@
     "flavor": "\"Bandage: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medical"
-    ]
+    ],
+    "sprite_tag": "bandage"
   },
   {
     "id": "core:splint",
@@ -685,7 +715,8 @@
     "flavor": "\"Splint: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "medical"
-    ]
+    ],
+    "sprite_tag": "splint"
   },
   {
     "id": "core:steel_sword",
@@ -714,7 +745,8 @@
     "weapon_class": "sword",
     "reach": 1,
     "accuracy": 7,
-    "stamina_cost": 6
+    "stamina_cost": 6,
+    "sprite_tag": "steel_sword"
   },
   {
     "id": "core:steel_pick",
@@ -744,7 +776,8 @@
     ],
     "tool_qualities": {
       "mine": 6
-    }
+    },
+    "sprite_tag": "steel_pick"
   },
   {
     "id": "core:steel_helmet",
@@ -770,7 +803,8 @@
     "utility_roles": [
       "armor",
       "durable"
-    ]
+    ],
+    "sprite_tag": "steel_helmet"
   },
   {
     "id": "core:bone_meal",
@@ -788,7 +822,8 @@
     "flavor": "\"Bone Meal: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "fertilizer"
-    ]
+    ],
+    "sprite_tag": "bone_meal"
   },
   {
     "id": "core:lockpick",
@@ -808,7 +843,8 @@
     "utility_roles": [
       "tool",
       "lockpick"
-    ]
+    ],
+    "sprite_tag": "lockpick"
   },
   {
     "id": "core:ancient_key",
@@ -828,7 +864,8 @@
     "utility_roles": [
       "key",
       "relic"
-    ]
+    ],
+    "sprite_tag": "key"
   },
   {
     "id": "core:parchment",
@@ -846,7 +883,8 @@
     "flavor": "\"Parchment: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "writing"
-    ]
+    ],
+    "sprite_tag": "parchment"
   },
   {
     "id": "core:crafted_sword",
@@ -872,7 +910,8 @@
     ],
     "tool_qualities": {
       "cut": 2
-    }
+    },
+    "sprite_tag": "crafted_sword"
   },
   {
     "id": "core:crafted_pick",
@@ -903,7 +942,8 @@
     ],
     "tool_qualities": {
       "mine": 4
-    }
+    },
+    "sprite_tag": "crafted_pick"
   },
   {
     "id": "core:crafted_helmet",
@@ -930,7 +970,8 @@
       "armor",
       "durable",
       "component_item"
-    ]
+    ],
+    "sprite_tag": "crafted_helmet"
   },
   {
     "id": "core:medicinal_herb",
@@ -951,7 +992,8 @@
     "utility_roles": [
       "medicine",
       "cooking"
-    ]
+    ],
+    "sprite_tag": "medical_herb"
   },
   {
     "id": "core:herbal_tonic",
@@ -974,7 +1016,8 @@
       "medical",
       "medicine",
       "consumable"
-    ]
+    ],
+    "sprite_tag": "tonic"
   },
   {
     "id": "core:soap",
@@ -993,7 +1036,8 @@
     "flavor": "\"Soap: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "sanitation"
-    ]
+    ],
+    "sprite_tag": "soap"
   },
   {
     "id": "core:clean_water",
@@ -1014,7 +1058,8 @@
     "utility_roles": [
       "drink",
       "cooking"
-    ]
+    ],
+    "sprite_tag": "water_flask"
   },
   {
     "id": "core:stout_branch",
@@ -1036,7 +1081,8 @@
       "primitive_craft",
       "fuel",
       "construction"
-    ]
+    ],
+    "sprite_tag": "branch"
   },
   {
     "id": "core:bark",
@@ -1058,7 +1104,8 @@
       "cordage_input",
       "tanning",
       "fuel"
-    ]
+    ],
+    "sprite_tag": "bark"
   },
   {
     "id": "core:reed_bundle",
@@ -1080,7 +1127,8 @@
       "weaving",
       "construction",
       "fuel"
-    ]
+    ],
+    "sprite_tag": "reeds"
   },
   {
     "id": "core:clay_lump",
@@ -1099,7 +1147,8 @@
     "utility_roles": [
       "pottery",
       "construction"
-    ]
+    ],
+    "sprite_tag": "clay"
   },
   {
     "id": "core:stone_flake",
@@ -1126,7 +1175,8 @@
       "scrape": 1
     },
     "weapon_damage": 2,
-    "damage_type": "cut"
+    "damage_type": "cut",
+    "sprite_tag": "stone_flake"
   },
   {
     "id": "core:plant_cordage",
@@ -1146,7 +1196,8 @@
       "binding",
       "construction",
       "toolmaking"
-    ]
+    ],
+    "sprite_tag": "cordage"
   },
   {
     "id": "core:sinew",
@@ -1167,7 +1218,8 @@
       "binding",
       "bowmaking",
       "sewing"
-    ]
+    ],
+    "sprite_tag": "sinew"
   },
   {
     "id": "core:sinew_cord",
@@ -1187,7 +1239,8 @@
     "utility_roles": [
       "binding",
       "bowmaking"
-    ]
+    ],
+    "sprite_tag": "sinew_cord"
   },
   {
     "id": "core:animal_fat",
@@ -1217,7 +1270,8 @@
     "fiber": 0,
     "food_groups": [
       "fats"
-    ]
+    ],
+    "sprite_tag": "animal_fat"
   },
   {
     "id": "core:offal",
@@ -1246,7 +1300,8 @@
     "fat": 10,
     "food_groups": [
       "protein"
-    ]
+    ],
+    "sprite_tag": "offal"
   },
   {
     "id": "core:fresh_hide",
@@ -1265,7 +1320,8 @@
     "flavor": "\"A skin is not leather until work makes it so.\"",
     "utility_roles": [
       "hide_processing"
-    ]
+    ],
+    "sprite_tag": "fresh_hide"
   },
   {
     "id": "core:scraped_hide",
@@ -1285,7 +1341,8 @@
     "utility_roles": [
       "drying",
       "tanning"
-    ]
+    ],
+    "sprite_tag": "scraped_hide"
   },
   {
     "id": "core:rawhide",
@@ -1305,7 +1362,8 @@
       "armor",
       "binding",
       "containers"
-    ]
+    ],
+    "sprite_tag": "rawhide"
   },
   {
     "id": "core:leather",
@@ -1326,7 +1384,8 @@
       "clothing",
       "containers",
       "craft_input"
-    ]
+    ],
+    "sprite_tag": "leather"
   },
   {
     "id": "core:feather",
@@ -1345,7 +1404,8 @@
     "utility_roles": [
       "fletching",
       "bedding"
-    ]
+    ],
+    "sprite_tag": "feather"
   },
   {
     "id": "core:crude_knife",
@@ -1379,7 +1439,8 @@
     "weapon_class": "knife",
     "reach": 1,
     "accuracy": 4,
-    "stamina_cost": 5
+    "stamina_cost": 5,
+    "sprite_tag": "crude_knife"
   },
   {
     "id": "core:stone_knife",
@@ -1413,7 +1474,8 @@
     "weapon_class": "knife",
     "reach": 1,
     "accuracy": 8,
-    "stamina_cost": 4
+    "stamina_cost": 4,
+    "sprite_tag": "stone_knife"
   },
   {
     "id": "core:stone_pick",
@@ -1440,7 +1502,8 @@
     },
     "tool_power": 2,
     "weapon_damage": 5,
-    "damage_type": "blunt"
+    "damage_type": "blunt",
+    "sprite_tag": "stone_pick"
   },
   {
     "id": "core:stone_hammer",
@@ -1467,7 +1530,8 @@
       "crush": 2
     },
     "weapon_damage": 5,
-    "damage_type": "blunt"
+    "damage_type": "blunt",
+    "sprite_tag": "stone_hammer"
   },
   {
     "id": "core:digging_stick",
@@ -1491,7 +1555,8 @@
     "tool_qualities": {
       "dig": 1,
       "till": 1
-    }
+    },
+    "sprite_tag": "digging_stick"
   },
   {
     "id": "core:crude_hoe",
@@ -1514,7 +1579,8 @@
     "tool_qualities": {
       "till": 2,
       "dig": 1
-    }
+    },
+    "sprite_tag": "stone_hoe"
   },
   {
     "id": "core:wooden_spear",
@@ -1546,7 +1612,8 @@
     "accuracy": -3,
     "stamina_cost": 8,
     "throwable": true,
-    "recovery_percent": 95
+    "recovery_percent": 95,
+    "sprite_tag": "spear"
   },
   {
     "id": "core:club",
@@ -1570,7 +1637,8 @@
     "weapon_class": "club",
     "reach": 1,
     "accuracy": 4,
-    "stamina_cost": 7
+    "stamina_cost": 7,
+    "sprite_tag": "club"
   },
   {
     "id": "core:sling",
@@ -1600,7 +1668,8 @@
     "accuracy": -7,
     "stamina_cost": 5,
     "recovery_percent": 20,
-    "two_handed": true
+    "two_handed": true,
+    "sprite_tag": "sling"
   },
   {
     "id": "core:sling_stone",
@@ -1618,7 +1687,8 @@
     "flavor": "\"The best ammunition is often underfoot.\"",
     "utility_roles": [
       "ranged_ammo"
-    ]
+    ],
+    "sprite_tag": "sling_stone"
   },
   {
     "id": "core:short_bow",
@@ -1649,7 +1719,8 @@
     "accuracy": 3,
     "stamina_cost": 7,
     "recovery_percent": 65,
-    "two_handed": true
+    "two_handed": true,
+    "sprite_tag": "short_bow"
   },
   {
     "id": "core:wood_arrow",
@@ -1667,7 +1738,8 @@
     "flavor": "\"Straight wood, sharp stone, steady breath.\"",
     "utility_roles": [
       "ranged_ammo"
-    ]
+    ],
+    "sprite_tag": "arrow"
   },
   {
     "id": "core:bone_awl",
@@ -1690,7 +1762,8 @@
     "tool_qualities": {
       "sew": 1,
       "pierce": 2
-    }
+    },
+    "sprite_tag": "bone_awl"
   },
   {
     "id": "core:bone_needle",
@@ -1711,7 +1784,8 @@
     ],
     "tool_qualities": {
       "sew": 2
-    }
+    },
+    "sprite_tag": "bone_needle"
   },
   {
     "id": "core:rawhide_buckler",
@@ -1747,7 +1821,8 @@
       "torso": 42,
       "arms": 82,
       "legs": 10
-    }
+    },
+    "sprite_tag": "buckler"
   },
   {
     "id": "core:clay_pot",
@@ -1765,7 +1840,8 @@
     "flavor": "\"A pot turns scattered ingredients into a meal.\"",
     "utility_roles": [
       "cooking"
-    ]
+    ],
+    "sprite_tag": "clay_pot"
   },
   {
     "id": "core:wooden_bowl",
@@ -1784,7 +1860,8 @@
     "utility_roles": [
       "cooking",
       "serving"
-    ]
+    ],
+    "sprite_tag": "bowl"
   },
   {
     "id": "core:raw_small_game",
@@ -1813,7 +1890,8 @@
     "fiber": 0,
     "food_groups": [
       "protein"
-    ]
+    ],
+    "sprite_tag": "small_game"
   },
   {
     "id": "core:raw_game_meat",
@@ -1842,7 +1920,8 @@
     "fiber": 0,
     "food_groups": [
       "protein"
-    ]
+    ],
+    "sprite_tag": "game_meat"
   },
   {
     "id": "core:raw_poultry",
@@ -1872,7 +1951,8 @@
     "fiber": 0,
     "food_groups": [
       "protein"
-    ]
+    ],
+    "sprite_tag": "poultry"
   },
   {
     "id": "core:dried_meat",
@@ -1902,7 +1982,8 @@
     "food_groups": [
       "protein"
     ],
-    "spoilage_hours": 720
+    "spoilage_hours": 720,
+    "sprite_tag": "dried_meat"
   },
   {
     "id": "core:blueberries",
@@ -1933,7 +2014,8 @@
     "fiber": 4,
     "food_groups": [
       "fruit"
-    ]
+    ],
+    "sprite_tag": "blueberries"
   },
   {
     "id": "core:raspberries",
@@ -1964,7 +2046,8 @@
     "fiber": 5,
     "food_groups": [
       "fruit"
-    ]
+    ],
+    "sprite_tag": "raspberries"
   },
   {
     "id": "core:wild_strawberries",
@@ -1995,7 +2078,8 @@
     "fiber": 3,
     "food_groups": [
       "fruit"
-    ]
+    ],
+    "sprite_tag": "strawberries"
   },
   {
     "id": "core:dandelion_greens",
@@ -2027,7 +2111,8 @@
     "fiber": 4,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "dandelion"
   },
   {
     "id": "core:nettles",
@@ -2058,7 +2143,8 @@
     "fiber": 5,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "nettle"
   },
   {
     "id": "core:wild_onion",
@@ -2091,7 +2177,8 @@
     "fiber": 3,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "wild_onion"
   },
   {
     "id": "core:wild_carrot",
@@ -2124,7 +2211,8 @@
     "fiber": 4,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "wild_carrot"
   },
   {
     "id": "core:yarrow",
@@ -2145,7 +2233,8 @@
     "utility_roles": [
       "medicine",
       "cooking"
-    ]
+    ],
+    "sprite_tag": "yarrow"
   },
   {
     "id": "core:plantain_leaf",
@@ -2166,7 +2255,8 @@
     "utility_roles": [
       "medicine",
       "cooking"
-    ]
+    ],
+    "sprite_tag": "plantain"
   },
   {
     "id": "core:morel",
@@ -2195,7 +2285,8 @@
     "fiber": 3,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "morel"
   },
   {
     "id": "core:bolete",
@@ -2224,7 +2315,8 @@
     "fiber": 3,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "bolete"
   },
   {
     "id": "core:wild_grain",
@@ -2254,7 +2346,8 @@
     "fiber": 4,
     "food_groups": [
       "grain"
-    ]
+    ],
+    "sprite_tag": "wild_grain"
   },
   {
     "id": "core:cattail_root",
@@ -2285,7 +2378,8 @@
     "fiber": 5,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "cattail"
   },
   {
     "id": "core:barley_seed",
@@ -2302,7 +2396,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "barley_seed"
   },
   {
     "id": "core:barley",
@@ -2331,7 +2426,8 @@
     "fiber": 5,
     "food_groups": [
       "grain"
-    ]
+    ],
+    "sprite_tag": "barley"
   },
   {
     "id": "core:beans_seed",
@@ -2348,7 +2444,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "bean_seed"
   },
   {
     "id": "core:beans",
@@ -2377,7 +2474,8 @@
     "fiber": 7,
     "food_groups": [
       "protein"
-    ]
+    ],
+    "sprite_tag": "beans"
   },
   {
     "id": "core:cabbage_seed",
@@ -2394,7 +2492,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "cabbage_seed"
   },
   {
     "id": "core:cabbage",
@@ -2423,7 +2522,8 @@
     "fiber": 4,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "cabbage"
   },
   {
     "id": "core:carrot_seed",
@@ -2440,7 +2540,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "carrot_seed"
   },
   {
     "id": "core:carrot",
@@ -2469,7 +2570,8 @@
     "fiber": 4,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "carrot"
   },
   {
     "id": "core:onion_seed",
@@ -2486,7 +2588,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "onion_seed"
   },
   {
     "id": "core:onion",
@@ -2515,7 +2618,8 @@
     "fiber": 3,
     "food_groups": [
       "vegetable"
-    ]
+    ],
+    "sprite_tag": "onion"
   },
   {
     "id": "core:flax_seed",
@@ -2532,7 +2636,8 @@
     "flavor": "\"A future field carried in the palm.\"",
     "utility_roles": [
       "planting"
-    ]
+    ],
+    "sprite_tag": "flax_seed"
   },
   {
     "id": "core:flax",
@@ -2561,7 +2666,8 @@
     "fiber": 6,
     "food_groups": [
       "grain"
-    ]
+    ],
+    "sprite_tag": "flax"
   },
   {
     "id": "core:copper_ore",
@@ -2581,7 +2687,8 @@
     "utility_roles": [
       "smelting",
       "trade"
-    ]
+    ],
+    "sprite_tag": "copper_ore"
   },
   {
     "id": "core:copper_ingot",
@@ -2600,7 +2707,8 @@
     "utility_roles": [
       "metalworking",
       "trade"
-    ]
+    ],
+    "sprite_tag": "copper_ingot"
   },
   {
     "id": "core:wicker_basket",
@@ -2621,7 +2729,8 @@
     "utility_roles": [
       "storage",
       "construction"
-    ]
+    ],
+    "sprite_tag": "basket"
   },
   {
     "id": "core:wood_storage_box",
@@ -2642,7 +2751,8 @@
     "utility_roles": [
       "storage",
       "construction"
-    ]
+    ],
+    "sprite_tag": "storage_box"
   },
   {
     "id": "core:duckweed",
@@ -2666,7 +2776,8 @@
       "forage",
       "vegetable"
     ],
-    "flavor": "A handful of green gathered from quiet water."
+    "flavor": "A handful of green gathered from quiet water.",
+    "sprite_tag": "duckweed"
   },
   {
     "id": "core:water_lily_root",
@@ -2692,7 +2803,8 @@
       "forage",
       "vegetable"
     ],
-    "flavor": "Mud hides more food than the surface suggests."
+    "flavor": "Mud hides more food than the surface suggests.",
+    "sprite_tag": "water_lily_root"
   },
   {
     "id": "core:pickerelweed",
@@ -2716,7 +2828,8 @@
       "forage",
       "vegetable"
     ],
-    "flavor": "The wetland offers food where dry ground ends."
+    "flavor": "The wetland offers food where dry ground ends.",
+    "sprite_tag": "pickerelweed"
   },
   {
     "id": "core:saltmarsh_grass",
@@ -2733,7 +2846,8 @@
       "fiber",
       "salt_tolerant"
     ],
-    "flavor": "Salt, wind, and tide have made every blade stubborn."
+    "flavor": "Salt, wind, and tide have made every blade stubborn.",
+    "sprite_tag": "saltmarsh_grass"
   },
   {
     "id": "core:eelgrass",
@@ -2750,7 +2864,8 @@
       "marine",
       "fiber"
     ],
-    "flavor": "A submerged meadow pulled from brackish water."
+    "flavor": "A submerged meadow pulled from brackish water.",
+    "sprite_tag": "eelgrass"
   },
   {
     "id": "core:kelp",
@@ -2775,7 +2890,8 @@
       "forage",
       "vegetable"
     ],
-    "flavor": "The sea grows forests where no axe can stand."
+    "flavor": "The sea grows forests where no axe can stand.",
+    "sprite_tag": "kelp"
   },
   {
     "id": "core:earthworms",
@@ -2794,7 +2910,8 @@
     "flavor": "Good bait begins under damp soil.",
     "utility_roles": [
       "fishing_bait"
-    ]
+    ],
+    "sprite_tag": "earthworms"
   },
   {
     "id": "core:spoon_lure",
@@ -2814,7 +2931,8 @@
     "flavor": "A flash of copper can look alive underwater.",
     "utility_roles": [
       "fishing_lure"
-    ]
+    ],
+    "sprite_tag": "spoon_lure"
   },
   {
     "id": "core:reed_rod",
@@ -2836,7 +2954,8 @@
     "flavor": "Simple tackle turns patient water into opportunity.",
     "utility_roles": [
       "fishing_rod"
-    ]
+    ],
+    "sprite_tag": "reed_rod"
   },
   {
     "id": "core:wood_rod",
@@ -2858,7 +2977,8 @@
     "flavor": "A balanced rod gives the angler room to fight.",
     "utility_roles": [
       "fishing_rod"
-    ]
+    ],
+    "sprite_tag": "wood_rod"
   },
   {
     "id": "core:fiber_line",
@@ -2879,7 +2999,8 @@
     "flavor": "Light line rewards finesse and punishes greed.",
     "utility_roles": [
       "fishing_line"
-    ]
+    ],
+    "sprite_tag": "fiber_line"
   },
   {
     "id": "core:sinew_line",
@@ -2901,7 +3022,8 @@
     "flavor": "Tendon twisted tight enough to trust with a fish.",
     "utility_roles": [
       "fishing_line"
-    ]
+    ],
+    "sprite_tag": "sinew_line"
   },
   {
     "id": "core:braided_line",
@@ -2923,7 +3045,8 @@
     "flavor": "Heavy line for fish that do not intend to be landed.",
     "utility_roles": [
       "fishing_line"
-    ]
+    ],
+    "sprite_tag": "braided_line"
   },
   {
     "id": "core:fishing_spear",
@@ -2953,7 +3076,8 @@
     "weapon_class": "spear",
     "reach": 2,
     "accuracy": -1,
-    "stamina_cost": 7
+    "stamina_cost": 7,
+    "sprite_tag": "fishing_spear"
   },
   {
     "id": "core:fishing_net",
@@ -2975,7 +3099,8 @@
     "flavor": "A school can escape a hook but not always a well-thrown net.",
     "utility_roles": [
       "fishing_net"
-    ]
+    ],
+    "sprite_tag": "fishing_net"
   },
   {
     "id": "core:brook_trout",
@@ -3000,7 +3125,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Cold clear water made this fish quick and bright."
+    "flavor": "Cold clear water made this fish quick and bright.",
+    "sprite_tag": "brook_trout"
   },
   {
     "id": "core:bluegill",
@@ -3025,7 +3151,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Small water can still provide a dependable meal."
+    "flavor": "Small water can still provide a dependable meal.",
+    "sprite_tag": "bluegill"
   },
   {
     "id": "core:largemouth_bass",
@@ -3050,7 +3177,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "It waits beside cover until prey makes one mistake."
+    "flavor": "It waits beside cover until prey makes one mistake.",
+    "sprite_tag": "largemouth_bass"
   },
   {
     "id": "core:channel_catfish",
@@ -3075,7 +3203,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Deep water and scent guide a fish that rarely needs light."
+    "flavor": "Deep water and scent guide a fish that rarely needs light.",
+    "sprite_tag": "channel_catfish"
   },
   {
     "id": "core:common_carp",
@@ -3100,7 +3229,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Heavy, wary, and stronger than its quiet feeding suggests."
+    "flavor": "Heavy, wary, and stronger than its quiet feeding suggests.",
+    "sprite_tag": "common_carp"
   },
   {
     "id": "core:northern_pike",
@@ -3125,7 +3255,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "A green shadow built for one sudden strike."
+    "flavor": "A green shadow built for one sudden strike.",
+    "sprite_tag": "northern_pike"
   },
   {
     "id": "core:striped_bass",
@@ -3150,7 +3281,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Current and salt pull this fish across whole watersheds."
+    "flavor": "Current and salt pull this fish across whole watersheds.",
+    "sprite_tag": "striped_bass"
   },
   {
     "id": "core:summer_flounder",
@@ -3175,7 +3307,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "The bottom itself seems to move when it strikes."
+    "flavor": "The bottom itself seems to move when it strikes.",
+    "sprite_tag": "summer_flounder"
   },
   {
     "id": "core:striped_mullet",
@@ -3200,7 +3333,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Silver schools turn together in shallow coastal water."
+    "flavor": "Silver schools turn together in shallow coastal water.",
+    "sprite_tag": "striped_mullet"
   },
   {
     "id": "core:atlantic_mackerel",
@@ -3225,7 +3359,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "A fast silver fish that arrives with the moving sea."
+    "flavor": "A fast silver fish that arrives with the moving sea.",
+    "sprite_tag": "atlantic_mackerel"
   },
   {
     "id": "core:atlantic_cod",
@@ -3250,7 +3385,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "Cold deep water carries a heavy fish close to the bottom."
+    "flavor": "Cold deep water carries a heavy fish close to the bottom.",
+    "sprite_tag": "atlantic_cod"
   },
   {
     "id": "core:red_drum",
@@ -3275,7 +3411,8 @@
       "raw_fish",
       "protein"
     ],
-    "flavor": "A bronze-sided fighter from warm estuaries and surf."
+    "flavor": "A bronze-sided fighter from warm estuaries and surf.",
+    "sprite_tag": "red_drum"
   },
   {
     "id": "core:beachgrass",
@@ -3292,7 +3429,8 @@
     ],
     "base_value": 1,
     "description": "Tough dune grass useful as coarse fiber and thatching.",
-    "flavor": "Thin blades hold dunes together one root at a time."
+    "flavor": "Thin blades hold dunes together one root at a time.",
+    "sprite_tag": "beachgrass"
   },
   {
     "id": "core:blue_mussels",
@@ -3316,7 +3454,8 @@
     "spoilage_hours": 24,
     "base_value": 6,
     "description": "Edible shellfish gathered from exposed rocky shore beds.",
-    "flavor": "A meal sealed shut and fastened to the rocks."
+    "flavor": "A meal sealed shut and fastened to the rocks.",
+    "sprite_tag": "blue_mussels"
   },
   {
     "id": "core:wicker_shield",
@@ -3353,7 +3492,8 @@
       "torso": 62,
       "arms": 72,
       "legs": 28
-    }
+    },
+    "sprite_tag": "wicker_shield"
   },
   {
     "id": "core:wood_round_shield",
@@ -3389,7 +3529,8 @@
       "torso": 76,
       "arms": 84,
       "legs": 38
-    }
+    },
+    "sprite_tag": "wood_round_shield"
   },
   {
     "id": "core:hide_kite_shield",
@@ -3426,7 +3567,8 @@
       "torso": 84,
       "arms": 80,
       "legs": 65
-    }
+    },
+    "sprite_tag": "hide_kite_shield"
   },
   {
     "id": "core:iron_heater_shield",
@@ -3464,7 +3606,8 @@
       "torso": 88,
       "arms": 86,
       "legs": 52
-    }
+    },
+    "sprite_tag": "iron_heater_shield"
   },
   {
     "id": "core:steel_tower_shield",
@@ -3503,12 +3646,13 @@
       "torso": 98,
       "arms": 94,
       "legs": 88
-    }
+    },
+    "sprite_tag": "steel_tower_shield"
   },
   {
     "id": "core:flour",
     "name": "Flour",
-    "asset": "wheat",
+    "asset": "flour",
     "category": "food",
     "material": "core:organic",
     "mass_g": 500,
@@ -3523,12 +3667,13 @@
       "baking_input",
       "trade_good"
     ],
-    "base_value": 6
+    "base_value": 6,
+    "sprite_tag": "flour"
   },
   {
     "id": "core:bread",
     "name": "Rustic Bread",
-    "asset": "cooked_meat",
+    "asset": "rustic_bread",
     "category": "food",
     "material": "core:organic",
     "mass_g": 500,
@@ -3553,12 +3698,13 @@
     "carbs": 175,
     "fat": 6,
     "fiber": 10,
-    "base_value": 11
+    "base_value": 11,
+    "sprite_tag": "rustic_bread"
   },
   {
     "id": "core:woven_cloth",
     "name": "Woven Cloth",
-    "asset": "fiber",
+    "asset": "woven_cloth",
     "category": "material",
     "material": "core:fiber",
     "mass_g": 700,
@@ -3573,12 +3719,13 @@
       "textile_input",
       "trade_good"
     ],
-    "base_value": 14
+    "base_value": 14,
+    "sprite_tag": "woven_cloth"
   },
   {
     "id": "core:small_ale",
     "name": "Small Ale",
-    "asset": "berries",
+    "asset": "small_ale",
     "category": "food",
     "material": "core:organic",
     "mass_g": 1000,
@@ -3603,12 +3750,13 @@
     "carbs": 22,
     "fat": 0,
     "fiber": 0,
-    "base_value": 12
+    "base_value": 12,
+    "sprite_tag": "small_ale"
   },
   {
     "id": "core:dressed_stone",
     "name": "Dressed Stone",
-    "asset": "stone",
+    "asset": "dressed_stone",
     "category": "material",
     "material": "core:stone",
     "mass_g": 2400,
@@ -3624,12 +3772,13 @@
       "masonry",
       "trade_good"
     ],
-    "base_value": 9
+    "base_value": 9,
+    "sprite_tag": "dressed_stone"
   },
   {
     "id": "core:smoked_fish",
     "name": "Smoked Fish",
-    "asset": "cooked_meat",
+    "asset": "smoked_fish",
     "category": "food",
     "material": "core:organic",
     "mass_g": 500,
@@ -3655,6 +3804,7 @@
     "carbs": 0,
     "fat": 22,
     "fiber": 0,
-    "base_value": 18
+    "base_value": 18,
+    "sprite_tag": "smoked_fish"
   }
 ]
