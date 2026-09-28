@@ -1403,5 +1403,196 @@
       "core:leather",
       "core:leather"
     ]
+  },
+  {
+    "id": "core:mill_flour",
+    "name": "Stone-Grind Flour",
+    "inputs": {
+      "core:wheat": 2
+    },
+    "outputs": {
+      "core:flour": 2
+    },
+    "minutes": 30,
+    "station": "core:millstone",
+    "knowledge": null,
+    "description": "Grind cleaned wheat between millstones into baking flour.",
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:rustic_bread",
+    "name": "Bake Rustic Bread",
+    "inputs": {
+      "core:flour": 2
+    },
+    "outputs": {
+      "core:bread": 2
+    },
+    "minutes": 55,
+    "station": "core:bakery_oven",
+    "knowledge": null,
+    "description": "Mix, proof, and bake dense settlement loaves in a masonry oven.",
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:weave_cloth",
+    "name": "Weave Cloth",
+    "inputs": {
+      "core:fiber": 4
+    },
+    "outputs": {
+      "core:woven_cloth": 1
+    },
+    "minutes": 90,
+    "station": "core:loom",
+    "knowledge": null,
+    "description": "Spin and tension prepared fiber into a durable woven cloth.",
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:tan_leather_workshop",
+    "name": "Bark-Tan Leather",
+    "inputs": {
+      "core:scraped_hide": 1,
+      "core:bark": 2
+    },
+    "outputs": {
+      "core:leather": 1
+    },
+    "minutes": 180,
+    "station": "core:tanning_frame",
+    "knowledge": null,
+    "description": "Work tannin-rich bark into a scraped hide until it cures into leather.",
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "scrape": 1
+    }
+  },
+  {
+    "id": "core:butcher_game_workshop",
+    "name": "Butcher Game Portions",
+    "inputs": {
+      "core:raw_game_meat": 2
+    },
+    "outputs": {
+      "core:meat": 2,
+      "core:animal_fat": 1
+    },
+    "minutes": 35,
+    "station": "core:butcher_table",
+    "knowledge": null,
+    "description": "Trim game quarters into clean meat portions and recover usable fat.",
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 2,
+    "tool_qualities": {
+      "butcher": 1
+    }
+  },
+  {
+    "id": "core:throw_clay_pot",
+    "name": "Throw Clay Pot",
+    "inputs": {
+      "core:clay_lump": 2
+    },
+    "outputs": {
+      "core:clay_pot": 1
+    },
+    "minutes": 65,
+    "station": "core:pottery_wheel",
+    "knowledge": null,
+    "description": "Center and throw prepared clay into a balanced vessel ready for firing.",
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 2,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:brew_small_ale",
+    "name": "Brew Small Ale",
+    "inputs": {
+      "core:wheat": 2
+    },
+    "outputs": {
+      "core:small_ale": 2
+    },
+    "minutes": 120,
+    "station": "core:brewery_vat",
+    "knowledge": null,
+    "description": "Mash grain and manage a weak fermentation for a common settlement drink.",
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:apothecary_tonic",
+    "name": "Prepare Apothecary Tonic",
+    "inputs": {
+      "core:medicinal_herb": 2,
+      "core:berries": 1
+    },
+    "outputs": {
+      "core:herbal_tonic": 1
+    },
+    "minutes": 35,
+    "station": "core:herbalist_table",
+    "knowledge": null,
+    "description": "Sort, crush, and steep medicinal herbs into a measured tonic.",
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 3,
+    "tool_qualities": {}
+  },
+  {
+    "id": "core:dress_stone",
+    "name": "Dress Building Stone",
+    "inputs": {
+      "core:stone": 2
+    },
+    "outputs": {
+      "core:dressed_stone": 1
+    },
+    "minutes": 50,
+    "station": "core:masonry_bench",
+    "knowledge": null,
+    "description": "Square rough stone into fitted construction blocks.",
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "hammer": 1
+    }
+  },
+  {
+    "id": "core:smoke_bass",
+    "name": "Smoke Fresh Fish",
+    "inputs": {
+      "core:largemouth_bass": 1
+    },
+    "outputs": {
+      "core:smoked_fish": 1
+    },
+    "minutes": 75,
+    "station": "core:smoke_rack",
+    "knowledge": null,
+    "description": "Clean and slowly smoke a fresh fish into portable preserved food.",
+    "category": "fishery",
+    "skill": "cooking",
+    "difficulty": 2,
+    "tool_qualities": {
+      "cut": 1
+    }
   }
 ]

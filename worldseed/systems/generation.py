@@ -14,10 +14,20 @@ def specialize_occupation(base:str,settlement_uid:str,index:int)->str:
     """Add Phase-4 specializations without changing the legacy RNG draw order."""
     base=str(base)
     token=int(hash_u64(b"worldseed-profession-v1",settlement_uid,int(index),base)%100)
-    if base=="carpenter" and token<58:
-        return "lumberjack"
-    if base=="farmer" and token<16:
-        return "cook"
+    if base=="carpenter":
+        if token<34:return "lumberjack"
+        if token<47:return "mason"
+        if token<60:return "potter"
+        if token<73:return "weaver"
+    if base=="farmer":
+        if token<16:return "cook"
+        if token<28:return "miller"
+        if token<40:return "baker"
+        if token<49:return "brewer"
+    if base=="hunter":
+        if token<20:return "butcher"
+        if token<35:return "tanner"
+        if token<50:return "fisher"
     return base
 
 TRAITS=["patient","greedy","brave","cautious","curious","traditional","kind","ambitious","suspicious","stoic"]

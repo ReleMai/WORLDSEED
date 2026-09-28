@@ -926,6 +926,7 @@ class PygameTerminal(PointerUI):
             'inventory_unified':self._present_inventory_unified,
             'container_inventory':self._present_container_inventory,
             'crafting_unified':self._present_crafting_unified,
+            'workshop_station':self._present_workshop_station,
             'discovery_pot':self._present_discovery_pot,
             'crafting_index':self._present_crafting_index,
             'inventory_item_actions':self._present_inventory_item_actions,
@@ -1367,7 +1368,7 @@ class PygameTerminal(PointerUI):
 
     def _crafting_tabs(self,x,y,w,active):
         pg=self.pg
-        tabs=(('Recipes','recipes'),('Experiment Grid','discovery'),('Item Index','index'))
+        tabs=(('Recipes','recipes'),('Workshops','workshops'),('Experiment Grid','discovery'),('Item Index','index'))
         hovered=None
         for i,(name,token) in enumerate(tabs):
             rect=pg.Rect(x+i*42,y,34,30);chosen=active==token;hover=rect.collidepoint(self._last_mouse)
@@ -1379,6 +1380,13 @@ class PygameTerminal(PointerUI):
                 # recipe card: page with three instruction rows
                 icon=pg.Rect(cx-9,cy-10,18,20);pg.draw.rect(self.screen,fg,icon,1,border_radius=2)
                 for oy in (-5,0,5):pg.draw.line(self.screen,fg,(cx-5,cy+oy),(cx+5,cy+oy),1)
+            elif token=='workshops':
+                # compact workshop silhouette: roof, bench, chimney
+                pg.draw.line(self.screen,fg,(cx-11,cy-2),(cx,cy-10),2)
+                pg.draw.line(self.screen,fg,(cx,cy-10),(cx+11,cy-2),2)
+                pg.draw.rect(self.screen,fg,(cx-8,cy-2,16,11),1)
+                pg.draw.line(self.screen,fg,(cx-6,cy+3),(cx+6,cy+3),2)
+                pg.draw.rect(self.screen,fg,(cx+5,cy-10,3,7),1)
             elif token=='discovery':
                 # five experiment sockets arranged around a center
                 for dx,dy in ((0,-7),(-7,-1),(7,-1),(-4,7),(4,7)):
@@ -1441,6 +1449,113 @@ class PygameTerminal(PointerUI):
             for line in (f"{m.get('minutes',0)} min  •  {m.get('skill','crafting')}",str(m.get('description',''))):screen.blit(self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['muted']),(detail.x+13,iy));iy+=19
             if m.get('ready'):self._button((detail.x+12,detail.bottom-40,detail.width-24,30),'CRAFT RECIPE','UI_ACTION:craft')
         self._draw_floating_footer(x,y,w,h,'Category tabs • Select a recipe • Drag title • Resize corner • Esc closes');pg.display.flip();self.clock.tick(120)
+
+    def _present_workshop_station(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """Station-specific workshop surface driven by authoritative workshop profiles."""
+        data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
+        profile=data.get('profile') or {};accent=tuple(profile.get('accent') or self._theme['accent'])
+        station_title=str(profile.get('title') or 'WORKSHOP')
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKSHOP',station_title,subtitle)
+        self._crafting_tabs(cx,cy,cw,'workshops');cy+=38
+
+        # Nearby station switcher. Each chip is a real station currently within
+        # BuildingSystem range, not a global recipe-category shortcut.
+        stations=list(data.get('stations') or [])
+        active_station=str(data.get('station_id') or '')
+        sx=cx
+        for row in stations:
+            sid=str(row.get('station_id',''));label=str(row.get('short_title') or row.get('title') or sid)
+            sw=min(156,max(72,self.small_font.size(label)[0]+20))
+            if sx+sw>cx+cw:break
+            rr=pg.Rect(sx,cy,sw,29);active=sid==active_station
+            pg.draw.rect(screen,(48,45,39) if active else self._theme['panel2'],rr,border_radius=5)
+            pg.draw.rect(screen,accent if active else self._theme['edge'],rr,2 if active else 1,border_radius=5)
+            txt=self.small_font.render(self._fit_ui_text(label,self.small_font,rr.width-12),True,self._theme['text'] if active else self._theme['muted'])
+            screen.blit(txt,txt.get_rect(center=rr.center));self._ui_target(rr,f'UI_ACTION:workshop:{sid}')
+            sx+=sw+6
+        cy+=37
+
+        purpose=str(profile.get('purpose') or 'Move beside a usable workshop station to begin.')
+        header=pg.Rect(cx,cy,cw,66)
+        pg.draw.rect(screen,self._theme['panel'],header,border_radius=7);pg.draw.rect(screen,accent,header,1,border_radius=7)
+        # Station icon is intentionally diagrammatic and varies by profession.
+        icon=str(profile.get('icon') or 'bench');ibox=pg.Rect(header.x+10,header.y+9,46,46)
+        pg.draw.rect(screen,(18,22,22),ibox,border_radius=5);pg.draw.rect(screen,accent,ibox,1,border_radius=5)
+        ix,iy=ibox.center
+        if icon in {'hammer','mason','stone'}:
+            pg.draw.line(screen,accent,(ix-8,iy+9),(ix+7,iy-7),4);pg.draw.rect(screen,accent,(ix+2,iy-12,14,7),border_radius=2)
+        elif icon in {'bread','mill'}:
+            pg.draw.ellipse(screen,accent,(ix-14,iy-8,28,17),2);pg.draw.line(screen,accent,(ix-8,iy-1),(ix+8,iy-1),1)
+        elif icon in {'loom','hide'}:
+            pg.draw.rect(screen,accent,(ix-13,iy-13,26,26),2);pg.draw.line(screen,accent,(ix-8,iy-10),(ix-8,iy+10),1);pg.draw.line(screen,accent,(ix,iy-10),(ix,iy+10),1);pg.draw.line(screen,accent,(ix+8,iy-10),(ix+8,iy+10),1)
+        elif icon in {'pot','vat'}:
+            pg.draw.ellipse(screen,accent,(ix-12,iy-11,24,10),2);pg.draw.arc(screen,accent,(ix-12,iy-8,24,25),0,3.14159,2)
+        elif icon=='herb':
+            pg.draw.line(screen,accent,(ix,iy+12),(ix,iy-10),2);pg.draw.ellipse(screen,accent,(ix-11,iy-8,12,7),2);pg.draw.ellipse(screen,accent,(ix,iy-2,12,7),2)
+        elif icon in {'knife','fish'}:
+            pg.draw.line(screen,accent,(ix-12,iy+7),(ix+11,iy-7),3);pg.draw.line(screen,accent,(ix-12,iy+7),(ix-6,iy+11),2)
+        else:
+            pg.draw.rect(screen,accent,(ix-13,iy,26,7),2);pg.draw.line(screen,accent,(ix-9,iy+7),(ix-9,iy+14),2);pg.draw.line(screen,accent,(ix+9,iy+7),(ix+9,iy+14),2)
+        name=self.font.render(self._fit_ui_text(station_title,self.font,header.width-76),True,accent);screen.blit(name,(header.x+66,header.y+9))
+        for li,line in enumerate(self._wrap_pixel_text(purpose,self.small_font,header.width-78)[:2]):
+            screen.blit(self.small_font.render(line,True,self._theme['muted']),(header.x+66,header.y+33+li*15))
+        cy=header.bottom+9
+
+        ph=y+h-48-cy;dw=max(270,min(350,cw//3));gap=10
+        listing=pg.Rect(cx,cy,cw-dw-gap,ph);detail=pg.Rect(listing.right+gap,cy,dw,ph)
+        for panel in (listing,detail):
+            pg.draw.rect(screen,self._theme['panel'],panel,border_radius=6);pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=6)
+        locked=int(data.get('locked_count',0))
+        cap=f"{len(rows)} KNOWN PROCESS{'ES' if len(rows)!=1 else ''}"
+        if locked:cap+=f"  •  {locked} UNDISCOVERED"
+        screen.blit(self.small_font.render(cap,True,accent),(listing.x+12,listing.y+11))
+
+        rh=67;sy=listing.y+36
+        for i,row in enumerate(rows):
+            rr=pg.Rect(listing.x+9,sy+i*(rh+5),listing.width-18,rh)
+            if rr.bottom>listing.bottom-10:break
+            rid=getattr(row,'key','');meta=recipes.get(rid,{});ready=bool(meta.get('ready'));active=i==selected
+            pg.draw.rect(screen,(43,48,43) if ready else (31,34,35),rr,border_radius=5)
+            pg.draw.rect(screen,accent if active else self._theme['edge'],rr,2 if active else 1,border_radius=5)
+            outs=meta.get('outputs') or []
+            if outs:self._draw_item_icon(outs[0]['id'],pg.Rect(rr.x+6,rr.y+6,52,52),scale=.82)
+            status='READY' if ready else 'NEEDS'
+            sc=self._theme['good'] if ready else self._theme['danger']
+            screen.blit(self.small_font.render(status,True,sc),(rr.right-58,rr.y+9))
+            screen.blit(self.small_font.render(self._fit_ui_text(meta.get('name',rid),self.small_font,rr.width-130),True,self._theme['text']),(rr.x+62,rr.y+9))
+            summary=', '.join(f"{o['name']} x{o['qty']}" for o in outs)
+            if not ready:summary=next((str(v) for v in meta.get('missing',[]) if v),'Missing requirements')
+            screen.blit(self.small_font.render(self._fit_ui_text(summary,self.small_font,rr.width-76),True,self._theme['muted'] if ready else self._theme['danger']),(rr.x+62,rr.y+37))
+            self._ui_target(rr,f'UI_SELECT:{i}')
+
+        meta=recipes.get(getattr(rows[max(0,min(selected,len(rows)-1))],'key',''),{}) if rows else {}
+        if meta:
+            yy=detail.y+13
+            screen.blit(self.font.render(self._fit_ui_text(meta.get('name',''),self.font,detail.width-26),True,accent),(detail.x+13,yy));yy+=30
+            screen.blit(self.small_font.render('OUTPUT',True,self._theme['muted']),(detail.x+13,yy));yy+=20
+            for out in meta.get('outputs',[])[:3]:
+                self._draw_item_icon(out['id'],pg.Rect(detail.x+12,yy-2,26,24),scale=.82)
+                screen.blit(self.small_font.render(self._fit_ui_text(f"{out['name']} x{out['qty']}",self.small_font,detail.width-48),True,self._theme['good']),(detail.x+43,yy+2));yy+=27
+            screen.blit(self.small_font.render('MATERIALS',True,self._theme['muted']),(detail.x+13,yy+5));yy+=27
+            for inp in meta.get('inputs',[])[:6]:
+                ok=int(inp['have'])>=int(inp['need']);fg=self._theme['text'] if ok else self._theme['danger']
+                screen.blit(self.small_font.render(self._fit_ui_text(f"{inp['name']}  {inp['have']}/{inp['need']}",self.small_font,detail.width-26),True,fg),(detail.x+13,yy));yy+=19
+            info_y=max(yy+8,detail.bottom-94)
+            info=f"{meta.get('minutes',0)} min  •  {meta.get('skill','crafting').replace('_',' ').title()}  •  difficulty {meta.get('difficulty',0)}"
+            screen.blit(self.small_font.render(self._fit_ui_text(info,self.small_font,detail.width-26),True,self._theme['muted']),(detail.x+13,info_y))
+            desc=str(meta.get('description',''))
+            if desc:
+                line=self._fit_ui_text(desc,self.small_font,detail.width-26);screen.blit(self.small_font.render(line,True,self._theme['muted']),(detail.x+13,info_y+20))
+            if meta.get('ready'):
+                label=str(profile.get('action_label') or 'WORK')
+                self._button((detail.x+12,detail.bottom-39,detail.width-24,29),label,'UI_ACTION:workshop_craft')
+        else:
+            msg='No discovered process for this station yet.' if active_station else 'No usable workshop station nearby.'
+            lines=self._wrap_pixel_text(msg,self.font,detail.width-32)
+            for i,line in enumerate(lines[:3]):
+                screen.blit(self.font.render(line,True,self._theme['muted']),(detail.x+16,detail.y+22+i*24))
+        self._draw_floating_footer(x,y,w,h,'Nearby physical workshops only • Station tabs change the process UI • Esc closes')
+        pg.display.flip();self.clock.tick(120)
 
     def _present_discovery_pot(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
@@ -2456,9 +2571,57 @@ class PygameTerminal(PointerUI):
         """Draw authored profession-yard props without requiring bitmap assets."""
         if piece is None:return False
         tags=set(getattr(piece,'tags',()) or ());pid=str(getattr(piece,'id',''))
+        pg=self.pg;size=rect.width;cx=rect.centerx;bottom=rect.bottom
+        if 'clutter' in tags:
+            # Small passable overlays: they communicate occupancy and profession
+            # without claiming an entire collision cell.
+            wood=(126,89,52);wood_hi=(174,132,82);dark=(65,55,46)
+            fiber=(177,151,102);cloth=(132,112,151);clay=(167,102,72)
+            metal=(101,106,108);stone=(132,132,126);green=(104,139,84)
+            pad=max(3,size//7);base_y=rect.bottom-pad
+            if {'flour_sacks','yarn','laundry','fish_basket'} & tags:
+                for i,(dx,dy) in enumerate(((-5,1),(4,0),(0,-5))):
+                    rr=pg.Rect(cx+dx-size//8,base_y+dy-size//4,size//4,size//4)
+                    pg.draw.ellipse(self.screen,fiber,rr);pg.draw.ellipse(self.screen,dark,rr,1)
+            elif {'tool_rack','mason_tools','hooks','net_rack','pottery_shelf','bread_rack','bottles'} & tags:
+                pg.draw.line(self.screen,wood,(rect.left+pad,rect.top+pad),(rect.left+pad,base_y),2)
+                pg.draw.line(self.screen,wood,(rect.right-pad,rect.top+pad),(rect.right-pad,base_y),2)
+                for yy in (rect.top+size//3,rect.top+2*size//3):
+                    pg.draw.line(self.screen,wood_hi,(rect.left+pad,yy),(rect.right-pad,yy),2)
+                col=metal if {'tool_rack','mason_tools','hooks'} & tags else (green if 'bottles' in tags else fiber)
+                for i in range(3):pg.draw.circle(self.screen,col,(rect.left+pad+4+i*max(4,size//5),rect.centery),max(1,size//14))
+            elif {'metal_scrap','wood_offcuts','wood_shavings','stone_chips','hearth_wood'} & tags:
+                col=metal if 'metal_scrap' in tags else (stone if 'stone_chips' in tags else wood)
+                for i in range(7):
+                    x=rect.left+pad+(i*11)%max(4,size-2*pad);y=base_y-(i*7)%max(5,size//3)
+                    pg.draw.line(self.screen,col,(x,y),(min(rect.right-pad,x+max(2,size//6)),max(rect.top+pad,y-2)),max(1,size//16))
+            elif {'cloth_roll','hide_stack'} & tags:
+                col=cloth if 'cloth_roll' in tags else (137,94,67)
+                for i in range(3):
+                    rr=pg.Rect(rect.left+pad+i*max(3,size//7),base_y-size//3+i*2,size//3,size//7)
+                    pg.draw.ellipse(self.screen,col,rr);pg.draw.ellipse(self.screen,dark,rr,1)
+            elif {'clay_jars','crockery'} & tags:
+                for i in range(3):
+                    x=rect.left+pad+4+i*max(4,size//5);rr=pg.Rect(x,base_y-size//4-(i%2)*3,max(4,size//6),max(6,size//4))
+                    pg.draw.ellipse(self.screen,clay,rr);pg.draw.ellipse(self.screen,dark,rr,1)
+            elif {'kegs','buckets','bark_tub'} & tags:
+                for i in range(2):
+                    rr=pg.Rect(cx-size//4+i*size//5,base_y-size//3-i*2,size//3,size//3)
+                    pg.draw.ellipse(self.screen,wood,rr);pg.draw.ellipse(self.screen,dark,rr,1)
+                    pg.draw.line(self.screen,metal,(rr.left+2,rr.centery),(rr.right-2,rr.centery),1)
+            elif 'herbs' in tags:
+                for i in range(4):
+                    x=rect.left+pad+i*max(3,size//6);pg.draw.line(self.screen,green,(x,rect.top+pad),(x+2,base_y-size//8),1)
+                    pg.draw.ellipse(self.screen,green,(x-2,rect.centery,6,3))
+            elif 'cutting_board' in tags:
+                rr=pg.Rect(rect.left+pad,rect.centery-size//10,size-2*pad,size//4);pg.draw.rect(self.screen,wood,rr,border_radius=2);pg.draw.rect(self.screen,wood_hi,rr,1,border_radius=2)
+            elif 'pantry' in tags:
+                rr=pg.Rect(rect.left+pad,base_y-size//3,size-2*pad,size//3);pg.draw.rect(self.screen,wood,rr);pg.draw.rect(self.screen,dark,rr,1);pg.draw.line(self.screen,wood_hi,(rr.left,rr.top),(rr.right,rr.bottom),1)
+            else:
+                pg.draw.circle(self.screen,fiber,(cx,rect.centery),max(3,size//6));pg.draw.circle(self.screen,dark,(cx,rect.centery),max(3,size//6),1)
+            return True
         if not ({'yard','trade_sign','well','woodpile','ore_pile','coal_bin','haystack','grain_sacks','barrel','smoke_rack','chopping_block'} & tags):
             return False
-        pg=self.pg;size=rect.width;cx=rect.centerx;bottom=rect.bottom
         wood=(126,89,52);wood_hi=(164,122,73);wood_lo=(77,51,31)
         stone=(118,119,114);stone_hi=(158,158,150);stone_lo=(69,71,69)
         straw=(181,151,72);straw_hi=(220,190,104);straw_lo=(111,86,42)

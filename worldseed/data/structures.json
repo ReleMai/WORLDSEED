@@ -626,5 +626,187 @@
       "storage",
       "natural_container"
     ]
+  },
+  {
+    "id": "core:millstone",
+    "name": "Millstone",
+    "glyph": "M",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 4,
+      "core:wood": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "milling"
+    ],
+    "uses": [
+      "milling",
+      "grain_processing"
+    ],
+    "work_bonus": 14,
+    "description": "A heavy stone mill for reducing grain into flour."
+  },
+  {
+    "id": "core:bakery_oven",
+    "name": "Bakery Oven",
+    "glyph": "O",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 4,
+      "core:clay_lump": 2,
+      "core:wood": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "oven",
+      "fire"
+    ],
+    "uses": [
+      "baking",
+      "cooking"
+    ],
+    "warmth": 12,
+    "work_bonus": 14,
+    "description": "A masonry oven built for repeated bread baking."
+  },
+  {
+    "id": "core:loom",
+    "name": "Loom",
+    "glyph": "L",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 3,
+      "core:fiber": 2
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "textile"
+    ],
+    "uses": [
+      "weaving",
+      "textiles"
+    ],
+    "work_bonus": 14,
+    "description": "A timber loom for turning loose fiber into woven cloth."
+  },
+  {
+    "id": "core:pottery_wheel",
+    "name": "Pottery Wheel",
+    "glyph": "P",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:stone": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "pottery"
+    ],
+    "uses": [
+      "pottery",
+      "clay_shaping"
+    ],
+    "work_bonus": 12,
+    "description": "A balanced wheel for shaping useful clay vessels."
+  },
+  {
+    "id": "core:brewery_vat",
+    "name": "Brewery Vat",
+    "glyph": "V",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 4,
+      "core:fiber": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "brewing"
+    ],
+    "uses": [
+      "brewing",
+      "fermentation"
+    ],
+    "work_bonus": 12,
+    "description": "A sealed work vat for controlled grain and fruit fermentation."
+  },
+  {
+    "id": "core:herbalist_table",
+    "name": "Herbalist Table",
+    "glyph": "H",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:fiber": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "medicine"
+    ],
+    "uses": [
+      "herbalism",
+      "medicine",
+      "apothecary"
+    ],
+    "work_bonus": 12,
+    "description": "A clean preparation table for herbs, tonics, and remedies."
+  },
+  {
+    "id": "core:masonry_bench",
+    "name": "Masonry Bench",
+    "glyph": "A",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:stone": 3,
+      "core:wood": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "masonry"
+    ],
+    "uses": [
+      "masonry",
+      "stonecutting"
+    ],
+    "work_bonus": 14,
+    "description": "A robust bench for dressing and fitting construction stone."
+  },
+  {
+    "id": "core:smoke_rack",
+    "name": "Fish Smoke Rack",
+    "glyph": "S",
+    "passable": false,
+    "blocks_sight": false,
+    "cost": {
+      "core:wood": 2,
+      "core:fiber": 1
+    },
+    "tags": [
+      "station",
+      "workshop",
+      "smoking",
+      "preservation"
+    ],
+    "uses": [
+      "fish_processing",
+      "smoking",
+      "preservation"
+    ],
+    "work_bonus": 10,
+    "description": "A rack and hood for preserving cleaned fish over low smoke."
   }
 ]

@@ -5,6 +5,7 @@ from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, StructureInstance, RoofState, ContainerState, GroundPile, pos_key
+from worldseed.systems.workshops import STATION_PIECE_ALIASES
 
 class BuildingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry):
@@ -201,9 +202,24 @@ class BuildingSystem:
         return True,f"You break apart {c.name.lower() if c.name else 'the container'}; its contents spill onto the ground."+extra
 
     def nearby_station_ids(self,pos:WorldPos,radius:int=2)->set[str]:
+        """Stations available to the player from built and generated civilization."""
         out=set()
         for s in self.state.structures.values():
-            if s.z==pos.z and abs(s.x-pos.x)<=radius and abs(s.y-pos.y)<=radius and "station" in self.registry.structures[s.structure_id].tags:out.add(s.structure_id)
+            if s.z==pos.z and abs(s.x-pos.x)<=radius and abs(s.y-pos.y)<=radius:
+                definition=self.registry.structures.get(s.structure_id)
+                if definition is not None and "station" in definition.tags:
+                    out.add(s.structure_id)
+        if self.settlement_overlay is not None and pos.z==0:
+            cells=self.settlement_overlay.cells_in_bounds(
+                int(pos.x)-radius,int(pos.y)-radius,int(pos.x)+radius,int(pos.y)+radius
+            )
+            for cell in cells:
+                if max(abs(int(cell.x)-int(pos.x)),abs(int(cell.y)-int(pos.y)))>radius:
+                    continue
+                for piece_id in (cell.fixture_piece_id,cell.structure_piece_id):
+                    station_id=STATION_PIECE_ALIASES.get(str(piece_id))
+                    if station_id and station_id in self.registry.structures:
+                        out.add(station_id)
         return out
 
     def environmental_bonuses(self,pos:WorldPos,radius:int=2)->dict[str,int]:

@@ -115,6 +115,7 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - Exact farmers operate on persistent `CropPlot`/soil cells inside generated farm parcels; exact lumberjacks deplete the same natural-resource overlay the player sees; exact workshop professions must withdraw real inputs, occupy a real fixture for a duration, and place outputs into real storage.
 - Profession buildings must connect their usable exterior entrance to the authoritative settlement road graph. Do not fake access with renderer-only dirt strips; frontage/service paths belong in `RoadSegmentPlan` and must be passable by the same pathing authority used by actors.
 - Profession-yard identity (fences, gates, signs, wells, work piles and outdoor stations) belongs to the persistent settlement plan as `StructurePiecePlan` placements. Decorative rendering may be procedural, but collision/access and stable IDs come from the plan.
+- Every new item definition must ship in the same work unit with its own custom `worldseed/assets/sprites/items/<asset>.png` and a unique `sprite_tag` equal to that asset basename. Never reuse another item's asset as a placeholder, never add an item with a missing sprite, and keep the item-asset catalog regression green before merge.
 - Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
 
 ### RC14 release gates

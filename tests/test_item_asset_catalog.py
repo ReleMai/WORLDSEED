@@ -34,10 +34,15 @@ class ItemAssetCatalogTests(unittest.TestCase):
 
     def test_every_item_has_one_simple_unique_asset(self):
         assets = [str(row.get("asset", "")) for row in self.items]
+        sprite_tags = [str(row.get("sprite_tag", "")) for row in self.items]
         self.assertEqual(len(assets), len(set(assets)), "duplicate item asset basenames")
+        self.assertEqual(len(sprite_tags), len(set(sprite_tags)), "duplicate item sprite tags")
         for row in self.items:
             asset = str(row.get("asset", ""))
+            sprite_tag = str(row.get("sprite_tag", ""))
             self.assertRegex(asset, r"^[a-z0-9_]+$", row["id"])
+            self.assertRegex(sprite_tag, r"^[a-z0-9_]+$", row["id"])
+            self.assertEqual(sprite_tag, asset, f"{row['id']} sprite_tag must identify its custom sprite")
             self.assertTrue((SPRITES / f"{asset}.png").is_file(), f"missing item asset for {row['id']}: {asset}.png")
 
     def test_item_sprite_directory_has_no_orphans(self):

@@ -161,7 +161,7 @@ class SettlementPhysicalizationSystem:
                 changes["structure_piece_id"] = placement.piece_id
                 changes["structure_piece_uid"] = placement.uid
                 changes["structure_piece_role"] = placement.role
-            elif placement.role in {"fixture", "yard_fixture"}:
+            elif placement.role in {"fixture", "yard_fixture", "tile_decor"}:
                 changes["fixture_piece_id"] = placement.piece_id
             elif placement.role == "roof" or piece.category == "roof":
                 changes["roof_piece_id"] = placement.piece_id

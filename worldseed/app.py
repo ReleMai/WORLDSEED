@@ -16,6 +16,7 @@ from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
+from worldseed.systems.workshops import WORKSHOP_PROFILES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
@@ -2301,10 +2302,66 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
     category_page=categories.index(category)//12 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
+    workshop_state=RouteState('crafting-workshop','WORKSHOP')
     pot_state=RouteState('crafting-pot','DISCOVERY')
+    workshop_station=''
     placed=[];status=''
     while True:
         inv=ctx.entities.get(pid,Inventory)
+        if tab=='workshops':
+            nearby=sorted(
+                sid for sid in sim.building.nearby_station_ids(sim.player_pos)
+                if sid in WORKSHOP_PROFILES
+            )
+            if workshop_station not in nearby:
+                workshop_station=nearby[0] if nearby else ''
+                workshop_state.selected=0
+            station_rows=[]
+            for sid in nearby:
+                row=profile_dict(WORKSHOP_PROFILES[sid])
+                row['short_title']=WORKSHOP_PROFILES[sid].title.replace("'S",'').replace(' WORKSHOP','').replace(' YARD','')
+                station_rows.append(row)
+            all_station_recipes=recipes_for_station(reg,workshop_station) if workshop_station else []
+            known_ids={r.id for r in sim.crafting.discovered_recipes(inv)}
+            station_recipes=[r for r in all_station_recipes if r.id in known_ids]
+            station_recipes.sort(key=lambda r:r.name)
+            rows=[(r.id,r.name) for r in station_recipes]
+            if not rows:
+                rows=[('__none__','No discovered process at this station' if workshop_station else 'No workshop station within reach')]
+            workshop_state.selected=max(0,min(workshop_state.selected,len(rows)-1))
+            data=_recipe_ui_data(reg,sim,inv,station_recipes)
+            data.update({
+                'profile':profile_dict(WORKSHOP_PROFILES[workshop_station]) if workshop_station else {},
+                'stations':station_rows,'station_id':workshop_station,
+                'locked_count':max(0,len(all_station_recipes)-len(station_recipes)),
+            })
+            choice=_select(
+                term,'WORKSHOP',rows,state=workshop_state,presentation='workshop_station',
+                subtitle=status or (
+                    WORKSHOP_PROFILES[workshop_station].purpose if workshop_station
+                    else 'Stand beside a workshop fixture to use its dedicated processes.'
+                ),presentation_data=data
+            )
+            status=''
+            if choice is None:return UI_BACK
+            if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
+            if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
+            if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
+            if choice=='UI_ACTION:tab:index':tab='index';continue
+            if choice.startswith('UI_ACTION:workshop:'):
+                sid=choice.split(':',2)[2]
+                if sid in nearby:workshop_station=sid;workshop_state.selected=0
+                continue
+            if choice in reg.recipes:
+                sim.state.player_unseen_recipes=[rid for rid in sim.state.player_unseen_recipes if rid!=choice]
+                continue
+            if choice=='UI_ACTION:workshop_craft' and station_recipes:
+                rid=rows[workshop_state.selected][0]
+                if rid in reg.recipes:
+                    sim.execute(CraftCommand(pid,rid))
+                    status=sim.log[-1].message if sim.log else ''
+                continue
+            continue
         if tab=='recipes':
             known=[r for r in sim.crafting.discovered_recipes(inv) if (r.category or 'general')==category]
             known.sort(key=lambda r:r.name)
@@ -2352,6 +2409,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                            subtitle='Possible recipes for the selected carried item.')
             if choice is None:return UI_BACK
             if choice=='UI_ACTION:tab:recipes':tab='recipes'
+            elif choice=='UI_ACTION:tab:workshops':tab='workshops'
             elif choice=='UI_ACTION:tab:discovery':tab='discovery'
             continue
         entries={}
@@ -2382,6 +2440,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
         status=''
         if choice is None:return UI_BACK
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
+        if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
         if choice=='UI_ACTION:tab:index':tab='index';continue
         if choice.startswith('UI_ACTION:remove_slot:'):
             try:idx=int(choice.rsplit(':',1)[1])
@@ -2422,8 +2481,13 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
         known=sorted(sim.crafting.discovered_recipes(inv),key=lambda r:(r.category or 'general',r.name))
         ideas=sim.crafting.researchable_recipes(inv)
         discovered_items=set(sim.state.player_discovered_items)
+        nearby_workshops=sorted(
+            sid for sid in sim.building.nearby_station_ids(sim.player_pos)
+            if sid in WORKSHOP_PROFILES
+        )
         rows=[
             ('recipes',f'Discovered Recipes — {len(known)} known'),
+            ('workshops',f'Nearby Workshops — {len(nearby_workshops)} usable station(s)'),
             ('ideas','Experiment Grid — combine 1–5 carried items'),
             ('materials',f'Materials — {len(discovered_items)} item types examined'),
             ('tree','Tech Tree — trace discovered recipes and future branches'),
@@ -2431,6 +2495,40 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
         if reg.designs:rows.append(('design','Component Designs — choose materials part by part'))
         pick=_select(term,'CRAFTING MODE // WORKBENCH',rows,presentation='crafting_home',presentation_data=_crafting_home_ui_data(reg,sim,inv,known,ideas))
         if not pick:return UI_BACK
+
+        if pick=='workshops':
+            if not nearby_workshops:
+                _view_text(term,box('WORKSHOPS',['No usable workshop station is within reach.','Move beside a generated workshop fixture or a station you built.'],screen_width(term.size()[0],96)))
+                continue
+            sid=_select(term,'WORKSHOPS',[
+                (station_id,f"{WORKSHOP_PROFILES[station_id].title} — {WORKSHOP_PROFILES[station_id].purpose}")
+                for station_id in nearby_workshops
+            ])
+            if not sid:continue
+            profile=WORKSHOP_PROFILES[sid]
+            known_ids={r.id for r in sim.crafting.discovered_recipes(inv)}
+            recipes=[r for r in recipes_for_station(reg,sid) if r.id in known_ids]
+            if not recipes:
+                _view_text(term,box(profile.title,[profile.purpose,'','You have not discovered a process for this station yet.'],screen_width(term.size()[0],96)))
+                continue
+            stations=sim.building.nearby_station_ids(sim.player_pos)
+            recipe_rows=[]
+            for r in recipes:
+                missing=sim.crafting.missing_requirements(r.id,inv,stations)
+                result=', '.join(f'{reg.items[i].name} x{n}' for i,n in r.outputs.items() if i in reg.items)
+                recipe_rows.append((r.id,f'[{"READY" if not missing else "NEEDS"}] {r.name} → {result}'+(f' | {missing[0]}' if missing else '')))
+            rid=_select(term,profile.title,recipe_rows,subtitle=profile.purpose)
+            if not rid:continue
+            r=reg.recipes[rid];missing=sim.crafting.missing_requirements(rid,inv,stations)
+            body=[profile.purpose,'',r.name,r.description or 'A workshop process.','','OUTPUT']
+            body += [f'  {reg.items[i].name} x{n}' for i,n in r.outputs.items() if i in reg.items]
+            body += ['','MATERIALS']+[f'  {reg.items[i].name if i in reg.items else i}: {inv.count(i)}/{n}' for i,n in r.inputs.items()]
+            body += ['',f'Skill: {r.skill.replace("_"," ").title()} (difficulty {r.difficulty})',f'Time: {r.minutes} minutes']
+            if missing:body += ['','NOT READY']+[f'  {x}' for x in missing]
+            action=_select(term,profile.title,[(profile.action_label.lower(),profile.action_label)] if not missing else [('view','Close detail')],subtitle=' • '.join(body[:3]))
+            if not missing and action==profile.action_label.lower():
+                sim.execute(CraftCommand(pid,rid));return sim.log[-1].message if sim.log else ''
+            continue
 
         if pick=='materials':
             by_cat={}

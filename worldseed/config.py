@@ -32,7 +32,7 @@ LIGHTING_VERSION = 1
 # routes exact local physical corridors/infrastructure state.
 # Phase 3 adds dynamic hazard rerouting, frontier control/tolls/patrols and
 # interactive physical crossings. Settlement geometry remains v5-compatible.
-SETTLEMENT_PLAN_VERSION = 6
+SETTLEMENT_PLAN_VERSION = 7
 ROUTEGEN_VERSION = 4
 RNG_PROTOCOL_VERSION = 1
 RESOURCEGEN_VERSION = 4
