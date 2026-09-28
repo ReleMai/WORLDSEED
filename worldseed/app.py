@@ -1642,6 +1642,11 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:
+            if abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
+                return moved or 'You move away from the container.'
+            status=moved;continue
         if not choice.startswith('UI_ACTION:'):
             last_selected=choice;action_amount=1;continue
         if rows and 0<=route.selected<len(rows):
@@ -2266,6 +2271,21 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
         if not nav.back():return UI_BACK
 
 
+def _live_panel_world_move(ctx:GameContext,term:Terminal,choice:str)->str|None:
+    """Apply WASD from a retained gameplay panel without closing it."""
+    if not str(choice).startswith('UI_WORLD_MOVE:'):
+        return None
+    key=str(choice).rsplit(':',1)[1].lower()
+    direction=DIRECTION_KEYS.get(key)
+    if not direction:
+        return ''
+    before=len(ctx.sim.log)
+    ctx.sim.execute(MoveCommand(ctx.player_id,*direction))
+    message=ctx.sim.log[-1].message if len(ctx.sim.log)>before else ''
+    try:_present_game_frame(term,ctx,Renderer(ctx.registry),message)
+    except Exception:pass
+    return message
+
 def _inventory_menu(ctx:GameContext,term:Terminal)->str:
     """Unified graphical inventory with terminal fallback.
 
@@ -2300,6 +2320,13 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:
+            status=moved;continue
+        if choice=='UI_ACTION:open_crafting':
+            _crafting_menu(ctx,term)
+            _present_game_frame(term,ctx,Renderer(reg),status)
+            continue
         if not choice.startswith('UI_ACTION:'):
             if choice!='__empty__':
                 action_amount=1;last_selected=choice
