@@ -1044,7 +1044,8 @@ class PygameTerminal(PointerUI):
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Render one graphical inventory surface with inline item actions."""
         data=data or {};pg=self.pg;screen=self.screen;items=data.get('items',{})
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','PACK',str(data.get('player_name') or 'CARRIED GEAR'),subtitle)
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','PACK','INVENTORY',subtitle)
+        self._button((x+w-138,y+7,88,27),'CRAFTING','UI_ACTION:open_crafting')
         gap=9;summary_h=50
         metric_gap=8;metric_w=max(90,(cw-metric_gap*3)//4)
         metrics=[
@@ -1410,6 +1411,7 @@ class PygameTerminal(PointerUI):
     def _present_crafting_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','CRAFTING',subtitle)
+        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
         self._crafting_tabs(cx,cy,cw,'recipes');cy+=38
         cats=list(data.get('categories',[]));cat=str(data.get('category',''));newcats=set(data.get('new_categories',[]));per=6
         cat_page=max(0,min(int(data.get('category_page',0)),max(0,(len(cats)-1)//per)));visible=cats[cat_page*per:(cat_page+1)*per]
@@ -1456,6 +1458,7 @@ class PygameTerminal(PointerUI):
         profile=data.get('profile') or {};accent=tuple(profile.get('accent') or self._theme['accent'])
         station_title=str(profile.get('title') or 'WORKSHOP')
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKSHOP',station_title,subtitle)
+        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
         self._crafting_tabs(cx,cy,cw,'workshops');cy+=38
 
         # Nearby station switcher. Each chip is a real station currently within
@@ -1559,7 +1562,9 @@ class PygameTerminal(PointerUI):
 
     def _present_discovery_pot(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','EXPERIMENT GRID',subtitle);self._crafting_tabs(cx,cy,cw,'discovery');cy+=40
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','EXPERIMENT GRID',subtitle)
+        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
+        self._crafting_tabs(cx,cy,cw,'discovery');cy+=40
         ph=y+h-48-cy;left=pg.Rect(cx,cy,int(cw*.52),ph);right=pg.Rect(left.right+12,cy,cw-left.width-12,ph)
         for r in (left,right):pg.draw.rect(screen,self._theme['panel'],r,border_radius=6);pg.draw.rect(screen,self._theme['edge'],r,1,border_radius=6)
         screen.blit(self.small_font.render('MATERIALS WITH DISCOVERY PATHS',True,self._theme['accent']),(left.x+12,left.y+12));entries=data.get('items',{});placed=list(data.get('selected_items',()))
@@ -1586,6 +1591,7 @@ class PygameTerminal(PointerUI):
     def _present_crafting_index(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','ITEM DISCOVERIES',subtitle)
+        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
         self._crafting_tabs(cx,cy,cw,'index');cy+=40
         panel=pg.Rect(cx,cy,cw,y+h-48-cy)
         pg.draw.rect(screen,self._theme['panel'],panel,border_radius=6)
