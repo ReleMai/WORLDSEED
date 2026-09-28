@@ -91,16 +91,85 @@ class PointerUI:
         self._ui_navigation(confirm=True)
         self.pg.display.flip()
 
+    def present_text_field(self,title,label,value,*,max_len=48,allow_blank=True):
+        """Purpose-built new-game text field instead of a boxed console dump."""
+        pg=self.pg;screen=self.screen
+        x,y,w,h=self._draw_chrome(f'WORLDSEED // {title}')
+        self._paint_menu_veil((x,y,w,h));self._set_input_mode('text')
+        panel_w=max(520,min(820,w-120));panel_h=270
+        panel=pg.Rect(x+(w-panel_w)//2,y+(h-panel_h)//2,panel_w,panel_h)
+        pg.draw.rect(screen,(18,23,24),panel,border_radius=9)
+        pg.draw.rect(screen,self._theme['accent'],panel,2,border_radius=9)
+        pg.draw.line(screen,self._theme['edge'],(panel.x+18,panel.y+62),(panel.right-18,panel.y+62),1)
+        heading=self.title_font.render(str(title),True,self._theme['accent'])
+        screen.blit(heading,(panel.x+22,panel.y+20))
+        prompt=self.font.render(str(label),True,self._theme['text'])
+        screen.blit(prompt,(panel.x+28,panel.y+84))
+        help_map={
+            'Name this world:':'This name identifies the save and world history. It does not change the seed.',
+            'World seed (blank = random):':'Seeds reproduce terrain, settlements and generated civilization. Leave blank for a random seed.',
+            'Character name:':'Your survivor name is used in social records, journals and property ownership.',
+        }
+        hint=help_map.get(str(label),'Type a value, then continue.')
+        hs=self.small_font.render(self._fit_ui_text(hint,self.small_font,panel.width-56),True,self._theme['muted'])
+        screen.blit(hs,(panel.x+28,panel.y+112))
+        field=pg.Rect(panel.x+28,panel.y+148,panel.width-56,48)
+        pg.draw.rect(screen,(12,17,18),field,border_radius=6)
+        pg.draw.rect(screen,self._theme['edge_hi'],field,1,border_radius=6)
+        shown=str(value)
+        cursor='|' if (pg.time.get_ticks()//450)%2==0 else ''
+        txt=self.font.render(self._fit_ui_text(shown+cursor,self.font,field.width-24),True,self._theme['text'])
+        screen.blit(txt,(field.x+12,field.centery-txt.get_height()//2))
+        count=self.small_font.render(f'{len(shown)}/{max_len}',True,self._theme['muted'])
+        screen.blit(count,(field.right-count.get_width(),field.bottom+7))
+        self._menu_nav_rect=panel
+        self._ui_navigation(confirm=True)
+        pg.display.flip();self.clock.tick(120)
+
     def present_allocation(self,title,rows,selected,remaining):
-        capacity=self.menu_page_size();start=(selected//capacity)*capacity
-        self.present_menu(title,rows[start:start+capacity],selected-start,
-                          subtitle=f'Points remaining: {remaining}',page_start=start,total=len(rows))
-        targets=list(self._pointer_targets)
-        for rect,token in targets:
-            if token.startswith('UI_SELECT:'):
-                i=int(token.split(':')[1])+start
-                self._button((rect.right-100,rect.y,44,rect.h),'-',f'UI_MINUS:{i}')
-                self._button((rect.right-50,rect.y,44,rect.h),'+',f'UI_PLUS:{i}')
+        """Two-pane point allocation with controls separate from row hit targets."""
+        pg=self.pg;screen=self.screen
+        x,y,w,h=self._draw_chrome(f'WORLDSEED // {title}')
+        self._paint_menu_veil((x,y,w,h));self._set_input_mode('ui')
+        panel_w=max(760,min(1040,w-80));panel_h=max(480,min(660,h-90))
+        panel=pg.Rect(x+(w-panel_w)//2,y+(h-panel_h)//2,panel_w,panel_h)
+        pg.draw.rect(screen,(18,23,24),panel,border_radius=9);pg.draw.rect(screen,self._theme['accent'],panel,2,border_radius=9)
+        heading=self.title_font.render(str(title),True,self._theme['text']);screen.blit(heading,(panel.x+22,panel.y+18))
+        rem=self.font.render(f'Points remaining: {remaining}',True,self._theme['accent'] if remaining else self._theme['good'])
+        screen.blit(rem,(panel.right-rem.get_width()-22,panel.y+20))
+        body_y=panel.y+62;footer_h=58;gap=14
+        left=pg.Rect(panel.x+18,body_y,int((panel.width-36-gap)*.58),panel.height-80-footer_h)
+        right=pg.Rect(left.right+gap,body_y,panel.right-left.right-gap-18,left.height)
+        for rr in (left,right):
+            pg.draw.rect(screen,self._theme['panel'],rr,border_radius=7);pg.draw.rect(screen,self._theme['edge'],rr,1,border_radius=7)
+        capacity=max(5,(left.height-20)//48);start=(selected//capacity)*capacity
+        page=rows[start:start+capacity]
+        for local,row in enumerate(page):
+            idx=start+local;rr=pg.Rect(left.x+10,left.y+10+local*48,left.width-20,40)
+            active=idx==selected;hover=rr.collidepoint(self._last_mouse)
+            pg.draw.rect(screen,(47,51,45) if active or hover else (26,31,32),rr,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rr,2 if active else 1,border_radius=5)
+            label=str(getattr(row,'label',row));name,value=(label.rsplit(': ',1)+[''])[:2] if ': ' in label else (label,'')
+            ns=self.font.render(self._fit_ui_text(name,self.font,rr.width-96),True,self._theme['text']);screen.blit(ns,(rr.x+12,rr.centery-ns.get_height()//2))
+            vs=self.font.render(value,True,self._theme['accent']);screen.blit(vs,(rr.right-vs.get_width()-12,rr.centery-vs.get_height()//2))
+            self._ui_target(rr,f'UI_SELECT:{local}')
+        active_row=rows[selected] if rows else None
+        label=str(getattr(active_row,'label','')) if active_row else ''
+        hint=str(getattr(active_row,'hint','')) if active_row else ''
+        title_text=label.split(':',1)[0]
+        ts=self.title_font.render(self._fit_ui_text(title_text,self.title_font,right.width-30),True,self._theme['accent']);screen.blit(ts,(right.x+15,right.y+18))
+        yy=right.y+58
+        for line in self._wrap_pixel_text(hint,self.font,right.width-30)[:6]:
+            screen.blit(self.font.render(line,True,self._theme['text']),(right.x+15,yy));yy+=24
+        note='Attributes define broad physical and mental capacity.' if str(title).upper()=='ATTRIBUTES' else 'Skills improve task effectiveness and unlock better results through practice.'
+        yy=max(yy+16,right.y+180)
+        for line in self._wrap_pixel_text(note,self.small_font,right.width-30)[:3]:
+            screen.blit(self.small_font.render(line,True,self._theme['muted']),(right.x+15,yy));yy+=18
+        control_y=right.bottom-58
+        self._button((right.x+16,control_y,70,34),'−',f'UI_MINUS:{selected}')
+        self._button((right.x+94,control_y,70,34),'+',f'UI_PLUS:{selected}')
+        page_s=self.small_font.render(f'{selected+1}/{len(rows)}',True,self._theme['muted']);screen.blit(page_s,(right.right-page_s.get_width()-18,control_y+9))
+        self._menu_nav_rect=panel
         self._ui_navigation(extra=('Continue','\r'))
-        self.pg.display.flip()
+        pg.display.flip();self.clock.tick(120)
         return start
