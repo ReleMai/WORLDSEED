@@ -6,6 +6,8 @@ import sys
 import tempfile
 import time
 import tracemalloc
+import threading
+from contextlib import contextmanager
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 
 from worldseed.config import DATA_DIR
@@ -21,6 +23,31 @@ from worldseed.world.generator import WorldGenerator
 from worldseed.world.world import World
 
 DAYS_PER_YEAR=120
+
+
+@contextmanager
+def progress(label: str, interval: float = 10):
+    """Report liveness without reading or changing simulation state."""
+    stopped = threading.Event()
+    started = time.monotonic()
+    stage = ['initializing']
+
+    def report(message):
+        stage[0] = message
+        print(f'SOAK {label}: {message} ({time.monotonic() - started:.1f}s)', file=sys.stderr, flush=True)
+
+    def heartbeat():
+        while not stopped.wait(interval):
+            print(f'SOAK RUNNING {label}: {stage[0]} ({time.monotonic() - started:.1f}s)', file=sys.stderr, flush=True)
+
+    report('initializing')
+    thread = threading.Thread(target=heartbeat, daemon=True)
+    thread.start()
+    try:
+        yield report
+    finally:
+        stopped.set()
+        thread.join(timeout=1)
 
 
 def make_sim(seed:bytes,root:Path):
@@ -66,28 +93,46 @@ def invariants(sim:Simulation)->list[str]:
 
 def run_one(seed_text:str,years:int,policy:str='full',trace_memory:bool=False)->dict:
     seed=seed_text.encode();days=years*DAYS_PER_YEAR
-    with tempfile.TemporaryDirectory() as td:
+    with tempfile.TemporaryDirectory() as td, progress(seed_text) as report:
         db,sim=make_sim(seed,Path(td))
-        if trace_memory:tracemalloc.start()
-        start=time.perf_counter();summary=sim.advance_offline(days*1440,policy);elapsed=time.perf_counter()-start
-        peak=0
-        if trace_memory:
-            _,peak=tracemalloc.get_traced_memory();tracemalloc.stop()
-        state_dict=sim.state.to_dict();state_bytes=len(json.dumps(state_dict,separators=(',',':'),sort_keys=True).encode('utf-8'))
-        errs=invariants(sim);digest=canonical_hash(state_dict);result={
-            'seed':seed_text,'years':years,'days':days,'seconds':round(elapsed,3),'state_mb':round(state_bytes/1024/1024,2),'hash':digest,
-            'settlements':len(sim.state.settlements),'realized_regions':len(sim.state.realized_regions),'npcs':len(sim.state.npcs),'cohorts':len(sim.state.cohorts),'creatures':len(sim.state.creatures),
-            'live_history':len(sim.state.history),'archive_buckets':len(sim.state.history_archive),'routes':len(sim.state.trade_routes),'properties':len(sim.state.properties),
-            'summary':summary,'errors':errs,
-        }
-        if trace_memory:result['peak_mb']=round(peak/1024/1024,2)
-        db.close();return result
+        try:
+            if trace_memory:tracemalloc.start()
+            report(f'advancing {days} simulated days, policy={policy}')
+            start=time.perf_counter();summary=sim.advance_offline(days*1440,policy);elapsed=time.perf_counter()-start
+            peak=0
+            if trace_memory:
+                _,peak=tracemalloc.get_traced_memory();tracemalloc.stop()
+            report('checking invariants and serializing state')
+            state_dict=sim.state.to_dict();state_bytes=len(json.dumps(state_dict,separators=(',',':'),sort_keys=True).encode('utf-8'))
+            errs=invariants(sim);digest=canonical_hash(state_dict);result={
+                'seed':seed_text,'years':years,'days':days,'seconds':round(elapsed,3),'state_mb':round(state_bytes/1024/1024,2),'hash':digest,
+                'settlements':len(sim.state.settlements),'realized_regions':len(sim.state.realized_regions),'npcs':len(sim.state.npcs),'cohorts':len(sim.state.cohorts),'creatures':len(sim.state.creatures),
+                'live_history':len(sim.state.history),'archive_buckets':len(sim.state.history_archive),'routes':len(sim.state.trade_routes),'properties':len(sim.state.properties),
+                'summary':summary,'errors':errs,
+            }
+            if trace_memory:result['peak_mb']=round(peak/1024/1024,2)
+            report('complete')
+            return result
+        finally:
+            if trace_memory and tracemalloc.is_tracing():tracemalloc.stop()
+            db.close()
 
 
 def main()->int:
-    ap=argparse.ArgumentParser();ap.add_argument('--years',type=int,default=25);ap.add_argument('--seeds',type=int,default=4);ap.add_argument('--prefix',default='matrix');ap.add_argument('--policy',choices=['safe','full'],default='full');ap.add_argument('--json',action='store_true');ap.add_argument('--trace-memory',action='store_true',help='Enable tracemalloc (slow; best for shorter runs).');a=ap.parse_args();results=[]
+    ap=argparse.ArgumentParser()
+    ap.add_argument('--years',type=int,default=1)
+    ap.add_argument('--seeds',type=int,default=1)
+    ap.add_argument('--prefix',default='matrix')
+    ap.add_argument('--policy',choices=['safe','full'],default='full')
+    ap.add_argument('--json',action='store_true')
+    ap.add_argument('--trace-memory',action='store_true',help='Enable tracemalloc (slow; best for shorter runs).')
+    ap.add_argument('--allow-long-run',action='store_true',help='Explicitly enable more than one seed-year for release validation.')
+    a=ap.parse_args();results=[]
+    if a.years < 1 or a.seeds < 1:ap.error('--years and --seeds must be positive')
+    if a.years*a.seeds > 1 and not a.allow_long_run:
+        ap.error('multi-year/multi-seed soaks require --allow-long-run; use run_ci_check.py for a hard deadline')
     for i in range(a.seeds):
-        row=run_one(f'{a.prefix}-{i}',a.years,a.policy,a.trace_memory);results.append(row);print(json.dumps(row,sort_keys=True) if a.json else row)
+        row=run_one(f'{a.prefix}-{i}',a.years,a.policy,a.trace_memory);results.append(row);print(json.dumps(row,sort_keys=True) if a.json else row,flush=True)
     failed=any(r['errors'] for r in results);return 1 if failed else 0
 
 if __name__=='__main__':raise SystemExit(main())

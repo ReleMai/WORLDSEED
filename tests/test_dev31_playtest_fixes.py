@@ -72,6 +72,9 @@ class Dev31ExplorationTests(unittest.TestCase):
         self.assertLess(storm_night,day)
         self.assertGreaterEqual(storm_night,3)
 
+
+class Dev31LightingTests(unittest.TestCase):
+    # Lighting is pure: do not regenerate a world just to inspect dawn/dusk.
     def test_twilight_uses_warm_orange_tints(self):
         light=LightingSystem()
         # Spring opening sunrise is near 06:00; sample shortly before and after sunset.

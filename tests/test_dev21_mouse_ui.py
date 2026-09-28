@@ -3,6 +3,8 @@ import os
 os.environ.setdefault('SDL_VIDEODRIVER','dummy')
 os.environ.setdefault('SDL_AUDIODRIVER','dummy')
 import unittest
+import tempfile
+from pathlib import Path
 from worldseed.ui.pygame_terminal import PygameTerminal
 from worldseed.ui.widgets import MenuRow, select_menu, prompt_text
 
@@ -157,7 +159,9 @@ class MouseUITests(unittest.TestCase):
         try:
             before=f.sim.state.to_dict()
             self.t.present_game(f.reg,f.world,f.entities,f.sim,f.pid)
-            self.pg.image.save(self.t.screen,'artifacts/dev21_hud.png')
+            # Test renders must not overwrite a tracked reference image.
+            with tempfile.TemporaryDirectory() as output:
+                self.pg.image.save(self.t.screen,str(Path(output)/'dev21_hud.png'))
             for _,token in HUD_BUTTONS:
                 self.click(token);self.assertEqual(self.t.read_key(),token)
                 self.assertNotEqual(classify_key(token).kind,'none')

@@ -44,27 +44,9 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
-      # Keep cheap/high-signal regressions before the expensive worldgen suite
-      # so interface or compatibility mistakes fail in seconds, not ~15 minutes.
-      - name: Run graphical inventory and storage UI regressions
+      - name: Run complete regression suite once
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Run graphical inventory and storage UI regressions" --timeout 360 -- python -u -m unittest -v tests.test_dev19_feature_ui tests.test_dev21_mouse_ui tests.test_dev34_storage_containers tests.test_dev37_floating_interaction_ui tests.test_dev38_natural_container_art tests.test_dev38_natural_container_visuals
-
-      - name: Run Phase 5 coast regression tests
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Run Phase 5 coast regression tests" --timeout 600 -- python -u -m unittest -v tests.test_worldgen_v8_coast
-
-      - name: Run atlas interaction regression
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Run atlas interaction regression" --timeout 360 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets
-
-      - name: Run Dev31 playtest regressions
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Run Dev31 playtest regressions" --timeout 360 -- python -u -m unittest -v tests.test_dev31_playtest_fixes
-
-      - name: Run v8 worldgen and hydrology regression suite
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Run v8 worldgen and hydrology regression suite" --timeout 1200 -- python -u -m unittest -v tests.test_rc14_hydrology tests.test_worldgen_v8_climate_weather tests.test_worldgen_v8_phase2 tests.test_worldgen_v8_topography tests.test_worldgen_v8_promotion tests.test_rc13_pregeneration
+        run: python -u tools/run_ci_check.py --name full-regressions --timeout 1200 -- python -u -m unittest discover -s tests -v -f
 
       - name: Run content audit
         shell: pwsh
@@ -93,13 +75,10 @@ jobs:
       - name: Build clean test package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path package | Out-Null
-          $exclude = @(".git", ".github", "package", "__pycache__", ".pytest_cache", ".mypy_cache", "saves", "backups")
-          Get-ChildItem -Force | Where-Object { $exclude -notcontains $_.Name } | ForEach-Object {
-            Copy-Item $_.FullName -Destination package -Recurse -Force
-          }
-          Get-ChildItem package -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
-          Get-ChildItem package -Recurse -File -Include "*.pyc","*.pyo" | Remove-Item -Force
+          git archive --format=zip --output="$env:RUNNER_TEMP/source.zip" HEAD
+          if ($LASTEXITCODE -ne 0) { throw "git archive failed" }
+          Expand-Archive -LiteralPath "$env:RUNNER_TEMP/source.zip" -DestinationPath package
+          Copy-Item DEV31_TEST_LOCATIONS.json -Destination package -Force
 
       - name: Upload playable validated build
         uses: actions/upload-artifact@v4

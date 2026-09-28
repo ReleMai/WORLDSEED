@@ -1,6 +1,6 @@
 # WORLDSEED — Consolidated Project Manual
 
-This README is the single consolidated human-facing Markdown document for WORLDSEED. It absorbs the previous roadmap, system, design, validation, handoff, audit, report, release-note, UI, art, and development-history Markdown files so the repository stays clean.
+This README collects WORLDSEED product documentation and historical development notes. For current checkout, branch, and validation instructions, use [DEVELOPMENT.md](DEVELOPMENT.md) and the current testing contract in [AGENTS.md](AGENTS.md). Older commands and release reports below are historical context, not requirements to rerun full suites or multi-decade soaks during every task.
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 

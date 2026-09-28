@@ -115,8 +115,8 @@ GEOGRAPHY + HYDROLOGY + RESOURCES
 - Exact farmers operate on persistent `CropPlot`/soil cells inside generated farm parcels; exact lumberjacks deplete the same natural-resource overlay the player sees; exact workshop professions must withdraw real inputs, occupy a real fixture for a duration, and place outputs into real storage.
 - Profession buildings must connect their usable exterior entrance to the authoritative settlement road graph. Do not fake access with renderer-only dirt strips; frontage/service paths belong in `RoadSegmentPlan` and must be passable by the same pathing authority used by actors.
 - Profession-yard identity (fences, gates, signs, wells, work piles and outdoor stations) belongs to the persistent settlement plan as `StructurePiecePlan` placements. Decorative rendering may be procedural, but collision/access and stable IDs come from the plan.
-- Every new item definition must ship in the same work unit with its own custom `worldseed/assets/sprites/items/<asset>.png` and a unique `sprite_tag` equal to that asset basename. Never reuse another item's asset as a placeholder, never add an item with a missing sprite, and keep the item-asset catalog regression green before merge.
 - Territorial control must ultimately be attributable to settlements, generated claim monuments, roads/supply, people or conflict. Do not create an unrelated colored-region ownership map.
+- Every new item definition must ship in the same work unit with its own custom `worldseed/assets/sprites/items/<asset>.png` and a unique `sprite_tag` equal to that asset basename. Never reuse another item's asset as a placeholder, never add an item with a missing sprite, and keep the item-asset catalog regression green before merge.
 
 ### RC14 release gates
 
@@ -161,7 +161,10 @@ GitHub Actions is a verification boundary, not an edit-by-edit development loop.
 
 - **One coherent publication per work unit.** Do not push file-by-file or bookkeeping-by-bookkeeping commits to `main`. Stage the code, tests, docs, version metadata and handoff for one validated work unit, then publish them together.
 - **Batch connector writes.** When a GitHub connector can create one tree/commit containing several changed files, prefer that over repeated contents-API commits that each trigger CI.
-- **Use work branches for iteration.** Intermediate experiments may live on an explicit work branch, but do not attach temporary push-triggered full-build workflows to that branch. Run targeted validation before publishing the coherent result.
+- **Main-first, one active work unit.** Start every task from freshly verified `main`. Keep routine implementation and targeted validation local, then publish one coherent update to `main`. Do not create a branch for each chat, fix, asset batch, or phase. Existing historical branches are parked references, not alternate development baselines. Use an isolated work branch only when the user explicitly requests one or unfinished work must be preserved; record its owner and purpose in the handoff and integrate or retire it before starting another.
+- **One writer at a time.** Do not run concurrent publishing chats against the same baseline. Re-read remote `main` immediately before publishing; if it moved, reconcile and revalidate the affected changes. Never force-push to resolve that situation.
+- **Bound the work session.** Aim to finish a coherent work unit within about 25 minutes, including validation and synchronization. Do not start another large feature near the limit. Leave an accurate resumable handoff rather than repeatedly expanding scope or launching a full release suite at the end of a chat.
+- **Verify the workspace first.** Follow `DEVELOPMENT.md` and run `tools/workspace_preflight.py` against a freshly read remote SHA before edits. A folder of source files, an old attachment, or a partial connector download is not a complete checkout. If recovery is needed, materialize one complete pinned snapshot and verify its recursive Git tree once; do not reconstruct the repository file-by-file for every task.
 - **Automatic CI is deliberately fast.** `.github/workflows/fast-gate.yml` is the normal automatic gate for `main` and pull requests. Keep it high-signal and bounded to roughly a few minutes.
 - **Full validation is deliberate.** `.github/workflows/test-build.yml` is a manual release/handoff gate. Run it once when a substantial phase/build is ready for comprehensive regression validation and packaging, not after every intermediate commit.
 - **Do not weaken tests to make CI green.** When the fast gate fails, inspect the failing assertion/root cause first. Update a test only when the intended contract actually changed.
@@ -358,27 +361,34 @@ Prefer the World Console/context menus over consuming every remaining keyboard l
 
 ## Testing contract
 
-Minimum branch gate:
+This section supersedes older blanket full-suite/long-soak instructions in historical guides and handoffs. Ordinary development uses targeted tests; release validation remains comprehensive.
+
+For an ordinary work unit:
 
 ```bash
-python -m compileall worldseed
-python -m unittest discover -s tests -v
-python tools/replay.py tests/fixtures/golden_replay.json
+python -m compileall -q worldseed tools tests
+python -u tools/run_ci_check.py --name targeted --timeout 180 -- python -u -m unittest -v <affected-test-modules>
 ```
 
-Persistence change:
+- Select the affected subsystem and its direct integration tests. Asset/UI edits do not require world-generation suites or long world simulations.
+- Use the bounded runner for every potentially long check. It emits progress, kills the process tree on timeout, and returns 124. Do not retry a timeout with a larger limit without inspecting the cause.
+- Run the automatic fast gate once for the coherent publication. Do not poll CI continuously or trigger extra runs for bookkeeping.
+- Full discovery, exhaustive worldgen audits, 25-year matrices and century seeds are deliberate manual release/nightly checks, not requirements for every chat. Report which validation tier ran; never label a smoke-tested build fully release-validated.
+- Put hard deadlines on local checks, keep per-task validation bounded, and communicate results or the last active check if work stalls. Never weaken assertions merely to finish sooner.
+
+Persistence changes also require representative save round-trip/migration checks and:
 
 ```bash
 python tools/verify_save.py <representative-save>
 ```
 
-Simulation/aggregate change:
+Simulation changes normally use relevant conservation tests plus a bounded one-seed smoke soak when needed:
 
 ```bash
-python tools/soak_matrix.py --years 25 --seeds 4 --policy full --json
+python -u tools/run_ci_check.py --name soak-smoke --timeout 180 -- python -u tools/soak_matrix.py --years 1 --seeds 1 --policy full --json
 ```
 
-Performance/LOD change should also run a century-scale seed during development/nightly validation.
+Manual release/nightly hardening uses `test-build.yml` and explicitly opted-in long soaks, for example `--years 25 --seeds 4 --allow-long-run`, under an appropriate hard deadline. Performance/LOD releases also need a century-scale seed; ordinary performance edits need focused benchmarks first.
 
 ## Required new tests by change type
 
@@ -395,7 +405,7 @@ Persistent state:
 Economy/ecology/disease:
 - conservation/bounds;
 - no negative populations/stocks;
-- long soak.
+- bounded smoke soak during development; long soak at the manual release/nightly gate.
 
 UI:
 - observational/read-only;

@@ -21,7 +21,9 @@ class CraftableSpriteCoverageTests(unittest.TestCase):
             sprite = visual.base_dir / ref.paths[0]
             data = sprite.read_bytes()
             self.assertEqual(b'\x89PNG\r\n\x1a\n', data[:8], item)
-            self.assertEqual((64, 64), struct.unpack('>II', data[16:24]), item)
+            # New workshop outputs retain the established 32px icon format;
+            # the authored craftable refresh uses 64px. Both render natively.
+            self.assertIn(struct.unpack('>II', data[16:24]), {(32, 32), (64, 64)}, item)
             self.assertEqual(6, data[25], item)  # RGBA, with transparency.
             hashes.add(hashlib.sha256(data).digest())
         self.assertEqual(len(crafted), len(hashes))

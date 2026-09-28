@@ -11,7 +11,7 @@ from worldseed.entities.components import Inventory
 @unittest.skipUnless(PygameTerminal.available(), 'pygame-ce required for graphical tests')
 class GraphicalRegressionTests(unittest.TestCase):
     def setUp(self):
-        from test_ui_rc2 import UIRC3FlowTests
+        from tests.test_ui_rc2 import UIRC3FlowTests
         self.fixture=UIRC3FlowTests();self.fixture.setUp()
         self.term=PygameTerminal();self.term.enter()
     def tearDown(self):
@@ -40,16 +40,29 @@ class GraphicalRegressionTests(unittest.TestCase):
             method('Inventory',[MenuRow(iid,iid)],0,data=data)
         t._present_inventory_item_detail('Item',data=data)
         self.assertEqual(before,f.sim.state.to_dict());self.assertEqual(before_inv,inv.items)
-    def test_all_character_assets_have_alpha_and_shared_canvas(self):
+
+@unittest.skipUnless(PygameTerminal.available(), 'pygame-ce required for graphical tests')
+class GraphicalAssetTests(unittest.TestCase):
+    # Asset loading/gallery checks do not need a generated simulation fixture.
+    def setUp(self):
+        self.term=PygameTerminal();self.term.enter()
+
+    def tearDown(self):
+        self.term.restore()
+
+    def test_character_assets_have_alpha_and_supported_canvases(self):
         t=self.term
         paths=t._visuals.player_paths('male')+t._visuals.player_paths('female')
         self.assertEqual(len(paths),20)
         for path in paths:
             surf=t.pg.image.load(str(path)).convert_alpha()
-            self.assertEqual(surf.get_size(),(160,256))
+            # The documented roster refresh replaces the first three looks
+            # per sex with 100x144 NPC artwork; legacy looks remain 160x256.
+            expected=(100,144) if 'npc_rework' in path.parts else (160,256)
+            self.assertEqual(surf.get_size(),expected,str(path))
             self.assertEqual(surf.get_at((0,0)).a,0)
             bounds=surf.get_bounding_rect(min_alpha=16)
-            self.assertGreater(bounds.top,0);self.assertLess(bounds.bottom,256)
+            self.assertGreater(bounds.top,0);self.assertLess(bounds.bottom,surf.get_height())
             for size in (28,56,240):
                 rendered=t._load_sprite(path,size,size*2)
                 self.assertIsNotNone(rendered)

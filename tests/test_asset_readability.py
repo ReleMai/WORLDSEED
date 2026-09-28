@@ -43,7 +43,8 @@ class AssetReadabilityTests(unittest.TestCase):
         digests = [self.digest(path) for path in paths]
         self.assertEqual(len(digests), len(set(digests)))
         for path in paths:
-            self.assertEqual(Image.open(ROOT / path).size, (128, 128))
+            with Image.open(ROOT / path) as image:
+                self.assertEqual(image.size, (128, 128))
 
 
 if __name__ == '__main__':
