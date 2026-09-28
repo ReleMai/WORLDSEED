@@ -464,6 +464,7 @@ class Simulation:
         return summary
 
     def _advance_time(self,minutes:int)->None:
+        advance_started=time.perf_counter()
         old=self.clock.minute;self.clock.advance(minutes);self.state.clock_minute=self.clock.minute
         player=self.player_pos
         replay_active=should_replay_active_ticks(minutes)
@@ -475,7 +476,10 @@ class Simulation:
         # decisions run first and physical Tier-A execution follows.
         for minute in sorted(hourly_minutes|tick_minutes):
             if minute in hourly_minutes:
+                hourly_started=time.perf_counter()
                 self.environment.hourly_update(minute);affected_routes=self.route_planner.hourly_hazard_update(minute,self.environment);collapsed=self.building.hourly_update();self.property_security.update_scheduled_locks(minute);self.npcs.decision_update(minute,player,execute_active=not replay_active);self.disease.transport_update(minute);self.economy.process_caravans(minute);self.households.hourly_update(minute);self.workplace_logistics.hourly_update(minute);self.migration.process(minute);self.disease.transport_update(minute);self.magic.hourly_update(minute);self.metallurgy.cool_hourly(minute,1);[self._message(m) for m in self.processing.complete_due(minute)]
+                hourly_ms=(time.perf_counter()-hourly_started)*1000
+                if hourly_ms>=35:self.debug.event("hourly_tick",minute=int(minute),elapsed_ms=round(hourly_ms,3),slow=hourly_ms>=100)
                 if affected_routes:self._refresh_active_transport()
                 pf=self.world.generator.sample_fields(player);pw=self.environment.weather.at(minute,player.x,player.y);ambient=-25+(pf.temperature*65)//65535+int(pw.get("temp_delta",0));arc=self.state.arcane_contamination.get(pos_key(player.x,player.y,player.z));self.artifacts.tick_environment("player",ambient,arc.intensity if arc else 0)
                 if collapsed:
@@ -489,6 +493,13 @@ class Simulation:
             minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
             if day%30==0:self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
+        advance_ms=(time.perf_counter()-advance_started)*1000
+        if advance_ms>=20 or minutes>=60:
+            self.debug.event(
+                "time_advance",minutes=int(minutes),elapsed_ms=round(advance_ms,3),
+                hourly_boundaries=len(hourly_minutes),fixed_ticks=len(tick_minutes),
+                day_boundaries=max(0,new_day-old_day),slow=advance_ms>=100,
+            )
 
     def _update_vitals(self,minutes:int)->None:
         v=self.entities.try_get(self.player_id,Vitals)
