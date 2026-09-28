@@ -620,7 +620,15 @@
     "core:wood_storage_box": "assets/sprites/structures/wood_chest.png",
     "core:natural_hollow_log": "assets/sprites/resources/hollow_log_cache.png",
     "core:natural_rotten_stump": "assets/sprites/resources/rotten_stump_cache.png",
-    "core:natural_rock_cache": "assets/sprites/resources/rock_crevice_cache.png"
+    "core:natural_rock_cache": "assets/sprites/resources/rock_crevice_cache.png",
+    "core:millstone": "assets/sprites/structures/millstone.png",
+    "core:bakery_oven": "assets/sprites/structures/bakery_oven.png",
+    "core:brewery_vat": "assets/sprites/structures/brewery_vat.png",
+    "core:herbalist_table": "assets/sprites/structures/herbalist_table.png",
+    "core:loom": "assets/sprites/structures/loom.png",
+    "core:masonry_bench": "assets/sprites/structures/masonry_bench.png",
+    "core:pottery_wheel": "assets/sprites/structures/pottery_wheel.png",
+    "core:smoke_rack": "assets/sprites/structures/smoke_rack.png"
   },
   "species": {
     "core:rabbit": [
