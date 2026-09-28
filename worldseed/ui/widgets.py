@@ -251,7 +251,11 @@ def prompt_text(term, title: str, label: str, *, default: str = "", max_len: int
     while True:
         cols,_=term.size(); width=max(40,min(84,cols-2))
         shown=''.join(value)
-        getattr(term,'present_text_entry',term.present)(panel(title,[label,'',f'> {shown}_','', 'Click Continue to accept or Back to cancel.'],width,'Type normally • Backspace deletes • Enter accepts'))
+        field=getattr(term,'present_text_field',None)
+        if callable(field):
+            field(title,label,shown,max_len=max_len,allow_blank=allow_blank)
+        else:
+            getattr(term,'present_text_entry',term.present)(panel(title,[label,'',f'> {shown}_','', 'Click Continue to accept or Back to cancel.'],width,'Type normally • Backspace deletes • Enter accepts'))
         k=term.read_key()
         if k in ('ESC',):return None
         if k in ('\r','\n'):
