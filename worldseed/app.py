@@ -17,7 +17,7 @@ from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
-from worldseed.systems.workshops import WORKSHOP_PROFILES, recipes_for_station, profile_dict
+from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
@@ -701,7 +701,7 @@ def _casing_notes(ctx:GameContext,term:Terminal,property_id:str)->str:
         state='forced open' if door.forced else 'unlocked' if not door.locked else 'locked'
         lock_rows.append(f'  {door.role.replace("_"," ").title()}: {sim.property_security.lock_band(door.lock_level)} lock — {state} — condition {door.condition}%')
     if lock_rows:lines+=['','Known security:']+lock_rows[:6]
-    lines+=['','Move around the exterior to survey access. Entering rooms reveals only the spaces and storage you physically reach.']
+    lines+=['','Observe exposed sides, doors and yards from nearby sightlines. You do not need to squeeze into every alley. Entering rooms still reveals only spaces and storage you physically reach.']
     _view_text(term,box('CASING NOTES',lines,screen_width(term.size()[0],96)))
     return UI_BACK
 
@@ -1841,6 +1841,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
     private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
+    fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
+    fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
         if door.locked and not door.forced and not sim.property_security.authorized_player(door):
             intel=sim.casing.intel_for(door.property_id)
@@ -1855,6 +1857,10 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
         elif door.forced:
             rows.append(('inspect_property_door',f'Inspect forced doorway — condition {door.condition}%'))
+    if fixture_piece is not None and distance<=1:
+        rows.append(('inspect_fixture',f'Inspect {fixture_piece.name}'))
+        if fixture_station in WORKSHOP_PROFILES:
+            rows.append(('use_fixture',f'Use {WORKSHOP_PROFILES[fixture_station].title.title()}'))
     if planned is not None:
         building_label=str(planned.function).replace('_',' ').title()
         active_case=str(sim.state.player_casing_property_id or '')
@@ -1863,12 +1869,23 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             rows.append(('stop_casing','Stop casing this property'))
         elif distance<=2:
             rows.append(('begin_casing',f'Begin casing from here — {building_label}'))
-        if planned.function=='market' and sim.state.player_stealth_mode and distance<=2:
-            rows.append(('steal_market_here','Steal from market stock'))
+        if planned.function=='market' and distance<=2:
+            rows.append(('use_market_here','Trade at market stall'))
+            if sim.state.player_stealth_mode:
+                rows.append(('steal_market_here','Steal from market stock'))
     if private_storage and distance<=1:
+        owner=sim.state.npcs.get(container.owner)
+        owner_label=owner.name if owner and owner.uid in sim.known_npc_ids() else 'private owner'
+        lock_label=sim.property_security.lock_band(container.lock_level) if container.lock_level>0 else 'unlocked'
+        rows.append(('inspect_property_storage',f'Inspect {container.name} — {owner_label} / {lock_label}'))
+        if container.locked:
+            inv=ctx.entities.get(ctx.player_id,Inventory)
+            rows.append(('lockpick_property_storage',
+                         f'Pick {container.name} lock'+('' if inv.count("core:lockpick")>0 else ' — requires Lockpick')))
         intel=sim.casing.intel_for(container.property_id)
         if (
-            sim.state.player_stealth_mode
+            not container.locked
+            and sim.state.player_stealth_mode
             and sim.state.player_casing_property_id==container.property_id
             and intel is not None and container.uid in intel.storage_uids
         ):
@@ -1909,6 +1926,37 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='inspect_fixture' and fixture_piece is not None:
+        lines=[
+            fixture_piece.name,
+            f'Type: {str(fixture_piece.category).replace("_"," ").title()}',
+        ]
+        if fixture_piece.workplace_role:
+            lines.append(f'Profession: {str(fixture_piece.workplace_role).replace("_"," ").title()}')
+        if fixture_piece.work_bonus:
+            lines.append(f'Work bonus: +{fixture_piece.work_bonus}')
+        if fixture_station in WORKSHOP_PROFILES:
+            lines.append(WORKSHOP_PROFILES[fixture_station].purpose)
+        _view_text(term,box('WORKSHOP OBJECT',lines,screen_width(term.size()[0],92)))
+        return UI_BACK
+    if choice=='use_fixture' and fixture_station in WORKSHOP_PROFILES:
+        return _crafting_menu(ctx,term,'workshops',fixture_station)
+    if choice=='inspect_property_storage' and container is not None:
+        owner=sim.state.npcs.get(container.owner)
+        owner_label=owner.name if owner and owner.uid in sim.known_npc_ids() else ('Player' if container.owner=='player' else 'Private owner')
+        lock_state='locked' if container.locked else 'unlocked'
+        _view_text(term,box('PROPERTY STORAGE',[
+            container.name or 'Storage',
+            f'Owner: {owner_label}',
+            f'Access: {container.access.title()}',
+            f'Lock: {lock_state} / {sim.property_security.lock_band(container.lock_level) if container.lock_level else "none"}',
+            f'Contents: {sum(container.items.values())} item(s) in {len(container.items)} stack(s)',
+            'Unauthorized removal is theft. Casing can reveal storage and access details.'
+        ],screen_width(term.size()[0],96)))
+        return UI_BACK
+    if choice=='lockpick_property_storage' and container is not None:
+        sim.execute(LockpickContainerCommand(ctx.player_id,container.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='inspect_property_door' and door is not None:
         intel=sim.casing.intel_for(door.property_id)
         lock_known=bool(intel and door.uid in intel.lock_uids)
@@ -1937,6 +1985,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         return sim.log[-1].message if sim.log else ''
     if choice=='steal_property_storage' and container:
         return _steal_property_storage_action(ctx,term,container)
+    if choice=='use_market_here' and planned is not None and physical is not None:
+        return _handle_menu(ctx,term,'o')
     if choice=='steal_market_here' and planned is not None and physical is not None:
         town=sim.state.settlements.get(physical.settlement_id)
         if town:return _steal_market_action(ctx,term,town)
@@ -2295,17 +2345,17 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         status=sim.log[-1].message if sim.log else ''
         action_amount=1;last_selected=None
 
-def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
+def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initial_station:str='')->str:
     """One retained, movable crafting surface with recipe and discovery tabs."""
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
-    tab='recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
     category_page=categories.index(category)//12 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
     workshop_state=RouteState('crafting-workshop','WORKSHOP')
     pot_state=RouteState('crafting-pot','DISCOVERY')
-    workshop_station=''
+    workshop_station=str(initial_station or '')
     placed=[];status=''
     while True:
         inv=ctx.entities.get(pid,Inventory)
@@ -2468,7 +2518,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
             else:placed.append(choice)
 
 
-def _crafting_menu(ctx:GameContext,term:Terminal)->str:
+def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initial_station:str='')->str:
     """Discovery-first crafting browser.
 
     The terminal backend keeps full keyboard parity while the pygame backend
@@ -2476,7 +2526,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
     mutation is performed by simulation commands; opening this UI is read-only.
     """
     if getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None)):
-        return _crafting_menu_graphical(ctx,term)
+        return _crafting_menu_graphical(ctx,term,initial_tab,initial_station)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
         known=sorted(sim.crafting.discovered_recipes(inv),key=lambda r:(r.category or 'general',r.name))
