@@ -124,6 +124,13 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
                 if presentation=='inventory_unified' and bool((presentation_data or {}).get('near_storage')):
                     return 'UI_ACTION:quick_store'
             continue
+        # Retained gameplay panels do not pause world movement. WASD is
+        # forwarded to the gameplay owner while arrows/Enter remain UI navigation.
+        if presentation in {
+            'inventory_unified','container_inventory','crafting_unified',
+            'workshop_station','discovery_pot','crafting_index'
+        } and k in {'w','a','s','d'}:
+            return f'UI_WORLD_MOVE:{k}'
         if k.startswith('UI_ACTION:'):
             return k
         if presentation=='inventory_unified':
