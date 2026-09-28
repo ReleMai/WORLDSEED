@@ -111,6 +111,9 @@ class PygameTerminal(PointerUI):
         self._floating_panels: dict[str, dict[str, int]] = {}
         self._floating_backdrop = None
         self._floating_panel_id: str | None = None
+        self._floating_panel_parent: str | None = None
+        self._floating_panel_stack = []
+        self._crafting_tab_tooltip = None
         self._ui_window_dragging: str | None = None
         self._ui_window_resizing: str | None = None
         self._ui_window_pointer_last = (0, 0)
@@ -561,6 +564,8 @@ class PygameTerminal(PointerUI):
         if mode in ('world','target'):
             self._floating_backdrop=None
             self._floating_panel_id=None
+            self._floating_panel_parent=None
+            self._floating_panel_stack.clear()
             self._ui_context=None
             self._context_backdrop=None
             self._context_overlay_rect=None
@@ -724,7 +729,13 @@ class PygameTerminal(PointerUI):
         default_h=min(sh-48,680 if panel_id in ('container_inventory','crafting') else 620)
         state=self._floating_panels.get(panel_id)
         if state is None:
-            state={'x':max(12,(sw-default_w)//2),'y':max(12,(sh-default_h)//2),
+            base_x=max(12,(sw-default_w)//2);base_y=max(12,(sh-default_h)//2)
+            # A second gameplay panel is cascaded so the retained parent title
+            # and edge remain visible instead of being hidden pixel-for-pixel.
+            if self._floating_panel_parent not in (None,panel_id):
+                parent=self._floating_panels.get(self._floating_panel_parent,{})
+                base_x=int(parent.get('x',base_x))+38;base_y=int(parent.get('y',base_y))+34
+            state={'x':base_x,'y':base_y,
                    'w':max(min_w,default_w),'h':max(min_h,default_h)}
             self._floating_panels[panel_id]=state
         state['w']=max(min_w,min(sw-16,state['w']));state['h']=max(min_h,min(sh-16,state['h']))
@@ -741,12 +752,30 @@ class PygameTerminal(PointerUI):
         self._hover_context=None;self._hover_map_snapshot=None
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
 
+    def push_floating_panel(self) -> None:
+        """Retain the active panel while a companion panel receives focus."""
+        if self.screen is None:return
+        self._floating_panel_stack.append((
+            self._floating_panel_id,self.screen.copy(),self._floating_backdrop,
+            self._floating_panel_parent,
+        ))
+
+    def pop_floating_panel(self) -> None:
+        """Restore the prior focused panel without redrawing the world."""
+        if not self._floating_panel_stack or self.screen is None:return
+        panel_id,snapshot,backdrop,parent=self._floating_panel_stack.pop()
+        self.screen.blit(snapshot,(0,0))
+        self._floating_panel_id=panel_id;self._floating_backdrop=backdrop
+        self._floating_panel_parent=parent
+
     def _floating_feature_shell(self, panel_id: str, domain: str, title: str, subtitle: str=''):
         pg=self.pg;screen=self.screen;assert screen is not None
         self._suspend_world_hover_animation()
         if self._floating_backdrop is None or self._floating_panel_id!=panel_id:
+            previous=self._floating_panel_id
             self._floating_backdrop=screen.copy()
             self._floating_panel_id=panel_id
+            self._floating_panel_parent=previous if previous in {'inventory_unified','crafting'} else None
         screen.blit(self._floating_backdrop,(0,0))
         self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
         self._pointer_targets.clear();self._set_input_mode('ui')
@@ -1375,6 +1404,7 @@ class PygameTerminal(PointerUI):
 
     def _crafting_tabs(self,x,y,w,active):
         pg=self.pg
+        self._crafting_tab_tooltip=None
         tabs=(('Recipes','recipes'),('Workshops','workshops'),('Experiment Grid','discovery'),('Item Index','index'))
         hovered=None
         for i,(name,token) in enumerate(tabs):
@@ -1411,8 +1441,18 @@ class PygameTerminal(PointerUI):
             name,rect=hovered
             tw=self.small_font.size(name)[0]+16;tip=pg.Rect(rect.x,rect.bottom+5,tw,25)
             if tip.right>x+w:tip.right=x+w
-            pg.draw.rect(self.screen,(12,16,17),tip,border_radius=4);pg.draw.rect(self.screen,self._theme['edge_hi'],tip,1,border_radius=4)
-            s=self.small_font.render(name,True,self._theme['text']);self.screen.blit(s,s.get_rect(center=tip.center))
+            # Defer the tooltip until every panel body has been painted.  The
+            # old immediate draw was covered by the category/body panels.
+            self._crafting_tab_tooltip=(name,tip)
+
+    def _draw_crafting_tab_tooltip(self):
+        pending=self._crafting_tab_tooltip
+        if not pending:return
+        name,tip=pending;pg=self.pg
+        pg.draw.rect(self.screen,(12,16,17),tip,border_radius=4)
+        pg.draw.rect(self.screen,self._theme['edge_hi'],tip,1,border_radius=4)
+        s=self.small_font.render(name,True,self._theme['text'])
+        self.screen.blit(s,s.get_rect(center=tip.center))
 
     def _present_crafting_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
@@ -1456,7 +1496,7 @@ class PygameTerminal(PointerUI):
             iy=max(yy+8,detail.bottom-92)
             for line in (f"{m.get('minutes',0)} min  •  {m.get('skill','crafting')}",str(m.get('description',''))):screen.blit(self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['muted']),(detail.x+13,iy));iy+=19
             if m.get('ready'):self._button((detail.x+12,detail.bottom-40,detail.width-24,30),'CRAFT RECIPE','UI_ACTION:craft')
-        self._draw_floating_footer(x,y,w,h,'Category tabs • Select a recipe • Drag title • Resize corner • Esc closes');pg.display.flip();self.clock.tick(120)
+        self._draw_floating_footer(x,y,w,h,'Category tabs • Select a recipe • Drag title • Resize corner • Esc closes');self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
 
     def _present_workshop_station(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Station-specific workshop surface driven by authoritative workshop profiles."""
@@ -1564,6 +1604,7 @@ class PygameTerminal(PointerUI):
             for i,line in enumerate(lines[:3]):
                 screen.blit(self.font.render(line,True,self._theme['muted']),(detail.x+16,detail.y+22+i*24))
         self._draw_floating_footer(x,y,w,h,'Nearby physical workshops only • Station tabs change the process UI • Esc closes')
+        self._draw_crafting_tab_tooltip()
         pg.display.flip();self.clock.tick(120)
 
     def _present_discovery_pot(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
@@ -1592,7 +1633,7 @@ class PygameTerminal(PointerUI):
         if data.get('known_exact'):label='Already tried — recorded: '+', '.join(data.get('known_exact',[])[:2])
         screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,right.width-28),True,accent),(right.x+14,right.bottom-84));self._button((right.x+14,right.bottom-61,right.width-28,28),'CLEAR GRID','UI_ACTION:clear')
         if state=='green':self._button((right.x+14,right.bottom-29,right.width-28,26),'MIX MATERIALS','UI_ACTION:mix')
-        self._draw_floating_footer(x,y,w,h,'Click to add • Right-click a filled slot to remove • Color shows recipe proximity • Esc closes');pg.display.flip();self.clock.tick(120)
+        self._draw_floating_footer(x,y,w,h,'Click to add • Right-click a filled slot to remove • Color shows recipe proximity • Esc closes');self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
 
     def _present_crafting_index(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen
@@ -1615,6 +1656,7 @@ class PygameTerminal(PointerUI):
             label=self.small_font.render(self._fit_ui_text(getattr(row,'label',str(row)),self.small_font,rr.width-18),True,self._theme['text'])
             screen.blit(label,(rr.x+9,rr.y+8));self._ui_target(rr,f'UI_SELECT:{i}')
         self._draw_floating_footer(x,y,w,h,'The catalog lists possible results; combine items in the experiment grid to reveal them')
+        self._draw_crafting_tab_tooltip()
         pg.display.flip();self.clock.tick(120)
 
     def animate_discovery_pot(self,items,recipe_name):

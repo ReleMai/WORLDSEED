@@ -169,11 +169,13 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertTrue(storage.blocks_actor(container,"player"))
         self.assertTrue(storage.grant_keyholder(container.uid,"npc:guest"))
         self.assertFalse(storage.blocks_actor(container,"npc:guest"))
-        class Picks:
-            def quantity(self,item_id):return 1 if item_id=="core:lockpick" else 0
+        from worldseed.entities.components import Inventory
+        picks=Inventory({"core:lockpick":1})
+        ok,msg,cost=storage.attempt_lockpick(container.uid,Inventory(),99,20,20)
+        self.assertFalse(ok);self.assertEqual(msg,"You need a lockpick.");self.assertEqual(cost,0)
         opened=False
         for minute in range(100,140):
-            ok,msg,cost=storage.attempt_lockpick(container.uid,Picks(),minute,20,20)
+            ok,msg,cost=storage.attempt_lockpick(container.uid,picks,minute,20,20)
             if ok:opened=True;break
         self.assertTrue(opened);self.assertTrue(container.picked);self.assertFalse(container.locked)
         storage.sync_active();self.assertFalse(container.locked)

@@ -229,7 +229,7 @@ class PropertyStorageSystem:
         if container is None:return False,"That storage is no longer present.",0
         if not container.locked:return True,f"{container.name or 'The storage'} is already unlocked.",0
         if self.authorized_actor(container,"player"):return False,"You already have access to this storage.",0
-        if inventory.quantity("core:lockpick")<=0:return False,"You need a lockpick.",0
+        if inventory.count("core:lockpick")<=0:return False,"You need a lockpick.",0
         container.pick_attempts+=1;container.last_tampered_minute=int(minute)
         chance=max(5,min(92,32+int(skill)*7+int(agility)*2-container.lock_level))
         roll=int(hash_u64(self.seed,"container-lockpick",container.uid,container.pick_attempts,minute)%100)

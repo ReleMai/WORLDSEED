@@ -12,6 +12,7 @@ env/
 saves/
 
 # Local logs and generated reports
+logs/
 *.log
 *.tmp
 

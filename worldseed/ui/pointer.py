@@ -204,10 +204,15 @@ class PointerUI:
             for talent in data.get('talents',[])[:8]:
                 screen.blit(self.small_font.render('• '+str(talent),True,self._theme['text']),(right.x+15,yy));yy+=22
 
+        footer=self.small_font.render('Review the choices above. Continue confirms this stage; Back returns to edit.',True,self._theme['muted'])
+        # Keep explanatory copy in its own row.  Navigation occupies the final
+        # 43 pixels of the panel, so sharing that baseline caused the copy to
+        # paint directly across Back/Continue on both overview screens.
+        footer_rect=footer.get_rect(centerx=panel.centerx,y=panel.bottom-72)
+        self._creation_overview_footer_rect=footer_rect
+        screen.blit(footer,footer_rect)
         self._menu_nav_rect=panel
         self._ui_navigation(confirm=True)
-        footer=self.small_font.render('Review the choices above. Continue confirms this stage; Back returns to edit.',True,self._theme['muted'])
-        screen.blit(footer,(panel.centerx-footer.get_width()//2,panel.bottom-34))
         pg.display.flip();self.clock.tick(120)
 
     def present_allocation(self,title,rows,selected,remaining):

@@ -1943,4 +1943,7 @@ class Simulation:
         if len(self.log)>150:del self.log[:-150]
         # Messages are useful for reconstructing a bad playtest but routine
         # movement no longer emits one line per terrain cell.
-        self.debug.event("game_message",turn=int(self.turn),minute=int(self.clock.minute),message=str(message))
+        debug=getattr(self,"debug",None)
+        if debug is not None:
+            clock=getattr(self,"clock",None)
+            debug.event("game_message",turn=int(self.turn),minute=int(getattr(clock,"minute",0)),message=str(message))

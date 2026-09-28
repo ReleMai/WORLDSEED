@@ -2287,8 +2287,13 @@ def _live_panel_world_move(ctx:GameContext,term:Terminal,choice:str)->str|None:
     before=len(ctx.sim.log)
     ctx.sim.execute(MoveCommand(ctx.player_id,*direction))
     message=ctx.sim.log[-1].message if len(ctx.sim.log)>before else ''
-    try:_present_game_frame(term,ctx,Renderer(ctx.registry),message)
-    except Exception:pass
+    # A focused companion panel is composited over a retained parent panel.
+    # Repainting the world here would discard that stack.  The command still
+    # executes immediately; the uncovered world refreshes when focus returns
+    # to one panel or the panels close.  Single-panel movement remains live.
+    if not getattr(term,'_floating_panel_stack',None):
+        try:_present_game_frame(term,ctx,Renderer(ctx.registry),message)
+        except Exception:pass
     return message
 
 def _inventory_menu(ctx:GameContext,term:Terminal)->str:
@@ -2302,6 +2307,7 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
     if not (getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None))):
         return _inventory_menu_terminal(ctx,term)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    parent_panel=getattr(term,'_floating_panel_id',None)
     nav=NavigationStack(RouteState('inventory','INVENTORY'))
     action_amount=1;last_selected=None;status='';active_filter='all'
     while True:
@@ -2329,8 +2335,12 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         if moved is not None:
             status=moved;continue
         if choice=='UI_ACTION:open_crafting':
-            _crafting_menu(ctx,term)
-            _present_game_frame(term,ctx,Renderer(reg),status)
+            if parent_panel=='crafting':return UI_BACK
+            push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
+            if callable(push):push()
+            try:_crafting_menu(ctx,term)
+            finally:
+                if callable(pop):pop()
             continue
         if not choice.startswith('UI_ACTION:'):
             if choice!='__empty__':
@@ -2380,6 +2390,15 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
 def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initial_station:str='')->str:
     """One retained, movable crafting surface with recipe and discovery tabs."""
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    parent_panel=getattr(term,'_floating_panel_id',None)
+    def open_inventory_panel():
+        if parent_panel=='inventory_unified':return False
+        push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
+        if callable(push):push()
+        try:_inventory_menu(ctx,term)
+        finally:
+            if callable(pop):pop()
+        return True
     tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
@@ -2430,7 +2449,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
             if choice=='UI_ACTION:open_inventory':
-                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
+                if not open_inventory_panel():return UI_BACK
+                continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
             if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
@@ -2464,7 +2484,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
             if choice=='UI_ACTION:open_inventory':
-                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
+                if not open_inventory_panel():return UI_BACK
+                continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
             if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice.startswith('UI_ACTION:category_page:'):
@@ -2502,7 +2523,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
             if choice=='UI_ACTION:open_inventory':
-                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
+                if not open_inventory_panel():return UI_BACK
+                continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes'
             elif choice=='UI_ACTION:tab:workshops':tab='workshops'
             elif choice=='UI_ACTION:tab:discovery':tab='discovery'
@@ -2537,7 +2559,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         moved=_live_panel_world_move(ctx,term,choice)
         if moved is not None:status=moved;continue
         if choice=='UI_ACTION:open_inventory':
-            _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
+            if not open_inventory_panel():return UI_BACK
+            continue
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
         if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
         if choice=='UI_ACTION:tab:index':tab='index';continue

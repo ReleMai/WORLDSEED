@@ -300,6 +300,46 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         rects=[self._target_rect(f"UI_ACTION:tab:{name}") for name in ("recipes","discovery","index")]
         self.assertTrue(all(r.width<=40 for r in rects))
 
+    def test_crafting_tab_tooltip_is_painted_after_the_panel_body(self):
+        rows=[MenuRow("core:stone_flake","Stone Flake")]
+        ready={"name":"Stone Flake","ready":True,"missing":[],"inputs":[],"outputs":[],"minutes":8,"skill":"crafting","description":""}
+        data={"recipes":{"core:stone_flake":ready},"categories":["primitive"],"category":"primitive"}
+        self.term.present_feature_menu("crafting_unified","CRAFTING",rows,0,data=data)
+        tab=self._target_rect("UI_ACTION:tab:discovery")
+        self.term._last_mouse=tab.center
+        self.term.present_feature_menu("crafting_unified","CRAFTING",rows,0,data=data)
+        name,tip=self.term._crafting_tab_tooltip
+        self.assertEqual(name,"Experiment Grid")
+        self.assertEqual(self.term.screen.get_at((tip.x+3,tip.y+3))[:3],(12,16,17))
+
+    def test_companion_inventory_and_crafting_panels_stack_and_restore(self):
+        rows=[MenuRow("core:wood","Wood x4")]
+        self.term.present_feature_menu("inventory_unified","INVENTORY",rows,0,data=self._inventory_data())
+        parent_snapshot=self.pg.image.tostring(self.term.screen,"RGBA")
+        parent_state=dict(self.term._floating_panels["inventory_unified"])
+        self.term.push_floating_panel()
+        craft_rows=[MenuRow("core:stone_flake","Stone Flake")]
+        ready={"name":"Stone Flake","ready":True,"missing":[],"inputs":[],"outputs":[],"minutes":8,"skill":"crafting","description":""}
+        self.term.present_feature_menu("crafting_unified","CRAFTING",craft_rows,0,data={"recipes":{"core:stone_flake":ready},"categories":["primitive"],"category":"primitive"})
+        child_state=self.term._floating_panels["crafting"]
+        self.assertEqual(self.term._floating_panel_parent,"inventory_unified")
+        self.assertNotEqual((parent_state["x"],parent_state["y"]),(child_state["x"],child_state["y"]))
+        self.assertEqual(len(self.term._floating_panel_stack),1)
+        self.term.pop_floating_panel()
+        self.assertEqual(self.term._floating_panel_id,"inventory_unified")
+        self.assertEqual(self.pg.image.tostring(self.term.screen,"RGBA"),parent_snapshot)
+
+    def test_creation_overview_footer_does_not_overlap_navigation_buttons(self):
+        self.term.present_creation_overview("world",{
+            "world_name":"New World","seed":"abc","start_mode":"village",
+            "character_name":"Wanderer","sex":"male","sprite_label":"Look 01",
+            "attributes":[],"talents":[],
+        })
+        footer=self.term._creation_overview_footer_rect
+        buttons=[rect for rect,token in self.term._pointer_targets if token in {"ESC","\r"}]
+        self.assertEqual(len(buttons),2)
+        self.assertTrue(all(not footer.colliderect(button) for button in buttons))
+
 
     def test_every_settlement_piece_has_graphical_render_path(self):
         registry=ContentRegistry.load(DATA_DIR)

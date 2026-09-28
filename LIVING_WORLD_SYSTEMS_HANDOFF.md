@@ -357,3 +357,20 @@ Status: implementation complete on `wu7-village-stability-debug-ux`; targeted Fa
 Known limitation: static map memory intentionally remembers only physical architecture. Dynamic fixture/container contents, moving NPCs, weather effects and changing loose-world objects are never frozen into remembered snapshots.
 
 Next dependency: use the new JSONL stage timings from real playtests to identify any remaining long-tail village stalls, then move the most expensive confirmed stage off the immediate input path only if profiling shows it is still necessary.
+
+### Work Unit 8 - Lock-pick crash and retained UI completion
+
+Status: implementation complete; targeted regressions pass on canonical-main baseline.
+
+- Fixed the property-storage lock-pick crash by using the real `Inventory.count()` contract. The regression now supplies the production `Inventory` type and covers both missing-tool feedback and a successful picked-lock state.
+- Character and world overview guidance now occupies a dedicated footer row above Back/Continue instead of painting through the navigation buttons.
+- Crafting-tab tooltips are deferred until the complete panel body and footer have rendered, keeping them above categories, recipe content, workshop content, the experiment grid and item-index panels.
+- Inventory and crafting now form a bounded two-panel retained stack. Opening the companion keeps the parent visible, cascades the focused panel, permits normal WASD commands, and restores the parent pixels and state when focus returns without recursively opening duplicate panels.
+- Engine message logging now tolerates deliberately partial simulation fixtures that omit the optional debugger/clock, while normal game sessions continue to record every message in the continuous JSONL log.
+- Runtime `logs/` output is ignored so shareable JSONL diagnostics remain local playtest artifacts and cannot be committed accidentally.
+- No persistence, world-generation, simulation cadence or RNG contract changed. The panel stack and tooltip state are presentation-only and bounded to at most the active parent plus focused companion.
+- Added graphical regressions for non-overlapping overview navigation, final-layer crafting tooltips, and companion-panel retention/restoration. Existing property-storage and Dev37 floating-panel suites cover the changed paths.
+
+Known limitation: while two panels are simultaneously visible, WASD commands execute immediately but the obscured retained world backdrop refreshes after returning to one panel or closing the panels. This avoids discarding either panel during a world redraw.
+
+Next dependency: collect the new session JSONL if another village or property interaction fails during playtesting; no additional architectural UI work is required for the issues in this work unit.
