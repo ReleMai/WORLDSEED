@@ -87,8 +87,8 @@ class VillageStabilityDebugTests(unittest.TestCase):
             "lockpick_property_storage",
         ):
             self.assertIn(token,app)
-        self.assertIn("UI_WORLD_MOVE:",pointer)
         self.assertIn("UI_WORLD_MOVE:",widgets)
+        self.assertIn("menu_page_size",pointer)
         self.assertIn("inventory_unified",pointer)
         self.assertIn("container_inventory",pointer)
         self.assertIn("crafting_unified",pointer)
