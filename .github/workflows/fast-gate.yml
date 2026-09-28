@@ -42,6 +42,18 @@ permissions:
   contents: read
 
 jobs:
+  process-runner-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install "Pillow>=10,<12"
+      - name: Verify process deadlines on Linux
+        run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
+
   smoke:
     runs-on: windows-latest
     timeout-minutes: 10
@@ -66,7 +78,7 @@ jobs:
 
       - name: Verify CI diagnostics and asset decoder
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name diagnostics-tests --timeout 60 -- python -u -m unittest -v tests.test_ci_diagnostics
+        run: python -u tools/run_ci_check.py --name diagnostics-tests --timeout 60 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_craftable_sprite_coverage tests.test_dev20_graphical_regressions.GraphicalAssetTests
 
       - name: Compile Python
         shell: pwsh
@@ -103,6 +115,10 @@ jobs:
       - name: Dev37 floating interaction UI regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui
+
+      - name: WU7 village stability and debugger regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "WU7 village stability and debugger regressions" --timeout 90 -- python -u -m unittest -v tests.test_wu7_village_stability_debug
 
       - name: Crafting discovery pot regressions
         shell: pwsh
