@@ -22,11 +22,25 @@ def _annotation(message: str) -> str:
     return message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
 
 
+def _console_print(*values, sep: str = ' ', end: str = '\n', flush: bool = False) -> None:
+    """Write diagnostic output without crashing on a narrow Windows console codec."""
+    text=sep.join(str(value) for value in values)+end
+    stream=sys.stdout
+    try:
+        stream.write(text)
+    except UnicodeEncodeError:
+        encoding=getattr(stream,'encoding',None) or 'utf-8'
+        safe=text.encode(encoding,errors='backslashreplace').decode(encoding,errors='strict')
+        stream.write(safe)
+    if flush:
+        stream.flush()
+
+
 def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) -> int:
     if not command or not all(math.isfinite(v) and v > 0 for v in (timeout, heartbeat)):
         raise ValueError('command, finite positive timeout, and heartbeat are required')
     started = time.monotonic()
-    print(f'CHECK START {name}: {command!r} (limit {timeout:g}s)', flush=True)
+    _console_print(f'CHECK START {name}: {command!r} (limit {timeout:g}s)', flush=True)
     events: queue.Queue[str | None] = queue.Queue(maxsize=256)
     stopping = threading.Event()
     tree = None
@@ -50,7 +64,7 @@ def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) ->
             tree.stop(process)
         if tree is not None:
             tree.close()
-        print(f'::error::{_annotation(f"{name}: could not start check: {exc}")}', flush=True)
+        _console_print(f'::error::{_annotation(f"{name}: could not start check: {exc}")}', flush=True)
         return 1
 
     def emit(value):
@@ -87,7 +101,7 @@ def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) ->
             # Deadline applies to both process completion and output-pipe drain.
             if now >= deadline:
                 timed_out = True
-                print(f'CHECK TIMEOUT {name}: exceeded {timeout:g}s; stopping child processes', flush=True)
+                _console_print(f'CHECK TIMEOUT {name}: exceeded {timeout:g}s; stopping child processes', flush=True)
                 break
             delay = max(.001, min(.1, deadline - now, next_beat - now))
             if eof:
@@ -100,10 +114,10 @@ def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) ->
                 if chunk is None:
                     eof = True
                 elif chunk:
-                    print(chunk, end='', flush=True)
+                    _console_print(chunk, end='', flush=True)
             now = time.monotonic()
             if now >= next_beat:
-                print(f'CHECK RUNNING {name}: {now - started:.0f}s elapsed, pid {process.pid}', flush=True)
+                _console_print(f'CHECK RUNNING {name}: {now - started:.0f}s elapsed, pid {process.pid}', flush=True)
                 next_beat = now + heartbeat
     finally:
         stopping.set()
@@ -115,9 +129,9 @@ def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) ->
     elapsed = time.monotonic() - started
     status = 'TIMEOUT' if timed_out else 'PASS' if code == 0 else 'FAIL'
     summary = f'{name}: {status} ({elapsed:.1f}s, exit {code})'
-    print(f'CHECK {summary}', flush=True)
+    _console_print(f'CHECK {summary}', flush=True)
     if status != 'PASS':
-        print(f'::error::{_annotation(summary)}', flush=True)
+        _console_print(f'::error::{_annotation(summary)}', flush=True)
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a', encoding='utf-8') as output:
             output.write(f'- {summary}\n')

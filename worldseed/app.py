@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import asdict, dataclass
 from pathlib import Path
-import secrets,sys,time,traceback
+import json,secrets,sys,time,traceback
+from worldseed.debug import debug_log_path
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
@@ -16,7 +17,7 @@ from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
-from worldseed.systems.workshops import WORKSHOP_PROFILES, recipes_for_station, profile_dict
+from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
@@ -495,6 +496,7 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     emit('World ready',1.0,f'Spawn {pos.x}, {pos.y}  •  prepared exploration area loaded')
     sim.state.last_offline_wall_time=time.time();return GameContext(db,reg,world,entities,sim,player)
 def _save(ctx:GameContext, *, backup:bool=True)->None:
+    started=time.perf_counter()
     p=ctx.entities.get(ctx.player_id,Position).value;inv=ctx.entities.get(ctx.player_id,Inventory);v=ctx.entities.get(ctx.player_id,Vitals);ctx.sim.state.last_offline_wall_time=time.time()
     # Rotating full-database backups are intentionally reserved for explicit
     # save/menu/quit checkpoints. Copying an ever-growing generated-world DB on
@@ -504,6 +506,10 @@ def _save(ctx:GameContext, *, backup:bool=True)->None:
         ctx.db.backup(3)
     ctx.db.set_meta('last_saved_at',time.time());ctx.db.set_meta('player_name',ctx.sim.state.player_name);ctx.db.set_meta('player_origin',ctx.sim.state.player_origin);ctx.db.set_meta('player_sex',ctx.sim.state.player_sex);ctx.db.set_meta('player_sprite_index',int(ctx.sim.state.player_sprite_index))
     ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=ctx.world.drain_dirty_tiles(),player_id=ctx.player_id,position=p,inventory=inv.items,vitals=asdict(v),sim_state=ctx.sim.state.to_dict())
+    try:
+        ctx.sim.debug.event("save",backup=bool(backup),elapsed_ms=round((time.perf_counter()-started)*1000,3),turn=int(ctx.sim.turn),world=str(ctx.db.path))
+        ctx.sim.debug.flush()
+    except Exception:pass
 
 def _select(terminal:Terminal,title:str,rows:list[tuple[str,str]],allow_escape=True,**kwargs)->str|None:
     return select_menu(terminal,title,rows,allow_escape=allow_escape,**kwargs)
@@ -700,7 +706,7 @@ def _casing_notes(ctx:GameContext,term:Terminal,property_id:str)->str:
         state='forced open' if door.forced else 'unlocked' if not door.locked else 'locked'
         lock_rows.append(f'  {door.role.replace("_"," ").title()}: {sim.property_security.lock_band(door.lock_level)} lock — {state} — condition {door.condition}%')
     if lock_rows:lines+=['','Known security:']+lock_rows[:6]
-    lines+=['','Move around the exterior to survey access. Entering rooms reveals only the spaces and storage you physically reach.']
+    lines+=['','Observe exposed sides, doors and yards from nearby sightlines. You do not need to squeeze into every alley. Entering rooms still reveals only spaces and storage you physically reach.']
     _view_text(term,box('CASING NOTES',lines,screen_width(term.size()[0],96)))
     return UI_BACK
 
@@ -1641,6 +1647,11 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:
+            if abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
+                return moved or 'You move away from the container.'
+            status=moved;continue
         if not choice.startswith('UI_ACTION:'):
             last_selected=choice;action_amount=1;continue
         if rows and 0<=route.selected<len(rows):
@@ -1840,6 +1851,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
     private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
+    fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
+    fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
         if door.locked and not door.forced and not sim.property_security.authorized_player(door):
             intel=sim.casing.intel_for(door.property_id)
@@ -1854,6 +1867,10 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
         elif door.forced:
             rows.append(('inspect_property_door',f'Inspect forced doorway — condition {door.condition}%'))
+    if fixture_piece is not None and distance<=1:
+        rows.append(('inspect_fixture',f'Inspect {fixture_piece.name}'))
+        if fixture_station in WORKSHOP_PROFILES:
+            rows.append(('use_fixture',f'Use {WORKSHOP_PROFILES[fixture_station].title.title()}'))
     if planned is not None:
         building_label=str(planned.function).replace('_',' ').title()
         active_case=str(sim.state.player_casing_property_id or '')
@@ -1862,12 +1879,23 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             rows.append(('stop_casing','Stop casing this property'))
         elif distance<=2:
             rows.append(('begin_casing',f'Begin casing from here — {building_label}'))
-        if planned.function=='market' and sim.state.player_stealth_mode and distance<=2:
-            rows.append(('steal_market_here','Steal from market stock'))
+        if planned.function=='market' and distance<=2:
+            rows.append(('use_market_here','Trade at market stall'))
+            if sim.state.player_stealth_mode:
+                rows.append(('steal_market_here','Steal from market stock'))
     if private_storage and distance<=1:
+        owner=sim.state.npcs.get(container.owner)
+        owner_label=owner.name if owner and owner.uid in sim.known_npc_ids() else 'private owner'
+        lock_label=sim.property_security.lock_band(container.lock_level) if container.lock_level>0 else 'unlocked'
+        rows.append(('inspect_property_storage',f'Inspect {container.name} — {owner_label} / {lock_label}'))
+        if container.locked:
+            inv=ctx.entities.get(ctx.player_id,Inventory)
+            rows.append(('lockpick_property_storage',
+                         f'Pick {container.name} lock'+('' if inv.count("core:lockpick")>0 else ' — requires Lockpick')))
         intel=sim.casing.intel_for(container.property_id)
         if (
-            sim.state.player_stealth_mode
+            not container.locked
+            and sim.state.player_stealth_mode
             and sim.state.player_casing_property_id==container.property_id
             and intel is not None and container.uid in intel.storage_uids
         ):
@@ -1908,6 +1936,37 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='inspect_fixture' and fixture_piece is not None:
+        lines=[
+            fixture_piece.name,
+            f'Type: {str(fixture_piece.category).replace("_"," ").title()}',
+        ]
+        if fixture_piece.workplace_role:
+            lines.append(f'Profession: {str(fixture_piece.workplace_role).replace("_"," ").title()}')
+        if fixture_piece.work_bonus:
+            lines.append(f'Work bonus: +{fixture_piece.work_bonus}')
+        if fixture_station in WORKSHOP_PROFILES:
+            lines.append(WORKSHOP_PROFILES[fixture_station].purpose)
+        _view_text(term,box('WORKSHOP OBJECT',lines,screen_width(term.size()[0],92)))
+        return UI_BACK
+    if choice=='use_fixture' and fixture_station in WORKSHOP_PROFILES:
+        return _crafting_menu(ctx,term,'workshops',fixture_station)
+    if choice=='inspect_property_storage' and container is not None:
+        owner=sim.state.npcs.get(container.owner)
+        owner_label=owner.name if owner and owner.uid in sim.known_npc_ids() else ('Player' if container.owner=='player' else 'Private owner')
+        lock_state='locked' if container.locked else 'unlocked'
+        _view_text(term,box('PROPERTY STORAGE',[
+            container.name or 'Storage',
+            f'Owner: {owner_label}',
+            f'Access: {container.access.title()}',
+            f'Lock: {lock_state} / {sim.property_security.lock_band(container.lock_level) if container.lock_level else "none"}',
+            f'Contents: {sum(container.items.values())} item(s) in {len(container.items)} stack(s)',
+            'Unauthorized removal is theft. Casing can reveal storage and access details.'
+        ],screen_width(term.size()[0],96)))
+        return UI_BACK
+    if choice=='lockpick_property_storage' and container is not None:
+        sim.execute(LockpickContainerCommand(ctx.player_id,container.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='inspect_property_door' and door is not None:
         intel=sim.casing.intel_for(door.property_id)
         lock_known=bool(intel and door.uid in intel.lock_uids)
@@ -1936,6 +1995,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         return sim.log[-1].message if sim.log else ''
     if choice=='steal_property_storage' and container:
         return _steal_property_storage_action(ctx,term,container)
+    if choice=='use_market_here' and planned is not None and physical is not None:
+        return _handle_menu(ctx,term,'o')
     if choice=='steal_market_here' and planned is not None and physical is not None:
         town=sim.state.settlements.get(physical.settlement_id)
         if town:return _steal_market_action(ctx,term,town)
@@ -2215,6 +2276,21 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
         if not nav.back():return UI_BACK
 
 
+def _live_panel_world_move(ctx:GameContext,term:Terminal,choice:str)->str|None:
+    """Apply WASD from a retained gameplay panel without closing it."""
+    if not str(choice).startswith('UI_WORLD_MOVE:'):
+        return None
+    key=str(choice).rsplit(':',1)[1].lower()
+    direction=DIRECTION_KEYS.get(key)
+    if not direction:
+        return ''
+    before=len(ctx.sim.log)
+    ctx.sim.execute(MoveCommand(ctx.player_id,*direction))
+    message=ctx.sim.log[-1].message if len(ctx.sim.log)>before else ''
+    try:_present_game_frame(term,ctx,Renderer(ctx.registry),message)
+    except Exception:pass
+    return message
+
 def _inventory_menu(ctx:GameContext,term:Terminal)->str:
     """Unified graphical inventory with terminal fallback.
 
@@ -2249,6 +2325,13 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:
+            status=moved;continue
+        if choice=='UI_ACTION:open_crafting':
+            _crafting_menu(ctx,term)
+            _present_game_frame(term,ctx,Renderer(reg),status)
+            continue
         if not choice.startswith('UI_ACTION:'):
             if choice!='__empty__':
                 action_amount=1;last_selected=choice
@@ -2294,17 +2377,17 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         status=sim.log[-1].message if sim.log else ''
         action_amount=1;last_selected=None
 
-def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
+def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initial_station:str='')->str:
     """One retained, movable crafting surface with recipe and discovery tabs."""
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
-    tab='recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
     category_page=categories.index(category)//12 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
     workshop_state=RouteState('crafting-workshop','WORKSHOP')
     pot_state=RouteState('crafting-pot','DISCOVERY')
-    workshop_station=''
+    workshop_station=str(initial_station or '')
     placed=[];status=''
     while True:
         inv=ctx.entities.get(pid,Inventory)
@@ -2344,6 +2427,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
             )
             status=''
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
             if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
@@ -2374,6 +2461,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                            subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
             status=''
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
             if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice.startswith('UI_ACTION:category_page:'):
@@ -2408,6 +2499,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                                               'known':sum(sim.crafting.recipe_is_discovered(r.id) for r in pool)},
                            subtitle='Possible recipes for the selected carried item.')
             if choice is None:return UI_BACK
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='UI_ACTION:open_inventory':
+                _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
             if choice=='UI_ACTION:tab:recipes':tab='recipes'
             elif choice=='UI_ACTION:tab:workshops':tab='workshops'
             elif choice=='UI_ACTION:tab:discovery':tab='discovery'
@@ -2439,6 +2534,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
                        subtitle=status or 'Combine up to five carried materials. The grid color shows how close the mix is to a discoverable recipe.',presentation_data=data)
         status=''
         if choice is None:return UI_BACK
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:status=moved;continue
+        if choice=='UI_ACTION:open_inventory':
+            _inventory_menu(ctx,term);_present_game_frame(term,ctx,Renderer(reg),status);continue
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
         if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
         if choice=='UI_ACTION:tab:index':tab='index';continue
@@ -2467,7 +2566,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal)->str:
             else:placed.append(choice)
 
 
-def _crafting_menu(ctx:GameContext,term:Terminal)->str:
+def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initial_station:str='')->str:
     """Discovery-first crafting browser.
 
     The terminal backend keeps full keyboard parity while the pygame backend
@@ -2475,7 +2574,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal)->str:
     mutation is performed by simulation commands; opening this UI is read-only.
     """
     if getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None)):
-        return _crafting_menu_graphical(ctx,term)
+        return _crafting_menu_graphical(ctx,term,initial_tab,initial_station)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
         known=sorted(sim.crafting.discovered_recipes(inv),key=lambda r:(r.category or 'general',r.name))
@@ -2889,12 +2988,61 @@ def _map_key(key:str,pid:int):
     if k=='j':return HarvestCommand(pid)
     return None
 
+def _diagnostics_view(ctx:GameContext,term:Terminal)->str:
+    """Show the exact playtest log users can hand back for diagnosis."""
+    path=Path(debug_log_path(ctx.sim))
+    try:ctx.sim.debug.flush()
+    except Exception:pass
+    slow=[]
+    recent_errors=[]
+    if path.exists():
+        try:
+            lines=path.read_text(encoding='utf-8',errors='replace').splitlines()[-600:]
+            for raw in lines:
+                try:row=json.loads(raw)
+                except Exception:continue
+                if row.get('kind')=='stage' and row.get('slow'):
+                    slow.append(f"{row.get('name','stage')}: {row.get('elapsed_ms',0)} ms")
+                elif row.get('kind')=='command_end' and row.get('slow'):
+                    slow.append(f"{row.get('command','command')}: {row.get('elapsed_ms',0)} ms")
+                elif row.get('kind')=='exception':
+                    recent_errors.append(f"{row.get('where','runtime')}: {row.get('error','')}")
+        except OSError:pass
+    size=path.stat().st_size if path.exists() else 0
+    lines=[
+        'WORLDSEED writes one bounded JSONL diagnostics stream for this play session.',
+        '',
+        'DEBUG LOG',
+        str(path),
+        f'Size: {size/1024:.1f} KB',
+        f'Turn: {ctx.sim.turn}  Minute: {ctx.sim.clock.minute}',
+        f'Position: {ctx.sim.player_pos.x}, {ctx.sim.player_pos.y}, z{ctx.sim.player_pos.z}',
+        '',
+        'WHAT IT RECORDS',
+        '• engine commands and elapsed time',
+        '• region/village activation stages and slow-stage flags',
+        '• UI actions and gameplay messages',
+        '• saves and performance timing',
+        '• crashes/exceptions with full Python traceback',
+    ]
+    if slow:lines+=['','RECENT SLOW OPERATIONS']+['• '+row for row in slow[-12:]]
+    if recent_errors:lines+=['','RECENT ERRORS']+['• '+row for row in recent_errors[-6:]]
+    lines+=['','If a freeze or crash occurs, send this JSONL file together with WORLDSEED_CRASH.log if one was created.']
+    _view_text(term,box('SESSION DIAGNOSTICS',lines,screen_width(term.size()[0],112)))
+    return UI_BACK
+
 def _pause_menu(ctx:GameContext,term:Terminal)->str:
     while True:
-        choice=_select(term,'PAUSED',[('resume','Resume game'),('save','Save game'),('console','Open World Console'),('menu','Save & return to main menu'),('quit','Save & quit WORLDSEED')],allow_escape=True)
+        choice=_select(term,'PAUSED',[
+            ('resume','Resume game'),('save','Save game'),
+            ('diagnostics','Session diagnostics / debug log'),
+            ('console','Open World Console'),('menu','Save & return to main menu'),
+            ('quit','Save & quit WORLDSEED')
+        ],allow_escape=True)
         if not choice:return 'resume'
         if choice=='resume':return 'resume'
         if choice=='save':_save(ctx);return 'saved'
+        if choice=='diagnostics':_diagnostics_view(ctx,term);continue
         if choice=='console':_world_console(ctx,term);continue
         if choice=='menu':_save(ctx);return 'menu'
         if choice=='quit':_save(ctx);return 'quit'
@@ -2904,6 +3052,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     while True:
         _present_game_frame(term,ctx,renderer,last);last=''
         key=term.read_key()
+        try:
+            ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
+        except Exception:
+            pass
         if key.startswith('UI_WORLD_MENU:'):
             _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
         intent=classify_key(key)
@@ -2998,25 +3150,33 @@ def main()->int:
                 outcome=run_game(ctx,term)
             except WindowCloseRequested:
                 _save(ctx);return 0
-            except Exception:
-                # Preserve an actionable traceback instead of leaving a playtest
-                # with only a transient window freeze/close. Do not claim
-                # recovery of corrupted state; return to the world selector
-                # after recording diagnostics.
+            except Exception as exc:
+                # Session diagnostics are continuous, so a crash adds the full
+                # traceback and state location to the same shareable JSONL log.
+                try:
+                    ctx.sim.debug.exception(
+                        "run_game",exc,turn=int(ctx.sim.turn),minute=int(ctx.sim.clock.minute),
+                        position=(ctx.sim.player_pos.x,ctx.sim.player_pos.y,ctx.sim.player_pos.z),
+                        world=str(ctx.db.path),
+                    )
+                except Exception:
+                    pass
                 report=Path.cwd()/'WORLDSEED_CRASH.log'
                 report.write_text(
                     f'WORLDSEED {ENGINE_VERSION} crash at {time.ctime()}\n'
                     f'world={ctx.db.path}\nturn={ctx.sim.turn}\n'
-                    f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n\n'
+                    f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n'
+                    f'debug_log={debug_log_path(ctx.sim)}\n\n'
                     +traceback.format_exc(),
                     encoding='utf-8',
                 )
                 try:
                     _view_text(term,box('WORLDSEED ERROR',[
                         'The current session stopped because of an unexpected error.',
-                        f'Crash details were written to {report.name}.',
-                        'Please keep that file with the seed/coordinates when reporting the issue.'
-                    ],min(96,term.size()[0]-2)))
+                        f'Crash summary: {report.name}',
+                        f'Session debug log: {debug_log_path(ctx.sim)}',
+                        'Send both files with the seed/coordinates when reporting the issue.'
+                    ],min(110,term.size()[0]-2)))
                 except Exception:
                     pass
                 outcome='menu'

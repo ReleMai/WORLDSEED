@@ -301,12 +301,29 @@ class NPCSystem:
                                     proxy.append((abs(p.x-goal.x)+abs(p.y-goal.y),abs(ox)+abs(oy),p.y,p.x,p))
                         if proxy:break
                     if proxy:path_goal=min(proxy,key=lambda row:row[:4])[4]
-                path=local_path(start,path_goal,passable,1000)
-                if len(path)>1:
+                cache_goal=[int(path_goal.x),int(path_goal.y),int(path_goal.z)]
+                cached=list(task.get("_local_path",[])) if task.get("_local_path_goal")==cache_goal else []
+                if not cached:
+                    path=local_path(start,path_goal,passable,1000)
+                    cached=[[int(step.x),int(step.y)] for step in path[1:]]
+                    task["_local_path"]=cached
+                    task["_local_path_goal"]=cache_goal
+                if cached:
                     old_x,old_y=npc.x,npc.y
-                    step=path[min(3,len(path)-1)];npc.x,npc.y=step.x,step.y
+                    moved=0
+                    while cached and moved<3:
+                        nx,ny=int(cached[0][0]),int(cached[0][1])
+                        step_pos=WorldPos(nx,ny,npc.z)
+                        if not passable(step_pos):
+                            task.pop("_local_path",None);task.pop("_local_path_goal",None)
+                            break
+                        npc.x,npc.y=nx,ny;cached.pop(0);moved+=1
+                    task["_local_path"]=cached
                     self._face_step(npc,old_x,old_y)
-                    if (npc.x,npc.y)==(goal.x,goal.y):npc.tasks.pop(0)
+                    if (npc.x,npc.y)==(goal.x,goal.y):
+                        npc.tasks.pop(0)
+                    elif not cached:
+                        task.pop("_local_path",None);task.pop("_local_path_goal",None)
                 # Never fall through to coarse movement while physically local.
                 return
             # aggregate/remote travel is straight-line at coarse fidelity

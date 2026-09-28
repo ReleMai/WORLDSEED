@@ -124,6 +124,13 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
                 if presentation=='inventory_unified' and bool((presentation_data or {}).get('near_storage')):
                     return 'UI_ACTION:quick_store'
             continue
+        # Retained gameplay panels do not pause world movement. WASD is
+        # forwarded to the gameplay owner while arrows/Enter remain UI navigation.
+        if presentation in {
+            'inventory_unified','container_inventory','crafting_unified',
+            'workshop_station','discovery_pot','crafting_index'
+        } and k in {'w','a','s','d'}:
+            return f'UI_WORLD_MOVE:{k}'
         if k.startswith('UI_ACTION:'):
             return k
         if presentation=='inventory_unified':
@@ -244,7 +251,11 @@ def prompt_text(term, title: str, label: str, *, default: str = "", max_len: int
     while True:
         cols,_=term.size(); width=max(40,min(84,cols-2))
         shown=''.join(value)
-        getattr(term,'present_text_entry',term.present)(panel(title,[label,'',f'> {shown}_','', 'Click Continue to accept or Back to cancel.'],width,'Type normally • Backspace deletes • Enter accepts'))
+        field=getattr(term,'present_text_field',None)
+        if callable(field):
+            field(title,label,shown,max_len=max_len,allow_blank=allow_blank)
+        else:
+            getattr(term,'present_text_entry',term.present)(panel(title,[label,'',f'> {shown}_','', 'Click Continue to accept or Back to cancel.'],width,'Type normally • Backspace deletes • Enter accepts'))
         k=term.read_key()
         if k in ('ESC',):return None
         if k in ('\r','\n'):
