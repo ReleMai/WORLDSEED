@@ -1,14 +1,29 @@
 from __future__ import annotations
 
+import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from worldseed.debug import SessionDebugLog
+from tools.run_ci_check import _console_print
 
 
 class VillageStabilityDebugTests(unittest.TestCase):
+    def test_bounded_runner_escapes_output_unsupported_by_console_codec(self):
+        raw=io.BytesIO()
+        narrow=io.TextIOWrapper(raw,encoding="ascii",errors="strict",write_through=True)
+        original=sys.stdout
+        try:
+            sys.stdout=narrow
+            _console_print("bad \ufffd glyph",flush=True)
+            narrow.flush()
+        finally:
+            sys.stdout=original
+        self.assertIn(b"bad \\ufffd glyph",raw.getvalue())
+
     def test_session_debug_log_is_jsonl_bounded_and_records_stage_timings(self):
         with tempfile.TemporaryDirectory() as tmp:
             log=SessionDebugLog(root=Path(tmp),engine_version="test",world="fixture")
