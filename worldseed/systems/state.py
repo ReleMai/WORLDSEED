@@ -531,6 +531,9 @@ class DoorSecurityState:
     # authoritative home/work/property bindings. Physical key items are a
     # later consumer of this grant list rather than a second permission model.
     keyholder_uids: list[str] = field(default_factory=list)
+    # Temporary social invitations are distinct from ownership and physical
+    # keys. Values are absolute game minutes and expire deterministically.
+    guest_access_until: dict[str, int] = field(default_factory=dict)
     lock_uid: str = ""
     # Work entrances may be locked by the local schedule. Track that provenance
     # so opening hours never unlock a lock changed by another authoritative

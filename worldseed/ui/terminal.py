@@ -34,6 +34,14 @@ class Terminal:
         self._old_termios = None
         self._win_input_mode = None
         self._win_input_handle = None
+        self._realtime_callback = None
+
+    def set_realtime_callback(self, callback) -> None:
+        self._realtime_callback = callback
+
+    def _pump_realtime(self) -> bool:
+        callback=self._realtime_callback
+        return bool(callback and callback())
 
     def size(self) -> tuple[int, int]:
         s = shutil.get_terminal_size((100, 30))
@@ -81,6 +89,9 @@ class Terminal:
     def read_key(self) -> str:
         if os.name == "nt":
             import msvcrt
+            while not msvcrt.kbhit():
+                if self._pump_realtime():return "UI_REDRAW"
+                time.sleep(0.05)
             ch = msvcrt.getwch()
             if ch in ("\x00", "\xe0"):
                 code = msvcrt.getwch()
@@ -91,10 +102,12 @@ class Terminal:
                 # therefore be returned immediately with no timing ambiguity.
                 return "ESC"
             return normalize_raw_key(ch)
+        import select
+        while not select.select([sys.stdin], [], [], 0.05)[0]:
+            if self._pump_realtime():return "UI_REDRAW"
         ch = sys.stdin.read(1)
         if ch == "\x1b":
             # Minimal arrow-sequence parser.
-            import select
             if select.select([sys.stdin], [], [], 0.03)[0]:
                 a = sys.stdin.read(1)
                 if a == "[" and select.select([sys.stdin], [], [], 0.03)[0]:

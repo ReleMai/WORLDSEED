@@ -384,6 +384,7 @@ class PropertySecuritySystem:
         actor_uid=str(actor_uid or "")
         if not actor_uid:return False
         if actor_uid==door.owner_uid or actor_uid in door.keyholder_uids:return True
+        if int(door.guest_access_until.get(actor_uid,-1))>=int(self.state.clock_minute):return True
         npc=self.state.npcs.get(actor_uid)
         if npc is None:return False
         if npc.home_id==door.property_id or npc.property_id==door.property_id:return True
@@ -429,6 +430,48 @@ class PropertySecuritySystem:
                 door.keyholder_uids=[uid for uid in door.keyholder_uids if uid!=actor_uid];changed+=1
         return changed
 
+    def grant_guest_access(self,property_id:str,actor_uid:str,until_minute:int)->int:
+        actor_uid=str(actor_uid or "")
+        if not actor_uid:return 0
+        changed=0
+        for door in self.doors_for_property(property_id):
+            before=int(door.guest_access_until.get(actor_uid,-1))
+            door.guest_access_until[actor_uid]=max(before,int(until_minute))
+            if int(door.guest_access_until[actor_uid])!=before:changed+=1
+        return changed
+
+    def knock_on_door(self,door_uid:str,player_pos:WorldPos,minute:int,persuasion:int=0)->dict:
+        """Ask a physically present resident to answer a home entrance."""
+        door=self.door_by_id(door_uid)
+        if door is None:return {"outcome":"missing","message":"That door is no longer present.","npc_uid":""}
+        if door.role!="entrance" or self._function(door.property_id)!="residence":
+            return {"outcome":"not_home","message":"This is not a private home entrance.","npc_uid":""}
+        if door.z!=player_pos.z or abs(door.x-player_pos.x)+abs(door.y-player_pos.y)>1:
+            return {"outcome":"far","message":"Move next to the door before knocking.","npc_uid":""}
+        residents=[]
+        for npc in self.state.npcs.values():
+            if not npc.alive or npc.z!=door.z:continue
+            if npc.home_id!=door.property_id and npc.property_id!=door.property_id:continue
+            cell=self.physicalization.cell_at(WorldPos(npc.x,npc.y,npc.z))
+            if cell is not None and cell.structure_id==door.property_id:
+                residents.append(npc)
+        if not residents:
+            return {"outcome":"unanswered","message":"You knock, but no one inside answers.","npc_uid":""}
+        residents.sort(key=lambda npc:(abs(npc.x-door.x)+abs(npc.y-door.y),npc.uid))
+        npc=residents[0]
+        rel=npc.relationships.setdefault("player",{"affection":0,"trust":0,"fear":0,"respect":0,"familiarity":0})
+        trust=int(rel.get("trust",0));affection=int(rel.get("affection",0));familiarity=int(rel.get("familiarity",0))
+        heat=int(self.state.player_crime_heat.get(door.settlement_id,0))
+        hour=(int(minute)%1440)//60
+        threshold=12+(14 if hour>=22 or hour<6 else 0)+(12 if "suspicious" in npc.traits else 0)
+        willingness=trust+affection//2+familiarity//3+max(0,int(persuasion))*3-heat
+        if willingness>=threshold:
+            until=int(minute)+120
+            self.grant_guest_access(door.property_id,"player",until)
+            door.locked=False;door.schedule_locked=False
+            return {"outcome":"invited","message":f"{npc.name} answers and invites you inside for a while.","npc_uid":npc.uid,"until_minute":until}
+        return {"outcome":"door_talk","message":f"{npc.name} answers but keeps the threshold between you. They are willing to talk here.","npc_uid":npc.uid}
+
     def update_scheduled_locks(self,minute:int)->int:
         """Apply active-workplace opening hours to stable entrance locks.
 
@@ -439,6 +482,10 @@ class PropertySecuritySystem:
         """
         hour=(int(minute)%1440)//60;changed=0
         for door in sorted(self.state.door_security.values(),key=lambda d:d.uid):
+            expired=[uid for uid,until in door.guest_access_until.items() if int(until)<int(minute)]
+            for uid in expired:door.guest_access_until.pop(uid,None)
+            if expired and self._function(door.property_id)=="residence" and door.role=="entrance" and not door.forced and not door.picked:
+                if not door.locked:door.locked=True;changed+=1
             if door.role!="entrance" or door.access not in {"work","public"}:continue
             function=self._function(door.property_id)
             hours=(self.WORK_OPEN_HOURS if door.access=="work" else self.PUBLIC_OPEN_HOURS).get(function)

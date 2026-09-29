@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev40"
+ENGINE_VERSION = "1.0.0-rc14-dev41"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -45,9 +45,14 @@ REGION_CHUNKS = 16
 DEFAULT_CACHE_CHUNKS = 384
 AUTOSAVE_TURNS = 40
 MINUTES_PER_ACTION = 5
-MOVE_MINUTES = 1
-# Phase 4 living-population contract: exact nearby NPC action execution advances
-# on deterministic game-time boundaries, never on render frames or hourly AI.
+MOVE_MINUTES = 0
+# Continuous-play clock.  One wall-clock second advances one game minute while
+# gameplay is active; long stalls are capped and resumed from "now" instead of
+# replaying an unbounded backlog.  Explicit long actions may still fast-forward.
+REALTIME_SECONDS_PER_GAME_MINUTE = 1.0
+REALTIME_MAX_CATCHUP_MINUTES = 5
+# Nearby NPC action execution remains on deterministic game-time boundaries.
+# The boundaries are now fed by continuous time rather than player movement.
 SIMULATION_TICK_MINUTES = 5
 # Long explicit waits retain bounded coarse simulation instead of replaying tens
 # of thousands of exact local ticks. Normal play remains on the fixed tick.

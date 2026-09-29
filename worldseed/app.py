@@ -13,6 +13,7 @@ from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
 from worldseed.sim.commands import *
 from worldseed.sim.engine import Simulation
+from worldseed.sim.realtime import RealtimeSimulationDriver
 from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
@@ -633,11 +634,14 @@ def _learn_area_from_npc(ctx:GameContext,npc)->str:
     if town is None:return f'{npc.name} does not know this country well enough to map it for you.'
     rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
     trust=int(rel.get('trust',0));familiarity=int(rel.get('familiarity',0))
+    community=DialogueSystem.settlement_standing(sim.state,npc.settlement_id)
+    persuasion=int(sim.state.player_skills.get('persuasion',0))
     guarded=8+int(hash_u64(sim.seed,'area-willingness',npc.uid)%25)
     if npc.occupation in {'guard','scholar','merchant'}:guarded=max(6,guarded-5)
     if any(str(t).lower() in {'suspicious','secretive','paranoid'} for t in npc.traits):guarded+=15
-    if trust+familiarity//2<guarded:
-        return f'{npc.name} is not ready to share local claims or resources with you. More trust may help.'
+    willingness=trust+familiarity//2+community//4+persuasion*2
+    if willingness<guarded:
+        return f'{npc.name} is not ready to share local claims or resources with you. Personal trust, community standing, or persuasion may help.'
     token=f'{town.region_x},{town.region_y}'
     control=sim.state.territory_control.get(token)
     faction_id=(control.controller_faction_id if control else '') or town.faction_id
@@ -654,6 +658,71 @@ def _learn_area_from_npc(ctx:GameContext,npc)->str:
     }
     if faction_id:sim.state.discovered_factions=sorted(set(sim.state.discovered_factions+[faction_id]))
     return f'{npc.name} explains the local boundary, who holds it, and the main goods here: '+(', '.join(resources) if resources else 'no dependable surplus')+'.'
+
+def _gift_npc(ctx:GameContext,term:Terminal,npc)->str:
+    inv=ctx.entities.get(ctx.player_id,Inventory)
+    rows=[]
+    for iid,count in sorted(inv.items.items()):
+        item=ctx.registry.items.get(iid)
+        if count<=0 or item is None:continue
+        if item.nutrition>0 or iid=='core:clean_water' or 'drink' in item.tags:
+            rows.append((iid,f'{item.name} — have {count}'))
+    if not rows:return 'You have no food or drink to offer.'
+    iid=_select(term,'OFFER A GIFT',rows,subtitle='The item is transferred from your pack. Gifts matter more when they answer a real need.')
+    if not iid:return 'You decide not to offer anything.'
+    item=ctx.registry.items[iid]
+    if not inv.remove(iid,1):return 'You no longer have that item.'
+    npc.inventory[iid]=npc.inventory.get(iid,0)+1
+    rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
+    needed=(iid=='core:clean_water' and npc.thirst>=45) or (item.nutrition>0 and npc.hunger>=45)
+    trust_gain=4 if needed else 2;affection_gain=5 if needed else 3
+    rel['trust']=min(100,int(rel.get('trust',0))+trust_gain)
+    rel['affection']=min(100,int(rel.get('affection',0))+affection_gain)
+    rel['familiarity']=min(100,int(rel.get('familiarity',0))+3)
+    npc.memories.append({'minute':ctx.sim.clock.minute,'type':'gift','subject':'player','item_id':iid,'salience':8,'valence':affection_gain})
+    npc.memories=npc.memories[-40:]
+    return f'{npc.name} accepts the {item.name.lower()}'+(' gratefully; it answers an immediate need.' if needed else ' with thanks.')
+
+def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
+    sim=ctx.sim;dialogue=DialogueSystem(sim.state,sim.seed)
+    nav=NavigationStack(RouteState('npc-dialogue',target.name,payload={'topic':'root'}))
+    while True:
+        topic=str(nav.current.payload.get('topic','root'))
+        vitals=ctx.entities.get(ctx.player_id,Vitals)
+        scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids(),topic=topic)
+        rows=[(option.key,option.label) for option in scene.options]
+        data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
+              'context':scene.context,'npc_uid':target.uid,'options':rows,'topic':scene.topic,
+              'relationship':dict(scene.relationship)}
+        choice=_stack_menu(term,nav,rows,subtitle='Conversation continues in real time. Trust, familiarity, and community standing gate information.',presentation='npc_dialogue',presentation_data=data)
+        if choice in (None,'goodbye'):return response or scene.opening
+        if choice=='__BACK__':continue
+        option=next((row for row in scene.options if row.key==choice),None)
+        if option is None:continue
+        if option.next_topic:
+            if option.key=='back':nav.back()
+            else:nav.push(RouteState(f'npc-dialogue:{option.next_topic}',option.next_topic.replace('_',' ').upper(),payload={'topic':option.next_topic}))
+            continue
+        dialogue.apply_option(target,option,sim.clock.minute)
+        if option.action=='inspect':
+            push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
+            if callable(push):push()
+            try:_npc_profile_menu(ctx,term,target.uid)
+            finally:
+                if callable(pop):pop()
+            continue
+        if option.action=='area':response=_learn_area_from_npc(ctx,target);continue
+        if option.action=='knowledge':
+            before=len(sim.log);sim.begin_conversation(target.uid)
+            response=sim.log[-1].message if len(sim.log)>before else f'{target.name} has nothing new to add.'
+            continue
+        if option.action=='gift':response=_gift_npc(ctx,term,target);continue
+        if option.action=='trade':
+            response=(f'{target.name} is willing to trade through the settlement market.' if target.occupation=='merchant' else f'{target.name} directs you to the local market; they are not a trader.')
+            continue
+        if option.action=='attack':
+            return 'You end the conversation aggressively. Direct NPC combat is not yet part of the combat authority.'
+        response=option.response
 
 def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     sim=ctx.sim;p=sim.player_pos
@@ -677,34 +746,7 @@ def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     target=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(p.x+dx,p.y+dy,p.z)),None)
     if target is None:return 'Nobody is close enough to talk to.'
     sim.execute(TalkCommand(ctx.player_id,dx,dy))
-    dialogue=DialogueSystem(sim.state,sim.seed);response=sim.log[-1].message if sim.log else ''
-    nav=NavigationStack(RouteState('npc-dialogue',target.name))
-    while True:
-        vitals=ctx.entities.get(ctx.player_id,Vitals)
-        scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids())
-        rows=[(option.key,option.label) for option in scene.options]
-        data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
-              'context':scene.context,'npc_uid':target.uid,'options':rows}
-        choice=_stack_menu(term,nav,rows,subtitle='Choose a response. Information depends on trust and what this person knows.',presentation='npc_dialogue',presentation_data=data)
-        if choice in (None,'goodbye'):return response or scene.opening
-        if choice=='__BACK__':continue
-        option=next((row for row in scene.options if row.key==choice),None)
-        if option is None:continue
-        dialogue.apply_option(target,option)
-        if option.action=='inspect':
-            push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
-            if callable(push):push()
-            try:_npc_profile_menu(ctx,term,target.uid)
-            finally:
-                if callable(pop):pop()
-            continue
-        if option.action=='area':response=_learn_area_from_npc(ctx,target);continue
-        if option.action=='trade':
-            response=(f'{target.name} is willing to trade through the settlement market.' if target.occupation=='merchant' else f'{target.name} directs you to the local market; they are not a trader.')
-            continue
-        if option.action=='attack':
-            return 'You end the conversation aggressively. Direct NPC combat is not yet part of the combat authority.'
-        response=option.response
+    return _conversation_menu(ctx,term,target,sim.log[-1].message if sim.log else '')
 
 def _near_market(sim:Simulation):
     p=sim.player_pos;candidates=[]
@@ -1833,7 +1875,18 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         role=npc.kinship.get(uid,'').replace('_',' ').title()
         relations.append((label,(', '.join(notes)+(f' · {role}' if role else '')).capitalize()))
     relations.sort(key=lambda row:row[0])
-    tabs['relations']=relations[:8] or [('Relations','No known relationships')]
+    trust=int(rel_player.get('trust',0));affection=int(rel_player.get('affection',0))
+    respect=int(rel_player.get('respect',0));community=DialogueSystem.settlement_standing(sim.state,npc.settlement_id)
+    readiness=max(0,min(100,trust+familiarity//2+community//4+sim.player_skill('persuasion')*2))
+    social_rows=[
+        ('Trust',f'{trust:+d}',(trust+100)//2),
+        ('Affection',f'{affection:+d}',(affection+100)//2),
+        ('Respect',f'{respect:+d}',(respect+100)//2),
+        ('Familiarity',f'{familiarity}/100',familiarity),
+        ('Community standing',f'{community:+d}',(community+100)//2),
+        ('Information readiness',f'{readiness}/100',readiness),
+    ]
+    tabs['relations']=social_rows+relations[:4]
 
     needs=[
         ('Hunger',npc.hunger),('Thirst',npc.thirst),('Fatigue',npc.rest),
@@ -1930,6 +1983,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
     fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
+        if planned is not None and planned.function=='residence' and door.role=='entrance':
+            rows.append(('knock_property_door','Knock and wait for a resident'))
         if door.locked and not door.forced and not sim.property_security.authorized_player(door):
             intel=sim.casing.intel_for(door.property_id)
             lock_known=bool(intel and door.uid in intel.lock_uids)
@@ -2055,6 +2110,17 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             f'Door condition: {door.condition}%',
         ],screen_width(term.size()[0],92)))
         return UI_BACK
+    if choice=='knock_property_door' and door is not None:
+        result=sim.property_security.knock_on_door(
+            door.uid,sim.player_pos,sim.clock.minute,sim.player_skill('persuasion')
+        )
+        npc_uid=str(result.get('npc_uid',''))
+        if npc_uid and npc_uid in sim.state.npcs:
+            before=len(sim.log);sim.begin_conversation(npc_uid)
+            learned=sim.log[-1].message if len(sim.log)>before else ''
+            opening=str(result.get('message',''))+((' '+learned) if learned else '')
+            return _conversation_menu(ctx,term,sim.state.npcs[npc_uid],opening)
+        return str(result.get('message','No one answers.'))
     if choice=='lockpick_property_door' and door is not None:
         sim.execute(LockpickDoorCommand(ctx.player_id,door.uid))
         return sim.log[-1].message if sim.log else ''
@@ -3160,9 +3226,17 @@ def _pause_menu(ctx:GameContext,term:Terminal)->str:
 
 def run_game(ctx:GameContext,term:Terminal)->str:
     renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
-    while True:
+    realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
+    install=getattr(term,'set_realtime_callback',None)
+    if callable(install):install(realtime.pump)
+    try:
+      while True:
         _present_game_frame(term,ctx,renderer,last);last=''
         key=term.read_key()
+        if key=='UI_REDRAW':
+            if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
+                _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
+            continue
         try:
             ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
         except Exception:
@@ -3173,10 +3247,12 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if intent.kind=='quit':
             _save(ctx);return 'quit'
         if intent.kind=='pause':
+            realtime.pause()
             choice=_pause_menu(ctx,term)
             if choice=='quit':return 'quit'
             if choice=='menu':return 'menu'
             if choice=='saved':last='Game saved.'
+            realtime.resume()
             continue
         if intent.kind=='actions':last=_action_palette(ctx,term);continue
         if intent.kind=='stance':
@@ -3210,6 +3286,8 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         last=ctx.sim.log[-1].message if ctx.sim.log else ''
         if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
             _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
+    finally:
+        if callable(install):install(None)
 def _make_display_backend():
     force_terminal='--terminal' in sys.argv
     force_window='--window' in sys.argv

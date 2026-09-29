@@ -380,7 +380,7 @@ class Simulation:
         elif isinstance(command,MoveContainerCommand):self._move_container(command)
         elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
-        elif isinstance(command,TalkCommand):self._talk(command)
+        elif isinstance(command,TalkCommand):self._talk(command);minutes=0
         elif isinstance(command,UseCrossingCommand):minutes=self._use_crossing(command,result)
         elif isinstance(command,RepairCrossingCommand):minutes=self._repair_crossing(command)
         elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
@@ -400,6 +400,18 @@ class Simulation:
             position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         return result
+
+    def advance_realtime(self, minutes:int)->None:
+        """Advance continuous active play without requiring a player command."""
+        minutes=max(0,int(minutes))
+        if minutes<=0:return
+        # Turn remains the bounded local-action sequence used by wildlife and
+        # combat presentation.  Wall time advances it even while the player is
+        # standing still, then normal ordered time boundaries drive NPCs.
+        self.turn+=minutes
+        self._advance_time(minutes)
+        self._post_action()
+        self.debug.event("realtime_advance",minutes=minutes,minute=int(self.clock.minute),turn=int(self.turn))
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
         """Fast-forward an absent player's world by meaningful event boundaries.
@@ -508,16 +520,19 @@ class Simulation:
     def _update_vitals(self,minutes:int)->None:
         v=self.entities.try_get(self.player_id,Vitals)
         if not v:return
-        v.hunger=min(100,v.hunger+max(0,minutes//45));v.thirst=min(100,v.thirst+max(0,minutes//30));stam=max(1,minutes//10);stam += max(0,minutes//20) if self.state.player_food_effects.get("stamina",0)>self.clock.minute else 0;
+        end=int(self.clock.minute);start=end-max(0,int(minutes))
+        hunger_steps=max(0,end//45-start//45);thirst_steps=max(0,end//30-start//30)
+        v.hunger=min(100,v.hunger+hunger_steps);v.thirst=min(100,v.thirst+thirst_steps);stam=max(1,minutes//10);stam += max(0,minutes//20) if self.state.player_food_effects.get("stamina",0)>self.clock.minute else 0;
         from worldseed.systems.swimming import exposure
         if exposure(self,self.player_pos).mode=='swimming':
-            effort=max(1,(minutes+4)//5)*max(1,3-self.player_attribute('endurance')//6)
+            swim_steps=max(0,end//5-start//5)
+            effort=swim_steps*max(1,3-self.player_attribute('endurance')//6)
             deficit=max(0,effort-v.stamina);v.stamina=max(0,v.stamina-effort)
             if deficit:
                 v.hp=max(0,v.hp-deficit*2)
                 self._message('You are drowning from exhaustion! Move to shallows, shore or a bridge!')
         else:v.stamina=min(100,v.stamina+stam)
-        hours=max(0,minutes//60)
+        hours=max(0,end//60-start//60)
         if hours:
             # Natural recovery is deliberately slow and depends on wound care.
             kept=[]
@@ -861,13 +876,24 @@ class Simulation:
         p=self.entities.get(cmd.actor,Position).value;target=p.moved(cmd.dx,cmd.dy)
         npc=next((n for n in self.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
         if not npc:self._message("There is nobody there to speak with.");return
+        self.begin_conversation(npc.uid)
+
+    def begin_conversation(self,npc_uid:str)->None:
+        """Start an authoritative conversation, including through an answered door."""
+        npc=self.state.npcs.get(str(npc_uid))
+        if npc is None or not npc.alive:self._message("There is nobody there to speak with.");return
         known=set(self.state.discovered_npcs);first=npc.uid not in known;known.add(npc.uid);self.state.discovered_npcs=sorted(known)
         if npc.settlement_id:
             ss=set(self.state.discovered_settlements);ss.add(npc.settlement_id);self.state.discovered_settlements=sorted(ss)
         if npc.faction_id:
             ff=set(self.state.discovered_factions);ff.add(npc.faction_id);self.state.discovered_factions=sorted(ff)
         rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
-        rel['familiarity']=min(100,int(rel.get('familiarity',0))+8);rel['trust']=min(100,int(rel.get('trust',0))+1)
+        conversation_marker=f'player:{int(self.clock.minute)//180}'
+        recent=any(m.get('type')=='conversation' and m.get('marker')==conversation_marker for m in npc.memories)
+        if not recent:
+            rel['familiarity']=min(100,int(rel.get('familiarity',0))+8);rel['trust']=min(100,int(rel.get('trust',0))+1)
+            npc.memories.append({'minute':int(self.clock.minute),'type':'conversation','subject':'player','marker':conversation_marker,'salience':3,'valence':1})
+            npc.memories=npc.memories[-40:]
         town=self.state.settlements.get(npc.settlement_id)
         if first:
             self._message(f"You meet {npc.name}, a {npc.occupation}" + (f" from {town.name}." if town else '.'))

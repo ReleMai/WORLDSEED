@@ -10,6 +10,9 @@ class DialogueOption:
     tone: str = "neutral"
     trust_delta: int = 0
     action: str = "chat"
+    next_topic: str = ""
+    affection_delta: int = 0
+    familiarity_delta: int = 0
 
 @dataclass(frozen=True, slots=True)
 class DialogueScene:
@@ -18,6 +21,8 @@ class DialogueScene:
     opening: str
     context: tuple[str, ...]
     options: tuple[DialogueOption, ...]
+    topic: str = "root"
+    relationship: tuple[tuple[str, int], ...] = ()
 
 class DialogueSystem:
     """Small state-driven storylet selector for living-world conversations.
@@ -44,7 +49,17 @@ class DialogueSystem:
         idx=hash_u64(self.seed,"dialogue",npc.uid,slot,bucket)%len(rows)
         return rows[idx]
 
-    def scene(self,npc,minute:int,player_vitals,known:bool=True)->DialogueScene:
+    @staticmethod
+    def settlement_standing(state,settlement_id:str)->int:
+        rows=[]
+        for person in state.npcs.values():
+            if not person.alive or person.settlement_id!=settlement_id:continue
+            rel=person.relationships.get("player",{})
+            if int(rel.get("familiarity",0))<=0:continue
+            rows.append((int(rel.get("trust",0))+int(rel.get("affection",0)))//2)
+        return sum(rows)//len(rows) if rows else 0
+
+    def scene(self,npc,minute:int,player_vitals,known:bool=True,topic:str="root")->DialogueScene:
         phase=self._phase(minute)
         town=self.state.settlements.get(npc.settlement_id)
         rel=npc.relationships.get("player",{}) if isinstance(npc.relationships,dict) else {}
@@ -88,23 +103,45 @@ class DialogueSystem:
         elif phase=="night" and npc.occupation not in {"guard","healer"}:
             opening=self._pick(npc,"night",["It is late. Make it quick.","Most decent people are asleep by now. What is it?"],minute)
 
-        options=[]
-        options.append(DialogueOption("area","Ask about the area","",action="area"))
-        options.append(DialogueOption("chat","Just chat",self._personal_response(npc,minute),"warm",1))
-        options.append(DialogueOption("work",f"Ask about their work",self._work_response(npc,town,stressed,minute)))
-        options.append(DialogueOption("trade","Trade","",action="trade"))
-        options.append(DialogueOption("inspect","Inspect", "", action="inspect"))
-        if hurt:
-            options.append(DialogueOption("health","Mention your injuries",self._health_response(npc,minute),"concerned",1 if npc.occupation=="healer" else 0))
-        if heat or bounty:
-            options.append(DialogueOption("crime","Ask about the trouble around your name",self._crime_response(npc,heat,bounty,minute),"wary",-1 if npc.occupation=="guard" else 0))
-        if hungry:
-            options.append(DialogueOption("needs","Ask where to find food or water",self._needs_response(npc,town,minute)))
-        if trust>=15 or affection>=20:
-            options.append(DialogueOption("personal","Ask how they are really doing",self._personal_response(npc,minute),"warm",1))
-        options.append(DialogueOption("attack","Attack", "You end the conversation and square up for violence.", "hostile", -20, "attack"))
-        options.append(DialogueOption("goodbye","End conversation",self._pick(npc,"bye",["Safe travels.","Until next time.","Take care of yourself."],minute),action="goodbye"))
-        return DialogueScene(npc.name if known else "Stranger",role.title(),opening,tuple(context),tuple(options))
+        topic=topic if topic in {"root","area","personal","relations"} else "root"
+        if topic=="area":
+            options=[
+                DialogueOption("area_overview","Ask who controls this area and what it produces","",action="area"),
+                DialogueOption("routes","Ask about roads and nearby settlements","",action="knowledge"),
+                DialogueOption("danger","Ask what is dangerous nearby",self._danger_response(npc,town,heat,minute)),
+                DialogueOption("back","Back to other topics","",next_topic="root"),
+            ]
+        elif topic=="personal":
+            options=[
+                DialogueOption("wellbeing","Ask how they are really doing",self._personal_response(npc,minute),"warm",1,"chat","",1,3),
+                DialogueOption("family","Ask about family",self._family_response(npc,trust,minute),"warm",0,"chat","",1,2),
+                DialogueOption("history","Ask about their past",self._history_response(npc,trust,minute),"neutral",1,"chat","",0,3),
+                DialogueOption("back","Back to other topics","",next_topic="root"),
+            ]
+        elif topic=="relations":
+            options=[
+                DialogueOption("listen","Listen without pressing for information",self._listen_response(npc,minute),"warm",1,"chat","",1,4),
+                DialogueOption("gift","Offer food or drink","",action="gift"),
+                DialogueOption("trust","Ask what would earn their trust",self._trust_response(npc,trust,minute)),
+                DialogueOption("back","Back to other topics","",next_topic="root"),
+            ]
+        else:
+            options=[
+                DialogueOption("area","Ask about the area","",next_topic="area"),
+                DialogueOption("personal","Talk about their life","",next_topic="personal"),
+                DialogueOption("relations","Build the relationship","",next_topic="relations"),
+                DialogueOption("work","Ask about their work",self._work_response(npc,town,stressed,minute),familiarity_delta=1),
+                DialogueOption("trade","Trade","",action="trade"),
+                DialogueOption("inspect","Inspect","",action="inspect"),
+            ]
+            if hurt:options.append(DialogueOption("health","Mention your injuries",self._health_response(npc,minute),"concerned",1 if npc.occupation=="healer" else 0,familiarity_delta=1))
+            if heat or bounty:options.append(DialogueOption("crime","Ask about the trouble around your name",self._crime_response(npc,heat,bounty,minute),"wary",-1 if npc.occupation=="guard" else 0,familiarity_delta=1))
+            if hungry:options.append(DialogueOption("needs","Ask where to find food or water",self._needs_response(npc,town,minute),familiarity_delta=1))
+            options.append(DialogueOption("attack","Attack","You end the conversation and square up for violence.","hostile",-20,"attack",affection_delta=-15,familiarity_delta=5))
+            options.append(DialogueOption("goodbye","End conversation",self._pick(npc,"bye",["Safe travels.","Until next time.","Take care of yourself."],minute),action="goodbye"))
+        standing=self.settlement_standing(self.state,npc.settlement_id)
+        relationship=(("trust",trust),("affection",affection),("familiarity",int(rel.get("familiarity",0))),("community",standing))
+        return DialogueScene(npc.name if known else "Stranger",role.title(),opening,tuple(context),tuple(options),topic,relationship)
 
     def _work_response(self,npc,town,stressed,minute):
         role=npc.occupation
@@ -149,7 +186,42 @@ class DialogueSystem:
         if npc.wants:return f"I keep thinking about {str(npc.wants[0]).replace('_',' ')}. Hard to know whether that is hope or foolishness."
         return self._pick(npc,"personal",["I am managing. That is enough for today.","Some days are quieter inside than others."],minute)
 
-    def apply_option(self,npc,option:DialogueOption)->None:
-        if not option.trust_delta:return
+    def _danger_response(self,npc,town,heat,minute):
+        if heat>0:return "Right now, the attention following you is the danger most people here notice first."
+        if town and town.food_stress>=45:return "Short supplies make roads and tempers less safe. Keep your pack close."
+        if npc.occupation=="guard":return "Watch the roads after dark, and do not assume every quiet stretch is empty."
+        return self._pick(npc,"danger",["Travel prepared and ask the watch before taking an unfamiliar road.","Most trouble starts where roads thin and witnesses disappear."],minute)
+
+    def _family_response(self,npc,trust,minute):
+        relatives=len(npc.parents)+len(npc.children)+(1 if npc.spouse_uid else 0)
+        if trust<8:return "That is personal. We do not know one another well enough yet."
+        if relatives:return f"Family ties run through much of my life. There are {relatives} people I count close enough to name as family."
+        return "I do not have close family here, or none I am ready to speak about."
+
+    def _history_response(self,npc,trust,minute):
+        if trust<18:return "Some history is earned, not requested. Give me time to know you."
+        if npc.backstory:
+            value=next((str(npc.backstory.get(k,'')) for k in ("formative_event","upbringing","birthplace","ambition") if npc.backstory.get(k)),"")
+            if value:return value[:1].upper()+value[1:]+"."
+        return "My past is mostly ordinary work, hard seasons, and people I remember."
+
+    def _listen_response(self,npc,minute):
+        return self._pick(npc,"listen",["They relax a little when it becomes clear you are actually listening.","You give them room to speak without turning every word into a demand."],minute)
+
+    def _trust_response(self,npc,trust,minute):
+        if trust>=35:return "Keep your word, respect private ground, and help when the cost is real. You have done better than most."
+        if "suspicious" in npc.traits:return "Do not pry. Keep your word twice before expecting me to believe it once."
+        return "Listen, respect our homes, and offer help without treating kindness like a purchase."
+
+    def apply_option(self,npc,option:DialogueOption,minute:int)->bool:
+        if not (option.trust_delta or option.affection_delta or option.familiarity_delta):return False
+        bucket=int(minute)//180
+        marker=f"{option.key}:{bucket}"
+        if any(m.get("type")=="dialogue_choice" and m.get("marker")==marker for m in npc.memories):return False
         rel=npc.relationships.setdefault("player",{})
-        rel["trust"]=max(-100,min(100,int(rel.get("trust",0))+option.trust_delta))
+        for key,delta in (("trust",option.trust_delta),("affection",option.affection_delta),("familiarity",option.familiarity_delta)):
+            low=0 if key=="familiarity" else -100
+            rel[key]=max(low,min(100,int(rel.get(key,0))+int(delta)))
+        npc.memories.append({"minute":int(minute),"type":"dialogue_choice","subject":"player","marker":marker,"salience":3,"valence":option.trust_delta+option.affection_delta})
+        npc.memories=npc.memories[-40:]
+        return True

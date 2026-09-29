@@ -43,12 +43,12 @@ class Dev31ExplorationTests(unittest.TestCase):
     def tearDown(self):
         self.db.close();self.td.cleanup()
 
-    def test_movement_advances_one_minute_not_five(self):
-        self.assertEqual(MOVE_MINUTES,1)
+    def test_movement_uses_continuous_clock_instead_of_advancing_time(self):
+        self.assertEqual(MOVE_MINUTES,0)
         before=self.sim.clock.minute
         with patch.object(self.sim,'_move'),patch.object(self.sim,'_post_action'):
             self.sim.execute(MoveCommand(self.pid,1,0))
-        self.assertEqual(self.sim.clock.minute,before+1)
+        self.assertEqual(self.sim.clock.minute,before)
 
     def test_discovery_is_circular(self):
         pos=self.sim.player_pos

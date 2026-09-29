@@ -36,7 +36,8 @@ class DialogueMovementPhaseTests(unittest.TestCase):
         self.assertIn('Wanted / watched',wanted.context)
         self.assertIn('crime',{o.key for o in wanted.options})
         self.assertIn('Night',wanted.context)
-        self.assertTrue({'area','chat','trade','inspect','attack'}.issubset({o.key for o in wanted.options}))
+        self.assertTrue({'area','personal','relations','trade','inspect','attack'}.issubset({o.key for o in wanted.options}))
+        self.assertEqual(next(o for o in wanted.options if o.key=='area').next_topic,'area')
 
     def test_dialogue_variants_are_deterministic(self):
         state,town,npc,dialogue=self.fixture()

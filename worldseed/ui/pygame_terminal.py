@@ -119,6 +119,7 @@ class PygameTerminal(PointerUI):
         self._ui_window_resizing: str | None = None
         self._ui_window_pointer_last = (0, 0)
         self._current_presentation = ''
+        self._realtime_callback = None
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
         # Context overlays retain only the pixels under the popup.  This lets
@@ -172,6 +173,13 @@ class PygameTerminal(PointerUI):
             self.pg.quit()
         except Exception:
             pass
+
+    def set_realtime_callback(self, callback) -> None:
+        self._realtime_callback = callback
+
+    def _pump_realtime(self) -> bool:
+        callback=self._realtime_callback
+        return bool(callback and callback())
 
     def _rebuild_fonts(self) -> None:
         pg = self.pg
@@ -255,6 +263,8 @@ class PygameTerminal(PointerUI):
         while True:
             now = pg.time.get_ticks()
             self._animate_idle_effects(now)
+            if self._pump_realtime():
+                return 'UI_REDRAW'
             wait_ms = 50
             if self._active_movement_key is not None:
                 wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
@@ -1043,9 +1053,18 @@ class PygameTerminal(PointerUI):
         screen.blit(heading,(content.x+14,content.y+12))
         yy=content.y+44
         entries=list(tabs.get(active,()))
-        if active=='needs':
+        if active in {'needs','relations'}:
             for row in entries[:9]:
                 if yy+38>content.bottom-10:break
+                if len(row)<3:
+                    label,value=row[0],row[1] if len(row)>1 else ''
+                    card=pg.Rect(content.x+10,yy-4,content.width-20,34)
+                    pg.draw.rect(screen,(27,32,33),card,border_radius=4)
+                    ls=self.small_font.render(self._fit_ui_text(str(label),self.small_font,max(90,card.width//3)),True,self._theme['muted'])
+                    screen.blit(ls,(card.x+9,card.centery-ls.get_height()//2))
+                    value_x=card.x+max(104,card.width//3)
+                    vs=self.small_font.render(self._fit_ui_text(str(value),self.small_font,card.right-value_x-9),True,self._theme['text'])
+                    screen.blit(vs,(value_x,card.centery-vs.get_height()//2));yy+=39;continue
                 label,status,value=row
                 name=self.small_font.render(str(label),True,self._theme['text'])
                 stat=self.small_font.render(str(status).upper(),True,self._theme['muted'])
@@ -1092,8 +1111,12 @@ class PygameTerminal(PointerUI):
         role=self.small_font.render(str(data.get('role','')).upper(),True,self._theme['accent']);screen.blit(role,(transcript.x+14,transcript.y+12))
         context='  •  '.join(str(v) for v in data.get('context',()))
         cs=self.small_font.render(self._fit_ui_text(context,self.small_font,transcript.width-28),True,self._theme['muted']);screen.blit(cs,(transcript.x+14,transcript.y+36))
+        relationship=data.get('relationship') or {}
+        rel_text='  •  '.join(f'{str(k).title()} {int(v):+d}' for k,v in relationship.items())
+        if rel_text:
+            rs=self.small_font.render(self._fit_ui_text(rel_text,self.small_font,transcript.width-28),True,self._theme['accent']);screen.blit(rs,(transcript.x+14,transcript.y+56))
         text=str(data.get('response') or data.get('opening') or '...')
-        max_chars=max(24,(transcript.width-30)//max(1,self.small_font.size('M')[0]));yy=transcript.y+70
+        max_chars=max(24,(transcript.width-30)//max(1,self.small_font.size('M')[0]));yy=transcript.y+(82 if rel_text else 70)
         for line in textwrap.wrap(text,max_chars)[:12]:
             surf=self.font.render(line,True,self._theme['text']);screen.blit(surf,(transcript.x+15,yy));yy+=self.font.get_linesize()+5
         heading=self.small_font.render('YOUR RESPONSE',True,self._theme['accent']);screen.blit(heading,(choices.x+12,choices.y+12))
