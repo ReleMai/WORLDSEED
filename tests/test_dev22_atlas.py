@@ -157,7 +157,7 @@ class AtlasRenderTests(unittest.TestCase):
                 term._resize(*size);term.present_region_map(self.sim)
                 for rect, token in term._pointer_targets:
                     self.assertTrue(term.screen.get_rect().contains(rect),(size,token,rect))
-                self.assertEqual(set(term._atlas_art.icons),{'village','city','camp','cave','fortress','temple','mine','archive','crypt'})
+                self.assertEqual(set(term._atlas_art.icons),{'village','city','camp','cave','fortress','temple','mine','archive','crypt','claim_stone','watch_monument','frontier_post','regional_stronghold'})
                 self.assertIsNone(term._hover_context)
                 pixels=term.pg.image.tobytes(term.screen,'RGB')
                 term.pg.event.clear()

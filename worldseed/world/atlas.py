@@ -125,8 +125,29 @@ def read_atlas(sim, center=None, span=512):
         if view.contains(town.x, town.y):
             # Presentation size class, not a new settlement authority.
             kind = 'city' if town.population >= 1000 else 'village'
-            markers.append(AtlasMarker(town.uid, kind, town.name, town.x, town.y,
-                                       detail=f'{kind.title()} | population {town.population}'))
+            town_rx=int(getattr(town,'region_x',town.x//REGION_SIZE));town_ry=int(getattr(town,'region_y',town.y//REGION_SIZE))
+            intel=getattr(sim.state,'learned_regions',{}).get(f'{town_rx},{town_ry}',{})
+            faction=sim.state.factions.get(str(intel.get('faction_id',''))) if intel else None
+            detail=f'{kind.title()} | population {town.population}'
+            if intel:
+                detail+=f' | faction {faction.name if faction else "unclaimed"}'
+                resources=', '.join(str(v) for v in intel.get('resources',())[:4])
+                if resources:detail+=f' | regional goods {resources}'
+            else:detail+=' | faction and regional resources not learned'
+            markers.append(AtlasMarker(town.uid, kind, town.name, town.x, town.y,detail=detail))
+    learned_regions=getattr(sim.state,'learned_regions',{})
+    known_monuments={uid for row in learned_regions.values() for uid in row.get('monument_uids',())}
+    for monument in getattr(sim.state,'claim_monuments',{}).values():
+        if 'player' not in monument.discovered_by and monument.uid not in known_monuments:continue
+        if not view.contains(monument.x,monument.y):continue
+        token=f'{monument.region_x},{monument.region_y}';intel=learned_regions.get(token,{})
+        faction=sim.state.factions.get(monument.controller_faction_id) if intel else None
+        resources=', '.join(str(v) for v in intel.get('resources',())[:5]) or 'not learned'
+        capture=('Remain near the monument with greater faction strength than its defenders; daily control progress reaches 100%.' if monument.integrity>0 else 'Repair the ruined monument before it can be captured.')
+        owner=faction.name if faction else ('unclaimed' if intel else 'not learned')
+        detail=(f'Claim region {token} | owner {owner} | '
+                f'resources {resources} | integrity {monument.integrity}% | capture: {capture}')
+        markers.append(AtlasMarker(monument.uid,monument.monument_type,monument.monument_type.replace('_',' ').title(),monument.x,monument.y,detail=detail))
     for uid in sorted(sim.known_site_ids()):
         site = sim.state.dungeon_sites.get(uid)
         if site is None:

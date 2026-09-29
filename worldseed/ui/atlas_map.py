@@ -3,8 +3,10 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import textwrap
+import math
 
 from worldseed.config import CHUNK_SIZE
+from worldseed.core.rng import hash_u64
 from worldseed.world.atlas import read_atlas
 from worldseed.world.settlement_atlas import build_settlement_atlas
 
@@ -98,6 +100,13 @@ class AtlasArt:
             if bounds.width and bounds.height:
                 icon = icon.subsurface(bounds)
             self.icons[kind] = pg.transform.smoothscale(icon, (36, 36))
+        monument_root=root/'sprites'/'monuments'
+        for kind in ('claim_stone','watch_monument','frontier_post','regional_stronghold'):
+            path=monument_root/f'{kind}.png'
+            if path.exists():
+                icon=pg.image.load(str(path)).convert_alpha();bounds=icon.get_bounding_rect(min_alpha=12)
+                if bounds.width and bounds.height:icon=icon.subsurface(bounds)
+                self.icons[kind]=pg.transform.smoothscale(icon,(42,42))
 
     def color(self, tid, registry):
         if tid in self.styles['terrain']:
@@ -479,6 +488,24 @@ def _draw_settlement_detail(term, sim, state):
     pg.display.flip()
 
 
+def _region_color(seed:bytes,faction_id:str)->tuple[int,int,int]:
+    value=hash_u64(seed,'atlas-faction-color',faction_id or 'unclaimed')
+    return (72+value%92,72+(value>>8)%92,72+(value>>16)%92)
+
+
+def _learned_region_polygon(sim,token:str,map_rect,view,size):
+    try:rx,ry=map(int,token.split(','))
+    except (TypeError,ValueError):return []
+    cx=rx*512+256;cy=ry*512+256;points=[]
+    for i in range(16):
+        angle=2*math.pi*i/16-math.pi/2
+        jitter=82+int(hash_u64(sim.seed,'atlas-region-shape',rx,ry,i)%29)
+        radius=256*jitter/100
+        wx=cx+math.cos(angle)*radius;wy=cy+math.sin(angle)*radius
+        points.append((map_rect.x+int((wx-view.left)*size/view.span),map_rect.y+int((wy-view.top)*size/view.span)))
+    return points
+
+
 def draw_atlas(term, sim):
     pg, screen = term.pg, term.screen
     if screen is None:
@@ -516,13 +543,15 @@ def draw_atlas(term, sim):
     old_clip = screen.get_clip()
     screen.set_clip(map_rect)
     try:
-        # Grid uses exact world boundaries; hidden terrain stays unpainted.
-        for x in range((view.left//512+1)*512, view.left+view.span, 512):
-            px = map_rect.x+(x-view.left)*size//view.span
-            pg.draw.line(screen, (79,87,78), (px,map_rect.top), (px,map_rect.bottom))
-        for y in range((view.top//512+1)*512, view.top+view.span, 512):
-            py = map_rect.y+(y-view.top)*size//view.span
-            pg.draw.line(screen, (79,87,78), (map_rect.left,py), (map_rect.right,py))
+        # Testimony reveals organic political influence shapes. The old square
+        # regional grid is deliberately absent; unexplained regions stay hidden.
+        overlay=pg.Surface(map_rect.size,pg.SRCALPHA)
+        for token,intel in sorted(getattr(sim.state,'learned_regions',{}).items()):
+            points=_learned_region_polygon(sim,token,pg.Rect(0,0,*map_rect.size),view,size)
+            if len(points)<3:continue
+            color=_region_color(sim.seed,str(intel.get('faction_id','')))
+            pg.draw.polygon(overlay,(*color,48),points);pg.draw.lines(overlay,(*color,180),True,points,2)
+        screen.blit(overlay,map_rect.topleft)
         # One visible icon per screen bucket; every POI remains in the pageable
         # list, so dense villages/caves never hide entries from inspection.
         occupied = set()

@@ -33,7 +33,7 @@ class SettlementPopulationBinder:
         "smith": ("smithy",),
         "lumberjack": ("workshop",),
         "carpenter": ("workshop",),
-        "cook": ("residence", "bakery"),
+        "cook": ("inn", "residence", "bakery"),
         "miller": ("mill",),
         "baker": ("bakery",),
         "butcher": ("butcher",),
@@ -183,7 +183,7 @@ class SettlementPopulationBinder:
         homes = sorted(
             (
                 structure for structure in skeleton.structures
-                if not structure.destroyed and structure.function == "residence"
+                if not structure.destroyed and structure.function in {"residence", "inn", "barracks", "outskirt_camp"}
             ),
             key=lambda structure: structure.uid,
         )
@@ -207,7 +207,11 @@ class SettlementPopulationBinder:
             had_valid_home = npc.home_id in valid_homes
             home = structures.get(npc.home_id) if had_valid_home else None
             if home is None and homes:
-                ranked = self._ranked(npc.uid, homes, "npc-home-structure")
+                preferred = (
+                    [row for row in homes if row.function == "barracks"] if npc.occupation == "guard"
+                    else [row for row in homes if row.function == "residence"]
+                )
+                ranked = self._ranked(npc.uid, preferred or homes, "npc-home-structure")
                 # Prefer an unused physical home. If every home is occupied,
                 # share the least-loaded one rather than inventing a fake ID.
                 unused = [row for row in ranked if home_load.get(row.uid, 0) == 0]
@@ -233,8 +237,13 @@ class SettlementPopulationBinder:
                 # A physical property claim uses the same stable structure ID
                 # as the settlement plan. Parcel membership remains discoverable
                 # from the skeleton and is not a second ownership identifier.
-                npc.property_id = home.uid
-                settlement.property_owners.setdefault(home.uid, npc.uid)
+                # Inns, barracks and camps are shared lodging, not private
+                # property silently granted to their occupants.
+                if home.function == "residence":
+                    npc.property_id = home.uid
+                    settlement.property_owners.setdefault(home.uid, npc.uid)
+                else:
+                    npc.property_id = ""
                 if reposition_unbound and not had_valid_home:
                     target = self._spawn_in_room(npc.uid, home_room, occupied)
                     if target is None and home.entrance is not None:

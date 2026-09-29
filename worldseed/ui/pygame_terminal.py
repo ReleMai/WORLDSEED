@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import math
 import re
+import textwrap
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -967,6 +968,7 @@ class PygameTerminal(PointerUI):
             'inventory_item_actions':self._present_inventory_item_actions,
             'world_context':self._present_context_menu,
             'npc_profile':self._present_npc_profile,
+            'npc_dialogue':self._present_npc_dialogue,
             'crafting_home':self._present_crafting_home,
             'crafting_categories':self._present_crafting_categories,
             'crafting_recipes':self._present_crafting_recipes,
@@ -1074,6 +1076,36 @@ class PygameTerminal(PointerUI):
             surf=self.small_font.render(self._fit_ui_text(txt,self.small_font,content.width-28),True,self._theme['muted'])
             screen.blit(surf,(content.x+14,content.bottom-27))
         self._draw_floating_footer(x,y,w,h,'Tabs show known information • Drag title • Resize corner • Esc closes')
+        pg.display.flip();self.clock.tick(120)
+
+    def _present_npc_dialogue(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """Retained conversation panel: transcript, choices, and inspect access."""
+        data=data or {};pg=self.pg;screen=self.screen
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('npc_dialogue','CONVERSATION',str(data.get('speaker',title)),subtitle)
+        inspect_index=next((i for i,row in enumerate(rows) if str(getattr(row,'key',''))=='inspect'),-1)
+        if inspect_index>=0:self._button((x+w-130,y+7,82,27),'INSPECT',f'UI_SELECT:{inspect_index}')
+        footer_h=45;gap=12;body_bottom=y+h-footer_h
+        transcript_w=max(250,int(cw*.58));transcript=pg.Rect(cx,cy,transcript_w,body_bottom-cy-8)
+        choices=pg.Rect(transcript.right+gap,cy,cw-transcript_w-gap,transcript.height)
+        for panel in (transcript,choices):
+            pg.draw.rect(screen,self._theme['panel'],panel,border_radius=7);pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=7)
+        role=self.small_font.render(str(data.get('role','')).upper(),True,self._theme['accent']);screen.blit(role,(transcript.x+14,transcript.y+12))
+        context='  •  '.join(str(v) for v in data.get('context',()))
+        cs=self.small_font.render(self._fit_ui_text(context,self.small_font,transcript.width-28),True,self._theme['muted']);screen.blit(cs,(transcript.x+14,transcript.y+36))
+        text=str(data.get('response') or data.get('opening') or '...')
+        max_chars=max(24,(transcript.width-30)//max(1,self.small_font.size('M')[0]));yy=transcript.y+70
+        for line in textwrap.wrap(text,max_chars)[:12]:
+            surf=self.font.render(line,True,self._theme['text']);screen.blit(surf,(transcript.x+15,yy));yy+=self.font.get_linesize()+5
+        heading=self.small_font.render('YOUR RESPONSE',True,self._theme['accent']);screen.blit(heading,(choices.x+12,choices.y+12))
+        yy=choices.y+40
+        for i,row in enumerate(rows):
+            if yy+38>choices.bottom-9:break
+            rect=pg.Rect(choices.x+8,yy,choices.width-16,34);self._ui_target(rect,f'UI_SELECT:{i}')
+            active=i==selected;pg.draw.rect(screen,(45,51,49) if active else self._theme['panel2'],rect,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=5)
+            label=str(getattr(row,'label',row));surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-18),True,self._theme['text'])
+            screen.blit(surf,(rect.x+9,rect.centery-surf.get_height()//2));yy+=39
+        self._draw_floating_footer(x,y,w,h,'Choose a reply • Inspect shows visible and learned facts • Esc closes')
         pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
@@ -3522,6 +3554,7 @@ class PygameTerminal(PointerUI):
         hunt_skill=max(sim.player_skill('hunting'),sim.player_skill('survival'))
         sign_by={(q.x,q.y,q.z):q for q in nearby['animal_signs'] if _onscreen(q.x,q.y,q.z) and q.strength+hunt_skill*8>=52}
         home_by={(q.x,q.y,q.z):q for q in nearby['animal_homes'] if _onscreen(q.x,q.y,q.z) and q.discovered}
+        monument_by={(m.x,m.y,0):m for m in sim.state.claim_monuments.values() if _onscreen(m.x,m.y,0)} if pos.z==0 else {}
         resource_by=self._resource_view(sim,visible,pos.z,left,top,cols,rows)
         resource_by={
             k:v for k,v in resource_by.items()
@@ -3664,7 +3697,7 @@ class PygameTerminal(PointerUI):
         # The cached base layer already contains every terrain tile. Walk only
         # cells that actually have an overlay instead of scanning the entire
         # viewport in Python every frame. Sorting by y preserves sprite depth.
-        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)|set(sign_by)|set(home_by)
+        overlay_keys=set(resource_by)|set(fluid_by)|set(crop_by)|set(structure_by)|set(property_container_by)|set(pile_by)|set(carcass_by)|set(fire_by)|set(creature_by)|set(npc_by)|set(sign_by)|set(home_by)|set(monument_by)
         overlay_keys.update(settlement_by)
         overlay_keys.add((pos.x,pos.y,pos.z))
         if cursor is not None:overlay_keys.add((cursor.x,cursor.y,cursor.z))
@@ -3732,6 +3765,15 @@ class PygameTerminal(PointerUI):
             if k in property_container_by:
                 pc=property_container_by[k];path=self._visuals.resolve(self._visuals.ref('structures',pc.source_id))
                 surf=self._load_sprite(path,int(tile_px*1.35),int(tile_px*.95))
+                if surf is not None:
+                    copy=surf if is_visible else surf.copy()
+                    if not is_visible:copy.set_alpha(138)
+                    screen.blit(copy,(rect.centerx-copy.get_width()//2,rect.bottom-copy.get_height()))
+            if k in monument_by:
+                monument=monument_by[k]
+                path=Path(__file__).resolve().parents[1]/'assets'/'sprites'/'monuments'/f'{monument.monument_type}.png'
+                scale={'claim_stone':1.55,'watch_monument':1.9,'frontier_post':2.15,'regional_stronghold':2.45}.get(monument.monument_type,1.6)
+                surf=self._load_sprite(path,int(tile_px*scale),int(tile_px*scale))
                 if surf is not None:
                     copy=surf if is_visible else surf.copy()
                     if not is_visible:copy.set_alpha(138)

@@ -35,6 +35,9 @@ def classify_key(key: str) -> Intent:
     if key.startswith('UI_STANCE:'):
         stance = key.partition(':')[2]
         return Intent('stance', stance) if stance in ('normal', 'stalk', 'crouch') else Intent('none')
+    if key.startswith('UI_MOVE:'):
+        mode=key.partition(':')[2]
+        return Intent('movement_mode',mode) if mode in ('walk','run','stealth') else Intent('none')
     if k in DIRECT_MENUS: return Intent('direct_menu', k)
     if k == 'g': return Intent('gather')
     if k == 'p': return Intent('pickup')

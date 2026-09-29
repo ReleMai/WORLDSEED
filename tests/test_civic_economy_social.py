@@ -71,9 +71,10 @@ class CivicEconomySocialTests(unittest.TestCase):
         region_planner=SimpleNamespace(plan=lambda rx,ry,persist=True:region)
         planner=SettlementSkeletonPlanner(world)
         skeleton=planner.plan(region,'settlement:civic',120,persist=False)
-        expected={'market','clinic','watchhouse','shrine','archive'}
+        expected_civic={'market','clinic','watchhouse','shrine','archive'}
+        expected=expected_civic|{'inn','barracks','outskirt_camp'}
         purposes={p.purpose for p in skeleton.parcels if p.kind=='civic'}
-        self.assertTrue(expected.issubset(purposes),purposes)
+        self.assertTrue(expected_civic.issubset(purposes),purposes)
         functions={s.function for s in skeleton.structures}
         self.assertTrue(expected.issubset(functions),functions)
         roles={s.function:s.workplace_role for s in skeleton.structures}
@@ -82,7 +83,8 @@ class CivicEconomySocialTests(unittest.TestCase):
         self.assertEqual(roles['watchhouse'],'guard')
         self.assertEqual(roles['shrine'],'priest')
         self.assertEqual(roles['archive'],'scholar')
-        self.assertEqual(SETTLEMENT_PLAN_VERSION,7)
+        self.assertEqual(SETTLEMENT_PLAN_VERSION,8)
+        self.assertGreaterEqual(skeleton.plan.housing_capacity,120)
 
         physical=SettlementPhysicalizationSystem(world,self.registry,region_planner,planner)
         town=SettlementState(

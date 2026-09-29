@@ -7,7 +7,7 @@ from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VER
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.mods import ModManager, ModError
 from worldseed.core.coords import WorldPos, split_world
-from worldseed.core.rng import PCG32, derive_seed
+from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.entities.components import Inventory,PlayerControlled,Position,Renderable,Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
@@ -17,6 +17,7 @@ from worldseed.systems.state import LivingWorldState, pos_key
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
+from worldseed.systems.dialogue import DialogueSystem
 from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
@@ -627,7 +628,34 @@ def _fishing_action(ctx:GameContext,term:Terminal,target:WorldPos|None=None)->st
     sim.execute(FishingCommand(ctx.player_id,dx,dy,method,bait_id))
     return sim.log[-1].message if sim.log else ''
 
-def _talk_action(ctx:GameContext,term:Terminal)->str:
+def _learn_area_from_npc(ctx:GameContext,npc)->str:
+    sim=ctx.sim;town=sim.state.settlements.get(npc.settlement_id)
+    if town is None:return f'{npc.name} does not know this country well enough to map it for you.'
+    rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
+    trust=int(rel.get('trust',0));familiarity=int(rel.get('familiarity',0))
+    guarded=8+int(hash_u64(sim.seed,'area-willingness',npc.uid)%25)
+    if npc.occupation in {'guard','scholar','merchant'}:guarded=max(6,guarded-5)
+    if any(str(t).lower() in {'suspicious','secretive','paranoid'} for t in npc.traits):guarded+=15
+    if trust+familiarity//2<guarded:
+        return f'{npc.name} is not ready to share local claims or resources with you. More trust may help.'
+    token=f'{town.region_x},{town.region_y}'
+    control=sim.state.territory_control.get(token)
+    faction_id=(control.controller_faction_id if control else '') or town.faction_id
+    resources=[]
+    for iid,qty in sorted(town.stocks.items(),key=lambda row:(-int(row[1]),row[0])):
+        if int(qty)<=0:continue
+        item=ctx.registry.items.get(iid);resources.append(item.name if item else iid)
+        if len(resources)>=6:break
+    monuments=[m.uid for m in sim.state.claim_monuments.values() if (m.region_x,m.region_y)==(town.region_x,town.region_y)]
+    sim.state.learned_regions[token]={
+        'region_x':town.region_x,'region_y':town.region_y,'learned_minute':sim.clock.minute,
+        'source_npc_uid':npc.uid,'faction_id':faction_id,'settlement_ids':[town.uid],
+        'resources':resources,'monument_uids':sorted(monuments),
+    }
+    if faction_id:sim.state.discovered_factions=sorted(set(sim.state.discovered_factions+[faction_id]))
+    return f'{npc.name} explains the local boundary, who holds it, and the main goods here: '+(', '.join(resources) if resources else 'no dependable surplus')+'.'
+
+def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     sim=ctx.sim;p=sim.player_pos
     nearby=[]
     for n in sim.state.npcs.values():
@@ -636,13 +664,47 @@ def _talk_action(ctx:GameContext,term:Terminal)->str:
             label=n.name if n.uid in sim.known_npc_ids() else 'Stranger'
             nearby.append((n.uid,n.x-p.x,n.y-p.y,f'{label} — {n.occupation if n.uid in sim.known_npc_ids() else "unknown occupation"}'))
     if not nearby:return 'Nobody is close enough to talk to.'
-    if len(nearby)==1:
+    if npc_uid:
+        picked=next((row for row in nearby if row[0]==npc_uid),None)
+        if picked is None:return 'That person is no longer close enough to talk to.'
+        _,dx,dy,_=picked
+    elif len(nearby)==1:
         _,dx,dy,_=nearby[0]
     else:
         uid=_select(term,'TALK TO',[(uid,label) for uid,_,_,label in nearby])
         if not uid:return UI_BACK
         _,dx,dy,_=next(row for row in nearby if row[0]==uid)
-    sim.execute(TalkCommand(ctx.player_id,dx,dy));return sim.log[-1].message if sim.log else ''
+    target=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(p.x+dx,p.y+dy,p.z)),None)
+    if target is None:return 'Nobody is close enough to talk to.'
+    sim.execute(TalkCommand(ctx.player_id,dx,dy))
+    dialogue=DialogueSystem(sim.state,sim.seed);response=sim.log[-1].message if sim.log else ''
+    nav=NavigationStack(RouteState('npc-dialogue',target.name))
+    while True:
+        vitals=ctx.entities.get(ctx.player_id,Vitals)
+        scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids())
+        rows=[(option.key,option.label) for option in scene.options]
+        data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
+              'context':scene.context,'npc_uid':target.uid,'options':rows}
+        choice=_stack_menu(term,nav,rows,subtitle='Choose a response. Information depends on trust and what this person knows.',presentation='npc_dialogue',presentation_data=data)
+        if choice in (None,'goodbye'):return response or scene.opening
+        if choice=='__BACK__':continue
+        option=next((row for row in scene.options if row.key==choice),None)
+        if option is None:continue
+        dialogue.apply_option(target,option)
+        if option.action=='inspect':
+            push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
+            if callable(push):push()
+            try:_npc_profile_menu(ctx,term,target.uid)
+            finally:
+                if callable(pop):pop()
+            continue
+        if option.action=='area':response=_learn_area_from_npc(ctx,target);continue
+        if option.action=='trade':
+            response=(f'{target.name} is willing to trade through the settlement market.' if target.occupation=='merchant' else f'{target.name} directs you to the local market; they are not a trader.')
+            continue
+        if option.action=='attack':
+            return 'You end the conversation aggressively. Direct NPC combat is not yet part of the combat authority.'
+        response=option.response
 
 def _near_market(sim:Simulation):
     p=sim.player_pos;candidates=[]
@@ -1708,6 +1770,17 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         'familiarity':familiarity,
     }
     tabs={}
+    worn=[]
+    for iid,qty in sorted(npc.inventory.items()):
+        if int(qty)<=0:continue
+        item=sim.registry.items.get(iid)
+        if item is not None and (item.equip_slot or any(tag in item.tags for tag in ('clothing','armor','worn'))):
+            worn.append(item.name)
+    visible_injuries=[]
+    if npc.hp<85:visible_injuries.append('Visible wounds or impaired movement')
+    if npc.infections and npc.hp<70:visible_injuries.append('Visible signs of illness')
+    tabs['appearance']=[('Wearing',', '.join(worn) if worn else 'No identifiable equipment'),
+                        ('Visible injuries',', '.join(visible_injuries) if visible_injuries else 'None apparent')]
     overview=[
         ('Age',str(npc.age) if npc.uid in known else 'Unknown'),
         ('Occupation',occupation),
@@ -1793,7 +1866,7 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
     if npc is None or not npc.alive:return UI_BACK
     if npc.uid not in sim.known_npc_ids():
         return 'Talk to this person before viewing their profile.'
-    tabs=(('overview','Overview'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','History'))
+    tabs=(('overview','Overview'),('appearance','Worn / Injuries'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','Learned History'))
     active='overview'
     while True:
         initial=next((i for i,row in enumerate(tabs) if row[0]==active),0)
@@ -1834,6 +1907,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     door=sim.property_security.door_at(target)
     signs=sim.hunting.signs_at(target)
     home=sim.hunting.home_at(target)
+    monument=next((m for m in sim.state.claim_monuments.values() if (m.x,m.y,target.z)==(target.x,target.y,target.z)),None)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
         label=sp.name if sp and creature.species_id in sim.known_species_ids() else 'animal'
@@ -1850,6 +1924,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
         else:rows.append(('observe_npc','Observe person — identity unknown'))
         if distance<=1:rows.append(('talk_npc',f'Talk to {label}'))
+    if monument:
+        rows.append(('inspect_monument',f'Inspect {monument.monument_type.replace("_"," ").title()}'))
     private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
     fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
     fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
@@ -2033,6 +2109,19 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             f'Collected: {border_post.treasury_collected}c',
         ],screen_width(term.size()[0],92)))
         return UI_BACK
+    if choice=='inspect_monument' and monument is not None:
+        token=f'{monument.region_x},{monument.region_y}';intel=sim.state.learned_regions.get(token)
+        faction=sim.state.factions.get(monument.controller_faction_id) if intel else None
+        resources=', '.join(str(v) for v in intel.get('resources',())[:6]) if intel else 'Unknown — ask an inhabitant about the area'
+        owner=(faction.name if faction else ('Unclaimed' if intel else 'Unknown — ask an inhabitant'))
+        capture=('Keep a stronger friendly presence here than the defender through daily control updates until capture reaches 100%.' if monument.integrity>0 else 'Repair the ruined monument before establishing control.')
+        _view_text(term,box('CLAIM MONUMENT',[
+            f'Tier: {monument.monument_type.replace("_"," ").title()}',f'Claim region: {token}',
+            f'Owner: {owner}',f'Regional resources: {resources}',f'Integrity: {monument.integrity}%',
+            f'Garrison: {monument.garrison_strength if intel else "Unknown"}',f'Capture progress: {monument.capture_progress if intel else "Unknown"}',
+            f'How to capture: {capture}',
+        ],screen_width(term.size()[0],96)))
+        return UI_BACK
     if choice=='pay_road_toll' and border_post is not None:
         sim.execute(PayRoadTollCommand(ctx.player_id,border_post.uid))
         return sim.log[-1].message if sim.log else ''
@@ -2041,8 +2130,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if choice=='observe_npc' and npc:
         return 'Talk to this person to learn who they are.'
     if choice=='talk_npc' and npc:
-        sim.execute(TalkCommand(ctx.player_id,target.x-p.x,target.y-p.y))
-        return sim.log[-1].message if sim.log else ''
+        return _talk_action(ctx,term,npc.uid)
     if choice=='observe_animal':
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK
     if choice=='attack_animal' and creature:

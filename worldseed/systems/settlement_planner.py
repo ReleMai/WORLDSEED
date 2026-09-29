@@ -342,8 +342,8 @@ class SettlementSkeletonPlanner:
     plan that later local materialization and RC17 schedules can consume.
     """
 
-    _RADIUS = {"homestead": 22, "hamlet": 30, "village": 42, "town": 58, "city": 76}
-    _RESIDENTIAL_TARGET = {"homestead": 1, "hamlet": 4, "village": 10, "town": 22, "city": 40}
+    _RADIUS = {"homestead": 25, "hamlet": 35, "village": 49, "town": 66, "city": 86}
+    _RESIDENTIAL_TARGET = {"homestead": 2, "hamlet": 6, "village": 14, "town": 28, "city": 52}
     _FARM_TARGET = {"homestead": 1, "hamlet": 2, "village": 4, "town": 7, "city": 10}
     _LOCAL_STREETS = {"homestead": 0, "hamlet": 1, "village": 2, "town": 4, "city": 6}
 
@@ -833,6 +833,10 @@ class SettlementSkeletonPlanner:
             if room_side=="primary":
                 return self._piece_choice(registry,"furniture",tags=("bed",))
             return self._piece_choice(registry,"furniture",contains="house_hearth")
+        if function in {"inn","outskirt_camp"}:
+            return self._piece_choice(registry,"furniture",tags=("bed",)) if room_side=="primary" else self._piece_choice(registry,"furniture",contains="large_table")
+        if function=="barracks":
+            return self._piece_choice(registry,"furniture",tags=("bed",)) if room_side=="primary" else self._piece_choice(registry,"civic",contains="guard_post")
         if function=="smithy":
             return self._piece_choice(registry,"workshop",contains="forge") if room_side=="primary" else self._piece_choice(registry,"furniture",contains="house_chest")
         if function=="workshop":
@@ -1173,7 +1177,7 @@ class SettlementSkeletonPlanner:
                 "smithy":"smith","workshop":"carpenter","mill":"miller","fishery":"fisher",
                 "bakery":"baker","butcher":"butcher","weavery":"weaver","tannery":"tanner",
                 "pottery":"potter","brewery":"brewer","mason_yard":"mason",
-                "barn":"farmer","market":"merchant","clinic":"healer","watchhouse":"guard",
+                "barn":"farmer","market":"merchant","inn":"cook","clinic":"healer","watchhouse":"guard","barracks":"guard",
                 "shrine":"priest","archive":"scholar","school":"scholar",
             }.get(function,"")),
         )
@@ -1186,17 +1190,21 @@ class SettlementSkeletonPlanner:
         parcels: list[LandUseParcel],
     ) -> tuple[list[StructurePlanState],list[RoomPlanState],list[StructurePiecePlan]]:
         structures=[]; rooms=[]; pieces=[]
-        residential=[p for p in parcels if p.kind=="residential"]
+        lodging_priority={"outskirt_camp":0,"barracks":1,"inn":2,"home_lot":3}
+        residential=sorted((p for p in parcels if p.kind=="residential"),key=lambda p:(lodging_priority.get(p.purpose,3),p.uid))
         for index,parcel in enumerate(residential):
             large=plan.rank in {"town","city"} and index%3==0
-            result=self._plan_building(parcel,roads,slot=f"home:{index}",function="residence",archetype=plan.archetype,large=large)
+            function=parcel.purpose if parcel.purpose in {"inn","barracks","outskirt_camp"} else "residence"
+            result=self._plan_building(parcel,roads,slot=f"home:{index}:{function}",function=function,archetype=plan.archetype,large=large)
+            if result is None and function in {"inn","barracks","outskirt_camp"}:
+                result=self._plan_building(parcel,roads,slot=f"home:{index}:{function}",function=function,archetype=plan.archetype,large=False)
             if result:
                 structure,new_rooms,new_pieces=result
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
                 parcel.structure_ids.append(structure.uid)
 
         industrial=[p for p in parcels if p.kind=="industrial"]
-        workshop_functions={"bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill","fishery"}
+        workshop_functions={"smithy","bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill","fishery"}
         primary_function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
         for index,parcel in enumerate(industrial):
             function=parcel.purpose if parcel.purpose in workshop_functions else primary_function
@@ -1415,7 +1423,8 @@ class SettlementSkeletonPlanner:
         remaining_candidates=list(sorted(candidates))
         for service in service_by_rank[rank]:
             placed=None
-            for _,sy,sx,access_id in list(remaining_candidates):
+            service_candidates=list(reversed(remaining_candidates)) if service=="outskirt_camp" else list(remaining_candidates)
+            for _,sy,sx,access_id in service_candidates:
                 size=7 if rank in {"town","city"} else 5
                 parcel=self._parcel(
                     plan.uid,f"civic:{service}","civic",service,(sx,sy),size,size,
@@ -1434,8 +1443,8 @@ class SettlementSkeletonPlanner:
             "homestead":(),
             "hamlet":("bakery",),
             "village":("bakery","butcher","weavery"),
-            "town":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard"),
-            "city":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill"),
+            "town":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","smithy"),
+            "city":("bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill","smithy"),
         }
         primary_for_archetype={
             "mining":"smithy","forest":"workshop","agrarian":"mill",
@@ -1458,6 +1467,20 @@ class SettlementSkeletonPlanner:
                 remaining_candidates=[row for row in remaining_candidates if (row[2],row[1])!=(sx,sy)]
                 break
 
+        # Larger towns keep one guaranteed street-fronting smithy lot even
+        # when their terrain-selected primary industry parcel proves too
+        # clipped for an enclosed forge footprint.
+        if rank in {"town","city"} and not any(p.kind=="industrial" and p.purpose=="smithy" for p in parcels):
+            for _,sy,sx,access_id in list(remaining_candidates):
+                parcel=self._parcel(
+                    plan.uid,"workshop:smithy-fallback","industrial","smithy",(sx,sy),5,5,
+                    forbidden=occupied|functional_reserve,road_cells=road_cells,access_road_id=access_id,
+                )
+                if parcel is None:continue
+                parcels.append(parcel);occupied.update(parcel.cells)
+                remaining_candidates=[row for row in remaining_candidates if (row[2],row[1])!=(sx,sy)]
+                break
+
         for _, y, x, access_id in remaining_candidates:
             parcel = self._parcel(
                 plan.uid, f"residential:{len([p for p in parcels if p.kind=='residential'])}",
@@ -1472,6 +1495,19 @@ class SettlementSkeletonPlanner:
             occupied.update(parcel.cells)
             if len([p for p in parcels if p.kind == "residential"]) >= residential_goal:
                 break
+
+        lodging_parcels=[p for p in parcels if p.kind=="residential"]
+        def parcel_distance(parcel):
+            return min((abs(x-common_center[0])+abs(y-common_center[1]) for x,y in parcel.cells),default=0)
+        lodging_parcels.sort(key=lambda p:(parcel_distance(p),p.uid))
+        assigned=set()
+        if rank!="homestead" and lodging_parcels:
+            lodging_parcels[0].purpose="inn";assigned.add(lodging_parcels[0].uid)
+        if rank in {"village","town","city"}:
+            barracks=next((p for p in lodging_parcels if p.uid not in assigned),None)
+            if barracks is not None:barracks.purpose="barracks";assigned.add(barracks.uid)
+        camp=next((p for p in reversed(lodging_parcels) if p.uid not in assigned),None)
+        if camp is not None:camp.purpose="outskirt_camp"
 
         if farm_target:
             farm_goal = self._FARM_TARGET[rank]
@@ -1531,9 +1567,17 @@ class SettlementSkeletonPlanner:
         for structure in structures:
             if structure.destroyed:continue
             structure_rooms=room_by_structure.get(structure.uid,[])
-            if structure.function=="residence":
+            if structure.function in {"residence","inn","barracks","outskirt_camp"}:
                 beds=sum(1 for room in structure_rooms if room.kind=="bedroom")
-                housing+=max(1,beds*2,structure.interior_area//8)
+                # A single authored bed fixture denotes a sleeping room, not
+                # one literal bed tile. Occupancy remains derived from the real
+                # enclosed structure and its lodging function.
+                if structure.function=="residence":
+                    housing+=max(4,beds*4,structure.interior_area//3)
+                elif structure.function in {"inn","barracks"}:
+                    housing+=max(8,beds*8,(structure.interior_area*2)//3)
+                else:
+                    housing+=max(8,beds*8,(structure.interior_area*2)//3)
             elif structure.workplace_role:
                 workplaces[structure.workplace_role]=workplaces.get(structure.workplace_role,0)+max(1,structure.interior_area//5)
         plan.housing_capacity=housing
