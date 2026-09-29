@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev36"
+ENGINE_VERSION = "1.0.0-rc14-dev39"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -34,6 +34,10 @@ LIGHTING_VERSION = 1
 # interactive physical crossings. Settlement geometry remains v5-compatible.
 SETTLEMENT_PLAN_VERSION = 7
 ROUTEGEN_VERSION = 4
+# Claim monuments are persistent regional control anchors.  Versioning their
+# generated placement separately keeps existing worlds from silently moving
+# political geography when the scoring or spacing contract changes.
+TERRITORY_VERSION = 1
 RNG_PROTOCOL_VERSION = 1
 RESOURCEGEN_VERSION = 4
 CHUNK_SIZE = 32

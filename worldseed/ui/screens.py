@@ -368,6 +368,10 @@ def faction_screen(sim:Simulation,width:int=110)->str:
         body.append(f'{f.name:<28} ruler {holder}')
         wars=[sim.state.factions[x].name for x in f.at_war if x in known_factions and x in sim.state.factions]
         if wars:body.append('   known wars: '+', '.join(wars))
+        known_monuments=[m for m in sim.state.claim_monuments.values() if m.uid in sim.known_site_ids() and m.controller_faction_id==f.uid]
+        if known_monuments:
+            contested=sum(1 for m in known_monuments if m.contested)
+            body.append(f'   known claim monuments: {len(known_monuments)}'+(f' ({contested} contested)' if contested else ''))
     cultures=[sim.state.cultures[x] for x in sorted(_known_culture_ids(sim)) if x in sim.state.cultures]
     religions=[sim.state.religions[x] for x in sorted(_known_religion_ids(sim)) if x in sim.state.religions]
     body+=['','KNOWN CULTURES']+([f'{c.name}: values={", ".join(c.values)}; taboo={", ".join(c.taboos)}; craft={c.craft_bias}' for c in cultures] or ['None discovered.'])
@@ -557,11 +561,14 @@ def faction_detail_screen(sim:Simulation,faction_uid:str,width:int=112)->str:
     culture=sim.state.cultures.get(f.culture_id);office=next((o for o in sim.state.offices.values() if o.faction_id==f.uid),None);holder=sim.state.npcs.get(office.holder_uid) if office and office.holder_uid in sim.known_npc_ids() else None
     towns=[s for s in _known_towns(sim) if s.faction_id==f.uid]
     claims=[c for c in sim.state.claims.values() if c.claimant_id==f.uid and c.active]
+    monuments=[m for m in sim.state.claim_monuments.values() if m.uid in sim.known_site_ids() and m.controller_faction_id==f.uid]
     body=[f'{f.name} [{f.uid}]',f'Culture: {culture.name if culture else f.culture_id} | power {f.power} | treasury {f.treasury}c',f'Manpower {f.manpower} | military supply {f.military_supply} | war exhaustion {f.war_exhaustion}',f'Ruler: {holder.name if holder else "vacant"} | office: {office.title if office else "none"} | succession: {office.succession_rule if office else "n/a"}',f'Laws: {f.laws or "none"}','', 'RELATIONS']
     for uid,val in sorted(f.relations.items(),key=lambda kv:kv[1]):
         if uid in sim.known_faction_ids():body.append(f'{sim.state.factions[uid].name if uid in sim.state.factions else "known faction":<28} {val:>4}'+('  WAR' if uid in f.at_war else ''))
     body+=['','SETTLEMENTS']+[f'{s.name:<24} pop {s.population:<5} wealth {s.wealth:>6}c stress {s.food_stress:>3}' for s in sorted(towns,key=lambda s:-s.population)]
     body+=['','ACTIVE CLAIMS']+[f'{c.target_type}:{c.target_id} basis={c.basis} strength={c.strength}' for c in claims] if claims else ['','ACTIVE CLAIMS','None.']
+    body+=['','KNOWN CONTROL ANCHORS']
+    body += [f'{m.monument_type.replace("_"," "):<22} region ({m.region_x},{m.region_y}) integrity {m.integrity:>3} supply {m.supply_level:>3} garrison {m.garrison_strength:>3}'+(' CONTESTED' if m.contested else '') for m in sorted(monuments,key=lambda row:(row.region_y,row.region_x,row.uid))] or ['None discovered.']
     return box(f'FACTION — {f.name}',body,width)
 
 

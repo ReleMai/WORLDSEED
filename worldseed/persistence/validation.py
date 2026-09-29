@@ -37,6 +37,8 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     settlements = _table(raw, "settlements")
     npcs = _table(raw, "npcs")
     factions = _table(raw, "factions")
+    monuments = _table(raw, "claim_monuments")
+    territory = _table(raw, "territory_control")
     routes = _table(raw, "trade_routes")
     caravans = _table(raw, "caravans")
     properties = _table(raw, "properties")
@@ -163,6 +165,32 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
             issues.append(f"orphan claim claimant: {uid}->{claimant}")
         if row.get("target_type") == "settlement" and str(row.get("target_id", "")) not in settlements:
             issues.append(f"orphan settlement claim target: {uid}")
+
+    for uid, row in monuments.items():
+        for key in ("integrity", "garrison_strength", "supply_level", "capture_progress"):
+            if not 0 <= int(row.get(key, 0)) <= 100:
+                issues.append(f"claim monument {key} out of bounds: {uid}")
+        controller = str(row.get("controller_faction_id", ""))
+        claimant = str(row.get("claimant_faction_id", ""))
+        if controller and controller not in factions:
+            issues.append(f"orphan claim monument controller: {uid}->{controller}")
+        if claimant and claimant not in factions:
+            issues.append(f"orphan claim monument claimant: {uid}->{claimant}")
+        if int(row.get("max_reach", 0)) not in range(1, 9):
+            issues.append(f"claim monument reach out of bounds: {uid}")
+
+    for token, row in territory.items():
+        try:
+            rx, ry = str(token).split(",", 1); int(rx); int(ry)
+        except Exception:
+            issues.append(f"invalid territory region key: {token!r}")
+        for key in ("control_strength", "rival_strength"):
+            if not 0 <= int(row.get(key, 0)) <= 100:
+                issues.append(f"territory {key} out of bounds: {token}")
+        for key in ("controller_faction_id", "rival_faction_id"):
+            faction = str(row.get(key, ""))
+            if faction and faction not in factions:
+                issues.append(f"orphan territory faction: {token}->{faction}")
 
     for uid, row in libraries.items():
         sid = str(row.get("settlement_id", ""))

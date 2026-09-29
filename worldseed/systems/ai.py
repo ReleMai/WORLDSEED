@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.activities=None;self.mining=None;self.professions=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -18,6 +18,7 @@ class NPCSystem:
     def attach_households(self,households)->None:self.households=households
     def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
     def attach_route_planner(self,system)->None:self.route_planner=system
+    def attach_territory(self,system)->None:self.territory=system
     def attach_activity_system(self,system)->None:self.activities=system
     def attach_mining_profession(self,system)->None:self.mining=system
     def attach_profession_system(self,system)->None:self.professions=system
@@ -218,10 +219,14 @@ class NPCSystem:
             npc.tasks=[{"kind":"move","x":center.x,"y":center.y},{"kind":"perform","action":"drink"}]
         elif goal=="guard":
             target=None
+            monument=None
+            if self.route_planner is not None:
+                monument=self.route_planner.territory_target_for_settlement(town.uid)
+                if monument is not None:target=WorldPos(int(monument.x),int(monument.y),0)
             if self.route_planner is not None and getattr(town,"frontier_status","core") in {"frontier","contested"}:
-                target=self.route_planner.patrol_destination_for_settlement(town.uid)
+                target=target or self.route_planner.patrol_destination_for_settlement(town.uid)
             if target is None:target=self._service_destination(town,("watchhouse",))
-            npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"guard"}]
+            npc.tasks=[{"kind":"move","x":target.x,"y":target.y,"exact":bool(monument),"physical_path":bool(monument)},{"kind":"perform","action":"territory_guard" if monument else "guard","monument_uid":monument.uid if monument else ""}]
         elif goal=="heal":
             target=self._service_destination(town,("clinic",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"heal"}]
@@ -373,6 +378,10 @@ class NPCSystem:
             elif action=='rest':npc.rest=max(0,npc.rest-55)
             elif action=='work':self._work(npc,town,minute);npc.needs['purpose']=max(0,npc.needs.get('purpose',0)-20)
             elif action=='guard':npc.rest=min(100,npc.rest+5);npc.needs['safety']=max(0,npc.needs.get('safety',0)-20)
+            elif action=='territory_guard' and self.territory is not None:
+                strength=max(8,min(40,12+npc.hp//5+(8 if npc.occupation=='guard' else 0)))
+                self.territory.record_presence(task.get('monument_uid',''),npc.faction_id,strength)
+                npc.rest=min(100,npc.rest+4);npc.needs['safety']=max(0,npc.needs.get('safety',0)-18)
             elif action=='heal':
                 medicine=next((iid for iid in ('core:herbal_tonic','core:medicinal_herb') if town.stocks.get(iid,0)>0),None)
                 if medicine:town.stocks[medicine]-=1;npc.hp=min(100,npc.hp+25)

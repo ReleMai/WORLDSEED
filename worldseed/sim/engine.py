@@ -43,6 +43,7 @@ from worldseed.systems.disasters import DisasterSystem
 from worldseed.systems.settlements import SettlementLifecycleSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
 from worldseed.systems.route_planner import RoutePlanner
+from worldseed.systems.territory import TerritorySystem
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.settlement_population import SettlementPopulationBinder
 from worldseed.systems.legends import LegendSystem
@@ -145,10 +146,13 @@ class Simulation:
         self.region_planner=RegionBlockPlanner(world)
         self.settlement_lifecycle.attach_region_planner(self.region_planner)
         self.route_planner=RoutePlanner(world,self.state,self.region_planner)
+        self.territory=TerritorySystem(world,self.state,self.region_planner,self.history)
+        self.route_planner.attach_territory(self.territory)
         self.economy.attach_route_planner(self.route_planner)
         self.factions.attach_route_planner(self.route_planner)
         self.disasters.attach_transport(self.route_planner,self.region_planner)
         self.npcs.attach_route_planner(self.route_planner)
+        self.npcs.attach_territory(self.territory)
         self.settlement_planner=SettlementSkeletonPlanner(world)
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner,self.route_planner
@@ -440,7 +444,7 @@ class Simulation:
                 self.ecology.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute,allow_named_mortality=(policy=="full"));self.resources.cleanup_regrown(minute)
                 for settlement in self.state.settlements.values():self.institutions.ensure_settlement(settlement.uid)
                 self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap()
-                self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
+                self.households.daily_update(minute);self.economy.daily_update(minute);self.territory.daily_update(minute);self.route_planner.refresh_territory_control();self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
                 summary["days"]+=1
             if "monthly" in kinds:
                 self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
@@ -490,7 +494,7 @@ class Simulation:
             if minute in tick_minutes:self.npcs.tick_update(minute,player)
         old_day=old//1440;new_day=self.clock.minute//1440
         for day in range(old_day+1,new_day+1):
-            minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
+            minute=day*1440;self.ecology.daily_update();self.fishing.daily_update();self.environment.daily_update(minute);self.disease.daily_update(minute);self.resources.cleanup_regrown(minute);[self.institutions.ensure_settlement(s.uid) for s in self.state.settlements.values()];self.magic.ensure_traditions();self.magic.ensure_rituals();self.knowledge.bootstrap();self.households.daily_update(minute);self.economy.daily_update(minute);self.territory.daily_update(minute);self.route_planner.refresh_territory_control();self.knowledge.daily_update(minute);self.law.daily_update(minute);self.nutrition.daily_update(minute)
             if day%30==0:self.route_planner.monthly_update(minute);self.economy.monthly_update(minute);self.disasters.monthly_update(minute);self.civics.monthly_update(minute);self.institutions.monthly_update(minute);self.economy.update_prices();self.governance.monthly_update(minute);self.factions.monthly_update(minute);self.family.monthly_update(minute);self.migration.monthly_update(minute);self.settlement_lifecycle.monthly_update(minute)
         self._update_vitals(minutes)
         advance_ms=(time.perf_counter()-advance_started)*1000
@@ -828,6 +832,15 @@ class Simulation:
                     if s.uid not in settlements:self._message(f"You discover {s.name}.")
                     settlements.add(s.uid);factions.add(s.faction_id)
                     visited=set(self.state.visited_settlements);visited.add(s.uid);self.state.visited_settlements=sorted(visited)
+            for monument in self.state.claim_monuments.values():
+                target=WorldPos(monument.x,monument.y,0)
+                if abs(monument.x-pos.x)+abs(monument.y-pos.y)<=12 and self._visible_from(pos,target,opaque_cache):
+                    first=monument.uid not in sites
+                    sites.add(monument.uid)
+                    monument.discovered_by=sorted(set(monument.discovered_by)|{"player"})
+                    if monument.controller_faction_id:
+                        factions.add(monument.controller_faction_id)
+                    if first:self._message(f"You discover a {monument.monument_type.replace('_',' ')}.")
         # An adjacent person remains a Stranger until you actually speak;
         # proximity alone is not knowledge of identity.
         for c in self.state.creatures.values():

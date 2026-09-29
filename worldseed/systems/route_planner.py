@@ -14,7 +14,8 @@ from worldseed.config import ROUTEGEN_VERSION
 from worldseed.core.canonical import canonical_hash
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
-from worldseed.systems.state import BorderPostState, RouteInfrastructureState, TradeRouteState
+from worldseed.systems.state import BorderPostState, RouteInfrastructureState, TerritoryControlState, TradeRouteState
+from worldseed.systems.territory import monument_effective_control
 from worldseed.world.regional_plan import CrossingPlan, RoadSegmentPlan, stable_plan_uid
 
 REGION_SIZE = 512
@@ -70,6 +71,15 @@ class RoutePlanner:
         self._cache: dict[str, RegionalRoutePlan] = {}
         self._active_plans: dict[str, RegionalRoutePlan] = {}
         self._material_cache: dict[tuple, tuple[list[tuple[int,int]], list[CrossingPlan]]] = {}
+        self.territory = None
+
+    def attach_territory(self, territory) -> None:
+        self.territory = territory
+
+    def refresh_territory_control(self) -> None:
+        self._update_centrality_and_hinterlands(self.state.settlements, list(self.active_plans()))
+        if self.version >= 4:
+            self._update_border_posts(list(self.active_plans()), int(getattr(self.state, "clock_minute", 0)))
 
     @staticmethod
     def _edge_uid(a: str, b: str) -> str:
@@ -484,6 +494,8 @@ class RoutePlanner:
         plans=[self._build_plan(a,b) for _,_,_,a,b in self._select_sparse_edges(rows)]
         self._active_plans={p.uid:p for p in plans}
         settlement_by_uid={s.uid:s for s in rows}
+        if self.territory is not None:
+            self.territory.prepare_sites(plans)
         for plan in plans:
             self._maybe_restore_base(plan,int(getattr(self.state,"clock_minute",0)))
         self._update_centrality_and_hinterlands(settlement_by_uid,plans)
@@ -1005,6 +1017,25 @@ class RoutePlanner:
         post=min(rows,key=lambda row:(row[1],row[0],row[2]))[-1]
         return WorldPos(int(post.x),int(post.y),0)
 
+    def territory_target_for_settlement(self, settlement_id: str):
+        """Choose a bounded strategic monument for an actual settlement guard."""
+        town=self.state.settlements.get(str(settlement_id))
+        if town is None or town.faction_id not in self.state.factions:return None
+        faction=self.state.factions[town.faction_id];rows=[]
+        for monument in self.state.claim_monuments.values():
+            distance=abs(int(monument.region_x)-int(town.region_x))+abs(int(monument.region_y)-int(town.region_y))
+            if distance>3 or monument.integrity<=0:continue
+            if monument.controller_faction_id==town.faction_id:
+                if not monument.contested and monument.supply_level>=45:continue
+                purpose=0
+            elif not monument.controller_faction_id:
+                purpose=1
+            elif monument.controller_faction_id in faction.at_war:
+                purpose=2
+            else:continue
+            rows.append((purpose,-int(monument.strategic_value),distance,monument.uid,monument))
+        return min(rows,key=lambda row:row[:4])[-1] if rows else None
+
     def monthly_update(self,minute:int)->None:
         month=int(minute)//(30*1440)
         for plan in sorted(self._active_plans.values(),key=lambda p:p.uid):
@@ -1048,6 +1079,8 @@ class RoutePlanner:
     def _update_centrality_and_hinterlands(self,settlements:dict[str,object],plans:list[RegionalRoutePlan])->None:
         degree={uid:0 for uid in settlements};candidate_regions=set();route_edges={}
         for s in settlements.values():candidate_regions.add((int(s.region_x),int(s.region_y)))
+        for monument in self.state.claim_monuments.values():
+            candidate_regions.add((int(monument.region_x),int(monument.region_y)))
         for plan in plans:
             regions=self._effective_regions(plan) if self.version>=4 else list(plan.region_path)
             infra=self.state.route_infrastructure.get(plan.uid)
@@ -1063,30 +1096,46 @@ class RoutePlanner:
             s.route_centrality=min(100,degree.get(uid,0)*24+through*12)
 
         factions={s.faction_id for s in settlements.values() if s.faction_id in self.state.factions}
+        factions.update(
+            m.controller_faction_id for m in self.state.claim_monuments.values()
+            if m.controller_faction_id in self.state.factions
+        )
         for faction in self.state.factions.values():
             faction.influence_regions={};faction.hinterland_regions=[]
         for faction_id in factions:
             faction=self.state.factions[faction_id];sources=[s for s in settlements.values() if s.faction_id==faction_id]
-            if not sources:continue
-            heap=[];best={}
-            for s in sources:
-                region=(int(s.region_x),int(s.region_y))
-                initial=max(0,28-int(s.population)//12-int(getattr(faction,"prominence",0))//8)
-                if initial<best.get(region,1<<60):best[region]=initial;heapq.heappush(heap,(initial,region))
-            while heap:
-                cost,cur=heapq.heappop(heap)
-                if cost!=best.get(cur):continue
-                for dx,dy in CARDINALS:
-                    nxt=(cur[0]+dx,cur[1]+dy)
-                    if nxt not in candidate_regions:continue
-                    edge=self._transition(cur,nxt)
-                    if edge in route_edges:
-                        condition,contested,blocked=route_edges[edge]
-                        step=8+(100-condition)//12+(8 if contested else 0)+(20 if blocked else 0)
-                    else:step=30
-                    nc=cost+step
-                    if nc>=best.get(nxt,1<<60):continue
-                    best[nxt]=nc;heapq.heappush(heap,(nc,nxt))
+            monument_sources=[
+                m for m in self.state.claim_monuments.values()
+                if m.controller_faction_id==faction_id and monument_effective_control(m)>0
+            ]
+            if not sources and not monument_sources:continue
+            best={}
+            source_rows=[
+                ((int(s.region_x),int(s.region_y)),max(0,28-int(s.population)//12-int(getattr(faction,"prominence",0))//8),None)
+                for s in sources
+            ]
+            source_rows.extend(
+                ((int(m.region_x),int(m.region_y)),max(0,100-monument_effective_control(m)),max(1,int(m.max_reach)))
+                for m in monument_sources
+            )
+            for region,initial,max_steps in source_rows:
+                heap=[(initial,0,region)];local={region:initial}
+                while heap:
+                    cost,steps,cur=heapq.heappop(heap)
+                    if cost!=local.get(cur):continue
+                    if cost<best.get(cur,1<<60):best[cur]=cost
+                    if max_steps is not None and steps>=max_steps:continue
+                    for dx,dy in CARDINALS:
+                        nxt=(cur[0]+dx,cur[1]+dy)
+                        if nxt not in candidate_regions:continue
+                        edge=self._transition(cur,nxt)
+                        if edge in route_edges:
+                            condition,contested,blocked=route_edges[edge]
+                            step=8+(100-condition)//12+(8 if contested else 0)+(20 if blocked else 0)
+                        else:step=30
+                        nc=cost+step
+                        if nc>=local.get(nxt,1<<60):continue
+                        local[nxt]=nc;heapq.heappush(heap,(nc,steps+1,nxt))
             faction.influence_regions={f"{r[0]},{r[1]}":max(0,100-c) for r,c in sorted(best.items()) if c<100}
 
         winners={}
@@ -1101,6 +1150,22 @@ class RoutePlanner:
         for faction_id in factions:
             faction=self.state.factions[faction_id]
             faction.hinterland_regions=sorted(region for region,row in winners.items() if row[2]==faction_id and row[0]>=35)
+
+        control={}
+        for token,rows in sorted(ranking.items()):
+            top=rows[0] if rows else (0,0,"")
+            rival=rows[1] if len(rows)>1 else (0,0,"")
+            contested=bool(rival[0]>=25 and abs(top[0]-rival[0])<=18)
+            rx,ry=self._parse_region(token)
+            source_uids=sorted(
+                m.uid for m in self.state.claim_monuments.values()
+                if (m.region_x,m.region_y)==(rx,ry) and m.controller_faction_id in {top[2],rival[2]}
+            )
+            control[token]=TerritoryControlState(rx,ry,top[2],top[0],rival[2],rival[0],contested,source_uids)
+        self.state.territory_control=control
+        for monument in self.state.claim_monuments.values():
+            row=control.get(self._region_token((monument.region_x,monument.region_y)))
+            monument.contested=bool(monument.capture_progress or (row is not None and row.contested))
 
         if self.version>=4:
             for s in settlements.values():

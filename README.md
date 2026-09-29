@@ -4,6 +4,17 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev39 — Territorial Sovereignty Foundation
+
+Dev39 adds deterministic, strategically scored claim monuments to the bounded
+regional civilization network. Monuments persist capture, damage, supply and
+garrison state; their effective power joins settlement influence through the
+same route-cost graph that drives hinterlands and frontier pressure. Nearby
+guards physically travel to neutral, threatened or wartime monuments and must
+maintain uncontested presence over time to capture them. Discovered anchors are
+shown in faction records without leaking unknown political information. See
+`TERRITORY_SOVEREIGNTY_HANDOFF.md` for contracts, validation and next work.
+
 ## RC14 Dev38 — Natural Container Art Variety
 
 Dev38 replaces the crude single-sprite natural containers with the new realistic art set and makes visual selection deterministic per generated world cell.
