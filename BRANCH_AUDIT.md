@@ -1,8 +1,18 @@
-# Branch audit — 2026-09-28 UTC
+# Branch audit and cleanup — 2026-09-28 UTC
+
+## Cleanup result
+
+Cleanup began from remote `main` at `05266a0c45ccaf1c89ec1707612cf6aa682dfd13`. Immediately before deletion, GitHub reported `main` as the default branch, no open pull requests, and 65 non-main remote branches. All 65 non-main branches were deleted in one Git push; `refs/heads/main` was then the only branch advertised by the canonical remote.
+
+No historical branch was bulk-merged during cleanup. Merged and closed pull-request history remains available on GitHub, and the exact pre-deletion refs were captured and verified in the local repository recovery bundle `.git/branch-cleanup-backup-20260928.bundle`. The bundle is intentionally not a tracked project artifact.
+
+The table below is the pre-cleanup audit record. Its SHAs remain useful recovery identifiers even though the named remote branches no longer exist.
+
+## Pre-cleanup audit
 
 Baseline: `4f00caa9925598cc611a0e7a302625a1ce558983` (`main`). Compared every branch tip with this exact commit. There were 65 branches including main: 1 other tip is fully contained in main; 63 have divergent ancestry. Ahead/behind counts describe commits, not missing features; copied or squashed work can already exist in main.
 
-Only `main` is the active integration baseline under the updated development contract. All branches below are parked historical references pending content-specific review. No branch was merged or deleted during this audit. Branch deletion is not exposed by the configured repository tools; use an authorized Git client or the repository UI only after rechecking current ancestry and open pull requests. The recorded SHA makes every reviewed tip recoverable.
+Only `main` is the active integration baseline under the updated development contract. At audit time, all branches below were parked historical references pending content-specific review. The recorded SHA makes every reviewed tip recoverable from Git object retention, pull-request history, or the cleanup bundle described above.
 
 Do not bulk-merge divergent branches. Recover a specific needed implementation onto current main, test it, and publish it as one work unit. Do not start new per-chat/per-phase branches.
 
