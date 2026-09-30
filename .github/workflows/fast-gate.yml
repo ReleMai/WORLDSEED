@@ -124,6 +124,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev41 real-time social world regressions" --timeout 120 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_dev31_playtest_fixes
 
+      - name: Dev42 normalized character art regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev42 normalized character art regressions" --timeout 90 -- python -u -m unittest -v tests.test_character_sprite_normalization tests.test_npc_sex tests.test_dev20_graphical_regressions.GraphicalAssetTests
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

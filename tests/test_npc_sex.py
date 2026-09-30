@@ -42,9 +42,9 @@ class NPCSexTests(unittest.TestCase):
 
     def test_authored_rosters_and_renderer_match_persisted_sex(self):
         visuals=VisualRegistry.load_default()
-        self.assertEqual(len(visuals.npc_paths()),24)
-        self.assertEqual(len(visuals.npc_paths('male')),12)
-        self.assertEqual(len(visuals.npc_paths('female')),12)
+        self.assertEqual(len(visuals.npc_paths()),20)
+        self.assertEqual(len(visuals.npc_paths('male')),10)
+        self.assertEqual(len(visuals.npc_paths('female')),10)
         self.assertFalse(set(visuals.npc_paths('male')) & set(visuals.npc_paths('female')))
         self.assertTrue(all(path.is_file() for path in visuals.npc_paths()))
         if not PygameTerminal.available():return

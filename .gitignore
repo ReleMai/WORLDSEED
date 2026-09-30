@@ -7,6 +7,8 @@ __pycache__/
 .venv/
 venv/
 env/
+build/
+*.egg-info/
 
 # Local runtime state and generated saves
 saves/

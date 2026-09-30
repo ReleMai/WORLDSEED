@@ -4,6 +4,15 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev42 — Tile-safe character artwork
+
+Player and NPC presentation now use four separate authored sets: ten male and
+ten female player appearances plus ten male and ten female NPC appearances.
+No player sprite is reused for an NPC. Every active actor image is normalized to
+a transparent `160x256` canvas, centered at x=80, and grounded on the same
+y=248 foot baseline so character art cannot shift the occupied map tile. See
+[`docs/handoffs/DEV42_CHARACTER_SPRITES_HANDOFF.md`](docs/handoffs/DEV42_CHARACTER_SPRITES_HANDOFF.md).
+
 ## RC14 Dev39 — Territorial Sovereignty Foundation
 
 Dev39 adds deterministic, strategically scored claim monuments to the bounded
