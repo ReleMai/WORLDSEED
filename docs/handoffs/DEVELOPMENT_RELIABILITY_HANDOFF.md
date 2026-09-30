@@ -26,7 +26,7 @@ Reconciled the interrupted workflow fixes onto main `4f00caa`, preserving its wo
 
 ## Branch disposition and remaining work
 
-`BRANCH_AUDIT.md` records all 64 non-main tips at the baseline. One is ancestry-contained; 63 diverge. Divergence is not proof that a feature is missing. Workshop PR #67 is now closed and its implementation is on main. No open PRs remained at the audit.
+[`BRANCH_AUDIT.md`](../development/BRANCH_AUDIT.md) records all 64 non-main tips at the baseline. One is ancestry-contained; 63 diverge. Divergence is not proof that a feature is missing. Workshop PR #67 is now closed and its implementation is on main. No open PRs remained at the audit.
 
 Remote branch deletion is unavailable through the configured repository tools. No branch was deleted or bulk-merged; divergent work is preserved. Only `dev38-natural-container-art-variants` is ancestry-proven eligible for later cleanup after a fresh check. The main-first rule is a development contract, not a server-side branch-creation restriction.
 

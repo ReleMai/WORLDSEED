@@ -1,6 +1,6 @@
 # WORLDSEED — Consolidated Project Manual
 
-This README collects WORLDSEED product documentation and historical development notes. For current checkout, branch, and validation instructions, use [DEVELOPMENT.md](DEVELOPMENT.md) and the current testing contract in [AGENTS.md](AGENTS.md). Older commands and release reports below are historical context, not requirements to rerun full suites or multi-decade soaks during every task.
+This README collects WORLDSEED product documentation and historical development notes. For current checkout, branch, and validation instructions, use [DEVELOPMENT.md](docs/development/DEVELOPMENT.md) and the current testing contract in [AGENTS.md](AGENTS.md). The organized documentation index is at [docs/README.md](docs/README.md). Older commands and release reports below are historical context, not requirements to rerun full suites or multi-decade soaks during every task.
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
@@ -13,7 +13,7 @@ same route-cost graph that drives hinterlands and frontier pressure. Nearby
 guards physically travel to neutral, threatened or wartime monuments and must
 maintain uncontested presence over time to capture them. Discovered anchors are
 shown in faction records without leaking unknown political information. See
-`TERRITORY_SOVEREIGNTY_HANDOFF.md` for contracts, validation and next work.
+[`docs/handoffs/TERRITORY_SOVEREIGNTY_HANDOFF.md`](docs/handoffs/TERRITORY_SOVEREIGNTY_HANDOFF.md) for contracts, validation and next work.
 
 ## RC14 Dev38 — Natural Container Art Variety
 

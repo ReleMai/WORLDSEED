@@ -9,7 +9,7 @@ from docx.oxml.ns import qn
 from docx.enum.style import WD_STYLE_TYPE
 
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'WORLDSEED_Developer_Blueprint_RC7.docx'
+OUT=ROOT/'docs'/'reference'/'WORLDSEED_Developer_Blueprint_RC7.docx'
 
 def shade(cell, fill):
     tcPr=cell._tc.get_or_add_tcPr(); shd=tcPr.find(qn('w:shd'))

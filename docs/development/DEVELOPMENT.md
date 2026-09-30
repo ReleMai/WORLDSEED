@@ -1,6 +1,6 @@
 # Reliable WORLDSEED development
 
-`ReleMai/WORLDSEED` on `main` is the only integration baseline. Work on one coherent task at a time. Historical branches are parked references; do not resume them or create a fresh branch per chat. See `BRANCH_AUDIT.md` before attempting to recover old work.
+`ReleMai/WORLDSEED` on `main` is the only integration baseline. Work on one coherent task at a time. Historical branches are parked references; do not resume them or create a fresh branch per chat. See [BRANCH_AUDIT.md](BRANCH_AUDIT.md) before attempting to recover old work.
 
 ## Start with a complete baseline
 
