@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from worldseed.core.coords import WorldPos
+from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import (
     CasingIntelState, ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
@@ -70,6 +70,8 @@ class PropertyStorageSystem:
         room=self._room_for(skeleton,structure)
         if room is None or not room.cells:
             return None
+        service=self._service_storage_position(structure)
+        if service is not None:return service,room.uid
         fixture_cells={
             (int(p.x),int(p.y))
             for p in skeleton.pieces
@@ -89,7 +91,8 @@ class PropertyStorageSystem:
             if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                 continue
             p=WorldPos(x,y,0)
-            if not self.physicalization.passable(p,True):
+            placement_passable=getattr(self.physicalization,"plan_piece_passable",self.physicalization.passable)
+            if not placement_passable(p,True):
                 continue
             distance=0 if entrance is None else abs(x-int(entrance[0]))+abs(y-int(entrance[1]))
             candidates.append((-distance,y,x))
@@ -101,13 +104,45 @@ class PropertyStorageSystem:
                 if entrance is not None and abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1:
                     continue
                 p=WorldPos(x,y,0)
-                if self.physicalization.passable(p,True):
+                placement_passable=getattr(self.physicalization,"plan_piece_passable",self.physicalization.passable)
+                if placement_passable(p,True):
                     distance=0 if entrance is None else abs(x-int(entrance[0]))+abs(y-int(entrance[1]))
                     candidates.append((-distance,y,x))
         if not candidates:
             return None
         _,y,x=min(candidates)
         return WorldPos(x,y,0),room.uid
+
+    def _service_storage_position(self,structure,ignore_uid:str=""):
+        """Move existing workshop cargo to its stable exterior service court.
+
+        Exact workers continue using original fixtures and labor reservations
+        through the frontage while interior activity migration is in progress.
+        No second container, inventory, road or production authority is created.
+        """
+        if structure.function=="residence":return None
+        frontage_lookup=getattr(self.physicalization,"frontage_for",None)
+        frontage=frontage_lookup(structure.uid) if callable(frontage_lookup) else None
+        if frontage is None:return None
+        occupied={(c.x,c.y,c.z) for c in self.state.containers.values() if c.uid!=ignore_uid}
+        candidates=[]
+        for dx,dy in ((-1,0),(1,0),(0,1),(0,-1)):
+            pos=frontage.moved(dx,dy)
+            if (pos.x,pos.y,pos.z) in occupied or not self.physicalization.passable(pos,True):continue
+            world=getattr(self.physicalization,"world",None)
+            if world is not None:
+                cache=getattr(world,"cache",None)
+                if cache is not None:
+                    key,lx,ly=split_world(pos);chunk=cache.peek(key)
+                    if chunk is None:continue
+                    terrain=self.registry.terrain(self.registry.terrain_id(chunk.get(lx,ly)))
+                    if not terrain.passable or "water" in terrain.tags:continue
+                else:
+                    environment=getattr(world,"environment_at",None)
+                    if callable(environment) and bool(getattr(environment(pos),"open_water",False)):continue
+            cell=self.physicalization.cell_at(pos)
+            candidates.append((1 if cell is not None and cell.road_ids else 0,pos.y,pos.x,pos))
+        return min(candidates,key=lambda r:r[:3])[3] if candidates else None
 
     @staticmethod
     def _lock_level(function: str) -> int:
@@ -151,6 +186,12 @@ class PropertyStorageSystem:
             owner=self.civics.owner_for_structure(town.uid,structure.uid) or town.uid
             existing=self._existing(uid)
             if existing is not None:
+                service=self._service_storage_position(structure,uid)
+                if service is not None and (existing.x,existing.y,existing.z)!=(service.x,service.y,service.z):
+                    old_key=next((key for key,c in self.state.containers.items() if c.uid==uid),None)
+                    if old_key is not None:self.state.containers.pop(old_key)
+                    existing.x,existing.y,existing.z=service.x,service.y,service.z
+                    self.state.containers[pos_key(service.x,service.y,service.z)]=existing
                 existing.owner=owner
                 existing.settlement_id=town.uid
                 existing.property_id=structure.uid
@@ -451,6 +492,7 @@ class PropertySecuritySystem:
             return {"outcome":"not_home","message":"This is not a private home entrance.","npc_uid":""}
         if door.z!=player_pos.z or abs(door.x-player_pos.x)+abs(door.y-player_pos.y)>1:
             return {"outcome":"far","message":"Move next to the door before knocking.","npc_uid":""}
+        answer_position=self.door_answer_position(door)
         residents=[]
         for npc in self.state.npcs.values():
             if not npc.alive or npc.z!=door.z:continue
@@ -472,7 +514,7 @@ class PropertySecuritySystem:
         npc=residents[0]
         if door.answering_npc_uid:
             answering=self.state.npcs.get(door.answering_npc_uid)
-            if answering is not None and answering.uid not in interior_actors and door.answered_minute>=door.answer_requested_minute and (answering.x,answering.y,answering.z)==(door.x,door.y,door.z):
+            if answering is not None and answering.uid not in interior_actors and door.answered_minute>=door.answer_requested_minute and (answering.x,answering.y,answering.z)==(answer_position.x,answer_position.y,answer_position.z):
                 return {"outcome":"answered","message":f"{answering.name} is waiting at the open door. Speak to them when you are ready.","npc_uid":answering.uid}
             if answering is not None and door.answered_minute<door.answer_requested_minute:
                 return {"outcome":"approaching","message":"You knock again. Someone inside is already coming to the door.","npc_uid":door.answering_npc_uid}
@@ -486,17 +528,19 @@ class PropertySecuritySystem:
         outcome="invited" if willingness>=threshold else "door_talk"
         door.answering_npc_uid=npc.uid;door.answer_requested_minute=int(minute)
         door.answered_minute=-1;door.answer_outcome=outcome
+        target=answer_position
         npc.tasks=[
-            {"kind":"move","x":door.x,"y":door.y,"z":door.z,"exact":True,"physical_path":True,"door_answer_uid":door.uid},
+            {"kind":"move","x":target.x,"y":target.y,"z":target.z,"exact":True,"physical_path":True,"door_answer_uid":door.uid},
             {"kind":"perform","action":"answer_door","door_uid":door.uid},
         ]
-        return {"outcome":"approaching","message":f"You knock. Footsteps move through the house as {npc.name} decides whether to answer.","npc_uid":npc.uid}
+        return {"outcome":"approaching","message":f"You knock. Footsteps move through the house as {npc.name} decides whether to answer. Leave the threshold clear so they can step outside.","npc_uid":npc.uid}
 
     def complete_door_answer(self,door_uid:str,npc_uid:str,minute:int)->bool:
         door=self.door_by_id(door_uid);npc=self.state.npcs.get(str(npc_uid))
         if door is None or npc is None or door.answering_npc_uid!=npc.uid:return False
         if npc.uid in getattr(self.state,"interior_actors",{}):return False
-        if (npc.x,npc.y,npc.z)!=(door.x,door.y,door.z):return False
+        target=self.door_answer_position(door)
+        if (npc.x,npc.y,npc.z)!=(target.x,target.y,target.z):return False
         door.locked=False;door.schedule_locked=False;door.answered_minute=int(minute)
         if door.answer_outcome=="invited":
             self.grant_guest_access(door.property_id,"player",int(minute)+120)
@@ -541,6 +585,11 @@ class PropertySecuritySystem:
             if prop:interested.update(prop.occupants)
             for npc in self.state.npcs.values():
                 if not npc.alive or npc.z!=pos.z or npc.settlement_id!=door.settlement_id:continue
+                presences=getattr(self.state,"interior_actors",{})
+                player_inside=presences.get("player");npc_inside=presences.get(npc.uid)
+                if player_inside is not None:
+                    if npc_inside is None or npc_inside.space_id!=player_inside.space_id:continue
+                elif npc_inside is not None:continue
                 distance=abs(npc.x-pos.x)+abs(npc.y-pos.y)
                 if distance<=noise_radius and (npc.occupation=="guard" or npc.uid in interested):
                     seen.add(npc.uid)
@@ -548,8 +597,9 @@ class PropertySecuritySystem:
 
     def _alert_guards(self,door:DoorSecurityState,witnesses,level:int)->None:
         structure=self.physicalization.structure_by_id(door.property_id)
-        target=(door.x,door.y)
-        if structure is not None and structure.entrance is not None:
+        answer_position=self.door_answer_position(door)
+        target=(answer_position.x,answer_position.y)
+        if structure is not None and structure.entrance is not None and target==(door.x,door.y):
             target=(int(structure.entrance[0]),int(structure.entrance[1]))
         witness_set=set(witnesses)
         for npc in self.state.npcs.values():
@@ -640,6 +690,43 @@ class PropertySecuritySystem:
         rows=self.doors_for_property(property_id)
         return next((d for d in rows if d.role=="entrance"),rows[0] if rows else None)
 
+    def door_answer_position(self,door) -> WorldPos:
+        frontage_lookup=getattr(self.physicalization,"frontage_for",None)
+        threshold=frontage_lookup(door.property_id) if callable(frontage_lookup) else None
+        return threshold or WorldPos(door.x,door.y,door.z)
+
+    def note_interior_entry(self,plan,minute:int,stealth)->list[str]:
+        """Portal entry uses the same permission and trespass records as walking."""
+        door=self._door_for_property(plan.building_id)
+        permitted=door is None or door.access=="public" or self.authorized_player(door)
+        current=str(self.state.player_trespass_property_id or "")
+        if current and (current!=plan.building_id or permitted):
+            old=self.state.trespass_states.get(current)
+            if old:old.active=False
+            self.state.player_trespass_property_id=""
+        if permitted:return []
+        row=self.state.trespass_states.get(plan.building_id)
+        if row is None:
+            row=TrespassState(plan.building_id,door.settlement_id)
+            self.state.trespass_states[plan.building_id]=row
+        row.active=True;row.entered_minute=int(minute)
+        row.entry_method="forced" if door.forced else "picked" if door.picked else "unsecured"
+        self.state.player_trespass_property_id=plan.building_id
+        seen=stealth.witnesses(WorldPos(plan.exterior_x,plan.exterior_y,plan.exterior_z),minute,door.settlement_id)
+        if seen:
+            row.witness_uids=sorted(set(row.witness_uids).union(seen));row.last_seen_minute=int(minute)
+            row.search_level=max(row.search_level,1)
+            self._incident(door,"trespass",minute,seen,5)
+            return ["Your unauthorized entry is noticed inside the building."]
+        return ["You enter the interior without permission."]
+
+    def note_interior_exit(self,plan,minute:int)->list[str]:
+        if self.state.player_trespass_property_id!=plan.building_id:return []
+        row=self.state.trespass_states.get(plan.building_id)
+        if row:row.active=False
+        self.state.player_trespass_property_id=""
+        return ["You leave the restricted property."]
+
     def note_player_step(self,old:WorldPos,new:WorldPos,minute:int,stealth)->list[str]:
         messages=[]
         old_cell=self.physicalization.cell_at(old)
@@ -686,8 +773,11 @@ class PropertySecuritySystem:
     def update_response(self,player_pos:WorldPos,minute:int,stealth)->list[str]:
         property_id=str(self.state.player_trespass_property_id or "")
         if not property_id:return []
-        cell=self.physicalization.cell_at(player_pos)
-        if cell is None or cell.structure_id!=property_id:
+        presence=getattr(self.state,"interior_actors",{}).get("player")
+        plan=getattr(self.state,"interiors",{}).get(presence.space_id) if presence else None
+        cell=self.physicalization.cell_at(player_pos) if plan is None else None
+        current_property=plan.building_id if plan is not None else cell.structure_id if cell is not None else ""
+        if current_property!=property_id:
             row=self.state.trespass_states.get(property_id)
             if row:row.active=False
             self.state.player_trespass_property_id=""
@@ -707,7 +797,8 @@ class PropertySecuritySystem:
         row.last_seen_minute=int(minute)
         for npc in guards:
             npc.goal="guard";npc.goal_score=max(int(npc.goal_score),100)
-            npc.tasks=[{"kind":"move","x":player_pos.x,"y":player_pos.y},{"kind":"perform","action":"guard"}]
+            if plan is None:
+                npc.tasks=[{"kind":"move","x":player_pos.x,"y":player_pos.y},{"kind":"perform","action":"guard"}]
         if not row.warned:
             row.warned=True;row.warning_count+=1;row.search_level=max(row.search_level,1)
             return ["A guard or occupant challenges you and orders you out of the property."]

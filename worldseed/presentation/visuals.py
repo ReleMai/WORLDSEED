@@ -171,10 +171,15 @@ class VisualRegistry:
             raw = style.get('atlas') if isinstance(style, dict) else None
             if raw and not (self.base_dir / str(raw)).exists():
                 issues.append(f"missing resource atlas: {raw} ({cid})")
+        for kind in ('interiors','building_shells','building_doors'):
+            for cid in self.manifest.get(kind,{}):
+                for raw in self._paths(kind,cid):
+                    if not (self.base_dir / raw).exists():
+                        issues.append(f"missing {kind} visual file: {raw} ({cid})")
         return issues
 
     def iter_asset_paths(self) -> Iterable[Path]:
-        for kind in ("items", "terrain", "resources", "structures", "species", "crops"):
+        for kind in ("items", "terrain", "resources", "structures", "species", "crops", "interiors", "building_shells", "building_doors"):
             for raw in self.manifest.get(kind, {}).values():
                 vals = [raw] if isinstance(raw, str) else raw
                 for p in vals or []:

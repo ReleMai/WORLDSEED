@@ -5,7 +5,40 @@
   "interiors": {
     "core:interior_floor": "assets/sprites/interiors/cottage_floor.png",
     "core:interior_wall": "assets/sprites/interiors/cottage_wall.png",
-    "core:interior_bed": "assets/sprites/interiors/cottage_bed.png"
+    "core:interior_bed": "assets/sprites/interiors/cottage_bed.png",
+    "core:double_bed_piece": "assets/sprites/interiors/dev47/double_bed_piece.png",
+    "core:bunk_bed_piece": "assets/sprites/interiors/dev47/bunk_bed_piece.png",
+    "core:small_table_piece": "assets/sprites/interiors/dev47/small_table_piece.png",
+    "core:large_table_piece": "assets/sprites/interiors/dev47/large_table_piece.png",
+    "core:bench_piece": "assets/sprites/interiors/dev47/bench_piece.png",
+    "core:stool_piece": "assets/sprites/interiors/dev47/stool_piece.png",
+    "core:chair_piece": "assets/sprites/interiors/dev47/chair_piece.png",
+    "core:wall_shelf_piece": "assets/sprites/interiors/dev47/wall_shelf_piece.png",
+    "core:cupboard_piece": "assets/sprites/interiors/dev47/cupboard_piece.png",
+    "core:house_chest_piece": "assets/sprites/interiors/dev47/house_chest_piece.png",
+    "core:wardrobe_piece": "assets/sprites/interiors/dev47/wardrobe_piece.png",
+    "core:writing_desk_piece": "assets/sprites/interiors/dev47/writing_desk_piece.png",
+    "core:brazier_piece": "assets/sprites/interiors/dev47/brazier_piece.png",
+    "core:house_hearth_piece": "assets/sprites/interiors/dev47/house_hearth_piece.png",
+    "core:washbasin_piece": "assets/sprites/interiors/dev47/washbasin_piece.png",
+    "core:cradle_piece": "assets/sprites/interiors/dev47/cradle_piece.png",
+    "core:woven_rug_piece": "assets/sprites/interiors/dev47/woven_rug_piece.png",
+    "core:partition_screen_piece": "assets/sprites/interiors/dev47/partition_screen_piece.png",
+    "core:lamp_stand_piece": "assets/sprites/interiors/dev47/lamp_stand_piece.png",
+    "core:single_bed_piece": "assets/sprites/interiors/cottage_bed.png",
+    "core:forge_piece": "assets/sprites/structures/forge.png",
+    "core:carpenter_bench_piece": "assets/sprites/structures/workbench.png",
+    "core:millstone_piece": "assets/sprites/structures/millstone.png",
+    "core:bakery_oven_piece": "assets/sprites/structures/bakery_oven.png",
+    "core:butcher_table_piece": "assets/sprites/structures/butcher_table.png",
+    "core:loom_piece": "assets/sprites/structures/loom.png",
+    "core:tanning_rack_piece": "assets/sprites/structures/tanning_frame.png",
+    "core:pottery_wheel_piece": "assets/sprites/structures/pottery_wheel.png",
+    "core:brewery_vat_piece": "assets/sprites/structures/brewery_vat.png",
+    "core:herbalist_table_piece": "assets/sprites/structures/herbalist_table.png",
+    "core:masonry_bench_piece": "assets/sprites/structures/masonry_bench.png",
+    "core:smoke_rack_piece": "assets/sprites/structures/smoke_rack.png",
+    "core:scribe_desk_piece": "assets/sprites/interiors/dev47/scribe_desk_piece.png"
   },
   "terrain": {
     "core:grass": [
@@ -656,10 +689,22 @@
     "core:logging_managed_tree_piece": "assets/sprites/settlement/dev43/logging_managed_tree.png"
   },
   "species": {
-    "core:pig": ["assets/sprites/species/domestic/pig_0.png", "assets/sprites/species/domestic/pig_1.png"],
-    "core:cow": ["assets/sprites/species/domestic/cow_0.png", "assets/sprites/species/domestic/cow_1.png"],
-    "core:chicken": ["assets/sprites/species/domestic/chicken_0.png", "assets/sprites/species/domestic/chicken_1.png"],
-    "core:sheep": ["assets/sprites/species/domestic/sheep_0.png", "assets/sprites/species/domestic/sheep_1.png"],
+    "core:pig": [
+      "assets/sprites/species/domestic/pig_0.png",
+      "assets/sprites/species/domestic/pig_1.png"
+    ],
+    "core:cow": [
+      "assets/sprites/species/domestic/cow_0.png",
+      "assets/sprites/species/domestic/cow_1.png"
+    ],
+    "core:chicken": [
+      "assets/sprites/species/domestic/chicken_0.png",
+      "assets/sprites/species/domestic/chicken_1.png"
+    ],
+    "core:sheep": [
+      "assets/sprites/species/domestic/sheep_0.png",
+      "assets/sprites/species/domestic/sheep_1.png"
+    ],
     "core:rabbit": [
       "assets/sprites/species/illustrated/rabbit_0.png",
       "assets/sprites/species/illustrated/rabbit_1.png",
@@ -1026,5 +1071,38 @@
       "span_cells": 16
     }
   },
-  "item_assets_source": "data/items.json"
+  "item_assets_source": "data/items.json",
+  "building_shells": {
+    "residence": "assets/sprites/buildings/dev47/residence.png",
+    "residence_2": "assets/sprites/buildings/dev47/residence_2.png",
+    "residence_3": "assets/sprites/buildings/dev47/residence_3.png",
+    "inn": "assets/sprites/buildings/dev47/inn.png",
+    "barracks": "assets/sprites/buildings/dev47/barracks.png",
+    "smithy": "assets/sprites/buildings/dev47/smithy.png",
+    "residence_4": "assets/sprites/buildings/dev47/residence_4.png",
+    "residence_5": "assets/sprites/buildings/dev47/residence_5.png",
+    "residence_6": "assets/sprites/buildings/dev47/residence_6.png",
+    "outskirt_camp": "assets/sprites/buildings/dev47/outskirt_camp.png",
+    "workshop": "assets/sprites/buildings/dev47/workshop.png",
+    "mill": "assets/sprites/buildings/dev47/mill.png",
+    "fishery": "assets/sprites/buildings/dev47/fishery.png",
+    "bakery": "assets/sprites/buildings/dev47/bakery.png",
+    "butcher": "assets/sprites/buildings/dev47/butcher.png",
+    "weavery": "assets/sprites/buildings/dev47/weavery.png",
+    "tannery": "assets/sprites/buildings/dev47/tannery.png",
+    "pottery": "assets/sprites/buildings/dev47/pottery.png",
+    "brewery": "assets/sprites/buildings/dev47/brewery.png",
+    "mason_yard": "assets/sprites/buildings/dev47/mason_yard.png",
+    "barn": "assets/sprites/buildings/dev47/barn.png",
+    "market": "assets/sprites/buildings/dev47/market.png",
+    "clinic": "assets/sprites/buildings/dev47/clinic.png",
+    "watchhouse": "assets/sprites/buildings/dev47/watchhouse.png",
+    "shrine": "assets/sprites/buildings/dev47/shrine.png",
+    "archive": "assets/sprites/buildings/dev47/archive.png",
+    "school": "assets/sprites/buildings/dev47/school.png"
+  },
+  "building_doors": {
+    "wood": "assets/sprites/buildings/dev47/door_wood.png",
+    "iron": "assets/sprites/buildings/dev47/door_iron.png"
+  }
 }

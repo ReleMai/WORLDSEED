@@ -219,6 +219,16 @@ def help_screen(width:int=100)->str:
     return box('HELP',body,width,'Click buttons • Wheel scrolls • Arrows/Enter remain available')
 
 def look_screen(sim:Simulation,width:int=100,pos=None)->str:
+    p=pos or sim.player_pos
+    shell_lookup=getattr(getattr(sim,'settlement_physicalization',None),'shell_at',None)
+    shell=shell_lookup(p) if shell_lookup else None
+    if shell is not None:
+        body=[f'{shell.function.replace("_"," ").title()} exterior',
+              f'Position: {p.x}, {p.y}, z {p.z}',
+              'Solid building shell; interior rooms and contents are not visible from outside.']
+        if shell.entrance==(p.x,p.y):body.append('Entrance door: right-click to enter, knock or inspect access.')
+        else:body.append('Use the separate entrance door to enter this building.')
+        return box('LOOK',body,width)
     p=pos or sim.player_pos;t=sim.world.tile_at(p);room=sim.building.room_at(p);w=sim.environment.weather.at(sim.clock.minute,p.x,p.y)
     key=f'{p.x},{p.y},{p.z}';crop=sim.state.crops.get(key);soil=sim.state.soils.get(key);container=sim.state.containers.get(key);fluid=sim.state.fluids.get(key);fire=sim.state.fires.get(key);arc=sim.state.arcane_contamination.get(key)
     feature=sim.resources.description(p)

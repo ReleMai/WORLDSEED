@@ -136,8 +136,36 @@ class SettlementPopulationBindingTests(unittest.TestCase):
             else:
                 self.assertFalse(npc.property_id)
             self.assertTrue(any(npc.home_id in parcel.structure_ids for parcel in parcels.values()))
-            self.assertIn((npc.x, npc.y), set(rooms[npc.home_room_id].cells))
+            if structures[npc.home_id].enclosed:
+                # Home/bed identity remains authoritative, but exterior
+                # actors wait on usable frontage until a portal entry.
+                frontage=physical.frontage_for(npc.home_id)
+                self.assertIsNotNone(frontage)
+                self.assertLessEqual(abs(npc.x-frontage.x)+abs(npc.y-frontage.y),1)
+                self.assertNotIn((npc.x,npc.y),set(structures[npc.home_id].footprint))
+            else:
+                self.assertIn((npc.x,npc.y),set(rooms[npc.home_room_id].cells))
             self.assertTrue(physical.passable(WorldPos(npc.x, npc.y, 0), True))
+
+    def test_activation_rescues_legacy_shell_anchors_but_preserves_indoor_actors(self):
+        from worldseed.systems.interior_state import InteriorActor
+        state,settlement,physical,binder=self._fixture()
+        binder.bind_settlement(settlement)
+        residents=sorted(state.npcs.values(),key=lambda n:n.uid)
+        outside,inside=residents[:2]
+        old_bindings={n.uid:(n.home_id,n.home_room_id,n.bed_fixture_id) for n in residents}
+        for npc in (outside,inside):
+            structure=physical.structure_by_id(npc.home_id)
+            npc.x,npc.y=structure.entrance
+            self.assertTrue(physical.shell_blocks(WorldPos(npc.x,npc.y,0)))
+        inside_anchor=(inside.x,inside.y,inside.z)
+        state.interior_actors[inside.uid]=InteriorActor("interior:"+inside.home_id,2500,3500)
+        binder.bind_settlement(settlement)
+        self.assertFalse(physical.shell_blocks(WorldPos(outside.x,outside.y,outside.z)))
+        self.assertTrue(physical.passable(WorldPos(outside.x,outside.y,outside.z),True))
+        self.assertEqual((inside.x,inside.y,inside.z),inside_anchor)
+        self.assertEqual(state.interior_actors[inside.uid].space_id,"interior:"+inside.home_id)
+        self.assertEqual(old_bindings,{n.uid:(n.home_id,n.home_room_id,n.bed_fixture_id) for n in residents})
 
     def test_work_bindings_match_existing_physical_workplaces(self):
         state, settlement, physical, binder = self._fixture()

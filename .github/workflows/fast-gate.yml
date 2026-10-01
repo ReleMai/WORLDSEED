@@ -140,6 +140,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev46 interiors" --timeout 180 -- python -u -m unittest -v tests.test_interiors tests.test_interior_engine tests.test_interior_ai tests.test_interior_knocking tests.test_interior_presentation tests.test_interior_projection
 
+      - name: Dev47 building shell and differentiated interior regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev47 buildings" --timeout 180 -- python -u -m unittest -v tests.test_building_shells tests.test_building_interior_profiles tests.test_building_presentation tests.test_interior_security tests.test_interior_work tests.test_interior_activity_validation tests.test_dev47_building_context tests.test_ui_rc2.AggressiveStanceRoutingTests
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

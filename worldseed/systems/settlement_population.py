@@ -142,6 +142,17 @@ class SettlementPopulationBinder:
     def _spawn_in_room(self, npc_uid: str, room, occupied: set[tuple[int, int]]) -> tuple[int, int] | None:
         if room is None:
             return None
+        frontage_lookup=getattr(self.physicalization,"frontage_for",None)
+        frontage=frontage_lookup(room.structure_plan_id) if callable(frontage_lookup) else None
+        if frontage is not None:
+            # A household's room/bed IDs still bind its residents, but their
+            # exterior bodies must wait outside the solid portal footprint.
+            options=[frontage]+[frontage.moved(dx,dy) for dx,dy in ((-1,0),(1,0),(0,-1),(0,1))]
+            candidates=[(int((p.x,p.y) in occupied),abs(p.x-frontage.x)+abs(p.y-frontage.y),p.y,p.x)
+                        for p in options if self.physicalization.passable(p,True)]
+            if candidates:
+                _,_,y,x=min(candidates)
+                return x,y
         candidates = []
         for x, y in room.cells:
             pos = WorldPos(int(x), int(y), 0)
@@ -245,23 +256,39 @@ class SettlementPopulationBinder:
                     settlement.property_owners.setdefault(home.uid, npc.uid)
                 else:
                     npc.property_id = ""
-                if reposition_unbound and not had_valid_home:
+                if reposition_unbound and not had_valid_home and npc.uid not in getattr(self.state,"interior_actors",{}):
                     target = self._spawn_in_room(npc.uid, home_room, occupied)
                     if target is None and home.entrance is not None:
-                        target = (int(home.entrance[0]), int(home.entrance[1]))
+                        entrance=WorldPos(int(home.entrance[0]),int(home.entrance[1]),0)
+                        if self.physicalization.passable(entrance,True):
+                            target = (entrance.x,entrance.y)
                     if target is None:
                         target = self._common_spawn(skeleton, npc.uid, occupied)
                     npc.x, npc.y, npc.z = target[0], target[1], 0
                     npc.tasks = []
                     occupied.add(target)
                     repositioned += 1
+                elif reposition_unbound and npc.uid not in getattr(self.state,"interior_actors",{}):
+                    # Legacy exterior anchors in a now-solid shell are moved
+                    # only during activation, never by render or inspection.
+                    current=WorldPos(int(npc.x),int(npc.y),int(npc.z))
+                    shell_blocks=getattr(self.physicalization,"shell_blocks",None)
+                    rescue=getattr(self.physicalization,"displace_shell_position",None)
+                    if callable(shell_blocks) and shell_blocks(current) and callable(rescue):
+                        target=rescue(current,lambda p:self.physicalization.passable(p,True) and (p.x,p.y) not in occupied,max_radius=12)
+                        if target is not None:
+                            occupied.discard((npc.x,npc.y))
+                            npc.x,npc.y,npc.z=target.x,target.y,target.z
+                            npc.tasks=[]
+                            occupied.add((npc.x,npc.y))
+                            repositioned+=1
             else:
                 npc.home_id = ""
                 npc.home_room_id = ""
                 npc.bed_fixture_id = ""
                 npc.property_id = ""
                 homeless += 1
-                if reposition_unbound:
+                if reposition_unbound and npc.uid not in getattr(self.state,"interior_actors",{}):
                     target = self._common_spawn(skeleton, npc.uid, occupied)
                     npc.x, npc.y, npc.z = target[0], target[1], 0
                     npc.tasks = []

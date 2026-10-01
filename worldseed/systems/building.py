@@ -118,6 +118,8 @@ class BuildingSystem:
         else:c.items.pop(item_id,None)
         inv.add(item_id,amount);return True,f"You take {amount} {self.registry.items[item_id].name.lower()}."
     def passable(self,pos:WorldPos,world_passable:bool=True)->bool:
+        shell_blocks=getattr(self.settlement_overlay,"shell_blocks",None)
+        if callable(shell_blocks) and shell_blocks(pos):return False
         s=self.structure_at(pos)
         if s is not None:
             sd=self.registry.structures[s.structure_id]
@@ -132,6 +134,8 @@ class BuildingSystem:
             return self.settlement_overlay.passable(pos,world_passable)
         return world_passable
     def blocks_sight(self,pos:WorldPos)->bool:
+        shell_blocks=getattr(self.settlement_overlay,"shell_blocks",None)
+        if callable(shell_blocks) and shell_blocks(pos):return True
         s=self.structure_at(pos)
         if s is not None:return self.registry.structures[s.structure_id].blocks_sight
         return bool(self.settlement_overlay and self.settlement_overlay.blocks_sight(pos))

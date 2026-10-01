@@ -50,7 +50,9 @@ def run(name: str, command: list[str], timeout: float, heartbeat: float = 30) ->
         actual = command
         if os.name == 'nt':
             # Do not let the command spawn children before job assignment.
-            gate = "import os,sys; token=sys.stdin.buffer.read(1); sys.exit(1) if token!=b'1' else os.execvp(sys.argv[1],sys.argv[1:])"
+            # Windows execvp does not preserve argument quoting or child exit
+            # status. A waiting subprocess inherits this assigned job instead.
+            gate = "import subprocess,sys; token=sys.stdin.buffer.read(1); sys.exit(1 if token!=b'1' else subprocess.call(sys.argv[1:]))"
             actual = [sys.executable, '-u', '-c', gate, *command]
         process = subprocess.Popen(actual, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    stdin=subprocess.PIPE if os.name == 'nt' else subprocess.DEVNULL,

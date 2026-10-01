@@ -122,8 +122,9 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
         state,town,physical,binder,civics,economy,history=self._fixture()
         market_pos=physical.destination_for_function(town.uid,('market',))
         self.assertIsNotNone(market_pos)
-        cell=physical.cell_at(market_pos)
-        self.assertTrue(cell.structure_id)
+        skeleton=physical.skeleton_for(town.uid)
+        market=next(s for s in sorted(skeleton.structures,key=lambda s:s.uid) if s.function=='market' and not s.destroyed)
+        self.assertFalse(physical.shell_blocks(market_pos))
         guard=state.npcs['npc:guard']
         guard.x,guard.y,guard.z=market_pos.x+1,market_pos.y,0
         inv=Inventory()
@@ -142,7 +143,7 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
         self.assertEqual(inv.count('core:wheat'),2)
         theft=next(reversed(state.theft_records.values()))
         self.assertEqual(theft.thief_uid,'player')
-        self.assertEqual(theft.property_id,cell.structure_id)
+        self.assertEqual(theft.property_id,market.uid)
         self.assertEqual(theft.source_kind,'market')
         self.assertIn(guard.uid,theft.witness_uids)
         self.assertGreater(state.player_crime_heat[town.uid],0)

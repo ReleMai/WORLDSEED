@@ -24,6 +24,8 @@ class ActivityAffordance:
     use_z: int
     work_bonus: int = 0
     tags: tuple[str, ...] = ()
+    space_id: str = ""
+    door_uid: str = ""
 
 
 class ActivitySystem:
@@ -39,6 +41,10 @@ class ActivitySystem:
         self.registry = registry
         self.physicalization = physicalization
         self.world = world or getattr(physicalization, "world", None)
+        self.interiors = None
+
+    def attach_interior_system(self, interiors) -> None:
+        self.interiors = interiors
 
     def attach_physicalization(self, physicalization) -> None:
         self.physicalization = physicalization
@@ -101,6 +107,15 @@ class ActivitySystem:
             use = self._use_position(placement)
             if use is None:
                 continue
+            structure_lookup = getattr(self.physicalization, "structure_by_id", None)
+            structure = structure_lookup(placement.structure_plan_id) if structure_lookup else None
+            door_uid = ""
+            space_id = ""
+            if (self.interiors is not None and structure is not None and structure.enclosed and not structure.destroyed
+                    and (placement.x, placement.y) in structure.footprint):
+                space_id = "interior:" + structure.uid
+                skeleton_doors = sorted((p for p in skeleton.pieces if p.structure_plan_id == structure.uid and p.role == "entrance"), key=lambda p: p.uid)
+                door_uid = skeleton_doors[0].uid if skeleton_doors else ""
             out.append(
                 ActivityAffordance(
                     uid=f"affordance:work:{placement.uid}",
@@ -117,6 +132,8 @@ class ActivitySystem:
                     use_z=use[2],
                     work_bonus=int(definition.work_bonus),
                     tags=tuple(sorted(set(definition.tags))),
+                    space_id=space_id,
+                    door_uid=door_uid,
                 )
             )
         return sorted(out, key=lambda row: (-row.work_bonus, row.target_uid))
@@ -128,7 +145,7 @@ class ActivitySystem:
                 continue
             if row.target_uid == affordance.target_uid:
                 return True
-            if (row.use_x, row.use_y, row.use_z) == (affordance.use_x, affordance.use_y, affordance.use_z):
+            if not row.metadata.get("space_id") and not affordance.space_id and (row.use_x, row.use_y, row.use_z) == (affordance.use_x, affordance.use_y, affordance.use_z):
                 return True
         return False
 
@@ -165,8 +182,40 @@ class ActivitySystem:
             expires_minute=int(minute) + max(int(duration_minutes) + 30, int(lease_minutes)),
             metadata={"work_bonus": int(affordance.work_bonus), "tags": list(affordance.tags)},
         )
+        if self.interiors is not None and affordance.space_id:
+            if not self.bind_interior(row, npc, affordance.door_uid):
+                return None
         self.state.activity_reservations[uid] = row
         return row
+
+    def bind_interior(self, row, npc, door_uid: str = "") -> bool:
+        """Bind the same station reservation to its prepared continuous space."""
+        if self.interiors is None:
+            return False
+        plan = self.interiors.prepare_workplace(npc.workplace_id, door_uid)
+        if plan is None:
+            return False
+        furnishing = next((f for f in plan.furniture if f.uid == row.target_uid), None)
+        use = self.interiors.fixture_use_position(plan, furnishing) if furnishing else None
+        if use is None:
+            return False
+        row.metadata.update(space_id=plan.uid, door_uid=plan.door_uid, interior_use_x=use[0], interior_use_y=use[1])
+        frontage_lookup = getattr(self.physicalization, "frontage_for", None)
+        frontage = frontage_lookup(plan.building_id) if frontage_lookup else None
+        if frontage is not None:
+            row.use_x, row.use_y, row.use_z = int(frontage.x), int(frontage.y), int(frontage.z)
+        # The lease includes walking across a substantially expanded interior.
+        row.expires_minute = max(row.expires_minute, int(row.reserved_minute) + 1440)
+        return True
+
+    def _indoor_target(self, npc, target_uid: str) -> bool:
+        if self.physicalization is None:
+            return False
+        structure = self.physicalization.structure_by_id(npc.workplace_id)
+        skeleton = self.physicalization.skeleton_for(npc.settlement_id)
+        if structure is None or not structure.enclosed or skeleton is None:
+            return False
+        return any(p.uid == target_uid and (p.x, p.y) in structure.footprint for p in skeleton.pieces)
 
     def _choose(
         self,
@@ -204,6 +253,7 @@ class ActivitySystem:
                 "y": int(row.use_y),
                 "reservation_uid": row.uid,
                 "activity_phase": row.phase,
+                **({"interior_work_door_uid": row.metadata["door_uid"], "space_id": row.metadata["space_id"], "exact": True, "physical_path": True} if row.metadata.get("space_id") else {}),
             },
             {
                 "kind": "activity",
@@ -276,7 +326,16 @@ class ActivitySystem:
             row.status = "cancelled"
             row.completed_minute = now
             return "cancelled"
-        if max(abs(int(actor.x) - row.use_x), abs(int(actor.y) - row.use_y), abs(int(actor.z) - row.use_z)) > 1:
+        if self.interiors is not None and not row.metadata.get("space_id") and row.target_kind == "fixture":
+            if self._indoor_target(actor, row.target_uid) and not self.bind_interior(row, actor):
+                return "not_at_target"
+        if row.metadata.get("space_id"):
+            presence = self.state.interior_actors.get(actor.uid)
+            if presence is None or presence.space_id != row.metadata["space_id"]:
+                return "not_at_target"
+            if max(abs(presence.x - int(row.metadata["interior_use_x"])), abs(presence.y - int(row.metadata["interior_use_y"]))) > 220:
+                return "not_at_target"
+        elif max(abs(int(actor.x) - row.use_x), abs(int(actor.y) - row.use_y), abs(int(actor.z) - row.use_z)) > 1:
             return "not_at_target"
 
         if row.started_minute < 0:

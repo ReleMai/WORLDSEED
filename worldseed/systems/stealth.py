@@ -38,6 +38,39 @@ class StealthSystem:
         self.building = building
         self.physicalization = physicalization
         self.environment = environment
+        self.interiors = None
+
+    def attach_interior_system(self,system) -> None:
+        self.interiors=system
+
+    def _interior_snapshot(self,minute:int) -> dict | None:
+        if self.interiors is None:return None
+        player=self.interiors.player_presence();plan=self.interiors.current_plan()
+        if player is None or plan is None:return None
+        from worldseed.systems.interior_state import UNIT
+        observers=[]
+        for uid,actor in self.interiors.actors_in_space(plan.uid):
+            npc=self.state.npcs.get(uid)
+            if uid=="player" or npc is None or not npc.alive:continue
+            dx,dy=player.x-actor.x,player.y-actor.y
+            distance=dx*dx+dy*dy
+            if distance>(self.MAX_RANGE*UNIT)**2:continue
+            observers.append((distance,uid,npc,actor))
+        views=[];seen=[]
+        for _,uid,npc,actor in sorted(observers,key=lambda row:row[:2])[:self.MAX_OBSERVERS]:
+            fx,fy=self.facing(npc);dx,dy=player.x-actor.x,player.y-actor.y
+            radius=min(self.MAX_RANGE,10 if npc.occupation=="guard" else 7)*UNIT
+            dot=dx*fx+dy*fy;cross=abs(dx*fy-dy*fx)
+            sees=dx*dx+dy*dy<=radius*radius and (abs(dx)+abs(dy)<=UNIT or (dot>0 and cross<=dot))
+            if sees:
+                steps=max(1,(max(abs(dx),abs(dy))+89)//90)
+                sees=not any(wall.contains(actor.x+dx*i//steps,actor.y+dy*i//steps)
+                    for i in range(1,steps) for wall in plan.walls)
+            if sees:seen.append(uid)
+            views.append({"uid":uid,"x":actor.x,"y":actor.y,"z":0,"facing_dx":fx,"facing_dy":fy,"range":radius,"sees_player":sees,"space_id":plan.uid})
+        room=self.interiors.room_at(player.x,player.y)
+        return {"active":True,"cells":(),"observers":tuple(views),"seen_by":tuple(sorted(seen)),
+                "structure_id":plan.building_id,"room_id":room.uid if room else "","space_id":plan.uid}
 
     @staticmethod
     def _sign(value: int) -> int:
@@ -164,6 +197,9 @@ class StealthSystem:
         return cross <= dot
 
     def can_see(self, npc, target: WorldPos, minute: int) -> bool:
+        indoor=self._interior_snapshot(minute)
+        if indoor is not None:return npc.uid in indoor["seen_by"]
+        if npc.uid in getattr(self.state,"interior_actors",{}):return False
         radius = self.observer_range(npc, minute)
         if not self._inside_cone(npc, target, radius):
             return False
@@ -199,6 +235,8 @@ class StealthSystem:
                 "structure_id": "",
                 "room_id": "",
             }
+        indoor=self._interior_snapshot(minute)
+        if indoor is not None:return indoor
         cell_watchers: dict[tuple[int, int, int], set[str]] = {}
         observer_views: list[StealthObserverView] = []
         opaque_cache: dict[tuple[int, int, int], bool] = {}

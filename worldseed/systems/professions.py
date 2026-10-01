@@ -369,10 +369,21 @@ class SettlementProfessionSystem:
             made=self.goods.add_to_actor(npc,iid,qty)
             if made<qty:
                 # Exact output may not disappear because a worker's hands are full.
-                # Return uncarried overflow to the workplace container.
-                storage=self._work_storage(npc,town)
-                if storage is not None:
-                    storage.items[iid]=storage.items.get(iid,0)+(qty-made)
+                presence=getattr(self.state,"interior_actors",{}).get(npc.uid)
+                plan=getattr(self.state,"interiors",{}).get(presence.space_id) if presence else None
+                if plan is not None:
+                    # A physically indoor batch cannot teleport overflow through
+                    # the shell into an exterior service-court container.
+                    from worldseed.systems.interior_state import InteriorPile
+                    pile=next((p for p in plan.piles if p.x==presence.x and p.y==presence.y),None)
+                    if pile is None:
+                        pile=InteriorPile(self.state.uid("profession-overflow"),presence.x,presence.y,{})
+                        plan.piles.append(pile)
+                    pile.items[iid]=pile.items.get(iid,0)+(qty-made)
+                else:
+                    storage=self._work_storage(npc,town)
+                    if storage is not None:
+                        storage.items[iid]=storage.items.get(iid,0)+(qty-made)
         skills=self.SKILLS.get(str(npc.occupation),("crafting",))
         primary=skills[0] if skills else "crafting"
         self._gain_xp(npc,primary,18)

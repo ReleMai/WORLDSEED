@@ -138,15 +138,19 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 continue
             piece = registry.settlement_pieces.get(furniture.piece_id)
             path = term._visuals.resolve(term._visuals.ref('interiors', furniture.piece_id))
-            if path is None and piece is not None and 'bed' in set(piece.tags):
-                path = term._visuals.resolve(term._visuals.ref('interiors', 'core:interior_bed'))
-            path = path or term._settlement_piece_sprite_path(piece)
+            # Exact authored furniture IDs prevent the old generic grey/black
+            # block stand-ins. Existing workshop art is resolved by its real
+            # piece ID only; legacy clutter uses the same native prop art as
+            # the exterior, before truly unknown coverage becomes a glyph.
+            if path is None:
+                path = term._visuals.resolve(term._visuals.ref('settlement_pieces', furniture.piece_id))
             sprite = term._load_sprite(path, rect.width, rect.height, smooth=True)
-            pg.draw.rect(screen, (52, 39, 28), rect.move(2, 3), border_radius=3)
+            if getattr(furniture, 'solid', True):
+                pg.draw.rect(screen, (52, 39, 28), rect.move(2, 3), border_radius=3)
             if sprite:
                 screen.blit(sprite, (rect.centerx - sprite.get_width() // 2,
                                      rect.centery - sprite.get_height() // 2))
-            else:
+            elif not term._draw_settlement_yard_piece(piece, rect):
                 # Explicit glyph fallback preserves usability without inventing
                 # a simulation object or silently borrowing another item's art.
                 pg.draw.rect(screen, (132, 99, 63), rect, border_radius=3)
@@ -180,7 +184,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     finally:
         screen.set_clip(old_clip)
     old_clip = screen.get_clip()
-    screen.set_clip(side.inflate(-12, -12))
+    screen.set_clip(pg.Rect(side.x+6,side.y+6,max(1,side.width-12),max(1,side.height-58)))
     try:
         tx, ty = side.x + 14, side.y + 12
         def text(value, color=None, gap=22):
@@ -194,6 +198,11 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
         text(f'Inside: {player.x / 1000:.2f}, {player.y / 1000:.2f}', th['muted'])
         vit = entities.try_get(player_id, Vitals) or Vitals()
         text(f'Health {vit.hp}/{vit.max_hp} • Stamina {vit.stamina}')
+        if getattr(sim.state,'player_trespass_property_id','') and getattr(sim.state,'player_trespass_property_id','')==getattr(plan,'building_id',''):
+            text('TRESPASSING',th['danger'])
+        if getattr(sim.state,'player_stealth_mode',False) and getattr(sim,'stealth',None):
+            snap=sim.stealth.snapshot(sim.player_pos,sim.clock.minute)
+            text('Stealth: noticed' if snap.get('seen_by') else 'Stealth: unseen',th['muted'])
         text('FREE MOVEMENT', th['accent'], 26)
         text('WASD / arrows: walk', th['muted'])
         text('Right-click furniture or exit', th['muted'])
@@ -211,6 +220,8 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 text((npc.name if uid in known else 'Stranger') + ': ' + actor.action.replace('_', ' '), th['muted'])
     finally:
         screen.set_clip(old_clip)
+    term._draw_stance_buttons(pg.Rect(side.x+2,max(side.y+2,side.bottom-42),max(1,side.width-4),29),
+                             getattr(sim.state,'player_hunting_stance','normal'))
     term._draw_footer(foot, message or 'Right-click furnishings to interact. Interior movement is not tile-bound.', sim)
     term._hover_context = None
     term._hover_map_snapshot = None

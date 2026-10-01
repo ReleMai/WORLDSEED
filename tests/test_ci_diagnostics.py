@@ -49,6 +49,20 @@ class CIDiagnosticsTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn('TAIL', result.stdout)
 
+    def test_failed_unittest_child_returns_failure_instead_of_false_pass(self):
+        command = (
+            'import unittest\n'
+            'class ExpectedFailure(unittest.TestCase):\n'
+            '    def test_failure(self):\n'
+            '        self.fail("intentional_failure_probe")\n'
+            'unittest.main()\n'
+        )
+        result = self.check_command(command, timeout=3)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn('FAILED (failures=1)', result.stdout)
+        self.assertIn('CHECK deadline: FAIL', result.stdout)
+        self.assertNotIn('CHECK deadline: PASS', result.stdout)
+
     def test_nonfinite_deadlines_are_rejected(self):
         for timeout, heartbeat in [(float('nan'), 1), (float('inf'), 1), (1, float('nan'))]:
             with self.assertRaises(ValueError):
@@ -99,6 +113,29 @@ class CIDiagnosticsTests(unittest.TestCase):
             self.assertEqual(count, 3)
             self.assertTrue(any('palette.png: mode=P' in line for line in issues), issues)
             self.assertTrue(any('broken.png: PNG decode failed' in line for line in issues), issues)
+
+    def test_rgb_requires_exact_opaque_texture_and_still_decodes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            texture = root / 'floor.png'
+            overlay = root / 'furniture.png'
+            palette = root / 'palette_floor.png'
+            broken = root / 'broken_floor.png'
+            Image.new('RGB', (24, 24), (100, 50, 20)).save(texture)
+            Image.new('RGB', (24, 24), (100, 50, 20)).save(overlay)
+            Image.new('P', (24, 24)).save(palette)
+            data = bytearray(texture.read_bytes())
+            data[data.index(b'IDAT') + 8] ^= 0xFF
+            broken.write_bytes(data)
+            count, issues = image_issues(
+                [texture, overlay, palette, broken], root=root,
+                opaque_paths=[texture, palette, broken],
+            )
+            self.assertEqual(count, 4)
+            self.assertFalse(any(line.startswith('floor.png:') for line in issues), issues)
+            self.assertTrue(any('furniture.png: mode=RGB' in line for line in issues), issues)
+            self.assertTrue(any('palette_floor.png: mode=P' in line for line in issues), issues)
+            self.assertTrue(any('broken_floor.png: PNG decode failed' in line for line in issues), issues)
 
 
 if __name__ == '__main__':

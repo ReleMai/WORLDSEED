@@ -7,8 +7,11 @@ of stage 2; larger non-farm plots, terrain earthworks, explicit migration and
 stages 3-6 remain pending in full. Dev46 implements the household/lodging slice
 of stage 3 with fixed-point free movement, freely positioned furniture,
 connected rooms, shared resident portals/routines and persistence. Workshop
-activity/logistics migration and exterior shell art remain pending; see the
-Dev46 handoff for exact boundaries.
+Dev47 replaces generated building exteriors with solid stable-ID shells and
+separate doors, introduces function-specific continuous layouts, same-space
+intrusion witnesses, and shared indoor work reservations. Existing saved v1
+interiors preserve their geometry and player furniture arrangements. See the
+Dev47 handoff for validation and remaining boundaries.
 
 ## Findings and research
 

@@ -1,12 +1,14 @@
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from tests import test_ui_rc2
 from tests.test_interiors import sample_plan
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Vitals
-from worldseed.sim.commands import MoveCommand, GatherCommand, DropCommand, PickupCommand
-from worldseed.systems.interior_state import InteriorActor
+from worldseed.sim.commands import MoveCommand, GatherCommand, DropCommand, PickupCommand, CraftCommand, StartProcessingCommand
+from worldseed.systems.interior_state import InteriorActor, InteriorRect
+from worldseed.systems.interiors import build_interior
 from worldseed.systems.state import LivingWorldState
 from worldseed.ui.renderer import Renderer
 
@@ -28,6 +30,55 @@ class InteriorEngineTests(unittest.TestCase):
         self.assertEqual(sim.player_pos,pos)
         self.assertEqual(sim.clock.minute,minute)
         self.assertEqual(sim.state.discovered_tiles,discovered)
+
+    def generated_mill(self):
+        from tests import test_phase4_workshop_expansion as workshop_fixtures
+        source=workshop_fixtures.WorkshopExpansionTests();source.registry=self.sim.registry
+        _,_,_,skeleton=source._city()
+        mill=next(s for s in skeleton.structures if s.function=='mill')
+        pieces=[p for p in skeleton.pieces if p.structure_plan_id==mill.uid]
+        entrance=next(p for p in pieces if p.role=='entrance')
+        door=SimpleNamespace(uid=entrance.uid,x=entrance.x,y=entrance.y,z=0,owner_uid='')
+        plan=build_interior(mill,door,[r for r in skeleton.rooms if r.structure_plan_id==mill.uid],pieces)
+        self.sim.state.interiors[plan.uid]=plan
+        station=next(f for f in plan.furniture if f.piece_id=='core:millstone_piece')
+        use=self.sim.interiors.fixture_use_position(plan,station)
+        self.sim.interiors._put_actor('player',InteriorActor(plan.uid,*use))
+        return plan,station
+
+    def test_execute_crafts_at_real_indoor_mill_without_outdoor_station_query(self):
+        sim=self.sim;plan,station=self.generated_mill()
+        sim.state.player_crafting_discovery_enabled=False
+        inv=sim.entities.get(sim.player_id,Inventory);inv.add('core:wheat',2)
+        before=inv.count('core:flour');minute=sim.clock.minute
+        with patch.object(sim.building,'nearby_station_ids',side_effect=AssertionError('outdoor station query')), patch.object(sim.building,'environmental_bonuses',side_effect=AssertionError('outdoor work bonus')):
+            sim.execute(CraftCommand(sim.player_id,'core:mill_flour'))
+        self.assertEqual(inv.count('core:flour'),before+2)
+        self.assertEqual(inv.count('core:wheat'),0)
+        self.assertGreater(sim.clock.minute,minute)
+        self.assertIn('complete',sim.log[-1].message)
+
+    def test_station_use_context_checks_actual_reach_and_wall_before_opening_craft_ui(self):
+        from worldseed import app
+        sim=self.sim;plan,station=self.generated_mill()
+        ctx=SimpleNamespace(sim=sim,player_id=sim.player_id)
+        before=sim.state.to_dict()
+        with patch.object(app,'_select',return_value='use'),patch.object(app,'_crafting_menu',return_value=app.UI_BACK) as opened:
+            result=app._interior_context_menu(ctx,SimpleNamespace(),station.x+10,station.y+10)
+        opened.assert_called_once_with(ctx,unittest.mock.ANY,'workshops','core:millstone')
+        self.assertEqual(result,app.UI_BACK)
+        self.assertEqual(sim.state.to_dict(),before)
+        actor=sim.interiors.player_presence()
+        nearest_x=max(station.x,min(actor.x,station.x+station.w));nearest_y=max(station.y,min(actor.y,station.y+station.h))
+        if abs(actor.x-nearest_x)>=abs(actor.y-nearest_y):
+            plan.walls.append(InteriorRect((actor.x+nearest_x)//2,0,25,plan.height))
+        else:plan.walls.append(InteriorRect(0,(actor.y+nearest_y)//2,plan.width,25))
+        with patch.object(app,'_select',return_value='use'),patch.object(app,'_crafting_menu',side_effect=AssertionError('through-wall craft menu')):
+            self.assertIn('walls block',app._interior_context_menu(ctx,SimpleNamespace(),station.x+10,station.y+10))
+        with patch.object(sim.world,'tile_at',side_effect=AssertionError('outside water query')):
+            self.assertFalse(app._nearby_water(sim))
+        sim.execute(StartProcessingCommand(sim.player_id,'core:smoke_fish'))
+        self.assertIn('unavailable inside',sim.log[-1].message)
 
     def test_outside_commands_cannot_use_anchor(self):
         with patch.object(self.sim,'_gather',side_effect=AssertionError('outside gather')):

@@ -79,6 +79,7 @@ class InteriorPlan:
     entry_y: int = 0
     version: int = 1
     piles: list[InteriorPile] = field(default_factory=list)
+    layout_id: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)

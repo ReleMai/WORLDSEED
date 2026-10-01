@@ -3345,6 +3345,12 @@ class PygameTerminal(PointerUI):
             sp=registry.species.get(c.species_id);lines.append(sp.name if sp else 'Creature')
         n=ctx['npc_by'].get(k)
         if n:lines.append(n.name if n.uid in ctx['known_npcs'] else 'Stranger')
+        shell=ctx.get('shell_by',{}).get(k)
+        if shell is not None:
+            lines.append(str(shell.function).replace('_',' ').title())
+            lines.append('Entrance door — right-click to enter or knock' if shell.entrance is not None and (wx,wy)==tuple(shell.entrance)
+                         else 'Building exterior — right-click to inspect')
+            return lines
         settlement=ctx.get('settlement_by',{}).get(k)
         if settlement:
             spid=settlement.structure_piece_id or settlement.fixture_piece_id or settlement.ground_piece_id
@@ -3509,16 +3515,21 @@ class PygameTerminal(PointerUI):
             self._hud_tooltips.append((box,name,f'{descriptions[name]}  [{hint}]'))
         if self._input_mode=='world':
             pg.draw.line(screen,th['edge'],(bar.x+11,bar.y+122),(bar.right-11,bar.y+122))
-            for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · casing, lockpicking, door bashing'))):
-                slot=pg.Rect(bar.x+11+i*(bar.width-22)//4,bar.y+130,(bar.width-28)//4,29)
-                active=stance==name
-                pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
-                pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
-                label=self.small_font.render(self._fit_ui_text('Aggro' if name=='aggressive' else name.title(),self.small_font,slot.width-6),True,th['text'] if active else th['muted'])
-                screen.blit(label,(slot.centerx-label.get_width()//2,slot.y+6))
-                self._pointer_targets.append((slot,'UI_STANCE:'+name))
-                self._hud_tooltips.append((slot,name.title()+' movement',detail+'; changes movement stance'))
+            self._draw_stance_buttons(pg.Rect(bar.x,bar.y+130,bar.width,29),stance)
         self._hud_tooltip_hover=None;self._hud_tooltip_since=self.pg.time.get_ticks()
+
+    def _draw_stance_buttons(self,rect,stance='normal'):
+        """Shared HUD-only posture selection for exterior and interior spaces."""
+        pg=self.pg;screen=self.screen;th=self._theme
+        for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · casing, lockpicking, door bashing'))):
+            slot=pg.Rect(rect.x+11+i*(rect.width-22)//4,rect.y,(rect.width-28)//4,29)
+            active=stance==name
+            pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
+            pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
+            label=self.small_font.render(self._fit_ui_text('Aggro' if name=='aggressive' else name.title(),self.small_font,slot.width-6),True,th['text'] if active else th['muted'])
+            screen.blit(label,(slot.centerx-label.get_width()//2,slot.y+6))
+            self._pointer_targets.append((slot,'UI_STANCE:'+name))
+            self._hud_tooltips.append((slot,name.title()+' movement',detail+'; changes movement stance'))
 
     def _update_hud_tooltip_hover(self, now):
         target=next(((r,name,description) for r,name,description in self._hud_tooltips if r.collidepoint(self._last_mouse)),None)
@@ -3634,6 +3645,11 @@ class PygameTerminal(PointerUI):
             if q.kind=='property' and 'interior:'+q.property_id not in getattr(sim.state,'interiors',{}) and _onscreen(q.x,q.y,q.z)
         }
         settlement_by={(c.x,c.y,0):c for c in sim.settlement_physicalization.cells_in_bounds(left,top,right,bottom)} if pos.z==0 else {}
+        shell_query=getattr(sim.settlement_physicalization,'shells_in_bounds',None)
+        building_shells=shell_query(left,top,right,bottom) if pos.z==0 and callable(shell_query) else ()
+        from worldseed.ui.exterior_view import shell_cells, draw_shells
+        shell_by=shell_cells(building_shells)
+        property_container_by={key:row for key,row in property_container_by.items() if key not in shell_by}
         crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}
         fire_by={(f.x,f.y,f.z):f for f in nearby['fires'] if _onscreen(f.x,f.y,f.z)}
         fluid_by={(f.x,f.y,f.z):f for f in nearby['fluids'] if f.amount>20 and _onscreen(f.x,f.y,f.z)}
@@ -3730,7 +3746,7 @@ class PygameTerminal(PointerUI):
         if settlement_by:
             for (wx,wy,wz),cell in sorted(settlement_by.items(),key=lambda kv:(kv[0][1],kv[0][0])):
                 key=(wx,wy,wz)
-                if wz!=pos.z or pos_key(wx,wy,wz) not in known or not cell.ground_piece_id:continue
+                if wz!=pos.z or pos_key(wx,wy,wz) not in known or not cell.ground_piece_id or key in shell_by:continue
                 piece=registry.settlement_pieces.get(cell.ground_piece_id)
                 bits=self._settlement_connection_bits(key,cell,settlement_by,registry,ground=True)
                 surf=self._settlement_ground_surface(piece,tile_px,bits)
@@ -3748,6 +3764,7 @@ class PygameTerminal(PointerUI):
                 _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
+            draw_shells(self,building_shells,map_rect,left,top,tile_px,known,visible)
 
         combat_by={}
         if combat_overlay:
@@ -3805,7 +3822,7 @@ class PygameTerminal(PointerUI):
             sx=wx-left;sy=wy-top
             rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
             scell=settlement_by.get(k)
-            if scell:
+            if scell and k not in shell_by:
                 roofed=bool(scell.roof_piece_id and scell.structure_id and scell.structure_id!=player_structure_id)
                 if roofed:
                     roof_piece=registry.settlement_pieces.get(scell.roof_piece_id)
@@ -4077,7 +4094,7 @@ class PygameTerminal(PointerUI):
             'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
-            'property_container_by':property_container_by,'settlement_by':settlement_by,
+            'property_container_by':property_container_by,'settlement_by':settlement_by,'shell_by':shell_by,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
             'sign_by':sign_by,'home_by':home_by,
             'combat_by':combat_by,'stealth_by':stealth_by,

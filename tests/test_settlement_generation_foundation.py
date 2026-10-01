@@ -283,7 +283,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(all(p.layer=='overlay' for p in roofs))
 
 
-    def test_local_physicalization_exposes_collision_rooms_and_road_glyphs(self):
+    def test_local_physicalization_exposes_solid_shells_and_road_glyphs(self):
         class Cache:
             def load_generated_settlement_plan(self,*_): return None
             def store_generated_settlement_plan(self,*_): pass
@@ -313,20 +313,30 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(cells)
         road_cell=next(c for c in cells if c.road_ids and c.ground_piece_id)
         self.assertEqual(physical.glyph_at(WorldPos(road_cell.x,road_cell.y,0)),'=')
-        wall_cell=next(c for c in cells if c.structure_piece_id and
-                       not self.registry.settlement_pieces[c.structure_piece_id].passable)
-        wall_pos=WorldPos(wall_cell.x,wall_cell.y,0)
+        shell=next(s for s in physical.shells_in_bounds(0,0,359,359) if s.entrance is not None)
+        body_x,body_y=next(p for p in shell.footprint if p!=shell.entrance)
+        wall_pos=WorldPos(body_x,body_y,0)
         self.assertFalse(physical.passable(wall_pos,True))
         self.assertTrue(physical.blocks_sight(wall_pos))
-        door_cell=next(c for c in cells if c.structure_piece_id and
-                       'door' in self.registry.settlement_pieces[c.structure_piece_id].tags)
-        self.assertTrue(physical.passable(WorldPos(door_cell.x,door_cell.y,0),True))
-        room_cell=next(c for c in cells if c.room_id)
-        room=physical.room_at(WorldPos(room_cell.x,room_cell.y,0))
-        self.assertTrue(room['enclosed'])
-        self.assertTrue(room['sheltered'])
-        self.assertGreaterEqual(room['roof_percent'],60)
-        self.assertIn(room['classification'],{'room','bedroom','smithy','storage','workshop'})
+        door_pos=WorldPos(*shell.entrance,0)
+        self.assertIsNotNone(physical.door_at(door_pos))
+        self.assertFalse(physical.passable(door_pos,True))
+        self.assertTrue(physical.blocks_sight(door_pos))
+        self.assertEqual(physical.glyph_at(door_pos),'+')
+        self.assertEqual(physical.glyph_at(wall_pos),'#')
+        # Stable generated rooms remain authoritative for interior creation,
+        # but inspecting the outside must not expose floors or furniture.
+        skeleton=physical.skeleton_for(settlement.uid)
+        room=next(r for r in skeleton.rooms if r.structure_plan_id==shell.uid)
+        self.assertTrue(room.enclosed)
+        self.assertTrue(room.sheltered)
+        self.assertGreaterEqual(room.roof_percent,60)
+        self.assertIn(room.kind,{'room','bedroom','smithy','storage','workshop'})
+        room_pos=WorldPos(*room.cells[0],0)
+        self.assertIsNone(physical.room_at(room_pos))
+        shell_cells=[c for c in cells if c.structure_id==shell.uid]
+        self.assertTrue(shell_cells)
+        self.assertTrue(all(not c.room_id and not c.fixture_piece_id and not c.ground_piece_id for c in shell_cells))
         # Generated civilization is reconstruction-only and does not duplicate
         # its walls into player construction state.
         state=LivingWorldState()
@@ -335,7 +345,7 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertFalse(state.structures)
         self.assertFalse(building.passable(wall_pos,True))
         self.assertTrue(building.blocks_sight(wall_pos))
-        self.assertEqual(building.room_at(WorldPos(room_cell.x,room_cell.y,0))['room_id'],room['room_id'])
+        self.assertNotIn('room_id',building.room_at(room_pos))
 
     def test_natural_features_respect_roads_and_one_cell_building_apron(self):
         physical=SettlementPhysicalizationSystem(

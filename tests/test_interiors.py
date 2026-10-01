@@ -138,9 +138,11 @@ class InteriorGeometryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="worldseed-interior-save-") as folder:
             path = Path(folder) / "interior.db"
             db = WorldDatabase.create(path, "Interior save proof", "aa" * 32)
-            db.save_state(turn=1, tile_deltas={}, player_id=1, position=WorldPos(1, 3, 0), inventory={}, sim_state=state.to_dict())
-            self.assertEqual(db.verify(), [])
-            db.close()
+            try:
+                db.save_state(turn=1, tile_deltas={}, player_id=1, position=WorldPos(1, 3, 0), inventory={}, sim_state=state.to_dict())
+                self.assertEqual(db.verify(), [])
+            finally:
+                db.close()
             loaded = WorldDatabase.open(path)
             rebuilt = LivingWorldState.from_dict(loaded.load_sim_state())
             self.assertEqual(rebuilt.interiors[plan.uid].to_dict(), plan.to_dict())
@@ -162,7 +164,7 @@ class InteriorPortalTests(unittest.TestCase):
 
     def fixture(self):
         base, security = self.source._security_fixture()
-        state, town, physical, _, _, _, _, building, _, _, _ = base
+        state, town, physical, _, _, _, _, building, stealth, _, _ = base
         house = next(s for s in physical.skeleton_for(town.uid).structures if s.function == "residence" and s.enclosed)
         door = next(d for d in security.doors_for_property(house.uid) if d.role == "entrance")
         entities = EntityStore()
@@ -179,10 +181,14 @@ class InteriorPortalTests(unittest.TestCase):
                          registry=self.registry, seed=b"interior-real-fixture",
                          clock=SimpleNamespace(minute=22 * 60),
                          settlement_physicalization=physical, property_security=security,
+                         stealth=stealth,
                          world=SimpleNamespace(cache=SimpleNamespace(peek=lambda key: chunk)),
                          building=building, resources=SimpleNamespace(blocks_movement=lambda p: False),
                          environment=SimpleNamespace(fluid_passable=lambda p: True))
         sim.interiors = InteriorSystem(sim)
+        attach = getattr(stealth, "attach_interior_system", None)
+        if attach:
+            attach(sim.interiors)
         return sim, house, door
 
     def test_real_stable_door_entry_preserves_stocks_and_containers(self):
@@ -215,6 +221,18 @@ class InteriorPortalTests(unittest.TestCase):
         sim.state.clock_minute = 1320
         self.assertIn("You enter", sim.interiors.enter(door.uid))
         self.assertEqual(sim.interiors.current_plan().building_id, house.uid)
+
+    def test_forced_locked_door_is_portal_not_walkable_shell(self):
+        sim, house, door = self.fixture()
+        door.locked = True
+        door.forced = True
+        door.owner_uid = "npc:unfriendly"
+        door.keyholder_uids = []
+        door.guest_access_until = {}
+        self.assertFalse(sim.settlement_physicalization.passable(WorldPos(door.x, door.y, door.z), True))
+        self.assertIn("You enter", sim.interiors.enter(door.uid))
+        trespass = next(row for row in sim.state.trespass_states.values() if row.property_id == house.uid and row.active)
+        self.assertEqual(trespass.entry_method, "forced")
 
     def test_exit_does_not_generate_missing_landing(self):
         sim, house, door = self.fixture()

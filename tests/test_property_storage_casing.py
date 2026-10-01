@@ -5,7 +5,7 @@ from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory
-from worldseed.sim.commands import StealContainerCommand
+from worldseed.sim.commands import StealContainerCommand, TakeFromContainerCommand
 from worldseed.sim.engine import Simulation
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.civics import CivicsSystem
@@ -163,6 +163,69 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertTrue(all(c.seeded_from_settlement for c in containers))
         self.assertTrue(all(c.lock_level>0 and c.locked for c in containers))
 
+    def test_prepared_workshop_retains_reachable_service_storage_and_real_goods(self):
+        from worldseed.systems.interiors import InteriorSystem
+        base,security=self._security_fixture()
+        state,town,physical,_,_,_,storage,building,_,_,_=base
+        workshop=next(s for s in physical.skeleton_for(town.uid).structures if s.function=="smithy")
+        container=storage.for_property(workshop.uid)[0]
+        frontage=physical.frontage_for(workshop.uid)
+        stocks_before=dict(town.stocks)
+        contents_before={c.uid:dict(c.items) for c in state.containers.values()}
+        location_before=(container.x,container.y,container.z)
+        sim=SimpleNamespace(state=state,registry=self.registry,settlement_physicalization=physical,property_security=security)
+        sim.interiors=InteriorSystem(sim)
+        plan=sim.interiors.prepare_workplace(workshop.uid)
+        self.assertIsNotNone(plan)
+        storage.sync_active()
+        self.assertEqual(town.stocks,stocks_before)
+        self.assertEqual({c.uid:dict(c.items) for c in state.containers.values()},contents_before)
+        self.assertIs(storage.by_id(container.uid),container)
+        self.assertEqual((container.x,container.y,container.z),location_before)
+        self.assertFalse(physical.shell_blocks(WorldPos(*location_before)))
+        inv=Inventory();messages=[]
+        harness=SimpleNamespace(state=state,settlement_physicalization=physical,building=building,
+            property_storage=storage,player_pos=frontage,entities=SimpleNamespace(get=lambda *_:inv),_message=messages.append)
+        harness._command_container=lambda uid:Simulation._command_container(harness,uid)
+        self.assertIs(harness._command_container(container.uid),container)
+        item,quantity=next(iter(container.items.items()))
+        # Reachability does not bypass the original container's ownership.
+        container.locked=False
+        Simulation._take_container(harness,TakeFromContainerCommand(1,item,1,container.uid))
+        self.assertIn("private",messages[-1])
+        self.assertEqual(container.items[item],quantity)
+        self.assertEqual(inv.count(item),0)
+        container.access="public"
+        Simulation._take_container(harness,TakeFromContainerCommand(1,item,1,container.uid))
+        self.assertEqual(container.items.get(item,0)+inv.count(item),quantity)
+        self.assertEqual(inv.count(item),1)
+        self.assertEqual(town.stocks,stocks_before)
+
+    def test_household_storage_command_cannot_reach_through_solid_shell(self):
+        from worldseed.systems.interiors import InteriorSystem
+        base,security=self._security_fixture()
+        state,town,physical,_,_,_,storage,building,_,_,_=base
+        house=next(s for s in physical.skeleton_for(town.uid).structures if s.function=="residence")
+        container=storage.for_property(house.uid)[0]
+        sim=SimpleNamespace(state=state,registry=self.registry,settlement_physicalization=physical,property_security=security)
+        sim.interiors=InteriorSystem(sim)
+        self.assertIsNotNone(sim.interiors.prepare_workplace(house.uid))
+        self.assertTrue(physical.shell_blocks(WorldPos(container.x,container.y,container.z)))
+        messages=[];inv=Inventory()
+        harness=SimpleNamespace(state=state,settlement_physicalization=physical,building=building,
+            interiors=sim.interiors,player_pos=WorldPos(container.x,container.y+1,container.z),
+            entities=SimpleNamespace(get=lambda *_:inv),_message=messages.append,
+            debug=SimpleNamespace(event=lambda *_args,**_kwargs:None),turn=0,clock=SimpleNamespace(minute=700))
+        self.assertIsNone(Simulation._command_container(harness,container.uid))
+        stocks_before=dict(town.stocks);contents_before=dict(container.items)
+        item=next(iter(container.items))
+        Simulation.execute(harness,TakeFromContainerCommand(1,item,1,container.uid))
+        self.assertIn("separate building space",messages[-1])
+        self.assertEqual(container.items,contents_before)
+        self.assertEqual(town.stocks,stocks_before)
+        self.assertEqual(inv.count(item),0)
+        self.assertEqual(harness.turn,0)
+
     def test_property_container_lockpick_and_keyholder_state_persist(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
         container=next(c for c in state.containers.values() if c.kind=="property")
@@ -202,19 +265,17 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertGreater(casing.summary(residence.uid)["survey_progress"],0)
         self.assertEqual(intel.storage_uids,[])
 
-        room=physical.room_by_id(container.room_id)
-        adjacent=[
-            WorldPos(int(x),int(y),0) for x,y in room.cells
-            if (int(x),int(y))!=(container.x,container.y)
-            and abs(int(x)-container.x)+abs(int(y)-container.y)<=2
-        ]
-        self.assertTrue(adjacent)
-        for p in adjacent:
+        # The old room cells are now a solid exterior shell. Walking around
+        # the public perimeter reveals frontage, not the separate interior.
+        for x,y in ring:
+            p=WorldPos(x,y,0)
+            if not physical.passable(p,True):
+                continue
             casing.observe_step(p,610,stealth)
-            if container.uid in intel.storage_uids:
-                break
-        self.assertIn(container.uid,intel.storage_uids)
-        self.assertGreaterEqual(len(intel.room_ids),1)
+        self.assertTrue(intel.entrance_known)
+        self.assertTrue(intel.surveyed_cells)
+        self.assertNotIn(container.uid,intel.storage_uids)
+        self.assertEqual(intel.room_ids,[])
 
     def test_repeated_observed_casing_raises_alarm_without_creating_crime(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()

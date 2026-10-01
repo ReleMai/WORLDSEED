@@ -33,9 +33,12 @@ class NPCSystem:
         doors=(door for door in self.property_security.doors_for_property(npc.home_id) if door.role=="entrance")
         door=next(doors,None)
         if door is None:return None
+        frontage_lookup=getattr(self.settlement_physicalization,"frontage_for",None)
+        threshold=frontage_lookup(npc.home_id) if callable(frontage_lookup) else None
+        target=threshold or WorldPos(door.x,door.y,door.z)
         # Residents approach the same physical door as the player before the
         # shared portal authority transfers them to a continuous local space.
-        return {"kind":"move","x":door.x,"y":door.y,"z":door.z,
+        return {"kind":"move","x":target.x,"y":target.y,"z":target.z,
                 "exact":True,"physical_path":True,"interior_home_door_uid":door.uid}
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
@@ -283,10 +286,25 @@ class NPCSystem:
     def execute_tick(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
         self._execute_task(npc,town,minute,player_pos)
 
-    def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
-        if self._inside(npc) or not npc.tasks:return
+    def execute_interior_activity(self,npc:NPCState,town,minute:int)->None:
+        """Use the existing completion authority after continuous indoor arrival."""
+        if npc.tasks and npc.tasks[0].get("kind")=="activity":
+            self._execute_task(npc,town,minute,WorldPos(npc.x,npc.y,npc.z),allow_interior_activity=True)
+
+    def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos,*,allow_interior_activity:bool=False)->None:
+        if not npc.tasks:return
+        if self._inside(npc) and not (allow_interior_activity and npc.tasks[0].get("kind")=="activity"):return
         task=npc.tasks[0]
         if task['kind']=='move':
+            # Legacy saves may contain a pending station walk aimed inside the
+            # old tiled shell. Rebind the original reservation, not its goods.
+            row=getattr(self.state,"activity_reservations",{}).get(str(task.get("reservation_uid","")))
+            if self.interiors is not None and self.activities is not None and row is not None and row.target_kind=="fixture":
+                if not row.metadata.get("space_id") and self.activities._indoor_target(npc,row.target_uid):
+                    self.activities.bind_interior(row,npc)
+                if row.metadata.get("space_id"):
+                    task.update(x=row.use_x,y=row.use_y,z=row.use_z,exact=True,physical_path=True,
+                                interior_work_door_uid=row.metadata["door_uid"],space_id=row.metadata["space_id"])
             goal=WorldPos(int(task['x']),int(task['y']),int(task.get('z',npc.z)));start=WorldPos(npc.x,npc.y,npc.z)
             if goal.z!=npc.z:
                 # Vertical movement must use an explicit connector activity.
@@ -295,6 +313,12 @@ class NPCSystem:
             distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
             reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
             if reached:
+                if task.get("interior_work_door_uid") and self.interiors is not None:
+                    reservation=self.state.activity_reservations.get(str(task.get("reservation_uid","")))
+                    if reservation is None or reservation.status in {"completed","cancelled"}:
+                        npc.tasks.pop(0);return
+                    if self.interiors.enter_work_npc(npc,task["interior_work_door_uid"]):npc.tasks.pop(0)
+                    return
                 if task.get("interior_home_door_uid") and self.interiors is not None:
                     if self.interiors.enter_npc(npc,task["interior_home_door_uid"]):
                         npc.tasks.clear()
@@ -350,7 +374,7 @@ class NPCSystem:
                     task["_local_path"]=cached
                     self._face_step(npc,old_x,old_y)
                     if (npc.x,npc.y)==(goal.x,goal.y):
-                        if not task.get("interior_home_door_uid"):npc.tasks.pop(0)
+                        if not task.get("interior_home_door_uid") and not task.get("interior_work_door_uid"):npc.tasks.pop(0)
                     elif not cached:
                         task.pop("_local_path",None);task.pop("_local_path_goal",None)
                 # Never fall through to coarse movement while physically local.
@@ -359,7 +383,7 @@ class NPCSystem:
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
-            if (npc.x,npc.y)==(goal.x,goal.y) and not task.get("interior_home_door_uid"):npc.tasks.pop(0)
+            if (npc.x,npc.y)==(goal.x,goal.y) and not task.get("interior_home_door_uid") and not task.get("interior_work_door_uid"):npc.tasks.pop(0)
         elif task['kind']=='mining_transition':
             if self.mining is None:
                 npc.tasks.pop(0);return
@@ -371,6 +395,10 @@ class NPCSystem:
                 npc.tasks.pop(0)
                 return
             status=self.activities.progress(task.get('reservation_uid',''),npc.uid,minute)
+            row=self.state.activity_reservations.get(str(task.get('reservation_uid','')))
+            if status=='not_at_target' and row is not None and row.metadata.get('space_id') and not self._inside(npc):
+                npc.tasks.insert(0,{"kind":"move","x":row.use_x,"y":row.use_y,"z":row.use_z,"exact":True,"physical_path":True,"reservation_uid":row.uid,"interior_work_door_uid":row.metadata['door_uid'],"space_id":row.metadata['space_id'],"profession_task":bool(task.get('profession_task'))})
+                return
             if status=='completed':
                 npc.tasks.pop(0)
                 if task.get('on_complete')=='work':

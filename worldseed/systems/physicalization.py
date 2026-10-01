@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from typing import Iterable
 
 from worldseed.core.coords import WorldPos
+from worldseed.systems.building_shells import shell_from_plan, frontage_candidates
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +61,7 @@ class SettlementPhysicalizationSystem:
         self._cells: dict[tuple[int, int], PhysicalizedSettlementCell] = {}
         self._rooms: dict[str, object] = {}
         self._structures: dict[str, object] = {}
+        self._shells: dict[str, object] = {}
         self._skeletons: dict[str, object] = {}
         self._route_segments: dict[str, object] = {}
         self._crossings: dict[str, object] = {}
@@ -82,6 +84,12 @@ class SettlementPhysicalizationSystem:
         if len(self._indoor_fixture_uids)!=before:self.revision+=1
 
     def _project_cell(self,cell):
+        if cell is not None and cell.structure_id in self._shells:
+            entrance=cell.structure_piece_role=="entrance"
+            return replace(cell,ground_piece_id="",fixture_piece_id="",fixture_piece_uid="",roof_piece_id="",
+                structure_piece_id=cell.structure_piece_id if entrance else "",
+                structure_piece_uid=cell.structure_piece_uid if entrance else "",
+                structure_piece_role=cell.structure_piece_role if entrance else "",room_id="")
         if cell is not None and cell.fixture_piece_uid in self._indoor_fixture_uids:
             return replace(cell,fixture_piece_id="",fixture_piece_uid="")
         return cell
@@ -94,6 +102,7 @@ class SettlementPhysicalizationSystem:
         self._cells.clear()
         self._rooms.clear()
         self._structures.clear()
+        self._shells.clear()
         self._skeletons.clear()
         self._route_segments.clear()
         self._crossings.clear()
@@ -159,6 +168,8 @@ class SettlementPhysicalizationSystem:
 
         for structure in skeleton.structures:
             self._structures[structure.uid] = structure
+            shell=shell_from_plan(structure,settlement_id,skeleton.pieces)
+            if shell is not None:self._shells[structure.uid]=shell
             for x, y in structure.footprint:
                 key = (int(x), int(y)); old = self._cells.get(key)
                 self._cells[key] = self._merge_cell(
@@ -275,15 +286,18 @@ class SettlementPhysicalizationSystem:
         new_cells = {}
         new_rooms = {}
         new_structures = {}
+        new_shells = {}
         new_skeletons = {}
         new_route_segments={}
         new_crossings={}
         old_cells,old_rooms,old_structures,old_skeletons,old_route_segments,old_crossings=(
             self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings
         )
+        old_shells=self._shells
         self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings=(
             new_cells,new_rooms,new_structures,new_skeletons,new_route_segments,new_crossings
         )
+        self._shells=new_shells
         active = []
         try:
             for settlement in selected:
@@ -308,6 +322,7 @@ class SettlementPhysicalizationSystem:
                 route_roads,route_crossings=self.route_planner.materialize_region((rx,ry),self._skeletons)
                 for road in route_roads:self._index_regional_route(road,route_crossings)
         except Exception:
+            self._shells=old_shells
             self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings=(
                 old_cells,old_rooms,old_structures,old_skeletons,old_route_segments,old_crossings
             )
@@ -351,6 +366,47 @@ class SettlementPhysicalizationSystem:
     def structure_by_id(self, structure_id: str):
         return self._structures.get(str(structure_id))
 
+    def shell_at(self,pos:WorldPos):
+        if pos.z!=0:return None
+        cell=self._cells.get((int(pos.x),int(pos.y)))
+        return self._shells.get(cell.structure_id) if cell is not None else None
+
+    def shell_blocks(self,pos:WorldPos) -> bool:
+        return self.shell_at(pos) is not None
+
+    def shells_in_bounds(self,left:int,top:int,right:int,bottom:int):
+        return tuple(s for _,s in sorted(self._shells.items())
+            if s.bounds[0]<=right and s.bounds[2]>=left and s.bounds[1]<=bottom and s.bounds[3]>=top)
+
+    def frontage_for(self,structure_id:str) -> WorldPos | None:
+        shell=self._shells.get(str(structure_id))
+        if shell is None:return None
+        candidates=[]
+        for x,y in frontage_candidates(shell):
+            pos=WorldPos(x,y,0)
+            if self.shell_blocks(pos):continue
+            cell=self._cells.get((x,y))
+            piece=self.registry.settlement_pieces.get(cell.structure_piece_id or cell.fixture_piece_id) if cell else None
+            if piece is not None and not piece.passable:continue
+            candidates.append((0 if cell is not None and cell.road_ids else 1,y,x,pos))
+        return min(candidates,key=lambda r:r[:3])[3] if candidates else None
+
+    def displace_shell_position(self,pos:WorldPos,is_safe,max_radius:int=12) -> WorldPos | None:
+        """Load-only bounded relocation; the caller supplies prepared-cell safety."""
+        shell=self.shell_at(pos)
+        if shell is None:return pos
+        frontage=self.frontage_for(shell.uid)
+        if frontage is not None and is_safe(frontage):return frontage
+        radius=min(24,max(1,int(max_radius)))
+        candidates=[]
+        for dy in range(-radius,radius+1):
+            for dx in range(-radius,radius+1):
+                candidate=pos.moved(dx,dy)
+                if not self.shell_blocks(candidate):candidates.append((abs(dx)+abs(dy),candidate.y,candidate.x,candidate))
+        for _,_,_,candidate in sorted(candidates,key=lambda r:r[:3]):
+            if is_safe(candidate):return candidate
+        return None
+
     def room_by_id(self, room_id: str):
         return self._rooms.get(str(room_id))
 
@@ -359,6 +415,8 @@ class SettlementPhysicalizationSystem:
         structure = self._structures.get(str(structure_id))
         if structure is None:
             return None
+        if str(structure_id) in self._shells:
+            return self.frontage_for(structure_id)
         room = self._rooms.get(str(room_id)) if room_id else None
         if room is None:
             room = next(
@@ -423,10 +481,19 @@ class SettlementPhysicalizationSystem:
         return cell
 
     def passable(self, pos: WorldPos, world_passable: bool = True) -> bool:
+        if self.shell_blocks(pos):return False
         piece = self.piece_def_at(pos)
         return bool(world_passable if piece is None else world_passable and piece.passable)
 
+    def plan_piece_passable(self,pos:WorldPos,world_passable:bool=True) -> bool:
+        """Legacy fixture placement query, not actor traversal through shells."""
+        cell=self._cells.get((int(pos.x),int(pos.y))) if pos.z==0 else None
+        piece_id=(cell.structure_piece_id or cell.fixture_piece_id) if cell else ""
+        piece=self.registry.settlement_pieces.get(piece_id) if piece_id else None
+        return bool(world_passable and (piece is None or piece.passable))
+
     def blocks_sight(self, pos: WorldPos) -> bool:
+        if self.shell_blocks(pos):return True
         piece = self.piece_def_at(pos)
         return bool(piece and piece.blocks_sight)
 
@@ -461,6 +528,8 @@ class SettlementPhysicalizationSystem:
         return False
 
     def glyph_at(self, pos: WorldPos) -> str | None:
+        shell=self.shell_at(pos)
+        if shell is not None:return "+" if (pos.x,pos.y)==shell.entrance else "#"
         cell = self.cell_at(pos)
         if cell is None:
             return None

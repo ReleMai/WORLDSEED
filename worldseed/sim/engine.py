@@ -4,7 +4,7 @@ import time
 from worldseed.config import MINUTES_PER_ACTION, MOVE_MINUTES, ENGINE_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.clock import GameClock
-from worldseed.core.coords import WorldPos
+from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.events import GameEvent, GatheredEvent, MovedEvent
 from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory, Position, Vitals
@@ -201,6 +201,8 @@ class Simulation:
         )
         self.npcs.attach_property_security(self.property_security)
         self.interiors=InteriorSystem(self)
+        self.stealth.attach_interior_system(self.interiors)
+        self.activities.attach_interior_system(self.interiors)
         self.settlement_physicalization.attach_interior_state(self.state)
         self.npcs.attach_interior_system(self.interiors)
         self.casing=CasingSystem(
@@ -218,6 +220,15 @@ class Simulation:
             self.state.magic_laws=MagicGenerator(self.seed).laws()
         start=self.player_pos if any(True for _ in entities.query(Position)) else WorldPos(0,0,0)
         self._ensure_nearby_world(start,force=True)
+        if self.interiors.player_presence() is None:
+            # Build occupancy once only when loading an old outdoor room position.
+            occupied={(n.x,n.y,n.z) for n in self.state.npcs.values() if n.alive and n.uid not in self.state.interior_actors} if self.settlement_physicalization.shell_at(start) else set()
+            landing=self.settlement_physicalization.displace_shell_position(start,
+                lambda pos:(pos.x,pos.y,pos.z) not in occupied and self._prepared_shell_landing(pos))
+            if landing is not None and landing!=start:
+                self.entities.get(self.player_id,Position).value=landing
+                start=landing
+                self._message('You step outside the building to its accessible frontage.')
         self.magic.ensure_traditions()
         self.magic.ensure_rituals()
         # Reconstruct current visibility immediately on load. Persistent map
@@ -227,6 +238,18 @@ class Simulation:
     @property
     def discovered_tiles_set(self)->set[str]:
         return self._discovered_tile_set
+
+    def _prepared_shell_landing(self,pos:WorldPos)->bool:
+        """Load recovery reads prepared local terrain only, never generates it."""
+        key,lx,ly=split_world(pos)
+        chunk=self.world.cache.peek(key)
+        if chunk is None:return False
+        terrain=self.registry.terrain(self.registry.terrain_id(chunk.get(lx,ly)))
+        if not terrain.passable or 'water' in terrain.tags:return False
+        if not self.building.passable(pos,True):return False
+        if self.resources.blocks_movement(pos) and not self.settlement_physicalization.clears_natural_feature(pos):return False
+        if any(c.hp>0 and (c.x,c.y,c.z)==(pos.x,pos.y,pos.z) for c in self.state.creatures.values()):return False
+        return True
 
     @property
     def visible_tiles_set(self)->set[str]:
@@ -342,13 +365,14 @@ class Simulation:
                 self._message('You collect nearby items from the interior floor.');return result
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
                                        UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
-                                       SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand)):
+                                       SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand,
+                                       CraftCommand,ComponentCraftCommand)):
                 self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
         elif isinstance(command,(MoveFurnitureCommand,UseInteriorFurnitureCommand)):
             self._message('Enter a building before using interior furniture.');return result
         if not indoor and getattr(command,'container_uid',''):
             target=next((c for c in self.state.containers.values() if c.uid==command.container_uid),None)
-            if target is not None and 'interior:'+target.property_id in self.state.interiors:
+            if target is not None and self.settlement_physicalization.shell_blocks(WorldPos(target.x,target.y,target.z)):
                 self._message('That storage is inside a separate building space.');return result
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
             # Developer arena commands deliberately bypass world time, ecology
@@ -733,6 +757,8 @@ class Simulation:
             # target an actor whose actual location is in another space.
             v=self.entities.try_get(self.player_id,Vitals)
             self.combat.tick_wounds()
+            for message in self.property_security.update_response(self.player_pos,self.clock.minute,self.stealth):
+                self._message(message)
             if v:
                 self.combat.tick_player_wounds(v)
                 for message in self.disease.tick_player(self.clock.minute,v):self._message(message)
@@ -1187,6 +1213,8 @@ class Simulation:
         ):
             if crossing and self.route_planner.crossing_blocked(crossing.route_id,crossing.uid,self.clock.minute):
                 self._message(f"The {crossing.kind} crossing is closed or too damaged to use.");return
+            if self.settlement_physicalization.shell_at(new):
+                self._message('The building exterior blocks your path. Right-click its door to enter.');return
             self._message('Something solid blocks your path.');return
         v=self.entities.get(cmd.actor,Vitals)
         if water.mode=='swimming':
@@ -1325,10 +1353,23 @@ class Simulation:
             self._message('You sink a supported vertical shaft to the level below.')
         return 180
 
+    def _player_station_ids(self)->set[str]:
+        interiors=getattr(self,'interiors',None)
+        if interiors is not None and interiors.player_presence() is not None:
+            return interiors.station_ids_near_player()
+        return self.building.nearby_station_ids(self.player_pos)
+
     def _craft(self,cmd:CraftCommand)->int:
-        pos=self.entities.get(cmd.actor,Position).value;bonus=self.building.environmental_bonuses(pos).get('work_bonus',0);skill=self.player_skill(self.registry.recipes.get(cmd.recipe_id).skill if cmd.recipe_id in self.registry.recipes else 'crafting');ok,msg,minutes=self.crafting.craft(cmd.recipe_id,self.entities.get(cmd.actor,Inventory),self.building.nearby_station_ids(pos),self.clock.minute,"player",skill,bonus);self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        indoor=getattr(self,'interiors',None) is not None and self.interiors.player_presence() is not None
+        bonus=0 if indoor else self.building.environmental_bonuses(self.player_pos).get('work_bonus',0)
+        recipe=self.registry.recipes.get(cmd.recipe_id)
+        skill=self.player_skill(recipe.skill if recipe is not None else 'crafting')
+        ok,msg,minutes=self.crafting.craft(cmd.recipe_id,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player",skill,bonus)
+        self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+
     def _component_craft(self,cmd:ComponentCraftCommand)->int:
-        pos=self.entities.get(cmd.actor,Position).value;ok,msg,minutes=self.crafting.craft_design(cmd.design_id,cmd.choices,self.entities.get(cmd.actor,Inventory),self.building.nearby_station_ids(pos),self.clock.minute,"player");self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        ok,msg,minutes=self.crafting.craft_design(cmd.design_id,cmd.choices,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player")
+        self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
@@ -1342,10 +1383,10 @@ class Simulation:
     def _command_container(self,uid:str):
         if uid:
             c=next((row for row in self.state.containers.values() if row.uid==uid),None)
-            if c and 'interior:'+c.property_id not in self.state.interiors and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
+            if c and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
             return None
         c=self.building.nearby_container(self.player_pos)
-        return c if c and 'interior:'+c.property_id not in self.state.interiors else None
+        return c if c and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) else None
     def _store(self,cmd:StoreCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
@@ -2011,9 +2052,16 @@ class Simulation:
             self._message("That quantity is not present in the market.");return
         if cmd.item_id not in self.registry.items:
             self._message("That market good is invalid.");return
-        cell=self.settlement_physicalization.cell_at(target)
-        structure_id=cell.structure_id if cell is not None else ""
-        owner=self.civics.owner_for_structure(town.uid,structure_id) if structure_id else town.uid
+        # The accessible market frontage is outside its solid shell. Resolve
+        # ownership from the same stable plan, not from the frontage road cell.
+        skeleton=self.settlement_physicalization.skeleton_for(town.uid)
+        market=next((s for s in sorted(skeleton.structures,key=lambda row:row.uid)
+                     if s.function=='market' and not s.destroyed
+                     and self.settlement_physicalization.destination_for(s.uid)==target),None) if skeleton else None
+        if market is None:
+            self._message("That market's property record is unavailable.");return
+        structure_id=market.uid
+        owner=self.civics.owner_for_structure(town.uid,structure_id)
         witnesses=list(self.stealth.witnesses(self.player_pos,self.clock.minute,town.uid))
         town.stocks[cmd.item_id]-=amount
         inv.add(cmd.item_id,amount)

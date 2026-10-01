@@ -8,10 +8,12 @@ from types import SimpleNamespace
 from worldseed.config import DATA_DIR, SETTLEMENT_PLAN_VERSION
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
-from worldseed.entities.components import Inventory
+from worldseed.entities.components import Inventory, Position
+from worldseed.entities.store import EntityStore
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.crafting import CraftingSystem
 from worldseed.systems.generation import specialize_occupation
+from worldseed.systems.interiors import InteriorSystem
 from worldseed.systems.physicalization import SettlementPhysicalizationSystem
 from worldseed.systems.professions import SettlementProfessionSystem
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner
@@ -68,7 +70,7 @@ class WorkshopExpansionTests(unittest.TestCase):
         return world,region,planner,skeleton
 
     def test_every_workshop_profile_has_station_and_player_recipe(self):
-        self.assertEqual(SETTLEMENT_PLAN_VERSION,8)
+        self.assertEqual(SETTLEMENT_PLAN_VERSION,10)
         self.assertGreaterEqual(len(WORKSHOP_PROFILES),12)
         for station_id,profile in WORKSHOP_PROFILES.items():
             self.assertIn(station_id,self.registry.structures,station_id)
@@ -130,8 +132,30 @@ class WorkshopExpansionTests(unittest.TestCase):
         state=LivingWorldState(player_crafting_discovery_enabled=False)
         building=BuildingSystem(state,self.registry)
         building.attach_settlement_physicalization(physical)
-        stations=building.nearby_station_ids(WorldPos(mill_piece.x,mill_piece.y,0),radius=0)
+        # Enclosed stations now belong to the independent continuous interior;
+        # an exterior-coordinate read must not permit crafting through a wall.
+        self.assertNotIn("core:millstone",building.nearby_station_ids(WorldPos(mill_piece.x,mill_piece.y,0),radius=0))
+        entrance=next(p for p in placements if p.role=="entrance")
+        door=SimpleNamespace(uid=entrance.uid,property_id=mill.uid,settlement_id=town.uid,
+                             x=entrance.x,y=entrance.y,z=0,role="entrance",owner_uid="")
+        entities=EntityStore();player_id=entities.spawn()
+        entities.add(player_id,Position(physical.frontage_for(mill.uid)))
+        sim=SimpleNamespace(state=state,registry=self.registry,entities=entities,player_id=player_id,
+                            player_pos=entities.get(player_id,Position).value,
+                            settlement_physicalization=physical,clock=SimpleNamespace(minute=600),
+                            property_security=SimpleNamespace(door_by_id=lambda uid:door if uid==door.uid else None,
+                                                              blocks_actor=lambda pos,actor:False))
+        interiors=InteriorSystem(sim)
+        self.assertIn("You enter",interiors.enter(door.uid))
+        plan=interiors.current_plan()
+        original=next(f for f in plan.furniture if f.uid==mill_piece.uid)
+        use=interiors.fixture_use_position(plan,original)
+        self.assertIsNotNone(use)
+        actor=interiors.player_presence();actor.x,actor.y=use
+        before=state.to_dict()
+        stations=interiors.station_ids_near_player()
         self.assertIn("core:millstone",stations)
+        self.assertEqual(state.to_dict(),before)
 
         craft=CraftingSystem(state,self.registry)
         inv=Inventory({"core:wheat":2})

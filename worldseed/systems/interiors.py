@@ -16,6 +16,8 @@ from worldseed.systems.interior_state import (
     ACTOR_RADIUS, UNIT, InteriorActor, InteriorFurniture, InteriorPlan,
     InteriorRect, InteriorRoom,
 )
+from worldseed.systems.interior_templates import profile_for, rooms_for_profile
+from worldseed.systems.workshops import STATION_PIECE_ALIASES
 
 
 def furniture_size(piece_id: str) -> tuple[int, int]:
@@ -29,60 +31,59 @@ def furniture_size(piece_id: str) -> tuple[int, int]:
 
 
 def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
-    """Derive an expanded room arrangement from one stable building identity."""
+    """Create a v2 layout only for a building without a persisted interior.
+
+    Every furnishing is a projection of an existing stable plan-piece identity;
+    the template supplies space, not extra beds, production or material stocks.
+    """
     cells = structure.footprint or [(door.x, door.y)]
     span_x = max(x for x, _ in cells) - min(x for x, _ in cells) + 1
     span_y = max(y for _, y in cells) - min(y for _, y in cells) + 1
-    width = max(10000, min(24000, span_x * 1800))
-    height = max(10000, min(20000, span_y * 1800))
+    profile = profile_for(structure)
+    width = max(profile["width"], min(30000, span_x * 1500))
+    height = max(profile["height"], min(26000, span_y * 1500))
     plan = InteriorPlan(
         "interior:" + structure.uid, structure.uid, door.uid, door.x, door.y,
         door.z, width, height, structure.function.replace("_", " ").title(),
-        structure.function, door.owner_uid, entry_x=width // 2, entry_y=height - 700,
+        structure.function, door.owner_uid, version=2, layout_id=profile["id"],
     )
-    # A wide shared hall connects every room. Partitions have real gaps rather
-    # than door decoration on an impermeable wall.
-    inset, thickness = 250, 180
-    hall_y = height - 2800
-    plan.rooms.append(InteriorRoom(plan.uid + ":hall", "Common hall", InteriorRect(inset, hall_y, width - 2 * inset, height - hall_y - inset)))
-    plan.walls = [
-        InteriorRect(0, 0, width, thickness), InteriorRect(0, 0, thickness, height),
-        InteriorRect(width - thickness, 0, thickness, height), InteriorRect(0, height - thickness, width, thickness),
-    ]
-    room_count = max(2, min(4, len(source_rooms)))
-    room_width = (width - 2 * inset) // room_count
-    ordered_rooms = sorted(source_rooms, key=lambda r: r.uid)
-    for index in range(room_count):
-        left = inset + index * room_width
-        right = width - inset if index == room_count - 1 else left + room_width
-        source = ordered_rooms[index] if index < len(ordered_rooms) else None
-        name = source.kind.replace("_", " ").title() if source else ("Sleeping room" if index == 0 else "Living room")
-        room = InteriorRoom(source.uid if source else plan.uid + f":room:{index}", name, InteriorRect(left, inset, right - left, hall_y - inset))
-        plan.rooms.append(room)
-        if index:
-            plan.walls.append(InteriorRect(left - thickness // 2, inset, thickness, hall_y - inset))
-        gap = min(1400, room_width // 2)
-        centre = (left + right) // 2
-        plan.walls.extend([
-            InteriorRect(left, hall_y - thickness // 2, max(0, centre - gap // 2 - left), thickness),
-            InteriorRect(centre + gap // 2, hall_y - thickness // 2, max(0, right - centre - gap // 2), thickness),
-        ])
-    fixture_rooms = {uid: i for i, room in enumerate(ordered_rooms) for uid in room.fixture_ids}
-    counters: dict[int, int] = {}
+    plan.rooms, plan.walls, (plan.entry_x, plan.entry_y) = rooms_for_profile(plan.uid, profile, width, height, source_rooms)
+    fixture_rooms = {uid: i + 1 for i, room in enumerate(sorted(source_rooms, key=lambda r: r.uid)) for uid in room.fixture_ids}
     for piece in sorted(pieces, key=lambda p: p.uid):
         if piece.role not in {"fixture", "tile_decor"}:
             continue
-        index = min(room_count - 1, fixture_rooms.get(piece.uid, len(plan.furniture) % room_count))
-        room = plan.rooms[index + 1]
-        ordinal = counters.get(index, 0)
-        counters[index] = ordinal + 1
         w, h = furniture_size(piece.piece_id)
-        # Deliberately fractional placements, with generous circulation space.
-        x = room.rect.x + 425 + (ordinal % 2) * (w + 450)
-        y = room.rect.y + 425 + (ordinal // 2) * 1950
-        row = InteriorFurniture(piece.uid, piece.piece_id, x, y, w, h, door.owner_uid, piece.uid, piece.role == "fixture")
-        if placement_clear(plan, row.rect) and y + h < hall_y - 500:
-            plan.furniture.append(row)
+        key = piece.piece_id.lower()
+        preferred = []
+        if "bed" in key:
+            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("bed", "dorm", "bunk", "guest", "recovery"))]
+        elif any(k in key for k in ("hearth", "table", "chair", "bench")):
+            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("living", "kitchen", "tavern", "mess", "common"))]
+        elif any(k in key for k in ("chest", "shelf", "rack", "hay")):
+            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("store", "pantry", "armory", "supply", "hay", "book"))]
+        else:
+            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("work", "forge", "machinery", "preparation", "treatment", "class", "scribe", "sanctuary"))]
+        original_room = plan.rooms[min(len(plan.rooms) - 1, fixture_rooms.get(piece.uid, 1))]
+        choices = list(dict.fromkeys(r.uid for r in preferred + [original_room] + plan.rooms))
+        rooms_by_id = {r.uid: r for r in plan.rooms}
+        placed = False
+        for uid in choices:
+            rect = rooms_by_id[uid].rect
+            # Corners first, then bounded fractional shelf rows. The free centre
+            # and a 900-unit door apron remain circulation space.
+            positions = [(rect.x + 425, rect.y + 425), (rect.x + rect.w - w - 425, rect.y + 425)]
+            positions += [(rect.x + 425 + col * (w + 575), rect.y + 425 + row * (h + 575))
+                          for row in range(1, 6) for col in range(3)]
+            for x, y in positions:
+                if x + w > rect.x + rect.w - 400 or y + h > rect.y + rect.h - 950:
+                    continue
+                furnishing = InteriorFurniture(piece.uid, piece.piece_id, x, y, w, h, door.owner_uid, piece.uid, piece.role == "fixture")
+                if placement_clear(plan, furnishing.rect):
+                    plan.furniture.append(furnishing)
+                    placed = True
+                    break
+            if placed:
+                break
     return plan
 
 
@@ -127,9 +128,38 @@ def room_at(plan: InteriorPlan, x: int, y: int) -> InteriorRoom | None:
     return next((room for room in plan.rooms if room.rect.contains(x, y)), None)
 
 
-def exit_reachable(plan: InteriorPlan, x: int, y: int) -> bool:
-    """Bounded conservative visibility graph; no world/grid queries are used."""
-    nodes = [(x, y), (plan.entry_x, plan.entry_y)]
+def _segment_hits_rect(a: tuple[int, int], b: tuple[int, int], rect: InteriorRect) -> bool:
+    left, top, right, bottom = rect.x, rect.y, rect.x + rect.w, rect.y + rect.h
+    if max(a[0], b[0]) < left or min(a[0], b[0]) > right or max(a[1], b[1]) < top or min(a[1], b[1]) > bottom:
+        return False
+    if any(left <= p[0] <= right and top <= p[1] <= bottom for p in (a, b)):
+        return True
+    def cross(p, q, r):
+        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
+    for c, d in zip(corners, corners[1:] + corners[:1]):
+        if (max(a[0], b[0]) < min(c[0], d[0]) or min(a[0], b[0]) > max(c[0], d[0])
+                or max(a[1], b[1]) < min(c[1], d[1]) or min(a[1], b[1]) > max(c[1], d[1])):
+            continue
+        if cross(a, b, c) * cross(a, b, d) <= 0 and cross(c, d, a) * cross(c, d, b) <= 0:
+            return True
+    return False
+
+
+def segment_clear(plan: InteriorPlan, start: tuple[int, int], target: tuple[int, int], radius: int = ACTOR_RADIUS) -> bool:
+    if not position_clear(plan, *start, radius) or not position_clear(plan, *target, radius):
+        return False
+    return not any(_segment_hits_rect(start, target, InteriorRect(r.x - radius, r.y - radius, r.w + radius * 2, r.h + radius * 2))
+                   for r in plan.walls + [f.rect for f in plan.furniture if f.solid])
+
+
+def interior_path(plan: InteriorPlan, start: tuple[int, int], target: tuple[int, int]) -> list[tuple[int, int]] | None:
+    """Bounded continuous corner visibility graph, shared by every room grammar."""
+    if segment_clear(plan, start, target):
+        return [target] if start != target else []
+    if not position_clear(plan, *start) or not position_clear(plan, *target):
+        return None
+    nodes = [start, target]
     obstacles = plan.walls + [f.rect for f in plan.furniture if f.solid]
     clearance = ACTOR_RADIUS + 25
     for rect in obstacles:
@@ -139,20 +169,27 @@ def exit_reachable(plan: InteriorPlan, x: int, y: int) -> bool:
                     nodes.append((px, py))
     # Household plans are bounded; de-duplicate corner nodes before graph work.
     nodes = list(dict.fromkeys(nodes))[:180]
-    seen, queue = {0}, deque([0])
+    parents, queue = {0: None}, deque([0])
     while queue:
         index = queue.popleft()
         if index == 1:
-            return True
+            path = []
+            while index:
+                path.append(nodes[index])
+                index = parents[index]
+            return list(reversed(path))
         ax, ay = nodes[index]
         for other, (bx, by) in enumerate(nodes):
-            if other in seen:
+            if other in parents:
                 continue
-            steps = max(1, (max(abs(bx - ax), abs(by - ay)) + 99) // 100)
-            if all(position_clear(plan, ax + (bx - ax) * i // steps, ay + (by - ay) * i // steps) for i in range(steps + 1)):
-                seen.add(other)
+            if segment_clear(plan, (ax, ay), (bx, by)):
+                parents[other] = index
                 queue.append(other)
-    return False
+    return None
+
+
+def exit_reachable(plan: InteriorPlan, x: int, y: int) -> bool:
+    return interior_path(plan, (x, y), (plan.entry_x, plan.entry_y)) is not None
 
 
 class InteriorSystem:
@@ -191,16 +228,37 @@ class InteriorSystem:
         plan = self.current_plan()
         return next((f for f in reversed(plan.furniture) if f.rect.contains(x, y)), None) if plan else None
 
+    def station_ids_near_player(self) -> set[str]:
+        """Observe recipe station aliases within continuous indoor reach.
+
+        This reads only the currently occupied persisted plan, never prepares
+        another building or exposes stations through interior partitions.
+        """
+        plan, actor = self.current_plan(), self.player_presence()
+        if plan is None or actor is None:
+            return set()
+        return {station_id for furnishing in plan.furniture
+                if (station_id := STATION_PIECE_ALIASES.get(furnishing.piece_id))
+                and station_id in self.sim.registry.structures
+                and self._furniture_reachable(plan, actor, furnishing, 1800)}
+
+    def furniture_in_reach(self, furniture_uid: str, reach: int = 1800) -> bool:
+        """Observe actual furniture reach in the player's current space."""
+        plan, actor = self.current_plan(), self.player_presence()
+        if plan is None or actor is None:
+            return False
+        furnishing = next((f for f in plan.furniture if f.uid == furniture_uid), None)
+        return bool(furnishing and self._furniture_reachable(plan, actor, furnishing, max(0, int(reach))))
+
     def _prepare(self, door) -> InteriorPlan | None:
         space_id = "interior:" + door.property_id
+        physical = self.sim.settlement_physicalization
+        structure = physical.structure_by_id(door.property_id)
+        if structure is None or structure.destroyed or not structure.enclosed:
+            return None
         existing = self.state.interiors.get(space_id)
         if existing:
             return existing
-        physical = self.sim.settlement_physicalization
-        structure = physical.structure_by_id(door.property_id)
-        if (structure is None or structure.destroyed or not structure.enclosed
-                or structure.function not in {"residence", "inn", "barracks", "outskirt_camp"}):
-            return None
         skeleton = physical.skeleton_for(door.settlement_id)
         if skeleton is None:
             return None
@@ -230,12 +288,16 @@ class InteriorSystem:
         if not position_clear(plan, plan.entry_x, plan.entry_y):
             return "The inside landing is obstructed."
         self._put_actor("player", InteriorActor(plan.uid, plan.entry_x, plan.entry_y))
-        return f"You enter the {plan.name.lower()}. WASD moves freely; right-click furniture to interact."
+        notice = getattr(security, "note_interior_entry", None)
+        messages = notice(plan, int(self.sim.clock.minute), getattr(self.sim, "stealth", None)) if notice else []
+        return f"You enter the {plan.name.lower()}. WASD moves freely; right-click furniture to interact." + (" " + " ".join(messages) if messages else "")
 
     def _exterior_landing(self, plan: InteriorPlan, actor_uid: str = "player") -> WorldPos | None:
         world = self.sim.world
-        for dx, dy in ((0, 0), (0, 1), (-1, 0), (1, 0), (0, -1)):
-            pos = WorldPos(plan.exterior_x + dx, plan.exterior_y + dy, plan.exterior_z)
+        frontage_lookup = getattr(self.sim.settlement_physicalization, "frontage_for", None)
+        frontage = frontage_lookup(plan.building_id) if frontage_lookup else None
+        candidates = ([frontage] if frontage else []) + [WorldPos(plan.exterior_x + dx, plan.exterior_y + dy, plan.exterior_z) for dx, dy in ((0, 0), (0, 1), (-1, 0), (1, 0), (0, -1))]
+        for pos in dict.fromkeys(candidates):
             key, lx, ly = split_world(pos)
             chunk = world.cache.peek(key)
             if chunk is None:
@@ -276,7 +338,9 @@ class InteriorSystem:
             return "The outside landing is blocked or not prepared; you cannot exit there."
         self.sim.entities.get(self.sim.player_id, Position).value = landing
         self._remove_actor("player")
-        return "You step outside."
+        notice = getattr(self.sim.property_security, "note_interior_exit", None)
+        messages = notice(plan, int(self.sim.clock.minute)) if notice else []
+        return "You step outside." + (" " + " ".join(messages) if messages else "")
 
     def move_player(self, dx: int, dy: int) -> str:
         plan, actor = self.current_plan(), self.player_presence()
@@ -297,7 +361,10 @@ class InteriorSystem:
             return "That furnishing is not in this interior."
         if not self.can_rearrange(furniture):
             return "Only the owner may rearrange this furnishing."
-        if self._distance(actor, furniture) > 1800:
+        if any(row.target_uid == furniture.uid and row.status in {"reserved", "active"}
+               for row in self.state.activity_reservations.values()):
+            return "That work station is reserved; wait until its current activity finishes."
+        if not self._furniture_reachable(plan, actor, furniture, 1800):
             return "Move closer to the furnishing first."
         rect = InteriorRect(int(x), int(y), furniture.w, furniture.h)
         if not placement_clear(plan, rect, furniture.uid):
@@ -331,6 +398,14 @@ class InteriorSystem:
         dy = max(furniture.y - actor.y, 0, actor.y - furniture.y - furniture.h)
         return isqrt(dx * dx + dy * dy)
 
+    @classmethod
+    def _furniture_reachable(cls, plan: InteriorPlan, actor: InteriorActor, furniture: InteriorFurniture, reach: int) -> bool:
+        if cls._distance(actor, furniture) > reach:
+            return False
+        nearest = (max(furniture.x, min(actor.x, furniture.x + furniture.w)),
+                   max(furniture.y, min(actor.y, furniture.y + furniture.h)))
+        return not any(_segment_hits_rect((actor.x, actor.y), nearest, wall) for wall in plan.walls)
+
     def interact(self, furniture_uid: str) -> str:
         plan, actor = self.current_plan(), self.player_presence()
         if not plan or not actor:
@@ -338,7 +413,7 @@ class InteriorSystem:
         furniture = next((f for f in plan.furniture if f.uid == furniture_uid), None)
         if furniture is None:
             return "That furnishing is not in this room."
-        if self._distance(actor, furniture) > 1500:
+        if not self._furniture_reachable(plan, actor, furniture, 1500):
             return "Move closer to interact with the furnishing."
         definition = self.sim.registry.settlement_pieces.get(furniture.piece_id)
         name = definition.name if definition else furniture.piece_id.split(":")[-1].replace("_", " ")
@@ -373,24 +448,103 @@ class InteriorSystem:
         npc.x, npc.y, npc.z = door.x, door.y, door.z
         return True
 
+    def prepare_workplace(self, building_id: str, door_uid: str = "") -> InteriorPlan | None:
+        security = self.sim.property_security
+        door = security.door_by_id(door_uid) if door_uid else next((d for d in security.doors_for_property(building_id) if d.role == "entrance"), None)
+        if door is None or door.property_id != building_id:
+            return None
+        return self._prepare(door)
+
+    @staticmethod
+    def fixture_use_position(plan: InteriorPlan, fixture: InteriorFurniture | None) -> tuple[int, int] | None:
+        if fixture is None:
+            return None
+        distance = ACTOR_RADIUS + 70
+        candidates = ((fixture.x + fixture.w // 2, fixture.y + fixture.h + distance),
+                      (fixture.x + fixture.w + distance, fixture.y + fixture.h // 2),
+                      (fixture.x + fixture.w // 2, fixture.y - distance),
+                      (fixture.x - distance, fixture.y + fixture.h // 2))
+        return next((p for p in candidates if position_clear(plan, *p) and exit_reachable(plan, *p)), None)
+
+    def enter_work_npc(self, npc, door_uid: str) -> bool:
+        if npc.uid in self.state.interior_actors:
+            return False
+        security = self.sim.property_security
+        door = security.door_by_id(door_uid)
+        if door is None or door.property_id != npc.workplace_id or door.role != "entrance":
+            return False
+        if (npc.z != door.z or abs(npc.x - door.x) + abs(npc.y - door.y) > 1
+                or security.blocks_actor(WorldPos(door.x, door.y, door.z), npc.uid)):
+            return False
+        plan = self._prepare(door)
+        if plan is None or not position_clear(plan, plan.entry_x, plan.entry_y):
+            return False
+        self._put_actor(npc.uid, InteriorActor(plan.uid, plan.entry_x, plan.entry_y, action="working", last_need_minute=int(self.sim.clock.minute)))
+        npc.x, npc.y, npc.z = door.x, door.y, door.z
+        return True
+
+    def _workplace_tick(self, npc, actor: InteriorActor, plan: InteriorPlan, minute: int) -> None:
+        task = npc.tasks[0] if npc.tasks else {}
+        reservation = self.state.activity_reservations.get(str(task.get("reservation_uid", "")))
+        meta = reservation.metadata if reservation else {}
+        working_here = bool(meta.get("space_id") == plan.uid and task.get("kind") in {"move", "activity"})
+        if working_here and reservation.status in {"reserved", "active"}:
+            target = int(meta["interior_use_x"]), int(meta["interior_use_y"])
+            if actor.target_x != target[0] or actor.target_y != target[1]:
+                actor.target_x, actor.target_y = target
+                self._household_route(plan, actor, target)
+            if max(abs(actor.x - target[0]), abs(actor.y - target[1])) <= 200:
+                actor.waypoints.clear()
+                actor.action = str(task.get("action", reservation.phase))
+                if task.get("kind") == "move":
+                    npc.tasks.pop(0)
+                else:
+                    town = self.state.settlements.get(npc.settlement_id)
+                    if town is not None:
+                        self.sim.npcs.execute_interior_activity(npc, town, minute)
+                return
+        else:
+            if task.get("kind") == "activity" and reservation and reservation.status in {"cancelled", "completed"}:
+                npc.tasks.pop(0)
+            target = plan.entry_x, plan.entry_y
+            if actor.action != "leaving":
+                actor.target_x, actor.target_y = target
+                self._household_route(plan, actor, target)
+            actor.action = "leaving"
+            if abs(actor.x - plan.entry_x) + abs(actor.y - plan.entry_y) <= 350:
+                landing = self._exterior_landing(plan, npc.uid)
+                if landing:
+                    npc.x, npc.y, npc.z = landing.x, landing.y, landing.z
+                    self._remove_actor(npc.uid)
+                return
+        if actor.waypoints:
+            tx, ty = actor.waypoints[0]
+            dx, dy = tx - actor.x, ty - actor.y
+            distance = max(1, isqrt(dx * dx + dy * dy))
+            moved = self._move_npc(npc, plan, actor, dx * min(350, distance) // distance, dy * min(350, distance) // distance)
+            if abs(actor.x - tx) + abs(actor.y - ty) <= 60:
+                actor.waypoints.pop(0)
+            elif not moved:
+                actor.target_x = actor.target_y = None
+                actor.waypoints.clear()
+
     def _household_route(self, plan: InteriorPlan, actor: InteriorActor, target: tuple[int, int]) -> None:
-        room = room_at(plan, actor.x, actor.y)
-        target_room = room_at(plan, *target)
-        hall_y = plan.rooms[0].rect.y + 650
-        points = []
-        if room and room.uid != plan.rooms[0].uid and room != target_room:
-            points.extend([(room.rect.x + room.rect.w // 2, actor.y), (room.rect.x + room.rect.w // 2, hall_y)])
-        if target_room and target_room.uid != plan.rooms[0].uid and room != target_room:
-            points.extend([(target_room.rect.x + target_room.rect.w // 2, hall_y), (target_room.rect.x + target_room.rect.w // 2, target_room.rect.y + target_room.rect.h - 600)])
-        points.append(target)
-        actor.waypoints = [[x, y] for x, y in points if position_clear(plan, x, y)]
+        actor.waypoints = [list(p) for p in (interior_path(plan, (actor.x, actor.y), target) or [])]
+
+    @staticmethod
+    def _move_npc(npc, plan: InteriorPlan, actor: InteriorActor, dx: int, dy: int) -> bool:
+        old_x, old_y = actor.x, actor.y
+        moved = move_actor(plan, actor, dx, dy)
+        if moved:
+            npc.facing_dx = 0 if actor.x == old_x else (1 if actor.x > old_x else -1)
+            npc.facing_dy = 0 if actor.y == old_y else (1 if actor.y > old_y else -1)
+        return moved
 
     def tick_update(self, minute: int) -> None:
         """Bounded domestic routines on simulation ticks, never rendering frames.
 
-        Work production remains the existing external activity system. A home
-        resident leaves through the portal when duty/needs require it. No indoor
-        routine creates goods, food, or workplace output.
+        Work arrivals call the existing reservation/completion authority only
+        after continuous station arrival. Household routines create no goods.
         """
         minute = int(minute)
         hour = minute % 1440 // 60
@@ -410,6 +564,10 @@ class InteriorSystem:
                 npc.thirst = min(100, npc.thirst + elapsed_hours * 5)
                 npc.rest = min(100, npc.rest + elapsed_hours * 2)
                 actor.last_need_minute += elapsed_hours * 60
+            if plan.building_id == npc.workplace_id and (actor.action == "working" or plan.function not in {"residence", "inn", "barracks", "outskirt_camp"}
+                    or any(t.get("profession_task") or t.get("space_id") == plan.uid for t in npc.tasks)):
+                self._workplace_tick(npc, actor, plan, minute)
+                continue
             answering = any(t.get("action") == "answer_door" or t.get("door_answer_uid") for t in npc.tasks)
             leave = answering or npc.hunger >= 70 or npc.thirst >= 70 or (7 <= hour < 20 and npc.rest < 50)
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
@@ -449,7 +607,7 @@ class InteriorSystem:
                 tx, ty = actor.waypoints[0]
                 dx, dy = tx - actor.x, ty - actor.y
                 distance = max(1, isqrt(dx * dx + dy * dy))
-                moved = move_actor(plan, actor, dx * min(220, distance) // distance, dy * min(220, distance) // distance)
+                moved = self._move_npc(npc, plan, actor, dx * min(220, distance) // distance, dy * min(220, distance) // distance)
                 if abs(actor.x - tx) + abs(actor.y - ty) <= 90:
                     actor.waypoints.pop(0)
                 elif not moved:

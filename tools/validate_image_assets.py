@@ -4,9 +4,11 @@ from pathlib import Path
 from PIL import Image, UnidentifiedImageError
 
 
-def image_issues(paths, *, root: Path | None = None) -> tuple[int, list[str]]:
+def image_issues(paths, *, root: Path | None = None, opaque_paths=()) -> tuple[int, list[str]]:
+    """Audit overlays strictly, allowing RGB only for named opaque textures."""
     root = root or Path.cwd()
     unique = sorted({Path(path).resolve() for path in paths})
+    opaque = {Path(path).resolve() for path in opaque_paths}
     issues = []
     for path in unique:
         try:
@@ -19,7 +21,8 @@ def image_issues(paths, *, root: Path | None = None) -> tuple[int, list[str]]:
                 if image.format != 'PNG':
                     issues.append(f'{label}: expected PNG; got {image.format}')
                 is_terrain = 'terrain' in {part.lower() for part in path.parts}
-                if not is_terrain and image.mode != 'RGBA':
+                opaque_texture = path in opaque and image.mode == 'RGB'
+                if not is_terrain and image.mode != 'RGBA' and not opaque_texture:
                     issues.append(f'{label}: mode={image.mode}; overlay sprites require RGBA (convert and save as PNG)')
                 if image.width < 24 or image.height < 24:
                     issues.append(f'{label}: dimensions={image.width}x{image.height}; minimum is 24x24')

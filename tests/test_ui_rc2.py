@@ -24,6 +24,22 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_shared_hud_stance_controls_are_pointer_only_and_bounded(self):
+        import os
+        from unittest.mock import patch
+        from worldseed.ui.pygame_terminal import PygameTerminal
+        if not PygameTerminal.available():self.skipTest('pygame optional')
+        with patch.dict(os.environ,{'SDL_VIDEODRIVER':'dummy','SDL_AUDIODRIVER':'dummy'}):
+            term=PygameTerminal(800,520);term.enter()
+            try:
+                rect=term.pg.Rect(540,450,230,29)
+                term._draw_stance_buttons(rect,'aggressive')
+                controls=[(r,t) for r,t in term._pointer_targets if t.startswith('UI_STANCE:')]
+                self.assertEqual([t for r,t in controls],['UI_STANCE:normal','UI_STANCE:stalk','UI_STANCE:crouch','UI_STANCE:aggressive'])
+                self.assertTrue(all(rect.contains(r) for r,t in controls))
+                for r,t in controls:self.assertEqual(classify_key(t).kind,'stance')
+            finally:term.restore()
+
     def test_interior_direction_tokens_preserve_wasd_movement_contract(self):
         from worldseed.ui.router import classify_key
         for key in ('w','a','s','d'):

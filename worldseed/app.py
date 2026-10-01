@@ -943,11 +943,17 @@ def _look_mode(ctx:GameContext,term:Terminal)->None:
             if max(abs(nxt.x-sim.player_pos.x),abs(nxt.y-sim.player_pos.y))<=35:cursor=nxt
 
 def _nearby_water(sim:Simulation)->bool:
+    interiors=getattr(sim,'interiors',None)
+    if interiors is not None and interiors.player_presence() is not None:return False
     p=sim.player_pos
     for dx,dy in ((0,0),(1,0),(-1,0),(0,1),(0,-1)):
         q=p.moved(dx,dy);tile=sim.world.tile_at(q);fluid=sim.environment.fluid_at(q)
         if 'water' in tile.terrain.tags or (fluid and fluid.fluid=='water' and fluid.amount>10):return True
     return False
+
+def _player_station_ids(sim:Simulation)->set[str]:
+    # The same authoritative read is also usable by lightweight UI fixtures.
+    return Simulation._player_station_ids(sim)
 
 def _process_carcass_menu(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;rows=[]
@@ -987,7 +993,7 @@ def _preservation_menu(ctx:GameContext,term:Terminal)->str:
     sim.execute(StartProcessingCommand(ctx.player_id,pick));return sim.log[-1].message if sim.log else ''
 
 def _cooking_menu(ctx:GameContext,term:Terminal)->str:
-    sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);stations=sim.building.nearby_station_ids(sim.player_pos);water=_nearby_water(sim) or inv.count('core:clean_water')>0
+    sim=ctx.sim;reg=ctx.registry;inv=ctx.entities.get(ctx.player_id,Inventory);stations=_player_station_ids(sim);water=_nearby_water(sim) or inv.count('core:clean_water')>0
     methods=[]
     for m in reg.cooking_methods.values():
         station=reg.structures[m.station].name if m.station in reg.structures else m.station
@@ -1985,8 +1991,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if target.z!=p.z:return UI_BACK
     distance=abs(target.x-p.x)+abs(target.y-p.y)
     rows=[]
-    container=sim.building.container_at(target)
-    if container is not None and 'interior:'+container.property_id in sim.state.interiors:container=None
+    shell=sim.settlement_physicalization.shell_at(target)
+    container=None if shell else sim.building.container_at(target)
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
     npc=next((n for n in sim.state.npcs.values() if n.alive and n.uid not in sim.state.interior_actors and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
@@ -2020,7 +2026,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
     fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
-        if planned is not None and planned.function in {'residence','inn','barracks'} and door.role=='entrance':
+        if shell is not None and door.role=='entrance':
             rows.append(('enter_interior','Enter building interior'))
         if planned is not None and planned.function=='residence' and door.role=='entrance':
             rows.append(('knock_property_door','Knock and wait for a resident'))
@@ -2030,22 +2036,24 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             lock_label=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown'
             rows.append(('inspect_property_door',f'Inspect locked door — lock {lock_label}'))
             inv=ctx.entities.get(ctx.player_id,Inventory)
-            if sim.state.player_hunting_stance!='aggressive':
-                rows.append(('aggressive_stance','Adopt Aggressive Stance for lockpicking or bashing'))
-            elif inv.count('core:lockpick')>0:
+            if sim.state.player_hunting_stance=='aggressive' and inv.count('core:lockpick')>0:
                 rows.append(('lockpick_property_door',f'Pick lock — {lock_label}'))
-            else:
+            elif sim.state.player_hunting_stance=='aggressive':
                 rows.append(('lockpick_property_door','Pick lock — requires Lockpick'))
             if sim.state.player_hunting_stance=='aggressive':
                 rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
         elif door.forced:
             rows.append(('inspect_property_door',f'Inspect forced doorway — condition {door.condition}%'))
+        else:
+            rows.append(('inspect_property_door',f'Inspect doorway — condition {door.condition}%'))
     if fixture_piece is not None and distance<=1:
         rows.append(('inspect_fixture',f'Inspect {fixture_piece.name}'))
         if fixture_station in WORKSHOP_PROFILES:
             rows.append(('use_fixture',f'Use {WORKSHOP_PROFILES[fixture_station].title.title()}'))
     if planned is not None:
         building_label=str(planned.function).replace('_',' ').title()
+        if shell is not None and door is None:
+            rows.append(('inspect_building_exterior',f'Inspect {building_label} exterior'))
         active_case=str(sim.state.player_casing_property_id or '')
         if active_case==planned.uid:
             rows.append(('review_casing',f'Review casing notes — {building_label}'))
@@ -2112,9 +2120,13 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if choice=='enter_interior':
         sim.execute(EnterInteriorCommand(ctx.player_id,door.uid))
         return sim.log[-1].message if sim.log else ''
-    if choice=='aggressive_stance':
-        sim.execute(SetHuntingStanceCommand(ctx.player_id,'aggressive'))
-        return sim.log[-1].message if sim.log else ''
+    if choice=='inspect_building_exterior' and shell is not None:
+        lines=[building_label, f'Exterior condition: {planned.condition}%',
+               'The building exterior is solid. Use its separate entrance to go inside.']
+        if shell.entrance:
+            lines.append(f'Entrance: {shell.entrance[0]}, {shell.entrance[1]}')
+        _view_text(term,box('BUILDING EXTERIOR',lines,screen_width(term.size()[0],92)))
+        return UI_BACK
     if choice=='inspect_fixture' and fixture_piece is not None:
         lines=[
             fixture_piece.name,
@@ -2348,7 +2360,7 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
     }
 
 def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->dict:
-    stations=sim.building.nearby_station_ids(sim.player_pos)
+    stations=_player_station_ids(sim)
     rows={}
     for r in recipes:
         missing=sim.crafting.missing_requirements(r.id,inv,stations)
@@ -2608,7 +2620,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         inv=ctx.entities.get(pid,Inventory)
         if tab=='workshops':
             nearby=sorted(
-                sid for sid in sim.building.nearby_station_ids(sim.player_pos)
+                sid for sid in _player_station_ids(sim)
                 if sid in WORKSHOP_PROFILES
             )
             if workshop_station not in nearby:
@@ -2800,7 +2812,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
         ideas=sim.crafting.researchable_recipes(inv)
         discovered_items=set(sim.state.player_discovered_items)
         nearby_workshops=sorted(
-            sid for sid in sim.building.nearby_station_ids(sim.player_pos)
+            sid for sid in _player_station_ids(sim)
             if sid in WORKSHOP_PROFILES
         )
         rows=[
@@ -2829,7 +2841,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
             if not recipes:
                 _view_text(term,box(profile.title,[profile.purpose,'','You have not discovered a process for this station yet.'],screen_width(term.size()[0],96)))
                 continue
-            stations=sim.building.nearby_station_ids(sim.player_pos)
+            stations=_player_station_ids(sim)
             recipe_rows=[]
             for r in recipes:
                 missing=sim.crafting.missing_requirements(r.id,inv,stations)
@@ -2915,7 +2927,7 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
         category=_select(term,'CRAFTING // RECIPES',[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})
         if not category:continue
         recipes=[r for r in known if (r.category or 'general')==category]
-        stations=sim.building.nearby_station_ids(sim.player_pos);recipe_rows=[]
+        stations=_player_station_ids(sim);recipe_rows=[]
         for r in recipes:
             missing=sim.crafting.missing_requirements(r.id,inv,stations);ready=not missing
             result=', '.join(f'{reg.items[i].name} x{n}' for i,n in r.outputs.items() if i in reg.items)
@@ -3286,7 +3298,12 @@ def _interior_context_menu(ctx,term,x:int,y:int)->str:
     choice=_select(term,'INTERIOR ACTIONS',rows,subtitle='Objects use their actual position and outline.',presentation='world_context')
     if choice=='exit':sim.execute(ExitInteriorCommand(ctx.player_id))
     elif choice=='pickup':sim.execute(PickupCommand(ctx.player_id))
-    elif choice=='use' and furniture is not None:sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
+    elif choice=='use' and furniture is not None:
+        station=STATION_PIECE_ALIASES.get(furniture.piece_id)
+        if station:
+            if not sim.interiors.furniture_in_reach(furniture.uid,1800):return 'Move closer to this station; walls block interaction.'
+            return _crafting_menu(ctx,term,'workshops',station)
+        sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
     elif choice=='move' and furniture is not None:
         term._interior_placing=furniture.uid
         return 'Left-click a free position for the furniture; right-click cancels. Placement respects walls, objects and exits.'

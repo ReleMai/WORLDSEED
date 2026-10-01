@@ -33,8 +33,11 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         if plan.get("uid") != space_id or not building_id or space_id != "interior:" + str(building_id):
             issues.append(f"invalid interior identity: {space_id}")
         width, height = plan.get("width"), plan.get("height")
-        if type(plan.get("version", 1)) is not int or plan.get("version", 1) != 1:
+        if type(plan.get("version", 1)) is not int or plan.get("version", 1) not in (1, 2):
             issues.append(f"unsupported interior plan version: {space_id}")
+        layout_id = plan.get("layout_id", "")
+        if not isinstance(layout_id, str) or (layout_id and (":" not in layout_id or any(c.isspace() for c in layout_id))):
+            issues.append(f"invalid interior layout identity: {space_id}")
         if not all(type(v) is int and 1 <= v <= 100_000 for v in (width, height)):
             issues.append(f"invalid interior dimensions: {space_id}")
             continue
@@ -105,6 +108,22 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
             if (type(x) is not int or type(y) is not int or type(width) is not int or type(height) is not int
                     or not (0 <= x <= width and 0 <= y <= height)):
                 issues.append(f"interior actor position out of bounds: {uid}")
+    for uid,reservation in _table(raw,'activity_reservations').items():
+        metadata=reservation.get('metadata',{}) if isinstance(reservation,dict) else {}
+        if not isinstance(metadata,dict) or not metadata.get('space_id'):continue
+        plan=plans.get(metadata['space_id']) if isinstance(metadata['space_id'],str) else None
+        if not isinstance(plan,dict):
+            issues.append(f'orphan interior activity space: {uid}')
+            continue
+        if metadata.get('door_uid')!=plan.get('door_uid'):
+            issues.append(f'invalid interior activity door binding: {uid}')
+        x,y=metadata.get('interior_use_x'),metadata.get('interior_use_y')
+        width,height=plan.get('width'),plan.get('height')
+        if (any(type(v) is not int for v in (x,y,width,height)) or not (0<=x<width and 0<=y<height)):
+            issues.append(f'invalid interior activity position: {uid}')
+        fixture_ids={f.get('uid') for f in plan.get('furniture',[]) if isinstance(f,dict)}
+        if reservation.get('target_uid') not in fixture_ids:
+            issues.append(f'orphan interior activity fixture: {uid}')
     return issues
 
 
