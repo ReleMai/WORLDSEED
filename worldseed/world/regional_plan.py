@@ -56,6 +56,12 @@ class SettlementPlanState:
     morphology: str = "organic"
     culture_style: str = "vernacular"
     faction_influence: str = ""
+    # Exactly two terrain-derived primary resource systems explain the local
+    # economy. Supporting craft buildings may consume their outputs, but may
+    # not silently create a third local deposit.
+    resource_specializations: list[str] = field(default_factory=list)
+    crop_ids: list[str] = field(default_factory=list)
+    livestock_species_ids: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -107,6 +113,7 @@ class StructurePlanState:
     room_ids: list[str] = field(default_factory=list)
     piece_ids: list[str] = field(default_factory=list)
     roof_percent: int = 0
+    building_form: str = "rectangular"
 
 
 @dataclass(slots=True)
@@ -140,6 +147,9 @@ class LandUseParcel:
     purpose: str = ""
     access_road_id: str = ""
     terrain_score: int = 0
+    resource_deposit: str = ""
+    crop_id: str = ""
+    livestock_species_ids: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

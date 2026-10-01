@@ -586,6 +586,94 @@ class SettlementSkeletonPlanner:
         _, _, y, x = min(rows)
         return x, y
 
+    def _resource_profile(self, common: tuple[int, int], archetype: str) -> list[str]:
+        """Choose exactly two causal, terrain-backed primary resource systems."""
+        samples=[]
+        cx,cy=common
+        for oy in (-12,-6,0,6,12):
+            for ox in (-12,-6,0,6,12):
+                env=self._env(cx+ox,cy+oy)
+                if env is not None and not env.open_water:samples.append(env)
+        if not samples:
+            return ["farming","logging"]
+        # Older deterministic test fixtures and legacy environment readers do not
+        # expose every newer terrain diagnostic.  Resource selection must remain
+        # compatible with their shared physical fields instead of making planning
+        # depend on an optional presentation metric.
+        avg=lambda name,default=0:sum(int(getattr(row,name,default)) for row in samples)//len(samples)
+        timber=sum(row.resources.timber for row in samples)//len(samples)
+        stone=sum(row.resources.stone for row in samples)//len(samples)
+        fresh=sum(row.resources.freshwater for row in samples)//len(samples)
+        farmland=avg("farmland");fertility=avg("soil_fertility");wetness=avg("wetness")
+        scores={
+            "mining":stone*5+avg("slope")*2,
+            "logging":timber*6+max(0,70-farmland),
+            "farming":farmland*5+fertility*3-max(0,wetness-78)*3,
+            "livestock":farmland*3+max(0,75-wetness)*2+max(0,70-avg("slope")),
+            "fishing":fresh*5+wetness*2,
+        }
+        preferred={
+            "mining":"mining","forest":"logging","agrarian":"farming",
+            "fishing":"fishing","river_market":"fishing","frontier":"livestock",
+        }.get(archetype)
+        if preferred:scores[preferred]+=240
+        ordered=sorted(scores,key=lambda key:(-scores[key],key))
+        return ordered[:2]
+
+    def _crop_profile(self, common: tuple[int,int], specializations: list[str]) -> list[str]:
+        if "farming" not in specializations:return []
+        env=self._env(*common)
+        if env is None:return ["core:turnip","core:barley"]
+        if env.wetness>=68:
+            pool=("core:beans","core:cabbage","core:pumpkin","core:wheat")
+        elif env.soil_fertility>=67:
+            pool=("core:wheat","core:corn","core:beans","core:pumpkin")
+        elif env.wetness<=30:
+            pool=("core:barley","core:onion","core:flax","core:corn")
+        else:
+            pool=("core:turnip","core:carrot","core:wheat","core:beans")
+        registry=getattr(self.world,"registry",None)
+        available=set(getattr(registry,"crops",{})) if registry is not None else set(pool)
+        return [crop for crop in pool if crop in available][:4]
+
+    def _livestock_profile(self, common: tuple[int,int], specializations: list[str]) -> list[str]:
+        if "livestock" not in specializations:return []
+        env=self._env(*common)
+        if env is None:return ["core:pig","core:chicken"]
+        if env.wetness>=60 or env.resources.timber>=70:
+            return ["core:pig","core:chicken"]
+        if env.slope>=45:
+            return ["core:sheep","core:chicken"]
+        return ["core:cow","core:sheep"]
+
+    def _curved_path(
+        self,
+        start: tuple[int,int],
+        goal: tuple[int,int],
+        bounds: tuple[int,int,int,int],
+        existing: set[tuple[int,int]],
+        slot: str,
+    ) -> list[tuple[int,int]]:
+        """Route through a stable off-axis control point to avoid ruler roads."""
+        dx=goal[0]-start[0];dy=goal[1]-start[1]
+        length=abs(dx)+abs(dy)
+        if length<10:return self._path(start,goal,bounds,existing)
+        sign=-1 if hash_u64(
+            self.seed,"settlement-road-bend",slot,
+            start[0],start[1],goal[0],goal[1],
+        )&1 else 1
+        bend=max(2,min(9,length//5))
+        scale=max(1,max(abs(dx),abs(dy)))
+        mx=(start[0]+goal[0])//2 + sign*(-dy)*bend//scale
+        my=(start[1]+goal[1])//2 + sign*dx*bend//scale
+        raw=(max(bounds[0],min(bounds[2],mx)),max(bounds[1],min(bounds[3],my)))
+        control=self._nearest_legal(raw,bounds,radius=7)
+        if control is None:return self._path(start,goal,bounds,existing)
+        first=self._path(start,control,bounds,existing)
+        if not first:return self._path(start,goal,bounds,existing)
+        second=self._path(control,goal,bounds,existing|set(first))
+        return first+second[1:] if second else self._path(start,goal,bounds,existing)
+
     @staticmethod
     def _rect(center: tuple[int, int], width: int, height: int) -> set[tuple[int, int]]:
         cx, cy = center
@@ -695,16 +783,16 @@ class SettlementSkeletonPlanner:
         shell: set[tuple[int,int]],
         interior: set[tuple[int,int]],
         road_cells: set[tuple[int,int]],
-        x0: int, y0: int, width: int, height: int,
+        footprint: set[tuple[int,int]],
     ) -> tuple[tuple[int,int],tuple[int,int],tuple[int,int]]:
         """Choose a cardinally usable, non-corner doorway facing the street."""
         edges=[]
-        for x in range(x0+1,x0+width-1):
-            edges.append(((x,y0),(x,y0-1),(x,y0+1)))
-            edges.append(((x,y0+height-1),(x,y0+height),(x,y0+height-2)))
-        for y in range(y0+1,y0+height-1):
-            edges.append(((x0,y),(x0-1,y),(x0+1,y)))
-            edges.append(((x0+width-1,y),(x0+width,y),(x0+width-2,y)))
+        for cell in sorted(shell,key=lambda p:(p[1],p[0])):
+            x,y=cell
+            for dx,dy in CARDINALS:
+                outside=(x+dx,y+dy);inside=(x-dx,y-dy)
+                if outside not in footprint and inside in interior:
+                    edges.append((cell,outside,inside))
         candidates=[]
         for cell,outside,inside in edges:
             if cell not in shell or inside not in interior:
@@ -813,19 +901,57 @@ class SettlementSkeletonPlanner:
         if target_w<4 or target_h<4:
             return None
         cx=(left+right)//2; cy=(top+bottom)//2
-        x0=cx-target_w//2; y0=cy-target_h//2
-        rect={(x,y) for y in range(y0,y0+target_h) for x in range(x0,x0+target_w)}
-        if not rect.issubset(set(parcel.cells)):
+        parcel_cells=set(parcel.cells)
+        sizes=[]
+        for size in (
+            (target_w,target_h),(min(5,target_w),target_h),
+            (target_w,4),(min(5,target_w),4),(4,target_h),(4,4),
+        ):
+            if size not in sizes and size[0]>=4 and size[1]>=4:sizes.append(size)
+        for width,height in sizes:
+            x0=cx-width//2;y0=cy-height//2
+            rect={(x,y) for y in range(y0,y0+height) for x in range(x0,x0+width)}
+            if rect.issubset(parcel_cells):
+                return x0,y0,width,height
             candidates=[]
-            for sy in range(top,bottom-target_h+2):
-                for sx in range(left,right-target_w+2):
-                    cells={(x,y) for y in range(sy,sy+target_h) for x in range(sx,sx+target_w)}
-                    if cells.issubset(set(parcel.cells)):
-                        candidates.append((abs((sx+target_w//2)-cx)+abs((sy+target_h//2)-cy),sy,sx))
-            if not candidates:
-                return None
-            _,y0,x0=min(candidates)
-        return x0,y0,target_w,target_h
+            for sy in range(top,bottom-height+2):
+                for sx in range(left,right-width+2):
+                    cells={(x,y) for y in range(sy,sy+height) for x in range(sx,sx+width)}
+                    if cells.issubset(parcel_cells):
+                        candidates.append((abs((sx+width//2)-cx)+abs((sy+height//2)-cy),sy,sx))
+            if candidates:
+                _,y0,x0=min(candidates)
+                return x0,y0,width,height
+        return None
+
+    def _building_cells(
+        self, parcel: LandUseParcel, *, large: bool, function: str, slot: str,
+    ) -> tuple[set[tuple[int,int]],str] | None:
+        rect=self._building_rect(parcel,large=large)
+        if rect is None:return None
+        x0,y0,width,height=rect
+        footprint={(x,y) for y in range(y0,y0+height) for x in range(x0,x0+width)}
+        if function not in {"residence","inn","barracks","outskirt_camp"}:
+            # Leave a one-cell authored yard around large profession buildings.
+            # The lot, not the wall rectangle, owns signs, materials and gates.
+            if width>=7:
+                x0+=1;width-=2
+                footprint={(x,y) for y in range(y0,y0+height) for x in range(x0,x0+width)}
+            return footprint,"workshop_block"
+        variant=int(hash_u64(self.seed,"settlement-building-form",parcel.uid,slot)%4)
+        if variant==1:
+            # Chamfered cottages break the repeated square silhouette while
+            # retaining a robust tile-enclosed interior on small lots.
+            corners={(x0,y0),(x0+width-1,y0),(x0,y0+height-1),(x0+width-1,y0+height-1)}
+            footprint-=corners
+            return footprint,"chamfered_cottage"
+        if variant==2 and width>=7:
+            for y in range(y0,y0+2):
+                for x in range(x0+width-2,x0+width):footprint.discard((x,y))
+            return footprint,"l_house"
+        if variant==3:
+            return footprint,"longhouse"
+        return footprint,"cottage"
 
     def _fixture_piece(self, function: str, room_side: str):
         registry=getattr(self.world,"registry",None)
@@ -952,19 +1078,24 @@ class SettlementSkeletonPlanner:
         registry=getattr(self.world,"registry",None)
         if registry is None:
             return None
-        rect=self._building_rect(parcel,large=large)
-        if rect is None:
+        shaped=self._building_cells(parcel,large=large,function=function,slot=slot)
+        if shaped is None:
             return None
-        x0,y0,width,height=rect
-        shell={(x,y) for x in range(x0,x0+width) for y in (y0,y0+height-1)}
-        shell|={(x,y) for y in range(y0,y0+height) for x in (x0,x0+width-1)}
-        interior={(x,y) for y in range(y0+1,y0+height-1) for x in range(x0+1,x0+width-1)}
+        footprint,building_form=shaped
+        xs=[p[0] for p in footprint];ys=[p[1] for p in footprint]
+        x0,y0=min(xs),min(ys);width=max(xs)-x0+1;height=max(ys)-y0+1
+        shell={
+            (x,y) for x,y in footprint
+            if any((x+dx,y+dy) not in footprint for dx,dy in CARDINALS)
+        }
+        interior=set(footprint)-shell
+        if not interior:return None
         road_cells=self._road_cell_set(roads)
         if not road_cells:
             return None
         try:
             entrance,entrance_outside,entrance_inside=self._select_entrance(
-                shell,interior,road_cells,x0,y0,width,height
+                shell,interior,road_cells,footprint
             )
         except ValueError:
             # One unsuitable lot must not invalidate the entire settlement plan.
@@ -974,7 +1105,7 @@ class SettlementSkeletonPlanner:
         walls=set(shell); walls.discard(entrance)
         doors={entrance}
         partition_cells=set()
-        if large and width>=7 and len(interior)>=9:
+        if large and building_form in {"workshop_block","longhouse","cottage"} and width>=7 and len(interior)>=9:
             px=x0+width//2
             partition_cells={(px,y) for y in range(y0+1,y0+height-1)}
             internal_door=(px,y0+height//2)
@@ -1173,6 +1304,7 @@ class SettlementSkeletonPlanner:
             entrance=entrance,building_type=analysis.building_type,enclosed=analysis.enclosed,
             interior_area=analysis.interior_area,room_ids=[r.uid for r in rooms],
             piece_ids=[p.uid for p in placements],roof_percent=analysis.roof_percent,
+            building_form=building_form,
             workplace_role=({
                 "smithy":"smith","workshop":"carpenter","mill":"miller","fishery":"fisher",
                 "bakery":"baker","butcher":"butcher","weavery":"weaver","tannery":"tanner",
@@ -1183,6 +1315,87 @@ class SettlementSkeletonPlanner:
         )
         return structure,rooms,placements
 
+    def _plan_open_worksite(
+        self, parcel: LandUseParcel, roads: list[RoadSegmentPlan], *, slot: str,
+    ) -> tuple[StructurePlanState,list[StructurePiecePlan]] | None:
+        """Materialize a persistent outdoor profession site from one parcel."""
+        registry=getattr(self.world,"registry",None)
+        if registry is None or not parcel.cells:return None
+        cells=set(parcel.cells);road_cells=self._road_cell_set(roads)
+        boundary={
+            p for p in cells
+            if any((p[0]+dx,p[1]+dy) not in cells for dx,dy in CARDINALS)
+        }
+        center=min(cells,key=lambda p:(sum(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in cells),p[1],p[0]))
+        gate=min(boundary,key=lambda p:(min((abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),default=0),p[1],p[0]))
+        far=max(cells,key=lambda p:(min((abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),default=0),-p[1],-p[0]))
+        purpose=str(parcel.purpose)
+        function={"field":"farm_field","animal_pen":"animal_pen","mine_approach":"mine_site","logging_yard":"logging_camp"}.get(purpose,purpose)
+        role={"farm_field":"farmer","animal_pen":"herder","mine_site":"miner","logging_camp":"lumberjack"}.get(function,"")
+        structure_uid=stable_plan_uid("structure",parcel.uid,slot,sorted(cells))
+        placements=[]
+        def place(piece_id,cell,piece_role):
+            piece=registry.settlement_pieces.get(piece_id)
+            if piece is None:return
+            uid=stable_plan_uid("piece",structure_uid,f"{piece.id}:{piece_role}:{cell[0]}:{cell[1]}",[cell])
+            placements.append(StructurePiecePlan(uid,structure_uid,piece.id,cell[0],cell[1],piece.layer,piece_role))
+        if function=="farm_field":
+            for cell in sorted(cells,key=lambda p:(p[1],p[0])):place("core:dev43_plowed_soil_piece",cell,"field_ground")
+            for index,cell in enumerate(sorted(boundary,key=lambda p:(p[1],p[0]))):
+                place("core:dev43_field_gate_piece" if cell==gate else "core:dev43_field_fence_piece",cell,"field_gate" if cell==gate else "field_fence")
+            place("core:farm_shed_piece",far,"worksite_fixture")
+        elif function=="animal_pen":
+            for cell in sorted(boundary,key=lambda p:(p[1],p[0])):
+                place("core:animal_pen_gate_piece" if cell==gate else "core:animal_pen_fence_piece",cell,"pen_gate" if cell==gate else "pen_fence")
+            place("core:dev43_livestock_trough_piece",center,"worksite_fixture")
+            hay=max(cells-{center,gate},key=lambda p:(abs(p[0]-center[0])+abs(p[1]-center[1]),-p[1],-p[0]))
+            place("core:dev43_hay_rack_piece",hay,"worksite_fixture")
+        elif function=="mine_site":
+            for cell in sorted(cells,key=lambda p:(p[1],p[0])):place("core:quarry_ground_piece",cell,"quarry_ground")
+            caves=getattr(self.world.generator,"caves",None)
+            connector=next((p for p in sorted(cells,key=lambda p:(p[1],p[0])) if caves is not None and caves.entrance(p[0],p[1]) is not None),far)
+            place("core:mine_entrance_piece",connector,"mine_connector_marker")
+            near=sorted(cells-{connector},key=lambda p:(abs(p[0]-connector[0])+abs(p[1]-connector[1]),p[1],p[0]))
+            if near:place("core:dev43_iron_ore_pile_piece",near[-1],"worksite_fixture")
+            if len(near)>1:place("core:mine_shed_piece",near[len(near)//2],"worksite_fixture")
+        elif function=="logging_camp":
+            place("core:logging_hut_piece",far,"worksite_fixture")
+            remaining=sorted(cells-{far},key=lambda p:(abs(p[0]-far[0])+abs(p[1]-far[1]),p[1],p[0]))
+            if remaining:place("core:logging_tool_rack_piece",remaining[0],"worksite_fixture")
+            if len(remaining)>1:place("core:dev43_timber_stack_piece",remaining[-1],"worksite_fixture")
+            fixture_cells={far}
+            if remaining:fixture_cells.add(remaining[0])
+            if len(remaining)>1:fixture_cells.add(remaining[-1])
+            planting=[p for p in sorted(cells-boundary-fixture_cells,key=lambda p:(p[1],p[0])) if (p[0]+p[1])%2==0]
+            for index,cell in enumerate(planting[:10]):
+                piece_id="core:logging_managed_tree_piece" if index%3==0 else "core:logging_sapling_piece"
+                place(piece_id,cell,"managed_tree_plot")
+        else:return None
+
+        # Outdoor workplaces participate in the same authoritative access graph
+        # as enclosed buildings.  Keep the interior blocked so the connector
+        # leaves through the selected gate instead of cutting across a field or
+        # animal pen.
+        frontage=self._service_path(gate,road_cells,cells-{gate},limit=48)
+        if len(frontage)>=2:
+            service_uid=stable_plan_uid("road",parcel.settlement_plan_id,f"service:{structure_uid}",frontage)
+            if not any(row.uid==service_uid for row in roads):
+                roads.append(RoadSegmentPlan(
+                    uid=service_uid,settlement_plan_id=parcel.settlement_plan_id,
+                    road_class="service_path",polyline=list(frontage),width=1,
+                    surface="packed_earth",
+                ))
+            parcel.access_road_id=service_uid
+        structure=StructurePlanState(
+            uid=structure_uid,settlement_plan_id=parcel.settlement_plan_id,
+            content_id=f"core:generated_{function}",function=function,
+            footprint=sorted(cells,key=lambda p:(p[1],p[0])),entrance=gate,
+            building_type="outdoor_worksite",enclosed=False,interior_area=len(cells),
+            piece_ids=[p.uid for p in placements],roof_percent=0,
+            workplace_role=role,building_form="open_worksite",
+        )
+        return structure,placements
+
     def _generate_buildings(
         self,
         plan: SettlementPlanState,
@@ -1190,6 +1403,11 @@ class SettlementSkeletonPlanner:
         parcels: list[LandUseParcel],
     ) -> tuple[list[StructurePlanState],list[RoomPlanState],list[StructurePiecePlan]]:
         structures=[]; rooms=[]; pieces=[]
+        for index,parcel in enumerate(p for p in parcels if p.purpose in {"field","animal_pen","mine_approach","logging_yard"}):
+            result=self._plan_open_worksite(parcel,roads,slot=f"worksite:{index}:{parcel.purpose}")
+            if result:
+                structure,new_pieces=result
+                structures.append(structure);pieces.extend(new_pieces);parcel.structure_ids.append(structure.uid)
         lodging_priority={"outskirt_camp":0,"barracks":1,"inn":2,"home_lot":3}
         residential=sorted((p for p in parcels if p.kind=="residential"),key=lambda p:(lodging_priority.get(p.purpose,3),p.uid))
         for index,parcel in enumerate(residential):
@@ -1203,7 +1421,7 @@ class SettlementSkeletonPlanner:
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
                 parcel.structure_ids.append(structure.uid)
 
-        industrial=[p for p in parcels if p.kind=="industrial"]
+        industrial=[p for p in parcels if p.kind=="industrial" and p.purpose not in {"mine_approach","logging_yard"}]
         workshop_functions={"smithy","bakery","butcher","weavery","tannery","pottery","brewery","mason_yard","mill","fishery"}
         primary_function={"mining":"smithy","forest":"workshop","agrarian":"mill","fishing":"fishery","river_market":"workshop"}.get(plan.archetype,"workshop")
         for index,parcel in enumerate(industrial):
@@ -1230,7 +1448,7 @@ class SettlementSkeletonPlanner:
                 structures.append(structure);rooms.extend(new_rooms);pieces.extend(new_pieces)
                 parcel.structure_ids.append(structure.uid)
 
-        farms=[p for p in parcels if p.kind=="farm"]
+        farms=[p for p in parcels if p.kind=="farm" and p.purpose=="field"]
         if farms:
             result=self._plan_building(farms[0],roads,slot="farm:0",function="barn",archetype=plan.archetype,large=True)
             if result:
@@ -1266,6 +1484,9 @@ class SettlementSkeletonPlanner:
             faction_influence=str(faction_id or ""),
             orientation=int(hash_u64(self.seed,"settlement-orientation",settlement_id,culture_id)%4),
         )
+        plan.resource_specializations=self._resource_profile(common_center,plan.archetype)
+        plan.crop_ids=self._crop_profile(common_center,plan.resource_specializations)
+        plan.livestock_species_ids=self._livestock_profile(common_center,plan.resource_specializations)
 
         roads: list[RoadSegmentPlan] = []
         road_cells: set[tuple[int, int]] = set()
@@ -1290,7 +1511,7 @@ class SettlementSkeletonPlanner:
             route_id: str = "",
             crossing_ids=(),
         ) -> str:
-            path = self._path(common_center, target, bounds, road_cells)
+            path = self._curved_path(common_center,target,bounds,road_cells,slot)
             if len(path) < 2:
                 return ""
             uid = stable_plan_uid("road", plan.uid, slot, path)
@@ -1319,28 +1540,30 @@ class SettlementSkeletonPlanner:
         local_count = self._LOCAL_STREETS[rank]
         radius = min(22, max(10, self._RADIUS[rank] // 2))
         if plan.morphology in {"river_spine","waterfront","linear"}:
-            local_targets=[
-                (common_center[0]+radius,common_center[1]),(common_center[0]-radius,common_center[1]),
-                (common_center[0]+radius//2,common_center[1]+radius//3),
-                (common_center[0]-radius//2,common_center[1]-radius//3),
-                (common_center[0],common_center[1]+radius//2),(common_center[0],common_center[1]-radius//2),
+            local_offsets=[
+                (radius,0),(-radius,0),(radius//2,radius//3),
+                (-radius//2,-radius//3),(0,radius//2),(0,-radius//2),
             ]
         elif plan.morphology in {"compact_workyard","courtyard"}:
             r=max(7,radius//2)
-            local_targets=[
-                (common_center[0]+r,common_center[1]),(common_center[0]-r,common_center[1]),
-                (common_center[0],common_center[1]+r),(common_center[0],common_center[1]-r),
-                (common_center[0]+r,common_center[1]+r),(common_center[0]-r,common_center[1]-r),
+            local_offsets=[
+                (r,0),(-r,0),(0,r),(0,-r),(r,r),(-r,-r),
+            ]
+        elif plan.morphology in {"field_cluster","clearing_web","organic"}:
+            local_offsets=[
+                (radius,radius//4),(-radius//2,radius),(radius//3,-radius),
+                (-radius,-radius//3),(radius*2//3,radius*2//3),(-radius*2//3,-radius*2//3),
             ]
         else:
-            local_targets = [
-                (common_center[0] + radius, common_center[1]),
-                (common_center[0] - radius, common_center[1]),
-                (common_center[0], common_center[1] + radius),
-                (common_center[0], common_center[1] - radius),
-                (common_center[0] + radius//2, common_center[1] + radius//2),
-                (common_center[0] - radius//2, common_center[1] - radius//2),
+            local_offsets=[
+                (radius,0),(-radius,0),(0,radius),(0,-radius),
+                (radius//2,radius//2),(-radius//2,-radius//2),
             ]
+        def orient(offset):
+            x,y=offset
+            for _ in range(plan.orientation%4):x,y=-y,x
+            return common_center[0]+x,common_center[1]+y
+        local_targets=[orient(offset) for offset in local_offsets]
         added = 0
         for raw in local_targets:
             target = self._nearest_legal(raw, bounds, radius=7)
@@ -1356,7 +1579,7 @@ class SettlementSkeletonPlanner:
         occupied = set(common_cells) | road_cells
         farm_target = self._best_functional_site(
             common_center, bounds, kind="farm", archetype=plan.archetype, occupied=occupied
-        )
+        ) if "farming" in plan.resource_specializations or "livestock" in plan.resource_specializations else None
         # Agricultural and industrial anchors must be physically distinct even
         # when a uniformly good test/plain gives both scorers the same optimum.
         industry_occupied=set(occupied)
@@ -1364,7 +1587,17 @@ class SettlementSkeletonPlanner:
             industry_occupied |= self._rect(farm_target,11,9)
         industry_target = self._best_functional_site(
             common_center, bounds, kind="industry", archetype=plan.archetype, occupied=industry_occupied
-        )
+        ) if any(kind in plan.resource_specializations for kind in ("mining","logging","fishing")) else None
+        if "mining" in plan.resource_specializations:
+            caves=getattr(self.world.generator,"caves",None)
+            if caves is not None:
+                entrances=[
+                    row for row in caves.entrances_near(common_center[0],common_center[1],self._RADIUS[rank])
+                    if bounds[0]<=row.x<=bounds[2] and bounds[1]<=row.y<=bounds[3]
+                ]
+                if entrances:
+                    entrance=min(entrances,key=lambda row:(abs(row.x-common_center[0])+abs(row.y-common_center[1]),row.y,row.x))
+                    industry_target=(int(entrance.x),int(entrance.y))
         farm_road = add_road(
             "farm-access", self._approach_point(farm_target,9,7,common_center), "path"
         ) if farm_target else ""
@@ -1387,9 +1620,9 @@ class SettlementSkeletonPlanner:
         # the settlement exists.
         functional_reserve=set()
         if farm_target:
-            functional_reserve |= self._rect(farm_target,9,7)
+            functional_reserve |= self._rect(farm_target,25,19)
         if industry_target:
-            functional_reserve |= self._rect(industry_target,7,7)
+            functional_reserve |= self._rect(industry_target,21,19)
 
         # Residential lots are street-fronting by construction. Candidate lots
         # are projected to either side of the actual curved road polyline.
@@ -1456,6 +1689,10 @@ class SettlementSkeletonPlanner:
         desired=[name for name in desired if name!=primary_for_archetype]
         for function in desired:
             for _,sy,sx,access_id in list(remaining_candidates):
+                # A profession building needs an owned exterior apron for its
+                # sign, materials, gate and yard fixtures. Roads can clip the
+                # street-facing edge, so these lots are deliberately larger
+                # than residential lots.
                 size=7 if rank in {"town","city"} else 5
                 parcel=self._parcel(
                     plan.uid,f"workshop:{function}","industrial",function,(sx,sy),size,size,
@@ -1473,7 +1710,7 @@ class SettlementSkeletonPlanner:
         if rank in {"town","city"} and not any(p.kind=="industrial" and p.purpose=="smithy" for p in parcels):
             for _,sy,sx,access_id in list(remaining_candidates):
                 parcel=self._parcel(
-                    plan.uid,"workshop:smithy-fallback","industrial","smithy",(sx,sy),5,5,
+                    plan.uid,"workshop:smithy-fallback","industrial","smithy",(sx,sy),7,7,
                     forbidden=occupied|functional_reserve,road_cells=road_cells,access_road_id=access_id,
                 )
                 if parcel is None:continue
@@ -1509,7 +1746,7 @@ class SettlementSkeletonPlanner:
         camp=next((p for p in reversed(lodging_parcels) if p.uid not in assigned),None)
         if camp is not None:camp.purpose="outskirt_camp"
 
-        if farm_target:
+        if farm_target and "farming" in plan.resource_specializations:
             farm_goal = self._FARM_TARGET[rank]
             offsets = ((0,0),(10,0),(-10,0),(0,8),(0,-8),(10,8),(-10,8),(10,-8),(-10,-8),(20,0),(-20,0))
             made = 0
@@ -1522,30 +1759,47 @@ class SettlementSkeletonPlanner:
                 )
                 if parcel is None or parcel.fertility < 22:
                     continue
+                parcel.crop_id=plan.crop_ids[made%len(plan.crop_ids)] if plan.crop_ids else ""
+                parcel.resource_deposit="farming"
                 parcels.append(parcel); occupied.update(parcel.cells); made += 1
                 if made >= farm_goal:
                     break
 
-        if industry_target:
-            purpose = {
-                "mining": "mine_approach",
-                "forest": "logging_yard",
-                "fishing": "fishery",
-                "river_market": "trade_workyard",
-                "agrarian": "mill_workyard",
-                "frontier": "general_workyard",
-            }.get(plan.archetype, "general_workyard")
-            parcel = self._parcel(
-                plan.uid, "industrial:0", "industrial", purpose, industry_target, 7, 7,
-                forbidden=occupied, road_cells=road_cells, access_road_id=industry_road,
-                min_legal_ratio=70,
+        if farm_target and "livestock" in plan.resource_specializations:
+            parcel=None
+            pen_offsets=((12,8),(12,-8),(-12,8),(-12,-8),(0,12),(0,-12),(16,0),(-16,0))
+            for ox,oy in pen_offsets:
+                parcel=self._parcel(
+                    plan.uid,"livestock:0","farm","animal_pen",
+                    (farm_target[0]+ox,farm_target[1]+oy),11,9,
+                    forbidden=occupied,road_cells=road_cells,access_road_id=farm_road,min_legal_ratio=72,
+                )
+                if parcel is not None:break
+            if parcel is not None:
+                parcel.resource_deposit="livestock"
+                parcel.livestock_species_ids=list(plan.livestock_species_ids[:2])
+                parcels.append(parcel);occupied.update(parcel.cells)
+
+        industry_specs=[kind for kind in plan.resource_specializations if kind in {"mining","logging","fishing"}]
+        for index,resource_kind in enumerate(industry_specs):
+            target=industry_target
+            if target is not None and index:
+                target=self._nearest_legal((target[0]+10,target[1]+8),bounds,radius=10)
+            if target is None:continue
+            purpose={"mining":"mine_approach","logging":"logging_yard","fishing":"fishery"}[resource_kind]
+            access_id=industry_road
+            if index:
+                access_id=add_road(
+                    f"industry-access:{resource_kind}",self._approach_point(target,9,9,common_center),"path"
+                )
+            parcel=self._parcel(
+                plan.uid,f"industrial:{resource_kind}","industrial",purpose,target,9,9,
+                forbidden=occupied,road_cells=road_cells,access_road_id=access_id,min_legal_ratio=70,
             )
             if parcel is not None:
-                # Preserve the settlement's terrain-explaining primary industry
-                # as the first industrial parcel. Specialist workshop lots are
-                # supporting craft district parcels rather than replacements.
+                parcel.resource_deposit=resource_kind
                 first_industrial=next((i for i,row in enumerate(parcels) if row.kind=="industrial"),len(parcels))
-                parcels.insert(first_industrial,parcel);occupied.update(parcel.cells)
+                parcels.insert(first_industrial+index,parcel);occupied.update(parcel.cells)
 
         plan.road_segment_ids = [row.uid for row in roads]
         plan.parcel_ids = [row.uid for row in parcels]

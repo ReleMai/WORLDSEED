@@ -15,18 +15,19 @@ class AnimalSpriteTests(unittest.TestCase):
         visuals = VisualRegistry.load_default()
         monsters = {"core:cave_crawler", "core:cave_stalker"}
         animals = set(content.species) - monsters
-        self.assertEqual(21, len(animals))
+        self.assertEqual(25, len(animals))
 
         for species_id in sorted(animals):
             with self.subTest(species=species_id):
                 ref = visuals.ref("species", species_id)
-                self.assertEqual(4, len(ref.paths))
-                self.assertTrue(all("/illustrated/" in path for path in ref.paths))
+                domestic=species_id in {"core:pig","core:cow","core:chicken","core:sheep"}
+                self.assertEqual(2 if domestic else 4, len(ref.paths))
+                self.assertTrue(all("/domestic/" in path for path in ref.paths) if domestic else all("/illustrated/" in path for path in ref.paths))
                 files = [visuals.base_dir / path for path in ref.paths]
-                self.assertEqual(4, len({path.read_bytes() for path in files}))
+                self.assertEqual(len(files), len({path.read_bytes() for path in files}))
                 for path in files:
                     with Image.open(path) as sprite:
-                        self.assertEqual((160, 136), sprite.size)
+                        self.assertEqual((320, 256) if domestic else (160, 136), sprite.size)
                         alpha = sprite.convert("RGBA").getchannel("A")
                         self.assertLessEqual(alpha.getpixel((0, 0)), 4)
                         self.assertIsNotNone(alpha.getbbox())

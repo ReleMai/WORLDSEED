@@ -121,17 +121,23 @@ class SettlementPopulationBindingTests(unittest.TestCase):
         parcels = {row.uid: row for row in skeleton.parcels}
         for npc in state.npcs.values():
             self.assertIn(npc.home_id, structures)
-            self.assertEqual(structures[npc.home_id].function, "residence")
+            self.assertIn(
+                structures[npc.home_id].function,
+                {"residence", "inn", "barracks", "outskirt_camp"},
+            )
             self.assertIn(npc.home_room_id, rooms)
             self.assertEqual(rooms[npc.home_room_id].structure_plan_id, npc.home_id)
             self.assertIn(npc.bed_fixture_id, pieces)
             bed = self.registry.settlement_pieces[pieces[npc.bed_fixture_id].piece_id]
             self.assertIn("bed", bed.tags)
-            self.assertEqual(npc.property_id, npc.home_id)
+            if structures[npc.home_id].function == "residence":
+                self.assertEqual(npc.property_id, npc.home_id)
+                self.assertEqual(settlement.property_owners[npc.home_id], npc.uid)
+            else:
+                self.assertFalse(npc.property_id)
             self.assertTrue(any(npc.home_id in parcel.structure_ids for parcel in parcels.values()))
             self.assertIn((npc.x, npc.y), set(rooms[npc.home_room_id].cells))
             self.assertTrue(physical.passable(WorldPos(npc.x, npc.y, 0), True))
-            self.assertEqual(settlement.property_owners[npc.home_id], npc.uid)
 
     def test_work_bindings_match_existing_physical_workplaces(self):
         state, settlement, physical, binder = self._fixture()
@@ -141,16 +147,22 @@ class SettlementPopulationBindingTests(unittest.TestCase):
         rooms = {row.uid: row for row in skeleton.rooms}
         by_occ = {npc.occupation: npc for npc in state.npcs.values()}
 
-        for occupation in ("smith", "miner"):
-            npc = by_occ[occupation]
-            self.assertTrue(npc.workplace_id)
-            self.assertEqual(structures[npc.workplace_id].function, "smithy")
-            self.assertIn(npc.work_room_id, rooms)
-            self.assertEqual(rooms[npc.work_room_id].structure_plan_id, npc.workplace_id)
+        smith = by_occ["smith"]
+        self.assertTrue(smith.workplace_id)
+        self.assertEqual(structures[smith.workplace_id].function, "smithy")
+        self.assertIn(smith.work_room_id, rooms)
+        self.assertEqual(rooms[smith.work_room_id].structure_plan_id, smith.workplace_id)
+
+        miner = by_occ["miner"]
+        self.assertTrue(miner.workplace_id)
+        self.assertEqual(structures[miner.workplace_id].function, "mine_site")
+        self.assertFalse(miner.work_room_id)
+
+        expected={"farmer":{"farm_field","mill","barn"},"herder":{"animal_pen","barn"}}
         for occupation in ("farmer", "herder"):
             npc = by_occ[occupation]
             self.assertTrue(npc.workplace_id)
-            self.assertIn(structures[npc.workplace_id].function, {"mill", "barn"})
+            self.assertIn(structures[npc.workplace_id].function, expected[occupation])
         self.assertGreaterEqual(stats.workplaces_bound, 4)
 
     def test_binding_is_idempotent_and_does_not_teleport_valid_residents(self):

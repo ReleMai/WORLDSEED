@@ -664,9 +664,11 @@ Player-managed tilled soil. Crops are planted rather than natural biome spawns.
 | Barley | spring, summer |
 | Cabbage | spring, autumn |
 | Carrot | spring, summer, autumn |
+| Corn | spring, summer |
 | Field Beans | spring, summer |
 | Flax | spring, summer |
 | Onion | spring, summer |
+| Pumpkin | spring, summer, autumn |
 | Turnip | spring, autumn |
 | Wheat | spring, summer |
 

@@ -335,5 +335,9 @@
       "core:dressed_stone": 1
     },
     "priority_good": "core:dressed_stone"
-  }
+  },
+  {"id":"core:field_corn","name":"Corn Field","occupation":"farmer","workers":2,"inputs":{"core:corn_seed":1},"outputs":{"core:corn":5},"priority_good":"core:corn"},
+  {"id":"core:field_beans","name":"Bean Field","occupation":"farmer","workers":1,"inputs":{"core:beans_seed":1},"outputs":{"core:beans":4},"priority_good":"core:beans"},
+  {"id":"core:field_pumpkin","name":"Pumpkin Field","occupation":"farmer","workers":2,"inputs":{"core:pumpkin_seed":1},"outputs":{"core:pumpkin":4},"priority_good":"core:pumpkin"},
+  {"id":"core:livestock_husbandry","name":"Livestock Husbandry","occupation":"herder","workers":2,"inputs":{"core:wheat":1},"outputs":{"core:meat":2,"core:animal_fat":1},"priority_good":"core:meat"}
 ]

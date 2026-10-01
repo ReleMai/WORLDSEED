@@ -107,6 +107,7 @@ SKILL_DEFS = [
     ('athletics','Athletics','Travel and physical endurance.'),
     ('swimming','Swimming','Efficient swimming; Endurance reduces stamina costs.'),
     ('survival','Survival','Living off the land and reading danger.'),
+    ('farming','Farming','Reading soil, tending crops and managing field fertility.'),
     ('foraging','Foraging','Plants, berries and useful wild materials.'),
     ('woodcutting','Woodcutting','Felling and processing trees.'),
     ('mining','Mining','Rock, ore and underground excavation.'),

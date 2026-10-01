@@ -1877,7 +1877,9 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
     relations.sort(key=lambda row:row[0])
     trust=int(rel_player.get('trust',0));affection=int(rel_player.get('affection',0))
     respect=int(rel_player.get('respect',0));community=DialogueSystem.settlement_standing(sim.state,npc.settlement_id)
-    readiness=max(0,min(100,trust+familiarity//2+community//4+sim.player_skill('persuasion')*2))
+    player_skill=getattr(sim,'player_skill',None)
+    persuasion=int(player_skill('persuasion')) if callable(player_skill) else 0
+    readiness=max(0,min(100,trust+familiarity//2+community//4+persuasion*2))
     social_rows=[
         ('Trust',f'{trust:+d}',(trust+100)//2),
         ('Affection',f'{affection:+d}',(affection+100)//2),
@@ -2114,12 +2116,6 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         result=sim.property_security.knock_on_door(
             door.uid,sim.player_pos,sim.clock.minute,sim.player_skill('persuasion')
         )
-        npc_uid=str(result.get('npc_uid',''))
-        if npc_uid and npc_uid in sim.state.npcs:
-            before=len(sim.log);sim.begin_conversation(npc_uid)
-            learned=sim.log[-1].message if len(sim.log)>before else ''
-            opening=str(result.get('message',''))+((' '+learned) if learned else '')
-            return _conversation_menu(ctx,term,sim.state.npcs[npc_uid],opening)
         return str(result.get('message','No one answers.'))
     if choice=='lockpick_property_door' and door is not None:
         sim.execute(LockpickDoorCommand(ctx.player_id,door.uid))

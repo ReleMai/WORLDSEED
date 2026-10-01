@@ -3047,6 +3047,15 @@
           "season_label": "spring, summer, autumn"
         },
         {
+          "id": "core:corn",
+          "name": "Corn",
+          "seasons": [
+            "spring",
+            "summer"
+          ],
+          "season_label": "spring, summer"
+        },
+        {
           "id": "core:beans",
           "name": "Field Beans",
           "seasons": [
@@ -3072,6 +3081,16 @@
             "summer"
           ],
           "season_label": "spring, summer"
+        },
+        {
+          "id": "core:pumpkin",
+          "name": "Pumpkin",
+          "seasons": [
+            "spring",
+            "summer",
+            "autumn"
+          ],
+          "season_label": "spring, summer, autumn"
         },
         {
           "id": "core:turnip",

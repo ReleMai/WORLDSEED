@@ -4,6 +4,18 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev43 — Diverse living settlements and physical work sites
+
+Settlements now select two terrain-backed resource specializations and project
+those choices into persistent mines, farm fields, logging plantations and animal
+pens. Town morphology varies by archetype and orientation, roads bend through
+stable control points, homes use multiple footprints, and inns, barracks and
+outskirt camps provide shared lodging. Corn, beans and pumpkins join the farming
+economy; domestic pigs, cows, chickens and sheep are limited to two suitable
+species per livestock settlement. Knocking queues a resident's physical walk to
+the door instead of opening dialogue immediately. See
+[`docs/handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md`](docs/handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md).
+
 ## RC14 Dev42 — Tile-safe character artwork
 
 Player and NPC presentation now use four separate authored sets: ten male and

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev42"
+ENGINE_VERSION = "1.0.0-rc14-dev43"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -32,7 +32,7 @@ LIGHTING_VERSION = 1
 # routes exact local physical corridors/infrastructure state.
 # Phase 3 adds dynamic hazard rerouting, frontier control/tolls/patrols and
 # interactive physical crossings. Settlement geometry remains v5-compatible.
-SETTLEMENT_PLAN_VERSION = 8
+SETTLEMENT_PLAN_VERSION = 9
 ROUTEGEN_VERSION = 4
 # Claim monuments are persistent regional control anchors.  Versioning their
 # generated placement separately keeps existing worlds from silently moving

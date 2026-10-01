@@ -284,10 +284,15 @@ def look_screen(sim:Simulation,width:int=100,pos=None)->str:
         if max(sim.player_skill('hunting'),survival)>=6 and carcass.organ_damage:
             damaged=', '.join(f'{name.replace("_"," ")} {amount}%' for name,amount in sorted(carcass.organ_damage.items()))
             body.append('Internal damage: '+damaged)
+    farming=sim.player_skill('farming')
     if crop:
         stage='ready to harvest' if crop.mature else 'growing';body.append(f'Crop: {crop.crop_id.split(":")[-1].replace("_"," ")} — {stage}')
-        if sim.player_skill('survival')>=4:body.append(f'Condition: health {crop.health}, moisture {crop.moisture}, disease {crop.disease}')
-    if soil and sim.player_skill('survival')>=6:body.append(f'Soil: N {soil.nitrogen} / P {soil.phosphorus} / K {soil.potassium}, organic {soil.organic}')
+        if farming>=3:body.append(f'Condition: health {crop.health}, moisture {crop.moisture}, disease {crop.disease}')
+    if soil and farming>=1:
+        fertility=min(soil.nitrogen,soil.phosphorus,soil.potassium)
+        body.append(f'Soil fertility: {"rich" if fertility>=70 else "fair" if fertility>=40 else "poor"}')
+        if farming>=5:
+            body.append(f'Soil analysis: N {soil.nitrogen} / P {soil.phosphorus} / K {soil.potassium}, organic {soil.organic}, disease pressure {soil.disease_pressure}')
     if container:
         mass,volume=sim.building.container_load(container);body.append(f'Storage: {sum(container.items.values())} item(s), {mass/1000:.1f} kg')
     crossing=sim.settlement_physicalization.crossing_at(p) if p.z==0 else None

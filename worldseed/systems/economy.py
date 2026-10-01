@@ -140,6 +140,16 @@ class EconomySystem:
         self._build_labor_pool(town)
         by_occ: dict[str, list[SettlementProcessDef]] = defaultdict(list)
         for proc in self.registry.settlement_processes.values():
+            required={
+                "core:field_wheat":"farming","core:field_turnip":"farming",
+                "core:field_beans":"farming","core:field_corn":"farming","core:field_pumpkin":"farming",
+                "core:logging":"logging","core:quarrying":"mining",
+                "core:iron_mining":"mining","core:coal_mining":"mining",
+                "core:clay_gathering":"mining","core:livestock_husbandry":"livestock",
+            }.get(proc.id)
+            specializations=set(getattr(town,"resource_specializations",()) or ())
+            if required and specializations and required not in specializations:
+                continue
             by_occ[proc.occupation].append(proc)
         assignments: list[tuple[SettlementProcessDef, int]] = []
         for occ, processes in sorted(by_occ.items()):

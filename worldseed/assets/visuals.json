@@ -630,7 +630,31 @@
     "core:pottery_wheel": "assets/sprites/structures/pottery_wheel.png",
     "core:smoke_rack": "assets/sprites/structures/smoke_rack.png"
   },
+  "settlement_pieces": {
+    "core:mine_entrance_piece": "assets/sprites/settlement/dev43/mine_entrance.png",
+    "core:quarry_ground_piece": "assets/sprites/settlement/dev43/quarry_ground.png",
+    "core:dev43_iron_ore_pile_piece": "assets/sprites/settlement/dev43/iron_ore_pile.png",
+    "core:mine_shed_piece": "assets/sprites/settlement/dev43/mine_shed.png",
+    "core:farm_shed_piece": "assets/sprites/settlement/dev43/farm_shed.png",
+    "core:dev43_field_fence_piece": "assets/sprites/settlement/dev43/field_fence.png",
+    "core:field_fence_corner_piece": "assets/sprites/settlement/dev43/field_fence_corner.png",
+    "core:dev43_field_gate_piece": "assets/sprites/settlement/dev43/field_gate.png",
+    "core:dev43_plowed_soil_piece": "assets/sprites/settlement/dev43/plowed_soil.png",
+    "core:logging_hut_piece": "assets/sprites/settlement/dev43/logging_hut.png",
+    "core:logging_tool_rack_piece": "assets/sprites/settlement/dev43/logging_tool_rack.png",
+    "core:dev43_timber_stack_piece": "assets/sprites/settlement/dev43/timber_stack.png",
+    "core:animal_pen_fence_piece": "assets/sprites/settlement/dev43/animal_pen_fence.png",
+    "core:animal_pen_gate_piece": "assets/sprites/settlement/dev43/animal_pen_gate.png",
+    "core:dev43_livestock_trough_piece": "assets/sprites/settlement/dev43/livestock_trough.png",
+    "core:dev43_hay_rack_piece": "assets/sprites/settlement/dev43/hay_rack.png",
+    "core:logging_sapling_piece": "assets/sprites/settlement/dev43/logging_sapling.png",
+    "core:logging_managed_tree_piece": "assets/sprites/settlement/dev43/logging_managed_tree.png"
+  },
   "species": {
+    "core:pig": ["assets/sprites/species/domestic/pig_0.png", "assets/sprites/species/domestic/pig_1.png"],
+    "core:cow": ["assets/sprites/species/domestic/cow_0.png", "assets/sprites/species/domestic/cow_1.png"],
+    "core:chicken": ["assets/sprites/species/domestic/chicken_0.png", "assets/sprites/species/domestic/chicken_1.png"],
+    "core:sheep": ["assets/sprites/species/domestic/sheep_0.png", "assets/sprites/species/domestic/sheep_1.png"],
     "core:rabbit": [
       "assets/sprites/species/illustrated/rabbit_0.png",
       "assets/sprites/species/illustrated/rabbit_1.png",
@@ -813,6 +837,16 @@
       "assets/sprites/crops/flax/stage_0.png",
       "assets/sprites/crops/flax/stage_1.png",
       "assets/sprites/crops/flax/stage_2.png"
+    ],
+    "core:corn": [
+      "assets/sprites/crops/corn/stage_0.png",
+      "assets/sprites/crops/corn/stage_1.png",
+      "assets/sprites/crops/corn/stage_2.png"
+    ],
+    "core:pumpkin": [
+      "assets/sprites/crops/pumpkin/stage_0.png",
+      "assets/sprites/crops/pumpkin/stage_1.png",
+      "assets/sprites/crops/pumpkin/stage_2.png"
     ]
   },
   "npc_variants": [

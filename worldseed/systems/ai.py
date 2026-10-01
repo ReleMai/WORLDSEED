@@ -83,7 +83,7 @@ class NPCSystem:
             task=npc.tasks[0] if npc.tasks else {}
             task_kind=task.get("kind","")
             profession_task=self.professions is not None and self.professions.is_physical_task(task)
-            physical_task=profession_task or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action")=="mining_deposit")
+            physical_task=profession_task or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action") in {"mining_deposit","answer_door"})
             if execute_active or not active or not physical_task:self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
@@ -101,7 +101,7 @@ class NPCSystem:
             if npc.tasks:
                 task=npc.tasks[0];kind=task.get("kind")
                 profession_task=self.professions is not None and self.professions.is_physical_task(task)
-                if profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action")=="mining_deposit"):
+                if profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action") in {"mining_deposit","answer_door"}):
                     self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
@@ -394,6 +394,7 @@ class NPCSystem:
             elif action=='workplace_pickup' and self.workplace_logistics is not None:self.workplace_logistics.pickup_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='workplace_dropoff' and self.workplace_logistics is not None:self.workplace_logistics.dropoff_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='mining_deposit' and self.mining is not None:self.mining.deposit(npc,town,task.get('trip_uid',''),task.get('container_uid',''),minute)
+            elif action=='answer_door' and self.property_security is not None:self.property_security.complete_door_answer(task.get('door_uid',''),npc.uid,minute)
             elif action=='profession_withdraw' and self.professions is not None:self.professions.withdraw(npc,town,task,minute)
             elif action=='profession_deposit' and self.professions is not None:self.professions.deposit(npc,town,task,minute)
             elif action=='socialize':npc.needs['social']=max(0,npc.needs.get('social',0)-35)

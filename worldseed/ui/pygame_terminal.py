@@ -2370,6 +2370,9 @@ class PygameTerminal(PointerUI):
         tags=set(getattr(piece,'tags',()) or ())|set(getattr(piece,'room_tags',()) or ())
         cat=str(getattr(piece,'category',''));mat=str(getattr(piece,'material',''));pid=str(getattr(piece,'id',''))
         sid=None
+        direct=self._visuals.ref('settlement_pieces',pid)
+        direct_path=self._visuals.resolve(direct)
+        if direct_path is not None:return direct_path
         if cat=='roof':sid='core:stone_roof' if any(token in mat for token in ('stone','slate','clay')) else 'core:wood_roof'
         elif cat=='floor' and ('plank' in mat or 'wood' in mat):sid='core:wood_floor'
         elif 'bed' in tags:sid='core:bed'

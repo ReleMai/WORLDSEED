@@ -441,10 +441,10 @@ class PropertySecuritySystem:
         return changed
 
     def knock_on_door(self,door_uid:str,player_pos:WorldPos,minute:int,persuasion:int=0)->dict:
-        """Ask a physically present resident to answer a home entrance."""
+        """Request a resident response without teleporting them or opening UI."""
         door=self.door_by_id(door_uid)
         if door is None:return {"outcome":"missing","message":"That door is no longer present.","npc_uid":""}
-        if door.role!="entrance" or self._function(door.property_id)!="residence":
+        if door.role!="entrance" or self._function(door.property_id) not in {"residence","inn","barracks","outskirt_camp"}:
             return {"outcome":"not_home","message":"This is not a private home entrance.","npc_uid":""}
         if door.z!=player_pos.z or abs(door.x-player_pos.x)+abs(door.y-player_pos.y)>1:
             return {"outcome":"far","message":"Move next to the door before knocking.","npc_uid":""}
@@ -459,18 +459,36 @@ class PropertySecuritySystem:
             return {"outcome":"unanswered","message":"You knock, but no one inside answers.","npc_uid":""}
         residents.sort(key=lambda npc:(abs(npc.x-door.x)+abs(npc.y-door.y),npc.uid))
         npc=residents[0]
+        if door.answering_npc_uid:
+            answering=self.state.npcs.get(door.answering_npc_uid)
+            if answering is not None and door.answered_minute>=door.answer_requested_minute and (answering.x,answering.y,answering.z)==(door.x,door.y,door.z):
+                return {"outcome":"answered","message":f"{answering.name} is waiting at the open door. Speak to them when you are ready.","npc_uid":answering.uid}
+            if answering is not None and door.answered_minute<door.answer_requested_minute:
+                return {"outcome":"approaching","message":"You knock again. Someone inside is already coming to the door.","npc_uid":door.answering_npc_uid}
+            door.answering_npc_uid="";door.answer_requested_minute=-1;door.answered_minute=-1;door.answer_outcome=""
         rel=npc.relationships.setdefault("player",{"affection":0,"trust":0,"fear":0,"respect":0,"familiarity":0})
         trust=int(rel.get("trust",0));affection=int(rel.get("affection",0));familiarity=int(rel.get("familiarity",0))
         heat=int(self.state.player_crime_heat.get(door.settlement_id,0))
         hour=(int(minute)%1440)//60
         threshold=12+(14 if hour>=22 or hour<6 else 0)+(12 if "suspicious" in npc.traits else 0)
         willingness=trust+affection//2+familiarity//3+max(0,int(persuasion))*3-heat
-        if willingness>=threshold:
-            until=int(minute)+120
-            self.grant_guest_access(door.property_id,"player",until)
-            door.locked=False;door.schedule_locked=False
-            return {"outcome":"invited","message":f"{npc.name} answers and invites you inside for a while.","npc_uid":npc.uid,"until_minute":until}
-        return {"outcome":"door_talk","message":f"{npc.name} answers but keeps the threshold between you. They are willing to talk here.","npc_uid":npc.uid}
+        outcome="invited" if willingness>=threshold else "door_talk"
+        door.answering_npc_uid=npc.uid;door.answer_requested_minute=int(minute)
+        door.answered_minute=-1;door.answer_outcome=outcome
+        npc.tasks=[
+            {"kind":"move","x":door.x,"y":door.y,"z":door.z,"exact":True,"physical_path":True,"door_answer_uid":door.uid},
+            {"kind":"perform","action":"answer_door","door_uid":door.uid},
+        ]
+        return {"outcome":"approaching","message":f"You knock. Footsteps move through the house as {npc.name} decides whether to answer.","npc_uid":npc.uid}
+
+    def complete_door_answer(self,door_uid:str,npc_uid:str,minute:int)->bool:
+        door=self.door_by_id(door_uid);npc=self.state.npcs.get(str(npc_uid))
+        if door is None or npc is None or door.answering_npc_uid!=npc.uid:return False
+        if (npc.x,npc.y,npc.z)!=(door.x,door.y,door.z):return False
+        door.locked=False;door.schedule_locked=False;door.answered_minute=int(minute)
+        if door.answer_outcome=="invited":
+            self.grant_guest_access(door.property_id,"player",int(minute)+120)
+        return True
 
     def update_scheduled_locks(self,minute:int)->int:
         """Apply active-workplace opening hours to stable entrance locks.

@@ -352,6 +352,12 @@ class HuntingSystem:
             if not sp:
                 continue
             self._update_needs(creature,sp,minute)
+            if creature.domestic:
+                # Domestic animals remain ordinary CreatureState authority but
+                # their containing settlement pen owns their local range.
+                creature.behavior="calm"
+                creature.alertness=max(0,creature.alertness-5)
+                continue
             home=self.state.animal_homes.get(creature.home_uid) if creature.home_uid else None
             # Homes are established during ordinary life, not conjured as an
             # escape destination in the middle of a fresh hunt. A threatened

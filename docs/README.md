@@ -10,6 +10,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev43 diverse living settlements](handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md)
 - [Dev42 normalized character sprites](handoffs/DEV42_CHARACTER_SPRITES_HANDOFF.md)
 - [Dev41 real-time social world](handoffs/DEV41_REALTIME_SOCIAL_WORLD_HANDOFF.md)
 - [Dev41 documentation and playtest package](handoffs/DEV41_PACKAGE_ORGANIZATION_HANDOFF.md)

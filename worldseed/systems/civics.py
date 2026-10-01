@@ -33,6 +33,9 @@ class CivicsSystem:
     def _property_kind(function: str) -> str:
         return {
             "residence": "home",
+            "inn": "home",
+            "barracks": "home",
+            "outskirt_camp": "home",
             "market": "shop",
             "smithy": "workshop",
             "workshop": "workshop",
@@ -190,6 +193,11 @@ class CivicsSystem:
 
     def _sync_physical_housing(self, settlement_id: str) -> None:
         town = self.state.settlements[settlement_id]
+        skeleton=self._skeleton(settlement_id)
+        shared_lodging={
+            row.uid for row in (() if skeleton is None else skeleton.structures)
+            if row.function in {"inn","barracks","outskirt_camp"}
+        }
         homes = {
             p.uid: p
             for p in self._properties(settlement_id)
@@ -214,7 +222,10 @@ class CivicsSystem:
                 else:
                     npc.property_id = ""
                     continue
-            npc.property_id = home.uid
+            # Lodging occupancy and private property ownership are separate.
+            # Inns, barracks and camps house people without handing each guest
+            # an ownership claim to the building.
+            npc.property_id = "" if home.uid in shared_lodging else home.uid
             if npc.uid not in home.occupants:
                 home.occupants.append(npc.uid)
         town.housing_capacity = sum(h.capacity for h in homes.values())

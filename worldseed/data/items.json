@@ -3812,5 +3812,9 @@
     "base_value": 18,
     "sprite_tag": "smoked_fish",
     "flavor": "Smoke and salt turn a day's catch into food that can travel."
-  }
+  },
+  {"id":"core:corn","name":"Corn","asset":"corn","category":"food","material":"core:organic","mass_g":320,"volume_ml":420,"nutrition":18,"tags":["food","crop","grain"],"description":"A ripe ear of corn harvested from warm fertile fields.","utility_roles":["food","grain","trade_good"],"calories":330,"food_groups":["grain","vegetable"],"protein":9,"carbs":74,"fat":4,"fiber":7,"base_value":6,"sprite_tag":"corn","flavor":"Gold kernels packed tight beneath green husks."},
+  {"id":"core:corn_seed","name":"Corn Seed","asset":"corn_seed","category":"seed","material":"core:organic","mass_g":8,"volume_ml":10,"tags":["seed","crop","grain"],"description":"Selected dry corn kernels for planting.","utility_roles":["seed","trade_good"],"base_value":3,"sprite_tag":"corn_seed","flavor":"A season's height folded into a handful of kernels."},
+  {"id":"core:pumpkin","name":"Pumpkin","asset":"pumpkin","category":"food","material":"core:organic","mass_g":4200,"volume_ml":5200,"nutrition":22,"hydration":5,"tags":["food","crop","vegetable"],"description":"A heavy pumpkin grown on sprawling field vines.","utility_roles":["food","vegetable","trade_good"],"calories":520,"food_groups":["vegetable"],"protein":12,"carbs":130,"fat":3,"fiber":24,"base_value":8,"sprite_tag":"pumpkin","flavor":"Thick rind protects sweet orange flesh."},
+  {"id":"core:pumpkin_seed","name":"Pumpkin Seed","asset":"pumpkin_seed","category":"seed","material":"core:organic","mass_g":6,"volume_ml":8,"tags":["seed","crop","vegetable"],"description":"Clean pumpkin seeds kept for spring planting.","utility_roles":["seed","trade_good"],"base_value":3,"sprite_tag":"pumpkin_seed","flavor":"Pale seeds saved from the best fruit."}
 ]

@@ -20,7 +20,7 @@ class SettlementProfessionSystem:
 
     PROCESS_IDS = {
         "lumberjack": {"core:logging"},
-        "farmer": {"core:field_wheat", "core:field_turnip"},
+        "farmer": {"core:field_wheat", "core:field_turnip", "core:field_beans", "core:field_corn", "core:field_pumpkin"},
         "smith": {"core:iron_smelt"},
         "carpenter": {"core:woodcraft"},
         "cook": {"core:hearth_roast"},
@@ -494,7 +494,10 @@ class SettlementProfessionSystem:
 
     @staticmethod
     def _crop_for_process(proc_id:str):
-        return {"core:field_wheat":"core:wheat","core:field_turnip":"core:turnip"}.get(str(proc_id))
+        return {
+            "core:field_wheat":"core:wheat","core:field_turnip":"core:turnip",
+            "core:field_beans":"core:beans","core:field_corn":"core:corn","core:field_pumpkin":"core:pumpkin",
+        }.get(str(proc_id))
 
     def _farm_affordance(self,npc,town,pos:WorldPos,action:str,minute:int,duration:int):
         affordance=ActivityAffordance(

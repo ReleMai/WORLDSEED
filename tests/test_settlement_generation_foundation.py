@@ -224,13 +224,18 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         catalog=set(self.registry.settlement_pieces)
         self.assertTrue(all(piece.piece_id in catalog for piece in skeleton.pieces))
         for structure in skeleton.structures:
-            self.assertTrue(structure.enclosed)
-            self.assertGreaterEqual(structure.roof_percent,60)
             self.assertTrue(structure.entrance)
-            self.assertTrue(structure.room_ids)
             self.assertTrue(structure.piece_ids)
-            self.assertTrue(set(structure.room_ids).issubset({r.uid for r in skeleton.rooms}))
             self.assertTrue(set(structure.piece_ids).issubset({p.uid for p in skeleton.pieces}))
+            if structure.building_type == "outdoor_worksite":
+                self.assertFalse(structure.enclosed)
+                self.assertEqual(structure.roof_percent,0)
+                self.assertFalse(structure.room_ids)
+            else:
+                self.assertTrue(structure.enclosed)
+                self.assertGreaterEqual(structure.roof_percent,60)
+                self.assertTrue(structure.room_ids)
+                self.assertTrue(set(structure.room_ids).issubset({r.uid for r in skeleton.rooms}))
         self.assertTrue(any(len(s.room_ids)>=2 for s in skeleton.structures))
         self.assertTrue(any(s.building_type=='smithy' for s in skeleton.structures))
         smithy=next(s for s in skeleton.structures if s.building_type=='smithy')
@@ -245,13 +250,19 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(all('stone_arch_door' in p.piece_id for p in skeleton.pieces if p.role in {'entrance','interior_door'}))
         for structure in skeleton.structures:
             ex,ey=structure.entrance
+            road_cells={tuple(cell) for road in skeleton.roads for cell in road.polyline}
+            if structure.building_type=='outdoor_worksite':
+                self.assertTrue(
+                    any(abs(ex-rx)+abs(ey-ry)<=1 for rx,ry in road_cells),
+                    structure.uid,
+                )
+                continue
             xs=[x for x,_ in structure.footprint];ys=[y for _,y in structure.footprint]
             self.assertFalse(ex in {min(xs),max(xs)} and ey in {min(ys),max(ys)},structure.uid)
             rows=pieces_by_structure[structure.uid]
             floor_cells={(p.x,p.y) for p in rows if p.role in {'floor','threshold'}}
             self.assertTrue(any((ex+dx,ey+dy) in floor_cells for dx,dy in ((0,1),(1,0),(0,-1),(-1,0))),structure.uid)
             self.assertTrue(any(p.role=='threshold' and (p.x,p.y)==structure.entrance for p in rows),structure.uid)
-            road_cells={tuple(cell) for road in skeleton.roads for cell in road.polyline}
             self.assertTrue(
                 any(p.role=='frontage' for p in rows)
                 or any(abs(ex-rx)+abs(ey-ry)<=1 for rx,ry in road_cells),

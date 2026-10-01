@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
+from worldseed.systems.state import CreatureState
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,11 +28,11 @@ class SettlementPopulationBinder:
     """Deterministically bind realized NPC representatives to plan IDs."""
 
     WORK_FUNCTIONS = {
-        "farmer": ("mill", "barn"),
-        "herder": ("barn",),
-        "miner": ("smithy",),
+        "farmer": ("farm_field", "mill", "barn"),
+        "herder": ("animal_pen", "barn"),
+        "miner": ("mine_site", "smithy"),
         "smith": ("smithy",),
-        "lumberjack": ("workshop",),
+        "lumberjack": ("logging_camp", "workshop"),
         "carpenter": ("workshop",),
         "cook": ("inn", "residence", "bakery"),
         "miller": ("mill",),
@@ -276,7 +277,17 @@ class SettlementPopulationBinder:
                 npc.workplace_id = ""
                 npc.work_room_id = ""
             if not npc.workplace_id and workplace_candidates:
-                ranked=self._ranked(npc.uid,workplace_candidates,"npc-workplace-structure")
+                # Preference order is semantic: exact physical extraction sites
+                # precede legacy fallback workshops. Hashing breaks ties only
+                # between equivalent structures.
+                ranked=sorted(
+                    workplace_candidates,
+                    key=lambda row:(
+                        preferences.index(row.function),
+                        -int(hash_u64(self.seed,"npc-workplace-structure",npc.uid,row.uid)),
+                        row.uid,
+                    ),
+                )
                 role_ready=[row for row in ranked if self._structure_has_role(skeleton,row.uid,npc.occupation)]
                 workplace=(role_ready or ranked)[0]
                 npc.workplace_id = workplace.uid
@@ -307,6 +318,9 @@ class SettlementPopulationBinder:
             if skeleton is None:continue
             settlement.housing_capacity=int(skeleton.plan.housing_capacity)
             settlement.homeless=max(0,int(settlement.population)-settlement.housing_capacity)
+            settlement.resource_specializations=list(skeleton.plan.resource_specializations[:2])
+            settlement.crop_ids=list(skeleton.plan.crop_ids)
+            settlement.livestock_species_ids=list(skeleton.plan.livestock_species_ids[:2])
             summary={}
             for structure in skeleton.structures:
                 if structure.destroyed:continue
@@ -315,6 +329,27 @@ class SettlementPopulationBinder:
             farms=sum(1 for parcel in skeleton.parcels if parcel.kind=="farm")
             if farms:summary["farm"]=farms
             settlement.buildings=summary
+            self._sync_livestock(settlement,skeleton)
+
+    def _sync_livestock(self, settlement, skeleton) -> None:
+        """Represent plan-owned pens with ordinary authoritative creatures."""
+        pens=[p for p in skeleton.parcels if p.purpose=="animal_pen" and p.livestock_species_ids]
+        for pen in pens:
+            blocked={(piece.x,piece.y) for piece in skeleton.pieces if piece.structure_plan_id in set(pen.structure_ids) and piece.role not in {"pen_gate"}}
+            cells=[p for p in sorted(pen.cells,key=lambda q:(q[1],q[0])) if p not in blocked]
+            if not cells:continue
+            for species_index,species_id in enumerate(pen.livestock_species_ids[:2]):
+                spec=self.registry.species.get(species_id)
+                if spec is None:continue
+                for ordinal in range(2):
+                    uid=f"livestock:{settlement.uid}:{pen.uid}:{species_id}:{ordinal}"
+                    if uid in self.state.creatures:continue
+                    pick=int(hash_u64(self.seed,"settlement-livestock",uid)%len(cells))
+                    x,y=cells[pick]
+                    self.state.creatures[uid]=CreatureState(
+                        uid,species_id,x,y,0,spec.max_hp,behavior="calm",stamina=spec.stamina,
+                        domestic=True,settlement_id=settlement.uid,pen_id=pen.uid,
+                    )
 
     def bind_active(self, settlements) -> tuple[SettlementBindingStats, ...]:
         active = set(self.physicalization.active_settlement_ids)

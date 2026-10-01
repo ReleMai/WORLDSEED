@@ -167,5 +167,17 @@
     "potassium": 3,
     "disease_family": "fiber",
     "description": "A dual-purpose seed and fiber crop valuable beyond food alone."
+  },
+  {
+    "id":"core:corn","name":"Corn","seed_item":"core:corn_seed","harvest_item":"core:corn",
+    "growth_hours":104,"min_temp":28,"max_temp":90,"water_use":5,"yield_min":3,"yield_max":8,
+    "seasons":["spring","summer"],"nitrogen":5,"phosphorus":3,"potassium":4,
+    "disease_family":"cereal","description":"A warm-ground grain crop that rewards fertile, well-watered fields."
+  },
+  {
+    "id":"core:pumpkin","name":"Pumpkin","seed_item":"core:pumpkin_seed","harvest_item":"core:pumpkin",
+    "growth_hours":112,"min_temp":24,"max_temp":86,"water_use":6,"yield_min":2,"yield_max":5,
+    "seasons":["spring","summer","autumn"],"nitrogen":4,"phosphorus":4,"potassium":5,
+    "disease_family":"vine","description":"A sprawling vine crop suited to rich, moisture-holding soil."
   }
 ]

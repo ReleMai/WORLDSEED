@@ -109,7 +109,9 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
         market=next(s for s in skeleton.structures if s.function=='market')
         self.assertEqual(active[market.uid].kind,'shop')
         for npc in state.npcs.values():
-            self.assertEqual(npc.property_id,npc.home_id)
+            home=next(s for s in skeleton.structures if s.uid==npc.home_id)
+            if home.function=='residence':self.assertEqual(npc.property_id,npc.home_id)
+            else:self.assertFalse(npc.property_id)
             self.assertIn(npc.home_id,active)
             self.assertIn(npc.uid,active[npc.home_id].occupants)
         before={n.uid:n.home_id for n in state.npcs.values()}

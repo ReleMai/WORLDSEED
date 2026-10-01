@@ -65,17 +65,20 @@ class ProfessionYardTests(unittest.TestCase):
         self.assertTrue(any(p.role=="yard_gate" for p in smith_pieces))
 
         _,_,forest=self.skeleton("forest","settlement:yard:forest")
-        workshop=next(s for s in forest.structures if s.function=="workshop")
-        wood_ids={p.piece_id for p in forest.pieces if p.structure_plan_id==workshop.uid}
-        self.assertIn("core:woodpile_piece",wood_ids)
-        self.assertIn("core:chopping_block_piece",wood_ids)
+        logging=next(s for s in forest.structures if s.function=="logging_camp")
+        wood_ids={p.piece_id for p in forest.pieces if p.structure_plan_id==logging.uid}
+        self.assertIn("core:logging_hut_piece",wood_ids)
+        self.assertIn("core:logging_tool_rack_piece",wood_ids)
+        self.assertIn("core:dev43_timber_stack_piece",wood_ids)
+        self.assertIn("core:logging_sapling_piece",wood_ids)
+        self.assertIn("core:logging_managed_tree_piece",wood_ids)
 
         _,_,agrarian=self.skeleton("agrarian","settlement:yard:agrarian")
-        barn=next(s for s in agrarian.structures if s.function=="barn")
-        barn_ids={p.piece_id for p in agrarian.pieces if p.structure_plan_id==barn.uid}
-        self.assertIn("core:haystack_piece",barn_ids)
-        self.assertIn("core:grain_sacks_piece",barn_ids)
-        self.assertIn("core:stone_well_piece",barn_ids)
+        field=next(s for s in agrarian.structures if s.function=="farm_field")
+        field_ids={p.piece_id for p in agrarian.pieces if p.structure_plan_id==field.uid}
+        self.assertIn("core:dev43_plowed_soil_piece",field_ids)
+        self.assertIn("core:dev43_field_fence_piece",field_ids)
+        self.assertIn("core:farm_shed_piece",field_ids)
 
     def test_every_generated_building_has_authoritative_service_path(self):
         _,_,skeleton=self.skeleton("mining","settlement:yard:roads")

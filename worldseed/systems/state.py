@@ -212,6 +212,9 @@ class CreatureState:
     activity_target_y: int | None = None
     activity_target_z: int | None = None
     last_need_minute: int = -1
+    domestic: bool = False
+    settlement_id: str = ""
+    pen_id: str = ""
 
 @dataclass(slots=True)
 class PopulationCohort:
@@ -408,6 +411,9 @@ class SettlementState:
     frontier_status: str = "core"
     border_pressure: int = 0
     patrol_pressure: int = 0
+    resource_specializations: list[str] = field(default_factory=list)
+    crop_ids: list[str] = field(default_factory=list)
+    livestock_species_ids: list[str] = field(default_factory=list)
 
 @dataclass(slots=True)
 class FactionState:
@@ -540,6 +546,12 @@ class DoorSecurityState:
     # action, and so picked/forced doors are not silently repaired.
     schedule_locked: bool = False
     last_schedule_minute: int = -1
+    # A knock is a request, not a conversation teleport. The selected resident
+    # must walk to the exact door tile before the door opens.
+    answering_npc_uid: str = ""
+    answer_requested_minute: int = -1
+    answered_minute: int = -1
+    answer_outcome: str = ""
 
 
 @dataclass(slots=True)
@@ -1162,7 +1174,7 @@ class LivingWorldState:
         "strength":5,"agility":5,"endurance":5,"intellect":5,"perception":5,"will":5
     })
     player_skills: dict[str, int] = field(default_factory=lambda: {
-        "swimming":0,"athletics":0,"survival":0,"foraging":0,"woodcutting":0,"mining":0,
+        "swimming":0,"athletics":0,"survival":0,"foraging":0,"farming":0,"woodcutting":0,"mining":0,
         "hunting":0,"fishing":0,"melee":0,"shield":0,"crafting":0,"medicine":0,"scholarship":0,
         "persuasion":0,"trading":0,"stealth":0,"naturalism":0,"arcana":0
     })

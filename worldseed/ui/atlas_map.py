@@ -448,6 +448,15 @@ def _draw_settlement_detail(term, sim, state):
         label(title,lx+20,ly,term._theme['muted'])
     sy += 58
 
+    label('LOCAL ECONOMY', sx, sy, term._theme['accent'])
+    sy += 20
+    resources=', '.join(_humanize(value) for value in skeleton.plan.resource_specializations) or 'Legacy plan'
+    crops=', '.join(_humanize(value.split(':')[-1]) for value in skeleton.plan.crop_ids) or 'Imported food'
+    livestock=', '.join(_humanize(value.split(':')[-1]) for value in skeleton.plan.livestock_species_ids) or 'None'
+    for line in (f'Resources: {resources}',f'Crops: {crops}',f'Livestock: {livestock}'):
+        label(line,sx,sy,term._theme['muted']);sy+=18
+    sy += 6
+
     label('INSPECT', sx, sy, term._theme['accent'])
     sy += 22
     inspect_bottom = side.bottom-58

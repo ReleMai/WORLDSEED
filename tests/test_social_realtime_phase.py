@@ -83,7 +83,12 @@ class SocialRealtimePhaseTests(unittest.TestCase):
         state,_,npc,door=self.fixture();npc.relationships['player']={'trust':40,'affection':20,'familiarity':30}
         security=PropertySecuritySystem(state,SimpleNamespace(),b'knock-test',FakePhysicalization('home:test'),SimpleNamespace())
         result=security.knock_on_door(door.uid,WorldPos(10,8,0),600,persuasion=2)
-        self.assertEqual(result['outcome'],'invited')
+        self.assertEqual(result['outcome'],'approaching')
+        self.assertFalse(security.authorized_player(door))
+        self.assertTrue(door.locked)
+        self.assertEqual((npc.tasks[0]['x'],npc.tasks[0]['y']),(door.x,door.y))
+        npc.x,npc.y=door.x,door.y
+        self.assertTrue(security.complete_door_answer(door.uid,npc.uid,600))
         self.assertTrue(security.authorized_player(door))
         self.assertFalse(door.locked)
         restored=LivingWorldState.from_dict(state.to_dict())
@@ -96,8 +101,11 @@ class SocialRealtimePhaseTests(unittest.TestCase):
         state,_,npc,door=self.fixture();npc.traits=['suspicious'];npc.relationships['player']={'trust':-10,'affection':0,'familiarity':4}
         security=PropertySecuritySystem(state,SimpleNamespace(),b'knock-test',FakePhysicalization('home:test'),SimpleNamespace())
         result=security.knock_on_door(door.uid,WorldPos(10,8,0),600,persuasion=0)
-        self.assertEqual(result['outcome'],'door_talk')
+        self.assertEqual(result['outcome'],'approaching')
+        npc.x,npc.y=door.x,door.y
+        self.assertTrue(security.complete_door_answer(door.uid,npc.uid,600))
         self.assertFalse(security.authorized_player(door))
+        self.assertFalse(door.locked)
 
 
 if __name__=='__main__':unittest.main()
