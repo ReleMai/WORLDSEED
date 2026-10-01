@@ -1103,6 +1103,9 @@ class LegacyCharacter:
 @dataclass(slots=True)
 class LivingWorldState:
     clock_minute: int = 480
+    # WorldPos remains the exterior portal anchor; these records own local space.
+    interiors: dict[str, Any] = field(default_factory=dict)
+    interior_actors: dict[str, Any] = field(default_factory=dict)
     structures: dict[str, StructureInstance] = field(default_factory=dict)
     roofs: dict[str, RoofState] = field(default_factory=dict)
     containers: dict[str, ContainerState] = field(default_factory=dict)
@@ -1266,6 +1269,7 @@ class LivingWorldState:
             return {k: asdict(v) for k, v in table.items()}
         return {
             "clock_minute": self.clock_minute,
+            "interiors": rows(self.interiors), "interior_actors": rows(self.interior_actors),
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_homes": rows(self.animal_homes), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "households": rows(self.households), "household_deliveries": rows(self.household_deliveries), "workplace_logistics": rows(self.workplace_logistics), "workplace_shipments": rows(self.workplace_shipments), "settlements": rows(self.settlements),
             "factions": rows(self.factions), "claim_monuments": rows(self.claim_monuments), "territory_control": rows(self.territory_control), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "activity_reservations": rows(self.activity_reservations), "physical_goods_transfers": rows(self.physical_goods_transfers), "mining_trips": rows(self.mining_trips), "trade_routes": rows(self.trade_routes), "route_infrastructure": rows(self.route_infrastructure), "border_posts": rows(self.border_posts), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "physical_keys": rows(self.physical_keys), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
@@ -1293,6 +1297,9 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
+        from worldseed.systems.interior_state import InteriorPlan, InteriorActor
+        s.interiors = {k: InteriorPlan.from_dict(v) for k, v in raw.get("interiors", {}).items()}
+        s.interior_actors = {k: InteriorActor.from_dict(v) for k, v in raw.get("interior_actors", {}).items()}
         scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_unseen_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_hunting_stance","player_hunting_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","player_toll_passes","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","learned_regions","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
         for key in scalar:
             if key in raw:

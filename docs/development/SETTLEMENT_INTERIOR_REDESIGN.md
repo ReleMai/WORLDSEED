@@ -4,7 +4,11 @@ Requested September 30, 2026. Baseline: main `eed4a381` (Dev43).
 This is the implementation order and acceptance contract for the complete request.
 Dev44 implements stage 1. Dev45 implements the farm-compound and planting core
 of stage 2; larger non-farm plots, terrain earthworks, explicit migration and
-stages 3-6 remain pending.
+stages 3-6 remain pending in full. Dev46 implements the household/lodging slice
+of stage 3 with fixed-point free movement, freely positioned furniture,
+connected rooms, shared resident portals/routines and persistence. Workshop
+activity/logistics migration and exterior shell art remain pending; see the
+Dev46 handoff for exact boundaries.
 
 ## Findings and research
 

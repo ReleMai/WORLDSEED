@@ -179,7 +179,7 @@ class StealthSystem:
     def _nearby_observers(self, player_pos: WorldPos, minute: int):
         rows = []
         for npc in self.state.npcs.values():
-            if not npc.alive or npc.z != player_pos.z:
+            if not npc.alive or npc.uid in getattr(self.state,'interior_actors',{}) or npc.z != player_pos.z:
                 continue
             radius = self.observer_range(npc, minute)
             distance = abs(int(npc.x) - player_pos.x) + abs(int(npc.y) - player_pos.y)

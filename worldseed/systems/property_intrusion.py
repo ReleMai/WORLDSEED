@@ -442,6 +442,9 @@ class PropertySecuritySystem:
 
     def knock_on_door(self,door_uid:str,player_pos:WorldPos,minute:int,persuasion:int=0)->dict:
         """Request a resident response without teleporting them or opening UI."""
+        interior_actors=getattr(self.state,"interior_actors",{})
+        if "player" in interior_actors:
+            return {"outcome":"inside","message":"You must be outside to knock on an exterior entrance.","npc_uid":""}
         door=self.door_by_id(door_uid)
         if door is None:return {"outcome":"missing","message":"That door is no longer present.","npc_uid":""}
         if door.role!="entrance" or self._function(door.property_id) not in {"residence","inn","barracks","outskirt_camp"}:
@@ -452,6 +455,14 @@ class PropertySecuritySystem:
         for npc in self.state.npcs.values():
             if not npc.alive or npc.z!=door.z:continue
             if npc.home_id!=door.property_id and npc.property_id!=door.property_id:continue
+            presence=interior_actors.get(npc.uid)
+            if presence is not None:
+                plan=getattr(self.state,"interiors",{}).get(presence.space_id)
+                if plan is not None and plan.building_id==door.property_id:
+                    residents.append(npc)
+                # The exterior coordinate is only an anchor. It cannot prove
+                # a resident is present in this house or already at its door.
+                continue
             cell=self.physicalization.cell_at(WorldPos(npc.x,npc.y,npc.z))
             if cell is not None and cell.structure_id==door.property_id:
                 residents.append(npc)
@@ -461,7 +472,7 @@ class PropertySecuritySystem:
         npc=residents[0]
         if door.answering_npc_uid:
             answering=self.state.npcs.get(door.answering_npc_uid)
-            if answering is not None and door.answered_minute>=door.answer_requested_minute and (answering.x,answering.y,answering.z)==(door.x,door.y,door.z):
+            if answering is not None and answering.uid not in interior_actors and door.answered_minute>=door.answer_requested_minute and (answering.x,answering.y,answering.z)==(door.x,door.y,door.z):
                 return {"outcome":"answered","message":f"{answering.name} is waiting at the open door. Speak to them when you are ready.","npc_uid":answering.uid}
             if answering is not None and door.answered_minute<door.answer_requested_minute:
                 return {"outcome":"approaching","message":"You knock again. Someone inside is already coming to the door.","npc_uid":door.answering_npc_uid}
@@ -484,6 +495,7 @@ class PropertySecuritySystem:
     def complete_door_answer(self,door_uid:str,npc_uid:str,minute:int)->bool:
         door=self.door_by_id(door_uid);npc=self.state.npcs.get(str(npc_uid))
         if door is None or npc is None or door.answering_npc_uid!=npc.uid:return False
+        if npc.uid in getattr(self.state,"interior_actors",{}):return False
         if (npc.x,npc.y,npc.z)!=(door.x,door.y,door.z):return False
         door.locked=False;door.schedule_locked=False;door.answered_minute=int(minute)
         if door.answer_outcome=="invited":

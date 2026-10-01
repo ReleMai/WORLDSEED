@@ -60,6 +60,7 @@ from worldseed.systems.processing import ProcessingSystem
 from worldseed.systems.fishing import FishingSystem
 from worldseed.systems.stealth import StealthSystem
 from worldseed.systems.property_intrusion import PhysicalKeySystem, PropertyStorageSystem, PropertySecuritySystem, CasingSystem
+from worldseed.systems.interiors import InteriorSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 from worldseed.debug import SessionDebugLog
@@ -199,6 +200,9 @@ class Simulation:
             self.state,registry,self.seed,self.settlement_physicalization,self.civics,self.physical_keys
         )
         self.npcs.attach_property_security(self.property_security)
+        self.interiors=InteriorSystem(self)
+        self.settlement_physicalization.attach_interior_state(self.state)
+        self.npcs.attach_interior_system(self.interiors)
         self.casing=CasingSystem(
             self.state,self.settlement_physicalization,self.civics,self.property_storage,
             self.property_security,
@@ -218,7 +222,7 @@ class Simulation:
         self.magic.ensure_rituals()
         # Reconstruct current visibility immediately on load. Persistent map
         # memory already exists, but current LOS depends on present weather/time.
-        self._discover(start)
+        if self.interiors.player_presence() is None:self._discover(start)
 
     @property
     def discovered_tiles_set(self)->set[str]:
@@ -298,6 +302,54 @@ class Simulation:
             minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         result=TickResult()
+        # Interior coordinates never fall through to commands at the outdoor anchor.
+        indoor=getattr(self,'interiors',None) is not None and self.interiors.player_presence() is not None
+        if isinstance(command,EnterInteriorCommand):
+            self._message(self.interiors.enter(command.door_uid));return result
+        if isinstance(command,ExitInteriorCommand):
+            self._message(self.interiors.exit());return result
+        if indoor:
+            if isinstance(command,MoveCommand):
+                message=self.interiors.move_player(command.dx,command.dy)
+                if message:self._message(message)
+                return result
+            if isinstance(command,MoveFurnitureCommand):
+                self._message(self.interiors.rearrange(command.furniture_uid,command.x,command.y));return result
+            if isinstance(command,UseInteriorFurnitureCommand):
+                message=self.interiors.interact(command.furniture_uid)
+                self._message(message)
+                if message.startswith('You rest on'):
+                    self.turn+=1;self._advance_time(30);self._post_action()
+                return result
+            if isinstance(command,DropCommand):
+                from worldseed.systems.interior_state import InteriorPile
+                inv=self.entities.get(command.actor,Inventory);amount=max(1,int(command.amount))
+                if inv.remove(command.item_id,amount):
+                    plan=self.interiors.current_plan();a=self.interiors.player_presence()
+                    pile=next((p for p in plan.piles if (p.x-a.x)**2+(p.y-a.y)**2<=400**2),None)
+                    if pile is None:
+                        pile=InteriorPile(self.state.uid('interior-pile'),a.x,a.y);plan.piles.append(pile)
+                    pile.items[command.item_id]=pile.items.get(command.item_id,0)+amount
+                    self._message('You drop the items on the interior floor.')
+                else:self._message('You do not carry that many items.')
+                return result
+            if isinstance(command,PickupCommand):
+                plan=self.interiors.current_plan();a=self.interiors.player_presence();inv=self.entities.get(command.actor,Inventory)
+                for pile in list(plan.piles):
+                    if (pile.x-a.x)**2+(pile.y-a.y)**2<=1400**2:
+                        for item,amount in list(pile.items.items()):inv.add(item,amount)
+                        plan.piles.remove(pile)
+                self._message('You collect nearby items from the interior floor.');return result
+            if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
+                                       UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
+                                       SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand)):
+                self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
+        elif isinstance(command,(MoveFurnitureCommand,UseInteriorFurnitureCommand)):
+            self._message('Enter a building before using interior furniture.');return result
+        if not indoor and getattr(command,'container_uid',''):
+            target=next((c for c in self.state.containers.values() if c.uid==command.container_uid),None)
+            if target is not None and 'interior:'+target.property_id in self.state.interiors:
+                self._message('That storage is inside a separate building space.');return result
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
             # Developer arena commands deliberately bypass world time, ecology
             # ticks, and crafting discovery so practice cannot reveal recipes or
@@ -524,7 +576,7 @@ class Simulation:
         hunger_steps=max(0,end//45-start//45);thirst_steps=max(0,end//30-start//30)
         v.hunger=min(100,v.hunger+hunger_steps);v.thirst=min(100,v.thirst+thirst_steps);stam=max(1,minutes//10);stam += max(0,minutes//20) if self.state.player_food_effects.get("stamina",0)>self.clock.minute else 0;
         from worldseed.systems.swimming import exposure
-        if exposure(self,self.player_pos).mode=='swimming':
+        if not (getattr(self,'interiors',None) and self.interiors.player_presence()) and exposure(self,self.player_pos).mode=='swimming':
             swim_steps=max(0,end//5-start//5)
             effort=swim_steps*max(1,3-self.player_attribute('endurance')//6)
             deficit=max(0,effort-v.stamina);v.stamina=max(0,v.stamina-effort)
@@ -552,6 +604,8 @@ class Simulation:
             ambient=-25+(fields.temperature*65)//65535+int(weather.get("temp_delta",0))
             insulation=sum(self.registry.items[iid].insulation for iid in self.state.player_equipment.values() if iid in self.registry.items)
             room=self.building.room_at(pos);env=self.building.environmental_bonuses(pos)
+            if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
+                room={'sheltered':True};env={'shelter':24,'warmth':8}
             shelter_bonus=(8 if room.get("sheltered") else 0)+int(env.get("shelter",0))//6
             warmth_bonus=int(env.get("warmth",0))//4
             resilience=min(6,self.player_attribute('endurance')//2+self.player_skill('survival')//3)
@@ -674,6 +728,16 @@ class Simulation:
         inv=self.entities.try_get(self.player_id,Inventory)
         if inv and self.state.player_readied_weapon and inv.count(self.state.player_readied_weapon)<=0:
             self.state.player_readied_weapon="";self.combat.clear_aim()
+        if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
+            # Wounds and illness continue, but outdoor animals/LOS/proximity cannot
+            # target an actor whose actual location is in another space.
+            v=self.entities.try_get(self.player_id,Vitals)
+            self.combat.tick_wounds()
+            if v:
+                self.combat.tick_player_wounds(v)
+                for message in self.disease.tick_player(self.clock.minute,v):self._message(message)
+                if v.hp<=0:self._handle_death('died indoors from wounds and exposure')
+            return
         self._ensure_nearby_world(self.player_pos)
         if self.turn % 32 == 0:self.ecology.dematerialize_far(self.player_pos)
         self.dungeons.update_cleared(self.clock.minute)
@@ -874,7 +938,7 @@ class Simulation:
 
     def _talk(self,cmd:TalkCommand)->None:
         p=self.entities.get(cmd.actor,Position).value;target=p.moved(cmd.dx,cmd.dy)
-        npc=next((n for n in self.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
+        npc=next((n for n in self.state.npcs.values() if n.alive and n.uid not in self.state.interior_actors and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
         if not npc:self._message("There is nobody there to speak with.");return
         self.begin_conversation(npc.uid)
 
@@ -882,6 +946,12 @@ class Simulation:
         """Start an authoritative conversation, including through an answered door."""
         npc=self.state.npcs.get(str(npc_uid))
         if npc is None or not npc.alive:self._message("There is nobody there to speak with.");return
+        player_inside=self.interiors.player_presence() if getattr(self,'interiors',None) else None
+        npc_inside=getattr(self.state,'interior_actors',{}).get(npc.uid)
+        if player_inside is not None or npc_inside is not None:
+            if (player_inside is None or npc_inside is None or player_inside.space_id!=npc_inside.space_id
+                or (player_inside.x-npc_inside.x)**2+(player_inside.y-npc_inside.y)**2>1800**2):
+                self._message('That person is in another space or too far away.');return
         known=set(self.state.discovered_npcs);first=npc.uid not in known;known.add(npc.uid);self.state.discovered_npcs=sorted(known)
         if npc.settlement_id:
             ss=set(self.state.discovered_settlements);ss.add(npc.settlement_id);self.state.discovered_settlements=sorted(ss)
@@ -1272,9 +1342,10 @@ class Simulation:
     def _command_container(self,uid:str):
         if uid:
             c=next((row for row in self.state.containers.values() if row.uid==uid),None)
-            if c and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
+            if c and 'interior:'+c.property_id not in self.state.interiors and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
             return None
-        return self.building.nearby_container(self.player_pos)
+        c=self.building.nearby_container(self.player_pos)
+        return c if c and 'interior:'+c.property_id not in self.state.interiors else None
     def _store(self,cmd:StoreCommand)->None:
         c=self._command_container(cmd.container_uid)
         if not c:self._message("There is no storage container within reach.");return
@@ -1365,7 +1436,7 @@ class Simulation:
 
     def _rest(self,cmd:RestCommand)->int:
         from worldseed.systems.swimming import exposure
-        if exposure(self,self.player_pos).mode=='swimming':
+        if not (getattr(self,'interiors',None) and self.interiors.player_presence()) and exposure(self,self.player_pos).mode=='swimming':
             self._message('You cannot rest while swimming. Reach shallows, shore or a bridge.');return MINUTES_PER_ACTION
         minutes=max(30,min(720,int(cmd.minutes)));v=self.entities.get(cmd.actor,Vitals);env=self.building.environmental_bonuses(self.player_pos);comfort=int(env.get('comfort',0));v.stamina=min(100,v.stamina+minutes//5+comfort//2);v.pain=max(0,v.pain-minutes//90-max(0,comfort//10));self._message(f"You rest for {minutes} minutes"+(" in relative comfort." if comfort else "."));return minutes
 
@@ -1496,6 +1567,8 @@ class Simulation:
         if soil:soil.last_crop_id=plot.crop_id;soil.disease_pressure=min(100,soil.disease_pressure+(12 if plot.disease else 5))
         self.state.crops.pop(key,None);self._message(f"You harvest {amount} {crop.name.lower()} (yield {factor}%).")
     def till(self)->None:
+        if self.interiors.player_presence() is not None:
+            self._message('Tilling requires outdoor soil.');return
         pos=self.player_pos;tile=self.world.tile_at(pos);inv=self.entities.get(self.player_id,Inventory)
         if max((self.registry.items[i].quality('till') for i,n in inv.items.items() if n>0 and i in self.registry.items),default=0)<1:self._message('You need a digging stick, hoe, or other tilling tool.');return
         if "soil" not in tile.terrain.tags:self._message("This ground cannot be tilled.");return
@@ -1505,6 +1578,8 @@ class Simulation:
             self.state.soils[key]=SoilState(pos.x,pos.y,pos.z,max(25,fert),max(25,fert*4//5),max(25,fert*9//10),max(20,fert//2),0,"")
         self._message("You till the soil.")
     def irrigate(self)->None:
+        if self.interiors.player_presence() is not None:
+            self._message('Irrigation requires outdoor soil.');return
         key=pos_key(self.player_pos.x,self.player_pos.y,self.player_pos.z);plot=self.state.crops.get(key)
         if not plot:self._message("There is no crop here to irrigate.");return
         if not self._water_available(self.player_pos):self._message('You need accessible water nearby to irrigate by hand.');return
@@ -1998,15 +2073,24 @@ class Simulation:
         if successor is None:
             self._message("No safe dry land was found for a successor. No ocean spawn was used.")
             return
-        pos=self.player_pos;inv=self.entities.get(self.player_id,Inventory);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
+        pos=self.player_pos;inv=self.entities.get(self.player_id,Inventory)
+        inside=self.interiors.player_presence() if getattr(self,'interiors',None) else None
+        if inside is not None:
+            from worldseed.systems.interior_state import InteriorPile
+            plan=self.interiors.current_plan();pile=InteriorPile(self.state.uid('interior-pile'),inside.x,inside.y)
+            plan.piles.append(pile);ground_owner=f'{plan.uid}:pile:{pile.uid}'
+        else:
+            key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
+            ground_owner=f'ground:{pos.x},{pos.y},{pos.z}'
         for iid,n in list(inv.items.items()):pile.items[iid]=pile.items.get(iid,0)+n
         for iid in list(self.state.player_equipment.values()):pile.items[iid]=pile.items.get(iid,0)+1
         self.state.player_equipment.clear();self.state.player_equipped_artifacts.clear();self.state.player_wounds.clear();self.state.player_body_parts={"head":100,"neck":100,"torso":100,"left_arm":100,"right_arm":100,"left_leg":100,"right_leg":100}
         for a in list(self.state.artifacts.values()):
-            if a.owner=="player":self.artifacts.transfer_uid(a.uid,f"ground:{pos.x},{pos.y},{pos.z}",self.clock.minute,"lost with a dead bearer")
+            if a.owner=="player":self.artifacts.transfer_uid(a.uid,ground_owner,self.clock.minute,"lost with a dead bearer")
         inv.items.clear();name=f"Wanderer {len(self.state.legacy)+1}";self.state.legacy.append(LegacyCharacter(name,max(0,self.clock.minute-365*1440),self.clock.minute,cause,pos.x,pos.y,pos.z,[]));self.history.record("death",f"{name} died: {cause}.",self.clock.minute,pos.x//512,pos.y//512,[name],salience=70)
         v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100
         self.entities.get(self.player_id,Position).value=successor
+        if inside is not None:self.interiors._remove_actor('player')
         self.hunting.set_player_stance('normal')
         self.state.player_trespass_property_id=''
         self.state.player_aim_target='';self.state.player_aim_quality=0

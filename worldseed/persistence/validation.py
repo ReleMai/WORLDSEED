@@ -17,10 +17,102 @@ def _table(raw: dict[str, Any], name: str) -> dict[str, dict[str, Any]]:
     return value if isinstance(value, dict) else {}
 
 
+def _validate_interiors(raw: dict[str, Any]) -> list[str]:
+    """Validate optional fixed-point indoor records without preparing geography."""
+    issues: list[str] = []
+    plans, actors = _table(raw, "interiors"), _table(raw, "interior_actors")
+    for key in ("interiors", "interior_actors"):
+        if key in raw and not isinstance(raw[key], dict):
+            issues.append(f"invalid interior table: {key}")
+    furniture_ids: set[str] = set()
+    for space_id, plan in plans.items():
+        if not isinstance(plan, dict):
+            issues.append(f"invalid interior record: {space_id}")
+            continue
+        building_id = plan.get("building_id", "")
+        if plan.get("uid") != space_id or not building_id or space_id != "interior:" + str(building_id):
+            issues.append(f"invalid interior identity: {space_id}")
+        width, height = plan.get("width"), plan.get("height")
+        if type(plan.get("version", 1)) is not int or plan.get("version", 1) != 1:
+            issues.append(f"unsupported interior plan version: {space_id}")
+        if not all(type(v) is int and 1 <= v <= 100_000 for v in (width, height)):
+            issues.append(f"invalid interior dimensions: {space_id}")
+            continue
+        def point_valid(row: dict, x_key="x", y_key="y") -> bool:
+            x, y = row.get(x_key), row.get(y_key)
+            return type(x) is int and type(y) is int and 0 <= x <= width and 0 <= y <= height
+        def rect_valid(row) -> bool:
+            return (isinstance(row, dict) and point_valid(row)
+                    and all(type(row.get(k)) is int and row[k] > 0 for k in ("w", "h"))
+                    and row["x"] + row["w"] <= width and row["y"] + row["h"] <= height)
+        if not point_valid(plan, "entry_x", "entry_y"):
+            issues.append(f"invalid interior portal position: {space_id}")
+        if any(type(plan.get(k)) is not int for k in ("exterior_x", "exterior_y", "exterior_z")):
+            issues.append(f"invalid interior exterior anchor: {space_id}")
+        door_uid = plan.get("door_uid", "")
+        door = _table(raw, "door_security").get(door_uid)
+        if not door_uid or (door and door.get("property_id") != building_id):
+            issues.append(f"invalid interior door binding: {space_id}")
+        for collection in ("rooms", "walls", "furniture", "piles"):
+            rows = plan.get(collection, [])
+            if not isinstance(rows, list):
+                issues.append(f"invalid interior {collection}: {space_id}")
+                continue
+            identifiers: set[str] = set()
+            for row in rows:
+                if not isinstance(row, dict):
+                    issues.append(f"invalid interior {collection} record: {space_id}")
+                    continue
+                if collection != "walls":
+                    uid = row.get("uid", "")
+                    if not isinstance(uid, str) or not uid or uid in identifiers:
+                        issues.append(f"duplicate or invalid interior {collection} identity: {space_id}")
+                    identifiers.add(str(uid))
+                if collection == "rooms" and not rect_valid(row.get("rect")):
+                    issues.append(f"invalid interior room rectangle: {space_id}")
+                elif collection in {"walls", "furniture"} and not rect_valid(row):
+                    issues.append(f"invalid interior {collection} rectangle: {space_id}")
+                elif collection == "piles":
+                    if not point_valid(row):
+                        issues.append(f"invalid interior pile position: {space_id}")
+                    items = row.get("items", {})
+                    if not isinstance(items, dict) or any(not isinstance(k, str) or type(v) is not int or v < 0 for k, v in items.items()):
+                        issues.append(f"negative or invalid interior pile goods: {space_id}")
+                if collection == "furniture":
+                    uid = str(row.get("uid", ""))
+                    if uid in furniture_ids:
+                        issues.append(f"duplicate interior furniture identity: {uid}")
+                    furniture_ids.add(uid)
+    for uid, actor in actors.items():
+        if not isinstance(actor, dict):
+            issues.append(f"invalid interior actor record: {uid}")
+            continue
+        plan = plans.get(actor.get("space_id", ""))
+        if not isinstance(plan, dict):
+            issues.append(f"orphan interior actor space: {uid}")
+            continue
+        if uid != "player" and uid not in _table(raw, "npcs"):
+            issues.append(f"orphan interior NPC actor: {uid}")
+        width, height = plan.get("width"), plan.get("height")
+        waypoints = actor.get("waypoints", [])
+        if not isinstance(waypoints, list) or any(not isinstance(p, (list, tuple)) or len(p) != 2 for p in waypoints):
+            issues.append(f"invalid interior actor waypoints: {uid}")
+            waypoints = []
+        points = [(actor.get("x"), actor.get("y"))] + [tuple(p) for p in waypoints]
+        if actor.get("target_x") is not None or actor.get("target_y") is not None:
+            points.append((actor.get("target_x"), actor.get("target_y")))
+        for x, y in points:
+            if (type(x) is not int or type(y) is not int or type(width) is not int or type(height) is not int
+                    or not (0 <= x <= width and 0 <= y <= height)):
+                issues.append(f"interior actor position out of bounds: {uid}")
+    return issues
+
+
 def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     if not raw:
         return []
     issues: list[str] = []
+    issues.extend(_validate_interiors(raw))
     xp=raw.get('player_swimming_xp',0)
     skill=(raw.get('player_skills',{}) or {}).get('swimming',0)
     if not isinstance(xp,int) or not 0<=xp<120:issues.append('swimming practice out of bounds')

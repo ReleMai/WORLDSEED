@@ -7,7 +7,7 @@ indexes only the currently relevant cells for simulation/render queries.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterable
 
 from worldseed.core.coords import WorldPos
@@ -33,6 +33,7 @@ class PhysicalizedSettlementCell:
     crossing_condition: int = 100
     crossing_blocked: bool = False
     border_post_id: str = ""
+    fixture_piece_uid: str = ""
 
     @property
     def occupied(self) -> bool:
@@ -63,7 +64,27 @@ class SettlementPhysicalizationSystem:
         self._route_segments: dict[str, object] = {}
         self._crossings: dict[str, object] = {}
         self._active_settlement_ids: tuple[str, ...] = ()
+        self._indoor_fixture_uids: set[str] = set()
         self.revision = 0
+
+    def attach_interior_state(self,state) -> None:
+        """Rebuild sparse fixture-space projection on load, never on inspection."""
+        self._indoor_fixture_uids.clear()
+        for plan in getattr(state,"interiors",{}).values():
+            self.register_interior(plan)
+
+    def register_interior(self,plan) -> None:
+        # Workshop reservations still consume exterior use positions. Only
+        # household fixtures have transferred to the new spatial authority.
+        if plan.function not in {"residence","inn","barracks","outskirt_camp"}:return
+        before=len(self._indoor_fixture_uids)
+        self._indoor_fixture_uids.update(f.uid for f in plan.furniture)
+        if len(self._indoor_fixture_uids)!=before:self.revision+=1
+
+    def _project_cell(self,cell):
+        if cell is not None and cell.fixture_piece_uid in self._indoor_fixture_uids:
+            return replace(cell,fixture_piece_id="",fixture_piece_uid="")
+        return cell
 
     @property
     def active_settlement_ids(self) -> tuple[str, ...]:
@@ -94,7 +115,7 @@ class SettlementPhysicalizationSystem:
             "x": changes["x"], "y": changes["y"], "settlement_id": changes["settlement_id"],
             "parcel_id": "", "road_ids": (), "structure_id": "", "room_id": "",
             "ground_piece_id": "", "structure_piece_id": "", "structure_piece_uid": "", "structure_piece_role": "", "fixture_piece_id": "", "roof_piece_id": "",
-            "crossing_id": "", "crossing_kind": "", "crossing_condition": 100, "crossing_blocked": False, "border_post_id": "",
+            "crossing_id": "", "crossing_kind": "", "crossing_condition": 100, "crossing_blocked": False, "border_post_id": "", "fixture_piece_uid": "",
         }
         if existing is not None:
             base.update({
@@ -105,6 +126,7 @@ class SettlementPhysicalizationSystem:
                 "structure_piece_uid": existing.structure_piece_uid,
                 "structure_piece_role": existing.structure_piece_role,
                 "fixture_piece_id": existing.fixture_piece_id,
+                "fixture_piece_uid": existing.fixture_piece_uid,
                 "roof_piece_id": existing.roof_piece_id,
                 "crossing_id": existing.crossing_id,
                 "crossing_kind": existing.crossing_kind,
@@ -163,6 +185,7 @@ class SettlementPhysicalizationSystem:
                 changes["structure_piece_role"] = placement.role
             elif placement.role in {"fixture", "yard_fixture", "tile_decor", "worksite_fixture", "managed_tree_plot", "mine_connector_marker"}:
                 changes["fixture_piece_id"] = placement.piece_id
+                changes["fixture_piece_uid"] = placement.uid
             elif placement.role == "roof" or piece.category == "roof":
                 changes["roof_piece_id"] = placement.piece_id
             elif placement.role == "floor" or piece.layer == "ground":
@@ -294,12 +317,12 @@ class SettlementPhysicalizationSystem:
         return len(active)
 
     def cells(self) -> tuple[PhysicalizedSettlementCell, ...]:
-        return tuple(self._cells[key] for key in sorted(self._cells, key=lambda p: (p[1], p[0])))
+        return tuple(self._project_cell(self._cells[key]) for key in sorted(self._cells, key=lambda p: (p[1], p[0])))
 
     def cells_in_bounds(self,left:int,top:int,right:int,bottom:int) -> tuple[PhysicalizedSettlementCell, ...]:
         """Return only materialized settlement cells intersecting a local viewport."""
         left,top,right,bottom=map(int,(left,top,right,bottom))
-        return tuple(cell for (x,y),cell in self._cells.items() if left<=x<=right and top<=y<=bottom)
+        return tuple(self._project_cell(cell) for (x,y),cell in self._cells.items() if left<=x<=right and top<=y<=bottom)
 
     def route_segments(self):
         return tuple(self._route_segments[key] for key in sorted(self._route_segments))
@@ -384,7 +407,7 @@ class SettlementPhysicalizationSystem:
     def cell_at(self, pos: WorldPos) -> PhysicalizedSettlementCell | None:
         if pos.z != 0:
             return None
-        return self._cells.get((int(pos.x), int(pos.y)))
+        return self._project_cell(self._cells.get((int(pos.x), int(pos.y))))
 
     def piece_def_at(self, pos: WorldPos):
         cell = self.cell_at(pos)
@@ -455,7 +478,8 @@ class SettlementPhysicalizationSystem:
         if room is None:
             return None
         fixture_names = []
-        for c in self._cells.values():
+        for raw_cell in self._cells.values():
+            c=self._project_cell(raw_cell)
             if c.room_id != room.uid or not c.fixture_piece_id:
                 continue
             definition = self.registry.settlement_pieces.get(c.fixture_piece_id)

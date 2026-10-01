@@ -2,6 +2,11 @@
   "version": 2,
   "tile_px": 32,
   "items": {},
+  "interiors": {
+    "core:interior_floor": "assets/sprites/interiors/cottage_floor.png",
+    "core:interior_wall": "assets/sprites/interiors/cottage_wall.png",
+    "core:interior_bed": "assets/sprites/interiors/cottage_bed.png"
+  },
   "terrain": {
     "core:grass": [
       "assets/sprites/terrain/grass_hd_v00.png",

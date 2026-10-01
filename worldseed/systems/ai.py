@@ -8,7 +8,7 @@ from worldseed.systems.pathfinding import local_path
 class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
-        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None
+        self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -22,6 +22,21 @@ class NPCSystem:
     def attach_activity_system(self,system)->None:self.activities=system
     def attach_mining_profession(self,system)->None:self.mining=system
     def attach_profession_system(self,system)->None:self.professions=system
+    def attach_interior_system(self,system)->None:self.interiors=system
+
+    def _inside(self,npc:NPCState)->bool:
+        return npc.uid in getattr(self.state,"interior_actors",{})
+
+    def _home_entry_task(self,npc:NPCState):
+        if self.interiors is None or self.property_security is None or not npc.home_id:
+            return None
+        doors=(door for door in self.property_security.doors_for_property(npc.home_id) if door.role=="entrance")
+        door=next(doors,None)
+        if door is None:return None
+        # Residents approach the same physical door as the player before the
+        # shared portal authority transfers them to a continuous local space.
+        return {"kind":"move","x":door.x,"y":door.y,"z":door.z,
+                "exact":True,"physical_path":True,"interior_home_door_uid":door.uid}
     @staticmethod
     def _face_step(npc:NPCState,old_x:int,old_y:int)->None:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
@@ -65,7 +80,7 @@ class NPCSystem:
         """
         if self.activities is not None:self.activities.cleanup(minute)
         for npc in self.state.npcs.values():
-            if not npc.alive:continue
+            if not npc.alive or self._inside(npc):continue
             tier=None
             if self.lod is not None:
                 tier=self.lod.npc_tier(player_pos,npc)
@@ -89,8 +104,11 @@ class NPCSystem:
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
         if self.activities is not None:self.activities.cleanup(minute)
+        # This is the single interior routine clock. Rendering may interpolate
+        # presentation but cannot execute domestic actions or move residents.
+        if self.interiors is not None:self.interiors.tick_update(minute)
         for npc in self.state.npcs.values():
-            if not npc.alive or not self._tick_managed(npc,player_pos):continue
+            if not npc.alive or self._inside(npc) or not self._tick_managed(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
@@ -176,6 +194,7 @@ class NPCSystem:
         return best,best_score
 
     def generate_plan(self,npc:NPCState,town,minute:int,goal:str|None=None)->None:
+        if self._inside(npc):return
         goal=npc.goal if goal is None else goal
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
@@ -211,7 +230,8 @@ class NPCSystem:
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"work"}]
         elif goal=="rest":
             target=self._binding_destination(npc.home_id,npc.home_room_id,town)
-            npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"rest"}]
+            entry=self._home_entry_task(npc)
+            npc.tasks=[entry or {"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"rest"}]
         elif goal=="eat":
             target=self._service_destination(town,("market",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"eat"}]
@@ -240,7 +260,7 @@ class NPCSystem:
             target=self._service_destination(town,("market",))
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"steal"}]
         elif goal=="socialize":
-            peers=[p for p in self.state.npcs.values() if p.alive and p.settlement_id==npc.settlement_id and p.uid!=npc.uid]
+            peers=[p for p in self.state.npcs.values() if p.alive and not self._inside(p) and p.settlement_id==npc.settlement_id and p.uid!=npc.uid]
             kin=set(npc.parents)|set(npc.children)|set(npc.kinship)
             if npc.spouse_uid:kin.add(npc.spouse_uid)
             peers.sort(key=lambda p:(0 if p.uid in kin else 1,-npc.relationships.get(p.uid,{}).get("affection",0),p.uid))
@@ -264,7 +284,7 @@ class NPCSystem:
         self._execute_task(npc,town,minute,player_pos)
 
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
-        if not npc.tasks:return
+        if self._inside(npc) or not npc.tasks:return
         task=npc.tasks[0]
         if task['kind']=='move':
             goal=WorldPos(int(task['x']),int(task['y']),int(task.get('z',npc.z)));start=WorldPos(npc.x,npc.y,npc.z)
@@ -275,6 +295,10 @@ class NPCSystem:
             distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
             reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
             if reached:
+                if task.get("interior_home_door_uid") and self.interiors is not None:
+                    if self.interiors.enter_npc(npc,task["interior_home_door_uid"]):
+                        npc.tasks.clear()
+                    return
                 npc.tasks.pop(0);return
             if self.world and (
                 bool(task.get('physical_path',False))
@@ -326,7 +350,7 @@ class NPCSystem:
                     task["_local_path"]=cached
                     self._face_step(npc,old_x,old_y)
                     if (npc.x,npc.y)==(goal.x,goal.y):
-                        npc.tasks.pop(0)
+                        if not task.get("interior_home_door_uid"):npc.tasks.pop(0)
                     elif not cached:
                         task.pop("_local_path",None);task.pop("_local_path_goal",None)
                 # Never fall through to coarse movement while physically local.
@@ -335,7 +359,7 @@ class NPCSystem:
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
-            if (npc.x,npc.y)==(goal.x,goal.y):npc.tasks.pop(0)
+            if (npc.x,npc.y)==(goal.x,goal.y) and not task.get("interior_home_door_uid"):npc.tasks.pop(0)
         elif task['kind']=='mining_transition':
             if self.mining is None:
                 npc.tasks.pop(0);return
@@ -413,6 +437,7 @@ class NPCSystem:
         if self.economy is not None:
             self.economy.representative_work(npc,town,minute)
     def _socialize(self,npc:NPCState,other:NPCState,minute:int)->None:
+        if self._inside(npc) or self._inside(other):return
         rel=npc.relationships.setdefault(other.uid,{"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0});rel['familiarity']=min(100,rel['familiarity']+2);rel['trust']=min(100,rel['trust']+1);rel['affection']=min(100,rel['affection']+1)
         npc.needs["social"]=max(0,npc.needs.get("social",0)-35)
         npc.memories.append({"minute":minute,"type":"social","subject":other.uid,"salience":5,"valence":5});npc.memories=npc.memories[-40:]

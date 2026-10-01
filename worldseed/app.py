@@ -745,8 +745,21 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
 
 def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     sim=ctx.sim;p=sim.player_pos
+    inside=sim.interiors.player_presence()
+    if inside is not None:
+        nearby=[n for uid,n in sim.state.npcs.items() if n.alive
+                and (a:=sim.state.interior_actors.get(uid)) is not None
+                and a.space_id==inside.space_id
+                and (a.x-inside.x)**2+(a.y-inside.y)**2<=1800**2]
+        if npc_uid:nearby=[n for n in nearby if n.uid==npc_uid]
+        if not nearby:return 'Nobody is close enough to talk to.'
+        uid=nearby[0].uid if len(nearby)==1 else _select(term,'TALK TO',[(n.uid,n.name if n.uid in sim.known_npc_ids() else 'Stranger') for n in nearby])
+        if not uid:return UI_BACK
+        target=sim.state.npcs[uid];sim.begin_conversation(uid)
+        return _conversation_menu(ctx,term,target,sim.log[-1].message if sim.log else '')
     nearby=[]
     for n in sim.state.npcs.values():
+        if n.uid in sim.state.interior_actors:continue
         dist=abs(n.x-p.x)+abs(n.y-p.y)
         if n.alive and n.z==p.z and dist<=1:
             label=n.name if n.uid in sim.known_npc_ids() else 'Stranger'
@@ -1968,13 +1981,15 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
 def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     """Context actions for a right-clicked world tile; only mutations enforce reach."""
     sim=ctx.sim;p=sim.player_pos
+    if sim.interiors.player_presence() is not None:return UI_BACK
     if target.z!=p.z:return UI_BACK
     distance=abs(target.x-p.x)+abs(target.y-p.y)
     rows=[]
     container=sim.building.container_at(target)
+    if container is not None and 'interior:'+container.property_id in sim.state.interiors:container=None
     pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
     creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
-    npc=next((n for n in sim.state.npcs.values() if n.alive and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
+    npc=next((n for n in sim.state.npcs.values() if n.alive and n.uid not in sim.state.interior_actors and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
     physical=sim.settlement_physicalization.cell_at(target)
     planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
     crossing=sim.settlement_physicalization.crossing_at(target)
@@ -2005,6 +2020,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
     fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
+        if planned is not None and planned.function in {'residence','inn','barracks'} and door.role=='entrance':
+            rows.append(('enter_interior','Enter building interior'))
         if planned is not None and planned.function=='residence' and door.role=='entrance':
             rows.append(('knock_property_door','Knock and wait for a resident'))
         if door.locked and not door.forced and not sim.property_security.authorized_player(door):
@@ -2092,6 +2109,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='enter_interior':
+        sim.execute(EnterInteriorCommand(ctx.player_id,door.uid))
+        return sim.log[-1].message if sim.log else ''
     if choice=='aggressive_stance':
         sim.execute(SetHuntingStanceCommand(ctx.player_id,'aggressive'))
         return sim.log[-1].message if sim.log else ''
@@ -3246,6 +3266,37 @@ def _pause_menu(ctx:GameContext,term:Terminal)->str:
         if choice=='menu':_save(ctx);return 'menu'
         if choice=='quit':_save(ctx);return 'quit'
 
+def _interior_context_menu(ctx,term,x:int,y:int)->str:
+    """Pointer coordinates and objects belong to the current interior, not a tile."""
+    sim=ctx.sim;plan=sim.interiors.current_plan();actor=sim.interiors.player_presence()
+    if plan is None or actor is None:return UI_BACK
+    furniture=sim.interiors.hit_test(x,y)
+    rows=[]
+    if furniture is not None:
+        piece=sim.registry.settlement_pieces.get(furniture.piece_id)
+        label=piece.name if piece else furniture.piece_id.split(':')[-1].replace('_',' ').title()
+        rows=[('inspect',f'Inspect {label}'),('use',f'Use {label}')]
+        if sim.interiors.can_rearrange(furniture):rows.append(('move',f'Reposition {label} freely'))
+    for uid,presence in sim.interiors.actors_in_space(plan.uid):
+        n=sim.state.npcs.get(uid)
+        if n is not None and n.alive and (presence.x-x)**2+(presence.y-y)**2<=500**2:
+            rows.append((f'talk:{uid}',f'Talk to {n.name if uid in sim.known_npc_ids() else "Stranger"}'))
+    rows.append(('exit','Leave through the entrance'))
+    if any((p.x-actor.x)**2+(p.y-actor.y)**2<=1400**2 for p in plan.piles):rows.append(('pickup','Collect nearby floor items'))
+    choice=_select(term,'INTERIOR ACTIONS',rows,subtitle='Objects use their actual position and outline.',presentation='world_context')
+    if choice=='exit':sim.execute(ExitInteriorCommand(ctx.player_id))
+    elif choice=='pickup':sim.execute(PickupCommand(ctx.player_id))
+    elif choice=='use' and furniture is not None:sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
+    elif choice=='move' and furniture is not None:
+        term._interior_placing=furniture.uid
+        return 'Left-click a free position for the furniture; right-click cancels. Placement respects walls, objects and exits.'
+    elif choice=='inspect' and furniture is not None:
+        _view_text(term,f'{label}\nPosition {furniture.x/1000:.2f}, {furniture.y/1000:.2f}\nSize {furniture.w/1000:.2f} × {furniture.h/1000:.2f}\nFree placement; no outdoor tile snapping.',title='INTERIOR OBJECT')
+        return UI_BACK
+    elif choice and choice.startswith('talk:'):return _talk_action(ctx,term,choice.split(':',1)[1])
+    else:return UI_BACK
+    return sim.log[-1].message if sim.log else ''
+
 def run_game(ctx:GameContext,term:Terminal)->str:
     renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
@@ -3265,6 +3316,17 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             pass
         if key.startswith('UI_WORLD_MENU:'):
             _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
+        if key.startswith('INTERIOR_MOVE:'):
+            _,dx,dy=key.split(':');ctx.sim.execute(MoveCommand(ctx.player_id,int(dx),int(dy)));continue
+        if key.startswith('INTERIOR_CONTEXT:'):
+            term._interior_placing=None
+            _,x,y=key.split(':');result=_interior_context_menu(ctx,term,int(x),int(y));last='' if result==UI_BACK else result;continue
+        if key.startswith('INTERIOR_PLACE:'):
+            uid=getattr(term,'_interior_placing',None);term._interior_placing=None
+            if uid:
+                _,x,y=key.split(':');ctx.sim.execute(MoveFurnitureCommand(ctx.player_id,uid,int(x),int(y)))
+                last=ctx.sim.log[-1].message if ctx.sim.log else ''
+            continue
         intent=classify_key(key)
         if intent.kind=='quit':
             _save(ctx);return 'quit'
@@ -3276,13 +3338,19 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             if choice=='saved':last='Game saved.'
             realtime.resume()
             continue
-        if intent.kind=='actions':last=_action_palette(ctx,term);continue
+        if intent.kind=='actions':
+            if ctx.sim.interiors.player_presence() is not None:
+                a=ctx.sim.interiors.player_presence();last=_interior_context_menu(ctx,term,a.x,a.y)
+            else:last=_action_palette(ctx,term)
+            continue
         if intent.kind=='stance':
             ctx.sim.execute(SetHuntingStanceCommand(ctx.player_id,str(intent.value)))
             last=ctx.sim.log[-1].message if ctx.sim.log else ''
             continue
         if intent.kind=='console':_world_console(ctx,term);continue
         if intent.kind=='settings':_settings(ctx,term);continue
+        if ctx.sim.interiors.player_presence() is not None and intent.kind in {'gather','farm','vertical'}:
+            last='That action requires outdoor ground. Right-click furniture for interior actions.';continue
         if intent.kind=='direct_menu':
             result=_handle_menu(ctx,term,str(intent.value));last='' if result==UI_BACK else result;continue
         if intent.kind=='move':ctx.sim.execute(MoveCommand(ctx.player_id,*intent.value))

@@ -1,5 +1,14 @@
 from dataclasses import dataclass
 
+@dataclass(frozen=True, slots=True)
+class EnterInteriorCommand: actor:int; door_uid:str
+@dataclass(frozen=True, slots=True)
+class ExitInteriorCommand: actor:int
+@dataclass(frozen=True, slots=True)
+class MoveFurnitureCommand: actor:int; furniture_uid:str; x:int; y:int
+@dataclass(frozen=True, slots=True)
+class UseInteriorFurnitureCommand: actor:int; furniture_uid:str
+
 @dataclass(frozen=True,slots=True)
 class MoveCommand: actor:int; dx:int; dy:int
 @dataclass(frozen=True,slots=True)

@@ -24,6 +24,10 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_interior_direction_tokens_preserve_wasd_movement_contract(self):
+        from worldseed.ui.router import classify_key
+        for key in ('w','a','s','d'):
+            self.assertEqual(classify_key(key).kind,'move')
     def test_aggressive_pointer_intent_preserves_movement_keys(self):
         intent = classify_key('UI_STANCE:aggressive')
         self.assertEqual(intent.kind, 'stance')

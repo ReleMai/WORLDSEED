@@ -76,6 +76,8 @@ class PygameTerminal(PointerUI):
         self._hover_rect = None
         self._hover_tile_rect = None
         self._hover_cell = None
+        self._interior_context = None
+        self._interior_placing = None
         self._scanlines_enabled = False
         self._visuals = VisualRegistry.load_default()
         self._character_sprite_paths = frozenset(self._visuals.player_paths("male") + self._visuals.player_paths("female") + self._visuals.npc_paths())
@@ -203,6 +205,7 @@ class PygameTerminal(PointerUI):
         self.screen = self.pg.display.set_mode((self.width, self.height), self.pg.RESIZABLE)
         self._base_layer_cache.clear(); self._base_scroll_state=None; self._resource_view_cache.clear(); self._terrain_transition_cache.clear(); self._terrain_transition_masks.clear()
         self._hover_context=None; self._hover_map_snapshot=None; self._hover_rect=None; self._hover_tile_rect=None; self._hover_cell=None
+        self._interior_context = None
         self._menu_backdrop_cache.clear();self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
 
     def discard_pending_input(self) -> None:
@@ -243,8 +246,16 @@ class PygameTerminal(PointerUI):
         def _activate_movement(key: int, now: int) -> str:
             self._held_movement[key] = now
             self._active_movement_key = key
-            self._movement_next_repeat_ms = now + self._movement_initial_delay_ms
-            return movement_keys[key]
+            self._movement_next_repeat_ms = now + (35 if self._interior_context else self._movement_initial_delay_ms)
+            return _movement_token()
+
+        def _movement_token() -> str:
+            if not self._interior_context:
+                return movement_keys[self._active_movement_key]
+            held = self._held_movement
+            dx = int(any(k in held for k in (pg.K_d, pg.K_RIGHT))) - int(any(k in held for k in (pg.K_a, pg.K_LEFT)))
+            dy = int(any(k in held for k in (pg.K_s, pg.K_DOWN))) - int(any(k in held for k in (pg.K_w, pg.K_UP)))
+            return f'INTERIOR_MOVE:{dx}:{dy}'
 
         def _release_movement(key: int) -> None:
             self._held_movement.pop(key, None)
@@ -282,8 +293,8 @@ class PygameTerminal(PointerUI):
                 if self._active_movement_key is not None and now >= self._movement_next_repeat_ms:
                     # Never catch up missed repeats. A slow frame produces one
                     # fresh step, then schedules the next from *now*.
-                    self._movement_next_repeat_ms = now + self._movement_repeat_ms
-                    return movement_keys[self._active_movement_key]
+                    self._movement_next_repeat_ms = now + (35 if self._interior_context else self._movement_repeat_ms)
+                    return _movement_token()
                 continue
             if event.type == pg.QUIT:
                 # Window close is a system quit event, not the gameplay Q key.
@@ -331,7 +342,11 @@ class PygameTerminal(PointerUI):
                     self._atlas_drag_last=self._last_mouse
                     if dx or dy:return f'ATLAS:drag:{dx}:{dy}'
                     continue
-                self._refresh_hover_only()
+                if self._interior_context:
+                    from worldseed.ui.interior_view import refresh_hover
+                    refresh_hover(self)
+                else:
+                    self._refresh_hover_only()
                 if self._input_mode=='target' and getattr(self,'_combat_targeting',False) and self._hover_context:
                     ctx=self._hover_context;rect=ctx['used']
                     if rect.collidepoint(self._last_mouse):
@@ -397,6 +412,10 @@ class PygameTerminal(PointerUI):
                         self._atlas_drag_last=self._last_mouse
                         return 'ATLAS:drag_start'
                     if token:return token
+                    if self._input_mode=='world' and self._interior_context and self._interior_placing:
+                        from worldseed.ui.interior_view import pointer_units
+                        point=pointer_units(self,self._last_mouse)
+                        if point is not None:return f'INTERIOR_PLACE:{point[0]}:{point[1]}'
                     if self._current_presentation=='world_context' and self._input_mode=='ui':
                         self._restore_context_overlay(clear=True,update=True)
                         return 'ESC'
@@ -424,7 +443,15 @@ class PygameTerminal(PointerUI):
                             self._ui_context=None
                             return 'UI_REDRAW'
                         continue
-                    if self._hover_context:
+                    if self._interior_context:
+                        from worldseed.ui.interior_view import pointer_units
+                        point=pointer_units(self,self._last_mouse)
+                        if point is not None:
+                            self._context_menu_origin=self._last_mouse
+                            self._context_backdrop=None;self._context_overlay_rect=None
+                            self._context_menu_state=None;self._context_opening=True
+                            return f'INTERIOR_CONTEXT:{point[0]}:{point[1]}'
+                    elif self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
                         if rect.collidepoint(self._last_mouse):
                             x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
@@ -569,7 +596,7 @@ class PygameTerminal(PointerUI):
         self._hud_tooltip_backdrop = None
         self._menu_cursor_rect=None;self._menu_cursor_backdrop=None
         self._menu_ambient_rects=();self._menu_nav_rect=None;self._menu_animation_phase=None
-        mode=('target' if getattr(self,'_drawing_target',False) else 'world') if title=='WORLDSEED // LOCAL' else 'ui'
+        mode=('target' if getattr(self,'_drawing_target',False) else 'world') if title in ('WORLDSEED // LOCAL','WORLDSEED // INTERIOR') else 'ui'
         self._set_input_mode(mode)
         pg.mouse.set_visible(mode not in ('ui','text'))
         if mode in ('world','target'):
@@ -3561,6 +3588,12 @@ class PygameTerminal(PointerUI):
         """Hybrid local-world view: sprite map + dense terminal-derived panels."""
         pg=self.pg; screen=self.screen
         if screen is None: return
+        interiors=getattr(sim,'interiors',None)
+        if interiors is not None and interiors.current_plan() is not None:
+            from worldseed.ui.interior_view import draw_interior
+            draw_interior(self,registry,sim,entities,player_id,message)
+            return
+        self._interior_context=None
         terrain_token=(id(registry),len(registry.terrains))
         if terrain_token!=self._terrain_catalog_token:
             configure_terrain_catalog(registry.terrains);self._terrain_catalog_token=terrain_token
@@ -3593,11 +3626,12 @@ class PygameTerminal(PointerUI):
             return z == pos.z and left <= x <= right and top <= y <= bottom
         nearby=self._spatial_state_views(sim,left,top,right,bottom,pos.z)
         creature_by={(c.x,c.y,c.z):c for c in nearby['creatures'] if c.hp>0 and _onscreen(c.x,c.y,c.z)}
-        npc_by={(n.x,n.y,n.z):n for n in nearby['npcs'] if n.alive and _onscreen(n.x,n.y,n.z)}
+        interior_actors=getattr(sim.state,'interior_actors',{})
+        npc_by={(n.x,n.y,n.z):n for n in nearby['npcs'] if n.alive and n.uid not in interior_actors and _onscreen(n.x,n.y,n.z)}
         structure_by={(s.x,s.y,s.z):s for s in nearby['structures'] if _onscreen(s.x,s.y,s.z)}
         property_container_by={
             (q.x,q.y,q.z):q for q in nearby['containers']
-            if q.kind=='property' and _onscreen(q.x,q.y,q.z)
+            if q.kind=='property' and 'interior:'+q.property_id not in getattr(sim.state,'interiors',{}) and _onscreen(q.x,q.y,q.z)
         }
         settlement_by={(c.x,c.y,0):c for c in sim.settlement_physicalization.cells_in_bounds(left,top,right,bottom)} if pos.z==0 else {}
         crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}

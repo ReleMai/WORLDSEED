@@ -104,6 +104,16 @@ class Renderer:
                combat_overlay: dict | None = None, stealth_overlay: dict | None = None) -> str:
         self.use_color = bool(sim.state.ui_color)
         self.use_unicode = bool(sim.state.ui_unicode)
+        if getattr(sim,'interiors',None) is not None and sim.interiors.player_presence() is not None:
+            plan=sim.interiors.current_plan();actor=sim.interiors.player_presence()
+            lines=[f'WORLDSEED // INTERIOR — {plan.name}',
+                   f'Free position: {actor.x/1000:.2f}, {actor.y/1000:.2f}',
+                   'WASD: walk freely | Enter: interior actions | TAB: console',
+                   f'Exit: {plan.entry_x/1000:.2f}, {plan.entry_y/1000:.2f}',
+                   'Rooms: '+', '.join(r.name for r in plan.rooms)]
+            lines.extend(f'{f.piece_id}: {f.x/1000:.2f}, {f.y/1000:.2f}' for f in plan.furniture[:max(0,height-7)])
+            lines.append(message)
+            return '\n'.join(self._clip(line,max(1,width)) for line in lines[:max(1,height)])
         layout = compute_layout(width, height, sim.state.ui_density)
         if layout.mode == 'tiny':
             return self._tiny(layout.width, layout.height)
@@ -176,7 +186,7 @@ class Renderer:
         cx, cy, cz = pos.x, pos.y, pos.z
         self._camera=(cx,cy,cz)
         creature_by = {(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp > 0}
-        npc_by = {(n.x,n.y,n.z):n for n in sim.state.npcs.values() if n.alive}
+        npc_by = {(n.x,n.y,n.z):n for n in sim.state.npcs.values() if n.alive and n.uid not in getattr(sim.state,'interior_actors',{})}
         structure_by = {(s.x,s.y,s.z):s for s in sim.state.structures.values()}
         property_container_by = {(q.x,q.y,q.z):q for q in sim.state.containers.values() if q.kind=="property"}
         crop_by = {(c.x,c.y,c.z):c for c in sim.state.crops.values()}
@@ -322,7 +332,7 @@ class Renderer:
             spec = self.registry.species.get(c.species_id)
             label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))
             near.append(f'{label} d{abs(c.x-p.x)+abs(c.y-p.y)}')
-        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
+        for n in sorted((n for n in sim.state.npcs.values() if n.alive and n.uid not in getattr(sim.state,'interior_actors',{}) and n.z==p.z and abs(n.x-p.x)+abs(n.y-p.y)<=40), key=lambda n:abs(n.x-p.x)+abs(n.y-p.y))[:2]:
             near.append(f'{n.name} [{n.occupation}]' if n.uid in known_npcs else f'Stranger d{abs(n.x-p.x)+abs(n.y-p.y)}')
         rows += near or ['Quiet nearby']
         rows += ['', 'GEAR']
