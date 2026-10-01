@@ -32,7 +32,7 @@ LIGHTING_VERSION = 1
 # routes exact local physical corridors/infrastructure state.
 # Phase 3 adds dynamic hazard rerouting, frontier control/tolls/patrols and
 # interactive physical crossings. Settlement geometry remains v5-compatible.
-SETTLEMENT_PLAN_VERSION = 9
+SETTLEMENT_PLAN_VERSION = 10
 ROUTEGEN_VERSION = 4
 # Claim monuments are persistent regional control anchors.  Versioning their
 # generated placement separately keeps existing worlds from silently moving

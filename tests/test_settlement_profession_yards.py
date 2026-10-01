@@ -78,7 +78,13 @@ class ProfessionYardTests(unittest.TestCase):
         field_ids={p.piece_id for p in agrarian.pieces if p.structure_plan_id==field.uid}
         self.assertIn("core:dev43_plowed_soil_piece",field_ids)
         self.assertIn("core:dev43_field_fence_piece",field_ids)
-        self.assertIn("core:farm_shed_piece",field_ids)
+        if agrarian.plan.version >= 10:
+            barn=next(s for s in agrarian.structures if s.function=="barn")
+            shed=next(p for p in agrarian.pieces if p.structure_plan_id==barn.uid and p.piece_id=="core:farm_shed_piece")
+            self.assertNotIn((shed.x,shed.y),set(field.footprint))
+            self.assertNotIn("core:farm_shed_piece",field_ids)
+        else:
+            self.assertIn("core:farm_shed_piece",field_ids)
 
     def test_every_generated_building_has_authoritative_service_path(self):
         _,_,skeleton=self.skeleton("mining","settlement:yard:roads")

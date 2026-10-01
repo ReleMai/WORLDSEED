@@ -35,3 +35,4 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 Generated previews, validation evidence, and source-art references remain in `artifacts/`. Runtime game art remains under `worldseed/assets/`.
 - [Dev44 stance, dialogue, and successor placement](handoffs/DEV44_INTERACTION_FOUNDATION_HANDOFF.md)
+- [Dev45 large farm compounds and farmer execution](handoffs/DEV45_FARM_COMPOUNDS_HANDOFF.md)

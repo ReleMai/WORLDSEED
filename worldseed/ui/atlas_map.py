@@ -341,7 +341,7 @@ def _draw_settlement_detail(term, sim, state):
             if inner.width < 1 or inner.height < 1:
                 inner = rect
             pg.draw.rect(screen, ROAD_COLOR, inner)
-        if cell.structure_id:
+        if cell.structure_id and cell.structure_function not in {'farm_field','animal_pen','mine_site','logging_camp'}:
             pg.draw.rect(screen, BUILDING_COLOR, rect)
         if cell.room_id and rect.width >= 4 and rect.height >= 4:
             inner = rect.inflate(-2,-2)

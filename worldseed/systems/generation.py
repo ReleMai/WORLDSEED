@@ -1,6 +1,8 @@
 from __future__ import annotations
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
+from worldseed.core.coords import WorldPos
+from worldseed.systems.farm_compounds import starting_farm_seeds, terrain_crop_ids
 from worldseed.systems.names import culture_name, place_name, person_name, DEITIES
 from worldseed.systems.state import CultureState, ReligionState, FactionState, SettlementState, NPCState, MagicLaw
 
@@ -120,6 +122,11 @@ class ProceduralSocietyGenerator:
             x,y=anchor
         uid=f"settlement:{rx}:{ry}"; pop=25+rng.randbelow(110)
         stocks={"core:wheat":60+rng.randbelow(160),"core:turnip":30+rng.randbelow(100),"core:wood":30+rng.randbelow(80),"core:stone":25+rng.randbelow(70),"core:iron_ore":rng.randbelow(35),"core:coal":rng.randbelow(30),"core:wheat_seed":15+rng.randbelow(25),"core:turnip_seed":10+rng.randbelow(20),"core:medicinal_herb":2+rng.randbelow(9),"core:herbal_tonic":rng.randbelow(5),"core:soap":2+rng.randbelow(8)}
+        if int(getattr(self.region_planner,"version",0)) >= 10:
+            world = getattr(self.region_planner,"world",None)
+            if world is not None:
+                env = world.environment_at(WorldPos(x,y,0))
+                starting_farm_seeds(stocks,terrain_crop_ids(env,self.registry),self.registry)
         # Physical settlement plans own buildings/capacity. This dictionary is
         # derived after physical planning and starts empty.
         s=SettlementState(uid,place_name(rng),rx,ry,x,y,pop,c.uid,r.uid,f.uid,500+rng.randbelow(1000),stocks,{}, {},0,dict(f.laws),["craft:stoneworking","craft:leatherwork"])

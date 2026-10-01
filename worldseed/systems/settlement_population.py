@@ -28,7 +28,7 @@ class SettlementPopulationBinder:
     """Deterministically bind realized NPC representatives to plan IDs."""
 
     WORK_FUNCTIONS = {
-        "farmer": ("farm_field", "mill", "barn"),
+        "farmer": ("barn", "mill", "farm_field"),
         "herder": ("animal_pen", "barn"),
         "miner": ("mine_site", "smithy"),
         "smith": ("smithy",),
@@ -273,6 +273,10 @@ class SettlementPopulationBinder:
                 structure for structure in skeleton.structures
                 if not structure.destroyed and structure.function in preferences
             ]
+            if npc.occupation == "farmer" and any(row.function == "barn" for row in workplace_candidates):
+                # Fields have no room-backed stores. Bind employment to the real
+                # farm barn; the profession still works the plan's crop parcels.
+                workplace_candidates = [row for row in workplace_candidates if row.function == "barn"]
             if npc.workplace_id not in {row.uid for row in workplace_candidates}:
                 npc.workplace_id = ""
                 npc.work_room_id = ""

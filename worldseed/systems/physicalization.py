@@ -157,11 +157,11 @@ class SettlementPhysicalizationSystem:
             if piece is None:
                 continue
             changes = {}
-            if placement.role in {"wall", "partition", "entrance", "interior_door", "yard_fence", "yard_gate"}:
+            if placement.role in {"wall", "partition", "entrance", "interior_door", "yard_fence", "yard_gate", "field_fence", "field_gate", "pen_fence", "pen_gate"}:
                 changes["structure_piece_id"] = placement.piece_id
                 changes["structure_piece_uid"] = placement.uid
                 changes["structure_piece_role"] = placement.role
-            elif placement.role in {"fixture", "yard_fixture", "tile_decor"}:
+            elif placement.role in {"fixture", "yard_fixture", "tile_decor", "worksite_fixture", "managed_tree_plot", "mine_connector_marker"}:
                 changes["fixture_piece_id"] = placement.piece_id
             elif placement.role == "roof" or piece.category == "roof":
                 changes["roof_piece_id"] = placement.piece_id

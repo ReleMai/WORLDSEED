@@ -150,6 +150,9 @@ class EconomySystem:
             specializations=set(getattr(town,"resource_specializations",()) or ())
             if required and specializations and required not in specializations:
                 continue
+            crops=set(getattr(town,"crop_ids",()) or ())
+            if proc.id.startswith("core:field_") and crops and proc.priority_good not in crops:
+                continue
             by_occ[proc.occupation].append(proc)
         assignments: list[tuple[SettlementProcessDef, int]] = []
         for occ, processes in sorted(by_occ.items()):

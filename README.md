@@ -4,6 +4,17 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev45 — Large farm compounds and working farmers
+
+New worlds use settlement-plan v10: large connected crop blocks share an outer
+split-rail fence and an accessible walking lane. Barns, sheds, storage and wells
+occupy a separate service court. Farmers bind to real stores, plant more than
+one healthy crop, share available plots, and return harvested seed for replanting.
+Starting seed capital is distributed among terrain-suitable crops without adding
+extra goods. Older worlds retain their pinned plans. See the
+[Dev45 handoff](docs/handoffs/DEV45_FARM_COMPOUNDS_HANDOFF.md) for validation and
+the remaining building-size, interior, AI and village-expansion stages.
+
 ## RC14 Dev44 — Interaction foundation and redesign plan
 
 Aggressive Stance gates casing, lockpicking and door bashing. Open fields and

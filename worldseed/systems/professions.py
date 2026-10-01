@@ -484,13 +484,22 @@ class SettlementProfessionSystem:
 
     # ---------- farmer ----------
 
-    def _field_cells(self,town):
+    def _field_cells(self,town,crop_id=""):
         skeleton=self.physicalization.skeleton_for(town.uid)
         if skeleton is None:return []
         cells=[]
-        for parcel in sorted((p for p in skeleton.parcels if p.kind=="farm"),key=lambda p:p.uid):
+        for parcel in sorted((p for p in skeleton.parcels if p.kind=="farm" and getattr(p,"purpose","field")=="field"),key=lambda p:p.uid):
+            if crop_id and getattr(parcel,"crop_id","") not in {"",crop_id}:
+                continue
             cells.extend((int(x),int(y)) for x,y in parcel.cells)
-        return sorted(set(cells),key=lambda p:(p[1],p[0]))
+        # Exclude physical fences, huts, storage, and plan-owned walking lanes.
+        blocked=set()
+        for piece in skeleton.pieces:
+            definition=self.registry.settlement_pieces.get(piece.piece_id)
+            if definition is not None and (not definition.passable or getattr(piece,"role","") in {"field_gate","pen_gate"}):
+                blocked.add((int(piece.x),int(piece.y)))
+        blocked.update((int(x),int(y)) for road in getattr(skeleton,"roads",()) for x,y in road.polyline)
+        return sorted(set(cells)-blocked,key=lambda p:(p[1],p[0]))
 
     @staticmethod
     def _crop_for_process(proc_id:str):
@@ -515,11 +524,12 @@ class SettlementProfessionSystem:
         crop_def=self.registry.crops.get(crop_id) if crop_id else None
         storage=self._work_storage(npc,town)
         if crop_def is None or storage is None:return []
-        field=self._field_cells(town)
+        field=self._field_cells(town,crop_id)
         if not field:return []
 
         carried={crop_def.harvest_item} if int(npc.inventory.get(crop_def.harvest_item,0))>0 else set()
         if carried:
+            if int(npc.inventory.get(crop_def.seed_item,0))>0:carried.add(crop_def.seed_item)
             return [
                 self._move(self._use_position(storage),process_id=proc.id),
                 {"kind":"perform","action":"profession_deposit","profession_task":True,
@@ -527,11 +537,17 @@ class SettlementProfessionSystem:
             ]
 
         mature=[];growing=[];empty=[]
+        claimed={
+            (int(row.use_x),int(row.use_y)) for row in self.state.activity_reservations.values()
+            if row.status in {"reserved","active"} and row.actor_uid!=npc.uid and row.expires_minute>minute
+        }
         for x,y in field:
+            if (x,y) in claimed:continue
             key=pos_key(x,y,0);plot=self.state.crops.get(key)
             if plot is None:empty.append((x,y));continue
             if plot.crop_id!=crop_id:continue
-            (mature if plot.mature else growing).append((x,y,plot))
+            if plot.mature:mature.append((x,y,plot))
+            elif int(plot.moisture)<55 or int(plot.health)<85:growing.append((x,y,plot))
         if mature:
             x,y,plot=min(mature,key=lambda r:(abs(npc.x-r[0])+abs(npc.y-r[1]),r[1],r[0]))
             row=self._farm_affordance(npc,town,WorldPos(x,y,0),"harvest",minute,max(8,18-int(npc.skills.get("farming",1))))
@@ -543,7 +559,7 @@ class SettlementProfessionSystem:
             tasks += [
                 self._move(self._use_position(storage),process_id=proc.id),
                 {"kind":"perform","action":"profession_deposit","profession_task":True,
-                 "container_uid":storage.uid,"items":[crop_def.harvest_item],"process_id":proc.id},
+                 "container_uid":storage.uid,"items":[crop_def.harvest_item,crop_def.seed_item],"process_id":proc.id},
             ]
             return tasks
 
@@ -601,6 +617,9 @@ class SettlementProfessionSystem:
             qty+=int(npc.skills.get("farming",1))//4
             made=self.goods.add_to_actor(npc,crop_def.harvest_item,qty)
             if made<=0:return False
+            # The player harvest path also recovers seed from the crop. Return
+            # it as real carried cargo so farms can replant without free refills.
+            self.goods.add_to_actor(npc,crop_def.seed_item,max(1,made//2))
             self.state.crops.pop(key,None)
             soil=self.state.soils.setdefault(key,SoilState(pos.x,pos.y,0))
             soil.last_crop_id=crop_id

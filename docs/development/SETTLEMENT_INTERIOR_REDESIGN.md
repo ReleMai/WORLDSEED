@@ -2,7 +2,9 @@
 
 Requested September 30, 2026. Baseline: main `eed4a381` (Dev43).
 This is the implementation order and acceptance contract for the complete request.
-Dev44 implements stage 1 only; the other stages remain pending.
+Dev44 implements stage 1. Dev45 implements the farm-compound and planting core
+of stage 2; larger non-farm plots, terrain earthworks, explicit migration and
+stages 3-6 remain pending.
 
 ## Findings and research
 
@@ -59,6 +61,17 @@ Primary research sources:
   then checks known land and bounded sparse potential rings. Never force (0,0).
 
 ## Stage 2: generous farm compounds and site preparation
+
+Dev45 completed slice: plan v10 compounds from 18x16 (homestead) to 60x50 (city),
+with 40x34 village / 50x42 town fields, chamfered outer edges, up to four adjoining
+crop blocks and one internal lane. The farm barn/shed/well court is disjoint from
+the growing area; livestock space is reserved before housing. Existing ground
+overlays clear vegetation, but ocean/cliff/flood constraints remain. Unbuildable
+road-split housing/service lots are rejected before consuming a required slot.
+Named farmers use real seeds, ignore healthy crops when more planting is possible,
+avoid fences/pens/lanes, share unreserved plots and return seed from harvest.
+Initial seed allocation and aggregate field processes respect terrain crop IDs.
+No implicit old-world regeneration or earthwork system is implemented.
 
 Use a new pinned settlement-plan version. Preserve existing plans and mutations;
 provide an explicit opt-in rebuild/migration for old worlds, not silent rerolls.
