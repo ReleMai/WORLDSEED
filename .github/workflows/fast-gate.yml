@@ -132,6 +132,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev43 domestic animal art regressions" --timeout 90 -- python -u -m unittest -v tests.test_animal_sprites
 
+      - name: Dev44 stance dialogue and respawn regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev44 interaction regressions" --timeout 90 -- python -u -m unittest -v tests.test_dev44_stance_dialogue_respawn tests.test_ui_rc2.AggressiveStanceRoutingTests
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

@@ -772,10 +772,21 @@ class CasingSystem:
     def intel_for(self, property_id: str):
         return self.state.casing_intel.get(str(property_id))
 
+    @staticmethod
+    def can_case(structure) -> bool:
+        """Survey secure property; open agricultural land is ordinary inspection."""
+        return bool(structure and getattr(structure,"enclosed",False)
+                    and not getattr(structure,"destroyed",False)
+                    and getattr(structure,"function","") not in {
+                        "farm_field","animal_pen","logging_camp","mine_site","monument"
+                    })
+
     def start(self, property_id: str, player_pos: WorldPos, minute: int, stealth) -> tuple[bool,str]:
         structure=self._structure(property_id)
         if structure is None:
             return False,"That property is not physically present."
+        if not self.can_case(structure):
+            return False,"This is open land or an outdoor worksite. Inspect it directly; it does not need casing."
         if self._distance_to_structure(player_pos,structure)>5:
             return False,"Move within sight of the property before casing it."
         settlement_id=self._settlement_id(property_id)

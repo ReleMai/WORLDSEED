@@ -308,7 +308,7 @@ class Simulation:
         if isinstance(command,MoveCommand):
             self._move(command,result)
             stance=str(getattr(self.state,"player_hunting_stance","normal"))
-            minutes=MOVE_MINUTES*(3 if stance=="crouch" else 2 if (stance=="stalk" or self.state.player_stealth_mode) else 1)
+            minutes=MOVE_MINUTES*(3 if stance=="crouch" else 2 if stance=="stalk" else 1)
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
@@ -1134,7 +1134,7 @@ class Simulation:
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
         movement_noise=self.hunting.movement_noise(new,self.clock.minute)
-        if self.state.player_stealth_mode:
+        if self.state.player_stealth_mode and self.state.player_hunting_stance in ('stalk','crouch'):
             movement_noise=self.stealth.movement_noise(movement_noise)
         self.hunting.note_player_noise(new,movement_noise,self.turn,self.clock.minute,"stealth_movement" if self.state.player_stealth_mode else "movement")
         for security_message in self.property_security.note_player_step(old,new,self.clock.minute,self.stealth):
@@ -1790,6 +1790,7 @@ class Simulation:
             self._message("You enter stealth mode. Observer sight cones are now visible.")
 
     def _lockpick_door(self,cmd:LockpickDoorCommand)->int:
+        if not self._require_aggressive_stance():return 0
         inv=self.entities.get(cmd.actor,Inventory)
         ok,msg,minutes=self.property_security.attempt_lockpick(
             cmd.door_uid,inv,self.player_pos,self.clock.minute,self.stealth,
@@ -1803,6 +1804,7 @@ class Simulation:
         return max(1,int(minutes or MINUTES_PER_ACTION))
 
     def _lockpick_container(self,cmd:LockpickContainerCommand)->int:
+        if not self._require_aggressive_stance():return 0
         inv=self.entities.get(cmd.actor,Inventory)
         ok,msg,minutes=self.property_storage.attempt_lockpick(cmd.container_uid,inv,self.clock.minute,self.player_skill("stealth"),self.player_attribute("agility"))
         self._message(msg)
@@ -1827,6 +1829,7 @@ class Simulation:
         self._message(f"You forge a duplicate of {key.label}.");return 30
 
     def _force_door(self,cmd:ForceDoorCommand)->int:
+        if not self._require_aggressive_stance():return 0
         inv=self.entities.get(cmd.actor,Inventory)
         ok,msg,minutes,noise=self.property_security.force_entry(
             cmd.door_uid,inv,self.player_pos,self.clock.minute,self.stealth,
@@ -1846,6 +1849,7 @@ class Simulation:
         return max(1,int(minutes or MINUTES_PER_ACTION))
 
     def _start_casing(self,cmd:StartCasingCommand)->None:
+        if not self._require_aggressive_stance():return
         ok,msg=self.casing.start(
             cmd.property_id,self.player_pos,self.clock.minute,self.stealth
         )
@@ -1858,6 +1862,11 @@ class Simulation:
 
     def _stop_casing(self,cmd:StopCasingCommand)->None:
         self._message(self.casing.stop())
+
+    def _require_aggressive_stance(self)->bool:
+        if self.state.player_hunting_stance=="aggressive":return True
+        self._message("Switch to Aggressive Stance before casing, lockpicking, or bashing a door.")
+        return False
 
     def _steal_container(self,cmd:StealContainerCommand)->None:
         if not self.state.player_stealth_mode:
@@ -1968,6 +1977,27 @@ class Simulation:
 
     def _handle_death(self,cause:str)->None:
         from worldseed.systems.state import LegacyCharacter
+        from worldseed.systems.respawn import nearby_land_spawn
+        occupied={(n.x,n.y,n.z) for n in self.state.npcs.values() if n.alive}
+        occupied.update((c.x,c.y,c.z) for c in self.state.creatures.values() if c.hp>0)
+        def safe_cell(q):
+            terrain=self.world.tile_at(q).terrain
+            return (terrain.passable and 'water' not in terrain.tags
+                    and (q.x,q.y,q.z) not in occupied
+                    and not self.resources.blocks_movement(q)
+                    and self.building.passable(q,True)
+                    and not self.property_security.blocks_player(q)
+                    and self.environment.fluid_passable(q))
+        known=[]
+        for key in self.state.discovered_tiles:
+            try:
+                x,y,z=map(int,key.split(','))
+                if z==0:known.append((x,y))
+            except (ValueError,TypeError):continue
+        successor=nearby_land_spawn(self.player_pos,self.world.generator.terrain_at,self.registry.terrains,safe_cell,known)
+        if successor is None:
+            self._message("No safe dry land was found for a successor. No ocean spawn was used.")
+            return
         pos=self.player_pos;inv=self.entities.get(self.player_id,Inventory);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
         for iid,n in list(inv.items.items()):pile.items[iid]=pile.items.get(iid,0)+n
         for iid in list(self.state.player_equipment.values()):pile.items[iid]=pile.items.get(iid,0)+1
@@ -1976,7 +2006,11 @@ class Simulation:
             if a.owner=="player":self.artifacts.transfer_uid(a.uid,f"ground:{pos.x},{pos.y},{pos.z}",self.clock.minute,"lost with a dead bearer")
         inv.items.clear();name=f"Wanderer {len(self.state.legacy)+1}";self.state.legacy.append(LegacyCharacter(name,max(0,self.clock.minute-365*1440),self.clock.minute,cause,pos.x,pos.y,pos.z,[]));self.history.record("death",f"{name} died: {cause}.",self.clock.minute,pos.x//512,pos.y//512,[name],salience=70)
         v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100
-        self.entities.get(self.player_id,Position).value=WorldPos(0,0,0);self._message("Your character dies. The world continues. A successor enters the same timeline.")
+        self.entities.get(self.player_id,Position).value=successor
+        self.hunting.set_player_stance('normal')
+        self.state.player_trespass_property_id=''
+        self.state.player_aim_target='';self.state.player_aim_quality=0
+        self._message(f"Your character dies. The world continues. A successor enters on dry land at {successor.x},{successor.y}.")
     def _message(self,message:str)->None:
         self.log.append(GameEvent(self.turn,message))
         if len(self.log)>150:del self.log[:-150]

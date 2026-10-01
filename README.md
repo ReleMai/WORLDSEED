@@ -4,6 +4,17 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev44 — Interaction foundation and redesign plan
+
+Aggressive Stance gates casing, lockpicking and door bashing. Open fields and
+worksites are inspected directly. Conversations now wrap text to panel width,
+show full community standing, page long answers, and offer questions about
+animals, plants, resources, towns and practiced skills. Successors search for
+validated dry land near the death location instead of always spawning at (0,0).
+See the [Dev44 handoff](docs/handoffs/DEV44_INTERACTION_FOUNDATION_HANDOFF.md)
+and [researched settlement/interior plan](docs/development/SETTLEMENT_INTERIOR_REDESIGN.md)
+for the pending farm, interior, architecture, AI and expansion stages.
+
 ## RC14 Dev43 — Diverse living settlements and physical work sites
 
 Settlements now select two terrain-backed resource specializations and project

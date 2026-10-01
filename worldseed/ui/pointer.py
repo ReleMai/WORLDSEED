@@ -46,6 +46,10 @@ class PointerUI:
 
     def menu_page_size(self, presentation=''):
         w,h=self.screen.get_size()
+        if presentation=='npc_dialogue':
+            panel=self._floating_panel_state('npc_dialogue')
+            # Shell header, subtitle, choice heading, footer, and paging buttons.
+            return max(1,(panel['h']-250)//39)
         if presentation in ('container_inventory','inventory_unified','crafting_unified','discovery_pot','crafting_index'):
             panel_id='crafting' if presentation in ('crafting_unified','discovery_pot','crafting_index') else presentation
             state=getattr(self,'_floating_panels',{}).get(panel_id)

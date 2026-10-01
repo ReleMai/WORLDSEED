@@ -686,6 +686,7 @@ def _gift_npc(ctx:GameContext,term:Terminal,npc)->str:
 def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
     sim=ctx.sim;dialogue=DialogueSystem(sim.state,sim.seed)
     nav=NavigationStack(RouteState('npc-dialogue',target.name,payload={'topic':'root'}))
+    transcript_page=0
     while True:
         topic=str(nav.current.payload.get('topic','root'))
         vitals=ctx.entities.get(ctx.player_id,Vitals)
@@ -693,17 +694,29 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
         rows=[(option.key,option.label) for option in scene.options]
         data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
               'context':scene.context,'npc_uid':target.uid,'options':rows,'topic':scene.topic,
-              'relationship':dict(scene.relationship)}
+              'relationship':dict(scene.relationship),'transcript_page':transcript_page}
         choice=_stack_menu(term,nav,rows,subtitle='Conversation continues in real time. Trust, familiarity, and community standing gate information.',presentation='npc_dialogue',presentation_data=data)
         if choice in (None,'goodbye'):return response or scene.opening
         if choice=='__BACK__':continue
+        if choice in ('UI_ACTION:transcript_previous','UI_ACTION:transcript_next'):
+            transcript_page=max(0,transcript_page+(-1 if choice.endswith('previous') else 1));continue
+        if choice=='UI_ACTION:inspect':choice='inspect'
+        if choice=='inspect' and not any(o.key=='inspect' for o in scene.options):
+            push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
+            if callable(push):push()
+            try:_npc_profile_menu(ctx,term,target.uid)
+            finally:
+                if callable(pop):pop()
+            continue
         option=next((row for row in scene.options if row.key==choice),None)
         if option is None:continue
         if option.next_topic:
+            transcript_page=0
             if option.key=='back':nav.back()
             else:nav.push(RouteState(f'npc-dialogue:{option.next_topic}',option.next_topic.replace('_',' ').upper(),payload={'topic':option.next_topic}))
             continue
         dialogue.apply_option(target,option,sim.clock.minute)
+        transcript_page=0
         if option.action=='inspect':
             push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
             if callable(push):push()
@@ -712,6 +725,12 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
                 if callable(pop):pop()
             continue
         if option.action=='area':response=_learn_area_from_npc(ctx,target);continue
+        if option.action=='local_knowledge':
+            from worldseed.systems.npc_knowledge import NPCKnowledgeSystem
+            knowledge=NPCKnowledgeSystem(sim.state,sim.registry)
+            response,facts=knowledge.answer(target,option.key)
+            knowledge.disclose(facts)
+            continue
         if option.action=='knowledge':
             before=len(sim.log);sim.begin_conversation(target.uid)
             response=sim.log[-1].message if len(sim.log)>before else f'{target.name} has nothing new to add.'
@@ -1256,6 +1275,7 @@ def _hunting_stance_menu(ctx:GameContext,term:Terminal)->str:
         ('normal',f'Normal{" [CURRENT]" if current=="normal" else ""} — fastest; no concealment stance'),
         ('stalk',f'Stalk{" [CURRENT]" if current=="stalk" else ""} — slower, quieter; observer cones enabled'),
         ('crouch',f'Crouch{" [CURRENT]" if current=="crouch" else ""} — slowest, strongest visual/noise concealment'),
+        ('aggressive',f'Aggressive Stance{" [CURRENT]" if current=="aggressive" else ""} — casing, lockpicking, and door bashing'),
     ],subtitle=f'Wind: {wind}. Scent still carries downwind; stance cannot hide scent.')
     if not pick:return UI_BACK
     sim.execute(SetHuntingStanceCommand(ctx.player_id,pick))
@@ -1993,11 +2013,14 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
             lock_label=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown'
             rows.append(('inspect_property_door',f'Inspect locked door — lock {lock_label}'))
             inv=ctx.entities.get(ctx.player_id,Inventory)
-            if inv.count('core:lockpick')>0:
+            if sim.state.player_hunting_stance!='aggressive':
+                rows.append(('aggressive_stance','Adopt Aggressive Stance for lockpicking or bashing'))
+            elif inv.count('core:lockpick')>0:
                 rows.append(('lockpick_property_door',f'Pick lock — {lock_label}'))
             else:
                 rows.append(('lockpick_property_door','Pick lock — requires Lockpick'))
-            rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
+            if sim.state.player_hunting_stance=='aggressive':
+                rows.append(('force_property_door',f'Force entry — door condition {door.condition}%'))
         elif door.forced:
             rows.append(('inspect_property_door',f'Inspect forced doorway — condition {door.condition}%'))
     if fixture_piece is not None and distance<=1:
@@ -2010,7 +2033,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         if active_case==planned.uid:
             rows.append(('review_casing',f'Review casing notes — {building_label}'))
             rows.append(('stop_casing','Stop casing this property'))
-        elif distance<=2:
+        elif distance<=2 and sim.casing.can_case(planned) and sim.state.player_hunting_stance=='aggressive':
             rows.append(('begin_casing',f'Begin casing from here — {building_label}'))
         if planned.function=='market' and distance<=2:
             rows.append(('use_market_here','Trade at market stall'))
@@ -2021,7 +2044,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         owner_label=owner.name if owner and owner.uid in sim.known_npc_ids() else 'private owner'
         lock_label=sim.property_security.lock_band(container.lock_level) if container.lock_level>0 else 'unlocked'
         rows.append(('inspect_property_storage',f'Inspect {container.name} — {owner_label} / {lock_label}'))
-        if container.locked:
+        if container.locked and sim.state.player_hunting_stance=='aggressive':
             inv=ctx.entities.get(ctx.player_id,Inventory)
             rows.append(('lockpick_property_storage',
                          f'Pick {container.name} lock'+('' if inv.count("core:lockpick")>0 else ' — requires Lockpick')))
@@ -2069,6 +2092,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='aggressive_stance':
+        sim.execute(SetHuntingStanceCommand(ctx.player_id,'aggressive'))
+        return sim.log[-1].message if sim.log else ''
     if choice=='inspect_fixture' and fixture_piece is not None:
         lines=[
             fixture_piece.name,

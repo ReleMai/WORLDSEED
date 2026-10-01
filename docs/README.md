@@ -5,6 +5,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 ## Development
 
 - [Development workflow](development/DEVELOPMENT.md)
+- [Settlement and interior redesign plan](development/SETTLEMENT_INTERIOR_REDESIGN.md)
 - [Branch audit](development/BRANCH_AUDIT.md)
 - [Build-system audit](development/BUILD_SYSTEM_AUDIT.md)
 
@@ -33,3 +34,4 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 - [RC8 sprite catalog](reference/WORLDSEED_RC8_Sprite_Catalog.png)
 
 Generated previews, validation evidence, and source-art references remain in `artifacts/`. Runtime game art remains under `worldseed/assets/`.
+- [Dev44 stance, dialogue, and successor placement](handoffs/DEV44_INTERACTION_FOUNDATION_HANDOFF.md)

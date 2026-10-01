@@ -34,7 +34,7 @@ def classify_key(key: str) -> Intent:
     if key == 'QUIT': return Intent('quit')
     if key.startswith('UI_STANCE:'):
         stance = key.partition(':')[2]
-        return Intent('stance', stance) if stance in ('normal', 'stalk', 'crouch') else Intent('none')
+        return Intent('stance', stance) if stance in ('normal', 'stalk', 'crouch', 'aggressive') else Intent('none')
     if key.startswith('UI_MOVE:'):
         mode=key.partition(':')[2]
         return Intent('movement_mode',mode) if mode in ('walk','run','stealth') else Intent('none')

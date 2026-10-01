@@ -23,6 +23,15 @@ from worldseed.world.world import World
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
+class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_aggressive_pointer_intent_preserves_movement_keys(self):
+        intent = classify_key('UI_STANCE:aggressive')
+        self.assertEqual(intent.kind, 'stance')
+        self.assertEqual(intent.value, 'aggressive')
+        for key in 'wasd':
+            self.assertEqual(classify_key(key).kind, 'move')
+
+
 def visible_len(s):
     return len(ANSI_RE.sub('', s))
 

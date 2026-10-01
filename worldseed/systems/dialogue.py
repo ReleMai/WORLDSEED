@@ -103,8 +103,19 @@ class DialogueSystem:
         elif phase=="night" and npc.occupation not in {"guard","healer"}:
             opening=self._pick(npc,"night",["It is late. Make it quick.","Most decent people are asleep by now. What is it?"],minute)
 
-        topic=topic if topic in {"root","area","personal","relations"} else "root"
-        if topic=="area":
+        topic=topic if topic in {"root","area","personal","relations","knowledge"} else "root"
+        if topic=="knowledge":
+            options=[
+                DialogueOption(key,label,"",action="local_knowledge") for key,label in (
+                    ("animals","Ask about animals and wildlife"),
+                    ("plants","Ask about plants and crops"),
+                    ("resources","Ask about local resources"),
+                    ("towns","Ask which other towns they know"),
+                    ("skills","Ask for advice from their skills"),
+                )
+            ]
+            options.append(DialogueOption("back","Back to other topics","",next_topic="root"))
+        elif topic=="area":
             options=[
                 DialogueOption("area_overview","Ask who controls this area and what it produces","",action="area"),
                 DialogueOption("routes","Ask about roads and nearby settlements","",action="knowledge"),
@@ -128,6 +139,7 @@ class DialogueSystem:
         else:
             options=[
                 DialogueOption("area","Ask about the area","",next_topic="area"),
+                DialogueOption("knowledge","Discuss nature, resources, towns, and skills","",next_topic="knowledge"),
                 DialogueOption("personal","Talk about their life","",next_topic="personal"),
                 DialogueOption("relations","Build the relationship","",next_topic="relations"),
                 DialogueOption("work","Ask about their work",self._work_response(npc,town,stressed,minute),familiarity_delta=1),

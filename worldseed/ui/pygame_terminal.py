@@ -736,6 +736,7 @@ class PygameTerminal(PointerUI):
     def _floating_panel_state(self, panel_id: str) -> dict[str,int]:
         sw,sh=self.screen.get_size()
         min_w,min_h=self._floating_panel_minimum(panel_id)
+        min_w=min(min_w,max(1,sw-16));min_h=min(min_h,max(1,sh-16))
         default_w=min(sw-48,1080 if panel_id in ('container_inventory','crafting') else 900)
         default_h=min(sh-48,680 if panel_id in ('container_inventory','crafting') else 620)
         state=self._floating_panels.get(panel_id)
@@ -803,7 +804,8 @@ class PygameTerminal(PointerUI):
         pg.draw.line(screen,self._theme['accent'],(x+14,y+42),(x+min(w-14,150),y+42),2)
         self._ui_target(pg.Rect(x+8,y+4,w-58,34),f'UI_WINDOW_DRAG:{panel_id}')
         domain_s=self.small_font.render(domain.upper(),True,self._theme['accent']);screen.blit(domain_s,(x+14,y+7))
-        title_s=self.font.render(self._fit_ui_text(title,self.font,w-190),True,self._theme['text']);screen.blit(title_s,(x+105,y+8))
+        title_x=x+14+domain_s.get_width()+16
+        title_s=self.font.render(self._fit_ui_text(title,self.font,max(1,x+w-150-title_x)),True,self._theme['text']);screen.blit(title_s,(title_x,y+8))
         self._button((x+w-38,y+7,28,27),'×','ESC')
         grip=pg.Rect(x+w-20,y+h-20,14,14)
         pg.draw.line(screen,self._theme['edge_hi'],(grip.x+3,grip.bottom-2),(grip.right-2,grip.y+3),2)
@@ -1101,33 +1103,49 @@ class PygameTerminal(PointerUI):
         """Retained conversation panel: transcript, choices, and inspect access."""
         data=data or {};pg=self.pg;screen=self.screen
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('npc_dialogue','CONVERSATION',str(data.get('speaker',title)),subtitle)
-        inspect_index=next((i for i,row in enumerate(rows) if str(getattr(row,'key',''))=='inspect'),-1)
-        if inspect_index>=0:self._button((x+w-130,y+7,82,27),'INSPECT',f'UI_SELECT:{inspect_index}')
+        self._button((x+w-130,y+7,82,27),'INSPECT','UI_ACTION:inspect')
         footer_h=45;gap=12;body_bottom=y+h-footer_h
-        transcript_w=max(250,int(cw*.58));transcript=pg.Rect(cx,cy,transcript_w,body_bottom-cy-8)
+        transcript_w=int(cw*.56);transcript=pg.Rect(cx,cy,transcript_w,body_bottom-cy-8)
         choices=pg.Rect(transcript.right+gap,cy,cw-transcript_w-gap,transcript.height)
         for panel in (transcript,choices):
             pg.draw.rect(screen,self._theme['panel'],panel,border_radius=7);pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=7)
         role=self.small_font.render(str(data.get('role','')).upper(),True,self._theme['accent']);screen.blit(role,(transcript.x+14,transcript.y+12))
+        old_clip=screen.get_clip();screen.set_clip(transcript.inflate(-12,-12))
         context='  •  '.join(str(v) for v in data.get('context',()))
-        cs=self.small_font.render(self._fit_ui_text(context,self.small_font,transcript.width-28),True,self._theme['muted']);screen.blit(cs,(transcript.x+14,transcript.y+36))
+        yy=transcript.y+36
+        for line in self._wrap_pixel_text(context,self.small_font,transcript.width-28):
+            screen.blit(self.small_font.render(line,True,self._theme['muted']),(transcript.x+14,yy));yy+=self.small_font.get_linesize()+3
         relationship=data.get('relationship') or {}
-        rel_text='  •  '.join(f'{str(k).title()} {int(v):+d}' for k,v in relationship.items())
+        rel_text='  •  '.join(f'{"Community standing" if k=="community" else str(k).title()} {int(v):+d}' for k,v in relationship.items())
         if rel_text:
-            rs=self.small_font.render(self._fit_ui_text(rel_text,self.small_font,transcript.width-28),True,self._theme['accent']);screen.blit(rs,(transcript.x+14,transcript.y+56))
+            for line in self._wrap_pixel_text(rel_text,self.small_font,transcript.width-28):
+                screen.blit(self.small_font.render(line,True,self._theme['accent']),(transcript.x+14,yy));yy+=self.small_font.get_linesize()+3
         text=str(data.get('response') or data.get('opening') or '...')
-        max_chars=max(24,(transcript.width-30)//max(1,self.small_font.size('M')[0]));yy=transcript.y+(82 if rel_text else 70)
-        for line in textwrap.wrap(text,max_chars)[:12]:
+        yy+=10;line_h=self.font.get_linesize()+5
+        lines=self._wrap_pixel_text(text,self.font,transcript.width-30)
+        capacity=max(1,(transcript.bottom-48-yy)//line_h)
+        pages=max(1,(len(lines)+capacity-1)//capacity)
+        page=min(pages-1,max(0,int(data.get('transcript_page',0))))
+        for line in lines[page*capacity:(page+1)*capacity]:
             surf=self.font.render(line,True,self._theme['text']);screen.blit(surf,(transcript.x+15,yy));yy+=self.font.get_linesize()+5
+        screen.set_clip(old_clip)
+        if pages>1:
+            self._button((transcript.x+10,transcript.bottom-36,72,27),'Previous','UI_ACTION:transcript_previous')
+            self._button((transcript.right-82,transcript.bottom-36,72,27),'Next','UI_ACTION:transcript_next')
+            count=self.small_font.render(f'{page+1}/{pages}',True,self._theme['muted']);screen.blit(count,(transcript.centerx-count.get_width()//2,transcript.bottom-30))
         heading=self.small_font.render('YOUR RESPONSE',True,self._theme['accent']);screen.blit(heading,(choices.x+12,choices.y+12))
         yy=choices.y+40
         for i,row in enumerate(rows):
-            if yy+38>choices.bottom-9:break
+            if yy+38>choices.bottom-44:break
             rect=pg.Rect(choices.x+8,yy,choices.width-16,34);self._ui_target(rect,f'UI_SELECT:{i}')
             active=i==selected;pg.draw.rect(screen,(45,51,49) if active else self._theme['panel2'],rect,border_radius=5)
             pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=5)
             label=str(getattr(row,'label',row));surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-18),True,self._theme['text'])
             screen.blit(surf,(rect.x+9,rect.centery-surf.get_height()//2));yy+=39
+        if total is not None and total>len(rows):
+            self._button((choices.x+8,choices.bottom-36,72,27),'Previous','PGUP')
+            self._button((choices.right-80,choices.bottom-36,72,27),'Next','PGDN')
+            count=self.small_font.render(f'{page_start+1}-{page_start+len(rows)} / {total}',True,self._theme['muted']);screen.blit(count,(choices.centerx-count.get_width()//2,choices.bottom-30))
         self._draw_floating_footer(x,y,w,h,'Choose a reply • Inspect shows visible and learned facts • Esc closes')
         pg.display.flip();self.clock.tick(120)
 
@@ -1885,8 +1903,18 @@ class PygameTerminal(PointerUI):
     def _wrap_pixel_text(self, text: str, font, max_width: int) -> list[str]:
         words=str(text or '').split()
         if not words:return []
-        lines=[];cur=words[0]
-        for word in words[1:]:
+        max_width=max(1,max_width)
+        # Break unspaced words too, so names/IDs cannot cross a panel boundary.
+        chunks=[]
+        for word in words:
+            part=''
+            for char in word:
+                if part and font.size(part+char)[0]>max_width:
+                    chunks.append(part);part=''
+                part+=char
+            if part:chunks.append(part)
+        lines=[];cur=chunks[0]
+        for word in chunks[1:]:
             trial=cur+' '+word
             if font.size(trial)[0]<=max_width:cur=trial
             else:lines.append(cur);cur=word
@@ -3454,12 +3482,12 @@ class PygameTerminal(PointerUI):
             self._hud_tooltips.append((box,name,f'{descriptions[name]}  [{hint}]'))
         if self._input_mode=='world':
             pg.draw.line(screen,th['edge'],(bar.x+11,bar.y+122),(bar.right-11,bar.y+122))
-            for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'))):
-                slot=pg.Rect(bar.x+11+i*(bar.width-22)//3,bar.y+130,(bar.width-28)//3,29)
+            for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · casing, lockpicking, door bashing'))):
+                slot=pg.Rect(bar.x+11+i*(bar.width-22)//4,bar.y+130,(bar.width-28)//4,29)
                 active=stance==name
                 pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
                 pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
-                label=self.small_font.render(name.title(),True,th['text'] if active else th['muted'])
+                label=self.small_font.render(self._fit_ui_text('Aggro' if name=='aggressive' else name.title(),self.small_font,slot.width-6),True,th['text'] if active else th['muted'])
                 screen.blit(label,(slot.centerx-label.get_width()//2,slot.y+6))
                 self._pointer_targets.append((slot,'UI_STANCE:'+name))
                 self._hud_tooltips.append((slot,name.title()+' movement',detail+'; changes movement stance'))

@@ -63,11 +63,14 @@ class HuntingSystem:
 
     def set_player_stance(self, stance:str) -> str:
         stance=str(stance or "normal").lower()
-        if stance not in {"normal","stalk","crouch"}:
+        if stance not in {"normal","stalk","crouch","aggressive"}:
             return "Unknown hunting stance."
         self.state.player_hunting_stance=stance
+        if stance!="aggressive" and hasattr(self.state,"player_casing_property_id"):
+            self.state.player_casing_property_id=""
         if hasattr(self.state,"player_stealth_mode"):self.state.player_stealth_mode=stance!="normal"
         if stance=="normal":return "You return to a normal walking posture."
+        if stance=="aggressive":return "You adopt Aggressive Stance. Casing, lockpicking, and door bashing are now available."
         if stance=="stalk":return "You begin stalking: slower movement, quieter footfalls, and a lower visible profile."
         return "You crouch low, maximizing concealment at the cost of movement speed."
 
@@ -92,7 +95,7 @@ class HuntingSystem:
         if any(k in tid for k in ("forest","grass","moss","mud")):noise -= 4
         if self.resources and self.resources.is_harvestable(pos):noise += 3
         stance=str(getattr(self.state,"player_hunting_stance","normal"))
-        noise_pct=100 if stance=="normal" else 58 if stance=="stalk" else 40
+        noise_pct=58 if stance=="stalk" else 40 if stance=="crouch" else 100
         skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
         noise_pct=max(25,noise_pct-min(20,skill))
         noise=noise*noise_pct//100 + self._equipment_noise()
@@ -105,7 +108,7 @@ class HuntingSystem:
 
     def player_concealment(self,pos:WorldPos,minute:int)->int:
         stance=str(getattr(self.state,"player_hunting_stance","normal"))
-        base=0 if stance=="normal" else 14 if stance=="stalk" else 24
+        base=14 if stance=="stalk" else 24 if stance=="crouch" else 0
         skill=max(int(self.state.player_skills.get("hunting",0)),int(self.state.player_skills.get("survival",0)))
         cover=min(30,self._cover_score(pos))
         weather_mask=0
