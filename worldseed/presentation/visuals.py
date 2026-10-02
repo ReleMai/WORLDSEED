@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import re
 from pathlib import Path
 from typing import Iterable
 
@@ -61,6 +62,21 @@ class VisualRegistry:
 
     def resource_style(self, content_id: str) -> dict:
         return self.manifest.get('resource_rendering', {}).get(content_id, {})
+
+    def interior_materials(self, function: str, room_name: str = '') -> tuple[str, str]:
+        """Resolve decorative materials from the existing room, never terrain."""
+        catalog = self.manifest.get('interior_styles', {})
+        default = catalog.get('default', {})
+        style = catalog.get('functions', {}).get(function, default)
+        floor = style.get('floor', default.get('floor', 'core:interior_floor'))
+        wall = style.get('wall', default.get('wall', 'core:interior_wall'))
+        name = room_name.casefold()
+        for override in catalog.get('room_floors', ()):
+            if any(re.search(r'\b' + re.escape(word.casefold()) + r'\b', name)
+                   for word in override.get('contains', ())):
+                floor = override.get('floor', floor)
+                break
+        return floor, wall
 
     def settlement_material_path(self, category: str, material: str, tags=(), piece_id: str = '') -> Path | None:
         """Resolve a building surface without changing its physical piece ID."""
@@ -171,7 +187,7 @@ class VisualRegistry:
             raw = style.get('atlas') if isinstance(style, dict) else None
             if raw and not (self.base_dir / str(raw)).exists():
                 issues.append(f"missing resource atlas: {raw} ({cid})")
-        for kind in ('interiors','building_shells','building_doors'):
+        for kind in ('interiors','interior_textures','building_shells','building_doors'):
             for cid in self.manifest.get(kind,{}):
                 for raw in self._paths(kind,cid):
                     if not (self.base_dir / raw).exists():
@@ -179,7 +195,7 @@ class VisualRegistry:
         return issues
 
     def iter_asset_paths(self) -> Iterable[Path]:
-        for kind in ("items", "terrain", "resources", "structures", "species", "crops", "interiors", "building_shells", "building_doors"):
+        for kind in ("items", "terrain", "resources", "structures", "species", "crops", "interiors", "interior_textures", "building_shells", "building_doors"):
             for raw in self.manifest.get(kind, {}).values():
                 vals = [raw] if isinstance(raw, str) else raw
                 for p in vals or []:

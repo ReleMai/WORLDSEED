@@ -461,6 +461,12 @@ class PygameTerminal(PointerUI):
                             self._context_overlay_rect=None
                             self._context_menu_state=None
                             self._context_opening=True
+                            if ctx.get('shell_hit_regions'):
+                                from worldseed.ui.exterior_view import shell_at_pointer
+                                hit=shell_at_pointer(ctx,self._last_mouse)
+                                if hit is not None:
+                                    shell,part=hit
+                                    return f'UI_BUILDING_MENU:{part}:{shell.uid}'
                             return f'UI_WORLD_MENU:{x}:{y}'
                 continue
             if event.type == pg.MOUSEBUTTONUP:
@@ -3319,9 +3325,22 @@ class PygameTerminal(PointerUI):
                 if cached is not None:out[(wx,wy,z)]=cached
         return out
 
-    def _hover_lines_for(self, wx:int, wy:int):
+    def _hover_lines_for(self, wx:int, wy:int, pixel=None):
         ctx=self._hover_context
         if not ctx:return []
+        # Full static exterior art is an object, not permission to inspect the
+        # undiscovered terrain, people or goods underneath its roof pixels.
+        if pixel is not None and ctx.get('shell_hit_regions'):
+            from worldseed.ui.exterior_view import shell_at_pointer
+            hit=shell_at_pointer(ctx,pixel)
+            if hit is not None:
+                shell,part=hit
+                lines=[str(shell.function).replace('_',' ').title()]
+                if part=='door':
+                    lines.append('Entrance door — right-click to interact')
+                    lines.append(f'Access threshold: {shell.entrance[0]}, {shell.entrance[1]}')
+                else:lines.append('Building exterior — right-click to inspect')
+                return lines
         z=ctx['z']; pk=pos_key(wx,wy,z); known=ctx['known']; k=(wx,wy,z)
         # RC9's inline branch was spelled `if hpk in known`; this helper keeps
         # the same discovery-gating contract while using a neutral key name.
@@ -3408,7 +3427,13 @@ class PygameTerminal(PointerUI):
             sx=(mx-used.x)//tile_px;sy=(my-used.y)//tile_px
             cell=(sx,sy)
         else:cell=None
-        if not force and cell==self._hover_cell:return
+        hover_object=None
+        if cell is not None and ctx.get('shell_hit_regions'):
+            from worldseed.ui.exterior_view import shell_at_pointer
+            hit=shell_at_pointer(ctx,self._last_mouse)
+            if hit is not None:hover_object=(hit[0].uid,hit[1])
+        if not force and cell==self._hover_cell and hover_object==getattr(self,'_hover_object',None):return
+        self._hover_object=hover_object
         damage=self._restore_hover_damage();self._hover_cell=cell
         if cell is not None:
             sx,sy=cell;wx=ctx['left']+sx;wy=ctx['top']+sy
@@ -3416,7 +3441,7 @@ class PygameTerminal(PointerUI):
             self.pg.draw.rect(self.screen,self._theme['accent'],tile_rect,1)
             self._hover_tile_rect=tile_rect
             anchor=(tile_rect.right,tile_rect.top)
-            self._hover_rect=self._draw_hover_tooltip(self._hover_lines_for(wx,wy),anchor,used)
+            self._hover_rect=self._draw_hover_tooltip(self._hover_lines_for(wx,wy,self._last_mouse),anchor,used)
             new_damage=tile_rect.copy()
             if self._hover_rect is not None:new_damage=new_damage.union(self._hover_rect)
             damage=new_damage if damage is None else damage.union(new_damage)
@@ -3642,13 +3667,14 @@ class PygameTerminal(PointerUI):
         structure_by={(s.x,s.y,s.z):s for s in nearby['structures'] if _onscreen(s.x,s.y,s.z)}
         property_container_by={
             (q.x,q.y,q.z):q for q in nearby['containers']
-            if q.kind=='property' and 'interior:'+q.property_id not in getattr(sim.state,'interiors',{}) and _onscreen(q.x,q.y,q.z)
+            if q.kind=='property' and _onscreen(q.x,q.y,q.z)
         }
         settlement_by={(c.x,c.y,0):c for c in sim.settlement_physicalization.cells_in_bounds(left,top,right,bottom)} if pos.z==0 else {}
         shell_query=getattr(sim.settlement_physicalization,'shells_in_bounds',None)
         building_shells=shell_query(left,top,right,bottom) if pos.z==0 and callable(shell_query) else ()
         from worldseed.ui.exterior_view import shell_cells, draw_shells
         shell_by=shell_cells(building_shells)
+        shell_hit_regions=[]
         property_container_by={key:row for key,row in property_container_by.items() if key not in shell_by}
         crop_by={(q.x,q.y,q.z):q for q in nearby['crops'] if _onscreen(q.x,q.y,q.z)}
         fire_by={(f.x,f.y,f.z):f for f in nearby['fires'] if _onscreen(f.x,f.y,f.z)}
@@ -3764,7 +3790,6 @@ class PygameTerminal(PointerUI):
                 _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
-            draw_shells(self,building_shells,map_rect,left,top,tile_px,known,visible)
 
         combat_by={}
         if combat_overlay:
@@ -3910,22 +3935,6 @@ class PygameTerminal(PointerUI):
                 pg.draw.ellipse(screen,(24,20,17),(rect.x+tile_px//5,rect.y+tile_px//2,3*tile_px//5,tile_px//3))
                 pg.draw.arc(screen,(103,82,58),(rect.x+tile_px//6,rect.y+tile_px//3,2*tile_px//3,tile_px//2),math.pi,2*math.pi,max(1,tile_px//12))
             if k in fire_by:self._draw_sprite_bottom(self._visuals.resolve(self._visuals.ref('structures','core:campfire')),rect,1.0)
-            if k in creature_by:
-                c=creature_by[k];ref=self._visuals.ref('species',c.species_id)
-                ap=self._visuals.resolve(ref,self._stable_variant(c.uid,len(ref.paths))) if ref.paths else (proc_species[self._stable_variant(c.species_id+c.uid,len(proc_species))] if proc_species else None)
-                self._draw_sprite_bottom(ap,rect,1.25)
-            if k in npc_by:
-                n=npc_by[k];self._draw_sprite_bottom(self._npc_sprite_path(n),rect,1.45)
-            if wx==pos.x and wy==pos.y:
-                from worldseed.systems.swimming import exposure
-                if exposure(sim,pos).mode=='swimming':
-                    saved=screen.get_clip();screen.set_clip(rect.move(0,-tile_px//2).inflate(0,-tile_px//3))
-                    self._draw_sprite_bottom(player_sprite,rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
-                    pg.draw.ellipse(screen,(165,207,205),rect.inflate(-tile_px//4,-tile_px*2//3),1)
-                else:self._draw_sprite_bottom(player_sprite,rect,1.45)
-            if cursor is not None and (wx,wy,pos.z)==(cursor.x,cursor.y,cursor.z):
-                cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
-                if cp:screen.blit(cp,rect.topleft)
         # Previously explored terrain remains as map memory, but anything
         # outside the current condition-driven sight circle is visibly subdued.
         # Entities/resources are never rendered through this memory fog.
@@ -3939,6 +3948,37 @@ class PygameTerminal(PointerUI):
                     pg.draw.rect(memory_fog,(4,8,13,138),(sx*tile_px,sy*tile_px,tile_px,tile_px))
                     memory_dirty=True
         if memory_dirty:screen.blit(memory_fog,map_rect.topleft)
+
+        # Roofs are recognizable static objects. Paint their whole silhouettes
+        # after cell-exact terrain fog; otherwise LOS stopped by a solid facade
+        # punches black tile-sized holes across the artwork. Discovery itself
+        # and every live overlay above remain cell-exact and unchanged.
+        if pos.z==0:
+            draw_shells(self,building_shells,map_rect,left,top,tile_px,known,visible,
+                        hit_regions=shell_hit_regions)
+        # Actors remain exact visible foreground objects, never inferred from
+        # a building's newly complete silhouette or remembered exterior.
+        actor_keys=set(creature_by)|set(npc_by)|{(pos.x,pos.y,pos.z)}
+        for wx,wy,wz in sorted(actor_keys,key=lambda key:(key[1],key[0])):
+            k=(wx,wy,wz)
+            if not _onscreen(wx,wy,wz) or pos_key(*k) not in visible:continue
+            rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+            if k in creature_by:
+                c=creature_by[k];ref=self._visuals.ref('species',c.species_id)
+                ap=self._visuals.resolve(ref,self._stable_variant(c.uid,len(ref.paths))) if ref.paths else (proc_species[self._stable_variant(c.species_id+c.uid,len(proc_species))] if proc_species else None)
+                self._draw_sprite_bottom(ap,rect,1.25)
+            if k in npc_by:
+                self._draw_sprite_bottom(self._npc_sprite_path(npc_by[k]),rect,1.45)
+            if k==(pos.x,pos.y,pos.z):
+                from worldseed.systems.swimming import exposure
+                if exposure(sim,pos).mode=='swimming':
+                    saved=screen.get_clip();screen.set_clip(rect.move(0,-tile_px//2).inflate(0,-tile_px//3))
+                    self._draw_sprite_bottom(player_sprite,rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
+                    pg.draw.ellipse(screen,(165,207,205),rect.inflate(-tile_px//4,-tile_px*2//3),1)
+                else:self._draw_sprite_bottom(player_sprite,rect,1.45)
+        if cursor is not None and _onscreen(cursor.x,cursor.y,cursor.z) and pos_key(cursor.x,cursor.y,cursor.z) in known:
+            cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
+            if cp:screen.blit(cp,(map_rect.x+(cursor.x-left)*tile_px,map_rect.y+(cursor.y-top)*tile_px))
 
         # Weather/light presentation is observational and applies only to the
         # local world viewport. UI chrome remains fully readable at night.
@@ -4095,6 +4135,7 @@ class PygameTerminal(PointerUI):
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'property_container_by':property_container_by,'settlement_by':settlement_by,'shell_by':shell_by,
+            'shell_hit_regions':shell_hit_regions,
             'crop_by':crop_by,'pile_by':pile_by,'resource_by':resource_by,'known_npcs':known_npcs,
             'sign_by':sign_by,'home_by':home_by,
             'combat_by':combat_by,'stealth_by':stealth_by,
@@ -4105,6 +4146,8 @@ class PygameTerminal(PointerUI):
             cell=(left+(wr.x-map_rect.x)//tile_px,top+(wr.y-map_rect.y)//tile_px,pos.z)
             # Tall/wide sprites may extend into adjacent water rectangles.
             # Leave their entire neighborhood untouched during idle redraw.
+            if any(hit['kind']=='body' and hit['rect'].colliderect(wr)
+                   for hit in shell_hit_regions):continue
             if any((cell[0]+dx,cell[1]+dy,cell[2]) in overlay_keys
                    for dx in (-1,0,1) for dy in (-1,0,1)):continue
             local=wr.move(-map_rect.x,-map_rect.y)

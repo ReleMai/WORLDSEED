@@ -13,7 +13,7 @@ from worldseed.ui.exterior_view import draw_shells
 from worldseed.ui.pygame_terminal import PygameTerminal
 
 
-def catalog_gallery(term, registry):
+def catalog_gallery(term, registry, prefix='dev47'):
     """Label source catalog images for QA; never alter a source sprite."""
     pg = term.pg
     groups = [('building_shells', sorted(term._visuals.manifest.get('building_shells',{})))]
@@ -46,7 +46,7 @@ def catalog_gallery(term, registry):
             label = term._fit_ui_text(label,term.small_font,cell_w-12)
             text = term.small_font.render(label,True,term._theme['text'])
             canvas.blit(text,text.get_rect(center=(col*cell_w+cell_w//2,row*cell_h+cell_h-23)))
-        output=Path(f'artifacts/dev47-{name}-gallery.png')
+        output=Path(f'artifacts/{prefix}-{name}-gallery.png')
         pg.image.save(canvas,str(output))
         print(f'{output.resolve()} ({len(entries)} catalog sprites)')
 
@@ -54,7 +54,11 @@ def catalog_gallery(term, registry):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--catalog-gallery',action='store_true',help='Also render labelled building/door and furniture source-art QA sheets.')
+    parser.add_argument('--prefix', default='dev47', help='QA output basename prefix.')
+    parser.add_argument('--partial-visibility', action='store_true', help='Observe frontages only; unknown roof cells must not chop static artwork.')
     args=parser.parse_args()
+    if not args.prefix.replace('-', '').isalnum():
+        parser.error('Prefix must contain only letters, digits and hyphens')
     PropertyStorageCasingTests.setUpClass()
     fixture = PropertyStorageCasingTests()
     base, security = fixture._security_fixture()
@@ -64,7 +68,7 @@ def main():
     before = state.to_dict()
     term = PygameTerminal(1280,832)
     term.enter()
-    output = Path('artifacts/dev47-exterior-preview.png')
+    output = Path(f'artifacts/{args.prefix}-exterior-preview.png')
     output.parent.mkdir(parents=True,exist_ok=True)
     try:
         pg = term.pg
@@ -92,6 +96,13 @@ def main():
             sprite = term._settlement_ground_surface(piece,size,bits)
             if sprite:term.screen.blit(sprite,(used.x+(cell.x-left)*size,used.y+(cell.y-top)*size))
         known = {pos_key(x,y,0) for y in range(top,bottom+1) for x in range(left,right+1)}
+        if args.partial_visibility:
+            known = {pos_key(x, y, 0) for shell in shells if shell.entrance
+                     for x, y in shell.footprint if abs(x-shell.entrance[0])+abs(y-shell.entrance[1]) <= 2}
+            for sy in range(rows):
+                for sx in range(cols):
+                    if pos_key(left+sx, top+sy, 0) not in known:
+                        pg.draw.rect(term.screen, (8, 13, 17), pg.Rect(used.x+sx*size, used.y+sy*size, size, size))
         draw_shells(term,shells,used,left,top,size,known,known)
         term.screen.set_clip(old_clip)
         label = 'Prepared settlement plan • whole roofed buildings • independent entrance doors • authoritative frontage paths'
@@ -100,7 +111,7 @@ def main():
         pg.image.save(term.screen,str(output))
         print(f'{output.resolve()}\n{len(shells)} prepared shells; observational projection passed')
         if args.catalog_gallery:
-            catalog_gallery(term,fixture.registry)
+            catalog_gallery(term,fixture.registry,args.prefix)
     finally:
         term.restore()
 

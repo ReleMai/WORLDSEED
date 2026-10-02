@@ -237,10 +237,52 @@ class InteriorSystem:
         plan, actor = self.current_plan(), self.player_presence()
         if plan is None or actor is None:
             return set()
+        reserved = self._reserved_furniture_uids(plan)
         return {station_id for furnishing in plan.furniture
                 if (station_id := STATION_PIECE_ALIASES.get(furnishing.piece_id))
                 and station_id in self.sim.registry.structures
+                and furnishing.uid not in reserved
                 and self._furniture_reachable(plan, actor, furnishing, 1800)}
+
+    def _reserved_furniture_uids(self, plan: InteriorPlan) -> set[str]:
+        """Read reservations through physically present workers' task links.
+
+        This deliberately avoids scanning the world's NPC or reservation
+        collections whenever a retained crafting panel refreshes. A worker's
+        existing reservation remains the sole activity authority.
+        """
+        now = int(getattr(getattr(self.sim, "clock", None), "minute", 0))
+        busy = set()
+        npcs = getattr(self.state, "npcs", {})
+        reservations = getattr(self.state, "activity_reservations", {})
+        for uid, actor in self.actors_in_space(plan.uid):
+            if uid == "player":
+                continue
+            npc = npcs.get(uid)
+            if npc is None:
+                continue
+            for task in getattr(npc, "tasks", ()):
+                row = reservations.get(str(task.get("reservation_uid", "")))
+                if (row is not None and row.actor_uid == uid
+                        and row.status in {"reserved", "active"}
+                        and row.metadata.get("space_id") == plan.uid
+                        and (row.expires_minute < 0 or now <= row.expires_minute)):
+                    busy.add(row.target_uid)
+        return busy
+
+    def furniture_use_status(self, furniture_uid: str) -> str:
+        """Observe reach and exclusive use without advancing an activity."""
+        plan, actor = self.current_plan(), self.player_presence()
+        if plan is None or actor is None:
+            return "unavailable"
+        furnishing = next((f for f in plan.furniture if f.uid == furniture_uid), None)
+        if furnishing is None:
+            return "unavailable"
+        if not self._furniture_reachable(plan, actor, furnishing, 1800):
+            return "out_of_reach"
+        if furnishing.uid in self._reserved_furniture_uids(plan):
+            return "busy"
+        return "available"
 
     def furniture_in_reach(self, furniture_uid: str, reach: int = 1800) -> bool:
         """Observe actual furniture reach in the player's current space."""

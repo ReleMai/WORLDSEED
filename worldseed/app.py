@@ -1984,7 +1984,26 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
             _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{npc.name} · {active.title()}')
 
 
-def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
+def _building_context_menu(ctx:GameContext,term:Terminal,building_uid:str,part:str)->str:
+    """A roof pixel identifies a static object, never its hidden ground cell."""
+    sim=ctx.sim
+    if sim.interiors.player_presence() is not None or sim.player_pos.z!=0:return UI_BACK
+    planned=sim.settlement_physicalization.structure_by_id(building_uid)
+    from worldseed.systems.building_shells import enclosed_shell
+    if not enclosed_shell(planned) or part not in ('body','door'):return UI_BACK
+    known=sim.discovered_tiles_set
+    observed=[(x,y) for x,y in planned.footprint if pos_key(x,y,0) in known]
+    if not observed:return UI_BACK
+    if part=='door':
+        target=planned.entrance
+        if target is None or pos_key(*target,0) not in known:return UI_BACK
+    else:
+        p=sim.player_pos
+        target=min(observed,key=lambda cell:(abs(cell[0]-p.x)+abs(cell[1]-p.y),cell))
+    return _world_context_menu(ctx,term,WorldPos(*target,0),building_part=part)
+
+
+def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building_part:str='')->str:
     """Context actions for a right-clicked world tile; only mutations enforce reach."""
     sim=ctx.sim;p=sim.player_pos
     if sim.interiors.player_presence() is not None:return UI_BACK
@@ -1992,18 +2011,18 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     distance=abs(target.x-p.x)+abs(target.y-p.y)
     rows=[]
     shell=sim.settlement_physicalization.shell_at(target)
-    container=None if shell else sim.building.container_at(target)
-    pile=sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
-    creature=next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
-    npc=next((n for n in sim.state.npcs.values() if n.alive and n.uid not in sim.state.interior_actors and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
+    container=None if shell or building_part else sim.building.container_at(target)
+    pile=None if building_part else sim.state.ground_piles.get(pos_key(target.x,target.y,target.z))
+    creature=None if building_part else next((c for c in sim.state.creatures.values() if c.hp>0 and (c.x,c.y,c.z)==(target.x,target.y,target.z)),None)
+    npc=None if building_part else next((n for n in sim.state.npcs.values() if n.alive and n.uid not in sim.state.interior_actors and (n.x,n.y,n.z)==(target.x,target.y,target.z)),None)
     physical=sim.settlement_physicalization.cell_at(target)
     planned=sim.settlement_physicalization.structure_by_id(physical.structure_id) if physical and physical.structure_id else None
-    crossing=sim.settlement_physicalization.crossing_at(target)
-    border_post=sim.settlement_physicalization.border_post_at(target)
-    door=sim.property_security.door_at(target)
-    signs=sim.hunting.signs_at(target)
-    home=sim.hunting.home_at(target)
-    monument=next((m for m in sim.state.claim_monuments.values() if (m.x,m.y,target.z)==(target.x,target.y,target.z)),None)
+    crossing=None if building_part else sim.settlement_physicalization.crossing_at(target)
+    border_post=None if building_part else sim.settlement_physicalization.border_post_at(target)
+    door=None if building_part=='body' else sim.property_security.door_at(target)
+    signs=[] if building_part else sim.hunting.signs_at(target)
+    home=None if building_part else sim.hunting.home_at(target)
+    monument=None if building_part else next((m for m in sim.state.claim_monuments.values() if (m.x,m.y,target.z)==(target.x,target.y,target.z)),None)
     if creature:
         sp=sim.registry.species.get(creature.species_id)
         label=sp.name if sp and creature.species_id in sim.known_species_ids() else 'animal'
@@ -2023,8 +2042,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if monument:
         rows.append(('inspect_monument',f'Inspect {monument.monument_type.replace("_"," ").title()}'))
     private_storage=bool(container and container.kind=='property' and container.owner!='player' and container.access!='public')
-    fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if physical and physical.fixture_piece_id else None
-    fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if physical and physical.fixture_piece_id else None
+    fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if not building_part and physical and physical.fixture_piece_id else None
+    fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if not building_part and physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
         if shell is not None and door.role=='entrance':
             rows.append(('enter_interior','Enter building interior'))
@@ -2102,9 +2121,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
     if home and home.discovered:
         rows.append(('inspect_home',f'Inspect {home.kind} — animal shelter'))
         if distance<=1:rows.append(('search_home',f'Search {home.kind} — {sum(home.stored_items.values())} cached item(s)'))
-    if distance<=1 and sim.resources.is_harvestable(target):
+    if not building_part and distance<=1 and sim.resources.is_harvestable(target):
         rows.append(('gather',f'Gather — {sim.resources.description(target)}'))
-    if distance<=3 and sim.fishing.is_fishable(target):
+    if not building_part and distance<=3 and sim.fishing.is_fishable(target):
         region=sim.fishing.region_at(target)
         rows.append(('fish',f'Fish — {sim.world.tile_at(target).terrain.name} / {region.structure.replace("_"," ")}'))
     if distance<=1 and pile and pile.items:
@@ -2114,6 +2133,10 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos)->str:
         rows.append(('open',f'Open {container.name or "container"}'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
+    if building_part and shell is not None:
+        subtitle='Exterior only; no hidden rooms or contents are revealed.'
+        if building_part=='door' and shell.entrance is not None:
+            subtitle=f'Entrance access: {shell.entrance[0]}, {shell.entrance[1]}. Move to its marked threshold to enter.'
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
@@ -3301,14 +3324,19 @@ def _interior_context_menu(ctx,term,x:int,y:int)->str:
     elif choice=='use' and furniture is not None:
         station=STATION_PIECE_ALIASES.get(furniture.piece_id)
         if station:
-            if not sim.interiors.furniture_in_reach(furniture.uid,1800):return 'Move closer to this station; walls block interaction.'
+            status=sim.interiors.furniture_use_status(furniture.uid)
+            if status=='busy':return 'This workstation is busy with a worker; wait until its reservation finishes.'
+            if status!='available':return 'Move closer to this station; walls block interaction.'
             return _crafting_menu(ctx,term,'workshops',station)
         sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
     elif choice=='move' and furniture is not None:
         term._interior_placing=furniture.uid
         return 'Left-click a free position for the furniture; right-click cancels. Placement respects walls, objects and exits.'
     elif choice=='inspect' and furniture is not None:
-        _view_text(term,f'{label}\nPosition {furniture.x/1000:.2f}, {furniture.y/1000:.2f}\nSize {furniture.w/1000:.2f} × {furniture.h/1000:.2f}\nFree placement; no outdoor tile snapping.',title='INTERIOR OBJECT')
+        from worldseed.ui.interior_workstation import workstation_details
+        detail=workstation_details(sim,furniture)
+        geometry=f'{label}\nPosition {furniture.x/1000:.2f}, {furniture.y/1000:.2f}\nSize {furniture.w/1000:.2f} × {furniture.h/1000:.2f}\nFree placement; no outdoor tile snapping.'
+        _view_text(term,detail or geometry,title='INTERIOR WORKSTATION' if detail else 'INTERIOR OBJECT')
         return UI_BACK
     elif choice and choice.startswith('talk:'):return _talk_action(ctx,term,choice.split(':',1)[1])
     else:return UI_BACK
@@ -3333,6 +3361,8 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             pass
         if key.startswith('UI_WORLD_MENU:'):
             _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
+        if key.startswith('UI_BUILDING_MENU:'):
+            _,part,uid=key.split(':',2);result=_building_context_menu(ctx,term,uid,part);last='' if result==UI_BACK else result;continue
         if key.startswith('INTERIOR_MOVE:'):
             _,dx,dy=key.split(':');ctx.sim.execute(MoveCommand(ctx.player_id,int(dx),int(dy)));continue
         if key.startswith('INTERIOR_CONTEXT:'):

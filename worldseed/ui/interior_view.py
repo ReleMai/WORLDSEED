@@ -73,7 +73,9 @@ def _rect(term, camera, rect):
 
 
 def _texture(term, rect, visual_id, *, tile_size=96, fallback=(103, 76, 48)):
-    path = term._visuals.resolve(term._visuals.ref('interiors', visual_id))
+    path = term._visuals.resolve(term._visuals.ref('interior_textures', visual_id))
+    if path is None:
+        path = term._visuals.resolve(term._visuals.ref('interiors', visual_id))
     surface = term._load_sprite(path, tile_size, tile_size, smooth=True)
     term.pg.draw.rect(term.screen, fallback, rect)
     if surface:
@@ -85,6 +87,32 @@ def _texture(term, rect, visual_id, *, tile_size=96, fallback=(103, 76, 48)):
                     term.screen.blit(surface, (x, y))
         finally:
             term.screen.set_clip(old_clip)
+
+
+def _furniture_sprite(term, path, rect):
+    """Aspect-fit the authored silhouette without changing furniture collision."""
+    if path is None:
+        return None
+    cache = getattr(term, '_interior_art_sources', None)
+    if cache is None:
+        cache = term._interior_art_sources = {}
+    key = str(path)
+    if key not in cache:
+        try:
+            source = term.pg.image.load(key).convert_alpha()
+            bounds = source.get_bounding_rect(min_alpha=1)
+            source = source.subsurface(bounds).copy() if bounds.width and bounds.height else None
+        except (OSError, term.pg.error):
+            source = None
+        if len(cache) >= 96:
+            cache.pop(next(iter(cache)))
+        cache[key] = source
+    source = cache[key]
+    if source is None:
+        return None
+    ratio = min(rect.width / source.get_width(), rect.height / source.get_height())
+    size = (max(1, round(source.get_width() * ratio)), max(1, round(source.get_height() * ratio)))
+    return term.pg.transform.smoothscale(source, size)
 
 
 def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
@@ -117,9 +145,13 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
         screen.fill((12, 14, 15), used)
         floor = pg.Rect(*camera.to_screen(0, 0), max(1, round(plan.width * scale)),
                         max(1, round(plan.height * scale)))
-        _texture(term, floor, 'core:interior_floor', tile_size=max(48, term._tile_px * 4))
+        floor_id, wall_id = term._visuals.interior_materials(getattr(plan, 'function', 'residence'))
+        _texture(term, floor, floor_id, tile_size=max(48, term._tile_px * 4))
         for room in plan.rooms:
             rect = _rect(term, camera, room.rect)
+            room_floor, _ = term._visuals.interior_materials(getattr(plan, 'function', 'residence'), room.name)
+            if room_floor != floor_id:
+                _texture(term, rect, room_floor, tile_size=max(48, term._tile_px * 4))
             label = term.small_font.render(term._fit_ui_text(room.name, term.small_font, max(1, rect.width - 18)),
                                            True, (193, 172, 137))
             if rect.width > 40 and rect.height > 28:
@@ -127,7 +159,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
         for wall in plan.walls:
             rect = _rect(term, camera, wall)
             pg.draw.rect(screen, (34, 30, 27), rect.move(3, 4))
-            _texture(term, rect, 'core:interior_wall', tile_size=48, fallback=(153, 139, 112))
+            _texture(term, rect, wall_id, tile_size=48, fallback=(153, 139, 112))
             pg.draw.rect(screen, (74, 65, 53), rect, 1)
         portal = camera.to_screen(plan.entry_x, plan.entry_y)
         pg.draw.circle(screen, th['accent'], portal, max(5, term._tile_px // 3), 2)
@@ -144,7 +176,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             # the exterior, before truly unknown coverage becomes a glyph.
             if path is None:
                 path = term._visuals.resolve(term._visuals.ref('settlement_pieces', furniture.piece_id))
-            sprite = term._load_sprite(path, rect.width, rect.height, smooth=True)
+            sprite = _furniture_sprite(term, path, rect)
             if getattr(furniture, 'solid', True):
                 pg.draw.rect(screen, (52, 39, 28), rect.move(2, 3), border_radius=3)
             if sprite:

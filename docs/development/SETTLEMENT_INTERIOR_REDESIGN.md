@@ -12,6 +12,11 @@ separate doors, introduces function-specific continuous layouts, same-space
 intrusion witnesses, and shared indoor work reservations. Existing saved v1
 interiors preserve their geometry and player furniture arrangements. See the
 Dev47 handoff for validation and remaining boundaries.
+Dev48 fixes upright, complete exterior silhouettes and alpha-aware door/body
+selection, adds room/building-specific wall and floor finishes plus six new
+workstation assets, and exposes learned recipe requirements and exclusive-use
+status through the existing crafting UI. Geometry and economic authority remain
+unchanged. See `docs/handoffs/DEV48_EXTERIOR_INTERIOR_POLISH.md`.
 
 ## Findings and research
 

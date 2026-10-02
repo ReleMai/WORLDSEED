@@ -1,0 +1,32 @@
+{
+  "default": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_plaster"},
+  "functions": {
+    "residence": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_plaster"},
+    "inn": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_timber"},
+    "barracks": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_stone"},
+    "watchhouse": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_timber"},
+    "outskirt_camp": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_timber"},
+    "smithy": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_stone"},
+    "workshop": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_timber"},
+    "mill": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_timber"},
+    "fishery": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_timber"},
+    "bakery": {"floor": "core:interior_floor_terracotta", "wall": "core:interior_wall_plaster"},
+    "butcher": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_plaster"},
+    "weavery": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_plaster"},
+    "tannery": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_timber"},
+    "pottery": {"floor": "core:interior_floor_terracotta", "wall": "core:interior_wall_stone"},
+    "brewery": {"floor": "core:interior_floor_terracotta", "wall": "core:interior_wall_timber"},
+    "mason_yard": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_stone"},
+    "barn": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_timber"},
+    "market": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_plaster"},
+    "clinic": {"floor": "core:interior_floor_terracotta", "wall": "core:interior_wall_plaster"},
+    "shrine": {"floor": "core:interior_floor_flagstone", "wall": "core:interior_wall_stone"},
+    "archive": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_plaster"},
+    "school": {"floor": "core:interior_floor_oak", "wall": "core:interior_wall_plaster"}
+  },
+  "room_floors": [
+    {"contains": ["kitchen", "pantry", "dough", "apothecary", "tavern"], "floor": "core:interior_floor_terracotta"},
+    {"contains": ["forge", "oven", "kiln", "cutting", "tanning", "cleaning", "preparation", "armory", "cellar", "vat", "smoke"], "floor": "core:interior_floor_flagstone"},
+    {"contains": ["bedroom", "dormitory", "guest", "bunk", "living", "study", "reading", "classroom"], "floor": "core:interior_floor_oak"}
+  ]
+}
