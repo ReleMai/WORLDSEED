@@ -1,26 +1,80 @@
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 from types import SimpleNamespace
 
-from tests import test_ui_rc2
 from tests.test_interiors import sample_plan
-from worldseed.core.coords import WorldPos
-from worldseed.entities.components import Inventory, Vitals
+from worldseed.config import DATA_DIR
+from worldseed.content.registry import ContentRegistry
+from worldseed.core.coords import ChunkKey, WorldPos
+from worldseed.entities.components import Inventory, Position, Vitals
+from worldseed.entities.store import EntityStore
+from worldseed.persistence.database import WorldDatabase
 from worldseed.sim.commands import MoveCommand, GatherCommand, DropCommand, PickupCommand, CraftCommand, StartProcessingCommand
+from worldseed.sim.engine import Simulation
 from worldseed.systems.interior_state import InteriorActor, InteriorRect
 from worldseed.systems.interiors import build_interior
 from worldseed.systems.state import LivingWorldState
 from worldseed.ui.renderer import Renderer
+from worldseed.world.chunk import Chunk
+from worldseed.world.generator import WorldGenerator
+from worldseed.world.world import World
 
 
 class InteriorEngineTests(unittest.TestCase):
     def setUp(self):
-        fixture=test_ui_rc2.UIRC2Tests('test_environment_look_is_observational_and_does_not_plan')
-        fixture.setUp();self.addCleanup(fixture.tearDown)
-        self.sim=fixture.sim;self.fixture=fixture
-        self.plan=sample_plan()
-        self.sim.state.interiors[self.plan.uid]=self.plan
-        self.sim.interiors._put_actor('player',InteriorActor(self.plan.uid,self.plan.entry_x,self.plan.entry_y))
+        self.sim,self.plan=self.prepared_simulation()
+
+    def prepared_simulation(self):
+        """Fresh real engine, without regenerating unrelated surface regions.
+
+        These assertions cover continuous interiors and Simulation.execute,
+        not world startup (covered by the world/UI and portal integrations).
+        Only constructor regional preparation is suppressed. Command handlers,
+        time advancement, consequences and every authoritative system remain
+        real and unpatched when each test starts.
+        """
+        registry=ContentRegistry.load(DATA_DIR)
+        folder=tempfile.TemporaryDirectory(prefix='worldseed-interior-engine-')
+        self.addCleanup(folder.cleanup)
+        seed=b'interior-engine'
+        database=WorldDatabase.create(Path(folder.name)/'interior.db','Interior engine fixture',seed.hex())
+        self.addCleanup(database.close)
+        world=World(WorldGenerator(seed,registry),registry,database)
+        # One prepared dry anchor chunk makes unexpected incidental terrain
+        # reads bounded, without hydrology, society or route generation.
+        key=ChunkKey(0,0,0);chunk=Chunk.empty(key)
+        ground=registry.terrain_index('core:grass')
+        for index in range(len(chunk.terrain)):chunk.terrain[index]=ground
+        world.cache.put(key,chunk)
+        entities=EntityStore();player_id=entities.spawn(preferred_id=1)
+        entities.add(player_id,Position(WorldPos(0,0,0)))
+        entities.add(player_id,Inventory({'core:copper_coin':30,'core:wood':4}))
+        entities.add(player_id,Vitals())
+        plan=sample_plan()
+        state=LivingWorldState(discovered_tiles=['0,0,0','1,0,0'])
+        state.interiors[plan.uid]=plan
+        state.interior_actors['player']=InteriorActor(plan.uid,plan.entry_x,plan.entry_y)
+        with patch.object(Simulation,'_ensure_nearby_world') as prepare:
+            sim=Simulation(world,entities,registry,0,state,seed)
+        prepare.assert_called_once_with(WorldPos(0,0,0),force=True)
+        return sim,plan
+
+    def test_prepared_fixture_has_isolated_mutable_engine_and_world_state(self):
+        other,other_plan=self.prepared_simulation()
+        self.assertIsNot(self.sim.state,other.state)
+        self.assertIsNot(self.sim.entities,other.entities)
+        self.assertIsNot(self.sim.registry,other.registry)
+        self.assertIsNot(self.sim.world,other.world)
+        self.sim.entities.get(self.sim.player_id,Inventory).remove('core:wood',2)
+        self.sim.interiors.player_presence().x+=127
+        self.plan.furniture[0].x+=143
+        self.sim.state.discovered_tiles.append('2,0,0')
+        self.assertEqual(other.entities.get(other.player_id,Inventory).count('core:wood'),4)
+        self.assertEqual(other.interiors.player_presence().x,other_plan.entry_x)
+        self.assertNotEqual(self.plan.furniture[0].x,other_plan.furniture[0].x)
+        self.assertEqual(other.state.discovered_tiles,['0,0,0','1,0,0'])
 
     def test_move_is_fractional_without_discovering_outside(self):
         sim=self.sim;pos=sim.player_pos;discovered=list(sim.state.discovered_tiles);minute=sim.clock.minute

@@ -89,6 +89,27 @@ Shell surfaces, masks, door surfaces and furniture source caches are bounded.
 The automatic Fast Gate includes the three new focused regression modules.
 Publication is one coherent commit to canonical main, with no force update.
 
+### October 3 CI follow-through
+
+The first Dev48 automatic run (`36959272856`) passed the Linux runner job and
+the early Windows gameplay checks, then hit the unchanged 180-second Dev46
+interior deadline. No assertion failed: `InteriorEngineTests` composed the
+full-world UI fixture and regenerated unrelated surface regions per test.
+
+The fixture now creates a fresh real database, World, registry, entities and
+Simulation for every test, with a prepared indoor plan/player presence,
+nonempty discovery sentinels and a dry anchor chunk. Only constructor regional
+preparation is scoped out; real command dispatch, crafting, inventory,
+clock advancement and post-action consequences remain covered. The original
+assertions and deadline are unchanged; an added regression proves mutable
+fixtures are isolated. One original local test took 9.147 seconds, while all
+nine updated engine tests took 1.855 seconds. The exact Dev46 CI batch passes
+**53 tests in 7.298 seconds**, including representative SQLite save round-trip
+and `verify_save.py`. The exact Dev47-48 batch passes **77 tests in 7.681
+seconds**. This follow-through changes tests/documentation only, not gameplay,
+save contracts or generation versions. The repaired publication receives its
+normal automatic Fast Gate; the first failed run is not treated as success.
+
 ## Limitations and next dependency
 
 Timed process jobs and the separate meal-cooking menu remain outdoor-only;
