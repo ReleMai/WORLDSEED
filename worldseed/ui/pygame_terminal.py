@@ -2481,6 +2481,10 @@ class PygameTerminal(PointerUI):
         wx,wy,wz=key;bits=0
         current_piece=registry.settlement_pieces.get(cell.ground_piece_id if ground else cell.structure_piece_id)
         current_cat=str(getattr(current_piece,'category','')) if current_piece else ''
+        if not ground:
+            from worldseed.ui.fence_view import is_fence, connection_bits
+            if is_fence(current_piece):
+                return connection_bits(key,settlement_by,registry)
         for bit,dx,dy in ((1,0,-1),(2,1,0),(4,0,1),(8,-1,0)):
             other=settlement_by.get((wx+dx,wy+dy,wz))
             if other is None:continue
@@ -2637,6 +2641,9 @@ class PygameTerminal(PointerUI):
 
     def _settlement_wall_surface(self,piece,size:int,bits:int,role:str='wall'):
         """Connected top-down wall/door art with material depth and clean joins."""
+        from worldseed.ui.fence_view import is_fence, fence_surface
+        if is_fence(piece):
+            return fence_surface(self,piece,size,bits)
         key=('settlement-wall-v4',str(getattr(piece,'id','')),int(size),int(bits),str(role))
         cached=self._sprite_cache.get(key)
         if cached is not None:return cached
@@ -3283,6 +3290,8 @@ class PygameTerminal(PointerUI):
             for name,mapping in collections:
                 buckets=index[name]
                 for obj in mapping.values():
+                    if name=='containers' and getattr(obj,'interior_space_id',''):
+                        continue
                     ox=int(getattr(obj,'x',0));oy=int(getattr(obj,'y',0));oz=int(getattr(obj,'z',0))
                     buckets.setdefault((ox//32,oy//32,oz),[]).append(obj)
             self._entity_spatial_cache_key=key;self._entity_spatial_cache=index
@@ -3667,7 +3676,7 @@ class PygameTerminal(PointerUI):
         structure_by={(s.x,s.y,s.z):s for s in nearby['structures'] if _onscreen(s.x,s.y,s.z)}
         property_container_by={
             (q.x,q.y,q.z):q for q in nearby['containers']
-            if q.kind=='property' and _onscreen(q.x,q.y,q.z)
+            if q.kind=='property' and not getattr(q,'interior_space_id','') and _onscreen(q.x,q.y,q.z)
         }
         settlement_by={(c.x,c.y,0):c for c in sim.settlement_physicalization.cells_in_bounds(left,top,right,bottom)} if pos.z==0 else {}
         shell_query=getattr(sim.settlement_physicalization,'shells_in_bounds',None)
@@ -3695,7 +3704,7 @@ class PygameTerminal(PointerUI):
         else:
             weather={'kind':'underground','cloud_cover':0,'rain':0,'wetness':0,'fog':0,'wind_dx':0,'wind_dy':0,'storm_intensity':0}
             lighting=None
-        known_npcs=sim.known_npc_ids()
+        known_npcs=sim.introduced_npc_ids()
         neighbor_cache={}
         display_cache={}
         current_cache={}
@@ -3893,7 +3902,8 @@ class PygameTerminal(PointerUI):
                         if not is_visible:copy.set_alpha(138)
                         screen.blit(copy,(rect.centerx-copy.get_width()//2,rect.bottom-copy.get_height()))
             if k in property_container_by:
-                pc=property_container_by[k];path=self._visuals.resolve(self._visuals.ref('structures',pc.source_id))
+                pc=property_container_by[k]
+                path=self._visuals.resolve(self._visuals.ref('containers',getattr(pc,'profile_id',''))) or self._visuals.resolve(self._visuals.ref('structures',pc.source_id))
                 surf=self._load_sprite(path,int(tile_px*1.35),int(tile_px*.95))
                 if surf is not None:
                     copy=surf if is_visible else surf.copy()

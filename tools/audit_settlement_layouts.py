@@ -157,6 +157,15 @@ def inspect_skeleton(world, registry, skeleton, require_all_resources=False):
         gate = tuple(row.entrance)
         if gate not in reached or not physical.passable(WorldPos(*gate, 0), True):
             failures.append(f'outdoor worksite gate disconnected or obstructed: {row.uid}')
+        if (plan.version >= 12 or plan.plan_revision >= 1) and row.function in {'animal_pen','farm_field'}:
+            footprint=set(map(tuple,row.footprint))
+            boundary={p for p in footprint if any((p[0]+dx,p[1]+dy) not in footprint
+                                                  for dx,dy in ((0,1),(1,0),(0,-1),(-1,0)))}
+            if not any((gate[0]+dx,gate[1]+dy) in footprint-boundary
+                       and physical.passable(WorldPos(gate[0]+dx,gate[1]+dy,0),True)
+                       and (gate[0]-dx,gate[1]-dy) not in footprint
+                       for dx,dy in ((0,1),(1,0),(0,-1),(-1,0))):
+                failures.append(f'gate has no cardinal interior/exterior passage: {row.uid}')
     rooms = {}
     for room in skeleton.rooms:
         rooms.setdefault(room.structure_plan_id, []).append(room)

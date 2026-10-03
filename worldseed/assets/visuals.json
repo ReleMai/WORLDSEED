@@ -698,8 +698,8 @@
       "assets/sprites/species/domestic/cow_1.png"
     ],
     "core:chicken": [
-      "assets/sprites/species/domestic/chicken_0.png",
-      "assets/sprites/species/domestic/chicken_1.png"
+      "assets/sprites/species/domestic/dev50/chicken_0.png",
+      "assets/sprites/species/domestic/dev50/chicken_1.png"
     ],
     "core:sheep": [
       "assets/sprites/species/domestic/sheep_0.png",
@@ -1249,5 +1249,17 @@
         "floor": "core:interior_floor_oak"
       }
     ]
+  },
+  "containers": {
+    "core:household_chest": "assets/sprites/containers/dev50/household_chest.png",
+    "core:wardrobe": "assets/sprites/containers/dev50/wardrobe.png",
+    "core:pantry_cabinet": "assets/sprites/containers/dev50/pantry_cabinet.png",
+    "core:inn_barrel": "assets/sprites/containers/dev50/inn_barrel.png",
+    "core:armory_locker": "assets/sprites/containers/dev50/armory_locker.png",
+    "core:tool_chest": "assets/sprites/containers/dev50/tool_chest.png",
+    "core:supply_crate": "assets/sprites/containers/dev50/supply_crate.png",
+    "core:grain_bin": "assets/sprites/containers/dev50/grain_bin.png",
+    "core:medicine_cabinet": "assets/sprites/containers/dev50/medicine_cabinet.png",
+    "core:archive_bookcase": "assets/sprites/containers/dev50/archive_bookcase.png"
   }
 }

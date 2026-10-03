@@ -1,0 +1,74 @@
+[
+  {
+    "name": "household_chest",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-23639cb4-d8a5-4ce5-a9f0-8f3146b6aef0.png",
+    "subject": "a low closed oak household chest with curved lid, aged brass corner straps and a small iron latch"
+  },
+  {
+    "name": "wardrobe",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2e73f158-c39a-4100-8a31-a8fbdfaa7f15.png",
+    "subject": "a tall closed medieval pine wardrobe with twin doors, carved panels and cloth peeking from one narrow vent"
+  },
+  {
+    "name": "pantry_cabinet",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-4301f0b4-ff4e-4b12-abd7-dba7f302a214.png",
+    "subject": "a freestanding kitchen pantry cupboard with shelves of clay jars behind a lattice upper door and solid wooden lower doors"
+  },
+  {
+    "name": "inn_barrel",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-789f81ba-7a8d-4369-af43-b54d6965fa34.png",
+    "subject": "a stout closed inn provisioning barrel with dark oak staves, three iron hoops and a wooden bung; one barrel only"
+  },
+  {
+    "name": "armory_locker",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-4b3b10fa-a39c-4994-8a2e-2d49d3ffa9ed.png",
+    "subject": "a narrow tall closed barracks armory locker of iron-banded dark timber, sturdy padlock and shield-shaped carved insignia, no text"
+  },
+  {
+    "name": "tool_chest",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-9b8442f2-defa-4872-9370-cc81cee812f2.png",
+    "subject": "a blacksmith tool chest, squat reinforced iron-bound oak, low rectangular profile, soot-darkened metal latch and rivets"
+  },
+  {
+    "name": "supply_crate",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-906b46e8-9998-4dc8-b68a-f59c5cd5e3ef.png",
+    "subject": "a carpentry workshop slatted wood supply crate, closed square box, diagonal braces, rope handles, clean warm raw timber"
+  },
+  {
+    "name": "grain_bin",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2ed83914-1cad-4bdb-bd15-3ced4e480694.png",
+    "subject": "a deep farmhouse grain bin, lidded wide wooden hopper with tapered legs, coarse woven sack tucked against its side"
+  },
+  {
+    "name": "medicine_cabinet",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-a32cf230-40ec-468a-a614-4648f1a3418b.png",
+    "subject": "a healer's medicine cabinet, narrow pale timber, glass-front upper doors with tiny muted green and amber bottles, closed lower drawer"
+  },
+  {
+    "name": "archive_bookcase",
+    "kind": "container",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2a36ea89-788d-4f05-a6a3-9481ad11c000.png",
+    "subject": "a medieval archive bookcase, broad walnut shelving, varied leather-bound volumes, bottom lockable cupboard and iron hinges"
+  },
+  {
+    "name": "chicken_0",
+    "kind": "chicken",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-ffe94eb9-88a0-47d9-8b95-375b58b58f4d.png",
+    "subject": "Remove stray cow anatomy; preserve only the single existing brown chicken and its pose on transparent alpha."
+  },
+  {
+    "name": "chicken_1",
+    "kind": "chicken",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-94dcb330-9015-4e35-96ad-6b9684fa6700.png",
+    "subject": "Remove stray cow anatomy; preserve only the single existing brown chicken and its pose on transparent alpha."
+  }
+]

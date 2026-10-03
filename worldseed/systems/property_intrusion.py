@@ -13,24 +13,11 @@ from dataclasses import dataclass
 
 from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import hash_u64
+from worldseed.systems.container_profiles import building_storage_profile, container_profile, validate_catalog
 from worldseed.systems.state import (
     CasingIntelState, ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
     TrespassState, pos_key,
 )
-
-
-_STORAGE_FUNCTIONS = {
-    "residence": ("Household Chest", "core:wood_chest", ("core:wheat","core:turnip","core:meat","core:dried_meat","core:clean_water","core:soap"), 4),
-    "smithy": ("Smithy Stores", "core:wood_storage_box", ("core:iron_ore","core:coal","core:iron_bloom","core:wood","core:stone"), 5),
-    "workshop": ("Workshop Stores", "core:wood_storage_box", ("core:wood","core:plant_cordage","core:leather","core:stone"), 4),
-    "mill": ("Mill Stores", "core:wood_storage_box", ("core:wheat","core:wheat_seed","core:turnip_seed","core:wood"), 4),
-    "fishery": ("Fishery Stores", "core:wood_storage_box", ("core:dried_meat","core:clean_water","core:wood"), 3),
-    "barn": ("Barn Stores", "core:storage_basket", ("core:wheat_seed","core:turnip_seed","core:wheat","core:turnip","core:wood"), 5),
-    "clinic": ("Clinic Cabinet", "core:wood_storage_box", ("core:herbal_tonic","core:soap","core:clean_water"), 3),
-    "watchhouse": ("Watchhouse Locker", "core:wood_chest", ("core:dried_meat","core:clean_water","core:wood"), 2),
-    "archive": ("Archive Cabinet", "core:wood_chest", ("core:book","core:soap"), 2),
-    "school": ("School Cabinet", "core:wood_chest", ("core:book","core:soap"), 2),
-}
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +42,8 @@ class PropertyStorageSystem:
         self.physicalization=physicalization
         self.civics=civics
         self.keys=keys or PhysicalKeySystem(state,seed)
+        if all(hasattr(registry,key) for key in ('items','structures','settlement_pieces')):
+            validate_catalog(registry)
 
     def _room_for(self, skeleton, structure):
         rooms=sorted(
@@ -124,7 +113,8 @@ class PropertyStorageSystem:
         frontage_lookup=getattr(self.physicalization,"frontage_for",None)
         frontage=frontage_lookup(structure.uid) if callable(frontage_lookup) else None
         if frontage is None:return None
-        occupied={(c.x,c.y,c.z) for c in self.state.containers.values() if c.uid!=ignore_uid}
+        occupied={(c.x,c.y,c.z) for c in self.state.containers.values()
+                  if c.uid!=ignore_uid and not c.interior_space_id}
         candidates=[]
         for dx,dy in ((-1,0),(1,0),(0,1),(0,-1)):
             pos=frontage.moved(dx,dy)
@@ -154,7 +144,7 @@ class PropertyStorageSystem:
     def _reserve_contents(self, town, structure_uid: str, preferred, stack_cap: int):
         items={}
         for iid in preferred:
-            if iid not in self.registry.items:
+            if iid not in getattr(self.registry,"items",{}):
                 continue
             available=max(0,int(town.stocks.get(iid,0)))
             if available<=0:
@@ -175,51 +165,77 @@ class PropertyStorageSystem:
         if town is None or skeleton is None:
             return PropertyStorageSync(str(settlement_id))
         self.civics.ensure_settlement(town.uid)
+        space_ids={"interior:"+structure.uid for structure in skeleton.structures}
+        occupants={}
+        for actor in self.state.interior_actors.values():
+            if actor.space_id in space_ids:
+                occupants.setdefault(actor.space_id,[]).append(actor)
         created=reserved=eligible=0
         for structure in sorted(skeleton.structures,key=lambda s:s.uid):
-            profile=_STORAGE_FUNCTIONS.get(str(structure.function))
+            profile=building_storage_profile(str(structure.function))
             if structure.destroyed or profile is None:
                 continue
             eligible+=1
-            name,source_id,preferred,stack_cap=profile
-            uid=f"property-storage:{structure.uid}"
             owner=self.civics.owner_for_structure(town.uid,structure.uid) or town.uid
-            existing=self._existing(uid)
-            if existing is not None:
-                service=self._service_storage_position(structure,uid)
-                if service is not None and (existing.x,existing.y,existing.z)!=(service.x,service.y,service.z):
-                    old_key=next((key for key,c in self.state.containers.items() if c.uid==uid),None)
-                    if old_key is not None:self.state.containers.pop(old_key)
-                    existing.x,existing.y,existing.z=service.x,service.y,service.z
-                    self.state.containers[pos_key(service.x,service.y,service.z)]=existing
-                existing.owner=owner
-                existing.settlement_id=town.uid
-                existing.property_id=structure.uid
-                existing.access="private"
-                self.keys.ensure_lock(existing)
-                if existing.lock_level<=0:existing.lock_level=self._lock_level(structure.function)
-                if existing.last_tampered_minute<0 and not existing.picked:existing.locked=existing.lock_level>0
-                continue
-            placed=self._position(skeleton,structure)
-            if placed is None:
-                continue
-            position,room_id=placed
-            key=pos_key(position.x,position.y,position.z)
-            occupied=self.state.containers.get(key)
-            if occupied is not None:
-                continue
-            items=self._reserve_contents(town,structure.uid,preferred,stack_cap)
-            reserved+=sum(items.values())
-            self.state.containers[key]=ContainerState(
-                uid=uid,x=position.x,y=position.y,z=position.z,owner=owner,
-                capacity_mass_g=160000 if structure.function in {"barn","smithy","workshop","mill"} else 90000,
-                capacity_volume_ml=260000 if structure.function in {"barn","smithy","workshop","mill"} else 140000,
-                items=items,name=name,kind="property",movable=False,source_id=source_id,
-                settlement_id=town.uid,property_id=structure.uid,room_id=room_id,
-                access="private",lock_level=self._lock_level(structure.function),
-                locked=self._lock_level(structure.function)>0,lock_uid=f"lock:{uid}",seeded_from_settlement=True,
-            )
-            created+=1
+            # The original primary UID is retained for existing logistics and
+            # keys. Additional indoor storage has its own stable slot identity.
+            slots=[(f"property-storage:{structure.uid}",profile.primary,not profile.outside,profile.stock)]
+            if getattr(structure,"enclosed",False):
+                slots += [(f"property-storage:{structure.uid}:inside:{uid.split(':',1)[-1]}",uid,True,())
+                          for uid in profile.inside]
+            for uid,profile_id,indoors,stock in slots:
+                style=container_profile(profile_id)
+                if style is None:continue
+                room=self._room_for(skeleton,structure)
+                if room is None:continue
+                existing=self._existing(uid)
+                if indoors:
+                    anchor=structure.entrance or structure.footprint[0]
+                    position=WorldPos(int(anchor[0]),int(anchor[1]),0)
+                    key=f"indoor-storage:{uid}"
+                else:
+                    position=self._service_storage_position(structure,uid)
+                    if position is None:continue
+                    key=pos_key(position.x,position.y,position.z)
+                collision=self.state.containers.get(key)
+                if collision is not None and collision.uid!=uid:continue
+                lock_level=style.lock_level
+                locked=lock_level>0 and int(hash_u64(self.seed,"container-profile-lock",uid)%100)<style.lock_chance
+                if existing is not None:
+                    old_key=next((k for k,c in self.state.containers.items() if c.uid==uid),None)
+                    if old_key!=key:
+                        if old_key is not None:self.state.containers.pop(old_key)
+                        self.state.containers[key]=existing
+                    # One-time visual/location migration never alters contents,
+                    # player-purchased locks, picked locks or tampering history.
+                    if not existing.profile_id and existing.last_tampered_minute<0 and not existing.picked:
+                        existing.lock_level=lock_level;existing.locked=locked
+                    existing.x,existing.y,existing.z=position.x,position.y,position.z
+                    existing.owner=owner;existing.settlement_id=town.uid;existing.property_id=structure.uid
+                    existing.name=style.name;existing.source_id=style.source_id;existing.profile_id=profile_id
+                    space_id="interior:"+structure.uid if indoors else ""
+                    if existing.interior_space_id!=space_id or not existing.interior_furniture_uid:
+                        existing.interior_furniture_uid="storage-furniture:"+uid if indoors else ""
+                    existing.interior_space_id=space_id
+                    existing.access="private";self.keys.ensure_lock(existing)
+                    continue
+                items=self._reserve_contents(town,uid,stock or style.loot,5)
+                reserved+=sum(items.values())
+                self.state.containers[key]=ContainerState(
+                    uid=uid,x=position.x,y=position.y,z=position.z,owner=owner,
+                    capacity_mass_g=style.capacity_mass_g,capacity_volume_ml=style.capacity_volume_ml,
+                    items=items,name=style.name,kind="property",movable=False,source_id=style.source_id,
+                    settlement_id=town.uid,property_id=structure.uid,room_id=room.uid,
+                    access="private",lock_level=lock_level,locked=locked,lock_uid=f"lock:{uid}",
+                    seeded_from_settlement=True,profile_id=profile_id,
+                    interior_space_id="interior:"+structure.uid if indoors else "",
+                    interior_furniture_uid="storage-furniture:"+uid if indoors else "",
+                )
+                created+=1
+            plan=self.state.interiors.get("interior:"+structure.uid)
+            if plan is not None:
+                from worldseed.systems.interior_storage import bind_storage
+                bind_storage(plan,self.state.containers.values(),occupants.get(plan.uid,()))
         return PropertyStorageSync(town.uid,eligible,created,reserved)
 
     def sync_active(self) -> tuple[PropertyStorageSync,...]:
@@ -234,7 +250,7 @@ class PropertyStorageSystem:
                 c for c in self.state.containers.values()
                 if c.kind=="property" and c.property_id==str(property_id)
             ),
-            key=lambda c:c.uid,
+            key=lambda c:(bool(c.interior_space_id),c.uid),
         ))
 
 
@@ -533,7 +549,8 @@ class PropertySecuritySystem:
             {"kind":"move","x":target.x,"y":target.y,"z":target.z,"exact":True,"physical_path":True,"door_answer_uid":door.uid},
             {"kind":"perform","action":"answer_door","door_uid":door.uid},
         ]
-        return {"outcome":"approaching","message":f"You knock. Footsteps move through the house as {npc.name} decides whether to answer. Leave the threshold clear so they can step outside.","npc_uid":npc.uid}
+        resident=npc.name if npc.uid in self.state.introduced_npcs else 'someone inside'
+        return {"outcome":"approaching","message":f"You knock. Footsteps move through the house as {resident} decides whether to answer. Leave the threshold clear so they can step outside.","npc_uid":npc.uid}
 
     def complete_door_answer(self,door_uid:str,npc_uid:str,minute:int)->bool:
         door=self.door_by_id(door_uid);npc=self.state.npcs.get(str(npc_uid))
@@ -1043,6 +1060,8 @@ class CasingSystem:
 
         known_storage=set(intel.storage_uids)
         for container in self.property_storage.for_property(property_id):
+            if container.interior_space_id:
+                continue
             cpos=WorldPos(container.x,container.y,container.z)
             if container.uid not in known_storage and self._visible_nearby(player_pos,cpos,stealth,2):
                 known_storage.add(container.uid);changed=True
@@ -1099,7 +1118,7 @@ class CasingSystem:
         progress=0 if not perimeter else min(100,len(surveyed & perimeter)*100//len(perimeter))
         storage_cells=[]
         for container in self.property_storage.for_property(property_id):
-            if container.uid in intel.storage_uids:
+            if container.uid in intel.storage_uids and not container.interior_space_id:
                 storage_cells.append((container.x,container.y,container.z))
         return {
             "active":self.state.player_casing_property_id==property_id,

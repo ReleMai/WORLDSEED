@@ -188,7 +188,7 @@ class Renderer:
         creature_by = {(c.x,c.y,c.z):c for c in sim.state.creatures.values() if c.hp > 0}
         npc_by = {(n.x,n.y,n.z):n for n in sim.state.npcs.values() if n.alive and n.uid not in getattr(sim.state,'interior_actors',{})}
         structure_by = {(s.x,s.y,s.z):s for s in sim.state.structures.values()}
-        property_container_by = {(q.x,q.y,q.z):q for q in sim.state.containers.values() if q.kind=="property"}
+        property_container_by = {(q.x,q.y,q.z):q for q in sim.state.containers.values() if q.kind=="property" and not getattr(q,"interior_space_id","")}
         crop_by = {(c.x,c.y,c.z):c for c in sim.state.crops.values()}
         fire_by = {(f.x,f.y,f.z):f for f in sim.state.fires.values()}
         fluid_by = {(f.x,f.y,f.z):f for f in sim.state.fluids.values() if f.amount > 20}
@@ -295,7 +295,7 @@ class Renderer:
             snap=stealth_overlay or {}
             seen=list(snap.get('seen_by',()))
             rows += ['', 'STEALTH', f'Observed by: {len(seen)}', f'Skill: {sim.player_skill("stealth")}']
-            known=sim.known_npc_ids()
+            known=sim.introduced_npc_ids()
             for uid in seen[:3]:
                 npc=sim.state.npcs.get(uid)
                 rows.append((npc.name if npc and uid in known else 'Stranger')+' sees you')
@@ -327,7 +327,7 @@ class Renderer:
                 rows.append(f"{str(w.get('part','?')).replace('_',' ')} s{w.get('severity',0)} b{w.get('bleeding',0)}")
         rows += ['', 'NEARBY']
         near = []
-        known_species=sim.known_species_ids();known_npcs=sim.known_npc_ids();known_creatures=sim.known_creature_ids()
+        known_species=sim.known_species_ids();known_npcs=sim.introduced_npc_ids();known_creatures=sim.known_creature_ids()
         for c in sorted((c for c in sim.state.creatures.values() if c.hp>0 and c.z==p.z and abs(c.x-p.x)+abs(c.y-p.y)<=40), key=lambda c:abs(c.x-p.x)+abs(c.y-p.y))[:2]:
             spec = self.registry.species.get(c.species_id)
             label=(c.name if c.uid in known_creatures and c.name else (spec.name if spec and c.species_id in known_species else 'Unknown creature'))

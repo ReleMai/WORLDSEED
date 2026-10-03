@@ -51,7 +51,7 @@ class InteriorPresentationTests(unittest.TestCase):
         interior = NS(current_plan=lambda: self.plan, player_presence=lambda: self.player,
                       actors_in_space=lambda space: (('player', self.player),))
         self.sim = NS(interiors=interior, state=state, clock=NS(label=lambda: 'Y1 Spring 1, 12:00'),
-                      known_npc_ids=lambda: set(), log=[])
+                      known_npc_ids=lambda: set(), introduced_npc_ids=lambda: set(), log=[])
 
     def tearDown(self):
         self.term.restore()

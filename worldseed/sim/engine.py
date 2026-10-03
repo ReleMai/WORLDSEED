@@ -366,13 +366,15 @@ class Simulation:
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
                                        UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
                                        SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand,
-                                       CraftCommand,ComponentCraftCommand)):
+                                       CraftCommand,ComponentCraftCommand,StoreCommand,TakeFromContainerCommand,
+                                       StealContainerCommand,LockpickContainerCommand,SetContainerLockCommand,
+                                       IntroduceNPCCommand)):
                 self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
         elif isinstance(command,(MoveFurnitureCommand,UseInteriorFurnitureCommand)):
             self._message('Enter a building before using interior furniture.');return result
         if not indoor and getattr(command,'container_uid',''):
             target=next((c for c in self.state.containers.values() if c.uid==command.container_uid),None)
-            if target is not None and self.settlement_physicalization.shell_blocks(WorldPos(target.x,target.y,target.z)):
+            if target is not None and (target.interior_space_id or self.settlement_physicalization.shell_blocks(WorldPos(target.x,target.y,target.z))):
                 self._message('That storage is inside a separate building space.');return result
         if isinstance(command,(ArenaSpawnItemCommand,ArenaSpawnCreatureCommand,ArenaSetStatCommand,ArenaInjuryCommand,ArenaPresetCommand,ArenaClearCommand,ArenaIncomingHitCommand)):
             # Developer arena commands deliberately bypass world time, ecology
@@ -457,6 +459,7 @@ class Simulation:
         elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
         elif isinstance(command,TalkCommand):self._talk(command);minutes=0
+        elif isinstance(command,IntroduceNPCCommand):self.introduce_npc(command.npc_uid);minutes=0
         elif isinstance(command,UseCrossingCommand):minutes=self._use_crossing(command,result)
         elif isinstance(command,RepairCrossingCommand):minutes=self._repair_crossing(command)
         elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
@@ -834,6 +837,9 @@ class Simulation:
     def known_settlement_ids(self)->set[str]:return set(self.state.discovered_settlements)
     def visited_settlement_ids(self)->set[str]:return set(self.state.visited_settlements)
     def known_npc_ids(self)->set[str]:return set(self.state.discovered_npcs)
+    def introduced_npc_ids(self)->set[str]:
+        """Personal recognition for live actor labels, separate from testimony."""
+        return set(self.state.introduced_npcs)&self.known_npc_ids()
     def known_faction_ids(self)->set[str]:return set(self.state.discovered_factions)
     def known_site_ids(self)->set[str]:return set(self.state.discovered_sites)
     def known_species_ids(self)->set[str]:return set(self.state.discovered_species)
@@ -970,31 +976,14 @@ class Simulation:
 
     def begin_conversation(self,npc_uid:str)->None:
         """Start an authoritative conversation, including through an answered door."""
-        npc=self.state.npcs.get(str(npc_uid))
-        if npc is None or not npc.alive:self._message("There is nobody there to speak with.");return
-        player_inside=self.interiors.player_presence() if getattr(self,'interiors',None) else None
-        npc_inside=getattr(self.state,'interior_actors',{}).get(npc.uid)
-        if player_inside is not None or npc_inside is not None:
-            if (player_inside is None or npc_inside is None or player_inside.space_id!=npc_inside.space_id
-                or (player_inside.x-npc_inside.x)**2+(player_inside.y-npc_inside.y)**2>1800**2):
-                self._message('That person is in another space or too far away.');return
-        known=set(self.state.discovered_npcs);first=npc.uid not in known;known.add(npc.uid);self.state.discovered_npcs=sorted(known)
-        if npc.settlement_id:
-            ss=set(self.state.discovered_settlements);ss.add(npc.settlement_id);self.state.discovered_settlements=sorted(ss)
-        if npc.faction_id:
-            ff=set(self.state.discovered_factions);ff.add(npc.faction_id);self.state.discovered_factions=sorted(ff)
-        rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
-        conversation_marker=f'player:{int(self.clock.minute)//180}'
-        recent=any(m.get('type')=='conversation' and m.get('marker')==conversation_marker for m in npc.memories)
-        if not recent:
-            rel['familiarity']=min(100,int(rel.get('familiarity',0))+8);rel['trust']=min(100,int(rel.get('trust',0))+1)
-            npc.memories.append({'minute':int(self.clock.minute),'type':'conversation','subject':'player','marker':conversation_marker,'salience':3,'valence':1})
-            npc.memories=npc.memories[-40:]
-        town=self.state.settlements.get(npc.settlement_id)
-        if first:
-            self._message(f"You meet {npc.name}, a {npc.occupation}" + (f" from {town.name}." if town else '.'))
+        npc=self._conversation_target(npc_uid)
+        if npc is None:return
+        if npc.uid not in self.state.introduced_npcs or npc.uid not in self.state.discovered_npcs:
+            self._message("A stranger pauses to hear you. Introduce yourself and ask their name.")
             return
-        familiarity=int(rel.get('familiarity',0))
+        self._record_player_conversation(npc)
+        town=self.state.settlements.get(npc.settlement_id)
+        familiarity=int(npc.relationships.get('player',{}).get('familiarity',0))
         # Conversations reveal a bounded piece of world knowledge rather than
         # dumping the NPC's complete database into the UI.
         relatives=[uid for uid in ([npc.spouse_uid] if npc.spouse_uid else [])+list(npc.parents)+list(npc.children) if uid and uid in self.state.npcs and uid not in self.known_npc_ids()]
@@ -1042,6 +1031,46 @@ class Simulation:
             ev=sorted(relevant,key=lambda e:(-e.salience,-e.minute,e.uid))[0];ee=set(self.state.discovered_events);ee.add(ev.uid);self.state.discovered_events=sorted(ee)
             self._message(f"{npc.name} tells you: {ev.summary}");return
         self._message(f"You speak with {npc.name}. They are focused on {npc.goal}.")
+
+    def _conversation_target(self,npc_uid:str):
+        """Resolve a nearby person without granting any identity knowledge."""
+        npc=self.state.npcs.get(str(npc_uid))
+        if npc is None or not npc.alive:self._message("There is nobody there to speak with.");return None
+        player_inside=self.interiors.player_presence() if getattr(self,'interiors',None) else None
+        npc_inside=getattr(self.state,'interior_actors',{}).get(npc.uid)
+        if player_inside is not None or npc_inside is not None:
+            if (player_inside is None or npc_inside is None or player_inside.space_id!=npc_inside.space_id
+                or (player_inside.x-npc_inside.x)**2+(player_inside.y-npc_inside.y)**2>1800**2):
+                self._message('That person is in another space or too far away.');return None
+        else:
+            pos=self.player_pos
+            if npc.z!=pos.z or abs(npc.x-pos.x)+abs(npc.y-pos.y)>1:
+                self._message('That person is too far away to speak with.');return None
+        return npc
+
+    def _record_player_conversation(self,npc)->None:
+        rel=npc.relationships.setdefault('player',{'affection':0,'trust':0,'fear':0,'respect':0,'familiarity':0})
+        conversation_marker=f'player:{int(self.clock.minute)//180}'
+        recent=any(m.get('type')=='conversation' and m.get('marker')==conversation_marker for m in npc.memories)
+        if not recent:
+            rel['familiarity']=min(100,int(rel.get('familiarity',0))+8);rel['trust']=min(100,int(rel.get('trust',0))+1)
+            npc.memories.append({'minute':int(self.clock.minute),'type':'conversation','subject':'player','marker':conversation_marker,'salience':3,'valence':1})
+            npc.memories=npc.memories[-40:]
+
+    def introduce_npc(self,npc_uid:str)->bool:
+        """An explicit exchange teaches identity once, never merely on UI open."""
+        npc=self._conversation_target(npc_uid)
+        if npc is None:return False
+        first=npc.uid not in self.state.introduced_npcs
+        self.state.discovered_npcs=sorted(set(self.state.discovered_npcs)|{npc.uid})
+        self.state.introduced_npcs=sorted(set(self.state.introduced_npcs)|{npc.uid})
+        if first:
+            self._record_player_conversation(npc)
+            npc.memories.append({'minute':int(self.clock.minute),'type':'introduction','subject':'player',
+                                'player_name':self.state.player_name or 'Wanderer','salience':5,'valence':1})
+            npc.memories=npc.memories[-40:]
+        self._message(f'You introduce yourself as {self.state.player_name or "Wanderer"}. "My name is {npc.name}," they reply.')
+        return True
 
     @staticmethod
     def _step_sign(value:int)->int:
@@ -1381,9 +1410,14 @@ class Simulation:
     def _dismantle(self,cmd:DismantleCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.dismantle(pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
     def _command_container(self,uid:str):
+        interiors=getattr(self,'interiors',None)
+        if interiors is not None and interiors.player_presence() is not None:
+            plan=interiors.current_plan()
+            rows=interiors._storage_by_space.get(plan.uid,{}) if plan else {}
+            return next((c for c in rows.values() if (not uid or c.uid==uid) and interiors.container_in_reach(c.uid)),None)
         if uid:
             c=next((row for row in self.state.containers.values() if row.uid==uid),None)
-            if c and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
+            if c and not c.interior_space_id and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) and c.z==self.player_pos.z and abs(c.x-self.player_pos.x)+abs(c.y-self.player_pos.y)<=1:return c
             return None
         c=self.building.nearby_container(self.player_pos)
         return c if c and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) else None
@@ -1921,6 +1955,8 @@ class Simulation:
 
     def _lockpick_container(self,cmd:LockpickContainerCommand)->int:
         if not self._require_aggressive_stance():return 0
+        if self._command_container(cmd.container_uid) is None:
+            self._message("Move next to the storage first; walls block interaction.");return 0
         inv=self.entities.get(cmd.actor,Inventory)
         ok,msg,minutes=self.property_storage.attempt_lockpick(cmd.container_uid,inv,self.clock.minute,self.player_skill("stealth"),self.player_attribute("agility"))
         self._message(msg)
@@ -1930,6 +1966,8 @@ class Simulation:
         ok,msg=self.property_security.set_locked_with_key(cmd.door_uid,"player",cmd.locked);self._message(msg);return 1
 
     def _set_container_lock(self,cmd:SetContainerLockCommand)->int:
+        if self._command_container(cmd.container_uid) is None:
+            self._message("Move next to the storage first; walls block interaction.");return 0
         ok,msg=self.property_storage.set_locked_with_key(cmd.container_uid,"player",cmd.locked);self._message(msg);return 1
 
     def _transfer_key(self,cmd:TransferKeyCommand)->int:

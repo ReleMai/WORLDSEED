@@ -685,12 +685,14 @@ def _gift_npc(ctx:GameContext,term:Terminal,npc)->str:
 
 def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
     sim=ctx.sim;dialogue=DialogueSystem(sim.state,sim.seed)
-    nav=NavigationStack(RouteState('npc-dialogue',target.name,payload={'topic':'root'}))
+    nav=NavigationStack(RouteState('npc-dialogue','Stranger',payload={'topic':'root'}))
     transcript_page=0
     while True:
         topic=str(nav.current.payload.get('topic','root'))
         vitals=ctx.entities.get(ctx.player_id,Vitals)
-        scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids(),topic=topic)
+        scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids(),topic=topic,
+                             introduced=target.uid in sim.state.introduced_npcs)
+        if nav.depth==1:nav.current.title=scene.speaker
         rows=[(option.key,option.label) for option in scene.options]
         data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
               'context':scene.context,'npc_uid':target.uid,'options':rows,'topic':scene.topic,
@@ -714,6 +716,11 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
             transcript_page=0
             if option.key=='back':nav.back()
             else:nav.push(RouteState(f'npc-dialogue:{option.next_topic}',option.next_topic.replace('_',' ').upper(),payload={'topic':option.next_topic}))
+            continue
+        if option.action=='introduce':
+            sim.execute(IntroduceNPCCommand(ctx.player_id,target.uid))
+            response=sim.log[-1].message if sim.log else ''
+            nav.reset_to_root();nav.current.selected=0;transcript_page=0
             continue
         dialogue.apply_option(target,option,sim.clock.minute)
         transcript_page=0
@@ -753,7 +760,7 @@ def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
                 and (a.x-inside.x)**2+(a.y-inside.y)**2<=1800**2]
         if npc_uid:nearby=[n for n in nearby if n.uid==npc_uid]
         if not nearby:return 'Nobody is close enough to talk to.'
-        uid=nearby[0].uid if len(nearby)==1 else _select(term,'TALK TO',[(n.uid,n.name if n.uid in sim.known_npc_ids() else 'Stranger') for n in nearby])
+        uid=nearby[0].uid if len(nearby)==1 else _select(term,'TALK TO',[(n.uid,n.name if n.uid in sim.introduced_npc_ids() else 'Stranger') for n in nearby])
         if not uid:return UI_BACK
         target=sim.state.npcs[uid];sim.begin_conversation(uid)
         return _conversation_menu(ctx,term,target,sim.log[-1].message if sim.log else '')
@@ -762,8 +769,8 @@ def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
         if n.uid in sim.state.interior_actors:continue
         dist=abs(n.x-p.x)+abs(n.y-p.y)
         if n.alive and n.z==p.z and dist<=1:
-            label=n.name if n.uid in sim.known_npc_ids() else 'Stranger'
-            nearby.append((n.uid,n.x-p.x,n.y-p.y,f'{label} — {n.occupation if n.uid in sim.known_npc_ids() else "unknown occupation"}'))
+            label=n.name if n.uid in sim.introduced_npc_ids() else 'Stranger'
+            nearby.append((n.uid,n.x-p.x,n.y-p.y,f'{label} — {n.occupation if n.uid in sim.introduced_npc_ids() else "unknown occupation"}'))
     if not nearby:return 'Nobody is close enough to talk to.'
     if npc_uid:
         picked=next((row for row in nearby if row[0]==npc_uid),None)
@@ -1695,6 +1702,17 @@ def _settings(ctx:GameContext,term:Terminal)->None:
         elif choice=='mods':
             rows2=getattr(sim,'loaded_mods',[]) or ['No external data mods are active.'];nav.push(RouteState('mods','Data Mods'));_stack_view(term,nav,box('DATA MODS',rows2+[f'hash={getattr(sim,"mod_hash","none")}'],screen_width(term.size()[0],110)))
 
+def _container_reach_error(sim,container):
+    if getattr(container,'interior_space_id',''):
+        if not sim.interiors.container_in_reach(container.uid):
+            return 'Move closer to this container; walls block interaction.'
+    elif abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
+        return 'Move next to the storage before opening it.'
+    if sim.property_storage.blocks_actor(container,'player'):
+        return 'This container is locked. Its contents are concealed.'
+    return ''
+
+
 def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=None)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     c=next((row for row in sim.state.containers.values() if row.uid==container_uid),None) if container_uid else sim.building.nearby_container(sim.player_pos)
@@ -1702,7 +1720,10 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
         _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not c:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
-    if c.kind=='property' and c.owner!='player' and c.access!='public':
+    error=_container_reach_error(sim,c)
+    if error:return error
+    private=c.kind=='property' and c.owner!='player' and c.access!='public'
+    if private and not getattr(c,'interior_space_id',''):
         _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     nav=NavigationStack(RouteState('storage','Nearby Storage'))
     while True:
@@ -1711,7 +1732,7 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
             mass,volume=sim.building.container_load(c)
             choice=_stack_menu(term,nav,[
                 ('store',f'Store item — {mass/1000:.1f}/{c.capacity_mass_g/1000:.1f} kg'),
-                ('take',f'Take item — {volume/1000:.1f}/{c.capacity_volume_ml/1000:.1f} L'),
+                ('take',f'{"Steal" if private else "Take"} item — {volume/1000:.1f}/{c.capacity_volume_ml/1000:.1f} L'),
                 ('inspect',f'Inspect contents — {sum(c.items.values())} items'),
             ])
             if choice is None:return UI_BACK
@@ -1731,7 +1752,8 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
             iid=_stack_menu(term,nav,rows,subtitle='Esc returns to the storage menu.')
             if iid is None:return UI_BACK
             if iid=='__BACK__':continue
-            sim.execute(StoreCommand(pid,iid,1) if mode=='store' else TakeFromContainerCommand(pid,iid,1))
+            sim.execute(StoreCommand(pid,iid,1,c.uid) if mode=='store' else
+                        (StealContainerCommand(pid,c.uid,iid,1) if private else TakeFromContainerCommand(pid,iid,1,c.uid)))
             return sim.log[-1].message if sim.log else ''
         if not nav.back():return UI_BACK
 
@@ -1746,7 +1768,10 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         _view_text(term,box('STORAGE',['That container is no longer available.'],screen_width(term.size()[0],88)));return UI_BACK
     if not container:
         _view_text(term,box('STORAGE',['No accessible container is adjacent to you.'],screen_width(term.size()[0],88)));return UI_BACK
-    if container.kind=='property' and container.owner!='player' and container.access!='public':
+    error=_container_reach_error(sim,container)
+    if error:return error
+    private=container.kind=='property' and container.owner!='player' and container.access!='public'
+    if private and not getattr(container,'interior_space_id',''):
         _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     uid=container.uid
     nav=NavigationStack(RouteState('container-inventory','CONTAINER STORAGE'))
@@ -1754,6 +1779,8 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
     while True:
         container=next((row for row in sim.state.containers.values() if row.uid==uid),None)
         if not container:return status or UI_BACK
+        error=_container_reach_error(sim,container)
+        if error:return error
         inv=ctx.entities.get(pid,Inventory)
         pack_data=_inventory_ui_data(reg,inv,sim)
         container_data=_inventory_ui_data(reg,Inventory(dict(container.items)),sim,False)
@@ -1785,14 +1812,14 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
                 'item_count':sum(container.items.values()),'stack_count':len(container.items),
             },
         }
-        subtitle=status or 'Click either side • right-click for actions • Shift-click transfers the full stack. Natural containers can also be moved or broken apart.'
+        subtitle=status or ('Private storage: removing items is theft; stealth and casing are required.' if private else 'Click either side • right-click for actions • Shift-click transfers the full stack. Natural containers can also be moved or broken apart.')
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
         moved=_live_panel_world_move(ctx,term,choice)
         if moved is not None:
-            if abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
+            if _container_reach_error(sim,container):
                 return moved or 'You move away from the container.'
             status=moved;continue
         if not choice.startswith('UI_ACTION:'):
@@ -1810,7 +1837,7 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         if action in ('transfer','quick_transfer') and meta:
             iid=meta['iid'];amount=count if action=='quick_transfer' else min(action_amount,count)
             if meta['side']=='pack':sim.execute(StoreCommand(pid,iid,amount,uid))
-            else:sim.execute(TakeFromContainerCommand(pid,iid,amount,uid))
+            else:sim.execute(StealContainerCommand(pid,uid,iid,amount) if private else TakeFromContainerCommand(pid,iid,amount,uid))
             status=sim.log[-1].message if sim.log else '';last_selected=None;action_amount=1;continue
         if action.startswith('move:'):
             try:_,dx,dy=action.split(':');dx=int(dx);dy=int(dy)
@@ -1837,8 +1864,9 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
     known=sim.known_npc_ids()
     rel_player=npc.relationships.get('player',{})
     familiarity=int(rel_player.get('familiarity',0))
-    home=sim.settlement_physicalization.structure_by_id(npc.home_id) if npc.home_id else None
-    work=sim.settlement_physicalization.structure_by_id(npc.workplace_id) if npc.workplace_id else None
+    introduced=npc.uid in known and npc.uid in sim.state.introduced_npcs
+    home=sim.settlement_physicalization.structure_by_id(npc.home_id) if introduced and npc.home_id else None
+    work=sim.settlement_physicalization.structure_by_id(npc.workplace_id) if introduced and npc.workplace_id else None
     name=npc.name if npc.uid in known else 'Stranger'
     occupation=npc.occupation.replace('_',' ').title() if npc.uid in known else 'Unknown'
     summary={
@@ -1862,6 +1890,11 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
     if npc.infections and npc.hp<70:visible_injuries.append('Visible signs of illness')
     tabs['appearance']=[('Wearing',', '.join(worn) if worn else 'No identifiable equipment'),
                         ('Visible injuries',', '.join(visible_injuries) if visible_injuries else 'None apparent')]
+    if npc.uid not in known or npc.uid not in sim.state.introduced_npcs:
+        summary={'name':'Stranger','age':None,'occupation':'Unknown','settlement':'Unknown',
+                 'activity':'Unknown','home':'','workplace':'','traits':[],'familiarity':0}
+        tabs['overview']=[('Identity','Not introduced'),('Information','Introduce yourself to learn about this person')]
+        return {'summary':summary,'tabs':tabs,'active_tab':active_tab}
     overview=[
         ('Age',str(npc.age) if npc.uid in known else 'Unknown'),
         ('Occupation',occupation),
@@ -1958,17 +1991,16 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
 def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
     sim=ctx.sim;npc=sim.state.npcs.get(npc_uid)
     if npc is None or not npc.alive:return UI_BACK
-    if npc.uid not in sim.known_npc_ids():
-        return 'Talk to this person before viewing their profile.'
-    tabs=(('overview','Overview'),('appearance','Worn / Injuries'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','Learned History'))
-    active='overview'
+    introduced=npc.uid in sim.known_npc_ids() and npc.uid in sim.state.introduced_npcs
+    tabs=(('overview','Overview'),('appearance','Worn / Injuries'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','Learned History')) if introduced else (('appearance','Worn / Injuries'),('overview','Unknown person'))
+    active='overview' if introduced else 'appearance'
     while True:
         initial=next((i for i,row in enumerate(tabs) if row[0]==active),0)
         data=_npc_profile_data(sim,npc,active)
         summary=data['summary']
         subtitle=f"{summary['occupation']} · {summary['settlement']} · {summary['activity']}"
         choice=_select(
-            term,npc.name,list(tabs),initial=initial,subtitle=subtitle,
+            term,summary['name'],list(tabs),initial=initial,subtitle=subtitle,
             presentation='npc_profile',presentation_data=data,
         )
         if not choice:return UI_BACK
@@ -1981,7 +2013,7 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
                     lines.append(f'{row[0]}: {row[1]}')
                 else:
                     lines.append(f'{row[0]}: {row[1]}')
-            _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{npc.name} · {active.title()}')
+            _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{summary["name"]} · {active.title()}')
 
 
 def _building_context_menu(ctx:GameContext,term:Terminal,building_uid:str,part:str)->str:
@@ -2034,7 +2066,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
             rows.append(('aim_animal',f'Aim at {label} — {weapon.name}'))
             rows.append(('shoot_animal',f'Fire at {label} — range {distance}/{weapon.range}'))
     if npc:
-        known=npc.uid in sim.known_npc_ids()
+        known=npc.uid in sim.introduced_npc_ids()
         label=npc.name if known else 'Stranger'
         if known:rows.append(('inspect_npc',f'Inspect {label} — {npc.occupation.replace("_"," ")}'))
         else:rows.append(('observe_npc','Observe person — identity unknown'))
@@ -2136,7 +2168,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     if building_part and shell is not None:
         subtitle='Exterior only; no hidden rooms or contents are revealed.'
         if building_part=='door' and shell.entrance is not None:
-            subtitle=f'Entrance access: {shell.entrance[0]}, {shell.entrance[1]}. Move to its marked threshold to enter.'
+            subtitle=f'Entrance access: {shell.entrance[0]}, {shell.entrance[1]}. Approach the painted doorway to enter.'
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
@@ -3306,21 +3338,45 @@ def _interior_context_menu(ctx,term,x:int,y:int)->str:
     sim=ctx.sim;plan=sim.interiors.current_plan();actor=sim.interiors.player_presence()
     if plan is None or actor is None:return UI_BACK
     furniture=sim.interiors.hit_test(x,y)
+    container=sim.interiors.container_for_furniture(furniture.uid) if furniture is not None else None
     rows=[]
     if furniture is not None:
         piece=sim.registry.settlement_pieces.get(furniture.piece_id)
         label=piece.name if piece else furniture.piece_id.split(':')[-1].replace('_',' ').title()
-        rows=[('inspect',f'Inspect {label}'),('use',f'Use {label}')]
+        if container is not None:
+            label=container.name
+            rows=[('inspect_storage',f'Inspect {label}')]
+            if sim.interiors.container_in_reach(container.uid):
+                blocked=sim.property_storage.blocks_actor(container,'player')
+                if not blocked:rows.append(('open_storage',f'Open {label}'))
+                elif sim.state.player_hunting_stance=='aggressive':
+                    rows.append(('pick_storage',f'Pick {label} lock'))
+        else:
+            rows=[('inspect',f'Inspect {label}'),('use',f'Use {label}')]
         if sim.interiors.can_rearrange(furniture):rows.append(('move',f'Reposition {label} freely'))
     for uid,presence in sim.interiors.actors_in_space(plan.uid):
         n=sim.state.npcs.get(uid)
         if n is not None and n.alive and (presence.x-x)**2+(presence.y-y)**2<=500**2:
-            rows.append((f'talk:{uid}',f'Talk to {n.name if uid in sim.known_npc_ids() else "Stranger"}'))
+            rows.append((f'talk:{uid}',f'Talk to {n.name if uid in sim.introduced_npc_ids() else "Stranger"}'))
     rows.append(('exit','Leave through the entrance'))
     if any((p.x-actor.x)**2+(p.y-actor.y)**2<=1400**2 for p in plan.piles):rows.append(('pickup','Collect nearby floor items'))
     choice=_select(term,'INTERIOR ACTIONS',rows,subtitle='Objects use their actual position and outline.',presentation='world_context')
     if choice=='exit':sim.execute(ExitInteriorCommand(ctx.player_id))
     elif choice=='pickup':sim.execute(PickupCommand(ctx.player_id))
+    elif choice=='open_storage' and container is not None:
+        sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
+        return _storage_menu(ctx,term,container.uid)
+    elif choice=='pick_storage' and container is not None:
+        sim.execute(LockpickContainerCommand(ctx.player_id,container.uid))
+    elif choice=='inspect_storage' and container is not None:
+        reachable=sim.interiors.container_in_reach(container.uid)
+        blocked=sim.property_storage.blocks_actor(container,'player')
+        rows=[label,f'Lock: {"locked" if container.locked else "unlocked"}',
+              'Private property: unauthorized removal is theft.' if container.owner!='player' and container.access!='public' else 'Accessible storage.',
+              'Move closer; walls block interaction.' if not reachable else
+              ('Contents concealed by the lock.' if blocked else 'Open to inspect the contents.')]
+        _view_text(term,box('INDOOR STORAGE',rows,screen_width(term.size()[0],88)))
+        return UI_BACK
     elif choice=='use' and furniture is not None:
         station=STATION_PIECE_ALIASES.get(furniture.piece_id)
         if station:

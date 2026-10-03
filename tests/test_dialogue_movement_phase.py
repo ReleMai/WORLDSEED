@@ -20,6 +20,7 @@ class DialogueMovementPhaseTests(unittest.TestCase):
         state.settlements[town.uid]=town
         npc=NPCState('npc:healer','Eda',35,'healer',['patient'],0,0,0,town.uid,town.faction_id)
         state.npcs[npc.uid]=npc
+        state.discovered_npcs=[npc.uid];state.introduced_npcs=[npc.uid]
         return state,town,npc,DialogueSystem(state,b'dialogue-test')
 
     def test_dialogue_reacts_to_health_time_and_crime(self):

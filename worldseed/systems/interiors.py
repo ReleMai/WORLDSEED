@@ -197,6 +197,10 @@ class InteriorSystem:
         self.sim = sim
         self.state = sim.state
         self._actors_by_space: dict[str, set[str]] = {}
+        self._storage_by_space: dict[str, dict] = {}
+        for container in getattr(self.state,'containers',{}).values():
+            if container.interior_space_id and container.interior_furniture_uid:
+                self._storage_by_space.setdefault(container.interior_space_id,{})[container.interior_furniture_uid]=container
         for uid, actor in self.state.interior_actors.items():
             self._actors_by_space.setdefault(actor.space_id, set()).add(uid)
 
@@ -227,6 +231,22 @@ class InteriorSystem:
     def hit_test(self, x: int, y: int) -> InteriorFurniture | None:
         plan = self.current_plan()
         return next((f for f in reversed(plan.furniture) if f.rect.contains(x, y)), None) if plan else None
+
+    def container_for_furniture(self, furniture_uid: str):
+        """Observe the current building's real inventory binding, in O(1)."""
+        plan=self.current_plan()
+        return self._storage_by_space.get(plan.uid,{}).get(str(furniture_uid)) if plan else None
+
+    def container_in_reach(self, container_uid: str, reach: int = 1800) -> bool:
+        plan=self.current_plan()
+        if plan is None:return False
+        return any(c.uid==str(container_uid) and self.furniture_in_reach(uid,reach)
+                   for uid,c in self._storage_by_space.get(plan.uid,{}).items())
+
+    def _bind_storage(self, plan) -> None:
+        from worldseed.systems.interior_storage import bind_storage
+        self._storage_by_space[plan.uid]=bind_storage(plan,self.state.containers.values(),
+                                                    (actor for _,actor in self.actors_in_space(plan.uid)))
 
     def station_ids_near_player(self) -> set[str]:
         """Observe recipe station aliases within continuous indoor reach.
@@ -300,6 +320,11 @@ class InteriorSystem:
             return None
         existing = self.state.interiors.get(space_id)
         if existing:
+            # Stable door identity may receive a bounded legacy access repair.
+            # Refresh only its exterior anchor, never reroll saved interior art,
+            # walls, furniture placement or the inventory bound to a furnishing.
+            existing.exterior_x,existing.exterior_y,existing.exterior_z=door.x,door.y,door.z
+            self._bind_storage(existing)
             return existing
         skeleton = physical.skeleton_for(door.settlement_id)
         if skeleton is None:
@@ -308,6 +333,7 @@ class InteriorSystem:
         pieces = [p for p in skeleton.pieces if p.structure_plan_id == structure.uid]
         plan = build_interior(structure, door, rooms, pieces)
         self.state.interiors[plan.uid] = plan
+        self._bind_storage(plan)
         register=getattr(physical,'register_interior',None)
         if register is not None:register(plan)
         return plan
@@ -457,6 +483,12 @@ class InteriorSystem:
             return "That furnishing is not in this room."
         if not self._furniture_reachable(plan, actor, furniture, 1500):
             return "Move closer to interact with the furnishing."
+        container=self.container_for_furniture(furniture_uid)
+        if container is not None:
+            intel=self.state.casing_intel.get(plan.building_id)
+            if intel is not None and container.uid not in intel.storage_uids:
+                intel.storage_uids=sorted(set(intel.storage_uids+[container.uid]))
+            return f"{container.name}: {'locked' if container.locked else 'unlocked'} storage. Right-click to open or inspect it."
         definition = self.sim.registry.settlement_pieces.get(furniture.piece_id)
         name = definition.name if definition else furniture.piece_id.split(":")[-1].replace("_", " ")
         if "bed" in furniture.piece_id or "chair" in furniture.piece_id or "bench" in furniture.piece_id:

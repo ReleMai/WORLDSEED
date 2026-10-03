@@ -172,6 +172,43 @@ def _door_surface(term, shell, width, height):
     return sprite
 
 
+def _aligned_body_rect(term, shell, body_rect, used, left, top, size):
+    """The painted threshold and stable physical portal share one anchor.
+
+    New plans and explicitly repaired legacy plans face south. Do not move a
+    legacy north-facing roof across a street while its repair is unavailable.
+    """
+    if shell.entrance is None or shell.door_side != 'south':
+        return body_rect
+    x, y = shell.entrance
+    threshold = (used.x + (x - left) * size + size // 2,
+                 used.y + (y - top + 1) * size - max(1, size // 10))
+    door = _facade_door_rect(term, shell, body_rect)
+    return body_rect.move(threshold[0] - door.centerx, threshold[1] - door.bottom)
+
+
+def _contact_shadow(term, rect, current):
+    """Soft ground contact, not a square tile overlay or new world feature."""
+    pg = term.pg
+    width, height = rect.width, max(6, rect.height // 9)
+    cache = getattr(term, '_building_shadow_cache', None)
+    if cache is None:
+        cache = term._building_shadow_cache = {}
+    key = (width, height, current)
+    if key not in cache:
+        shadow = pg.Surface((width + 8, height + 8), pg.SRCALPHA)
+        for inset, alpha in ((0, 12), (3, 20), (6, 28)):
+            ellipse = shadow.get_rect().inflate(-inset * 2, -max(0, inset // 2))
+            if ellipse.width > 0 and ellipse.height > 0:
+                pg.draw.ellipse(shadow, (20, 19, 16, alpha if current else alpha // 2), ellipse)
+        if len(cache) >= 96:
+            cache.clear()
+        cache[key] = shadow
+    shadow = cache[key]
+    term.screen.blit(shadow, (rect.centerx - shadow.get_width() // 2 + 2,
+                              rect.bottom - height // 2 - 5))
+
+
 def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions=None):
     """Paint complete observed static shells without promoting tile discovery."""
     pg, screen = term.pg, term.screen
@@ -186,10 +223,12 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
             x0, y0, x1, y1 = shell.bounds
             rect = pg.Rect(used.x + (x0 - left) * size, used.y + (y0 - top) * size,
                            (x1 - x0 + 1) * size, (y1 - y0 + 1) * size)
+            rect = _aligned_body_rect(term, shell, rect, used, left, top, size)
             if not rect.colliderect(used):
                 continue
             surface = _whole_surface(term, shell, rect.width, rect.height)
             current = any(pos_key(x, y, 0) in visible for x, y in shell.footprint)
+            _contact_shadow(term, rect, current)
             display = surface
             if not current:
                 display = surface.copy()
@@ -204,6 +243,16 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
                 continue
             key = pos_key(*shell.entrance, 0)
             recess = _facade_door_rect(term, shell, body_rect)
+            role = 'facade'
+            if shell.door_side != 'south':
+                # A few frozen, tightly packed legacy shells cannot gain a
+                # south apron without destroying their minimum footprint.
+                # Show their real side portal, never an inaccessible painted
+                # front door that secretly targets a different world cell.
+                x, y = shell.entrance
+                recess.midbottom = (used.x + (x - left) * size + size // 2,
+                                    used.y + (y - top + 1) * size - max(1, size // 10))
+                role = 'physical-side'
             sprite = _door_surface(term, shell, recess.width, recess.height)
             rect = sprite.get_rect(midbottom=recess.midbottom)
             display = sprite
@@ -212,25 +261,8 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
                 display.set_alpha(138)
             screen.blit(display, rect.topleft)
             if hit_regions is not None and rect.colliderect(used):
-                hit_regions.append({'shell': shell, 'kind': 'door', 'role': 'facade', 'rect': rect,
+                hit_regions.append({'shell': shell, 'kind': 'door', 'role': role, 'rect': rect,
                                     'mask': _surface_mask(term, sprite), 'target': shell.entrance})
-            # The upright threshold symbol marks the real road-facing portal;
-            # both this marker and the painted facade resolve the same door.
-            x, y = shell.entrance
-            tile = pg.Rect(used.x + (x - left) * size, used.y + (y - top) * size, size, size)
-            marker = pg.Rect(0, 0, max(7, size // 2), max(6, size * 2 // 5))
-            marker.center = tile.center
-            # A south-facing physical portal can already coincide with the
-            # painted facade. Do not obscure that leaf with a second symbol.
-            if marker.colliderect(rect):
-                continue
-            color = (226, 177, 84) if key in visible else (131, 113, 78)
-            pg.draw.rect(screen, (26, 28, 24), marker, border_radius=2)
-            pg.draw.rect(screen, color, marker.inflate(-2, -2), 1, border_radius=1)
-            pg.draw.line(screen, color, (marker.left + 1, marker.bottom - 2), (marker.right - 2, marker.bottom - 2))
-            if hit_regions is not None and marker.colliderect(used):
-                hit_regions.append({'shell': shell, 'kind': 'door', 'role': 'threshold', 'rect': marker,
-                                    'mask': None, 'target': shell.entrance})
     finally:
         screen.set_clip(old_clip)
     return shell_by

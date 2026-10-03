@@ -144,6 +144,11 @@ class ContainerState:
     keyholder_uids: list[str] = field(default_factory=list)
     lock_uid: str = ""
     seeded_from_settlement: bool = False
+    # Indoor storage keeps the same goods/lock identity, but is indexed by UID
+    # rather than an exterior tile. Coordinates remain the building anchor.
+    profile_id: str = ""
+    interior_space_id: str = ""
+    interior_furniture_uid: str = ""
 
 @dataclass(slots=True)
 class SoilState:
@@ -1229,6 +1234,9 @@ class LivingWorldState:
     discovered_settlements: list[str] = field(default_factory=list)
     visited_settlements: list[str] = field(default_factory=list)
     discovered_npcs: list[str] = field(default_factory=list)
+    # A name learned through testimony is not an exchange of introductions.
+    # Entries grow only with personally met, persistent named people.
+    introduced_npcs: list[str] = field(default_factory=list)
     discovered_factions: list[str] = field(default_factory=list)
     discovered_sites: list[str] = field(default_factory=list)
     discovered_species: list[str] = field(default_factory=list)
@@ -1283,6 +1291,7 @@ class LivingWorldState:
             "player_toll_passes": dict(self.player_toll_passes),
             "discovered_tiles": list(self.discovered_tiles[-120000:]),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
+            "introduced_npcs": sorted(set(self.introduced_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
             "discovered_species": sorted(set(self.discovered_species)), "discovered_events": sorted(set(self.discovered_events)), "discovered_routes": sorted(set(self.discovered_routes)), "learned_regions": dict(self.learned_regions), "population_reports": dict(self.population_reports), "player_rumors": list(dict.fromkeys(self.player_rumors))[-40:], "resource_depletion": dict(self.resource_depletion),
             "realized_regions": sorted(set(self.realized_regions)), "legacy": [asdict(x) for x in self.legacy], "artifacts": rows(self.artifacts), "books": rows(self.books), "metal_batches": rows(self.metal_batches), "next_uid": self.next_uid,
@@ -1304,6 +1313,9 @@ class LivingWorldState:
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])
+        # Old saves disclosed identity on first speech. Preserve those already
+        # established conversations; fresh saves require the explicit exchange.
+        s.introduced_npcs = sorted(set(raw.get("introduced_npcs", s.discovered_npcs)))
         maps = {
             "structures":StructureInstance,"roofs":RoofState,"containers":ContainerState,"soils":SoilState,"ground_piles":GroundPile,"carcasses":CarcassState,"processing_jobs":ProcessingJobState,"prepared_meals":PreparedMealState,"crops":CropPlot,"creatures":CreatureState,"animal_signs":AnimalSignState,"animal_homes":AnimalHomeState,"cohorts":PopulationCohort,
             "npcs":NPCState,"households":HouseholdState,"household_deliveries":HouseholdDeliveryState,"workplace_logistics":WorkplaceLogisticsState,"workplace_shipments":WorkplaceShipmentState,"settlements":SettlementState,"factions":FactionState,"claim_monuments":ClaimMonumentState,"territory_control":TerritoryControlState,"caravans":CaravanState,"labor_reservations":LaborReservationState,"activity_reservations":ActivityReservationState,"physical_goods_transfers":PhysicalGoodsTransferState,"mining_trips":MiningTripState,"trade_routes":TradeRouteState,"route_infrastructure":RouteInfrastructureState,"border_posts":BorderPostState,"theft_records":TheftRecordState,"market_transactions":MarketTransactionState,"properties":PropertyState,"casing_intel":CasingIntelState,"door_security":DoorSecurityState,"physical_keys":PhysicalKeyState,"trespass_states":TrespassState,"security_incidents":SecurityIncidentState,"migration_cohorts":MigrationCohortState,"dungeon_sites":DungeonSiteState,"offices":OfficeState,"dynasties":DynastyState,"claims":ClaimState,"graves":GraveState,"fires":FireCell,"fluids":FluidCell,

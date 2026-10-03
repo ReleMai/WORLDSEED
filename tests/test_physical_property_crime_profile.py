@@ -157,6 +157,7 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
     def test_npc_profile_reveals_known_people_without_raw_ids(self):
         state,town,physical,binder,civics,economy,history=self._fixture()
         npc=state.npcs['npc:merchant'];spouse=state.npcs['npc:healer']
+        state.introduced_npcs.append(npc.uid)
         npc.spouse_uid=spouse.uid;npc.kinship[spouse.uid]='spouse'
         npc.relationships['player']={'affection':15,'trust':25,'fear':0,'respect':12,'familiarity':40}
         npc.relationships[spouse.uid]={'affection':70,'trust':65,'fear':0,'respect':30,'familiarity':90}

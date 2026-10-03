@@ -168,7 +168,7 @@ class SettlementProfessionSystem:
 
     def _containers(self,town_uid:str):
         return sorted(
-            (c for c in self.state.containers.values() if c.settlement_id==str(town_uid)),
+            (c for c in self.state.containers.values() if c.settlement_id==str(town_uid) and not c.interior_space_id),
             key=lambda c:c.uid,
         )
 

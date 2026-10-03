@@ -441,6 +441,13 @@ class SettlementSkeletonPlanner:
 
     def _gateway_targets(self, region_plan, common: tuple[int, int], bounds: tuple[int, int, int, int], rank: str) -> list[tuple[int, int]]:
         left, top, right, bottom = bounds
+        if self.version >= 12:
+            # A regional exit is only potential until the strategic graph binds
+            # a real route. Do not pave an empty tail to the planning boundary.
+            radius = {"homestead":18,"hamlet":26,"village":36,"town":46,"city":58}[rank]
+            left=max(left,common[0]-radius);right=min(right,common[0]+radius)
+            top=max(top,common[1]-radius);bottom=min(bottom,common[1]+radius)
+            bounds=(left,top,right,bottom)
         region_x0, region_y0 = region_plan.region_x * 512, region_plan.region_y * 512
         targets = []
         for road in sorted(region_plan.roads, key=lambda row: (row.direction, row.offset, row.road_class)):
@@ -837,7 +844,7 @@ class SettlementSkeletonPlanner:
             x,y=cell
             for dx,dy in CARDINALS:
                 outside=(x+dx,y+dy);inside=(x-dx,y-dy)
-                if outside not in footprint and inside in interior:
+                if outside not in footprint and inside in interior and (self.version < 12 or (dx,dy)==(0,1)):
                     edges.append((cell,outside,inside))
         candidates=[]
         for cell,outside,inside in edges:
@@ -849,6 +856,25 @@ class SettlementSkeletonPlanner:
             raise ValueError("Building shell has no cardinally accessible entrance cell")
         *_,cell,outside,inside=min(candidates,key=lambda row:row[:4])
         return cell,outside,inside
+
+    def _facade_access(self, shell, interior, road_cells, footprint, parcel_cells):
+        """Choose a genuinely reachable south-facing door, not a roof marker."""
+        blocked = footprint | (self._access_reserved - parcel_cells)
+        center_x = (min(x for x,_ in footprint)+max(x for x,_ in footprint))//2
+        candidates = []
+        for x,y in sorted(shell,key=lambda p:(p[1],p[0])):
+            outside=(x,y+1);inside=(x,y-1)
+            if outside in footprint or inside not in interior or outside in blocked or not self._legal(*outside):
+                continue
+            frontage=self._frontage_path(outside,road_cells,parcel_cells,footprint)
+            if not any(cell in road_cells for cell in frontage):
+                frontage=self._service_path(outside,road_cells,blocked)
+            if any(cell in road_cells for cell in frontage):
+                candidates.append((len(frontage),abs(x-center_x),y,x,(x,y),outside,inside,frontage))
+        if not candidates:
+            raise ValueError("Building has no reachable south-facing facade")
+        *_,cell,outside,inside,frontage=min(candidates,key=lambda row:row[:4])
+        return cell,outside,inside,frontage
 
     @staticmethod
     def _frontage_path(
@@ -1140,9 +1166,13 @@ class SettlementSkeletonPlanner:
         if not road_cells:
             return None
         try:
-            entrance,entrance_outside,entrance_inside=self._select_entrance(
-                shell,interior,road_cells,footprint
-            )
+            if self.version >= 12:
+                entrance,entrance_outside,entrance_inside,_ = self._facade_access(
+                    shell,interior,road_cells,footprint,set(parcel.cells))
+            else:
+                entrance,entrance_outside,entrance_inside=self._select_entrance(
+                    shell,interior,road_cells,footprint
+                )
         except ValueError:
             # One unsuitable lot must not invalidate the entire settlement plan.
             # Route-bound gateway geometry can change frontage opportunities; a
@@ -1443,6 +1473,21 @@ class SettlementSkeletonPlanner:
         }
         center=min(cells,key=lambda p:(sum(abs(p[0]-q[0])+abs(p[1]-q[1]) for q in cells),p[1],p[0]))
         gate=min(boundary,key=lambda p:(min((abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),default=0),p[1],p[0]))
+        if self.version >= 12:
+            # Corner gates meet two fence arms and have no cardinal step into
+            # the pen. Require an unobstructed inside/outside pair instead.
+            options=[]
+            for x,y in sorted(boundary,key=lambda p:(p[1],p[0])):
+                for dx,dy in CARDINALS:
+                    outside=(x+dx,y+dy);inside=(x-dx,y-dy)
+                    if outside in cells or inside not in cells-boundary or outside in self._access_reserved-cells or not self._legal(*outside):
+                        continue
+                    blocked=(cells-{(x,y)})|(self._access_reserved-cells)
+                    path=self._service_path((x,y),road_cells,blocked,limit=48)
+                    if any(cell in road_cells for cell in path):
+                        options.append((len(path),abs(x-center[0])+abs(y-center[1]),y,x,(x,y)))
+            if not options:return None
+            gate=min(options,key=lambda row:row[:4])[-1]
         far=max(cells,key=lambda p:(min((abs(p[0]-r[0])+abs(p[1]-r[1]) for r in road_cells),default=0),-p[1],-p[0]))
         purpose=str(parcel.purpose)
         function={"field":"farm_field","animal_pen":"animal_pen","mine_approach":"mine_site","logging_yard":"logging_camp"}.get(purpose,purpose)
@@ -2134,8 +2179,9 @@ class SettlementSkeletonPlanner:
 
     def read_prepared(self, settlement_id: str) -> SettlementSkeleton | None:
         settlement_id = str(settlement_id)
+        from worldseed.systems.settlement_access import apply_access_delta
         if settlement_id in self._cache:
-            return self._cache[settlement_id]
+            return apply_access_delta(self._cache[settlement_id],self.cache_source)
         loader = getattr(self.cache_source, "load_generated_settlement_plan", None)
         if not callable(loader):
             return None
@@ -2151,7 +2197,7 @@ class SettlementSkeletonPlanner:
             if skeleton.plan.settlement_id != settlement_id or skeleton.plan.version != self.version:
                 return None
             self._cache[settlement_id] = skeleton
-            return skeleton
+            return apply_access_delta(skeleton,self.cache_source)
         except (KeyError, TypeError, ValueError):
             return None
 
@@ -2169,4 +2215,5 @@ class SettlementSkeletonPlanner:
                 commit = getattr(self.cache_source, "commit_generated", None)
                 if callable(commit):
                     commit()
-        return skeleton
+        from worldseed.systems.settlement_access import apply_access_delta
+        return apply_access_delta(skeleton,self.cache_source)

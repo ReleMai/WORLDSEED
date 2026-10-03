@@ -19,7 +19,7 @@ class WorkplaceLogisticsSystem:
 
     def _storage_for_property(self,property_id:str):
         rows=sorted(
-            (c for c in self.state.containers.values() if c.kind=="property" and c.property_id==str(property_id)),
+            (c for c in self.state.containers.values() if c.kind=="property" and c.property_id==str(property_id) and not c.interior_space_id),
             key=lambda c:c.uid,
         )
         return rows[0] if rows else None

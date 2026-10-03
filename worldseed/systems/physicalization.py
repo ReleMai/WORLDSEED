@@ -313,6 +313,8 @@ class SettlementPhysicalizationSystem:
                         faction_id=str(getattr(settlement,"faction_id","")),
                         route_links=route_links,persist=True
                     )
+                    from worldseed.systems.settlement_access import prepare_access_repairs
+                    skeleton = prepare_access_repairs(skeleton,self.world,self.registry)
                 except ValueError:
                     continue
                 active.append(settlement.uid)

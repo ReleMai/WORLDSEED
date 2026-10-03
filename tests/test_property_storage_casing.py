@@ -161,7 +161,10 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertEqual(stocks_before,town.stocks)
         self.assertEqual(container_before,{c.uid:dict(c.items) for c in state.containers.values() if c.kind=="property"})
         self.assertTrue(all(c.seeded_from_settlement for c in containers))
-        self.assertTrue(all(c.lock_level>0 and c.locked for c in containers))
+        # Private ownership and locking are separate: everyday pantries and
+        # workyard cargo remain open, while valuables use real locks.
+        self.assertTrue(any(c.lock_level>0 and c.locked for c in containers))
+        self.assertTrue(any(c.lock_level==0 and not c.locked for c in containers))
 
     def test_prepared_workshop_retains_reachable_service_storage_and_real_goods(self):
         from worldseed.systems.interiors import InteriorSystem

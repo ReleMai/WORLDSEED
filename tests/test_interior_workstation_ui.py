@@ -37,7 +37,7 @@ class InteriorWorkstationUITests(unittest.TestCase):
         messages = []
         sim = SimpleNamespace(state=state, registry=self.registry, entities=entities, player_id=player,
                               clock=SimpleNamespace(minute=600), player_skill=lambda skill: 5,
-                              _message=messages.append, known_npc_ids=lambda: set(), log=[])
+                              _message=messages.append, known_npc_ids=lambda: set(), introduced_npc_ids=lambda: set(), log=[])
         sim.interiors = InteriorSystem(sim)
         sim.crafting = CraftingSystem(state, self.registry)
         sim._player_station_ids = lambda: Simulation._player_station_ids(sim)

@@ -36,6 +36,8 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         state.settlements[town.uid] = town
         npc = NPCState('npc:test', 'Tomas', 30, 'farmer', [], 100, 200, 0, town.uid, town.faction_id)
         state.npcs[npc.uid] = npc
+        state.discovered_npcs = [npc.uid]
+        state.introduced_npcs = [npc.uid]
         return state, town, npc
 
     def test_commands_reject_all_non_aggressive_stances_before_side_effects(self):

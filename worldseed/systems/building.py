@@ -93,7 +93,7 @@ class BuildingSystem:
     def nearby_container(self,pos:WorldPos,radius:int=1,include_private:bool=False)->ContainerState|None:
         rows=[
             c for c in self.state.containers.values()
-            if c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=radius
+            if not c.interior_space_id and c.z==pos.z and abs(c.x-pos.x)+abs(c.y-pos.y)<=radius
             and (include_private or c.kind!="property" or c.owner=="player" or c.access=="public")
         ]
         return min(rows,key=lambda c:(abs(c.x-pos.x)+abs(c.y-pos.y),c.uid),default=None)

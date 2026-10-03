@@ -59,8 +59,18 @@ class DialogueSystem:
             rows.append((int(rel.get("trust",0))+int(rel.get("affection",0)))//2)
         return sum(rows)//len(rows) if rows else 0
 
-    def scene(self,npc,minute:int,player_vitals,known:bool=True,topic:str="root")->DialogueScene:
+    def scene(self,npc,minute:int,player_vitals,known:bool=True,topic:str="root",introduced:bool|None=None)->DialogueScene:
         phase=self._phase(minute)
+        if introduced is None:introduced=npc.uid in self.state.introduced_npcs
+        if not known or introduced is False:
+            # Do not read a stranger's job, private goals, family or social
+            # metrics to decorate the introduction screen.
+            options=(
+                DialogueOption("introduce","Introduce myself and ask their name","",action="introduce"),
+                DialogueOption("inspect","Inspect visible clothing and injuries","",action="inspect"),
+                DialogueOption("goodbye","Leave without an introduction","You leave without exchanging names.",action="goodbye"),
+            )
+            return DialogueScene("Stranger","Unknown person","You have not exchanged introductions. What would you like to say?",(phase.title(),),options,"introduction")
         town=self.state.settlements.get(npc.settlement_id)
         rel=npc.relationships.get("player",{}) if isinstance(npc.relationships,dict) else {}
         trust=int(rel.get("trust",0));affection=int(rel.get("affection",0))

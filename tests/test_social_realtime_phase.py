@@ -31,6 +31,7 @@ class SocialRealtimePhaseTests(unittest.TestCase):
         state.settlements[town.uid]=town
         npc=NPCState('npc:resident','Eda',35,'healer',[],10,10,0,town.uid,town.faction_id,home_id='home:test',property_id='home:test')
         state.npcs[npc.uid]=npc
+        state.discovered_npcs=[npc.uid];state.introduced_npcs=[npc.uid]
         door=DoorSecurityState('door:test',town.uid,'home:test',10,9,owner_uid=npc.uid,locked=True,lock_level=24)
         state.door_security[door.uid]=door
         return state,town,npc,door
@@ -72,8 +73,15 @@ class SocialRealtimePhaseTests(unittest.TestCase):
 
     def test_conversation_familiarity_gain_is_time_bounded(self):
         state,_,npc,_=self.fixture()
-        sim=SimpleNamespace(state=state,clock=SimpleNamespace(minute=600),_message=lambda *_:None)
-        # Exercise only the relationship prelude by making this the first meeting.
+        from worldseed.entities.components import Inventory, Position, Vitals
+        from worldseed.entities.store import EntityStore
+        sim=Simulation.__new__(Simulation)
+        sim.state=state;sim.clock=SimpleNamespace(minute=600);sim._message=lambda *_:None
+        sim.entities=EntityStore();sim.entities.spawn(preferred_id=1)
+        sim.entities.add(1,Position(WorldPos(10,9,0)))
+        sim.entities.add(1,Inventory());sim.entities.add(1,Vitals())
+        sim.seed=b'social-test'
+        Simulation.introduce_npc(sim,npc.uid)
         Simulation.begin_conversation(sim,npc.uid)
         first=dict(npc.relationships['player'])
         Simulation.begin_conversation(sim,npc.uid)

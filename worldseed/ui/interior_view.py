@@ -58,7 +58,8 @@ def refresh_hover(term, *, update_display: bool = True) -> None:
         try:
             term.pg.draw.rect(term.screen, term._theme['accent'], rect, 2, border_radius=3)
             piece = ctx['registry'].settlement_pieces.get(furniture.piece_id)
-            name = piece.name if piece else furniture.piece_id.split(':')[-1].replace('_', ' ').title()
+            container = getattr(ctx['sim'].interiors, 'container_for_furniture', lambda uid: None)(furniture.uid)
+            name = container.name if container else (piece.name if piece else furniture.piece_id.split(':')[-1].replace('_', ' ').title())
             term._draw_hover_tooltip([name, 'Right-click to interact or move'], rect.topright, used)
         finally:
             term.screen.set_clip(old_clip)
@@ -112,7 +113,15 @@ def _furniture_sprite(term, path, rect):
         return None
     ratio = min(rect.width / source.get_width(), rect.height / source.get_height())
     size = (max(1, round(source.get_width() * ratio)), max(1, round(source.get_height() * ratio)))
-    return term.pg.transform.smoothscale(source, size)
+    scaled = getattr(term, '_interior_art_scaled', None)
+    if scaled is None:
+        scaled = term._interior_art_scaled = {}
+    scale_key = (key, size)
+    if scale_key not in scaled:
+        if len(scaled) >= 128:
+            scaled.clear()
+        scaled[scale_key] = term.pg.transform.smoothscale(source, size)
+    return scaled[scale_key]
 
 
 def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
@@ -170,6 +179,9 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 continue
             piece = registry.settlement_pieces.get(furniture.piece_id)
             path = term._visuals.resolve(term._visuals.ref('interiors', furniture.piece_id))
+            container = getattr(sim.interiors, 'container_for_furniture', lambda uid: None)(furniture.uid)
+            if container is not None:
+                path = term._visuals.resolve(term._visuals.ref('containers', container.profile_id)) or path
             # Exact authored furniture IDs prevent the old generic grey/black
             # block stand-ins. Existing workshop art is resolved by its real
             # piece ID only; legacy clutter uses the same native prop art as
@@ -243,7 +255,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
         text('ROOMS', th['accent'], 25)
         for room in plan.rooms:
             text(room.name, th['muted'])
-        known = sim.known_npc_ids()
+        known = sim.introduced_npc_ids()
         for uid, actor in actors:
             if uid == 'player':
                 continue
@@ -260,7 +272,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     term._weather_animation_context = None
     term._weather_static_snapshot = None
     term._water_animation_cells = []
-    term._interior_context = {'used': used, 'camera': camera, 'plan': plan,
+    term._interior_context = {'used': used, 'camera': camera, 'plan': plan, 'sim': sim,
                               'registry': registry, 'snapshot': screen.subsurface(used).copy(),
                               'hover_uid': None}
     refresh_hover(term, update_display=False)

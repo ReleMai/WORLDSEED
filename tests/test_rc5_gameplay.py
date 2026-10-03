@@ -11,7 +11,7 @@ from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
-from worldseed.sim.commands import GatherCommand, MoveCommand, TalkCommand, VerticalMoveCommand, ExcavateShaftCommand
+from worldseed.sim.commands import GatherCommand, MoveCommand, TalkCommand, IntroduceNPCCommand, VerticalMoveCommand, ExcavateShaftCommand
 from worldseed.sim.engine import Simulation
 from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.state import LivingWorldState, pos_key
@@ -126,14 +126,15 @@ class RC5GameplayTests(unittest.TestCase):
             self.assertNotIn(pos_key(hidden.x,hidden.y,hidden.z),sim.state.discovered_tiles)
         finally:db.close();td.cleanup()
 
-    def test_npc_identity_requires_talking(self):
+    def test_npc_identity_requires_an_introduction(self):
         td,db,reg,world,e,pid,sim=self.make_sim()
         try:
             if not sim.state.npcs:self.skipTest('seed realized no named NPCs')
             npc=next(iter(sim.state.npcs.values()));npc.x,npc.y,npc.z=1,0,0;e.get(pid,Position).value=WorldPos(0,0,0)
             sim.state.discovered_npcs=[];sim._discover(sim.player_pos)
             self.assertNotIn(npc.uid,sim.known_npc_ids())
-            sim.execute(TalkCommand(pid,1,0));self.assertIn(npc.uid,sim.known_npc_ids())
+            sim.execute(TalkCommand(pid,1,0));self.assertNotIn(npc.uid,sim.known_npc_ids())
+            sim.execute(IntroduceNPCCommand(pid,npc.uid));self.assertIn(npc.uid,sim.known_npc_ids())
         finally:db.close();td.cleanup()
 
     def test_mouse_and_paste_tokens_are_never_gameplay_commands(self):

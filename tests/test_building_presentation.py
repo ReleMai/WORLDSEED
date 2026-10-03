@@ -64,11 +64,9 @@ class BuildingPresentationTests(unittest.TestCase):
 
     @staticmethod
     def main_regions(ctx):
-        # A schematic threshold marker is separately clickable, but it is not
-        # the portrait artwork on the facade (especially at minimum zoom).
         return {'body': next(row for row in ctx['shell_hit_regions'] if row['kind'] == 'body'),
                 'door': next(row for row in ctx['shell_hit_regions']
-                             if row['kind'] == 'door' and row.get('role') == 'facade')}
+                             if row['kind'] == 'door')}
 
     def test_whole_building_and_independent_door_at_all_zoom_limits(self):
         for size in (16, 28, 56):
@@ -181,15 +179,16 @@ class BuildingPresentationTests(unittest.TestCase):
         self.assertEqual(shell_at_pointer(ctx, self.opaque_point(body, (.2, .2))),
                          (self.shell, 'body'))
 
-    def test_facade_door_is_selectable_independently_of_physical_threshold_cell(self):
+    def test_unrepairable_legacy_side_door_is_shown_at_actual_threshold(self):
         self.shell = BuildingShell('house:north', 'town:one', 'residence', 'core:house',
                                    tuple((x, y) for y in range(5) for x in range(5)),
                                    (2, 0), 'door:north', 0, 'rectangular', (0, 0, 4, 4))
         ctx = self.paint(28)
         facade = self.main_regions(ctx)['door']
         point = self.opaque_point(facade)
-        display_cell = ((point[0]-ctx['used'].x)//28, (point[1]-ctx['used'].y)//28)
-        self.assertNotEqual(display_cell, self.shell.entrance)
+        self.assertEqual(facade['role'], 'physical-side')
+        self.assertEqual(facade['rect'].midbottom,
+                         (ctx['used'].x + 2 * 28 + 14, ctx['used'].y + 28 - 2))
         self.assertEqual(shell_at_pointer(ctx, point), (self.shell, 'door'))
         for door in (row for row in ctx['shell_hit_regions'] if row['kind'] == 'door'):
             self.assertEqual(tuple(door['target']), self.shell.entrance)

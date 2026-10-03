@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "profiles": [
+    {"id":"core:household_chest","name":"Household Chest","piece_id":"core:house_chest_piece","source_id":"core:wood_chest","size":[1050,750],"rooms":["bed","guest","living"],"lock_level":22,"lock_chance":100,"capacity_mass_g":90000,"capacity_volume_ml":140000,"loot":["core:soap","core:leather","core:plant_cordage","core:dried_meat"]},
+    {"id":"core:wardrobe","name":"Clothes Wardrobe","piece_id":"core:wardrobe_piece","source_id":"core:wood_chest","size":[1100,800],"rooms":["bed","guest","bunk"],"lock_level":16,"lock_chance":60,"capacity_mass_g":90000,"capacity_volume_ml":180000,"loot":["core:woven_cloth","core:leather","core:plant_cordage","core:soap"]},
+    {"id":"core:pantry_cabinet","name":"Pantry Cabinet","piece_id":"core:cupboard_piece","source_id":"core:wood_storage_box","size":[1050,700],"rooms":["pantry","kitchen","mess","living"],"lock_level":0,"lock_chance":0,"capacity_mass_g":120000,"capacity_volume_ml":180000,"loot":["core:wheat","core:turnip","core:bread","core:dried_meat","core:clean_water"]},
+    {"id":"core:inn_barrel","name":"Inn Provision Barrel","piece_id":"core:water_barrel_piece","source_id":"core:wood_storage_box","size":[850,850],"rooms":["store","tavern","kitchen","preparation"],"lock_level":0,"lock_chance":0,"capacity_mass_g":160000,"capacity_volume_ml":260000,"loot":["core:small_ale","core:clean_water","core:smoked_fish","core:dried_meat"]},
+    {"id":"core:armory_locker","name":"Armory Locker","piece_id":"core:house_chest_piece","source_id":"core:wood_chest","size":[1050,850],"rooms":["armory","supply","watch","bunk"],"lock_level":40,"lock_chance":100,"capacity_mass_g":180000,"capacity_volume_ml":260000,"loot":["core:iron_bloom","core:leather","core:plant_cordage","core:dried_meat","core:clean_water"]},
+    {"id":"core:tool_chest","name":"Artisan Tool Chest","piece_id":"core:house_chest_piece","source_id":"core:wood_storage_box","size":[1000,700],"rooms":["work","forge","supply","store"],"lock_level":28,"lock_chance":100,"capacity_mass_g":160000,"capacity_volume_ml":200000,"loot":["core:iron_bloom","core:wood","core:plant_cordage","core:stone","core:leather"]},
+    {"id":"core:supply_crate","name":"Workyard Supply Crate","piece_id":"core:house_chest_piece","source_id":"core:wood_storage_box","size":[1100,850],"rooms":["supply","store","work"],"lock_level":0,"lock_chance":0,"capacity_mass_g":160000,"capacity_volume_ml":260000,"loot":["core:wood","core:stone","core:plant_cordage"]},
+    {"id":"core:grain_bin","name":"Grain and Seed Bin","piece_id":"core:cupboard_piece","source_id":"core:storage_basket","size":[1300,950],"rooms":["grain","store","hay","machinery"],"lock_level":0,"lock_chance":0,"capacity_mass_g":200000,"capacity_volume_ml":300000,"loot":["core:wheat","core:wheat_seed","core:turnip_seed","core:flour"]},
+    {"id":"core:medicine_cabinet","name":"Medicine Cabinet","piece_id":"core:apothecary_shelf_piece","source_id":"core:wood_storage_box","size":[1000,700],"rooms":["treatment","supply","clinic","recovery"],"lock_level":32,"lock_chance":100,"capacity_mass_g":60000,"capacity_volume_ml":120000,"loot":["core:herbal_tonic","core:soap","core:clean_water"]},
+    {"id":"core:archive_bookcase","name":"Archive Bookcase","piece_id":"core:wall_shelf_piece","source_id":"core:wood_chest","size":[1450,700],"rooms":["book","scribe","study","class"],"lock_level":34,"lock_chance":100,"capacity_mass_g":100000,"capacity_volume_ml":180000,"loot":["core:book","core:soap"]}
+  ],
+  "buildings": {
+    "residence":{"primary":"core:household_chest","inside":["core:wardrobe","core:pantry_cabinet"]},
+    "inn":{"primary":"core:inn_barrel","inside":["core:pantry_cabinet","core:household_chest"]},
+    "barracks":{"primary":"core:armory_locker","inside":["core:pantry_cabinet"]},
+    "watchhouse":{"primary":"core:armory_locker","inside":["core:pantry_cabinet"]},
+    "archive":{"primary":"core:archive_bookcase","inside":[]},
+    "school":{"primary":"core:archive_bookcase","inside":[]},
+    "shrine":{"primary":"core:archive_bookcase","inside":["core:pantry_cabinet"]},
+    "outskirt_camp":{"primary":"core:household_chest","inside":["core:pantry_cabinet"]},
+    "smithy":{"primary":"core:supply_crate","outside":true,"inside":["core:tool_chest"],"stock":["core:iron_ore","core:coal","core:iron_bloom","core:wood","core:stone"]},
+    "workshop":{"primary":"core:supply_crate","outside":true,"inside":["core:tool_chest"],"stock":["core:wood","core:plant_cordage","core:leather","core:stone"]},
+    "mill":{"primary":"core:supply_crate","outside":true,"inside":["core:grain_bin"],"stock":["core:wheat","core:wheat_seed","core:flour","core:wood"]},
+    "fishery":{"primary":"core:supply_crate","outside":true,"inside":["core:inn_barrel"],"stock":["core:smoked_fish","core:dried_meat","core:clean_water","core:wood"]},
+    "barn":{"primary":"core:supply_crate","outside":true,"inside":["core:grain_bin"],"stock":["core:wheat_seed","core:turnip_seed","core:wheat","core:turnip","core:wood"]},
+    "clinic":{"primary":"core:supply_crate","outside":true,"inside":["core:medicine_cabinet"],"stock":["core:herbal_tonic","core:soap","core:clean_water"]},
+    "market":{"primary":"core:supply_crate","outside":true,"inside":["core:household_chest"]},
+    "bakery":{"primary":"core:supply_crate","outside":true,"inside":["core:pantry_cabinet","core:grain_bin"],"stock":["core:flour","core:wheat","core:bread","core:wood"]},
+    "brewery":{"primary":"core:supply_crate","outside":true,"inside":["core:inn_barrel"],"stock":["core:wheat","core:small_ale","core:clean_water","core:wood"]},
+    "butcher":{"primary":"core:supply_crate","outside":true,"inside":["core:pantry_cabinet"],"stock":["core:meat","core:animal_fat","core:leather","core:wood"]},
+    "weavery":{"primary":"core:supply_crate","outside":true,"inside":["core:wardrobe"],"stock":["core:woven_cloth","core:plant_cordage","core:wood"]},
+    "tannery":{"primary":"core:supply_crate","outside":true,"inside":["core:tool_chest"],"stock":["core:leather","core:wood","core:clean_water"]},
+    "pottery":{"primary":"core:supply_crate","outside":true,"inside":["core:tool_chest"],"stock":["core:clay_pot","core:wood","core:stone"]},
+    "mason_yard":{"primary":"core:supply_crate","outside":true,"inside":["core:tool_chest"],"stock":["core:stone","core:dressed_stone","core:wood"]}
+  }
+}

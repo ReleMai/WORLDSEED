@@ -124,6 +124,35 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         fixture_ids={f.get('uid') for f in plan.get('furniture',[]) if isinstance(f,dict)}
         if reservation.get('target_uid') not in fixture_ids:
             issues.append(f'orphan interior activity fixture: {uid}')
+    for key,container in _table(raw,'containers').items():
+        if not isinstance(container,dict):continue
+        space_id=container.get('interior_space_id','')
+        if not space_id:continue
+        uid=container.get('uid','')
+        furnishing_uid=container.get('interior_furniture_uid','')
+        if not isinstance(space_id,str) or not isinstance(furnishing_uid,str):
+            issues.append(f'invalid interior storage binding type: {uid}')
+            continue
+        if space_id!='interior:'+str(container.get('property_id','')):
+            issues.append(f'invalid interior storage space binding: {uid}')
+        if key!='indoor-storage:'+str(uid):
+            issues.append(f'invalid interior storage index: {uid}')
+        profile=container.get('profile_id','')
+        if not isinstance(profile,str) or not profile.startswith('core:'):
+            issues.append(f'invalid interior storage profile: {uid}')
+        plan=plans.get(space_id)
+        # A storage point may be reserved before anyone prepares its interior.
+        # A nonempty binding must reference its real furnishing. Empty means
+        # migration safely deferred placement while that prepared room is full.
+        if plan is not None:
+            ids={f.get('uid') for f in plan.get('furniture',[]) if isinstance(f,dict)}
+            if furnishing_uid and furnishing_uid not in ids:
+                issues.append(f'orphan interior storage furnishing: {uid}')
+        elif not furnishing_uid:
+            issues.append(f'pending interior storage has no prepared space: {uid}')
+        goods=container.get('items',{})
+        if not isinstance(goods,dict) or any(type(v) is not int or v<0 for v in goods.values()):
+            issues.append(f'negative or invalid interior storage goods: {uid}')
     return issues
 
 
@@ -146,6 +175,14 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
         elif len(rows)!=len(set(rows)):
             issues.append(f'duplicate crafting discovery entries: {key}')
     settlements = _table(raw, "settlements")
+    introduced=raw.get('introduced_npcs',[]) or []
+    if not isinstance(introduced,list) or any(not isinstance(uid,str) for uid in introduced):
+        issues.append('invalid NPC introduction list')
+    else:
+        if len(introduced)!=len(set(introduced)):issues.append('duplicate NPC introductions')
+        known=raw.get('discovered_npcs',[]) or []
+        if isinstance(known,list) and any(uid not in known for uid in introduced):
+            issues.append('introduced NPC identity is not discovered')
     npcs = _table(raw, "npcs")
     factions = _table(raw, "factions")
     monuments = _table(raw, "claim_monuments")

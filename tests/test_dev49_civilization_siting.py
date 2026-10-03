@@ -178,13 +178,13 @@ class CivilizationSitingTests(unittest.TestCase):
 
 
 class CivilizationVersionMetadataTests(unittest.TestCase):
-    def test_missing_contract_stays_v10_but_new_save_records_v11(self):
-        self.assertEqual(SETTLEMENT_PLAN_VERSION, 11)
+    def test_missing_contract_stays_v10_but_new_save_records_current_version(self):
+        self.assertEqual(SETTLEMENT_PLAN_VERSION, 12)
         self.assertEqual(LEGACY_SETTLEMENT_PLAN_VERSION, 10)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "world.db"
             db = WorldDatabase.create(path, "contract", "00")
-            self.assertEqual(db.get_meta("settlement_plan_version"), 11)
+            self.assertEqual(db.get_meta("settlement_plan_version"), 12)
             db.connection.execute("DELETE FROM world_meta WHERE key='settlement_plan_version'")
             db.connection.commit()
             db.close()
