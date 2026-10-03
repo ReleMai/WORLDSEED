@@ -200,7 +200,12 @@ class SettlementPhysicalizationSystem:
             elif placement.role == "roof" or piece.category == "roof":
                 changes["roof_piece_id"] = placement.piece_id
             elif placement.role == "floor" or piece.layer == "ground":
-                changes["ground_piece_id"] = placement.piece_id
+                # Outdoor yard/field material is a base beneath an actual
+                # transport corridor, not a replacement road authority.
+                # Keep enclosed room floors for the independent interior
+                # projection; solid fixtures still own collision/glyphs.
+                if not (old and old.road_ids and old.structure_id not in self._shells):
+                    changes["ground_piece_id"] = placement.piece_id
             self._cells[key] = self._merge_cell(
                 old, x=placement.x, y=placement.y, settlement_id=settlement_id, **changes
             )

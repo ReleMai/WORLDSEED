@@ -107,3 +107,23 @@ art remain recoverable. Automatic fast-gate includes this regression group.
 Next dependency: interactive playtest of frontages, private storage theft and
 NPC introduction flow with new and resumed worlds. No unrelated feature work
 or manual long-soak/full-release gate was started.
+
+## Fast-gate follow-up
+
+The first publication (4e8e274) exposed a broader foundation regression in run
+37135788525: passable quarry ground overwrote a real service road's ground piece.
+Materialization now preserves outdoor road surface authority beneath parcel
+ground; enclosed floors and solid fixtures retain their existing precedence.
+A new quarry-road regression verifies both road visibility and fixture collision.
+The original road-glyph assertion is unchanged. The foundation's ordinary-home
+room assertions now select a residence explicitly instead of whichever civic
+shell happens to sort first in a version's layout; no assertions were relaxed.
+
+The complete previously failing settlement CI group passed locally: 134 tests,
+86.384s, under a 180s process deadline. All seven access regressions passed, and
+compileall and whitespace checks passed. This correction changes no generated
+base geometry, schema, stable IDs, stock allocation or RNG domains.
+
+Production-rendered prepared-only village/farm previews were visually reviewed
+in the external dev50-qa folder. They reveal infrastructure for QA only, read
+cached terrain, contain no NPC snapshot, and generate or write no world data.

@@ -48,6 +48,25 @@ class SettlementAccessTests(unittest.TestCase):
         self.assertGreater(road.polyline[-1][0]-256,60)
         self.assertIn(tuple(road.polyline[-1]),skeleton.plan.gateway_cells)
 
+    def test_outdoor_road_projection_wins_over_quarry_base_without_hiding_solid_fixtures(self):
+        road=SimpleNamespace(uid="road:yard",road_class="service_path",polyline=[(0,0),(1,0)])
+        solid=next(p for p in self.registry.settlement_pieces.values()
+                   if p.category=="furniture" and not p.passable)
+        pieces=[StructurePiecePlan("piece:quarry-road","","core:quarry_ground_piece",0,0,role="quarry_ground"),
+                StructurePiecePlan("piece:quarry-yard","","core:quarry_ground_piece",0,1,role="quarry_ground"),
+                StructurePiecePlan("piece:fixture-road","",solid.id,1,0,role="worksite_fixture")]
+        skeleton=SimpleNamespace(parcels=(),roads=(road,),structures=(),rooms=(),pieces=pieces)
+        physical=SettlementPhysicalizationSystem(None,self.registry,None,None)
+        physical._index_skeleton("settlement:test",skeleton)
+        road_cell=physical.cell_at(WorldPos(0,0,0))
+        self.assertEqual((road.uid,),road_cell.road_ids)
+        self.assertEqual(physical._road_piece("service_path"),road_cell.ground_piece_id)
+        self.assertEqual("=",physical.glyph_at(WorldPos(0,0,0)))
+        self.assertEqual("core:quarry_ground_piece",physical.cell_at(WorldPos(0,1,0)).ground_piece_id)
+        self.assertEqual("q",physical.glyph_at(WorldPos(0,1,0)))
+        self.assertEqual(solid.glyph,physical.glyph_at(WorldPos(1,0,0)))
+        self.assertFalse(physical.passable(WorldPos(1,0,0)))
+
     def test_v11_activation_repairs_preserve_base_cache_ids_locks_and_quantities(self):
         with tempfile.TemporaryDirectory(prefix="worldseed-access-") as directory:
             db=WorldDatabase.create(Path(directory)/"access.db","Access repair",b"layout-audit".hex())

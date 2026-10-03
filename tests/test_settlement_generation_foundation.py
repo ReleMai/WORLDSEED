@@ -313,7 +313,10 @@ class SettlementGenerationFoundationTests(unittest.TestCase):
         self.assertTrue(cells)
         road_cell=next(c for c in cells if c.road_ids and c.ground_piece_id)
         self.assertEqual(physical.glyph_at(WorldPos(road_cell.x,road_cell.y,0)),'=')
-        shell=next(s for s in physical.shells_in_bounds(0,0,359,359) if s.entrance is not None)
+        # These room assertions describe a home, not whichever civic building
+        # happens to be first in a particular version's deterministic layout.
+        shell=next(s for s in physical.shells_in_bounds(0,0,359,359)
+                   if s.function=='residence' and s.entrance is not None)
         body_x,body_y=next(p for p in shell.footprint if p!=shell.entrance)
         wall_pos=WorldPos(body_x,body_y,0)
         self.assertFalse(physical.passable(wall_pos,True))
