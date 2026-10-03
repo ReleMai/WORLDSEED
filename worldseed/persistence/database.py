@@ -5,7 +5,7 @@ from typing import Any
 from worldseed.config import (
     ENGINE_VERSION, SAVE_SCHEMA_VERSION, WORLDGEN_VERSION, RESOURCEGEN_VERSION,
     HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION, COAST_MORPHOLOGY_VERSION,
-    SETTLEMENT_PLAN_VERSION, ROUTEGEN_VERSION,
+    SETTLEMENT_PLAN_VERSION, LEGACY_SETTLEMENT_PLAN_VERSION, ROUTEGEN_VERSION,
 )
 from worldseed.core.coords import ChunkKey,WorldPos
 from worldseed.persistence.validation import validate_sim_state
@@ -100,7 +100,9 @@ class WorldDatabase:
             # keep the pre-materialization shoreline instead of silently
             # repainting an existing v8 world under Phase-5 rules.
             "coast_morphology_version":0,
-            "settlement_plan_version":SETTLEMENT_PLAN_VERSION,
+            # Freeze the pre-v11 missing-field behavior; promoting the live
+            # generator must not move existing settlements during loading.
+            "settlement_plan_version":LEGACY_SETTLEMENT_PLAN_VERSION,
             # A save missing route metadata predates the graph-first v2 route
             # contract. Keep its legacy transport generation instead of silently
             # introducing a new regional road network on load.

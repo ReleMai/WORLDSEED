@@ -453,8 +453,9 @@ def _draw_settlement_detail(term, sim, state):
     resources=', '.join(_humanize(value) for value in skeleton.plan.resource_specializations) or 'Legacy plan'
     crops=', '.join(_humanize(value.split(':')[-1]) for value in skeleton.plan.crop_ids) or 'Imported food'
     livestock=', '.join(_humanize(value.split(':')[-1]) for value in skeleton.plan.livestock_species_ids) or 'None'
-    for line in (f'Resources: {resources}',f'Crops: {crops}',f'Livestock: {livestock}'):
-        label(line,sx,sy,term._theme['muted']);sy+=18
+    morphology = _humanize(skeleton.plan.morphology)
+    for line in (f'Layout: {morphology}',f'Resources: {resources}',f'Crops: {crops}',f'Livestock: {livestock}'):
+        label(fit(line,term.small_font,width),sx,sy,term._theme['muted']);sy+=18
     sy += 6
 
     label('INSPECT', sx, sy, term._theme['accent'])

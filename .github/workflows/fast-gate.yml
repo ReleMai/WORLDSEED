@@ -144,6 +144,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev47-48 buildings" --timeout 180 -- python -u -m unittest -v tests.test_building_shells tests.test_building_interior_profiles tests.test_building_presentation tests.test_exterior_pointer_routing tests.test_interior_materials tests.test_interior_workstation_ui tests.test_interior_security tests.test_interior_work tests.test_interior_activity_validation tests.test_dev47_building_context tests.test_ui_rc2.AggressiveStanceRoutingTests
 
+      - name: Dev49 production layouts and civilization siting
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev49 production layouts" --timeout 180 -- python -u -m unittest -v tests.test_settlement_layouts tests.test_dev49_production_layouts tests.test_dev49_civilization_siting
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

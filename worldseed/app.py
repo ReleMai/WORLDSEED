@@ -363,8 +363,8 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     world=World(WorldGenerator(seed,reg,version=gen_version),reg,db,auto_hydrology=False)
     try:world.settlement_plan_version=int(db.get_meta('settlement_plan_version'))
     except KeyError:
-        from worldseed.config import SETTLEMENT_PLAN_VERSION
-        world.settlement_plan_version=SETTLEMENT_PLAN_VERSION
+        from worldseed.config import LEGACY_SETTLEMENT_PLAN_VERSION
+        world.settlement_plan_version=LEGACY_SETTLEMENT_PLAN_VERSION
     try:world.routegen_version=int(db.get_meta('routegen_version'))
     except KeyError:world.routegen_version=1
     try:hydrology_version=int(db.get_meta('hydrology_version'))

@@ -292,7 +292,7 @@ class RC14HydrologyTests(unittest.TestCase):
             self.assertEqual(db2.get_meta('hydrology_version'), 1)
             self.assertEqual(db2.get_meta('hydrology_morphology_version'), 1)
             self.assertEqual(db2.get_meta('coast_morphology_version'), 0)
-            self.assertEqual(db2.get_meta('settlement_plan_version'), SETTLEMENT_PLAN_VERSION)
+            self.assertEqual(db2.get_meta('settlement_plan_version'), 10)
             self.assertEqual(db2.get_meta('routegen_version'), 1)
             db2.close()
 

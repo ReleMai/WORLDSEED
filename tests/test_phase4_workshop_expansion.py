@@ -70,7 +70,7 @@ class WorkshopExpansionTests(unittest.TestCase):
         return world,region,planner,skeleton
 
     def test_every_workshop_profile_has_station_and_player_recipe(self):
-        self.assertEqual(SETTLEMENT_PLAN_VERSION,10)
+        self.assertEqual(SETTLEMENT_PLAN_VERSION,11)
         self.assertGreaterEqual(len(WORKSHOP_PROFILES),12)
         for station_id,profile in WORKSHOP_PROFILES.items():
             self.assertIn(station_id,self.registry.structures,station_id)
