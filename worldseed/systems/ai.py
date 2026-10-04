@@ -296,6 +296,21 @@ class NPCSystem:
         if self._inside(npc) and not (allow_interior_activity and npc.tasks[0].get("kind")=="activity"):return
         task=npc.tasks[0]
         if task['kind']=='move':
+            # Persisted rest walks may still aim at the former tiled bedroom or
+            # at a door moved by a bounded legacy access repair. Rebind only
+            # the approach to the same authoritative home/door, not the NPC's
+            # position, cargo or the household roster.
+            home_walk = bool(task.get("interior_home_door_uid")) or (
+                len(npc.tasks) > 1 and npc.tasks[1].get("kind") == "perform"
+                and npc.tasks[1].get("action") == "rest")
+            if home_walk and self.interiors is not None and self.property_security is not None:
+                current = self._home_entry_task(npc)
+                if current is not None:
+                    previous = task.get("x"), task.get("y"), task.get("z", npc.z)
+                    task.update(current)
+                    if previous != (task["x"], task["y"], task["z"]):
+                        task.pop("_local_path", None)
+                        task.pop("_local_path_goal", None)
             # Legacy saves may contain a pending station walk aimed inside the
             # old tiled shell. Rebind the original reservation, not its goods.
             row=getattr(self.state,"activity_reservations",{}).get(str(task.get("reservation_uid","")))

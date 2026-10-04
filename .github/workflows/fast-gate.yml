@@ -152,6 +152,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev50 settlement polish" --timeout 180 -- python -u -m unittest -v tests.test_dev50_settlement_access tests.test_dev50_interior_storage tests.test_dev50_npc_introductions tests.test_dev50_presentation tests.test_dev50_storage_ui
 
+      - name: Dev51 furnished floors and Stalk theft
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev51 furnished interiors" --timeout 180 -- python -u -m unittest -v tests.test_dev51_furnishing tests.test_dev51_interior_floors tests.test_dev51_interior_pointer tests.test_dev51_stalk_theft
+
       - name: Crafting discovery pot regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests

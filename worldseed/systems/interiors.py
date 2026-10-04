@@ -21,17 +21,12 @@ from worldseed.systems.workshops import STATION_PIECE_ALIASES
 
 
 def furniture_size(piece_id: str) -> tuple[int, int]:
-    if "bed" in piece_id:
-        return 950, 1450
-    if "table" in piece_id:
-        return 1150, 750
-    if "chest" in piece_id or "storage" in piece_id:
-        return 850, 650
-    return 750, 750
+    from worldseed.systems.interior_furnishing import furniture_dimensions
+    return furniture_dimensions(piece_id)
 
 
 def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
-    """Create a v2 layout only for a building without a persisted interior.
+    """Create a v3 layout only for a building without a persisted interior.
 
     Every furnishing is a projection of an existing stable plan-piece identity;
     the template supplies space, not extra beds, production or material stocks.
@@ -45,7 +40,7 @@ def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
     plan = InteriorPlan(
         "interior:" + structure.uid, structure.uid, door.uid, door.x, door.y,
         door.z, width, height, structure.function.replace("_", " ").title(),
-        structure.function, door.owner_uid, version=2, layout_id=profile["id"],
+        structure.function, door.owner_uid, version=3, layout_id=profile["id"],
     )
     plan.rooms, plan.walls, (plan.entry_x, plan.entry_y) = rooms_for_profile(plan.uid, profile, width, height, source_rooms)
     fixture_rooms = {uid: i + 1 for i, room in enumerate(sorted(source_rooms, key=lambda r: r.uid)) for uid in room.fixture_ids}
@@ -121,6 +116,8 @@ def placement_clear(plan: InteriorPlan, rect: InteriorRect, ignore_uid: str = ""
     if any(f.uid != ignore_uid and rect.overlaps(f.rect) for f in plan.furniture):
         return False
     exit_apron = InteriorRect(plan.entry_x - 650, plan.entry_y - 650, 1300, 1300)
+    if any(rect.overlaps(InteriorRect(s.x - 250, s.y - 250, s.w + 500, s.h + 500)) for s in plan.stairs):
+        return False
     return not rect.overlaps(exit_apron)
 
 
@@ -216,6 +213,9 @@ class InteriorSystem:
                      if uid in self.state.interior_actors and self.state.interior_actors[uid].space_id == space_id)
 
     def _put_actor(self, uid: str, actor: InteriorActor) -> None:
+        previous = self.state.interior_actors.get(uid)
+        if previous is not None:
+            self._actors_by_space.get(previous.space_id, set()).discard(uid)
         self.state.interior_actors[uid] = actor
         self._actors_by_space.setdefault(actor.space_id, set()).add(uid)
 
@@ -312,6 +312,45 @@ class InteriorSystem:
         furnishing = next((f for f in plan.furniture if f.uid == furniture_uid), None)
         return bool(furnishing and self._furniture_reachable(plan, actor, furnishing, max(0, int(reach))))
 
+    def stairs_target(self, stair_uid: str):
+        """Observe a prepared stair endpoint without creating another level."""
+        plan = self.current_plan()
+        if plan is None:
+            return None
+        stair = next((s for s in plan.stairs if s.uid == stair_uid), None)
+        target = self.state.interiors.get(stair.target_space_id) if stair else None
+        return (stair, target) if target and target.building_id == plan.building_id else None
+
+    def _transfer_stairs(self, uid: str, actor: InteriorActor, stair) -> bool:
+        source = self.state.interiors.get(actor.space_id)
+        target = self.state.interiors.get(stair.target_space_id)
+        if (source is None or target is None or source.building_id != target.building_id
+                or not position_clear(target, stair.target_x, stair.target_y)):
+            return False
+        reverse_direction = "down" if stair.direction == "up" else "up"
+        if not any(back.target_space_id == source.uid and back.direction == reverse_direction
+                   for back in target.stairs):
+            return False
+        self._actors_by_space.get(actor.space_id, set()).discard(uid)
+        actor.space_id, actor.x, actor.y = target.uid, stair.target_x, stair.target_y
+        actor.target_x = actor.target_y = None
+        actor.waypoints.clear()
+        actor.action = "arriving"
+        self._actors_by_space.setdefault(target.uid, set()).add(uid)
+        return True
+
+    def use_stairs(self, stair_uid: str) -> str:
+        endpoint = self.stairs_target(stair_uid)
+        actor, plan = self.player_presence(), self.current_plan()
+        if endpoint is None or actor is None or plan is None:
+            return "Those stairs are not in this interior."
+        stair, target = endpoint
+        if not self._furniture_reachable(plan, actor, stair, 1300):
+            return "Move closer to the stairs first."
+        if not self._transfer_stairs("player", actor, stair):
+            return "The stair landing is obstructed."
+        return f"You go {stair.direction} to floor {target.floor_index + 1} of {target.name.lower()}."
+
     def _prepare(self, door) -> InteriorPlan | None:
         space_id = "interior:" + door.property_id
         physical = self.sim.settlement_physicalization
@@ -324,7 +363,10 @@ class InteriorSystem:
             # Refresh only its exterior anchor, never reroll saved interior art,
             # walls, furniture placement or the inventory bound to a furnishing.
             existing.exterior_x,existing.exterior_y,existing.exterior_z=door.x,door.y,door.z
+            from worldseed.systems.interior_floors import prepare_floors
+            floors = prepare_floors(self, existing, structure, profile_for(structure))
             self._bind_storage(existing)
+            self._furnish_prepared(floors)
             return existing
         skeleton = physical.skeleton_for(door.settlement_id)
         if skeleton is None:
@@ -333,10 +375,21 @@ class InteriorSystem:
         pieces = [p for p in skeleton.pieces if p.structure_plan_id == structure.uid]
         plan = build_interior(structure, door, rooms, pieces)
         self.state.interiors[plan.uid] = plan
+        from worldseed.systems.interior_floors import prepare_floors
+        floors = prepare_floors(self, plan, structure, profile_for(structure), new_ground=True)
         self._bind_storage(plan)
+        self._furnish_prepared(floors)
         register=getattr(physical,'register_interior',None)
-        if register is not None:register(plan)
+        if register is not None:
+            for floor in floors:register(floor)
         return plan
+
+    def _furnish_prepared(self, floors) -> None:
+        from worldseed.systems.interior_furnishing import furnish_plan
+        for floor in floors:
+            if floor.furnishing_version == 0:
+                furnish_plan(floor, self.sim.registry, (a for _, a in self.actors_in_space(floor.uid)))
+                floor.furnishing_version = 1
 
     def enter(self, door_uid: str) -> str:
         if self.player_presence():
@@ -399,6 +452,8 @@ class InteriorSystem:
         plan, actor = self.current_plan(), self.player_presence()
         if not plan or not actor:
             return "You are already outside."
+        if plan.floor_index:
+            return "Take the stairs down to the ground-floor entrance first."
         if abs(actor.x - plan.entry_x) + abs(actor.y - plan.entry_y) > 1300:
             return "Walk to the exit doorway first."
         landing = self._exterior_landing(plan)
@@ -485,19 +540,24 @@ class InteriorSystem:
             return "Move closer to interact with the furnishing."
         container=self.container_for_furniture(furniture_uid)
         if container is not None:
-            intel=self.state.casing_intel.get(plan.building_id)
-            if intel is not None and container.uid not in intel.storage_uids:
-                intel.storage_uids=sorted(set(intel.storage_uids+[container.uid]))
             return f"{container.name}: {'locked' if container.locked else 'unlocked'} storage. Right-click to open or inspect it."
         definition = self.sim.registry.settlement_pieces.get(furniture.piece_id)
         name = definition.name if definition else furniture.piece_id.split(":")[-1].replace("_", " ")
-        if "bed" in furniture.piece_id or "chair" in furniture.piece_id or "bench" in furniture.piece_id:
+        if any(word in furniture.piece_id for word in ("bed", "chair", "bench", "stool")):
             vitals = self.sim.entities.get(self.sim.player_id, Vitals)
             if vitals:
                 vitals.stamina = min(100, vitals.stamina + 5)
                 vitals.pain = max(0, vitals.pain - 1)
             actor.action = "resting"
             return f"You rest on the {name.lower()}."
+        if not furniture.source_uid:
+            if "hearth" in furniture.piece_id or "brazier" in furniture.piece_id:
+                return f"{name}: a domestic fireside, not a second productive workshop or a free fuel source."
+            if "washbasin" in furniture.piece_id:
+                return f"{name}: washing needs water and supplies; it cannot create drinking water or heal wounds."
+            if "desk" in furniture.piece_id or "shelf" in furniture.piece_id:
+                return f"{name}: a household reading and organizing place. Books and stored items remain in their real inventories."
+            return f"{name}: household furnishing. You can freely reposition it if you own this home."
         return f"{name}. This is the original building fixture, not a duplicate source of goods."
 
     def enter_npc(self, npc, door_uid: str) -> bool:
@@ -614,6 +674,41 @@ class InteriorSystem:
             npc.facing_dy = 0 if actor.y == old_y else (1 if actor.y > old_y else -1)
         return moved
 
+    def _household_floor_step(self, npc, actor, plan, destination_index: int) -> bool:
+        """Walk to a real stair before crossing spaces; never teleport rooms."""
+        if plan.floor_index == destination_index:
+            return False
+        direction = "up" if destination_index > plan.floor_index else "down"
+        stair = next((s for s in plan.stairs if s.direction == direction), None)
+        if stair is None:
+            return True
+        target = stair.x + stair.w // 2, stair.y + stair.h - 300
+        if abs(actor.x - target[0]) + abs(actor.y - target[1]) <= 250:
+            self._transfer_stairs(npc.uid, actor, stair)
+            return True
+        if (actor.target_x, actor.target_y) != target or not actor.waypoints:
+            actor.target_x, actor.target_y = target
+            self._household_route(plan, actor, target)
+        actor.action = "using stairs"
+        if actor.waypoints:
+            tx, ty = actor.waypoints[0]
+            dx, dy = tx - actor.x, ty - actor.y
+            distance = max(1, isqrt(dx * dx + dy * dy))
+            moved = self._move_npc(npc, plan, actor, dx * min(500, distance) // distance,
+                                   dy * min(500, distance) // distance)
+            if abs(actor.x - tx) + abs(actor.y - ty) <= 90:
+                actor.waypoints.pop(0)
+            elif not moved:
+                actor.waypoints.clear()
+        return True
+
+    def _sleep_floor(self, npc, plan):
+        ground_id = "interior:" + plan.building_id
+        floors = [self.state.interiors.get(ground_id if index == 0 else ground_id + ":floor:" + str(index))
+                  for index in range(plan.floor_count)]
+        assigned = next((floor for floor in floors if floor and any(f.uid == npc.bed_fixture_id for f in floor.furniture)), None)
+        return assigned or next((floor for floor in floors if floor and any("bed" in f.piece_id for f in floor.furniture)), plan)
+
     def tick_update(self, minute: int) -> None:
         """Bounded domestic routines on simulation ticks, never rendering frames.
 
@@ -647,10 +742,17 @@ class InteriorSystem:
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
             if distant:
                 # Tier-C does not replay household locomotion indefinitely.
-                landing = self._exterior_landing(plan, uid) if leave else None
+                # Coarse demotion may fold locomotion, but always exits via the
+                # same ground-floor property doorway, not an upper-floor exit.
+                ground = self.state.interiors.get("interior:" + plan.building_id, plan)
+                landing = self._exterior_landing(ground, uid) if leave else None
                 if landing:
                     npc.x, npc.y, npc.z = landing.x, landing.y, landing.z
                     self._remove_actor(uid)
+                continue
+            sleeping = npc.rest >= 45 or hour >= 22 or hour < 6
+            desired_floor = 0 if leave or not sleeping else self._sleep_floor(npc, plan).floor_index
+            if self._household_floor_step(npc, actor, plan, desired_floor):
                 continue
             if leave:
                 if actor.action != "leaving":
@@ -664,7 +766,6 @@ class InteriorSystem:
                     continue
             elif not actor.waypoints:
                 phase = minute // 30
-                sleeping = npc.rest >= 45 or hour >= 22 or hour < 6
                 candidates = [f for f in plan.furniture if "bed" in f.piece_id] if sleeping else [f for f in plan.furniture if any(k in f.piece_id for k in ("chair", "table", "bench"))]
                 candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None)
                 if candidate is None and candidates:
@@ -681,7 +782,7 @@ class InteriorSystem:
                 tx, ty = actor.waypoints[0]
                 dx, dy = tx - actor.x, ty - actor.y
                 distance = max(1, isqrt(dx * dx + dy * dy))
-                moved = self._move_npc(npc, plan, actor, dx * min(220, distance) // distance, dy * min(220, distance) // distance)
+                moved = self._move_npc(npc, plan, actor, dx * min(500, distance) // distance, dy * min(500, distance) // distance)
                 if abs(actor.x - tx) + abs(actor.y - ty) <= 90:
                     actor.waypoints.pop(0)
                 elif not moved:

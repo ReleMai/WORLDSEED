@@ -66,11 +66,11 @@ class HuntingSystem:
         if stance not in {"normal","stalk","crouch","aggressive"}:
             return "Unknown hunting stance."
         self.state.player_hunting_stance=stance
-        if stance!="aggressive" and hasattr(self.state,"player_casing_property_id"):
+        if hasattr(self.state,"player_casing_property_id"):
             self.state.player_casing_property_id=""
         if hasattr(self.state,"player_stealth_mode"):self.state.player_stealth_mode=stance!="normal"
         if stance=="normal":return "You return to a normal walking posture."
-        if stance=="aggressive":return "You adopt Aggressive Stance. Casing, lockpicking, and door bashing are now available."
+        if stance=="aggressive":return "You adopt Aggressive Stance. Lockpicking and door bashing are now available."
         if stance=="stalk":return "You begin stalking: slower movement, quieter footfalls, and a lower visible profile."
         return "You crouch low, maximizing concealment at the cost of movement speed."
 

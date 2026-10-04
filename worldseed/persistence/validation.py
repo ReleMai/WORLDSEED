@@ -30,10 +30,20 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
             issues.append(f"invalid interior record: {space_id}")
             continue
         building_id = plan.get("building_id", "")
-        if plan.get("uid") != space_id or not building_id or space_id != "interior:" + str(building_id):
+        floor_index, floor_count = plan.get("floor_index", 0), plan.get("floor_count", 1)
+        valid_floor = (type(floor_index) is int and type(floor_count) is int
+                       and 1 <= floor_count <= 3 and 0 <= floor_index < floor_count)
+        expected_space = "interior:" + str(building_id)
+        if type(floor_index) is int and floor_index:
+            expected_space += ":floor:" + str(floor_index)
+        if plan.get("uid") != space_id or not building_id or space_id != expected_space:
             issues.append(f"invalid interior identity: {space_id}")
+        if not valid_floor:
+            issues.append(f"invalid interior floor metadata: {space_id}")
+        if type(plan.get("furnishing_version", 0)) is not int or plan.get("furnishing_version", 0) not in (0, 1):
+            issues.append(f"unsupported interior furnishing version: {space_id}")
         width, height = plan.get("width"), plan.get("height")
-        if type(plan.get("version", 1)) is not int or plan.get("version", 1) not in (1, 2):
+        if type(plan.get("version", 1)) is not int or plan.get("version", 1) not in (1, 2, 3):
             issues.append(f"unsupported interior plan version: {space_id}")
         layout_id = plan.get("layout_id", "")
         if not isinstance(layout_id, str) or (layout_id and (":" not in layout_id or any(c.isspace() for c in layout_id))):
@@ -56,7 +66,7 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         door = _table(raw, "door_security").get(door_uid)
         if not door_uid or (door and door.get("property_id") != building_id):
             issues.append(f"invalid interior door binding: {space_id}")
-        for collection in ("rooms", "walls", "furniture", "piles"):
+        for collection in ("rooms", "walls", "furniture", "piles", "stairs"):
             rows = plan.get(collection, [])
             if not isinstance(rows, list):
                 issues.append(f"invalid interior {collection}: {space_id}")
@@ -73,8 +83,27 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
                     identifiers.add(str(uid))
                 if collection == "rooms" and not rect_valid(row.get("rect")):
                     issues.append(f"invalid interior room rectangle: {space_id}")
-                elif collection in {"walls", "furniture"} and not rect_valid(row):
+                elif collection in {"walls", "furniture", "stairs"} and not rect_valid(row):
                     issues.append(f"invalid interior {collection} rectangle: {space_id}")
+                if collection == "stairs":
+                    target = plans.get(row.get("target_space_id", ""))
+                    valid_target = isinstance(target, dict) and type(target.get("floor_index", 0)) is int
+                    expected_direction = "up" if valid_target and valid_floor and target.get("floor_index", 0) > floor_index else "down"
+                    if (not valid_target or target.get("building_id") != building_id
+                            or not valid_floor or abs(target.get("floor_index", 0) - floor_index) != 1
+                            or row.get("direction") != expected_direction):
+                        issues.append(f"invalid interior stair binding: {space_id}")
+                    elif (type(row.get("target_x")) is not int or type(row.get("target_y")) is not int
+                          or not (0 <= row["target_x"] <= target.get("width", 0)
+                                  and 0 <= row["target_y"] <= target.get("height", 0))):
+                        issues.append(f"invalid interior stair landing: {space_id}")
+                    else:
+                        returns = target.get("stairs", [])
+                        reverse_direction = "down" if row.get("direction") == "up" else "up"
+                        if not (isinstance(returns, list) and any(
+                                isinstance(back, dict) and back.get("target_space_id") == space_id
+                                and back.get("direction") == reverse_direction for back in returns)):
+                            issues.append(f"missing reciprocal interior stair binding: {space_id}")
                 elif collection == "piles":
                     if not point_valid(row):
                         issues.append(f"invalid interior pile position: {space_id}")
@@ -133,7 +162,10 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         if not isinstance(space_id,str) or not isinstance(furnishing_uid,str):
             issues.append(f'invalid interior storage binding type: {uid}')
             continue
-        if space_id!='interior:'+str(container.get('property_id','')):
+        linked_plan = plans.get(space_id)
+        if (space_id!='interior:'+str(container.get('property_id',''))
+                and not (isinstance(linked_plan,dict)
+                         and linked_plan.get('building_id')==container.get('property_id'))):
             issues.append(f'invalid interior storage space binding: {uid}')
         if key!='indoor-storage:'+str(uid):
             issues.append(f'invalid interior storage index: {uid}')

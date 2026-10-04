@@ -74,6 +74,7 @@ class IndoorStorageMenuTests(unittest.TestCase):
 
     def test_private_terminal_take_dispatches_theft_not_authorized_transfer(self):
         self.container.locked = False
+        self.sim.state.player_hunting_stance = 'stalk'
         self.container.items = {'core:wheat': 2}
         with patch.object(app, '_stack_menu', side_effect=['take', 'core:wheat']):
             app._storage_menu_terminal(self.ctx, self.term, self.container.uid)

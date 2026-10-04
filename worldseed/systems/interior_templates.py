@@ -12,7 +12,7 @@ from worldseed.systems.interior_state import InteriorRect, InteriorRoom
 @lru_cache(maxsize=1)
 def interior_profiles() -> tuple[dict, ...]:
     data = json.loads((DATA_DIR / "interior_templates.json").read_text(encoding="utf-8"))
-    if data.get("version") != 2:
+    if data.get("version") != 3:
         raise ValueError("Unsupported interior template catalog version")
     profiles = data.get("profiles", [])
     if not isinstance(profiles, list) or not profiles:
@@ -25,7 +25,7 @@ def interior_profiles() -> tuple[dict, ...]:
         if not isinstance(uid, str) or not uid.startswith("core:") or uid in seen:
             raise ValueError("Invalid or duplicate interior profile identity")
         seen.add(uid)
-        if profile.get("geometry") not in {"front_hall", "side_hall", "central_hall"}:
+        if profile.get("geometry") not in {"front_hall", "side_hall", "central_hall", "courtyard_hall"}:
             raise ValueError("Invalid interior room grammar")
         if not all(type(profile.get(key)) is int and 10000 <= profile[key] <= 30000 for key in ("width", "height")):
             raise ValueError("Invalid interior profile dimensions")
@@ -49,7 +49,7 @@ def profile_for(structure) -> dict:
         return next(p for p in profiles if "*" in p["functions"])
     form_choices = [p for p in choices if getattr(structure, "building_form", "") in p.get("forms", ())]
     choices = form_choices or choices
-    return sorted(choices, key=lambda p: p["id"])[hash_u64(b"interior-template-v2", "interior-profile", structure.uid) % len(choices)]
+    return sorted(choices, key=lambda p: p["id"])[hash_u64(b"interior-template-v3", "interior-profile", structure.uid) % len(choices)]
 
 
 def _wall_with_gap(walls: list[InteriorRect], *, vertical: bool, position: int, start: int, end: int, centre: int) -> None:
@@ -62,14 +62,38 @@ def _wall_with_gap(walls: list[InteriorRect], *, vertical: bool, position: int, 
 
 
 def rooms_for_profile(space_id: str, profile: dict, width: int, height: int, source_rooms=()):
-    """Three connected layouts; every private room opens onto the common hall."""
+    """Connected layouts; private rooms open onto a circulation gallery."""
     inset, thickness = 250, 180
     walls = [InteriorRect(0, 0, width, thickness), InteriorRect(0, 0, thickness, height), InteriorRect(width - thickness, 0, thickness, height), InteriorRect(0, height - thickness, width, thickness)]
     names = profile["rooms"]
     sources = sorted(source_rooms, key=lambda r: r.uid)
     rects = []
     grammar = profile["geometry"]
-    if grammar == "front_hall":
+    gallery = None
+    if grammar == "courtyard_hall":
+        # Public buildings need an actual common room, not four long strips.
+        # The service spine reaches compact rear rooms without passing through
+        # someone else's bedroom or a store of merchandise.
+        split = height * 3 // 5
+        left, right = width // 2 - 1250, width // 2 + 1250
+        hall = InteriorRect(inset, split, width - 2 * inset, height - split - inset)
+        gallery = InteriorRect(left, inset, right - left, split - inset)
+        _wall_with_gap(walls, vertical=False, position=split, start=inset,
+                       end=width - inset, centre=width // 2)
+        side_counts = ((len(names) + 1) // 2, len(names) // 2)
+        for index in range(len(names)):
+            side, row = index % 2, index // 2
+            count = side_counts[side]
+            top = inset + (split - inset) * row // count
+            bottom = inset + (split - inset) * (row + 1) // count
+            x, end_x = (inset, left) if side == 0 else (right, width - inset)
+            rects.append(InteriorRect(x, top, end_x - x, bottom - top))
+            if row:
+                walls.append(InteriorRect(x, top - thickness // 2, end_x - x, thickness))
+            _wall_with_gap(walls, vertical=True, position=left if side == 0 else right,
+                           start=top, end=bottom, centre=(top + bottom) // 2)
+        entry = width // 2, height - 700
+    elif grammar == "front_hall":
         split = height - max(3000, height // 3)
         hall = InteriorRect(inset, split, width - 2 * inset, height - split - inset)
         for index in range(len(names)):
@@ -108,4 +132,6 @@ def rooms_for_profile(space_id: str, profile: dict, width: int, height: int, sou
         entry = width // 2, height - 700
     rooms = [InteriorRoom(space_id + ":hall", profile["hall"], hall)]
     rooms.extend(InteriorRoom(sources[i].uid if i < len(sources) else space_id + ":room:" + str(i), name, rect) for i, (name, rect) in enumerate(zip(names, rects)))
+    if gallery is not None:
+        rooms.append(InteriorRoom(space_id + ":gallery", "Service gallery", gallery))
     return rooms, walls, entry

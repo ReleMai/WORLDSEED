@@ -331,6 +331,8 @@ class Simulation:
             self._message(self.interiors.enter(command.door_uid));return result
         if isinstance(command,ExitInteriorCommand):
             self._message(self.interiors.exit());return result
+        if isinstance(command,UseInteriorStairsCommand):
+            self._message(self.interiors.use_stairs(command.stair_uid));return result
         if indoor:
             if isinstance(command,MoveCommand):
                 message=self.interiors.move_player(command.dx,command.dy)
@@ -1268,9 +1270,6 @@ class Simulation:
             self._message(security_message)
         for security_message in self.property_security.update_response(new,self.clock.minute,self.stealth):
             self._message(security_message)
-        if self.state.player_casing_property_id:
-            for casing_message in self.casing.observe_step(new,self.clock.minute,self.stealth):
-                self._message(casing_message)
         trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
@@ -1435,7 +1434,7 @@ class Simulation:
         if c.kind=="property" and self.property_storage.blocks_actor(c,"player"):
             self._message(f"{c.name or 'That storage'} is locked.");return
         if c.kind=="property" and c.owner!="player" and c.access!="public":
-            self._message("That storage is private. Use the theft action while casing the property.");return
+            self._message("That storage is private. Select Stalk mode to attempt theft.");return
         ok,msg=self.building.take(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _move_container(self,cmd:MoveContainerCommand)->None:
         c=self._command_container(cmd.container_uid)
@@ -1918,8 +1917,6 @@ class Simulation:
         snap=self.stealth.snapshot(
             self.player_pos,self.clock.minute,active=bool(self.state.player_stealth_mode)
         )
-        if self.state.player_casing_property_id:
-            snap["casing"]=self.casing.summary()
         if self.state.player_trespass_property_id:
             snap["security"]=self.property_security.summary(self.state.player_trespass_property_id)
         return snap
@@ -2003,37 +2000,26 @@ class Simulation:
         return max(1,int(minutes or MINUTES_PER_ACTION))
 
     def _start_casing(self,cmd:StartCasingCommand)->None:
-        if not self._require_aggressive_stance():return
-        ok,msg=self.casing.start(
-            cmd.property_id,self.player_pos,self.clock.minute,self.stealth
-        )
-        self._message(msg)
-        if ok:
-            for casing_message in self.casing.observe_step(
-                self.player_pos,self.clock.minute,self.stealth
-            ):
-                self._message(casing_message)
+        # Retain the command type for older clients/replays without allowing
+        # it to change stance, intel, relationships, or security response.
+        self.state.player_casing_property_id=""
+        self._message("Casing is disabled. Select Stalk mode to attempt theft.")
 
     def _stop_casing(self,cmd:StopCasingCommand)->None:
         self._message(self.casing.stop())
 
     def _require_aggressive_stance(self)->bool:
         if self.state.player_hunting_stance=="aggressive":return True
-        self._message("Switch to Aggressive Stance before casing, lockpicking, or bashing a door.")
+        self._message("Switch to Aggressive Stance before lockpicking or bashing a door.")
         return False
 
     def _steal_container(self,cmd:StealContainerCommand)->None:
-        if not self.state.player_stealth_mode:
-            self._message("Enter stealth mode before attempting theft.");return
+        if self.state.player_hunting_stance!="stalk":
+            self._message("Select Stalk mode before attempting theft.");return
         container=self._command_container(cmd.container_uid)
         if container is None or container.kind!="property":
             self._message("That property storage is not within reach.");return
-        if self.state.player_casing_property_id!=container.property_id:
-            self._message("You need to case this property before stealing from its storage.");return
-        intel=self.state.casing_intel.get(container.property_id)
-        if intel is None or container.uid not in intel.storage_uids:
-            self._message("You have not located this storage while casing the property.");return
-        if container.locked and "player" not in container.keyholder_uids and container.owner!="player":
+        if self.property_storage.blocks_actor(container,"player"):
             self._message(f"{container.name or 'That storage'} is locked. Pick the lock before taking goods.");return
         amount=max(1,int(cmd.amount))
         if container.items.get(cmd.item_id,0)<amount:
@@ -2055,13 +2041,12 @@ class Simulation:
             source_kind="property_storage",witness_uids=witnesses,
         )
         if witnesses:
-            alarm=int(getattr(intel,"alarm_level",0))
             guards=sum(
                 1 for uid in witnesses
                 if uid in self.state.npcs and self.state.npcs[uid].occupation=="guard"
             )
             self.state.player_crime_heat[town.uid]=min(
-                100,self.state.player_crime_heat.get(town.uid,0)+10+guards*15+alarm*5
+                100,self.state.player_crime_heat.get(town.uid,0)+10+guards*15
             )
             self._message(
                 f"You steal {amount} {self.registry.items[cmd.item_id].name} from {container.name.lower()}. "
@@ -2076,8 +2061,8 @@ class Simulation:
     def _steal_market(self,cmd:StealMarketCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id)
         inv=self.entities.get(cmd.actor,Inventory)
-        if not self.state.player_stealth_mode:
-            self._message("Enter stealth mode before attempting theft.");return
+        if self.state.player_hunting_stance!="stalk":
+            self._message("Select Stalk mode before attempting theft.");return
         if town is None:
             self._message("That market is unavailable.");return
         target=self.settlement_physicalization.destination_for_function(town.uid,("market",))

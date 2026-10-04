@@ -38,7 +38,8 @@
     "core:herbalist_table_piece": "assets/sprites/structures/herbalist_table.png",
     "core:masonry_bench_piece": "assets/sprites/structures/masonry_bench.png",
     "core:smoke_rack_piece": "assets/sprites/structures/smoke_rack.png",
-    "core:scribe_desk_piece": "assets/sprites/interiors/dev47/scribe_desk_piece.png"
+    "core:scribe_desk_piece": "assets/sprites/interiors/dev47/scribe_desk_piece.png",
+    "core:market_stall_piece": "assets/sprites/interiors/dev51/market_stall_piece.png"
   },
   "terrain": {
     "core:grass": [
@@ -1102,8 +1103,13 @@
     "school": "assets/sprites/buildings/dev47/school.png"
   },
   "building_doors": {
-    "wood": "assets/sprites/buildings/dev47/door_wood.png",
+    "wood": "assets/sprites/buildings/dev51/door_closed.png",
+    "wood_open": "assets/sprites/buildings/dev51/door_open.png",
     "iron": "assets/sprites/buildings/dev47/door_iron.png"
+  },
+  "interior_stairs": {
+    "up": "assets/sprites/interiors/dev51/stairs_up.png",
+    "down": "assets/sprites/interiors/dev51/stairs_down.png"
   },
   "interior_textures": {
     "core:interior_floor_oak": "assets/sprites/interiors/dev48/floor_oak.png",

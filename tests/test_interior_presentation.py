@@ -77,7 +77,7 @@ class InteriorPresentationTests(unittest.TestCase):
         after = (vars(self.player), vars(self.furniture), vars(self.plan))
         self.assertEqual(before, after)
 
-    def test_right_click_retains_continuous_local_coordinates(self):
+    def test_right_click_selects_stable_furniture_id(self):
         self.render()
         ctx = self.term._interior_context
         point = ctx['camera'].to_screen(4517, 3892)
@@ -85,7 +85,7 @@ class InteriorPresentationTests(unittest.TestCase):
         self.assertIsNotNone(expected)
         self.assertNotEqual(expected[0] % 1000, 0)
         self.pg.event.post(self.pg.event.Event(self.pg.MOUSEBUTTONDOWN, button=3, pos=point))
-        self.assertEqual(self.term.read_key(), f'INTERIOR_CONTEXT:{expected[0]}:{expected[1]}')
+        self.assertEqual(self.term.read_key(), 'INTERIOR_OBJECT:furniture:bed-one')
         self.assertIsNone(pointer_units(self.term, (0, 0)))
 
     def test_indoor_hud_exposes_same_stances_and_trespass_without_mutation(self):

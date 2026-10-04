@@ -249,7 +249,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
         saved=next(c for c in restored.containers.values() if c.uid==container.uid)
         self.assertTrue(saved.picked);self.assertFalse(saved.locked);self.assertIn("npc:guest",saved.keyholder_uids)
 
-    def test_casing_learns_by_movement_not_by_starting_mode(self):
+    def test_casing_is_retired_and_does_not_disclose_storage(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
         skeleton=physical.skeleton_for(town.uid)
         residence=next(s for s in skeleton.structures if s.function=="residence")
@@ -261,12 +261,11 @@ class PropertyStorageCasingTests(unittest.TestCase):
         sx,sy=max(ring,key=lambda p:abs(p[0]-container.x)+abs(p[1]-container.y))
         start=WorldPos(sx,sy,0)
         ok,msg=casing.start(residence.uid,start,600,stealth)
-        self.assertTrue(ok)
-        intel=casing.intel_for(residence.uid)
-        self.assertEqual(intel.storage_uids,[])
+        self.assertFalse(ok)
+        self.assertIn("disabled",msg)
+        self.assertIsNone(casing.intel_for(residence.uid))
         casing.observe_step(start,600,stealth)
-        self.assertGreater(casing.summary(residence.uid)["survey_progress"],0)
-        self.assertEqual(intel.storage_uids,[])
+        self.assertFalse(casing.summary(residence.uid)["active"])
 
         # The old room cells are now a solid exterior shell. Walking around
         # the public perimeter reveals frontage, not the separate interior.
@@ -275,12 +274,10 @@ class PropertyStorageCasingTests(unittest.TestCase):
             if not physical.passable(p,True):
                 continue
             casing.observe_step(p,610,stealth)
-        self.assertTrue(intel.entrance_known)
-        self.assertTrue(intel.surveyed_cells)
-        self.assertNotIn(container.uid,intel.storage_uids)
-        self.assertEqual(intel.room_ids,[])
+        self.assertIsNone(casing.intel_for(residence.uid))
+        self.assertFalse(state.player_casing_property_id)
 
-    def test_repeated_observed_casing_raises_alarm_without_creating_crime(self):
+    def test_repeated_legacy_casing_commands_do_not_alarm_or_create_crime(self):
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=self._fixture()
         skeleton=physical.skeleton_for(town.uid)
         residence=next(s for s in skeleton.structures if s.function=="residence")
@@ -294,14 +291,13 @@ class PropertyStorageCasingTests(unittest.TestCase):
         for session in range(4):
             p=WorldPos(ring[session%len(ring)][0],ring[session%len(ring)][1],0)
             ok,_=casing.start(residence.uid,p,minute,watcher)
-            self.assertTrue(ok)
+            self.assertFalse(ok)
             casing.observe_step(p,minute,watcher)
             casing.stop()
             minute+=20
-        intel=casing.intel_for(residence.uid)
-        self.assertGreaterEqual(intel.sessions,4)
-        self.assertGreaterEqual(intel.suspicion,20)
-        self.assertGreaterEqual(intel.alarm_level,1)
+        self.assertIsNone(casing.intel_for(residence.uid))
+        self.assertFalse(owner.memories)
+        self.assertFalse(owner.relationships)
         self.assertFalse(state.theft_records)
         self.assertFalse(state.player_bounties)
 
@@ -311,16 +307,12 @@ class PropertyStorageCasingTests(unittest.TestCase):
         item_id,_=next(iter(container.items.items()))
         guard=state.npcs["npc:guard"]
         state.player_stealth_mode=True
-        state.player_casing_property_id=container.property_id
-        intel=state.casing_intel.setdefault(
-            container.property_id,
-            CasingIntelState(container.property_id,container.settlement_id,owner_uid=container.owner),
-        )
-        intel.storage_uids=[container.uid]
+        state.player_hunting_stance="stalk"
+        self.assertFalse(state.casing_intel)
         inv=Inventory()
         messages=[]
         harness=SimpleNamespace(
-            state=state,registry=self.registry,economy=economy,civics=civics,
+            state=state,registry=self.registry,economy=economy,civics=civics,property_storage=storage,
             entities=SimpleNamespace(get=lambda actor,typ:inv),
             player_pos=WorldPos(container.x,container.y+1,container.z),
             clock=SimpleNamespace(minute=700),
@@ -438,7 +430,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertFalse(door.locked)
         self.assertFalse(door.schedule_locked)
 
-    def test_casing_discovers_door_and_lock_only_when_physically_observed(self):
+    def test_casing_retirement_keeps_historical_door_intel_without_new_disclosure(self):
         base,security=self._security_fixture()
         state,town,physical,binder,civics,economy,storage,building,stealth,casing,sync=base
         skeleton=physical.skeleton_for(town.uid)
@@ -446,8 +438,11 @@ class PropertyStorageCasingTests(unittest.TestCase):
         door=next(d for d in security.doors_for_property(residence.uid) if d.role=="entrance")
         ring=sorted(casing._perimeter(residence))
         far=max(ring,key=lambda p:abs(p[0]-door.x)+abs(p[1]-door.y))
+        historical=CasingIntelState(residence.uid,town.uid,door_uids=["door:historical"],lock_uids=["lock:historical"])
+        state.casing_intel[residence.uid]=historical
+        before=state.to_dict()["casing_intel"][residence.uid]
         ok,_=casing.start(residence.uid,WorldPos(far[0],far[1],0),600,stealth)
-        self.assertTrue(ok)
+        self.assertFalse(ok)
         casing.observe_step(WorldPos(far[0],far[1],0),600,stealth)
         intel=casing.intel_for(residence.uid)
         self.assertNotIn(door.uid,intel.lock_uids)
@@ -458,8 +453,9 @@ class PropertyStorageCasingTests(unittest.TestCase):
         ]
         self.assertTrue(adjacent)
         casing.observe_step(adjacent[0],610,stealth)
-        self.assertIn(door.uid,intel.door_uids)
-        self.assertIn(door.uid,intel.lock_uids)
+        self.assertNotIn(door.uid,intel.door_uids)
+        self.assertNotIn(door.uid,intel.lock_uids)
+        self.assertEqual(state.to_dict()["casing_intel"][residence.uid],before)
 
     def test_lock_tampering_and_forced_entry_create_security_not_theft(self):
         base,security=self._security_fixture()

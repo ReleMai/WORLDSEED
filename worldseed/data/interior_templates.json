@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "profiles": [
     {"id":"core:cottage_front","functions":["residence"],"forms":["cottage"],"geometry":"front_hall","width":12000,"height":10500,"hall":"Family kitchen","rooms":["Bedroom","Living room"]},
     {"id":"core:cottage_side","functions":["residence"],"forms":["chamfered_cottage"],"geometry":"side_hall","width":12500,"height":12000,"hall":"Kitchen passage","rooms":["Living room","Bedroom"]},
@@ -7,7 +7,7 @@
     {"id":"core:longhouse","functions":["residence"],"forms":["longhouse"],"geometry":"side_hall","width":12000,"height":17000,"hall":"Hearth gallery","rooms":["Family bedroom","Living room","Pantry"]},
     {"id":"core:cottage_loftless","functions":["residence"],"forms":["courtyard_house"],"geometry":"front_hall","width":14500,"height":11000,"hall":"Common hearth","rooms":["Bedroom","Pantry","Living room"]},
     {"id":"core:house_gallery","functions":["residence"],"forms":["rectangular"],"geometry":"central_hall","width":15500,"height":12000,"hall":"Entry gallery","rooms":["Bedroom","Living room","Pantry","Study"]},
-    {"id":"core:inn_tavern","functions":["inn"],"geometry":"front_hall","width":22000,"height":15500,"hall":"Tavern and bar","rooms":["Guest dormitory","Private guest room","Kitchen","Storeroom"]},
+    {"id":"core:inn_tavern","functions":["inn"],"geometry":"courtyard_hall","width":22000,"height":15500,"hall":"Tavern and bar","rooms":["Guest dormitory","Private guest room","Kitchen","Storeroom"]},
     {"id":"core:barracks","functions":["barracks"],"geometry":"central_hall","width":22000,"height":16500,"hall":"Guard muster hall","rooms":["Guard dormitory","Armory","Officer room","Mess room"]},
     {"id":"core:camp_lodge","functions":["outskirt_camp"],"geometry":"side_hall","width":13000,"height":13500,"hall":"Lodge common room","rooms":["Bunk room","Supply room"]},
     {"id":"core:smithy","functions":["smithy"],"geometry":"front_hall","width":16000,"height":14000,"hall":"Forge work floor","rooms":["Metal store","Tool room"]},
@@ -22,7 +22,7 @@
     {"id":"core:brewery","functions":["brewery"],"geometry":"front_hall","width":18000,"height":14000,"hall":"Brewing work floor","rooms":["Vat room","Grain store","Cellar room"]},
     {"id":"core:masonry","functions":["mason_yard"],"geometry":"side_hall","width":17500,"height":13500,"hall":"Stone finishing floor","rooms":["Cutting room","Tool room","Stone store"]},
     {"id":"core:barn","functions":["barn"],"geometry":"central_hall","width":19000,"height":15000,"hall":"Barn service aisle","rooms":["Animal stall","Hay room","Grain room","Equipment room"]},
-    {"id":"core:market","functions":["market"],"geometry":"front_hall","width":21000,"height":13000,"hall":"Trading hall","rooms":["Stall room","Merchants room","Stock room"]},
+    {"id":"core:market","functions":["market"],"geometry":"courtyard_hall","width":21000,"height":13000,"hall":"Trading hall","rooms":["Stall room","Merchants room","Stock room","Counting room"]},
     {"id":"core:clinic","functions":["clinic"],"geometry":"central_hall","width":17500,"height":14000,"hall":"Clinic reception","rooms":["Treatment room","Recovery room","Apothecary","Herb store"]},
     {"id":"core:watchhouse","functions":["watchhouse"],"geometry":"side_hall","width":15500,"height":13500,"hall":"Watch briefing room","rooms":["Guard room","Records room","Equipment room"]},
     {"id":"core:shrine","functions":["shrine"],"geometry":"front_hall","width":18000,"height":13500,"hall":"Sanctuary","rooms":["Shrine chamber","Quiet room","Offering store"]},

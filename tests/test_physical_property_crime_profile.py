@@ -130,6 +130,7 @@ class PhysicalPropertyCrimeProfileTests(unittest.TestCase):
         inv=Inventory()
         messages=[]
         state.player_stealth_mode=True
+        state.player_hunting_stance='stalk'
         harness=SimpleNamespace(
             state=state,registry=self.registry,economy=economy,civics=civics,
             settlement_physicalization=physical,entities=SimpleNamespace(get=lambda actor,typ:inv),

@@ -133,8 +133,10 @@ def _facade_door_rect(term, shell, body_rect):
                         max(3, round(body_rect.height * height / 1000)))
 
 
-def _door_surface(term, shell, width, height):
+def _door_surface(term, shell, width, height, opened=False):
     material = 'iron' if shell.function in {'barracks', 'watchtower', 'watchhouse', 'guardhouse', 'fortress'} else 'wood'
+    if opened and material == 'wood' and term._visuals.ref('building_doors', 'wood_open').paths:
+        material = 'wood_open'
     path = term._visuals.resolve(term._visuals.ref('building_doors', material))
     key = (str(path), width, height)
     cache = getattr(term, '_building_door_cache', None)
@@ -209,7 +211,7 @@ def _contact_shadow(term, rect, current):
                               rect.bottom - height // 2 - 5))
 
 
-def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions=None):
+def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions=None, door_states=None):
     """Paint complete observed static shells without promoting tile discovery."""
     pg, screen = term.pg, term.screen
     shell_by = shell_cells(shells)
@@ -253,7 +255,10 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
                 recess.midbottom = (used.x + (x - left) * size + size // 2,
                                     used.y + (y - top + 1) * size - max(1, size // 10))
                 role = 'physical-side'
-            sprite = _door_surface(term, shell, recess.width, recess.height)
+            door = (door_states or {}).get(shell.door_uid)
+            opened = bool(key in visible and door and (door.forced or
+                          (door.answering_npc_uid and door.answered_minute >= door.answer_requested_minute >= 0)))
+            sprite = _door_surface(term, shell, recess.width, recess.height, opened)
             rect = sprite.get_rect(midbottom=recess.midbottom)
             display = sprite
             if key not in visible:

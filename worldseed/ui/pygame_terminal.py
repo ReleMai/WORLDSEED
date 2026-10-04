@@ -444,12 +444,14 @@ class PygameTerminal(PointerUI):
                             return 'UI_REDRAW'
                         continue
                     if self._interior_context:
-                        from worldseed.ui.interior_view import pointer_units
+                        from worldseed.ui.interior_view import pointer_units, pointer_object
                         point=pointer_units(self,self._last_mouse)
-                        if point is not None:
+                        obj=pointer_object(self,self._last_mouse)
+                        if point is not None or obj is not None:
                             self._context_menu_origin=self._last_mouse
                             self._context_backdrop=None;self._context_overlay_rect=None
                             self._context_menu_state=None;self._context_opening=True
+                            if obj is not None:return f'INTERIOR_OBJECT:{obj["kind"]}:{obj["uid"]}'
                             return f'INTERIOR_CONTEXT:{point[0]}:{point[1]}'
                     elif self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
@@ -3555,7 +3557,7 @@ class PygameTerminal(PointerUI):
     def _draw_stance_buttons(self,rect,stance='normal'):
         """Shared HUD-only posture selection for exterior and interior spaces."""
         pg=self.pg;screen=self.screen;th=self._theme
-        for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · casing, lockpicking, door bashing'))):
+        for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter, enables theft'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · lockpicking, door bashing'))):
             slot=pg.Rect(rect.x+11+i*(rect.width-22)//4,rect.y,(rect.width-28)//4,29)
             active=stance==name
             pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
@@ -3965,7 +3967,9 @@ class PygameTerminal(PointerUI):
         # and every live overlay above remain cell-exact and unchanged.
         if pos.z==0:
             draw_shells(self,building_shells,map_rect,left,top,tile_px,known,visible,
-                        hit_regions=shell_hit_regions)
+                        hit_regions=shell_hit_regions,
+                        door_states={shell.door_uid:sim.property_security.door_by_id(shell.door_uid)
+                                     for shell in building_shells if shell.door_uid})
         # Actors remain exact visible foreground objects, never inferred from
         # a building's newly complete silhouette or remembered exterior.
         actor_keys=set(creature_by)|set(npc_by)|{(pos.x,pos.y,pos.z)}
@@ -4090,14 +4094,6 @@ class PygameTerminal(PointerUI):
             structure=sim.settlement_physicalization.structure_by_id(structure_id) if structure_id else None
             if structure is not None:
                 text(f'Inside: {str(structure.function).replace("_"," ").title()}',self._theme['muted'])
-            casing=stealth_overlay.get('casing') or {}
-            if casing.get('active'):
-                text('CASING',self._theme['accent'],gap=19)
-                text(f"{str(casing.get('function','property')).replace('_',' ').title()} • survey {int(casing.get('survey_progress',0))}%")
-                text(
-                    f"Attention {str(casing.get('attention','low')).title()} • rooms {int(casing.get('room_count',0))} • storage {int(casing.get('storage_count',0))}",
-                    self._theme['danger'] if int(casing.get('alarm_level',0))>=2 else self._theme['muted']
-                )
             security=stealth_overlay.get('security') or {}
             if security.get('trespassing'):
                 text('TRESPASSING',self._theme['danger'],gap=19)

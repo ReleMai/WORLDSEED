@@ -46,9 +46,9 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         sim._message = Mock()
         for stance in ('normal', 'stalk', 'crouch'):
             sim.state.player_hunting_stance = stance
-            for method in ('_lockpick_door', '_lockpick_container', '_force_door', '_start_casing'):
+            for method in ('_lockpick_door', '_lockpick_container', '_force_door'):
                 getattr(sim, method)(SimpleNamespace())
-        self.assertEqual(sim._message.call_count, 12)
+        self.assertEqual(sim._message.call_count, 9)
         sim.state.player_hunting_stance = 'aggressive'
         self.assertTrue(sim._require_aggressive_stance())
 
@@ -61,8 +61,8 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         hunting.set_player_stance('crouch')
         self.assertEqual(hunting.state.player_casing_property_id, '')
 
-    def test_only_secure_buildings_are_caseable(self):
-        self.assertTrue(CasingSystem.can_case(SimpleNamespace(enclosed=True, function='residence')))
+    def test_no_buildings_are_caseable_while_the_mechanic_is_retired(self):
+        self.assertFalse(CasingSystem.can_case(SimpleNamespace(enclosed=True, function='residence')))
         for function in ('farm_field', 'logging_camp', 'animal_pen', 'mine_site', 'monument'):
             self.assertFalse(CasingSystem.can_case(SimpleNamespace(enclosed=False, function=function)))
         self.assertFalse(CasingSystem.can_case(SimpleNamespace(enclosed=True, function='residence', destroyed=True)))

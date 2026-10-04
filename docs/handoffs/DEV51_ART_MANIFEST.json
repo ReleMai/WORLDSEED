@@ -1,0 +1,37 @@
+[
+  {
+    "name": "door_closed",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-0684f483-5293-444c-b310-a24ef49d3de4.png",
+    "destination": "worldseed/assets/sprites/buildings/dev51/door_closed.png",
+    "prompt": "Use case: precise-object-edit. Asset type: WORLDSEED medieval house entrance sprite, frontal orthographic facade. Input image: the existing wooden door is the edit target. Replace its opaque painted backdrop with genuine transparent alpha. Redesign the leaf as a modest complete oak plank house door with iron strap hinges and a ring handle, restrained medium-brown wood, subtle dark recessed frame, centered straight upright vertical composition, threshold exactly at the bottom. Full object uncropped with a narrow transparent margin. Readable at 18x32 pixels, cohesive hand-painted RPG style. No wall section, no halo, no background, no perspective tilt, no text, no watermark.",
+    "mode": "built-in imagegen"
+  },
+  {
+    "name": "door_open",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-46071848-9381-4a48-aed8-7f570e5bbe24.png",
+    "destination": "worldseed/assets/sprites/buildings/dev51/door_open.png",
+    "prompt": "Use case: stylized-concept. Asset type: WORLDSEED medieval house open entrance sprite. A single complete modest oak doorframe viewed frontal orthographic, an open wooden plank door leaf folded inward to the left at about seventy degrees, dark recessed doorway opening visible inside the frame, iron hinges and ring handle, subtle worn threshold at the bottom. Centered upright vertical composition; full object visible with narrow transparent margin. Readable at 18x32 pixels, restrained medium brown, hand-painted medieval RPG sprite style. Genuine transparent background outside the object, opaque dark doorway within. No wall, no halo, no text or watermark.",
+    "mode": "built-in imagegen"
+  },
+  {
+    "name": "stairs_up",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-554cd9f5-efef-48f4-b8be-1da4321ba0a5.png",
+    "destination": "worldseed/assets/sprites/interiors/dev51/stairs_up.png",
+    "prompt": "Use case: stylized-concept. Asset type: WORLDSEED free-movement interior staircase sprite. Single compact straight oak staircase ascending from lower foreground toward upper background, eight clearly separated treads with side stringers and a slim wooden railing on each side. Elevated near-top-down orthographic RPG view, same front-facing vertical axis as house furniture; not diamond isometric, no sideways projection. Footprint twice as long as wide. Full isolated staircase with clean worn wood and dark contact crevices, restrained hand-painted medieval RPG art readable at 45x70 pixels. Genuine transparent background; no room, wall, floor surround, people, labels, watermark or halo.",
+    "mode": "built-in imagegen"
+  },
+  {
+    "name": "stairs_down",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-e82e57cf-3015-433e-bb13-482edfdb5b1a.png",
+    "destination": "worldseed/assets/sprites/interiors/dev51/stairs_down.png",
+    "prompt": "Use case: stylized-concept. Asset type: WORLDSEED free-movement interior stairwell sprite. Single rectangular wooden stairwell opening with oak treads descending away from foreground into a dark recessed opening toward upper background, subtle wooden rim and thin railing each side. Elevated near-top-down orthographic RPG view, vertical orientation matching front-facing house furniture, not diamond isometric. Footprint twice as long as wide; all edges visible. Restrained hand-painted medieval RPG art readable at 45x70 pixels. Genuine transparent background outside the object, opaque dark stairwell inside. No room, wall, surrounding floor, people, labels, watermark or halo.",
+    "mode": "built-in imagegen"
+  },
+  {
+    "name": "market_stall_piece",
+    "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-1bb9b6cc-c01a-4e69-90bd-be19ae26e22e.png",
+    "destination": "worldseed/assets/sprites/interiors/dev51/market_stall_piece.png",
+    "prompt": "Create one game-ready medieval indoor MARKET COUNTER furniture sprite, isolated on a genuinely transparent RGBA background. Style: detailed hand-painted rustic fantasy game prop, warm aged oak and iron, muted earthy colors, visible brush texture, slightly elevated three-quarter front view matching medieval building interiors. A wide low wooden shop counter with a real deep tabletop, a small balancing scale on the left, folded cloth parcels and a wicker basket with a few vegetables on the right, neat shelf front, subtle wear. No roof, no canopy, no building, no people, no letters, no UI, no border, no background scenery, no floor plane, no cast shadow block. The counter's long horizontal front faces screen bottom, all objects upright. Crisp silhouette, full object visible with ample transparent margins, visually grounded at bottom center. It must read clearly as a market sales workstation at small game scale. Wide roughly 2.2:1 silhouette. Do not put a solid rectangle underneath it.",
+    "mode": "built-in imagegen"
+  }
+]

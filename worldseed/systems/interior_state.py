@@ -60,6 +60,24 @@ class InteriorPile:
 
 
 @dataclass(slots=True)
+class InteriorStair:
+    """A persistent, non-solid passage between floors of one building."""
+    uid: str
+    x: int
+    y: int
+    w: int
+    h: int
+    target_space_id: str
+    target_x: int
+    target_y: int
+    direction: str = "up"
+
+    @property
+    def rect(self) -> InteriorRect:
+        return InteriorRect(self.x, self.y, self.w, self.h)
+
+
+@dataclass(slots=True)
 class InteriorPlan:
     uid: str
     building_id: str
@@ -80,6 +98,10 @@ class InteriorPlan:
     version: int = 1
     piles: list[InteriorPile] = field(default_factory=list)
     layout_id: str = ""
+    floor_index: int = 0
+    floor_count: int = 1
+    stairs: list[InteriorStair] = field(default_factory=list)
+    furnishing_version: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -91,6 +113,7 @@ class InteriorPlan:
         data["walls"] = [InteriorRect(**r) for r in data.get("walls", [])]
         data["furniture"] = [InteriorFurniture(**r) for r in data.get("furniture", [])]
         data["piles"] = [InteriorPile(**r) for r in data.get("piles", [])]
+        data["stairs"] = [InteriorStair(**r) for r in data.get("stairs", [])]
         return cls(**data)
 
 

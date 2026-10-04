@@ -1,11 +1,9 @@
-"""Physical property storage, casing knowledge, and non-criminal suspicion.
+"""Physical property storage and intrusion security.
 
 Generated settlement structures remain the property authority. This module adds
-sparse local storage containers backed by those structures and a player-knowledge
-layer that is learned by physically moving around a target while casing it.
-
-Casing is suspicious, not itself a crime: observed repetition raises attention
-around the same owner/property, but it never creates a theft record or bounty.
+sparse local storage containers backed by those structures. Historical casing
+intel is retained only for save compatibility; theft now depends on Stalk mode,
+physical reach, real locks, and witness sight.
 """
 from __future__ import annotations
 
@@ -15,7 +13,7 @@ from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import hash_u64
 from worldseed.systems.container_profiles import building_storage_profile, container_profile, validate_catalog
 from worldseed.systems.state import (
-    CasingIntelState, ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
+    ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
     TrespassState, pos_key,
 )
 
@@ -839,7 +837,7 @@ class PropertySecuritySystem:
 
 
 class CasingSystem:
-    """Accumulate property intel only from the player's physical survey."""
+    """Read historical intel while keeping retired casing commands harmless."""
 
     CARDINALS=((1,0),(-1,0),(0,1),(0,-1))
 
@@ -849,25 +847,10 @@ class CasingSystem:
         self.civics=civics
         self.property_storage=property_storage
         self.security=security
+        self.state.player_casing_property_id=""
 
     def _structure(self, property_id: str):
         return self.physicalization.structure_by_id(str(property_id))
-
-    def _settlement_id(self, property_id: str) -> str:
-        structure=self._structure(property_id)
-        if structure is None:
-            return ""
-        for uid in self.physicalization.active_settlement_ids:
-            skeleton=self.physicalization.skeleton_for(uid)
-            if skeleton and any(s.uid==structure.uid for s in skeleton.structures):
-                return uid
-        return ""
-
-    @staticmethod
-    def _distance_to_structure(pos: WorldPos, structure) -> int:
-        if structure is None or not structure.footprint:
-            return 9999
-        return min(abs(pos.x-int(x))+abs(pos.y-int(y)) for x,y in structure.footprint)
 
     def victim_suspicion(self, owner_uid: str) -> int:
         if not owner_uid:
@@ -885,91 +868,22 @@ class CasingSystem:
         if value>=20:return "noticed"
         return "low"
 
-    @staticmethod
-    def _alarm_level(value: int) -> int:
-        return 3 if value>=70 else 2 if value>=45 else 1 if value>=20 else 0
-
     def intel_for(self, property_id: str):
         return self.state.casing_intel.get(str(property_id))
 
     @staticmethod
     def can_case(structure) -> bool:
-        """Survey secure property; open agricultural land is ordinary inspection."""
-        return bool(structure and getattr(structure,"enclosed",False)
-                    and not getattr(structure,"destroyed",False)
-                    and getattr(structure,"function","") not in {
-                        "farm_field","animal_pen","logging_camp","mine_site","monument"
-                    })
+        return False
 
     def start(self, property_id: str, player_pos: WorldPos, minute: int, stealth) -> tuple[bool,str]:
-        structure=self._structure(property_id)
-        if structure is None:
-            return False,"That property is not physically present."
-        if not self.can_case(structure):
-            return False,"This is open land or an outdoor worksite. Inspect it directly; it does not need casing."
-        if self._distance_to_structure(player_pos,structure)>5:
-            return False,"Move within sight of the property before casing it."
-        settlement_id=self._settlement_id(property_id)
-        if not settlement_id:
-            return False,"That property is outside the active settlement."
-        owner=self.civics.owner_for_structure(settlement_id,structure.uid)
-        intel=self.state.casing_intel.get(structure.uid)
-        if intel is None:
-            intel=CasingIntelState(structure.uid,settlement_id,owner_uid=owner)
-            self.state.casing_intel[structure.uid]=intel
-        else:
-            intel.owner_uid=owner or intel.owner_uid
-            intel.settlement_id=settlement_id
-        intel.sessions+=1
-        intel.last_started_minute=int(minute)
-        self.state.player_casing_property_id=structure.uid
-        self.state.player_stealth_mode=True
-        witnesses=stealth.witnesses(player_pos,minute,settlement_id)
-        if witnesses and intel.sessions>1:
-            self._add_suspicion(intel,witnesses,2+min(6,intel.sessions-1),minute)
-        return True,"Casing started. Move around the property to learn entrances, rooms, occupants, and storage."
+        self.state.player_casing_property_id=""
+        return False,"Casing is disabled. Select Stalk mode to attempt theft."
 
     def stop(self) -> str:
         if not self.state.player_casing_property_id:
             return "You are not casing a property."
         self.state.player_casing_property_id=""
         return "You stop casing the property."
-
-    def _add_suspicion(self, intel: CasingIntelState, witnesses, amount: int, minute: int) -> tuple[int,int]:
-        old=intel.alarm_level
-        witness_set=set(intel.witness_uids)
-        witness_set.update(str(uid) for uid in witnesses if uid)
-        intel.witness_uids=sorted(witness_set)[-24:]
-        intel.suspicion=min(100,intel.suspicion+max(0,int(amount)))
-        intel.last_observed_minute=int(minute)
-        aggregate=self.victim_suspicion(intel.owner_uid)
-        intel.alarm_level=self._alarm_level(max(intel.suspicion,aggregate))
-        for uid in witnesses:
-            npc=self.state.npcs.get(uid)
-            if npc is None:
-                continue
-            npc.memories.append({
-                "minute":int(minute),"type":"suspicious_casing",
-                "subject":"player","property_id":intel.property_id,
-                "salience":10+intel.alarm_level*8,"valence":-4-intel.alarm_level*2,
-            })
-            npc.memories=npc.memories[-40:]
-            if intel.alarm_level>=2:
-                rel=npc.relationships.setdefault(
-                    "player",
-                    {"affection":0,"trust":0,"fear":0,"respect":0,"obligation":0,"familiarity":0},
-                )
-                rel["trust"]=max(-100,int(rel.get("trust",0))-2)
-                rel["familiarity"]=min(100,int(rel.get("familiarity",0))+2)
-            if intel.alarm_level>=3 and npc.occupation=="guard":
-                npc.goal="guard"
-                npc.goal_score=max(int(getattr(npc,"goal_score",0)),85)
-        return old,intel.alarm_level
-
-    def _visible_nearby(self, player_pos: WorldPos, target: WorldPos, stealth, radius: int = 2) -> bool:
-        if abs(player_pos.x-target.x)+abs(player_pos.y-target.y)>radius:
-            return False
-        return stealth.visible_from(player_pos,target)
 
     def _perimeter(self, structure) -> set[tuple[int,int]]:
         footprint={(int(x),int(y)) for x,y in structure.footprint}
@@ -1000,109 +914,10 @@ class CasingSystem:
         return out or self._perimeter(structure)
 
     def observe_step(self, player_pos: WorldPos, minute: int, stealth) -> list[str]:
-        property_id=str(self.state.player_casing_property_id or "")
-        if not property_id:
-            return []
-        structure=self._structure(property_id)
-        intel=self.state.casing_intel.get(property_id)
-        if structure is None or intel is None:
-            self.state.player_casing_property_id=""
-            return ["The property is no longer available to case."]
-        if self._distance_to_structure(player_pos,structure)>6:
-            self.state.player_casing_property_id=""
-            return ["You move away and stop casing the property."]
-
-        messages=[]
-        changed=False
-        perimeter=self._survey_targets(structure)
-        surveyed=set(intel.surveyed_cells)
-        # Casing is an observation activity, not a requirement to squeeze the
-        # avatar into every alley around a building. Every exposed exterior cell
-        # within a short sightline can be surveyed from the current vantage.
-        for x,y in sorted(perimeter):
-            if abs(player_pos.x-x)+abs(player_pos.y-y)>6:
-                continue
-            target=WorldPos(x,y,player_pos.z)
-            if not stealth.visible_from(player_pos,target):
-                continue
-            token=f"{x},{y}"
-            if token not in surveyed:
-                surveyed.add(token);changed=True
-        if changed:
-            intel.surveyed_cells=sorted(surveyed)[-160:]
-
-        if structure.entrance is not None:
-            entrance=WorldPos(int(structure.entrance[0]),int(structure.entrance[1]),0)
-            if not intel.entrance_known and self._visible_nearby(player_pos,entrance,stealth,2):
-                intel.entrance_known=True;changed=True
-                messages.append("You identify the property's main entrance.")
-
-        if self.security is not None:
-            known_doors=set(intel.door_uids);known_locks=set(intel.lock_uids)
-            for door in self.security.doors_for_property(property_id):
-                dpos=WorldPos(door.x,door.y,door.z)
-                if door.uid not in known_doors and self._visible_nearby(player_pos,dpos,stealth,2):
-                    known_doors.add(door.uid);changed=True
-                    messages.append("You identify a doorway in the property's access pattern.")
-                if door.lock_level>0 and door.uid not in known_locks and self._visible_nearby(player_pos,dpos,stealth,1):
-                    known_locks.add(door.uid);changed=True
-                    messages.append(f"You inspect a {self.security.lock_band(door.lock_level)} lock.")
-            intel.door_uids=sorted(known_doors);intel.lock_uids=sorted(known_locks)
-
-        cell=self.physicalization.cell_at(player_pos)
-        if cell is not None and cell.structure_id==property_id and cell.room_id:
-            rooms=set(intel.room_ids)
-            if cell.room_id not in rooms:
-                rooms.add(cell.room_id);intel.room_ids=sorted(rooms);changed=True
-                room=self.physicalization.room_by_id(cell.room_id)
-                if room is not None:
-                    messages.append(f"You learn the layout of a {str(room.kind).replace('_',' ')}.")
-
-        known_storage=set(intel.storage_uids)
-        for container in self.property_storage.for_property(property_id):
-            if container.interior_space_id:
-                continue
-            cpos=WorldPos(container.x,container.y,container.z)
-            if container.uid not in known_storage and self._visible_nearby(player_pos,cpos,stealth,2):
-                known_storage.add(container.uid);changed=True
-                messages.append(f"You locate {container.name.lower()}.")
-        if known_storage!=set(intel.storage_uids):
-            intel.storage_uids=sorted(known_storage)
-
-        occupants=set(intel.occupant_uids)
-        prop=self.state.properties.get(property_id)
-        if prop:
-            for uid in prop.occupants:
-                npc=self.state.npcs.get(uid)
-                if npc is None or not npc.alive or npc.z!=player_pos.z:
-                    continue
-                if abs(npc.x-player_pos.x)+abs(npc.y-player_pos.y)<=5 and stealth.visible_from(player_pos,WorldPos(npc.x,npc.y,npc.z)):
-                    if uid not in occupants:
-                        occupants.add(uid);changed=True
-            intel.occupant_uids=sorted(occupants)
-            if intel.entrance_known and not intel.owner_known and prop.owner_uid:
-                owner=self.state.npcs.get(prop.owner_uid)
-                if owner is not None and owner.uid in occupants:
-                    intel.owner_known=True;changed=True
-
-        witnesses=stealth.witnesses(player_pos,minute,intel.settlement_id)
-        relevant=[]
-        for uid in witnesses:
-            npc=self.state.npcs.get(uid)
-            if npc is None:
-                continue
-            if uid==intel.owner_uid or uid in intel.occupant_uids or npc.occupation=="guard":
-                relevant.append(uid)
-        if changed and witnesses:
-            # Ordinary passersby notice repeated loitering slowly; owners,
-            # occupants and guards react faster.
-            amount=1+len(relevant)*2+(1 if intel.sessions>1 else 0)
-            old,new=self._add_suspicion(intel,witnesses,amount,minute)
-            if new>old:
-                if new==1:messages.append("Your repeated attention to the property has been noticed.")
-                elif new==2:messages.append("The household is watching your behavior closely.")
-                else:messages.append("The property is alarmed; guards and occupants are alert to your presence.")
-        return messages
+        # A loaded legacy casing session must not keep surveying or alarming
+        # NPCs when the player moves. Saved historical intel remains intact.
+        self.state.player_casing_property_id=""
+        return []
 
     def summary(self, property_id: str | None = None) -> dict:
         property_id=str(property_id or self.state.player_casing_property_id or "")
@@ -1121,7 +936,7 @@ class CasingSystem:
             if container.uid in intel.storage_uids and not container.interior_space_id:
                 storage_cells.append((container.x,container.y,container.z))
         return {
-            "active":self.state.player_casing_property_id==property_id,
+            "active":False,
             "property_id":property_id,
             "function":str(structure.function),
             "survey_progress":progress,

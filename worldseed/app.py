@@ -856,13 +856,10 @@ def _casing_notes(ctx:GameContext,term:Terminal,property_id:str)->str:
 
 def _steal_property_storage_action(ctx:GameContext,term:Terminal,container)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
-    if not sim.state.player_stealth_mode or sim.state.player_casing_property_id!=container.property_id:
-        return 'Case this property in stealth mode before attempting storage theft.'
-    intel=sim.casing.intel_for(container.property_id)
-    if intel is None or container.uid not in intel.storage_uids:
-        return 'You have not located this storage while casing the property.'
-    if abs(container.x-sim.player_pos.x)+abs(container.y-sim.player_pos.y)>1 or container.z!=sim.player_pos.z:
-        return 'Move next to the storage before attempting theft.'
+    if sim.state.player_hunting_stance!='stalk':
+        return 'Select Stalk mode before attempting storage theft.'
+    error=_container_reach_error(sim,container)
+    if error:return error
     rows=[
         (iid,f'{reg.items[iid].name} — x{n} — value {sim.player_trade_price(container.settlement_id,iid,True)}c')
         for iid,n in sorted(container.items.items()) if n>0 and iid in reg.items
@@ -1301,7 +1298,7 @@ def _hunting_stance_menu(ctx:GameContext,term:Terminal)->str:
         ('normal',f'Normal{" [CURRENT]" if current=="normal" else ""} — fastest; no concealment stance'),
         ('stalk',f'Stalk{" [CURRENT]" if current=="stalk" else ""} — slower, quieter; observer cones enabled'),
         ('crouch',f'Crouch{" [CURRENT]" if current=="crouch" else ""} — slowest, strongest visual/noise concealment'),
-        ('aggressive',f'Aggressive Stance{" [CURRENT]" if current=="aggressive" else ""} — casing, lockpicking, and door bashing'),
+        ('aggressive',f'Aggressive Stance{" [CURRENT]" if current=="aggressive" else ""} — lockpicking and door bashing'),
     ],subtitle=f'Wind: {wind}. Scent still carries downwind; stance cannot hide scent.')
     if not pick:return UI_BACK
     sim.execute(SetHuntingStanceCommand(ctx.player_id,pick))
@@ -1723,8 +1720,6 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
     error=_container_reach_error(sim,c)
     if error:return error
     private=c.kind=='property' and c.owner!='player' and c.access!='public'
-    if private and not getattr(c,'interior_space_id',''):
-        _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     nav=NavigationStack(RouteState('storage','Nearby Storage'))
     while True:
         route=nav.current
@@ -1732,7 +1727,7 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
             mass,volume=sim.building.container_load(c)
             choice=_stack_menu(term,nav,[
                 ('store',f'Store item — {mass/1000:.1f}/{c.capacity_mass_g/1000:.1f} kg'),
-                ('take',f'{"Steal" if private else "Take"} item — {volume/1000:.1f}/{c.capacity_volume_ml/1000:.1f} L'),
+                ('take',f'{"Steal" if private else "Take"} item — {volume/1000:.1f}/{c.capacity_volume_ml/1000:.1f} L'+(' — requires Stalk mode' if private and sim.state.player_hunting_stance!='stalk' else '')),
                 ('inspect',f'Inspect contents — {sum(c.items.values())} items'),
             ])
             if choice is None:return UI_BACK
@@ -1742,6 +1737,8 @@ def _storage_menu_terminal(ctx:GameContext,term:Terminal,container_uid:str|None=
                 nav.push(RouteState('storage-inspect','Container Contents'))
                 _stack_view(term,nav,box('CONTAINER CONTENTS',rows or ['Empty.'],screen_width(term.size()[0],96)))
                 continue
+            if choice=='take' and private and sim.state.player_hunting_stance!='stalk':
+                return 'Select Stalk mode before stealing from private storage.'
             nav.push(RouteState(f'storage-{choice}',choice.title(),payload={'mode':choice}))
             continue
         if route.route_id in ('storage-store','storage-take'):
@@ -1771,8 +1768,6 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
     error=_container_reach_error(sim,container)
     if error:return error
     private=container.kind=='property' and container.owner!='player' and container.access!='public'
-    if private and not getattr(container,'interior_space_id',''):
-        _view_text(term,box('PRIVATE STORAGE',['This storage belongs to someone else. Locate it while casing the property to expose theft actions.'],screen_width(term.size()[0],88)));return UI_BACK
     uid=container.uid
     nav=NavigationStack(RouteState('container-inventory','CONTAINER STORAGE'))
     action_amount=1;last_selected=None;status=''
@@ -1812,7 +1807,7 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
                 'item_count':sum(container.items.values()),'stack_count':len(container.items),
             },
         }
-        subtitle=status or ('Private storage: removing items is theft; stealth and casing are required.' if private else 'Click either side • right-click for actions • Shift-click transfers the full stack. Natural containers can also be moved or broken apart.')
+        subtitle=status or ('Private storage: removing items is theft. Select Stalk mode; locks and witnesses still matter.' if private else 'Click either side • right-click for actions • Shift-click transfers the full stack. Natural containers can also be moved or broken apart.')
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
@@ -2082,9 +2077,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         if planned is not None and planned.function=='residence' and door.role=='entrance':
             rows.append(('knock_property_door','Knock and wait for a resident'))
         if door.locked and not door.forced and not sim.property_security.authorized_player(door):
-            intel=sim.casing.intel_for(door.property_id)
-            lock_known=bool(intel and door.uid in intel.lock_uids)
-            lock_label=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown'
+            lock_label=sim.property_security.lock_band(door.lock_level)
             rows.append(('inspect_property_door',f'Inspect locked door — lock {lock_label}'))
             inv=ctx.entities.get(ctx.player_id,Inventory)
             if sim.state.player_hunting_stance=='aggressive' and inv.count('core:lockpick')>0:
@@ -2105,15 +2098,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         building_label=str(planned.function).replace('_',' ').title()
         if shell is not None and door is None:
             rows.append(('inspect_building_exterior',f'Inspect {building_label} exterior'))
-        active_case=str(sim.state.player_casing_property_id or '')
-        if active_case==planned.uid:
-            rows.append(('review_casing',f'Review casing notes — {building_label}'))
-            rows.append(('stop_casing','Stop casing this property'))
-        elif distance<=2 and sim.casing.can_case(planned) and sim.state.player_hunting_stance=='aggressive':
-            rows.append(('begin_casing',f'Begin casing from here — {building_label}'))
         if planned.function=='market' and distance<=2:
             rows.append(('use_market_here','Trade at market stall'))
-            if sim.state.player_stealth_mode:
+            if sim.state.player_hunting_stance=='stalk':
                 rows.append(('steal_market_here','Steal from market stock'))
     if private_storage and distance<=1:
         owner=sim.state.npcs.get(container.owner)
@@ -2124,13 +2111,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
             inv=ctx.entities.get(ctx.player_id,Inventory)
             rows.append(('lockpick_property_storage',
                          f'Pick {container.name} lock'+('' if inv.count("core:lockpick")>0 else ' — requires Lockpick')))
-        intel=sim.casing.intel_for(container.property_id)
-        if (
-            not container.locked
-            and sim.state.player_stealth_mode
-            and sim.state.player_casing_property_id==container.property_id
-            and intel is not None and container.uid in intel.storage_uids
-        ):
+        if not container.locked and sim.state.player_hunting_stance=='stalk':
             rows.append(('steal_property_storage',f'Steal from {container.name}'))
     if crossing is not None:
         condition=sim.route_planner.crossing_condition(crossing.route_id,crossing.uid)
@@ -2207,16 +2188,14 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
             f'Access: {container.access.title()}',
             f'Lock: {lock_state} / {sim.property_security.lock_band(container.lock_level) if container.lock_level else "none"}',
             f'Contents: {sum(container.items.values())} item(s) in {len(container.items)} stack(s)',
-            'Unauthorized removal is theft. Casing can reveal storage and access details.'
+            'Unauthorized removal is theft and requires Stalk mode. Locks and witnesses still matter.'
         ],screen_width(term.size()[0],96)))
         return UI_BACK
     if choice=='lockpick_property_storage' and container is not None:
         sim.execute(LockpickContainerCommand(ctx.player_id,container.uid))
         return sim.log[-1].message if sim.log else ''
     if choice=='inspect_property_door' and door is not None:
-        intel=sim.casing.intel_for(door.property_id)
-        lock_known=bool(intel and door.uid in intel.lock_uids)
-        lock_desc=sim.property_security.lock_band(door.lock_level) if lock_known else 'unknown; case the doorway closely to assess it'
+        lock_desc=sim.property_security.lock_band(door.lock_level)
         status='forced open' if door.forced else 'locked' if door.locked else 'unlocked'
         _view_text(term,box('PROPERTY DOOR',[
             f'Access: {door.access.title()}',
@@ -2235,14 +2214,6 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         return sim.log[-1].message if sim.log else ''
     if choice=='force_property_door' and door is not None:
         sim.execute(ForceDoorCommand(ctx.player_id,door.uid))
-        return sim.log[-1].message if sim.log else ''
-    if choice=='begin_casing' and planned is not None:
-        sim.execute(StartCasingCommand(ctx.player_id,planned.uid))
-        return sim.log[-1].message if sim.log else ''
-    if choice=='review_casing' and planned is not None:
-        return _casing_notes(ctx,term,planned.uid)
-    if choice=='stop_casing':
-        sim.execute(StopCasingCommand(ctx.player_id))
         return sim.log[-1].message if sim.log else ''
     if choice=='steal_property_storage' and container:
         return _steal_property_storage_action(ctx,term,container)
@@ -3333,13 +3304,17 @@ def _pause_menu(ctx:GameContext,term:Terminal)->str:
         if choice=='menu':_save(ctx);return 'menu'
         if choice=='quit':_save(ctx);return 'quit'
 
-def _interior_context_menu(ctx,term,x:int,y:int)->str:
+def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:str='')->str:
     """Pointer coordinates and objects belong to the current interior, not a tile."""
     sim=ctx.sim;plan=sim.interiors.current_plan();actor=sim.interiors.player_presence()
     if plan is None or actor is None:return UI_BACK
-    furniture=sim.interiors.hit_test(x,y)
+    furniture=(next((f for f in plan.furniture if f.uid==object_uid),None)
+               if object_kind=='furniture' else sim.interiors.hit_test(x,y))
+    stair=next((s for s in getattr(plan,'stairs',()) if s.uid==object_uid),None) if object_kind=='stairs' else None
     container=sim.interiors.container_for_furniture(furniture.uid) if furniture is not None else None
     rows=[]
+    if stair is not None:
+        rows.append(('stairs',f'Go {stair.direction} stairs'))
     if furniture is not None:
         piece=sim.registry.settlement_pieces.get(furniture.piece_id)
         label=piece.name if piece else furniture.piece_id.split(':')[-1].replace('_',' ').title()
@@ -3358,10 +3333,20 @@ def _interior_context_menu(ctx,term,x:int,y:int)->str:
         n=sim.state.npcs.get(uid)
         if n is not None and n.alive and (presence.x-x)**2+(presence.y-y)**2<=500**2:
             rows.append((f'talk:{uid}',f'Talk to {n.name if uid in sim.introduced_npc_ids() else "Stranger"}'))
-    rows.append(('exit','Leave through the entrance'))
+    if getattr(plan,'floor_index',0)==0:
+        rows.append(('exit','Leave through the entrance'))
+    else:
+        rows.append(('floor_info','Upstairs — use the stairs to reach the outside entrance'))
+    if stair is None:
+        for nearby in getattr(plan,'stairs',()):
+            if (nearby.x+nearby.w//2-actor.x)**2+(nearby.y+nearby.h//2-actor.y)**2<=1800**2:
+                rows.append(('stairs:'+nearby.uid,f'Go {nearby.direction} stairs'))
     if any((p.x-actor.x)**2+(p.y-actor.y)**2<=1400**2 for p in plan.piles):rows.append(('pickup','Collect nearby floor items'))
     choice=_select(term,'INTERIOR ACTIONS',rows,subtitle='Objects use their actual position and outline.',presentation='world_context')
-    if choice=='exit':sim.execute(ExitInteriorCommand(ctx.player_id))
+    if choice=='stairs' and stair is not None:sim.execute(UseInteriorStairsCommand(ctx.player_id,stair.uid))
+    elif choice and choice.startswith('stairs:'):sim.execute(UseInteriorStairsCommand(ctx.player_id,choice.split(':',1)[1]))
+    elif choice=='floor_info':return 'Follow the stairs down to the ground-floor entrance.'
+    elif choice=='exit':sim.execute(ExitInteriorCommand(ctx.player_id))
     elif choice=='pickup':sim.execute(PickupCommand(ctx.player_id))
     elif choice=='open_storage' and container is not None:
         sim.execute(UseInteriorFurnitureCommand(ctx.player_id,furniture.uid))
@@ -3424,6 +3409,14 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if key.startswith('INTERIOR_CONTEXT:'):
             term._interior_placing=None
             _,x,y=key.split(':');result=_interior_context_menu(ctx,term,int(x),int(y));last='' if result==UI_BACK else result;continue
+        if key.startswith('INTERIOR_OBJECT:'):
+            term._interior_placing=None
+            _,kind,uid=key.split(':',2)
+            actor=ctx.sim.interiors.player_presence()
+            if actor:
+                result=_interior_context_menu(ctx,term,actor.x,actor.y,kind,uid)
+                last='' if result==UI_BACK else result
+            continue
         if key.startswith('INTERIOR_PLACE:'):
             uid=getattr(term,'_interior_placing',None);term._interior_placing=None
             if uid:

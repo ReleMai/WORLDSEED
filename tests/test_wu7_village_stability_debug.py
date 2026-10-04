@@ -69,14 +69,21 @@ class VillageStabilityDebugTests(unittest.TestCase):
         self.assertIn("safe_cells=[cell for cell in interior_sorted if cell not in door_clearance]",src)
         self.assertIn("abs(cell[0]-entrance_inside[0])+abs(cell[1]-entrance_inside[1])>1",src)
 
-    def test_property_casing_is_sightline_based_and_ignores_blocked_neighbor_cells(self):
-        src=Path("worldseed/systems/property_intrusion.py").read_text(encoding="utf-8")
-        self.assertIn("def _survey_targets",src)
-        self.assertIn("cell.structure_id!=structure.uid",src)
-        self.assertIn("self.physicalization.passable(p,True)",src)
-        self.assertIn("stealth.visible_from(player_pos,target)",src)
-        self.assertIn("Move within sight of the property before casing it.",src)
-        self.assertIn("abs(x-int(entrance[0]))+abs(y-int(entrance[1]))<=1",src)
+    def test_retired_casing_cannot_survey_or_disclose_property(self):
+        from types import SimpleNamespace
+        from worldseed.core.coords import WorldPos
+        from worldseed.systems.property_intrusion import CasingSystem
+        from worldseed.systems.state import LivingWorldState
+        state=LivingWorldState(player_hunting_stance="stalk",player_stealth_mode=True)
+        # No physical queries are available: the retired action must not
+        # inspect terrain, reveal inventories, or synthesize new intel.
+        casing=CasingSystem(state,SimpleNamespace(),SimpleNamespace(),SimpleNamespace())
+        before=state.to_dict()
+        ok,message=casing.start("home:test",WorldPos(0,0),600,SimpleNamespace())
+        self.assertFalse(ok)
+        self.assertIn("disabled",message)
+        self.assertEqual(casing.observe_step(WorldPos(0,1),601,SimpleNamespace()),[])
+        self.assertEqual(state.to_dict(),before)
 
     def test_discovered_static_buildings_remain_visible_as_memory_not_live_entities(self):
         src=Path("worldseed/ui/pygame_terminal.py").read_text(encoding="utf-8")

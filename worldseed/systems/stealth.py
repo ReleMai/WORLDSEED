@@ -151,11 +151,6 @@ class StealthSystem:
         }.get(str(npc.occupation), 7)
         if str(getattr(npc, "goal", "")) == "guard":
             base += 1
-        casing_id=str(getattr(self.state,"player_casing_property_id","") or "")
-        intel=getattr(self.state,"casing_intel",{}).get(casing_id) if casing_id else None
-        if intel is not None and int(getattr(intel,"alarm_level",0))>0:
-            if npc.uid==getattr(intel,"owner_uid","") or npc.uid in getattr(intel,"occupant_uids",()) or npc.occupation=="guard":
-                base += min(3,int(getattr(intel,"alarm_level",0)))
         if npc.z != 0:
             return max(3, min(self.MAX_RANGE, base - 2))
         try:

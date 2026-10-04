@@ -299,15 +299,6 @@ class Renderer:
             for uid in seen[:3]:
                 npc=sim.state.npcs.get(uid)
                 rows.append((npc.name if npc and uid in known else 'Stranger')+' sees you')
-            casing=snap.get('casing') or {}
-            if casing.get('active'):
-                rows += [
-                    '',
-                    'CASING',
-                    f"{str(casing.get('function','property')).replace('_',' ').title()} {int(casing.get('survey_progress',0))}%",
-                    f"Attention: {str(casing.get('attention','low')).title()}",
-                    f"Rooms {int(casing.get('room_count',0))} | Storage {int(casing.get('storage_count',0))}",
-                ]
             security=snap.get('security') or {}
             if security.get('trespassing'):
                 rows += [

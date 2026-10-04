@@ -109,7 +109,8 @@ class InteriorStorageTests(unittest.TestCase):
                                  {'core:wood':3},kind='property',property_id=plan.building_id,
                                  profile_id='core:household_chest',interior_space_id=plan.uid,
                                  interior_furniture_uid='storage-furniture:container:occupied')
-        state=LivingWorldState();state.interiors[plan.uid]=plan
+        state=LivingWorldState()
+        state.interiors[plan.uid]=plan
         state.interior_actors={'player':player,'npc:resident':resident,'npc:elsewhere':elsewhere}
         state.containers['indoor-storage:'+container.uid]=container
         system=InteriorSystem(SimpleNamespace(state=state))
@@ -236,7 +237,14 @@ class InteriorStorageTests(unittest.TestCase):
         sim,town,storage=self.fixture()
         house=next(s for s in sim.settlement_physicalization.skeleton_for(town.uid).structures if s.function=='residence')
         plan=sim.interiors.prepare_workplace(house.uid)
-        state=LivingWorldState();state.interiors[plan.uid]=plan
+        state=LivingWorldState()
+        # A prepared home owns linked floors. A representative save must keep
+        # both ends of every stair instead of constructing an orphan binding.
+        state.interiors.update({uid:floor for uid,floor in sim.state.interiors.items()
+                                if floor.building_id==house.uid})
+        self.assertIn(plan.uid,state.interiors)
+        self.assertTrue(all(stair.target_space_id in state.interiors
+                            for floor in state.interiors.values() for stair in floor.stairs))
         for container in storage.for_property(house.uid):
             state.containers['indoor-storage:'+container.uid]=container
         with tempfile.TemporaryDirectory(prefix='worldseed-storage-save-') as folder:

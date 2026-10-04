@@ -8,6 +8,8 @@ class ExitInteriorCommand: actor:int
 class MoveFurnitureCommand: actor:int; furniture_uid:str; x:int; y:int
 @dataclass(frozen=True, slots=True)
 class UseInteriorFurnitureCommand: actor:int; furniture_uid:str
+@dataclass(frozen=True, slots=True)
+class UseInteriorStairsCommand: actor:int; stair_uid:str
 
 @dataclass(frozen=True, slots=True)
 class IntroduceNPCCommand: actor:int; npc_uid:str

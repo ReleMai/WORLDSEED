@@ -38,6 +38,9 @@ class AggressiveStanceRoutingTests(unittest.TestCase):
                 self.assertEqual([t for r,t in controls],['UI_STANCE:normal','UI_STANCE:stalk','UI_STANCE:crouch','UI_STANCE:aggressive'])
                 self.assertTrue(all(rect.contains(r) for r,t in controls))
                 for r,t in controls:self.assertEqual(classify_key(t).kind,'stance')
+                hints=' '.join(detail for _,_,detail in term._hud_tooltips)
+                self.assertIn('enables theft',hints)
+                self.assertNotIn('casing',hints.lower())
             finally:term.restore()
 
     def test_interior_direction_tokens_preserve_wasd_movement_contract(self):
