@@ -102,6 +102,9 @@ class InteriorPlan:
     floor_count: int = 1
     stairs: list[InteriorStair] = field(default_factory=list)
     furnishing_version: int = 0
+    variant_id: str = ""
+    floor_material: str = ""
+    wall_material: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)

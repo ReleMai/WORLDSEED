@@ -23,7 +23,7 @@ class BuildingInteriorProfileTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         for function in expected:
             plan = build_interior(self.structure(function), self.door())
-            self.assertEqual(plan.version, 3)
+            self.assertEqual(plan.version, 4)
             self.assertNotEqual(plan.layout_id, "core:generic_enclosed")
             self.assertTrue(position_clear(plan, plan.entry_x, plan.entry_y))
 

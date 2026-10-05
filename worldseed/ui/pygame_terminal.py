@@ -3968,6 +3968,7 @@ class PygameTerminal(PointerUI):
         if pos.z==0:
             draw_shells(self,building_shells,map_rect,left,top,tile_px,known,visible,
                         hit_regions=shell_hit_regions,
+                        interior_plans=sim.state.interiors,
                         door_states={shell.door_uid:sim.property_security.door_by_id(shell.door_uid)
                                      for shell in building_shells if shell.door_uid})
         # Actors remain exact visible foreground objects, never inferred from

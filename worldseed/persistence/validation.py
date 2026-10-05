@@ -43,11 +43,15 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         if type(plan.get("furnishing_version", 0)) is not int or plan.get("furnishing_version", 0) not in (0, 1):
             issues.append(f"unsupported interior furnishing version: {space_id}")
         width, height = plan.get("width"), plan.get("height")
-        if type(plan.get("version", 1)) is not int or plan.get("version", 1) not in (1, 2, 3):
+        if type(plan.get("version", 1)) is not int or plan.get("version", 1) not in (1, 2, 3, 4):
             issues.append(f"unsupported interior plan version: {space_id}")
         layout_id = plan.get("layout_id", "")
         if not isinstance(layout_id, str) or (layout_id and (":" not in layout_id or any(c.isspace() for c in layout_id))):
             issues.append(f"invalid interior layout identity: {space_id}")
+        for field in ("variant_id", "floor_material", "wall_material"):
+            value = plan.get(field, "")
+            if not isinstance(value, str) or (value and (":" not in value or any(c.isspace() for c in value))):
+                issues.append(f"invalid interior {field}: {space_id}")
         if not all(type(v) is int and 1 <= v <= 100_000 for v in (width, height)):
             issues.append(f"invalid interior dimensions: {space_id}")
             continue

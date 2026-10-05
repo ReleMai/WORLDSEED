@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 import json
+import re
 
 from worldseed.config import DATA_DIR
+from worldseed.core.rng import hash_u64
 from worldseed.systems.interior_state import ACTOR_RADIUS, InteriorFurniture, InteriorRect
 
 
@@ -18,6 +20,13 @@ def furnishing_catalog() -> dict:
     data = json.loads((DATA_DIR / "interior_furnishing.json").read_text(encoding="utf-8"))
     if data.get("version") != 1 or not 1 <= data.get("maximum_additions", 0) <= 32:
         raise ValueError("Invalid interior furnishing catalog version or budget")
+    for row in furniture_variant_catalog():
+        if row["base_piece"] not in data["pieces"]:
+            raise ValueError("Unknown furniture variant base: " + row["base_piece"])
+        base = data["pieces"][row["base_piece"]]
+        if any(row[key] != base[key] for key in ("width", "depth")):
+            raise ValueError("Furniture artwork variants cannot change physical footprints")
+        data["pieces"][row["id"]] = {key: row[key] for key in ("width", "depth", "height_ratio")}
     for uid, row in data["pieces"].items():
         if (not uid.startswith("core:") or any(type(row.get(key)) is not int
                 or not 300 <= row[key] <= 4000 for key in ("width", "depth"))
@@ -32,6 +41,45 @@ def furnishing_catalog() -> dict:
     if any(row.get("style") not in data["styles"] or not row.get("words") for row in data["room_sets"]):
         raise ValueError("Invalid furnishing room selector")
     return data
+
+
+@lru_cache(maxsize=1)
+def furniture_variant_catalog() -> tuple[dict, ...]:
+    """Small authored visual families; no inventories or capacity are added."""
+    raw = json.loads((DATA_DIR / "interior_furniture_variants.json").read_text(encoding="utf-8"))
+    if raw.get("version") != 1 or not isinstance(raw.get("pieces"), list):
+        raise ValueError("Invalid furniture variant catalog")
+    seen, assets = set(), set()
+    for row in raw["pieces"]:
+        if not isinstance(row, dict):
+            raise ValueError("Furniture variant must be an object")
+        uid, asset = row.get("id", ""), row.get("asset", "")
+        if (not isinstance(asset, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", asset)
+                or uid != "core:" + asset + "_piece" or uid in seen or asset in assets
+                or not isinstance(row.get("base_piece"), str)
+                or not re.fullmatch(r"core:[a-z][a-z0-9_]*", row["base_piece"])
+                or not isinstance(row.get("name"), str) or not row["name"].strip()
+                or any(type(row.get(key)) is not int
+                    or not 300 <= row[key] <= 4000 for key in ("width", "depth"))
+                or not 1 <= row.get("height_ratio", 0) <= 4):
+            raise ValueError("Invalid furniture variant identity or dimensions")
+        seen.add(uid)
+        assets.add(asset)
+    return tuple(sorted(raw["pieces"], key=lambda row: row["id"]))
+
+
+def furniture_base_piece(piece_id: str) -> str:
+    return next((row["base_piece"] for row in furniture_variant_catalog() if row["id"] == piece_id), piece_id)
+
+
+def furniture_variant(piece_id: str, stable_uid: str) -> str:
+    """Choose once when a new fixture is prepared; never restyle saved pieces."""
+    if furniture_base_piece(piece_id) != piece_id:
+        return piece_id
+    choices = tuple(row["id"] for row in furniture_variant_catalog() if row["base_piece"] == piece_id)
+    if not choices or not stable_uid:
+        return piece_id
+    return choices[hash_u64(b"interior-furniture-variants-v1", "fixture-style", piece_id, stable_uid) % len(choices)]
 
 
 def furniture_dimensions(piece_id: str) -> tuple[int, int]:
@@ -157,12 +205,12 @@ def furnish_plan(plan, registry=None, actors=()) -> int:
             if uid in existing:
                 continue
             spec = catalog["slots"][slot]
-            piece_id = spec["piece"]
+            piece_id = furniture_variant(spec["piece"], uid)
             if registry is not None and piece_id not in registry.settlement_pieces:
                 continue
             # Project the existing hearth/table/desk when present instead of
             # piling a second copy beside it. Seating can form a useful cluster.
-            if slot in {"table", "desk", "hearth"} and any(f.piece_id == piece_id
+            if slot in {"table", "desk", "hearth"} and any(furniture_base_piece(f.piece_id) == furniture_base_piece(piece_id)
                     and room.rect.contains(f.x + f.w // 2, f.y + f.h // 2) for f in plan.furniture):
                 continue
             w, h = furniture_dimensions(piece_id)

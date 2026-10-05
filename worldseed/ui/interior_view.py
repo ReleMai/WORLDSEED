@@ -238,11 +238,12 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
         screen.fill((12, 14, 15), used)
         floor = pg.Rect(*camera.to_screen(0, 0), max(1, round(plan.width * scale)),
                         max(1, round(plan.height * scale)))
-        floor_id, wall_id = term._visuals.interior_materials(getattr(plan, 'function', 'residence'))
+        materials = {key: getattr(plan, key, '') for key in ('floor_material', 'wall_material')}
+        floor_id, wall_id = term._visuals.interior_materials(getattr(plan, 'function', 'residence'), **materials)
         _texture(term, floor, floor_id, tile_size=max(48, term._tile_px * 4))
         for room in plan.rooms:
             rect = _rect(term, camera, room.rect)
-            room_floor, _ = term._visuals.interior_materials(getattr(plan, 'function', 'residence'), room.name)
+            room_floor, _ = term._visuals.interior_materials(getattr(plan, 'function', 'residence'), room.name, **materials)
             if room_floor != floor_id:
                 _texture(term, rect, room_floor, tile_size=max(48, term._tile_px * 4))
             label = term.small_font.render(term._fit_ui_text(room.name, term.small_font, max(1, rect.width - 18)),
@@ -273,7 +274,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 screen.blit(sprite, position)
             _register_object(term, object_regions, stair, 'stairs', rect, sprite, position)
             screen.blit(term.small_font.render(stair.direction.upper(), True, th['accent']), (rect.x, rect.bottom + 2))
-        from worldseed.systems.interior_furnishing import furniture_visual
+        from worldseed.systems.interior_furnishing import furniture_visual, furniture_base_piece
         for furniture in sorted(plan.furniture, key=lambda f: (not furniture_visual(f.piece_id)['flat'], f.y + f.h, f.x, f.uid)):
             if not furniture_visual(furniture.piece_id)['flat']:
                 while actor_index < len(actors) and actors[actor_index][1].y <= furniture.y + furniture.h:
@@ -285,7 +286,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             piece = registry.settlement_pieces.get(furniture.piece_id)
             path = term._visuals.resolve(term._visuals.ref('interiors', furniture.piece_id))
             container = getattr(sim.interiors, 'container_for_furniture', lambda uid: None)(furniture.uid)
-            if container is not None:
+            if container is not None and furniture_base_piece(furniture.piece_id) == furniture.piece_id:
                 path = term._visuals.resolve(term._visuals.ref('containers', container.profile_id)) or path
             # Exact authored furniture IDs prevent the old generic grey/black
             # block stand-ins. Existing workshop art is resolved by its real

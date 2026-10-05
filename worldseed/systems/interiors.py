@@ -18,6 +18,8 @@ from worldseed.systems.interior_state import (
 )
 from worldseed.systems.interior_templates import profile_for, rooms_for_profile
 from worldseed.systems.workshops import STATION_PIECE_ALIASES
+from worldseed.systems.building_variants import building_variant
+from worldseed.systems.interior_furnishing import furniture_base_piece, furniture_variant
 
 
 def furniture_size(piece_id: str) -> tuple[int, int]:
@@ -26,7 +28,7 @@ def furniture_size(piece_id: str) -> tuple[int, int]:
 
 
 def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
-    """Create a v3 layout only for a building without a persisted interior.
+    """Create a v4 layout only for a building without a persisted interior.
 
     Every furnishing is a projection of an existing stable plan-piece identity;
     the template supplies space, not extra beds, production or material stocks.
@@ -35,13 +37,19 @@ def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
     span_x = max(x for x, _ in cells) - min(x for x, _ in cells) + 1
     span_y = max(y for _, y in cells) - min(y for _, y in cells) + 1
     profile = profile_for(structure)
+    variant = building_variant(structure)
     width = max(profile["width"], min(30000, span_x * 1500))
     height = max(profile["height"], min(26000, span_y * 1500))
     plan = InteriorPlan(
         "interior:" + structure.uid, structure.uid, door.uid, door.x, door.y,
         door.z, width, height, structure.function.replace("_", " ").title(),
-        structure.function, door.owner_uid, version=3, layout_id=profile["id"],
+        structure.function, door.owner_uid, version=4, layout_id=profile["id"],
+        variant_id=variant["id"] if variant else "",
+        floor_material=variant["floor"] if variant else "",
+        wall_material=variant["wall"] if variant else "",
     )
+    if variant:
+        plan.name = variant["name"]
     plan.rooms, plan.walls, (plan.entry_x, plan.entry_y) = rooms_for_profile(plan.uid, profile, width, height, source_rooms)
     fixture_rooms = {uid: i + 1 for i, room in enumerate(sorted(source_rooms, key=lambda r: r.uid)) for uid in room.fixture_ids}
     for piece in sorted(pieces, key=lambda p: p.uid):
@@ -72,7 +80,7 @@ def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
             for x, y in positions:
                 if x + w > rect.x + rect.w - 400 or y + h > rect.y + rect.h - 950:
                     continue
-                furnishing = InteriorFurniture(piece.uid, piece.piece_id, x, y, w, h, door.owner_uid, piece.uid, piece.role == "fixture")
+                furnishing = InteriorFurniture(piece.uid, furniture_variant(piece.piece_id, piece.uid), x, y, w, h, door.owner_uid, piece.uid, piece.role == "fixture")
                 if placement_clear(plan, furnishing.rect):
                     plan.furniture.append(furnishing)
                     placed = True
@@ -364,7 +372,8 @@ class InteriorSystem:
             # walls, furniture placement or the inventory bound to a furnishing.
             existing.exterior_x,existing.exterior_y,existing.exterior_z=door.x,door.y,door.z
             from worldseed.systems.interior_floors import prepare_floors
-            floors = prepare_floors(self, existing, structure, profile_for(structure))
+            floors = prepare_floors(self, existing, structure,
+                                    profile_for(structure, variant_id=existing.variant_id))
             self._bind_storage(existing)
             self._furnish_prepared(floors)
             return existing
@@ -376,7 +385,8 @@ class InteriorSystem:
         plan = build_interior(structure, door, rooms, pieces)
         self.state.interiors[plan.uid] = plan
         from worldseed.systems.interior_floors import prepare_floors
-        floors = prepare_floors(self, plan, structure, profile_for(structure), new_ground=True)
+        floors = prepare_floors(self, plan, structure,
+                                profile_for(structure, variant_id=plan.variant_id), new_ground=True)
         self._bind_storage(plan)
         self._furnish_prepared(floors)
         register=getattr(physical,'register_interior',None)
@@ -543,7 +553,7 @@ class InteriorSystem:
             return f"{container.name}: {'locked' if container.locked else 'unlocked'} storage. Right-click to open or inspect it."
         definition = self.sim.registry.settlement_pieces.get(furniture.piece_id)
         name = definition.name if definition else furniture.piece_id.split(":")[-1].replace("_", " ")
-        if any(word in furniture.piece_id for word in ("bed", "chair", "bench", "stool")):
+        if any(word in furniture_base_piece(furniture.piece_id) for word in ("bed", "chair", "bench", "stool")):
             vitals = self.sim.entities.get(self.sim.player_id, Vitals)
             if vitals:
                 vitals.stamina = min(100, vitals.stamina + 5)
@@ -766,7 +776,7 @@ class InteriorSystem:
                     continue
             elif not actor.waypoints:
                 phase = minute // 30
-                candidates = [f for f in plan.furniture if "bed" in f.piece_id] if sleeping else [f for f in plan.furniture if any(k in f.piece_id for k in ("chair", "table", "bench"))]
+                candidates = [f for f in plan.furniture if "bed" in furniture_base_piece(f.piece_id)] if sleeping else [f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair", "table", "bench"))]
                 candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None)
                 if candidate is None and candidates:
                     candidate = sorted(candidates, key=lambda f: f.uid)[hash_u64(self.sim.seed, "interior-household-routine", uid, phase) % len(candidates)]

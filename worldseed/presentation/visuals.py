@@ -63,15 +63,15 @@ class VisualRegistry:
     def resource_style(self, content_id: str) -> dict:
         return self.manifest.get('resource_rendering', {}).get(content_id, {})
 
-    def interior_materials(self, function: str, room_name: str = '') -> tuple[str, str]:
+    def interior_materials(self, function: str, room_name: str = '', *, floor_material: str = '', wall_material: str = '') -> tuple[str, str]:
         """Resolve decorative materials from the existing room, never terrain."""
         catalog = self.manifest.get('interior_styles', {})
         default = catalog.get('default', {})
         style = catalog.get('functions', {}).get(function, default)
-        floor = style.get('floor', default.get('floor', 'core:interior_floor'))
-        wall = style.get('wall', default.get('wall', 'core:interior_wall'))
+        floor = floor_material or style.get('floor', default.get('floor', 'core:interior_floor'))
+        wall = wall_material or style.get('wall', default.get('wall', 'core:interior_wall'))
         name = room_name.casefold()
-        for override in catalog.get('room_floors', ()):
+        for override in (() if floor_material else catalog.get('room_floors', ())):
             if any(re.search(r'\b' + re.escape(word.casefold()) + r'\b', name)
                    for word in override.get('contains', ())):
                 floor = override.get('floor', floor)

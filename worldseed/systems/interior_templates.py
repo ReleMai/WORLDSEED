@@ -42,14 +42,24 @@ def interior_profiles() -> tuple[dict, ...]:
     return tuple(profiles)
 
 
-def profile_for(structure) -> dict:
+def profile_for(structure, *, variant_id: str = "") -> dict:
     profiles = interior_profiles()
     choices = [p for p in profiles if structure.function in p["functions"]]
     if not choices:
         return next(p for p in profiles if "*" in p["functions"])
     form_choices = [p for p in choices if getattr(structure, "building_form", "") in p.get("forms", ())]
     choices = form_choices or choices
-    return sorted(choices, key=lambda p: p["id"])[hash_u64(b"interior-template-v3", "interior-profile", structure.uid) % len(choices)]
+    selected = sorted(choices, key=lambda p: p["id"])[hash_u64(b"interior-template-v3", "interior-profile", structure.uid) % len(choices)]
+    from worldseed.systems.building_variants import building_variant
+    variant = building_variant(structure, variant_id=variant_id)
+    if variant is None:
+        return selected
+    # Preserve familiar layout IDs and form-specific compatibility selectors;
+    # only NEWly constructed plans consume the authored variant dimensions and
+    # room grammar. Existing persisted rooms are never rebuilt on inspection.
+    if not form_choices:
+        selected = next(p for p in profiles if p['id'] == variant['interior_profile'])
+    return {**selected, **variant['interior'], 'rooms': list(variant['interior']['rooms'])}
 
 
 def _wall_with_gap(walls: list[InteriorRect], *, vertical: bool, position: int, start: int, end: int, centre: int) -> None:

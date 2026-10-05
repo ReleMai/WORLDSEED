@@ -5,6 +5,7 @@ furniture positions are preserved; only missing storage projections are added.
 """
 from worldseed.systems.container_profiles import container_profile
 from worldseed.systems.interior_state import ACTOR_RADIUS, InteriorFurniture, InteriorRect
+from worldseed.systems.interior_furnishing import furniture_base_piece, furniture_variant
 
 
 def bind_storage(plan, containers, actors=()):
@@ -22,7 +23,7 @@ def bind_storage(plan, containers, actors=()):
         if fixture is None:
             # Bind a real chest/cabinet already in the building before adding
             # another silhouette. Neither path creates another item inventory.
-            fixture=next((f for f in plan.furniture if f.piece_id==style.piece_id and f.uid not in bound),None)
+            fixture=next((f for f in plan.furniture if furniture_base_piece(f.piece_id)==style.piece_id and f.uid not in bound),None)
         if fixture is None:
             rooms=sorted(plan.rooms,key=lambda r:(not any(word in r.name.lower() for word in style.rooms),r.uid))
             for room in rooms:
@@ -31,7 +32,8 @@ def bind_storage(plan, containers, actors=()):
                     for col in range(6):
                         x,y=rect.x+425+col*(style.width+450),rect.y+425+row*(style.height+450)
                         if x+style.width>rect.x+rect.w-400 or y+style.height>rect.y+rect.h-900:continue
-                        candidate=InteriorFurniture("storage-furniture:"+container.uid,style.piece_id,x,y,
+                        piece_id=furniture_variant(style.piece_id,container.uid) if plan.version>=4 else style.piece_id
+                        candidate=InteriorFurniture("storage-furniture:"+container.uid,piece_id,x,y,
                                                     style.width,style.height,container.owner,container.uid)
                         if not placement_clear(plan,candidate.rect):continue
                         # Legacy interiors may already contain the player or

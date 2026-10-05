@@ -44,8 +44,10 @@ def prepare_floors(system, ground, structure, profile, *, new_ground=False) -> l
             floor = InteriorPlan(uid, ground.building_id, ground.door_uid,
                                  ground.exterior_x, ground.exterior_y, ground.exterior_z,
                                  ground.width, ground.height, ground.name, ground.function,
-                                 ground.owner_uid, version=3, layout_id=ground.layout_id,
-                                 floor_index=index, floor_count=target_count)
+                                 ground.owner_uid, version=max(3, ground.version), layout_id=ground.layout_id,
+                                 floor_index=index, floor_count=target_count,
+                                 variant_id=ground.variant_id, floor_material=ground.floor_material,
+                                 wall_material=ground.wall_material)
             floor.rooms, floor.walls, (floor.entry_x, floor.entry_y) = rooms_for_profile(
                 uid, profile, floor.width, floor.height)
         lower = floors[-1]

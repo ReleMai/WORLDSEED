@@ -1,0 +1,581 @@
+{
+  "version": 1,
+  "build": "Dev52",
+  "mode": "built-in image_gen",
+  "artist_group": "buildings_a",
+  "count": 15,
+  "door_coordinate_contract": "door_rect = [x,y,width,height] per-mille normalized against entire original untrimmed PNG canvas; entrance recess including passable threshold, excluding facade frame. Original PNG copied without crop or repaint.",
+  "validation": "All 15 PNGs inspected individually; genuine RGBA alpha; source and destination bytes identical; original pixel doorway recess/threshold measurements cross-checked against dark recess runs and opaque threshold alpha edge.",
+  "assets": [
+    {
+      "id": "reed_cottage",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A small broad reed-thatched cottage with a softly rounded hipped straw roof, off-white wattle-and-daub walls, carved dark oak beams, low fieldstone footing and two small square shuttered windows. Modest rounded roof silhouette, no second storey. The unique reed roof is olive-gold, with tied ridge bundles.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-d711556a-4668-4e88-8d3b-3f9eb918779c.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/reed_cottage.png",
+      "door_rect": [
+        431,
+        621,
+        138,
+        296
+      ],
+      "door_pixel_rect": [
+        541,
+        779,
+        173,
+        371
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1254,
+        1214
+      ],
+      "fully_transparent_pixels": 512715,
+      "sha256": "ff9288c25a9533cf5adbae132fe1a10889277a4bc0a98eb0aad03a2065e0af3b",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "stone_croft",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A compact chunky rural stone croft with rough pale limestone walls, mossy thick red-brown stone-slab gable roof, short square stone chimney and narrow deep-set windows. Solid low rectangular silhouette, no timber framing, one centered sandstone-framed door recess.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-259cc00c-80e1-47d4-b386-a1db63ec09e3.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/stone_croft.png",
+      "door_rect": [
+        451,
+        637,
+        101,
+        278
+      ],
+      "door_pixel_rect": [
+        565,
+        799,
+        127,
+        349
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        7,
+        1238,
+        1246
+      ],
+      "fully_transparent_pixels": 509848,
+      "sha256": "b1affc8f8aa4d4cf9e5f87075d13fc8be8beb51014158c29a8a86ca7c3d5f200",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "woodland_lodge",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A rustic tall woodland lodge made of horizontally stacked hewn cedar logs, deep green wooden shingles, a steep split gable roof with a central high loft peak and deep eaves, tall riverstone chimney, dark brass-latched shutters. A broad covered entry only if its central opening remains entirely unobstructed; no supporting post in front of the door.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-9bd8901a-dd36-4e60-a2ae-75bd6bf5e708.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/woodland_lodge.png",
+      "door_rect": [
+        449,
+        695,
+        100,
+        265
+      ],
+      "door_pixel_rect": [
+        563,
+        872,
+        125,
+        332
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1254,
+        1230
+      ],
+      "fully_transparent_pixels": 427818,
+      "sha256": "c9189fc51066d021ce4e5bb920b3390f2fa9dbe7b5217d8433824da3ca69cb6f",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "clay_adobe_home",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A warm terracotta clay-adobe desert home, broad single-storey footprint with softly irregular rounded corners, a nearly flat terraced earthen roof and raised parapets, exposed short timber roof ends, two deep-set rounded windows, and a small mudbrick chimney. Earthen orange and cream walls, no timber-framed façade. One centered dark rectangular door recess with a chunky plaster surround; no courtyard floor outside the house.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-17ce8fe7-e97e-490d-9a3d-65fa16eac4eb.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/clay_adobe_home.png",
+      "door_rect": [
+        435,
+        579,
+        132,
+        319
+      ],
+      "door_pixel_rect": [
+        545,
+        726,
+        165,
+        400
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        8,
+        1254,
+        1224
+      ],
+      "fully_transparent_pixels": 533923,
+      "sha256": "76aae20ebe780bbc4f3f9580d2081143f3128fc550251e03cc482e9d6fbe9dac",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "slate_townhouse",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A narrow dignified three-storey medieval townhouse of dark oak framing and pale cool gray plaster, a very steep blue-gray slate roof with one central tall dormer, symmetrical projecting upper storey, stone base and elegant leaded glass windows. Tall vertical silhouette and distinctive slate finial; no balcony and no extra doors. Its one centered entrance is a tall dark rectangular doorway at ground level.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-dc5bd9cd-e4a2-4166-8575-06747c3ee2fe.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/slate_townhouse.png",
+      "door_rect": [
+        456,
+        804,
+        88,
+        182
+      ],
+      "door_pixel_rect": [
+        572,
+        1008,
+        110,
+        228
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        41,
+        0,
+        1172,
+        1254
+      ],
+      "fully_transparent_pixels": 782958,
+      "sha256": "d59e1fbff2cd825b4ac69fb422f3670a0e1cf4260624c96901f89b4daea8ca05",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "merchant_villa",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A prosperous broad two-storey merchant villa with cream stone walls, warm copper-green hipped roof, two small matching corner roof pavilions connected by a low central roof section, carved stone window surrounds and heavy red-brown timber lintels. Balanced low mansion silhouette, understated gold metalwork, no towers or courtyards outside the footprint. One centered tall dark entry recess in the bottom middle.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-d93db5ac-7e5d-49be-bf38-c223af3f797b.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/merchant_villa.png",
+      "door_rect": [
+        453,
+        681,
+        94,
+        217
+      ],
+      "door_pixel_rect": [
+        568,
+        854,
+        118,
+        272
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1220
+      ],
+      "fully_transparent_pixels": 594101,
+      "sha256": "9354432d1027c2a69f1557cd7bab60f9f354e7b2d8980ba38091f782137e8ebb",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "fisherman_cottage",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A weathered coastal fisherman's cottage with pale blue-gray clapboard walls on a sturdy low dark-stone footing, broad bowed roof covered in driftwood-gray shingles, orange clay chimney pots, tiny round upper attic window and two shuttered ground windows. Distinct narrow curved roof eaves, modest single storey plus attic, no fishing nets or detached barrels. One centered deep dark rectangular door recess framed in salt-worn timber.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-5b29cd44-966b-49fc-b6d5-d975b167be52.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/fisherman_cottage.png",
+      "door_rect": [
+        436,
+        626,
+        120,
+        334
+      ],
+      "door_pixel_rect": [
+        547,
+        785,
+        151,
+        419
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "fully_transparent_pixels": 502333,
+      "sha256": "0ee3442d0db39efba96c1b3c96a9ae63fd100dda9619a51f45be876e00b04462",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "miners_terrace",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A squat wide miner's family terrace home made from dark charcoal quarry stone, industrially simple steep russet corrugated-looking clay pantile roof, two stout square chimneys and a raised central gable face. Thick arched stone window openings and rough iron braces; one single centered shallow-arched dark door recess at the bottom. Make it a single home, not a row of houses with multiple entrances.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-04e2d86a-9b36-4e40-ae70-1d03a500499f.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/miners_terrace.png",
+      "door_rect": [
+        447,
+        699,
+        108,
+        248
+      ],
+      "door_pixel_rect": [
+        560,
+        876,
+        135,
+        311
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        8,
+        1241,
+        1222
+      ],
+      "fully_transparent_pixels": 348078,
+      "sha256": "38d773a9afd7c116a4694e1ed73f64e13156d21fc4dbfcea49aee1e311731727",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "alpine_chalet",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A two-storey alpine chalet with a massive wide shallow-sloping roof of honey-brown split wooden shakes and very deep carved eaves, reddish timber upper storey, white lime-plastered stone ground storey, two broad low window banks, central carved gable flower medallion and squat stone chimney. Distinct low triangular roof silhouette and horizontal beams, no balcony, no exterior stairs. One centered dark wooden door recess below the medallion.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-5e34aebf-4d89-4bb0-aa0a-0cdf2820133d.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/alpine_chalet.png",
+      "door_rect": [
+        461,
+        715,
+        80,
+        213
+      ],
+      "door_pixel_rect": [
+        578,
+        897,
+        100,
+        267
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        53,
+        1254,
+        1182
+      ],
+      "fully_transparent_pixels": 525530,
+      "sha256": "5d34457bf316072a5c626266e86e606ced1d3f861cbe1e05ae4673451d8dd5d4",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "courtyard_home",
+      "type": "residence",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A walled medieval courtyard home represented as one compact building: two low cream-white plaster side wings under distinctive ochre terracotta barrel-tile roofs, linked by a small central entry block with a shallow scalloped parapet. One taller rear roof peeks above to suggest an enclosed courtyard without showing any courtyard ground. Sculpted earth-red corner pilasters, paired little lattice windows. One centered dark rectangular entry recess in the FRONT bottom entry block; no archway showing a background, no extra doors, no fences.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-7b39a3d0-43cd-49a3-8239-be2b26123bf3.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/courtyard_home.png",
+      "door_rect": [
+        448,
+        639,
+        100,
+        243
+      ],
+      "door_pixel_rect": [
+        562,
+        801,
+        125,
+        305
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        33,
+        1238,
+        1222
+      ],
+      "fully_transparent_pixels": 579099,
+      "sha256": "d69c83c93419de18c3441f410ef337376afc044e9c389d3781052cce4631dfd3",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "roadside_inn",
+      "type": "inn",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A large welcoming two-storey roadside inn with asymmetrical connected wings but a centered main façade entrance, cream plaster, chunky dark oak half-timbering, deep wine-red overlapping clay roof tiles, three varied front dormers and tall twin brick chimney stacks. Rounded central entrance surround, a few amber glass windows, wide low stone foundation. Broad irregular roof outline distinct from a regular house. No signs or letters, no barrels or outdoor furniture, no extra entrance leaves. One centered dark doorway recess with its threshold on the bottom front face.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-79b31d4a-f4ed-4d4f-b062-dce44a7b49e9.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/roadside_inn.png",
+      "door_rect": [
+        463,
+        721,
+        90,
+        192
+      ],
+      "door_pixel_rect": [
+        581,
+        904,
+        113,
+        241
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1254
+      ],
+      "fully_transparent_pixels": 593649,
+      "sha256": "42a4e8d57a4303f2be01fcc9063ca07985e694ffa1470bc0c71e4c905a507bee",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "guild_tavern",
+      "type": "inn",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A sturdy octagonal medieval guild tavern with eight-sided pale limestone ground walls and rich dark timber upper storey, an enormous emerald-green conical shingle roof topped by a small copper ventilator, low matching pentagonal front porch gable over an entirely clear centered doorway. Wide warm amber diamond-pane windows and carved roundel decorations without letters. Rounded octagonal silhouette, NOT a square house. One sole dark rectangular entrance recess at front bottom center, no porch rails crossing it, no outside props.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-142883b7-b495-40de-98ab-a343df8842f7.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/guild_tavern.png",
+      "door_rect": [
+        450,
+        732,
+        99,
+        224
+      ],
+      "door_pixel_rect": [
+        564,
+        918,
+        124,
+        281
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1246,
+        1208
+      ],
+      "fully_transparent_pixels": 617460,
+      "sha256": "7752223cd72c2368c9cba2e6361dfc5abe1cce6216bd31e9f27126b9564a6619",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "stone_garrison",
+      "type": "barracks",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A stout fortified stone garrison barracks: broad two-storey rectangular hall of blue-gray dressed granite with a low nearly flat slate hipped roof, two short crenellated square corner towers integrated into its front walls, narrow arrow-slit windows and heavy buttressed base. Not a cathedral, no religious symbol, no tall spires. One central stone-framed tall dark gateway recess, human-scaled door rather than enormous carriage gate, bottom south face centered. No banners, courtyard ground or extra gates.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-e31212c1-993e-4d3d-9518-0d4c29c059ba.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/stone_garrison.png",
+      "door_rect": [
+        458,
+        656,
+        83,
+        215
+      ],
+      "door_pixel_rect": [
+        574,
+        822,
+        104,
+        270
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "fully_transparent_pixels": 507318,
+      "sha256": "176e8e6f6a51a31af9820bbfda65f18794a5511b05f5288bb50b2a8a5fcf6c30",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "timber_barracks",
+      "type": "barracks",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A long substantial militia barracks built from vertical reddish pine planks framed by thick oak posts, a distinctive twin-gable sawtooth-looking roof with muted yellow-brown shingles, two narrow rows of little square windows, dark iron braces and low fieldstone foundation. One prominent centered small front gable projects above the entrance without blocking it. Rugged broad horizontal silhouette, no palisade or fencing, no shields or equipment outdoors. One centered dark rectangular entrance recess at bottom façade.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-76d52f5d-9911-4dea-af55-5537338462ec.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/timber_barracks.png",
+      "door_rect": [
+        456,
+        650,
+        78,
+        255
+      ],
+      "door_pixel_rect": [
+        700,
+        666,
+        120,
+        261
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        0,
+        9,
+        1536,
+        944
+      ],
+      "fully_transparent_pixels": 517539,
+      "sha256": "cbee170b91c06a20c185d5f85075dc0872e917194421c93834be1ca188c46cc9",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    },
+    {
+      "id": "village_forge",
+      "type": "smithy",
+      "prompt": "Use case: stylized-concept.\nAsset type: one standalone exterior-building sprite for WORLDSEED, a painted medieval settlement game.\nScene/backdrop: genuine transparent alpha, no scenery or ground plane.\nStyle/medium: crisp richly textured hand-painted stylized realism, like an illustrated medieval building game asset; clean readable silhouette and restrained earthy materials, not vector or pixel art.\nComposition/framing: upright centered building, front south façade facing the viewer squarely; slightly elevated orthographic view showing the roof, symmetrical front walls horizontal, vertical uprights vertical. NOT diamond isometric, NOT rotated, NOT top-down. Fill roughly 88% of a square canvas with small transparent margins; whole building visible including foundation, roof and chimney.\nLighting: soft upper-left daylight, baked-in material shading and very small contact shadow only; no background shadow plate.\nEntrance constraint: exactly ONE obvious human-height entrance, centered on the bottom front façade at x=50%; paint an EMPTY dark doorway recess with a clear wooden/stone surround and flat threshold; no painted closed door leaf, so the game can overlay its own independent door asset. Door opening must be tall rectangular or shallow arch, not tiny, and reach the bottom façade. No balcony doors, side doors or porch posts in front of the opening.\nAvoid: text, signs with letters, logos, people, animals, fences, trees, detached props, floors outside the foundation, colored backdrop, extra doors, tilt or upside-down buildings.\nSubject: A powerful village blacksmith forge building: low broad gray basalt workshop with a deep purple-black tile butterfly-style twin pitched roof, a massive square soot-darkened masonry furnace chimney rising from the rear left, attached low lean-to roof built into the right side, thick iron tie-rods, two tiny amber glass windows and one carved anvil-shaped stone relief above the centered doorway. No smoking plume, no outdoor anvils, no detached goods or furnace opening that resembles another doorway. One centered tall dark door recess in the FRONT bottom façade, with heavy rough stone jambs and clean flat threshold.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-450d-7790-8e3a-6a0d518c61dc\\exec-2f4dc622-e86a-4794-9458-1fdf5b642ae4.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/village_forge.png",
+      "door_rect": [
+        436,
+        636,
+        120,
+        235
+      ],
+      "door_pixel_rect": [
+        547,
+        798,
+        150,
+        295
+      ],
+      "door_measurement": "Individually inspected original PNG; visible dark door recess x/width and top, including central passable threshold to opaque foundation edge; normalized independently by original width and height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        40,
+        1252,
+        1254
+      ],
+      "fully_transparent_pixels": 714031,
+      "sha256": "c1ee67441a3aec49aa66b56a5cf7fe49756d8fcb4a489968669497db9d980552",
+      "inspection": "Upright complete painted silhouette, distinct architecture/material/roof, one clear centered front dark entrance, genuine transparent alpha; no crop, recolor or placeholder substitution."
+    }
+  ]
+}

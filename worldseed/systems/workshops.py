@@ -82,6 +82,12 @@ WORKSHOP_PROFILES = {
 # Generated settlement fixtures are not player-built StructureInstance objects,
 # but player crafting must still recognize them as the same usable station.
 STATION_PIECE_ALIASES = {
+    "core:joiners_workbench_piece": "core:workbench",
+    "core:toolmakers_workbench_piece": "core:workbench",
+    "core:brick_cookstove_piece": "core:bakery_oven",
+    "core:hooded_forge_piece": "core:forge",
+    "core:vertical_loom_piece": "core:loom",
+    "core:brewer_vat_piece": "core:brewery_vat",
     "core:forge_piece": "core:forge",
     "core:anvil_piece": "core:forge",
     "core:carpenter_bench_piece": "core:workbench",

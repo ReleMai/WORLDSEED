@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "pieces": [
+    {
+      "id": "core:oak_armchair_piece",
+      "name": "Oak Armchair",
+      "base_piece": "core:chair_piece",
+      "asset": "oak_armchair",
+      "width": 850,
+      "depth": 650,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:padded_armchair_piece",
+      "name": "Padded Armchair",
+      "base_piece": "core:chair_piece",
+      "asset": "padded_armchair",
+      "width": 850,
+      "depth": 650,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:carved_bench_piece",
+      "name": "Carved Hall Bench",
+      "base_piece": "core:bench_piece",
+      "asset": "carved_bench",
+      "width": 1800,
+      "depth": 650,
+      "height_ratio": 1.5
+    },
+    {
+      "id": "core:corner_settee_piece",
+      "name": "Corner Settee",
+      "base_piece": "core:bench_piece",
+      "asset": "corner_settee",
+      "width": 1800,
+      "depth": 650,
+      "height_ratio": 1.5
+    },
+    {
+      "id": "core:round_stool_piece",
+      "name": "Round Milking Stool",
+      "base_piece": "core:stool_piece",
+      "asset": "round_stool",
+      "width": 650,
+      "depth": 650,
+      "height_ratio": 1.5
+    },
+    {
+      "id": "core:high_back_chair_piece",
+      "name": "High-Back Chair",
+      "base_piece": "core:chair_piece",
+      "asset": "high_back_chair",
+      "width": 850,
+      "depth": 650,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:linen_cot_bed_piece",
+      "name": "Linen Cot",
+      "base_piece": "core:single_bed_piece",
+      "asset": "linen_cot_bed",
+      "width": 1250,
+      "depth": 2200,
+      "height_ratio": 1.05
+    },
+    {
+      "id": "core:canopy_bed_piece",
+      "name": "Canopy Bed",
+      "base_piece": "core:double_bed_piece",
+      "asset": "canopy_bed",
+      "width": 1900,
+      "depth": 2200,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:oak_dresser_piece",
+      "name": "Oak Kitchen Dresser",
+      "base_piece": "core:cupboard_piece",
+      "asset": "oak_dresser",
+      "width": 1500,
+      "depth": 800,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:painted_wardrobe_piece",
+      "name": "Painted Wardrobe",
+      "base_piece": "core:wardrobe_piece",
+      "asset": "painted_wardrobe",
+      "width": 1500,
+      "depth": 800,
+      "height_ratio": 2.6
+    },
+    {
+      "id": "core:ironbound_coffer_piece",
+      "name": "Ironbound Coffer",
+      "base_piece": "core:house_chest_piece",
+      "asset": "ironbound_coffer",
+      "width": 1150,
+      "depth": 750,
+      "height_ratio": 1.6
+    },
+    {
+      "id": "core:wicker_hamper_piece",
+      "name": "Wicker Storage Hamper",
+      "base_piece": "core:cupboard_piece",
+      "asset": "wicker_hamper",
+      "width": 1500,
+      "depth": 800,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:scroll_bookcase_piece",
+      "name": "Scroll Bookcase",
+      "base_piece": "core:wall_shelf_piece",
+      "asset": "scroll_bookcase",
+      "width": 1700,
+      "depth": 650,
+      "height_ratio": 2.5
+    },
+    {
+      "id": "core:corner_cabinet_piece",
+      "name": "Corner Cabinet",
+      "base_piece": "core:cupboard_piece",
+      "asset": "corner_cabinet",
+      "width": 1500,
+      "depth": 800,
+      "height_ratio": 2.2
+    },
+    {
+      "id": "core:joiners_workbench_piece",
+      "name": "Joiner's Workbench",
+      "base_piece": "core:carpenter_bench_piece",
+      "asset": "joiners_workbench",
+      "width": 2400,
+      "depth": 1100,
+      "height_ratio": 1.45
+    },
+    {
+      "id": "core:toolmakers_workbench_piece",
+      "name": "Toolmaker's Workbench",
+      "base_piece": "core:carpenter_bench_piece",
+      "asset": "toolmakers_workbench",
+      "width": 2400,
+      "depth": 1100,
+      "height_ratio": 1.45
+    },
+    {
+      "id": "core:brick_cookstove_piece",
+      "name": "Brick Cookstove",
+      "base_piece": "core:bakery_oven_piece",
+      "asset": "brick_cookstove",
+      "width": 2200,
+      "depth": 1650,
+      "height_ratio": 1.7
+    },
+    {
+      "id": "core:hooded_forge_piece",
+      "name": "Hooded Forge",
+      "base_piece": "core:forge_piece",
+      "asset": "hooded_forge",
+      "width": 2200,
+      "depth": 1650,
+      "height_ratio": 1.55
+    },
+    {
+      "id": "core:vertical_loom_piece",
+      "name": "Upright Loom",
+      "base_piece": "core:loom_piece",
+      "asset": "vertical_loom",
+      "width": 2100,
+      "depth": 1550,
+      "height_ratio": 1.8
+    },
+    {
+      "id": "core:brewer_vat_piece",
+      "name": "Coopered Brewer's Vat",
+      "base_piece": "core:brewery_vat_piece",
+      "asset": "brewer_vat",
+      "width": 1700,
+      "depth": 1600,
+      "height_ratio": 1.65
+    }
+  ]
+}

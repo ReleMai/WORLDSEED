@@ -176,7 +176,8 @@ class InteriorWorkshopTests(unittest.TestCase):
         door.locked = False
         sim.entities.get(sim.player_id, interior_fixtures.Position).value = WorldPos(door.x, door.y, door.z)
         self.assertIn("You enter", sim.interiors.enter(door.uid))
-        fixture = next(f for f in plan.furniture if f.piece_id == "core:forge_piece")
+        from worldseed.systems.interior_furnishing import furniture_base_piece
+        fixture = next(f for f in plan.furniture if furniture_base_piece(f.piece_id) == "core:forge_piece")
         actor = sim.interiors.player_presence()
         actor.x, actor.y = sim.interiors.fixture_use_position(plan, fixture)
         before = sim.state.to_dict()
@@ -192,7 +193,10 @@ class InteriorWorkshopTests(unittest.TestCase):
         self.assertNotIn("core:forge", sim.interiors.station_ids_near_player())
         self.assertEqual(sim.state.to_dict(), before)
         plan.walls.pop()
-        actor.x, actor.y = 500, 500
+        # New authored rooms may put the forge at the old hard-coded corner.
+        # Use the real far entrance, preserving the physical reach assertion.
+        actor.x, actor.y = plan.entry_x, plan.entry_y
+        self.assertGreater(abs(actor.y - fixture.y), 1500)
         self.assertNotIn("core:forge", sim.interiors.station_ids_near_player())
 
 

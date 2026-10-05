@@ -77,8 +77,17 @@ def container_profile(profile_id: str) -> ContainerProfile | None:
     return catalog()[0].get(str(profile_id))
 
 
-def building_storage_profile(function: str) -> BuildingStorageProfile | None:
-    return catalog()[1].get(str(function))
+def building_storage_profile(function: str, structure=None, *, variant_id: str = "") -> BuildingStorageProfile | None:
+    base = catalog()[1].get(str(function))
+    if base is None or structure is None:
+        return base
+    from worldseed.systems.building_variants import building_variant
+    variant = building_variant(structure, variant_id=variant_id)
+    if variant is None:
+        return base
+    # Container style/slot IDs remain unchanged so carried logistics, keys and
+    # saved inventories keep referring to the original physical object.
+    return BuildingStorageProfile(base.primary, base.inside, base.outside, variant['loot'])
 
 
 def validate_catalog(registry) -> None:
@@ -92,3 +101,5 @@ def validate_catalog(registry) -> None:
     for function,building in buildings.items():
         if any(iid not in registry.items for iid in building.stock):
             raise ValueError(f'Unknown building storage item: {function}')
+    from worldseed.systems.building_variants import validate_catalog as validate_variants
+    validate_variants(registry)

@@ -170,7 +170,9 @@ class PropertyStorageSystem:
                 occupants.setdefault(actor.space_id,[]).append(actor)
         created=reserved=eligible=0
         for structure in sorted(skeleton.structures,key=lambda s:s.uid):
-            profile=building_storage_profile(str(structure.function))
+            saved_plan=self.state.interiors.get('interior:'+structure.uid)
+            variant_id=str(getattr(saved_plan,'variant_id',''))
+            profile=building_storage_profile(str(structure.function),structure,variant_id=variant_id)
             if structure.destroyed or profile is None:
                 continue
             eligible+=1
@@ -210,7 +212,11 @@ class PropertyStorageSystem:
                         existing.lock_level=lock_level;existing.locked=locked
                     existing.x,existing.y,existing.z=position.x,position.y,position.z
                     existing.owner=owner;existing.settlement_id=town.uid;existing.property_id=structure.uid
-                    existing.name=style.name;existing.source_id=style.source_id;existing.profile_id=profile_id
+                    # Existing profiles and contents are authoritative. Only
+                    # legacy objects without a style gain compatibility data;
+                    # a new building loot catalog cannot restyle or reseed them.
+                    if not existing.profile_id:
+                        existing.name=style.name;existing.source_id=style.source_id;existing.profile_id=profile_id
                     space_id="interior:"+structure.uid if indoors else ""
                     if existing.interior_space_id!=space_id or not existing.interior_furniture_uid:
                         existing.interior_furniture_uid="storage-furniture:"+uid if indoors else ""

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from worldseed.systems.state import pos_key
+from worldseed.systems.building_variants import building_variant
 
 
 def shell_cells(shells):
@@ -42,7 +43,16 @@ def shell_at_pointer(context, pixel):
     return shell, 'door' if shell.entrance is not None and (x, y) == tuple(shell.entrance) else 'body'
 
 
-def _art_ref(term, shell):
+def _art_ref(term, shell, interior_plans=None):
+    # O(1) observation of the existing ground plan freezes inhabited facades
+    # even when a later content update adds more choices to the style catalog.
+    saved = (interior_plans or {}).get('interior:' + shell.uid)
+    variant = building_variant(shell, variant_id=str(getattr(saved, 'variant_id', '')))
+    if variant is not None:
+        for visual_id in (variant['id'], variant['asset']):
+            ref = term._visuals.ref('building_shells', visual_id)
+            if ref.paths:
+                return variant['asset'], term._visuals.resolve(ref)
     function = shell.function
     if function == 'residence':
         variants = [name for name in ('residence', 'residence_2', 'residence_3', 'residence_4', 'residence_5', 'residence_6')
@@ -56,8 +66,8 @@ def _art_ref(term, shell):
     return function, path
 
 
-def _whole_surface(term, shell, width, height):
-    _, path = _art_ref(term, shell)
+def _whole_surface(term, shell, width, height, interior_plans=None):
+    _, path = _art_ref(term, shell, interior_plans)
     # Physical door orientation cannot rotate perspective-painted artwork.
     key = ('whole-building-upright', str(path), width, height)
     cache = getattr(term, '_building_surface_cache', None)
@@ -121,8 +131,8 @@ def _surface_mask(term, surface):
     return mask
 
 
-def _facade_door_rect(term, shell, body_rect):
-    function, path = _art_ref(term, shell)
+def _facade_door_rect(term, shell, body_rect, interior_plans=None):
+    function, path = _art_ref(term, shell, interior_plans)
     catalog = _anchor_catalog()
     name = path.stem if path is not None else function
     anchor = catalog.get('assets', {}).get(name, catalog.get('assets', {}).get(function, catalog['default']))
@@ -174,7 +184,7 @@ def _door_surface(term, shell, width, height, opened=False):
     return sprite
 
 
-def _aligned_body_rect(term, shell, body_rect, used, left, top, size):
+def _aligned_body_rect(term, shell, body_rect, used, left, top, size, interior_plans=None):
     """The painted threshold and stable physical portal share one anchor.
 
     New plans and explicitly repaired legacy plans face south. Do not move a
@@ -185,7 +195,7 @@ def _aligned_body_rect(term, shell, body_rect, used, left, top, size):
     x, y = shell.entrance
     threshold = (used.x + (x - left) * size + size // 2,
                  used.y + (y - top + 1) * size - max(1, size // 10))
-    door = _facade_door_rect(term, shell, body_rect)
+    door = _facade_door_rect(term, shell, body_rect, interior_plans)
     return body_rect.move(threshold[0] - door.centerx, threshold[1] - door.bottom)
 
 
@@ -211,7 +221,7 @@ def _contact_shadow(term, rect, current):
                               rect.bottom - height // 2 - 5))
 
 
-def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions=None, door_states=None):
+def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions=None, door_states=None, interior_plans=None):
     """Paint complete observed static shells without promoting tile discovery."""
     pg, screen = term.pg, term.screen
     shell_by = shell_cells(shells)
@@ -225,10 +235,10 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
             x0, y0, x1, y1 = shell.bounds
             rect = pg.Rect(used.x + (x0 - left) * size, used.y + (y0 - top) * size,
                            (x1 - x0 + 1) * size, (y1 - y0 + 1) * size)
-            rect = _aligned_body_rect(term, shell, rect, used, left, top, size)
+            rect = _aligned_body_rect(term, shell, rect, used, left, top, size, interior_plans)
             if not rect.colliderect(used):
                 continue
-            surface = _whole_surface(term, shell, rect.width, rect.height)
+            surface = _whole_surface(term, shell, rect.width, rect.height, interior_plans)
             current = any(pos_key(x, y, 0) in visible for x, y in shell.footprint)
             _contact_shadow(term, rect, current)
             display = surface
@@ -244,7 +254,7 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
             if shell.entrance is None or pos_key(*shell.entrance, 0) not in known:
                 continue
             key = pos_key(*shell.entrance, 0)
-            recess = _facade_door_rect(term, shell, body_rect)
+            recess = _facade_door_rect(term, shell, body_rect, interior_plans)
             role = 'facade'
             if shell.door_side != 'south':
                 # A few frozen, tightly packed legacy shells cannot gain a

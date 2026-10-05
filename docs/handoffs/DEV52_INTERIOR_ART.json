@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "asset": "oak_armchair",
+      "name": "Oak Armchair",
+      "base": "core:chair_piece",
+      "subject": "A sturdy oak armchair with broad arms and woven rush seat.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/oak_armchair.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2a4661a2-b99c-484a-84ad-a63b7cb0cb77.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A sturdy oak armchair with broad arms and woven rush seat. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm natural material texture, consistent elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, not diamond-isometric. Composition: ONE complete isolated object, centered full silhouette, clean generous transparent margins, base at bottom, no room or floor surround, no labels, no people, no border, no cast-shadow rectangle. It must remain readable at small game scale. Genuine transparent RGBA background. Respect furniture proportions, do not crop."
+    },
+    {
+      "asset": "padded_armchair",
+      "name": "Padded Armchair",
+      "base": "core:chair_piece",
+      "subject": "A stout medieval armchair upholstered in faded burgundy wool with brass studs.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/padded_armchair.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-c082a3c5-b1b6-4543-8d83-b66671829509.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A stout medieval armchair upholstered in faded burgundy wool with brass studs. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm natural material texture, consistent elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, not diamond-isometric. Composition: ONE complete isolated object, centered full silhouette, clean generous transparent margins, base at bottom, no room or floor surround, no labels, no people, no border, no cast-shadow rectangle. It must remain readable at small game scale. Genuine transparent RGBA background. Respect furniture proportions, do not crop."
+    },
+    {
+      "asset": "carved_bench",
+      "name": "Carved Hall Bench",
+      "base": "core:bench_piece",
+      "subject": "A long oak bench with carved backrest and simple floral motifs, no cushions.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/carved_bench.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-22ffde0e-25c6-4889-9c29-049236a0df8f.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A long oak bench with carved backrest and simple floral motifs, no cushions. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm natural material texture, consistent elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, not diamond-isometric. Composition: ONE complete isolated object, centered full silhouette, clean generous transparent margins, base at bottom, no room or floor surround, no labels, no people, no border, no cast-shadow rectangle. It must remain readable at small game scale. Genuine transparent RGBA background. Respect furniture proportions, do not crop."
+    },
+    {
+      "asset": "corner_settee",
+      "name": "Corner Settee",
+      "base": "core:bench_piece",
+      "subject": "A compact L-shaped timber settee with worn green cushions.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/corner_settee.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-8dc10fa4-3679-4162-beb4-5a1f3190ee34.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A compact L-shaped timber settee with worn green cushions. Style: detailed hand-painted medieval RPG prop, earthy muted colors and warm wood grain, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object centered with generous TRANSPARENT margins. No room, no floor surround, no people, no labels, no border, no cast-shadow rectangle, no background gradient. Base at bottom. Readable at small game scale. Preserve real proportions and full silhouette. Genuine transparent RGBA background outside and between legs."
+    },
+    {
+      "asset": "round_stool",
+      "name": "Round Milking Stool",
+      "base": "core:stool_piece",
+      "subject": "A squat three-legged round wooden milking stool, rustic pale ash.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/round_stool.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-80e12f8b-4f10-42af-be07-56fe39ed4a4f.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A squat three-legged round wooden milking stool, rustic pale ash. Style: detailed hand-painted medieval RPG prop, earthy muted colors and warm wood grain, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object centered with generous TRANSPARENT margins. No room, no floor surround, no people, no labels, no border, no cast-shadow rectangle, no background gradient. Base at bottom. Readable at small game scale. Preserve real proportions and full silhouette. Genuine transparent RGBA background outside and between legs."
+    },
+    {
+      "asset": "high_back_chair",
+      "name": "High-Back Chair",
+      "base": "core:chair_piece",
+      "subject": "A slender high-back carved walnut dining chair with blue woven seat.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/high_back_chair.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-abd86fb6-4cd2-461f-81bb-75cf3d13a71d.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A slender high-back carved walnut dining chair with blue woven seat. Style: detailed hand-painted medieval RPG prop, earthy muted colors and warm wood grain, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object centered with generous TRANSPARENT margins. No room, no floor surround, no people, no labels, no border, no cast-shadow rectangle, no background gradient. Base at bottom. Readable at small game scale. Preserve real proportions and full silhouette. Genuine transparent RGBA background outside and between legs."
+    },
+    {
+      "asset": "linen_cot_bed",
+      "name": "Linen Cot",
+      "base": "core:single_bed_piece",
+      "subject": "A low wooden single cot with simple linen blanket, one pillow and rope frame.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/linen_cot_bed.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-76ebab54-9894-4628-b9e6-a4d2ca34efe6.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A low wooden single cot with simple linen blanket, one pillow and rope frame. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "canopy_bed",
+      "name": "Canopy Bed",
+      "base": "core:double_bed_piece",
+      "subject": "A rich four-poster oak double bed with muted crimson canopy fabric, blanket and pillows.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/canopy_bed.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2cac30d9-3f8d-4023-9417-6b824eb59bde.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A rich four-poster oak double bed with muted crimson canopy fabric, blanket and pillows. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "oak_dresser",
+      "name": "Oak Kitchen Dresser",
+      "base": "core:cupboard_piece",
+      "subject": "An oak kitchen dresser with shelves of pottery and closed low cupboards.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/oak_dresser.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-7c0a605e-6e76-4130-9d3a-522296763926.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: An oak kitchen dresser with shelves of pottery and closed low cupboards. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "painted_wardrobe",
+      "name": "Painted Wardrobe",
+      "base": "core:wardrobe_piece",
+      "subject": "A tall two-door wardrobe with faded teal painted panels and iron handles.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/painted_wardrobe.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-15d4622e-06c7-45cc-bfe9-6028153d48ef.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A tall two-door wardrobe with faded teal painted panels and iron handles. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "ironbound_coffer",
+      "name": "Ironbound Coffer",
+      "base": "core:house_chest_piece",
+      "subject": "A low dark oak coffer bound with heavy iron straps and a visible lock.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/ironbound_coffer.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-581e2943-98bb-4544-88c9-a59e30bf8022.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A low dark oak coffer bound with heavy iron straps and a visible lock. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "wicker_hamper",
+      "name": "Wicker Storage Hamper",
+      "base": "core:cupboard_piece",
+      "subject": "A broad lidded wicker storage hamper with rope handles and subtle weave.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/wicker_hamper.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-4c62bfb2-8e6a-4a66-881f-13c7ecfd1891.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A broad lidded wicker storage hamper with rope handles and subtle weave. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "scroll_bookcase",
+      "name": "Scroll Bookcase",
+      "base": "core:wall_shelf_piece",
+      "subject": "A tall walnut bookcase with parchment scrolls and a few leatherbound books.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/scroll_bookcase.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-d26d4990-70e4-4743-875f-7833ff2cc7da.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A tall walnut bookcase with parchment scrolls and a few leatherbound books. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "corner_cabinet",
+      "name": "Corner Cabinet",
+      "base": "core:cupboard_piece",
+      "subject": "A compact triangular corner cabinet with carved doors, dark brown oak.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/corner_cabinet.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-b120e711-8d9f-42fb-9464-d5a4695846c4.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A compact triangular corner cabinet with carved doors, dark brown oak. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "joiners_workbench",
+      "name": "Joiner's Workbench",
+      "base": "core:carpenter_bench_piece",
+      "subject": "A broad wooden joiner's workbench with vice, handplane and saw, neat tool cubbies.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/joiners_workbench.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-a75d47ae-1886-491a-bbad-8be960b56bdc.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A broad wooden joiner's workbench with vice, handplane and saw, neat tool cubbies. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "toolmakers_workbench",
+      "name": "Toolmaker's Workbench",
+      "base": "core:carpenter_bench_piece",
+      "subject": "A heavy pale wooden toolmaking bench with clamps, chisels and spare handles.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/toolmakers_workbench.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-1f84eee1-498f-4449-b25a-4d1a069a7343.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A heavy pale wooden toolmaking bench with clamps, chisels and spare handles. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "brick_cookstove",
+      "name": "Brick Cookstove",
+      "base": "core:bakery_oven_piece",
+      "subject": "A redbrick medieval kitchen oven with black iron cooktop, rounded fire opening and pots.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/brick_cookstove.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-ecd99628-807a-4a7b-86b5-a3f5503b6e81.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A redbrick medieval kitchen oven with black iron cooktop, rounded fire opening and pots. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "hooded_forge",
+      "name": "Hooded Forge",
+      "base": "core:forge_piece",
+      "subject": "A stone blacksmith's forge with raised iron hood, glowing coals, tongs and bellows.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/hooded_forge.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-b7a77fbf-f48c-46bc-b21d-97af691ce3bc.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A stone blacksmith's forge with raised iron hood, glowing coals, tongs and bellows. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "vertical_loom",
+      "name": "Upright Loom",
+      "base": "core:loom_piece",
+      "subject": "A standing oak weaving loom with cream warp threads and partially woven striped textile.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/vertical_loom.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-a5cab03b-ab2b-47b7-b1e4-aa72e733e436.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A standing oak weaving loom with cream warp threads and partially woven striped textile. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "brewer_vat",
+      "name": "Coopered Brewer's Vat",
+      "base": "core:brewery_vat_piece",
+      "subject": "A round oak brewing vat with copper-rimmed top, stirring paddle and stout iron hoops.",
+      "kind": "furniture",
+      "destination": "worldseed/assets/sprites/interiors/dev52/brewer_vat.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-39b4eb13-b09e-48b2-852b-bce277c8c172.png",
+      "prompt": "Use case: stylized-concept. Asset type: WORLDSEED indoor furniture sprite. Subject: A round oak brewing vat with copper-rimmed top, stirring paddle and stout iron hoops. Style: detailed hand-painted medieval RPG prop, earthy muted colors, warm material texture, elevated front-facing three-quarter view matching a top-down room; front points toward screen bottom, NOT diamond isometric. Composition: ONE complete isolated object, centered full silhouette, generous transparent margins. Base at bottom. No room, floor surround, people, labels, border, cast-shadow rectangle or background gradient. Readable at small game scale. Genuine transparent RGBA outside the object and between legs."
+    },
+    {
+      "asset": "floor_walnut",
+      "subject": "Dark walnut wood planks in staggered courses, subtly worn warm polished grain.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_walnut.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-6b3d2a21-89e4-48d1-b676-cf940b32c250.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Dark walnut wood planks in staggered courses, subtly worn warm polished grain. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_pine",
+      "subject": "Pale honey pine floorboards of uneven historical widths with knots.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_pine.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-e02ae41b-23e9-4a06-91ed-8e0c670ed5b7.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Pale honey pine floorboards of uneven historical widths with knots. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_limestone",
+      "subject": "Cream limestone flagstone floor, irregular fitted slabs with fine mortar joints.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_limestone.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-129e5fb5-6131-42a3-83f8-f672a2e60250.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Cream limestone flagstone floor, irregular fitted slabs with fine mortar joints. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_slate",
+      "subject": "Charcoal and bluish slate flagstone floor, small rustic slabs.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_slate.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-f1f01637-ce40-4be0-a42f-af8ddbe60571.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Charcoal and bluish slate flagstone floor, small rustic slabs. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_clay_hex",
+      "subject": "Warm red terracotta hexagonal floor tiles with worn pale grout.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_clay_hex.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-64ac0b84-3fcd-46bf-9cfb-02c7cdec3541.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Warm red terracotta hexagonal floor tiles with worn pale grout. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_mosaic",
+      "subject": "Medieval geometric cream and muted blue floor mosaic, no central motif or border.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_mosaic.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-c3c7f349-4eb2-4230-ba20-8cee18bcf429.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Medieval geometric cream and muted blue floor mosaic, no central motif or border. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "floor_packed_earth",
+      "subject": "Smooth compacted ochre earthen interior floor, fine straw flecks, no vegetation.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/floor_packed_earth.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-66857004-4d56-4006-ad32-e66514f5212e.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Smooth compacted ochre earthen interior floor, fine straw flecks, no vegetation. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "wall_limewash",
+      "subject": "Warm ivory limewashed plaster wall with fine natural imperfections, no cracks larger than a hair.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/wall_limewash.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-7a91bf61-7990-46f1-a89a-54ca5e18850b.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Warm ivory limewashed plaster wall with fine natural imperfections, no cracks larger than a hair. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "wall_fieldstone",
+      "subject": "Rustic grey fieldstone masonry wall, coursed tightly fitted stones, neutral mortar.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/wall_fieldstone.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-a4204cdf-8c44-4884-af95-965e6491a2a2.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Rustic grey fieldstone masonry wall, coursed tightly fitted stones, neutral mortar. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    },
+    {
+      "asset": "wall_oak_panel",
+      "subject": "Warm carved oak wood wall panelling, simple repeatable rectangular raised panels.",
+      "kind": "tile",
+      "destination": "worldseed/assets/sprites/interiors/dev52/wall_oak_panel.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-0920fa9d-06f5-4dc3-ac90-0e7dc3791d0a.png",
+      "prompt": "Use case: stylized-concept. Asset type: square seamless tileable WORLDSEED interior material texture. Subject: Warm carved oak wood wall panelling, simple repeatable rectangular raised panels. Camera: flat orthographic directly perpendicular to the material, no perspective. Cohesive detailed hand-painted medieval RPG surface, subdued natural colors, neutral even lighting, tiny material variation. Fill the entire square edge to edge with the same continuous repeatable material, opposite edges should join naturally. No furniture, shadows, room, labels, watermarks, border, vignette, focal objects or background. Opaque texture."
+    }
+  ]
+}

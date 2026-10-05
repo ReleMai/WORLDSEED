@@ -1,0 +1,492 @@
+{
+  "version": 1,
+  "build": "Dev52",
+  "mode": "built-in image_gen",
+  "artist_group": "buildings_b",
+  "count": 15,
+  "door_coordinate_contract": "door_rect = [x,y,width,height] per-mille normalized against entire original untrimmed PNG canvas; entrance recess including passable threshold, excluding facade frame. Original PNG copied without crop or repaint.",
+  "assets": [
+    {
+      "id": "foundry_hall",
+      "type": "smithy",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a substantial medieval foundry hall: squat heavy charcoal-gray basalt facade, broad low sawtooth-like triple gable roof clad in weathered dark copper sheets, two wide brick forge chimneys and arched high ventilation windows, industrial silhouette. The single centered dark doorway is on the front south facade beneath the middle gable.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-586c66bd-3e15-4ba0-9a6e-48fee4544094.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/foundry_hall.png",
+      "door_rect": [
+        459,
+        785,
+        79,
+        147
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1512,
+        1024
+      ],
+      "fully_transparent_pixels": 528418,
+      "sha256": "afa127d15313ea781bd39fb3adde93cc32d77dfff9e47b774f0552f9206814b1",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "carpenter_lodge",
+      "type": "workshop",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval carpenter lodge: tall honey-oak timber-frame gabled lodge on pale riverstone foundation, green-gray wooden shingle roof with broad overhanging eaves, decorative carved beam ends and shuttered wide windows. Compact broad front silhouette, single centered dark doorway beneath front beam.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-da47ecd0-d3fb-4c8c-8cbf-bd1962125aa0.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/carpenter_lodge.png",
+      "door_rect": [
+        435,
+        710,
+        128,
+        200
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1379,
+        1141
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        16,
+        1363,
+        1085
+      ],
+      "fully_transparent_pixels": 437228,
+      "sha256": "bfaa0e487548fecb7dcd883326589711b69938d338705374aa8a785dbbdde9c2",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "joiners_hall",
+      "type": "workshop",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval joiners hall: long orderly guild workshop with pale plaster infill and dark polished chestnut half-timbers, stepped twin dormers above a blue-slate hipped roof, small fretwork trim beneath eaves, chamfered pale sandstone corners. Distinct elegant low wide silhouette and one centered dark front doorway.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-28d10be6-4d1c-4084-9ea0-f97006a56d14.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/joiners_hall.png",
+      "door_rect": [
+        456,
+        683,
+        85,
+        187
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        23,
+        0,
+        1500,
+        960
+      ],
+      "fully_transparent_pixels": 568606,
+      "sha256": "ba5a19e18accc61f3bf69dccc75b57f2d3d6bb46f6f12549524475beaa2976a5",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "bakehouse",
+      "type": "bakery",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval bakehouse: cozy broad whitewashed stone bakery, low terracotta barrel-shaped curved roof, a round clay bread-oven chimney incorporated into the rear roof, two small amber windows, pale limestone base. Single centered dark recessed entrance on the front south facade.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-1a99c075-1731-4d33-99fd-7e9b7d6abef9.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/bakehouse.png",
+      "door_rect": [
+        468,
+        660,
+        81,
+        224
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "fully_transparent_pixels": 548603,
+      "sha256": "d31ff6d30441fc110ea5855ae63fd4655b7c194c6cbc62d6a9e240792143bdde",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "malt_house",
+      "type": "brewery",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval malt house: chunky red-brown brick two-story brewhouse with a steep dark maroon gambrel roof and squat octagonal roof vent, narrow vertical oak bands, copper downspouts, stone plinth. A single centered dark front doorway beneath a small timber lintel.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-870cfcc6-7aa2-43c9-a8b2-6bdd700183a8.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/malt_house.png",
+      "door_rect": [
+        448,
+        752,
+        98,
+        149
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1199,
+        1312
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        7,
+        1199,
+        1236
+      ],
+      "fully_transparent_pixels": 461407,
+      "sha256": "18dc0d3ef03333e7a9f86ab74443a0b190ceb8f22789721f5ba603a9be4a11c6",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "dyers_hall",
+      "type": "weavery",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval dyers hall: long ochre plaster and cedar workshop, alternating green and dusty blue roof shingles forming a restrained woven-chevron pattern, asymmetrical roof height but a broad straight front facade, high narrow windows, carved cloth-roll symbols with NO text. One single centered dark front doorway.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-1e033acb-ec8a-4883-9351-48c3c7a831dd.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/dyers_hall.png",
+      "door_rect": [
+        502,
+        737,
+        56,
+        173
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        0,
+        6,
+        1536,
+        1000
+      ],
+      "fully_transparent_pixels": 505125,
+      "sha256": "ab8cda2dee8cf7fb1fc44c96922b0633799dd13be3300606dbab815a9454a448",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "leatherworks",
+      "type": "tannery",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval leatherworks: stout irregular dark chestnut log walls with reddish leather awning shading a band of small windows, weathered brown tile saltbox roof and stone side buttress, narrow ridge vents and hide-rack motifs incorporated into side wall not freestanding. One centered dark open front doorway. Distinct rugged workshop silhouette.",
+      "original_source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-276a2df7-3191-4325-8e93-b817432b91f0.png",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a0ee01-1557-75c2-8159-e0972d7018c5\\exec-2e027332-23a0-4fd3-8eba-2a06c99981af.png",
+      "edit_prompt": "Use case: precise image-edit / production game sprite transparent cutout. Repair ONLY the transparency of this WORLDSEED medieval leatherworks exterior asset. Preserve its upright architecture, roof, hides, stonework, color, lighting, centered recessed doorway, and the full original composition. Remove any faint residual background pixels, matte or halo outside the building silhouette: all empty canvas pixels and especially all four corners must have fully transparent alpha 0. Keep actual building details fully visible and opaque; preserve antialiasing only immediately along the building edge. Do not add scenery, ground plate, text, shadows detached from the building or any new objects. Whole building remains in frame with transparent margins. Return a genuinely transparent PNG cutout, not a painted checkerboard.",
+      "destination": "worldseed/assets/sprites/buildings/dev52/leatherworks.png",
+      "door_rect": [
+        478,
+        749,
+        95,
+        156
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1227,
+        1282
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1227,
+        1242
+      ],
+      "fully_transparent_pixels": 538075,
+      "sha256": "a5ee094b689fd75c57b09ab8e69f0ea38008e481512e88367fc2d308c88daac6",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "granary_mill",
+      "type": "mill",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval granary mill: tall cream limestone grainhouse with compact square main block and a high steep golden straw roof, timber grain hoist ridge beam and dark shuttered loft windows, a small wood waterwheel attached tight to its left wall with no water or surrounding scene. One centered dark rectangular front doorway.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-92af706b-b85a-4142-8407-0ffe12530721.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/granary_mill.png",
+      "door_rect": [
+        514,
+        757,
+        110,
+        174
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1312,
+        1199
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1302,
+        1156
+      ],
+      "fully_transparent_pixels": 408975,
+      "sha256": "621c8e88756021620097dac0e774f2e70717c59a547a266afbe658971804e551",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "netmakers_hut",
+      "type": "fishery",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval netmakers hut: broad low weatherbeaten pale driftwood fisher cabin with dark blue painted window shutters, a shallow sea-green fish-scale shingle hipped roof and two short timber roof vents, thick rope details on facade and a compact wicker panel beside a window. One centered dark front doorway. No water, no dock, no landscape.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-6d13cfcd-a26e-42e9-8b73-3ec7c80a8c14.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/netmakers_hut.png",
+      "door_rect": [
+        460,
+        632,
+        89,
+        278
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        13,
+        12,
+        1522,
+        1024
+      ],
+      "fully_transparent_pixels": 452202,
+      "sha256": "9fcc55eb4ec26c9b7021381c09f018ece98035499a9d18d3f8978d3f422390b3",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "hay_barn",
+      "type": "barn",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval hay barn: wide rustic russet board-and-batten barn, great arching silver-gray weathered gambrel roof with deeply readable thatch-free cedar shingles, a square loft window under the ridge, heavy hewn oak braces and a low rugged fieldstone base. No hay piles outside. One centered dark open entrance rectangle sized for a regular door overlay, not two separate doors.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-3bd10ed5-4ba1-4322-833a-1cc6f558052e.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/hay_barn.png",
+      "door_rect": [
+        419,
+        710,
+        164,
+        244
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1312,
+        1199
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        2,
+        1312,
+        1199
+      ],
+      "fully_transparent_pixels": 555517,
+      "sha256": "ebe2d0b93f368948226ac98eec2b795d1122c69032463e23dc75937a19c295f1",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "apothecary",
+      "type": "clinic",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval apothecary: narrow tall two-story white plaster and warm chestnut timber townhouse, elegant deep olive-green pointed roof with a single angled dormer, tiny faceted glass windows and stone corner columns. No lettering or shop text, small carved leaf ornament over single centered dark front entrance.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-68835af9-f09b-4466-acef-200faa8d7b5a.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/apothecary.png",
+      "door_rect": [
+        457,
+        739,
+        86,
+        175
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1164,
+        1351
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        41,
+        14,
+        1144,
+        1305
+      ],
+      "fully_transparent_pixels": 689271,
+      "sha256": "8bbe8c4ff186298b03dc44995c8f102668480087809cd966a137e3700c90ef4f",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "covered_bazaar",
+      "type": "market",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval covered bazaar building: broad low enclosed market hall built in pale amber sandstone, red-and-cream terracotta hipped roof with a small octagonal skylight, repeated high arched windows separated by squat columns, woven green awnings under side windows. A single centered dark open rectangular front doorway. No open front stalls or extra exits.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-cab6a34f-7646-454b-bfb8-0807d04a991e.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/covered_bazaar.png",
+      "door_rect": [
+        467,
+        761,
+        67,
+        177
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_bbox": [
+        0,
+        11,
+        1520,
+        1002
+      ],
+      "fully_transparent_pixels": 481361,
+      "sha256": "fd69cdbc31e343e8d41d28b80540fad3585c5a310adbae9f06589ca6eba8656d",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "scribes_archive",
+      "type": "archive",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval scribes archive: dignified square three-story pale gray ashlar stone repository, dark plum-colored steep pyramidal roof with two tiny dormers, narrow diamond leaded windows, carved quill ornament without lettering, compact stone pilasters and unadorned ground-level foundation. One obvious centered dark recessed front entrance, no steps away from building footprint.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-d4bc4003-7175-42b0-b1e4-7e4e4f77cb99.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/scribes_archive.png",
+      "door_rect": [
+        459,
+        815,
+        79,
+        138
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1297,
+        1213
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1275,
+        1183
+      ],
+      "fully_transparent_pixels": 623647,
+      "sha256": "059b75dc502ec0d4954fe1461fd5bcb6a4f0818ba56e8fca1c62583d21a3cae6",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "schoolhouse",
+      "type": "school",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval village schoolhouse: welcoming broad two-story light-yellow plaster and brown timber hall, unusual blue-green mansard roof with a small central bell cupola, three repeated white-trimmed upper windows and broad rectangular ground windows, warm red sandstone plinth. One centered dark open front doorway. No writing, chalkboards, people, letters or labels.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-1c5848f2-65c2-4545-b89e-36b1404fe93d.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/schoolhouse.png",
+      "door_rect": [
+        467,
+        796,
+        69,
+        123
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1312,
+        1199
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1296,
+        1199
+      ],
+      "fully_transparent_pixels": 545559,
+      "sha256": "4ba1d435f2fe470523dd3884cdf788d8424ebc5665f72e8aeb2ae3df3551c226",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    },
+    {
+      "id": "wayside_chapel",
+      "type": "shrine",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production building sprite, a single exterior PNG cutout.\nStyle: richly hand-painted grounded medieval fantasy game architecture, muted warm stone and timber, finely readable roof tiles, cohesive realistic proportions, not cartoon. Neutral soft daylight from upper left, restrained attached contact shadow.\nComposition: upright front-facing orthographic elevated oblique view, front wall horizontal, show substantial roof from above and the south/front facade at the bottom. NOT diamond isometric, NOT rotated sideways, not upside down. Whole building entirely visible with a small transparent margin. One single obvious FRONT entrance exactly centered horizontally near the lower edge of the building, a dark open recessed rectangular doorway with a sturdy frame for an independent door overlay. No other door, no closed door slab over recess, no characters.\nBackground: genuinely transparent alpha, no sky, no scenery, no grass patch or platform, no backdrop, no checkerboard painted into pixels. No lettering, labels, signs with text, logos, watermarks, or frame.\nPrimary request: a medieval wayside chapel: slender pale sandstone sacred hall with a high rounded apse roof behind a narrow front facade, muted verdigris copper roof panels, short centered bell turret, two tall amber stained-glass windows with abstract pattern (not text), round carved sun medallion over one single centered dark recessed front doorway, attached low stone buttresses. No religious lettering, no scenery.",
+      "source": "C:\\Users\\relem\\.codex\\generated_images\\01a109f6-df31-7f12-a675-3581a687bcff\\exec-8d5dd20a-68c3-45e3-8286-de157989016a.png",
+      "destination": "worldseed/assets/sprites/buildings/dev52/wayside_chapel.png",
+      "door_rect": [
+        466,
+        720,
+        70,
+        177
+      ],
+      "door_measurement": "Visually measured front entrance recess against original untrimmed PNG canvas; coordinates in per-mille x/y/width/height.",
+      "mode": "built-in image_gen",
+      "size": [
+        1186,
+        1326
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        1178,
+        1326
+      ],
+      "fully_transparent_pixels": 788289,
+      "sha256": "fb4797b4b3ccd609f3d1f7a5128a618201b55242bd7cddbef9f02b037dd62c33",
+      "inspection": "Inspected original asset: upright complete silhouette, one centered front dark recessed entrance, distinct profession-specific architecture, genuine RGBA transparency."
+    }
+  ]
+}
