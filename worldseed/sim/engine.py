@@ -221,6 +221,7 @@ class Simulation:
             self.state.magic_laws=MagicGenerator(self.seed).laws()
         start=self.player_pos if any(True for _ in entities.query(Position)) else WorldPos(0,0,0)
         self._ensure_nearby_world(start,force=True)
+        self._refresh_combat_candidates()
         if self.interiors.player_presence() is None:
             # Build occupancy once only when loading an old outdoor room position.
             occupied={(n.x,n.y,n.z) for n in self.state.npcs.values() if n.alive and n.uid not in self.state.interior_actors} if self.settlement_physicalization.shell_at(start) else set()
@@ -319,6 +320,33 @@ class Simulation:
         })
         if len(self.visual_effects)>24:del self.visual_effects[:-24]
 
+    def _refresh_combat_candidates(self)->None:
+        """Rebuild transient encounter locality on simulation paths only."""
+        p=self.player_pos
+        self._combat_actor_ids=tuple(
+            uid for uid,c in self.state.creatures.items()
+            if c.hp>0 and c.z==p.z and abs(c.x-p.x)<=42 and abs(c.y-p.y)<=32
+        )
+
+    def combat_active(self)->bool:
+        """Read hostile intent without advancing AI, terrain or game time.
+
+        The nearby actor IDs are reconstructed by simulation updates. Reading
+        this from a HUD never scans the world's population or generates tiles.
+        Encounter state derives from the saved animal intent, so reloading a
+        threatened game retains the pause without a separate combat ledger.
+        """
+        if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:return False
+        p=self.player_pos
+        ids=getattr(self,'_combat_actor_ids',self.state.creatures)
+        for uid in ids:
+            c=self.state.creatures.get(uid)
+            if c is None or c.hp<=0 or c.domestic or c.z!=p.z:continue
+            if abs(c.x-p.x)>42 or abs(c.y-p.y)>32:continue
+            if c.behavior in {'display','pursue','defend','charge','flank'}:return True
+            if c.last_attacked_turn>=0 and 0<=self.turn-c.last_attacked_turn<=2:return True
+        return False
+
     def execute(self,command:object)->TickResult:
         command_started=time.perf_counter()
         self.debug.event(
@@ -384,6 +412,19 @@ class Simulation:
             # ticks, and crafting discovery so practice cannot reveal recipes or
             # perturb unrelated simulation systems.
             self._arena_command(command)
+            self._refresh_combat_candidates()
+            return result
+        combat_before=self.combat_active()
+        free_interaction=isinstance(command,(TalkCommand,IntroduceNPCCommand,StartCasingCommand,StopCasingCommand))
+        if combat_before and not free_interaction and not isinstance(command,(
+            MoveCommand,VerticalMoveCommand,WaitCommand,AttackCommand,RangedAttackCommand,
+            ReadyWeaponCommand,ClearReadyWeaponCommand,AimCommand,SetHuntingStanceCommand,
+            GuardCommand,DodgeCommand,ParryCommand,BraceCommand,ShieldBashCommand,DisengageCommand,
+            PickupCommand,DropCommand,EatCommand,EatMealCommand,DrinkCommand,EquipCommand,
+            UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ToggleStealthCommand,CastMagicCommand,
+            UseCrossingCommand,
+        )):
+            self._message('Combat is paused. Resolve the threat before resting or starting longer work.')
             return result
         minutes=MINUTES_PER_ACTION
         if isinstance(command,MoveCommand):
@@ -394,7 +435,9 @@ class Simulation:
         elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
         elif isinstance(command,ExcavateShaftCommand):minutes=self._excavate_shaft(command)
-        elif isinstance(command,WaitCommand):minutes=max(MINUTES_PER_ACTION,command.minutes);self._message(f"You wait {minutes} minutes.")
+        elif isinstance(command,WaitCommand):
+            minutes=1 if combat_before else max(MINUTES_PER_ACTION,command.minutes)
+            self._message("You wait one combat tick." if combat_before else f"You wait {minutes} minutes.")
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
         elif isinstance(command,ExperimentRecipeCommand):minutes=self._experiment_recipe(command)
@@ -472,7 +515,17 @@ class Simulation:
         # recipes. This runs on the authoritative command path only.
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
-        self.turn+=1;self._advance_time(minutes);self._post_action()
+        if free_interaction:
+            return result
+        # Every committed action in an encounter buys one physical exchange,
+        # including movement (normally wall-clock paced) and inventory actions.
+        # Long work is rejected above before it can apply an instant result.
+        respond_to_action=combat_before or self.combat_active()
+        if respond_to_action:minutes=1
+        self.turn+=1;self._advance_time(minutes)
+        self._post_action(allow_hostile_attacks=respond_to_action)
+        if not combat_before and self.combat_active():
+            self._message('Combat paused: choose an action to advance one tick. Looking and menus are free.')
         if isinstance(command,(GuardCommand,DodgeCommand,ParryCommand,BraceCommand)):
             self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
         elapsed=(time.perf_counter()-command_started)*1000
@@ -483,17 +536,23 @@ class Simulation:
         )
         return result
 
-    def advance_realtime(self, minutes:int)->None:
-        """Advance continuous active play without requiring a player command."""
-        minutes=max(0,int(minutes))
-        if minutes<=0:return
-        # Turn remains the bounded local-action sequence used by wildlife and
-        # combat presentation.  Wall time advances it even while the player is
-        # standing still, then normal ordered time boundaries drive NPCs.
-        self.turn+=minutes
-        self._advance_time(minutes)
-        self._post_action()
-        self.debug.event("realtime_advance",minutes=minutes,minute=int(self.clock.minute),turn=int(self.turn))
+    def advance_realtime(self, minutes:int)->int:
+        """Advance peaceful play, stopping before the first hostile exchange."""
+        advanced=0
+        # Catch-up is bounded by the driver, but each boundary must inspect the
+        # resulting intent. Otherwise a stalled window can skip the warning and
+        # deliver several attacks before the player can choose an action.
+        for _ in range(max(0,int(minutes))):
+            if self.combat_active():break
+            self.turn+=1
+            self._advance_time(1)
+            self._post_action(allow_hostile_attacks=False)
+            advanced+=1
+            if self.combat_active():
+                self._message('Combat paused: choose an action to advance one tick. Looking and menus are free.')
+                break
+        if advanced:self.debug.event("realtime_advance",minutes=advanced,minute=int(self.clock.minute),turn=int(self.turn))
+        return advanced
 
     def advance_offline(self, minutes:int, policy:str="safe") -> dict[str,int]:
         """Fast-forward an absent player's world by meaningful event boundaries.
@@ -760,7 +819,7 @@ class Simulation:
         else:
             self._nearby_dungeon_key=None
 
-    def _post_action(self)->None:
+    def _post_action(self,*,allow_hostile_attacks:bool=True)->None:
         inv=self.entities.try_get(self.player_id,Inventory)
         if inv and self.state.player_readied_weapon and inv.count(self.state.player_readied_weapon)<=0:
             self.state.player_readied_weapon="";self.combat.clear_aim()
@@ -786,8 +845,10 @@ class Simulation:
             for did in self.disease.local_player_exposure(self.player_pos,self.clock.minute):
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
             for msg in self.disease.tick_player(self.clock.minute,v):self._message(msg)
-        before_behavior={uid:c.behavior for uid,c in self.state.creatures.items()}
-        before_positions={uid:WorldPos(c.x,c.y,c.z) for uid,c in self.state.creatures.items()}
+        self._refresh_combat_candidates()
+        local=[self.state.creatures[uid] for uid in self._combat_actor_ids]
+        before_behavior={c.uid:c.behavior for c in local}
+        before_positions={c.uid:WorldPos(c.x,c.y,c.z) for c in local}
         attackers=self.hunting.update_local_ai(self.player_pos,self.turn,self.clock.minute)
         # Tactical tells are logged only when the local animal actually changes
         # state, keeping the behavior legible without a renderer-side mutation.
@@ -803,7 +864,7 @@ class Simulation:
         v=self.entities.try_get(self.player_id,Vitals)
         if v:
             inv=self.entities.try_get(self.player_id,Inventory)
-            for uid in attackers:
+            for uid in attackers if allow_hostile_attacks else ():
                 c=self.state.creatures.get(uid)
                 if not c:continue
                 p=self.player_pos

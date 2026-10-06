@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import CreatureState
+from worldseed.systems.npc_equipment import NPCEquipmentSystem
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +58,7 @@ class SettlementPopulationBinder:
         self.registry = registry
         self.seed = seed or b""
         self.physicalization = physicalization
+        self.equipment = NPCEquipmentSystem(state, registry)
 
     @staticmethod
     def _rooms_for(skeleton, structure_id: str):
@@ -331,6 +333,7 @@ class SettlementPopulationBinder:
                 npc.workplace_id = ""
                 npc.work_room_id = ""
 
+        self.equipment.provision_settlement(settlement, representatives)
         return SettlementBindingStats(
             str(settlement.uid),
             npcs=len(representatives),

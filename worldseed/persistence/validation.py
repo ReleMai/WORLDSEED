@@ -270,6 +270,25 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
             issues.append(f"negative NPC wealth: {uid}")
         if int(row.get("hp", 0)) < 0:
             issues.append(f"negative NPC hp: {uid}")
+        inventory = row.get("inventory", {})
+        valid_inventory = isinstance(inventory, dict) and all(
+            isinstance(iid, str) and ":" in iid and not any(c.isspace() for c in iid)
+            and type(qty) is int and qty >= 0
+            for iid, qty in inventory.items()
+        )
+        if not valid_inventory:
+            issues.append(f"invalid NPC inventory: {uid}")
+        equipment = row.get("equipment", {})
+        if not isinstance(equipment, dict) or any(
+            slot not in {"hand", "head", "body", "hands", "legs", "offhand"}
+            or not isinstance(iid, str)
+            for slot, iid in (equipment.items() if isinstance(equipment, dict) else ())
+        ):
+            issues.append(f"invalid NPC equipment: {uid}")
+        elif valid_inventory and any(
+            int(inventory.get(iid, 0)) < count for iid, count in Counter(equipment.values()).items()
+        ):
+            issues.append(f"NPC equipment exceeds carried inventory: {uid}")
 
     outbound = Counter()
     for uid, row in routes.items():

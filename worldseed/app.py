@@ -22,6 +22,7 @@ from worldseed.systems.dialogue import DialogueSystem
 from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
+from worldseed.ui.npc_activity import activity_label, possessions_rows
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
 from worldseed.ui.terminal import Terminal
@@ -1872,7 +1873,7 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
     summary={
         'name':name,'age':npc.age if npc.uid in known else None,'occupation':occupation,
         'settlement':town.name if town and town.uid in sim.known_settlement_ids() else 'Unknown',
-        'activity':str(npc.goal or 'idle').replace('_',' ').title(),
+        'activity':activity_label(npc),
         'home':home.function.replace('_',' ').title() if home else '',
         'workplace':work.function.replace('_',' ').title() if work else '',
         'traits':[str(v).title() for v in npc.traits] if familiarity>=16 else [],
@@ -1880,10 +1881,10 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
     }
     tabs={}
     worn=[]
-    for iid,qty in sorted(npc.inventory.items()):
-        if int(qty)<=0:continue
+    for slot,iid in sorted(getattr(npc,'equipment',{}).items()):
+        if int(npc.inventory.get(iid,0))<=0:continue
         item=sim.registry.items.get(iid)
-        if item is not None and (item.equip_slot or any(tag in item.tags for tag in ('clothing','armor','worn'))):
+        if item is not None:
             worn.append(item.name)
     visible_injuries=[]
     if npc.hp<85:visible_injuries.append('Visible wounds or impaired movement')
@@ -1900,6 +1901,7 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         ('Occupation',occupation),
         ('Settlement',summary['settlement']),
         ('Current activity',summary['activity']),
+        ('Position',f'{npc.x}, {npc.y}, z{npc.z}'),
     ]
     if summary['home']:overview.append(('Home',summary['home']))
     if summary['workplace']:overview.append(('Workplace',summary['workplace']))
@@ -1910,6 +1912,8 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
             if npc.backstory.get(key):
                 overview.append((key.replace('_',' ').title(),str(npc.backstory[key]).capitalize()))
     tabs['overview']=overview
+    registry=getattr(sim,'registry',None)
+    if registry is not None:tabs['belongings']=possessions_rows(npc,registry)
 
     def relative_row(uid,role):
         if not uid:return None
@@ -1992,20 +1996,22 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
     sim=ctx.sim;npc=sim.state.npcs.get(npc_uid)
     if npc is None or not npc.alive:return UI_BACK
     introduced=npc.uid in sim.known_npc_ids() and npc.uid in sim.state.introduced_npcs
-    tabs=(('overview','Overview'),('appearance','Worn / Injuries'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','Learned History')) if introduced else (('appearance','Worn / Injuries'),('overview','Unknown person'))
+    tabs=(('overview','Overview'),('appearance','Worn / Injuries'),('belongings','Cash / Gear / Pack'),('family','Family'),('relations','Relations'),('needs','Needs'),('history','Learned History')) if introduced else (('appearance','Worn / Injuries'),('overview','Unknown person'))
     active='overview' if introduced else 'appearance'
+    nav=NavigationStack(RouteState('npc-profile',npc.name if introduced else 'Stranger'))
     while True:
         initial=next((i for i,row in enumerate(tabs) if row[0]==active),0)
         data=_npc_profile_data(sim,npc,active)
         summary=data['summary']
         subtitle=f"{summary['occupation']} · {summary['settlement']} · {summary['activity']}"
-        choice=_select(
-            term,summary['name'],list(tabs),initial=initial,subtitle=subtitle,
+        nav.current.selected=initial
+        choice=_stack_menu(
+            term,nav,list(tabs),subtitle=subtitle,
             presentation='npc_profile',presentation_data=data,
         )
         if not choice:return UI_BACK
         active=choice
-        if not getattr(term,'mouse_ui',False):
+        if active=='belongings' or not getattr(term,'mouse_ui',False):
             page=_npc_profile_data(sim,npc,active)['tabs'].get(active,())
             lines=[]
             for row in page:
@@ -2013,7 +2019,8 @@ def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:
                     lines.append(f'{row[0]}: {row[1]}')
                 else:
                     lines.append(f'{row[0]}: {row[1]}')
-            _view_text(term,'\n'.join(lines) or 'No known information.',title=f'{summary["name"]} · {active.title()}')
+            nav.push(RouteState('npc-profile-'+active,f'{summary["name"]} · {active.title()}'))
+            _stack_view(term,nav,'\n'.join(lines) or 'No known information.')
 
 
 def _building_context_menu(ctx:GameContext,term:Terminal,building_uid:str,part:str)->str:
@@ -3396,6 +3403,8 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
     install=getattr(term,'set_realtime_callback',None)
     if callable(install):install(realtime.pump)
+    install_combat=getattr(term,'set_combat_callback',None)
+    if callable(install_combat):install_combat(ctx.sim.combat_active)
     try:
       while True:
         _present_game_frame(term,ctx,renderer,last);last=''

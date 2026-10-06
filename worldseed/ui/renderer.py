@@ -149,6 +149,7 @@ class Renderer:
 
         lines.append('+' + '-' * (layout.width-2) + '+')
         latest = message or (sim.log[-1].message if sim.log else 'The world continues around you.')
+        if sim.combat_active():latest = 'COMBAT PAUSED | Act to advance one tick. Enter: combat actions.'
         lines.append(self._full_row(self._clip(latest, layout.width-4), layout.width))
 
         if layout.mode == 'compact':

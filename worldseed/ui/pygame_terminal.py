@@ -122,6 +122,7 @@ class PygameTerminal(PointerUI):
         self._ui_window_pointer_last = (0, 0)
         self._current_presentation = ''
         self._realtime_callback = None
+        self._combat_active_callback = None
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
         # Context overlays retain only the pixels under the popup.  This lets
@@ -178,6 +179,9 @@ class PygameTerminal(PointerUI):
 
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
+
+    def set_combat_callback(self, callback) -> None:
+        self._combat_active_callback = callback
 
     def _pump_realtime(self) -> bool:
         callback=self._realtime_callback
@@ -276,6 +280,11 @@ class PygameTerminal(PointerUI):
             self._animate_idle_effects(now)
             if self._pump_realtime():
                 return 'UI_REDRAW'
+            if self._combat_active_callback and self._combat_active_callback():
+                # Retain pressed keys until KEYUP so queued duplicates cannot
+                # turn the walk into a fight into several unchosen exchanges.
+                self._active_movement_key = None
+                self._movement_next_repeat_ms = 0
             wait_ms = 50
             if self._active_movement_key is not None:
                 wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
@@ -507,7 +516,7 @@ class PygameTerminal(PointerUI):
                     # Ignore any duplicate/repeat KEYDOWN already queued by the
                     # platform or injected before repeat was disabled. Held
                     # movement is paced solely by the timer above.
-                    if event.key in self._held_movement:
+                    if event.key in self._held_movement or getattr(event,'repeat',False):
                         continue
                     return _activate_movement(event.key, pg.time.get_ticks())
                 if event.key in key_map:
@@ -4087,6 +4096,7 @@ class PygameTerminal(PointerUI):
             screen.blit(surf,(tx,ty)); ty+=gap
         text(sim.state.player_name,self._theme['accent'],self.title_font,28)
         text(sim.clock.label(),self._theme['muted'])
+        if sim.combat_active():text('COMBAT PAUSED — act for 1 tick',self._theme['danger'])
         text(f"Position  {pos.x}, {pos.y}, z{pos.z}",self._theme['muted'],gap=26)
         for label,val,maxv in [('Health',vit.hp,vit.max_hp),('Stamina',vit.stamina,100),('Hunger',100-vit.hunger,100),('Hydration',100-vit.thirst,100)]:
             text(f"{label:<10} {val:>3}/{maxv:<3}",gap=17)

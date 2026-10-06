@@ -35,8 +35,18 @@ class RealtimeSimulationDriver:
 
     def pump(self, now: float | None = None) -> int:
         current = time.monotonic() if now is None else float(now)
-        if self.paused:
+        combat_active=getattr(self.simulation,'combat_active',lambda:False)
+        if self.paused or combat_active():
             self._last = current
+            self._accumulator = 0.0
+            self._combat_paused=bool(combat_active())
+            return 0
+        if getattr(self,'_combat_paused',False):
+            # The last threat disappeared during an action/menu. Start a fresh
+            # wall-clock baseline instead of replaying time spent deciding.
+            self._combat_paused=False
+            self._last=current
+            self._accumulator=0.0
             return 0
         if self._last is None:
             self._last = current
@@ -53,5 +63,9 @@ class RealtimeSimulationDriver:
         # absences; an unfocused window must not burst through hours on return.
         cap = self.seconds_per_game_minute * self.max_catchup_minutes
         self._accumulator = min(self._accumulator, cap)
-        self.simulation.advance_realtime(minutes)
-        return minutes
+        advanced=self.simulation.advance_realtime(minutes)
+        if combat_active():
+            self._accumulator=0.0
+            self._combat_paused=True
+        # Older adapters did not return elapsed minutes; keep their pump API.
+        return minutes if advanced is None else int(advanced)

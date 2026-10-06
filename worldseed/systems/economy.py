@@ -202,8 +202,8 @@ class EconomySystem:
             key=lambda npc:npc.uid,
         )
         for npc in representatives:
+            if npc.work_assignment_day!=day:npc.work_hours_today=0
             npc.work_assignment_day=day
-            npc.work_hours_today=0
             npc.assigned_process_id=""
             rows=by_occ.get(npc.occupation,())
             if not rows:
@@ -219,11 +219,26 @@ class EconomySystem:
             row.representative_uids.append(npc.uid)
             npc.assigned_process_id=row.process_id
 
+    def ensure_work_assignments(self, town, minute: int) -> None:
+        """Prepare today's authoritative jobs without running production.
+
+        New settlements must not wait for their first midnight to start exact
+        work. Existing same-day reservations and completed hours are preserved.
+        """
+        day=int(minute)//1440
+        unbound=any(npc.alive and npc.age>=16 and npc.settlement_id==town.uid
+                    and npc.work_assignment_day!=day for npc in self.state.npcs.values())
+        if not unbound:return
+        current=any(row.settlement_id==town.uid and row.assigned_day==day
+                    for row in self.state.labor_reservations.values())
+        if current:self._bind_representative_labor(town,day)
+        else:self._reserve_labor(town,day)
+
     def representative_work(self, npc, town, minute: int) -> str:
         """Record physical work against today's aggregate assignment."""
         day=int(minute)//1440
         if npc.work_assignment_day!=day:
-            self._bind_representative_labor(town,day)
+            self.ensure_work_assignments(town,minute)
         if not npc.assigned_process_id:
             return ""
         reservation=self.state.labor_reservations.get(f"labor:{town.uid}:{npc.assigned_process_id}")

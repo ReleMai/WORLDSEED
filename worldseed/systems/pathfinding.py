@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import deque
 from dataclasses import dataclass
 import heapq
 from typing import Callable
@@ -9,34 +8,48 @@ from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 
 
-def local_path(start: WorldPos, goal: WorldPos, is_passable, max_nodes: int = 1200) -> list[WorldPos]:
+def local_path(start: WorldPos, goal: WorldPos, is_passable, max_nodes: int = 1200, *, goal_radius: int = 0) -> list[WorldPos]:
+    """Find a bounded deterministic cardinal path through prepared terrain.
+
+    Goal-directed search reaches ordinary village trips within the node budget.
+    A square bound matches the NPC waypoint contract, including diagonal trips;
+    no local search may expand beyond forty cells from its starting position.
+    """
     if start.z != goal.z:
         return []
-    if start == goal:
+    radius = max(0, min(1, int(goal_radius)))
+    def remaining(pos):
+        return max(0, abs(pos.x - goal.x) + abs(pos.y - goal.y) - radius)
+    if remaining(start) == 0:
         return [start]
-    q = deque([start])
+    serial = 0
+    queue = [(remaining(start), remaining(start), serial, 0, start)]
+    cost = {start: 0}
     came = {start: None}
     nodes = 0
-    while q and nodes < max_nodes:
-        cur = q.popleft()
+    while queue and nodes < max(0, int(max_nodes)):
+        _, _, _, distance, cur = heapq.heappop(queue)
+        if distance != cost.get(cur):
+            continue
         nodes += 1
+        if remaining(cur) == 0:
+            path = []
+            while cur is not None:
+                path.append(cur)
+                cur = came[cur]
+            return list(reversed(path))
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             nxt = cur.moved(dx, dy)
-            if nxt in came:
+            if max(abs(nxt.x - start.x), abs(nxt.y - start.y)) > 40:
                 continue
-            if abs(nxt.x - start.x) + abs(nxt.y - start.y) > 40:
-                continue
-            if not is_passable(nxt):
+            next_cost = distance + 1
+            if next_cost >= cost.get(nxt, 1 << 60) or not is_passable(nxt):
                 continue
             came[nxt] = cur
-            if nxt == goal:
-                path = [nxt]
-                p = cur
-                while p is not None:
-                    path.append(p)
-                    p = came[p]
-                return list(reversed(path))
-            q.append(nxt)
+            cost[nxt] = next_cost
+            serial += 1
+            heuristic = remaining(nxt)
+            heapq.heappush(queue, (next_cost + heuristic, heuristic, serial, next_cost, nxt))
     return []
 
 

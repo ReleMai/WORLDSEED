@@ -170,6 +170,18 @@ class UIRC2Tests(unittest.TestCase):
             self.assertLessEqual(layout.map_width,max(1,width))
             self.assertLessEqual(layout.map_height,max(1,height))
 
+    def test_combat_pause_indicator_is_observational_and_fits_narrow_hud(self):
+        from unittest.mock import patch
+        renderer=Renderer(self.reg,use_color=False)
+        before=self.sim.state.to_dict()
+        with patch.object(self.sim,'combat_active',return_value=True):
+            for width,height in ((60,18),(80,24),(100,30),(124,32)):
+                frame=renderer.render(self.world,self.entities,self.sim,self.pid,width,height)
+                self.assertIn('COMBAT PAUSED',frame)
+                self.assertLessEqual(len(frame.splitlines()),height)
+                self.assertTrue(all(visible_len(line)<=width for line in frame.splitlines()))
+        self.assertEqual(before,self.sim.state.to_dict())
+
     def test_renderer_never_relies_on_terminal_wrapping(self):
         r=Renderer(self.reg,use_color=True)
         before=self.sim.state.to_dict()

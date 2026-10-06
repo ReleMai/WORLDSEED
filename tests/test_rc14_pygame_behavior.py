@@ -50,6 +50,21 @@ class PygameBehaviorTests(unittest.TestCase):
         self.term.discard_pending_input()
         self.assertEqual(self.term.read_key(), 'QUIT')
 
+    def test_combat_requires_fresh_movement_press_and_never_replays_hold(self):
+        pg=self.pg;self.term.set_combat_callback(lambda:True)
+        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_d,unicode='d'))
+        self.assertEqual(self.term.read_key(),'d')
+        self.term._movement_next_repeat_ms=0
+        events=[pg.event.Event(pg.NOEVENT),
+                pg.event.Event(pg.KEYDOWN,key=pg.K_d,unicode='d',repeat=True),
+                pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE,unicode='\x1b')]
+        with patch.object(pg.event,'wait',side_effect=events):
+            self.assertEqual(self.term.read_key(),'ESC')
+        self.assertIsNone(self.term._active_movement_key)
+        pg.event.post(pg.event.Event(pg.KEYUP,key=pg.K_d,unicode=''))
+        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_d,unicode='d'))
+        self.assertEqual(self.term.read_key(),'d')
+
     def test_long_footer_does_not_paint_outside_its_panel(self):
         pg = self.pg
         self.term.screen.fill((0, 0, 0))

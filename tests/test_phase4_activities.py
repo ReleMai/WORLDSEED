@@ -166,9 +166,19 @@ class Phase4ActivityTests(unittest.TestCase):
         ai.attach_economy(SimpleNamespace(
             representative_work=lambda actor, settlement, minute: calls.append(actor.uid)
         ))
+        reservations_before=state.to_dict()["activity_reservations"]
+        stocks_before=dict(town.stocks)
         ai.generate_plan(other, town, 600, "work")
-        self.assertEqual(other.tasks, [])
+        # A busy station now sends the actor to the real workplace to wait;
+        # it still cannot bypass the reservation with abstract ghost work.
+        self.assertEqual(other.tasks[0], {"kind":"move", "x":10, "y":9})
+        self.assertEqual(other.tasks[1]["kind"], "wait")
+        self.assertFalse(any(t.get("action")=="work" for t in other.tasks))
+        for minute in range(605, 630, 5):
+            ai.execute_tick(other, town, minute, WorldPos(8, 9))
         self.assertEqual(calls, [])
+        self.assertEqual(town.stocks,stocks_before)
+        self.assertEqual(state.to_dict()["activity_reservations"],reservations_before)
 
     def test_ai_completes_smith_work_only_after_both_physical_activities(self):
         state, town, npc, physical, activities = self.fixture()

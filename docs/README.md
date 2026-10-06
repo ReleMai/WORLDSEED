@@ -11,6 +11,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev55 moving residents, equipment and action combat](handoffs/DEV55_LIVING_NPCS_ACTION_COMBAT_HANDOFF.md)
 - [Dev43 diverse living settlements](handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md)
 - [Dev42 normalized character sprites](handoffs/DEV42_CHARACTER_SPRITES_HANDOFF.md)
 - [Dev41 real-time social world](handoffs/DEV41_REALTIME_SOCIAL_WORLD_HANDOFF.md)

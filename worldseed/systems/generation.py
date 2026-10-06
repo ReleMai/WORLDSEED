@@ -3,6 +3,7 @@ from worldseed.content.registry import ContentRegistry
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.core.coords import WorldPos
 from worldseed.systems.farm_compounds import starting_farm_seeds, terrain_crop_ids
+from worldseed.systems.npc_equipment import starting_equipment_stock
 from worldseed.systems.names import culture_name, place_name, person_name, DEITIES
 from worldseed.systems.state import CultureState, ReligionState, FactionState, SettlementState, NPCState, MagicLaw
 
@@ -142,6 +143,8 @@ class ProceduralSocietyGenerator:
             # walls, water, or resource cells.
             base_occ=nr.choice(OCCUPATIONS);occ=specialize_occupation(base_occ,uid,i)
             npcs.append(NPCState(f"npc:{uid}:{i}",person_name(nr),18+nr.randbelow(48),occ,traits,x,y,0,uid,f.uid,wealth=10+nr.randbelow(60)))
+        for iid, qty in starting_equipment_stock(npcs, self.registry).items():
+            s.stocks[iid] = s.stocks.get(iid, 0) + qty
         return s,npcs,c,r,f
 
     def representatives_for_settlement(self,s:SettlementState,count:int|None=None)->list[NPCState]:

@@ -6,6 +6,21 @@ from worldseed.systems.history import HistorySystem
 from worldseed.systems.pathfinding import local_path
 
 class NPCSystem:
+    # Explicit local durations release completed routines on simulation ticks.
+    # Actions touching goods, cash, learning or aggregate work retain an hour
+    # per completion; faster ticking cannot multiply their old coarse output.
+    ROUTINE_MINUTES = {
+        "drink": 5, "rest": 30, "socialize": 15, "worship": 30,
+        "work": 60, "eat": 60, "heal": 60, "learn": 60, "steal": 60,
+        "guard": 60, "territory_guard": 60,
+    }
+
+    @classmethod
+    def _timed_routine(cls, task: dict) -> bool:
+        return (task.get("kind") in {"social", "wait"}
+                or (task.get("kind") == "perform"
+                    and task.get("action") in cls.ROUTINE_MINUTES))
+
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
         self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
@@ -121,6 +136,7 @@ class NPCSystem:
         coarse progress instead of replaying every exact local tick.
         """
         if self.activities is not None:self.activities.cleanup(minute)
+        provisioned_towns=set()
         for npc in self._indexed_npcs():
             if not npc.alive or self._inside(npc):continue
             tier=None
@@ -134,14 +150,21 @@ class NPCSystem:
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
             active=self._tick_managed(npc,player_pos)
-            # Normal Tier-A movement is owned by the fixed simulation tick, but
-            # non-movement actions keep their coarse decision cadence until the
-            # later activity/reservation work gives them explicit durations.
+            if active and town.uid not in provisioned_towns:
+                provisioned_towns.add(town.uid)
+                equipment=getattr(self.settlement_population,"equipment",None)
+                provision=getattr(equipment,"provision_settlement",None)
+                if callable(provision):provision(town)
+            # Local timed routines can complete at this boundary too. Exact
+            # locomotion and reserved work still belong to the fixed tick.
             task=npc.tasks[0] if npc.tasks else {}
             task_kind=task.get("kind","")
             profession_task=self.professions is not None and self.professions.is_physical_task(task)
             physical_task=profession_task or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action") in {"mining_deposit","answer_door"})
-            if execute_active or not active or not physical_task:self._execute_task(npc,town,minute,player_pos)
+            if active and not execute_active and self._timed_routine(task):
+                self.execute_tick(npc,town,minute,player_pos)
+            elif execute_active or not active or not physical_task:
+                self._execute_task(npc,town,minute,player_pos)
 
     def tick_update(self,minute:int,player_pos:WorldPos)->None:
         """Execute one deterministic action slice for physically active NPCs."""
@@ -155,13 +178,12 @@ class NPCSystem:
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
-            # Phase 4 WU1 moves locomotion onto the fixed tick without making
-            # work/eating/social effects fire every few minutes. Those actions
-            # remain coarse until activity durations/reservations are added.
+            # Timed domestic routines release their next walk on this tick;
+            # productive work remains on its own duration/reservation authority.
             if npc.tasks:
                 task=npc.tasks[0];kind=task.get("kind")
                 profession_task=self.professions is not None and self.professions.is_physical_task(task)
-                if profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action") in {"mining_deposit","answer_door"}):
+                if self._timed_routine(task) or profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action") in {"mining_deposit","answer_door"}):
                     self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
@@ -231,7 +253,11 @@ class NPCSystem:
         if npc.hunger>=85 and npc.wealth<=1 and ("greedy" in npc.traits or town.food_stress>=70):
             scores["steal"]=npc.hunger*3+25
         best=max(scores,key=scores.get);best_score=scores[best]
-        if npc.goal_score*110//100>=best_score and npc.goal in scores:best=npc.goal;best_score=npc.goal_score
+        # Hysteresis compares today's utility, never the historical peak. A
+        # satisfied thirst/sleep goal must release the actor to their next need.
+        current_score=scores.get(npc.goal,0)
+        if npc.goal in scores and current_score*110//100>=best_score:
+            best=npc.goal;best_score=current_score
         npc.goal=best;npc.goal_score=best_score
         return best,best_score
 
@@ -240,6 +266,9 @@ class NPCSystem:
         goal=npc.goal if goal is None else goal
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
+            ensure_assignments=getattr(self.economy,"ensure_work_assignments",None)
+            if npc.work_assignment_day!=int(minute)//1440 and callable(ensure_assignments):
+                ensure_assignments(town,minute)
             if self.mining is not None and self.mining.supports_physical_work(npc,town):
                 physical_tasks=self.mining.plan_work(npc,town,minute)
                 if physical_tasks:
@@ -247,14 +276,14 @@ class NPCSystem:
                     return
                 # A realized miner with a real workplace/cave authority must
                 # wait for a viable vein/reservation rather than mint abstract ore.
-                npc.tasks=[]
+                self._wait_for_work(npc,town)
                 return
             if self.professions is not None and self.professions.supports_physical_work(npc,town):
                 physical_tasks=self.professions.plan_work(npc,town,minute)
                 if physical_tasks:
                     npc.tasks=physical_tasks
                     return
-                npc.tasks=[]
+                self._wait_for_work(npc,town)
                 return
             if self.activities is not None:
                 physical_required=self.activities.supports_physical_work(npc,town)
@@ -266,7 +295,7 @@ class NPCSystem:
                     # A real nearby workplace exists but every compatible slot
                     # is reserved. Wait and retry on a later tick; never ghost
                     # through the reservation with abstract representative work.
-                    npc.tasks=[]
+                    self._wait_for_work(npc,town)
                     return
             target=self._binding_destination(npc.workplace_id,npc.work_room_id,town)
             npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"work"}]
@@ -318,11 +347,31 @@ class NPCSystem:
             else:
                 target=self._service_destination(town,("market","shrine"))
                 npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"socialize"}]
+    def _wait_for_work(self,npc:NPCState,town)->None:
+        # No viable resource/station/input means wait at the real workplace;
+        # never replace the missing exact work with invented production.
+        target=self._binding_destination(npc.workplace_id,npc.work_room_id,town)
+        npc.tasks=[{"kind":"move","x":target.x,"y":target.y},
+                   {"kind":"wait","reason":"work","duration_minutes":15}]
+
     def _choose_goal_and_plan(self,npc:NPCState,town,minute:int)->None:
         goal,_score=self.select_utility_goal(npc,town,minute)
         self.generate_plan(npc,town,minute,goal)
 
     def execute_tick(self,npc:NPCState,town,minute:int,player_pos:WorldPos)->None:
+        if not npc.tasks or self._inside(npc):return
+        task=npc.tasks[0]
+        if task.get("kind")=="move":
+            npc.routine_phase="walking_to_"+str(npc.goal or "destination")
+        elif self._timed_routine(task):
+            action="socialize" if task.get("kind")=="social" else str(task.get("action",task.get("reason","wait")))
+            npc.routine_phase="waiting_for_work" if task.get("kind")=="wait" else action
+            duration=max(5,int(task.get("duration_minutes",self.ROUTINE_MINUTES.get(action,15))))
+            if task.get("kind")=="perform" and action in {"work","eat","heal","learn","steal","guard","territory_guard"}:
+                duration=max(60,duration)
+            task.setdefault("started_minute",int(minute))
+            task.setdefault("complete_minute",int(task["started_minute"])+duration)
+            if int(minute)<int(task["complete_minute"]):return
         self._execute_task(npc,town,minute,player_pos)
 
     def execute_interior_activity(self,npc:NPCState,town,minute:int)->None:
@@ -411,7 +460,8 @@ class NPCSystem:
                 cache_goal=[int(path_goal.x),int(path_goal.y),int(path_goal.z)]
                 cached=list(task.get("_local_path",[])) if task.get("_local_path_goal")==cache_goal else []
                 if not cached:
-                    path=local_path(start,path_goal,passable,1000)
+                    path=local_path(start,path_goal,passable,1000,
+                                    goal_radius=1 if not exact and path_goal==goal and not passable(goal) else 0)
                     cached=[[int(step.x),int(step.y)] for step in path[1:]]
                     task["_local_path"]=cached
                     task["_local_path_goal"]=cache_goal
@@ -438,6 +488,9 @@ class NPCSystem:
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
             if (npc.x,npc.y)==(goal.x,goal.y) and not task.get("interior_home_door_uid") and not task.get("interior_work_door_uid"):npc.tasks.pop(0)
+        elif task['kind']=='wait':
+            npc.tasks.pop(0)
+            return
         elif task['kind']=='mining_transition':
             if self.mining is None:
                 npc.tasks.pop(0);return

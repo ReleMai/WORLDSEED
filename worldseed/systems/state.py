@@ -369,6 +369,10 @@ class NPCState:
     facing_dx: int = 0
     facing_dy: int = 1
 
+    # Equipment reserves units already in inventory; it is never another copy
+    # of the carried goods. Cash continues to use the existing wealth ledger.
+    equipment: dict[str, str] = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         if self.sex not in ('male','female'):
             self.sex=npc_sex_for_identity(self.name,self.uid)

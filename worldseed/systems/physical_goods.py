@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+from collections import Counter
+
 from worldseed.systems.state import PhysicalGoodsTransferState
 
 
 class SettlementPhysicalGoodsSystem:
-    """Authoritative hand-off between named NPC cargo and physical settlement stores.
+    """Transfer goods across carried, physical-container and stock authorities.
 
-    The settlement stock ledger is deliberately not touched here. A property
-    container is already outside aggregate stock authority; market/workplace
-    logistics may later move these physically held goods back into the aggregate
-    economy. This prevents a named NPC from duplicating the same ore in both
-    their bag and the settlement ledger.
+    Direct actor/container transfers leave aggregate stocks alone. Explicit
+    materialization, aggregation and equipment issuance debit the source as
+    goods cross its authority boundary, so cargo never exists in both ledgers.
     """
 
     def __init__(self, state, registry):
@@ -54,6 +54,35 @@ class SettlementPhysicalGoodsSystem:
         actor.inventory[item_id] = actor.inventory.get(item_id, 0) + qty
         return qty
 
+    def issue_equipment(self, actor, town, item_id: str, minute: int, *, container=None) -> int:
+        """Transfer one existing unit into carried personal equipment supply.
+
+        Settlement activation may issue aggregate capital directly. A physical
+        source has already left aggregate stocks and is never debited twice.
+        One cumulative audit row per actor bounds the new history collection.
+        """
+        source = town.stocks if container is None else container.items
+        if int(source.get(item_id, 0)) <= 0 or self.carry_fit(actor, item_id) < 1:
+            return 0
+        source[item_id] -= 1
+        if container is not None and source[item_id] == 0:
+            source.pop(item_id)
+        actor.inventory[item_id] = actor.inventory.get(item_id, 0) + 1
+        uid = f"npc-equipment:{actor.uid}"
+        row = self.state.physical_goods_transfers.get(uid)
+        if row is None:
+            row = PhysicalGoodsTransferState(
+                uid, str(town.uid), str(actor.uid), "", "issue", int(minute),
+                source_kind="npc_equipment",
+            )
+            self.state.physical_goods_transfers[uid] = row
+        row.items[item_id] = row.items.get(item_id, 0) + 1
+        row.minute = int(minute)
+        row.settlement_id = str(town.uid)
+        row.container_uid = str(container.uid) if container is not None else ""
+        row.source_uid = str(container.uid) if container is not None else str(town.uid)
+        return 1
+
     def _container_load(self, container) -> tuple[int, int]:
         mass = volume = 0
         for item_id, raw_qty in container.items.items():
@@ -88,9 +117,12 @@ class SettlementPhysicalGoodsSystem:
     ) -> PhysicalGoodsTransferState | None:
         requested = dict(items or actor.inventory)
         moved: dict[str, int] = {}
+        equipped = Counter(getattr(actor, "equipment", {}).values())
         for item_id in sorted(requested):
             available = max(0, int(actor.inventory.get(item_id, 0)))
-            wanted = min(available, max(0, int(requested[item_id])))
+            # Gear is part of inventory, but ordinary cargo deposits cannot
+            # silently strip a worker's reserved carried equipment units.
+            wanted = min(max(0, available - equipped[item_id]), max(0, int(requested[item_id])))
             qty = min(wanted, self.container_fit(container, item_id))
             if qty <= 0:
                 continue
