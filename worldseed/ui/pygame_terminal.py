@@ -3341,7 +3341,8 @@ class PygameTerminal(PointerUI):
         if not ctx:return []
         # Full static exterior art is an object, not permission to inspect the
         # undiscovered terrain, people or goods underneath its roof pixels.
-        if pixel is not None and ctx.get('shell_hit_regions'):
+        painted_hit_testing = pixel is not None and 'shell_hit_regions' in ctx
+        if painted_hit_testing:
             from worldseed.ui.exterior_view import shell_at_pointer
             hit=shell_at_pointer(ctx,pixel)
             if hit is not None:
@@ -3378,8 +3379,14 @@ class PygameTerminal(PointerUI):
         shell=ctx.get('shell_by',{}).get(k)
         if shell is not None:
             lines.append(str(shell.function).replace('_',' ').title())
-            lines.append('Entrance door — right-click to enter or knock' if shell.entrance is not None and (wx,wy)==tuple(shell.entrance)
-                         else 'Building exterior — right-click to inspect')
+            # A transparent roof corner can still be over the solid footprint.
+            # Describe the collision honestly without advertising a painted
+            # object action that the alpha-aware pointer did not actually hit.
+            if painted_hit_testing:
+                lines.append('Building footprint — movement blocked')
+            else:
+                lines.append('Entrance door — right-click to enter or knock' if shell.entrance is not None and (wx,wy)==tuple(shell.entrance)
+                             else 'Building exterior — right-click to inspect')
             return lines
         settlement=ctx.get('settlement_by',{}).get(k)
         if settlement:

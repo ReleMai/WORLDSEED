@@ -66,15 +66,22 @@ def _art_ref(term, shell, interior_plans=None):
     return function, path
 
 
+def _surface_key(function, path, shell, width, height):
+    entrance = (shell.entrance[0] - shell.bounds[0], shell.entrance[1] - shell.bounds[1]) if shell.entrance else None
+    grid = (shell.bounds[2] - shell.bounds[0] + 1, shell.bounds[3] - shell.bounds[1] + 1)
+    return ('whole-building-ground-fit', function, shell.function, str(path), width, height,
+            grid, entrance, shell.door_side)
+
+
 def _whole_surface(term, shell, width, height, interior_plans=None):
-    _, path = _art_ref(term, shell, interior_plans)
+    function, path = _art_ref(term, shell, interior_plans)
     # Physical door orientation cannot rotate perspective-painted artwork.
-    key = ('whole-building-upright', str(path), width, height)
+    key = _surface_key(function, path, shell, width, height)
     cache = getattr(term, '_building_surface_cache', None)
     if cache is None:
         cache = term._building_surface_cache = {}
     if key in cache:
-        return cache[key]
+        return cache[key][0]
     pg = term.pg
     source_cache = getattr(term, '_building_source_cache', None)
     if source_cache is None:
@@ -90,9 +97,18 @@ def _whole_surface(term, shell, width, height, interior_plans=None):
             source = None
     surface = pg.Surface((width, height), pg.SRCALPHA)
     if source is not None:
-        # Source alpha owns the visible silhouette; plan footprints still own
-        # collision. Neither seeing a roof nor painting it discovers terrain.
-        surface.blit(pg.transform.smoothscale(source, (width, height)), (0, 0))
+        # Export padding is not building geometry. Fit its visible bounds to
+        # the immutable physical extent, rather than shifting a whole padded
+        # PNG to line up its door (which left invisible blocked street tiles).
+        axes, fitted_door = _fit_geometry(shell, width, height, source,
+                                          _door_anchor(function, path))
+        sx, sy, tx, ty = axes
+        for yi in range(len(sy) - 1):
+            for xi in range(len(sx) - 1):
+                src = pg.Rect(sx[xi], sy[yi], sx[xi + 1] - sx[xi], sy[yi + 1] - sy[yi])
+                dst = pg.Rect(tx[xi], ty[yi], tx[xi + 1] - tx[xi], ty[yi + 1] - ty[yi])
+                if src.width and src.height and dst.width and dst.height:
+                    surface.blit(pg.transform.smoothscale(source.subsurface(src), dst.size), dst.topleft)
     else:
         # Explicit missing-art fallback stays a single closed shell, never the
         # old wall/floor puzzle or a borrowed building type.
@@ -100,9 +116,13 @@ def _whole_surface(term, shell, width, height, interior_plans=None):
         pg.draw.rect(surface, (161, 128, 83), surface.get_rect(), max(1, width // 40))
         label = term.small_font.render(shell.function.replace('_', ' ').title(), True, (235, 213, 174))
         surface.blit(label, label.get_rect(center=surface.get_rect().center))
+        _, fitted_door = _fit_geometry(shell, width, height, None,
+                                       _door_anchor(function, path))
     if len(cache) >= 96:
         cache.clear()
-    cache[key] = surface
+    # Geometry and fitted pixels have one lifetime. Source-cache eviction can
+    # never pair an existing fitted roof with a default/full-canvas door fit.
+    cache[key] = (surface, fitted_door)
     return surface
 
 
@@ -131,16 +151,81 @@ def _surface_mask(term, surface):
     return mask
 
 
-def _facade_door_rect(term, shell, body_rect, interior_plans=None):
-    function, path = _art_ref(term, shell, interior_plans)
+def _door_anchor(function, path):
     catalog = _anchor_catalog()
     name = path.stem if path is not None else function
-    anchor = catalog.get('assets', {}).get(name, catalog.get('assets', {}).get(function, catalog['default']))
-    x, y, width, height = anchor['door_rect']
-    return term.pg.Rect(body_rect.x + round(body_rect.width * x / 1000),
-                        body_rect.y + round(body_rect.height * y / 1000),
-                        max(2, round(body_rect.width * width / 1000)),
-                        max(3, round(body_rect.height * height / 1000)))
+    return catalog.get('assets', {}).get(name, catalog.get('assets', {}).get(function, catalog['default']))['door_rect']
+
+
+def _mapped_axis(value, source, target):
+    value = min(source[-1], max(source[0], value))
+    for index in range(len(source) - 1):
+        if value <= source[index + 1]:
+            fraction = (value - source[index]) / max(1, source[index + 1] - source[index])
+            return round(target[index] + fraction * (target[index + 1] - target[index]))
+    return target[-1]
+
+
+def _fit_geometry(shell, width, height, source, anchor):
+    """Shared pixel fit for roof art and its independent selectable doorway.
+
+    The physical footprint and door never move. A centre doorway band keeps
+    the painted recess and selectable leaf aligned; side bands fit the full
+    upright facade around it. Alpha remains pointer-only, never collision data.
+    """
+    if source is None:
+        sw, sh = 1000, 1000
+        bounds = (0, 0, sw, sh)
+    else:
+        sw, sh = source.get_size()
+        box = source.get_bounding_rect(16)
+        bounds = (box.left, box.top, box.right, box.bottom) if box.width and box.height else (0, 0, sw, sh)
+    left, top, right, bottom = bounds
+    ax, ay, aw, ah = anchor
+    door_bottom = (ay + ah) * sh / 1000
+    sx, sy, tx, ty = (left, right), (top, bottom), (0, width), (0, height)
+    target_x = None
+    if shell.entrance is not None and shell.door_side == 'south' and right - left > 2 and bottom - top > 1:
+        size = max(1, width // (shell.bounds[2] - shell.bounds[0] + 1))
+        target_x = (shell.entrance[0] - shell.bounds[0]) * size + size // 2
+        target_bottom = (shell.entrance[1] - shell.bounds[1] + 1) * size - max(1, size // 10)
+        target_x = max(1, min(width - 1, target_x))
+        target_bottom = max(1, min(height - 1, target_bottom))
+        sy = (top, max(top + 1, min(bottom - 1, round(door_bottom))), bottom)
+        ty = (0, target_bottom, height)
+        dy0 = _mapped_axis(ay * sh / 1000, sy, ty)
+        recess_height = max(3, target_bottom - dy0)
+        # Scale the opening from its vertical fit, not the padded canvas width.
+        # Narrow townhouse exports must not acquire a two-tile-wide doorway.
+        opening_width = max(2, round(aw * sw * recess_height / max(1, ah * sh)))
+        opening_width = min(opening_width, max(2, 2 * min(target_x, width - target_x) - 1))
+        source_left = max(left + 1, min(right - 2, round(ax * sw / 1000)))
+        source_right = max(source_left + 1, min(right - 1, round((ax + aw) * sw / 1000)))
+        target_left = target_x - opening_width // 2
+        sx = (left, source_left, source_right, right)
+        tx = (0, target_left, target_left + opening_width, width)
+    dx0 = _mapped_axis(ax * sw / 1000, sx, tx)
+    dx1 = _mapped_axis((ax + aw) * sw / 1000, sx, tx)
+    dy0 = _mapped_axis(ay * sh / 1000, sy, ty)
+    dy1 = _mapped_axis(door_bottom, sy, ty)
+    door_width, door_height = max(2, dx1 - dx0), max(3, dy1 - dy0)
+    if target_x is not None:
+        # This is the very same centre band used to paint the original recess,
+        # not a separately re-centred leaf over an asymmetrically scaled hole.
+        dx0, door_width = tx[1], tx[2] - tx[1]
+        dy1 = ty[1]
+    return (sx, sy, tx, ty), (dx0, dy1 - door_height, door_width, door_height)
+
+
+def _facade_door_rect(term, shell, body_rect, interior_plans=None):
+    function, path = _art_ref(term, shell, interior_plans)
+    key = _surface_key(function, path, shell, body_rect.width, body_rect.height)
+    cache = getattr(term, '_building_surface_cache', {})
+    if key not in cache:
+        _whole_surface(term, shell, body_rect.width, body_rect.height, interior_plans)
+        cache = term._building_surface_cache
+    x, y, width, height = cache[key][1]
+    return term.pg.Rect(body_rect.x + x, body_rect.y + y, width, height)
 
 
 def _door_surface(term, shell, width, height, opened=False):
@@ -184,21 +269,6 @@ def _door_surface(term, shell, width, height, opened=False):
     return sprite
 
 
-def _aligned_body_rect(term, shell, body_rect, used, left, top, size, interior_plans=None):
-    """The painted threshold and stable physical portal share one anchor.
-
-    New plans and explicitly repaired legacy plans face south. Do not move a
-    legacy north-facing roof across a street while its repair is unavailable.
-    """
-    if shell.entrance is None or shell.door_side != 'south':
-        return body_rect
-    x, y = shell.entrance
-    threshold = (used.x + (x - left) * size + size // 2,
-                 used.y + (y - top + 1) * size - max(1, size // 10))
-    door = _facade_door_rect(term, shell, body_rect, interior_plans)
-    return body_rect.move(threshold[0] - door.centerx, threshold[1] - door.bottom)
-
-
 def _contact_shadow(term, rect, current):
     """Soft ground contact, not a square tile overlay or new world feature."""
     pg = term.pg
@@ -235,7 +305,6 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
             x0, y0, x1, y1 = shell.bounds
             rect = pg.Rect(used.x + (x0 - left) * size, used.y + (y0 - top) * size,
                            (x1 - x0 + 1) * size, (y1 - y0 + 1) * size)
-            rect = _aligned_body_rect(term, shell, rect, used, left, top, size, interior_plans)
             if not rect.colliderect(used):
                 continue
             surface = _whole_surface(term, shell, rect.width, rect.height, interior_plans)

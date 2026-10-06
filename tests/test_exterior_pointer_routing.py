@@ -102,6 +102,17 @@ class ExteriorPointerEventTests(unittest.TestCase):
         self.assertEqual(self.click((95, 110)), 'UI_WORLD_MENU:3:4')
         self.world.tile_at.assert_not_called()
 
+    def test_known_transparent_corner_describes_footprint_not_painted_action(self):
+        for region in self.context['shell_hit_regions']:
+            region['mask'].clear()
+        self.context.update(shell_by={(0, 0, 0): self.shell}, registry=SimpleNamespace(),
+                            sim=SimpleNamespace(), creature_by={}, npc_by={})
+        self.world.tile_at = Mock(return_value=SimpleNamespace(
+            terrain=SimpleNamespace(name='Grass', tags=())))
+        lines = self.term._hover_lines_for(0, 0, (35, 35))
+        self.assertIn('Building footprint — movement blocked', lines)
+        self.assertFalse(any('right-click' in line for line in lines))
+
 
 class ExteriorBuildingMenuTests(unittest.TestCase):
     def fixture(self):

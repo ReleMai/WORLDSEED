@@ -160,9 +160,9 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev52 authored content" --timeout 180 -- python -u -m unittest -v tests.test_dev52_building_variants tests.test_dev52_furniture_content tests.test_dev52_exterior_alignment
 
-      - name: Dev53 semantic furnishing, lighting and interior HUD
+      - name: Dev53-54 furnishing lighting HUD and building footprint fit
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev53 interiors" --timeout 180 -- python -u -m unittest -v tests.test_dev53_furnishing_slots tests.test_dev53_lighting tests.test_dev53_interior_ui tests.test_dev53_decoration
+        run: python -u tools/run_ci_check.py --name "Dev53-54 interiors and exterior fit" --timeout 180 -- python -u -m unittest -v tests.test_dev53_furnishing_slots tests.test_dev53_lighting tests.test_dev53_interior_ui tests.test_dev53_decoration tests.test_dev54_exterior_fit tests.test_dev54_building_access
 
       - name: Crafting discovery pot regressions
         shell: pwsh

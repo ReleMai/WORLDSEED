@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev53"
+ENGINE_VERSION = "1.0.0-rc14-dev54"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
