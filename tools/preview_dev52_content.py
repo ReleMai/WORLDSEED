@@ -75,10 +75,10 @@ def contact_sheet(rows, path, columns=6):
     print(path)
 
 
-def production_interiors(output_dir):
+def production_interiors(output_dir, minute=720):
     fixtures.InteriorStorageTests.setUpClass()
     sim, town, _ = fixtures.InteriorStorageTests().fixture()
-    sim.clock = SimpleNamespace(label=lambda: 'Y1 Spring 4, 12:00', minute=720)
+    sim.clock = SimpleNamespace(label=lambda: f'Y1 Spring 4, {minute//60:02d}:{minute%60:02d}', minute=minute)
     sim.introduced_npc_ids = lambda: set()
     sim.log = []
     entities = EntityStore(); pid = entities.spawn(preferred_id=1)

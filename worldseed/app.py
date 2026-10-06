@@ -925,6 +925,11 @@ def _steal_market_action(ctx:GameContext,term:Terminal,town)->str:
     return sim.log[-1].message if sim.log else ''
 
 def _look_mode(ctx:GameContext,term:Terminal)->None:
+    interiors=getattr(ctx.sim,'interiors',None)
+    if interiors is not None and interiors.player_presence() is not None:
+        from worldseed.ui.interior_inspection import interior_look_screen
+        _view_text(term,interior_look_screen(ctx.sim,ctx.registry,screen_width(term.size()[0],88)))
+        return
     sim=ctx.sim;renderer=Renderer(ctx.registry);cursor=sim.player_pos
     while True:
         known=sim.is_discovered(cursor)
@@ -2982,6 +2987,9 @@ def _structure_group(st)->str:
     return 'other'
 
 def _building_menu(ctx:GameContext,term:Terminal)->str:
+    interiors=getattr(ctx.sim,'interiors',None)
+    if interiors is not None and interiors.player_presence() is not None:
+        return 'Exterior construction requires stepping outside. Right-click indoor furniture to reposition furnishings you own.'
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
         buildable=[st for st in reg.structures.values() if 'natural_only' not in st.tags]

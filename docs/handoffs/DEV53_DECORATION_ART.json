@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "build": "Dev53",
+  "tool": "built-in imagegen",
+  "mode": "original transparent asset generation; byte-for-byte copy, no pixel editing",
+  "assets": [
+    {
+      "id": "core:hearth_rug_piece",
+      "asset": "worldseed/assets/sprites/interiors/dev53/hearth_rug.png",
+      "source": "C:/Users/relem/.codex/generated_images/01a0ee01-1557-75c2-8159-e0972d7018c5/exec-1b3ffac8-5fca-4c09-b003-cafb62c04aed.png",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production interior furnishing sprite, ONE hearth rug carpet cutout PNG.\nPrimary request: a wide rectangular medieval handwoven wool hearth rug, muted russet and ochre border with a restrained charcoal-blue geometric diamond motif and short cream fringe. Distinct worn cozy household decoration, fine believable weave, softly rounded worn corners.\nStyle/medium: richly detailed hand-painted grounded medieval fantasy game art, matching realistic timber/stone furniture.\nComposition: straight top-down orthographic, rug lying FLAT, horizontal long axis, rectangular proportions about 2.6 wide to 1.8 deep, full rug centered and wholly visible with transparent margin. No perspective tilt, no rolled edges or folds. Neutral even lighting so the game supplies room light.\nBackground: genuinely transparent alpha around the rug, no floor, no scene, no checkerboard painted into pixels, no broad shadow or backdrop.\nConstraints: ONLY this single rug, no people or other objects, no text, labels, logo or watermark."
+    },
+    {
+      "id": "core:bedside_runner_piece",
+      "asset": "worldseed/assets/sprites/interiors/dev53/bedside_runner.png",
+      "source": "C:/Users/relem/.codex/generated_images/01a0ee01-1557-75c2-8159-e0972d7018c5/exec-d0d31991-ed00-43f1-b789-04b88ba014bc.png",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production interior furnishing sprite, ONE bedside runner carpet transparent PNG.\nPrimary request: a narrow long medieval linen-and-wool bedside runner with muted moss-green centre, cream embroidered vine border and short hand-knotted tassels at its two short ends. Modestly worn, simple cozy homespun decoration distinct from a formal hearth rug.\nStyle/medium: finely detailed hand-painted grounded medieval fantasy game art with tactile woven fibres.\nComposition: straight top-down orthographic, lying completely FLAT, long axis vertical, physical proportions 0.95 wide to 2.3 long. Full single runner centered with all fringe and transparent margin. No perspective tilt or diamond/isometric rotation, no folded or rolled parts. Neutral even lighting so game illumination can shade it.\nBackground: genuine transparent alpha outside the runner, no floor or scene, no painted checkerboard, no background shadow.\nConstraints: ONLY this one runner, no furniture, people, text, logos or watermark."
+    },
+    {
+      "id": "core:hall_carpet_piece",
+      "asset": "worldseed/assets/sprites/interiors/dev53/hall_carpet.png",
+      "source": "C:/Users/relem/.codex/generated_images/01a0ee01-1557-75c2-8159-e0972d7018c5/exec-10f963de-2313-4fa2-9554-d7e9542fe761.png",
+      "prompt": "Use case: stylized-concept\nAsset type: WORLDSEED production interior furnishing sprite, ONE formal hall carpet transparent PNG.\nPrimary request: a long medieval hall carpet with a subdued deep indigo-blue field, warm ivory and muted gold interlaced border, a vertical chain of three modest diamond medallions and short worn tassels. Rich woven wool, practical and slightly faded, distinct from homespun bedside runner and russet hearth rug.\nStyle/medium: fine hand-painted grounded medieval fantasy game art with readable woven texture.\nComposition: straight top-down orthographic, flat on the ground, long axis vertical, proportions 1.8 wide to 3.4 long. Whole single carpet, centered with generous genuine transparent margin; fringe visible. No isometric tilt, no roll or fold. Neutral even light; game supplies dynamic room illumination.\nBackground: fully transparent alpha around carpet, no floor/scenery or painted checkerboard, no detached or broad shadow.\nConstraints: ONLY one carpet, no furniture or people, no lettering, logos or watermarks."
+    }
+  ]
+}

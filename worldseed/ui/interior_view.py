@@ -205,6 +205,121 @@ def _draw_actor(term, sim, camera, uid, actor):
         term.pg.draw.circle(term.screen, term._theme['accent'] if uid == 'player' else term._theme['good'], (x, y), max(3, size // 4))
 
 
+def _draw_backed_tag(term, text, anchor, bounds, *, accent=False, occupied=()):
+    """Place readable annotations after objects/lighting, inside the viewport."""
+    pg, font = term.pg, term.small_font
+    inner = bounds.inflate(-8, -8)
+    if inner.width < 20 or inner.height < font.get_height() + 8:
+        return None
+    max_width = min(260, inner.width - 12)
+    lines = term._wrap_pixel_text(str(text), font, max_width)
+    limit = min(2, max(1, (inner.height - 8) // font.get_height()))
+    if len(lines) > limit:
+        lines = lines[:limit-1] + [term._fit_ui_text(' '.join(lines[limit-1:]), font, max_width)]
+    labels = [font.render(line, True, term._theme['accent'] if accent else (224, 215, 193)) for line in lines]
+    tag = pg.Rect(anchor[0], anchor[1], max(label.get_width() for label in labels) + 12,
+                  font.get_height() * len(labels) + 8)
+    tag.clamp_ip(inner)
+    # Labels for neighboring narrow rooms can share the same row. Move a
+    # later pill below the earlier one rather than covering either name.
+    for _ in range(len(occupied)+1):
+        blocker = next((rect for rect in occupied if tag.colliderect(rect)), None)
+        if blocker is None:
+            break
+        below = tag.move(0, blocker.bottom+4-tag.y)
+        if not inner.contains(below):
+            break  # On tiny viewports clipping takes priority over spacing.
+        tag = below
+    pg.draw.rect(term.screen, (25, 29, 29), tag, border_radius=3)
+    pg.draw.rect(term.screen, term._theme['accent'] if accent else term._theme['edge_hi'], tag, 1, border_radius=3)
+    for index, label in enumerate(labels):
+        term.screen.blit(label, (tag.x + 6, tag.y + 4 + index * font.get_height()))
+    return tag
+
+
+def _draw_indoor_light(term, sim, plan, camera, used):
+    """Bounded display samples of the same illumination used by detection."""
+    from worldseed.systems.illumination import indoor_light, interior_ambient, indoor_sources
+    minute = getattr(sim.clock, 'minute', 720)
+    ambient = interior_ambient(getattr(sim, 'environment', None), minute, plan)
+    sources = indoor_sources(plan)
+    floor = term.pg.Rect(*camera.to_screen(0, 0), round(plan.width * camera.scale), round(plan.height * camera.scale))
+    visible = floor.clip(used)
+    if not visible.width or not visible.height:
+        return
+    # At most 30 by 22 samples, regardless of total world size or zoom.
+    step_x = max(24, (visible.width + 29) // 30)
+    step_y = max(24, (visible.height + 21) // 22)
+    cols = (visible.width + step_x - 1) // step_x
+    rows = (visible.height + step_y - 1) // step_y
+    layer = term.pg.Surface((cols, rows), term.pg.SRCALPHA)
+    for row, y in enumerate(range(0, visible.height, step_y)):
+        for col, x in enumerate(range(0, visible.width, step_x)):
+            px = visible.x + min(visible.width - 1, x + step_x // 2)
+            py = visible.y + min(visible.height - 1, y + step_y // 2)
+            ux, uy = camera.to_units(px, py)
+            light = indoor_light(plan, ux, uy, minute, ambient_light=ambient, sources=sources)
+            alpha = max(0, min(190, (65535 - light) * 190 // 65535))
+            layer.set_at((col, row), (8, 12, 20, alpha))
+    term.screen.blit(term.pg.transform.smoothscale(layer, visible.size), visible.topleft)
+
+
+def _draw_indoor_sidebar(term, sim, plan, player, entities, player_id, side):
+    """Location/status shares the exterior controls and does not list hidden NPCs."""
+    from worldseed.systems.illumination import indoor_light, light_description, interior_ambient
+    pg, screen, th = term.pg, term.screen, term._theme
+    toolbar = term._draw_hud_actions(side, getattr(sim.state, 'player_hunting_stance', 'normal'))
+    content = pg.Rect(side.x + 8, side.y + 8, max(1, side.width - 16), max(1, toolbar.y - side.y - 16))
+    old_clip = screen.get_clip()
+    screen.set_clip(content)
+    ty = content.y
+    gap = 18 if content.height < 300 else 21
+    def text(value, color=None, advance=None):
+        nonlocal ty
+        if ty + term.small_font.get_height() > content.bottom:
+            return
+        fitted = term._fit_ui_text(str(value), term.small_font, content.width)
+        screen.blit(term.small_font.render(fitted, True, color or th['text']), (content.x, ty))
+        ty += advance or gap
+    try:
+        text(getattr(sim.state, 'player_name', 'Wanderer'), th['accent'])
+        text(plan.name, th['accent'])
+        room = next((r for r in plan.rooms if r.rect.x <= player.x < r.rect.x + r.rect.w and r.rect.y <= player.y < r.rect.y + r.rect.h), None)
+        floor = int(getattr(plan, 'floor_index', 0)) + 1
+        count = int(getattr(plan, 'floor_count', 1))
+        text(f'Floor {floor}/{count} · ' + (room.name if room else 'Passage'), th['muted'])
+        minute = getattr(sim.clock, 'minute', 720)
+        ambient = interior_ambient(getattr(sim, 'environment', None), minute, plan)
+        light = indoor_light(plan, player.x, player.y, minute, ambient_light=ambient)
+        text(f'Lighting: {light_description(light)} · {light * 100 // 65535}%', th['accent'])
+        vit = entities.try_get(player_id, Vitals) or Vitals()
+        if content.height < 280 or content.width < 210:
+            text(f'Health {vit.hp}/{vit.max_hp} · Stamina {vit.stamina}')
+            text(f'Hunger {100-vit.hunger} · Water {100-vit.thirst}')
+        else:
+            for label, value, maximum in (('Health', vit.hp, vit.max_hp), ('Stamina', vit.stamina, 100),
+                                          ('Hunger', 100-vit.hunger, 100), ('Hydration', 100-vit.thirst, 100)):
+                text(f'{label}  {value}/{maximum}', advance=17)
+                fraction = max(0, min(1, value / max(1, maximum)))
+                pg.draw.rect(screen, (45, 50, 52), (content.x, ty-1, content.width, 5), border_radius=2)
+                pg.draw.rect(screen, th['good'] if fraction > .35 else th['danger'],
+                             (content.x, ty-1, round(content.width * fraction), 5), border_radius=2)
+                ty += 10
+        if getattr(sim.state, 'player_trespass_property_id', '') == getattr(plan, 'building_id', None):
+            text('TRESPASSING', th['danger'])
+        if getattr(sim.state, 'player_stealth_mode', False) and getattr(sim, 'stealth', None):
+            snap = sim.stealth.snapshot(sim.player_pos, minute)
+            text('Stealth: noticed' if snap.get('seen_by') else 'Stealth: unseen', th['danger'] if snap.get('seen_by') else th['good'])
+        if content.height >= 280:
+            text(sim.clock.label(), th['muted'])
+        text('WASD / arrows: free movement', th['muted'])
+        text('Right-click furniture or door', th['muted'])
+        if getattr(term, '_interior_placing', None):
+            text('Left-click: place furniture', th['good'])
+    finally:
+        screen.set_clip(old_clip)
+
+
 def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     """Draw one prepared plan only; never query exterior spatial systems."""
     plan = sim.interiors.current_plan()
@@ -230,7 +345,14 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     camera = InteriorCamera(player.x - used.width / (2 * scale),
                             player.y - used.height / (2 * scale), scale, used.x, used.y)
     object_regions = []
-    actors = sorted(sim.interiors.actors_in_space(player.space_id), key=lambda row: (row[1].y, row[0]))
+    annotations = []
+    from worldseed.systems.illumination import indoor_actor_visible, interior_ambient
+    minute = getattr(sim.clock, 'minute', 720)
+    ambient = interior_ambient(getattr(sim, 'environment', None), minute, plan)
+    actors = sorted((row for row in sim.interiors.actors_in_space(player.space_id)
+                     if row[0] == 'player' or indoor_actor_visible(plan, player.x, player.y,
+                         row[1].x, row[1].y, minute, ambient_light=ambient)),
+                    key=lambda row: (row[1].y, row[0]))
     actor_index = 0
     old_clip = screen.get_clip()
     screen.set_clip(used)
@@ -246,10 +368,12 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             room_floor, _ = term._visuals.interior_materials(getattr(plan, 'function', 'residence'), room.name, **materials)
             if room_floor != floor_id:
                 _texture(term, rect, room_floor, tile_size=max(48, term._tile_px * 4))
-            label = term.small_font.render(term._fit_ui_text(room.name, term.small_font, max(1, rect.width - 18)),
-                                           True, (193, 172, 137))
-            if rect.width > 40 and rect.height > 28:
-                screen.blit(label, (rect.x + 9, rect.y + 7))
+            visible = rect.clip(used)
+            if visible.width > 70 and visible.height > 32:
+                # The room anchors the label, not its text width. Narrow
+                # galleries must not chop ordinary words into tiny fragments;
+                # a backed pill may cross a wall but stays in the viewport.
+                annotations.append(('room', room.name, (visible.x + 9, visible.y + 7), used))
         for wall in plan.walls:
             rect = _rect(term, camera, wall)
             pg.draw.rect(screen, (34, 30, 27), rect.move(3, 4))
@@ -264,7 +388,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             if sprite:
                 screen.blit(sprite, sprite.get_rect(midbottom=doorway.midbottom))
             pg.draw.circle(screen, th['accent'], portal, max(5, term._tile_px // 3), 2)
-            screen.blit(term.small_font.render('EXIT', True, th['accent']), (portal[0] + 9, portal[1] - 8))
+            annotations.append(('exit', 'Outside · right-click door', (portal[0] - 90, portal[1] + 12), used))
         for stair in getattr(plan, 'stairs', ()):
             rect = _rect(term, camera, stair)
             path = term._visuals.resolve(term._visuals.ref('interior_stairs', stair.direction))
@@ -273,7 +397,8 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             if sprite:
                 screen.blit(sprite, position)
             _register_object(term, object_regions, stair, 'stairs', rect, sprite, position)
-            screen.blit(term.small_font.render(stair.direction.upper(), True, th['accent']), (rect.x, rect.bottom + 2))
+            if rect.colliderect(used):
+                annotations.append(('stairs', 'Stairs ' + stair.direction, (rect.x, rect.bottom + 3), used))
         from worldseed.systems.interior_furnishing import furniture_visual, furniture_base_piece
         for furniture in sorted(plan.furniture, key=lambda f: (not furniture_visual(f.piece_id)['flat'], f.y + f.h, f.x, f.uid)):
             if not furniture_visual(furniture.piece_id)['flat']:
@@ -319,49 +444,19 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 screen.blit(sprite, (x - sprite.get_width() // 2, y - sprite.get_height() // 2))
         for uid, actor in actors[actor_index:]:
             _draw_actor(term, sim, camera, uid, actor)
-    finally:
-        screen.set_clip(old_clip)
-    old_clip = screen.get_clip()
-    screen.set_clip(pg.Rect(side.x+6,side.y+6,max(1,side.width-12),max(1,side.height-58)))
-    try:
-        tx, ty = side.x + 14, side.y + 12
-        def text(value, color=None, gap=22):
-            nonlocal ty
-            fitted = term._fit_ui_text(str(value), term.small_font, side.width - 28)
-            screen.blit(term.small_font.render(fitted, True, color or th['text']), (tx, ty))
-            ty += gap
-        text(getattr(sim.state, 'player_name', 'Wanderer'), th['accent'], 28)
-        text(plan.name, th['accent'])
-        if getattr(plan, 'floor_count', 1) > 1:
-            text(f'Floor {plan.floor_index + 1} / {plan.floor_count}', th['accent'])
-        text(sim.clock.label(), th['muted'])
-        text(f'Inside: {player.x / 1000:.2f}, {player.y / 1000:.2f}', th['muted'])
-        vit = entities.try_get(player_id, Vitals) or Vitals()
-        text(f'Health {vit.hp}/{vit.max_hp} • Stamina {vit.stamina}')
-        if getattr(sim.state,'player_trespass_property_id','') and getattr(sim.state,'player_trespass_property_id','')==getattr(plan,'building_id',''):
-            text('TRESPASSING',th['danger'])
-        if getattr(sim.state,'player_stealth_mode',False) and getattr(sim,'stealth',None):
-            snap=sim.stealth.snapshot(sim.player_pos,sim.clock.minute)
-            text('Stealth: noticed' if snap.get('seen_by') else 'Stealth: unseen',th['muted'])
-        text('FREE MOVEMENT', th['accent'], 26)
-        text('WASD / arrows: walk', th['muted'])
-        text('Right-click objects, stairs or exit', th['muted'])
-        if getattr(term, '_interior_placing', None):
-            text('Left-click to place furniture', th['good'])
-        text('ROOMS', th['accent'], 25)
-        for room in plan.rooms:
-            text(room.name, th['muted'])
-        known = sim.introduced_npc_ids()
-        for uid, actor in actors:
-            if uid == 'player':
+        _draw_indoor_light(term, sim, plan, camera, used)
+        label_regions = []
+        for kind, label, anchor, bounds in annotations:
+            # An offscreen exterior doorway must not leave a floating EXIT tag.
+            if kind == 'exit' and not used.collidepoint(camera.to_screen(plan.entry_x, plan.entry_y)):
                 continue
-            npc = sim.state.npcs.get(uid)
-            if npc is not None:
-                text((npc.name if uid in known else 'Stranger') + ': ' + actor.action.replace('_', ' '), th['muted'])
+            tag = _draw_backed_tag(term, label, anchor, bounds, accent=kind != 'room',
+                                   occupied=[row['rect'] for row in label_regions])
+            if tag is not None:
+                label_regions.append({'kind': kind, 'text': label, 'rect': tag})
     finally:
         screen.set_clip(old_clip)
-    term._draw_stance_buttons(pg.Rect(side.x+2,max(side.y+2,side.bottom-42),max(1,side.width-4),29),
-                             getattr(sim.state,'player_hunting_stance','normal'))
+    _draw_indoor_sidebar(term, sim, plan, player, entities, player_id, side)
     term._draw_footer(foot, message or 'Right-click furnishings to interact. Interior movement is not tile-bound.', sim)
     term._hover_context = None
     term._hover_map_snapshot = None
@@ -370,7 +465,8 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     term._water_animation_cells = []
     term._interior_context = {'used': used, 'camera': camera, 'plan': plan, 'sim': sim,
                               'registry': registry, 'snapshot': screen.subsurface(used).copy(),
-                              'hover_uid': None, 'object_regions': object_regions}
+                              'hover_uid': None, 'object_regions': object_regions,
+                              'label_regions': label_regions, 'side': side}
     refresh_hover(term, update_display=False)
     pg.display.flip()
     term.clock.tick(120)

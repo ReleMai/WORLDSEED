@@ -79,30 +79,28 @@ def prepare_floors(system, ground, structure, profile, *, new_ground=False) -> l
     # Only newly generated fixtures may be distributed upstairs. Their stable
     # IDs and total bed capacity remain exactly the same as the physical plan.
     if new_ground and len(floors) > 1:
-        beds = [f for f in ground.furniture if "bed" in f.piece_id]
+        from worldseed.systems.interior_furnishing import fixture_slot_candidates, is_bed_piece
+        beds = [f for f in ground.furniture if is_bed_piece(f.piece_id)]
         for number, bed in enumerate(beds):
             floor = floors[1 + number % (len(floors) - 1)]
-            for room in sorted(floor.rooms, key=lambda r: (not any(k in r.name.lower() for k in ("bed", "guest", "bunk", "dorm")), r.uid)):
-                placed = False
-                for col in range(4):
-                    x, y = room.rect.x + 450 + col * (bed.w + 600), room.rect.y + 450
-                    rect = InteriorRect(x, y, bed.w, bed.h)
-                    if (x + bed.w <= room.rect.x + room.rect.w - 400
-                            and y + bed.h <= room.rect.y + room.rect.h - 600
-                            and placement_clear(floor, rect)):
-                        old_position = bed.x, bed.y
-                        bed.x, bed.y = x, y
-                        floor.furniture.append(bed)
-                        safe = (InteriorSystem.fixture_use_position(floor, bed) is not None
-                                and all(exit_reachable(floor, r.rect.x + r.rect.w // 2,
-                                                       r.rect.y + r.rect.h - 400) for r in floor.rooms))
-                        if not safe:
-                            floor.furniture.remove(bed)
-                            bed.x, bed.y = old_position
-                            continue
-                        ground.furniture.remove(bed)
-                        placed = True
-                        break
-                if placed:
+            rooms = {room.uid: room for room in floor.rooms}
+            for room_uid, slot, x, y in fixture_slot_candidates(floor, bed.piece_id, width=bed.w, depth=bed.h):
+                room = rooms[room_uid]
+                rect = InteriorRect(x, y, bed.w, bed.h)
+                if (x >= room.rect.x + 400 and y >= room.rect.y + 400
+                        and x + bed.w <= room.rect.x + room.rect.w - 400
+                        and y + bed.h <= room.rect.y + room.rect.h - 600
+                        and placement_clear(floor, rect)):
+                    old_position = bed.x, bed.y
+                    bed.x, bed.y = x, y
+                    floor.furniture.append(bed)
+                    safe = (InteriorSystem.fixture_use_position(floor, bed) is not None
+                            and all(exit_reachable(floor, r.rect.x + r.rect.w // 2,
+                                                   r.rect.y + r.rect.h - 400) for r in floor.rooms))
+                    if not safe:
+                        floor.furniture.remove(bed)
+                        bed.x, bed.y = old_position
+                        continue
+                    ground.furniture.remove(bed)
                     break
     return floors

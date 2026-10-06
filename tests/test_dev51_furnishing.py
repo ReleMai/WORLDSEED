@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace
 
 from worldseed.systems.interior_furnishing import (
-    furnish_plan, furniture_dimensions, furniture_visual, furnishing_catalog,
+    furnish_plan, furniture_dimensions, furniture_visual, furnishing_catalog, furniture_base_piece,
 )
 from worldseed.systems.interior_state import InteriorActor, InteriorFurniture, InteriorPlan, InteriorRect
 from worldseed.systems.interior_templates import interior_profiles, rooms_for_profile
@@ -39,7 +39,10 @@ class Dev51FurnishingTests(unittest.TestCase):
                 self.assertTrue(plan.furniture)
                 for index, furniture in enumerate(plan.furniture):
                     self.assertFalse(furniture.source_uid)
-                    self.assertNotIn("bed", furniture.piece_id)
+                    # A bedside carpet is decoration, not a duplicated bed or
+                    # housing slot. Exclude actual functional bed families.
+                    self.assertNotIn(furniture_base_piece(furniture.piece_id),
+                                     {"core:single_bed_piece", "core:double_bed_piece", "core:bunk_bed_piece"})
                     self.assertFalse(any(furniture.rect.overlaps(other.rect)
                                          for other in plan.furniture[index + 1:]))
                     self.assertFalse(any(furniture.rect.overlaps(wall) for wall in plan.walls))

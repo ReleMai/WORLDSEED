@@ -9,6 +9,45 @@ class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
         self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
+        self._npc_spatial_buckets={};self._npc_spatial_positions={}
+        self.rebuild_spatial_index()
+
+    def _index_npc(self,npc)->None:
+        """Maintain a transient locator, never a second actor/state authority."""
+        current=(int(npc.x)//16,int(npc.y)//16,int(npc.z)) if npc.alive else None
+        previous=self._npc_spatial_positions.get(npc.uid)
+        if previous!=current and previous is not None:
+            bucket=self._npc_spatial_buckets.get(previous,{})
+            bucket.pop(npc.uid,None)
+            if not bucket:self._npc_spatial_buckets.pop(previous,None)
+            self._npc_spatial_positions.pop(npc.uid,None)
+        if current is not None:
+            self._npc_spatial_buckets.setdefault(current,{})[npc.uid]=npc
+            self._npc_spatial_positions[npc.uid]=current
+
+    def rebuild_spatial_index(self)->None:
+        """Explicit startup/activation preparation only, never a UI query."""
+        self._npc_spatial_buckets.clear();self._npc_spatial_positions.clear()
+        for npc in self.state.npcs.values():self._index_npc(npc)
+
+    def _indexed_npcs(self):
+        # Reuse the existing simulation enumeration. The post-yield update
+        # captures movement/death even when the caller takes an early continue;
+        # no extra population scan is added to ticks or hourly decisions.
+        for npc in self.state.npcs.values():
+            try:yield npc
+            finally:self._index_npc(npc)
+
+    def nearby_npcs(self,pos:WorldPos,radius:int=24)->tuple:
+        """Read only buckets intersecting a bounded local query."""
+        radius=max(0,min(256,int(radius)));rows=[]
+        for by in range((pos.y-radius)//16,(pos.y+radius)//16+1):
+            for bx in range((pos.x-radius)//16,(pos.x+radius)//16+1):
+                for uid,npc in self._npc_spatial_buckets.get((bx,by,pos.z),{}).items():
+                    if (self.state.npcs.get(uid) is npc and npc.alive and npc.z==pos.z
+                            and max(abs(npc.x-pos.x),abs(npc.y-pos.y))<=radius):
+                        rows.append(npc)
+        return tuple(sorted(rows,key=lambda npc:npc.uid))
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -82,7 +121,7 @@ class NPCSystem:
         coarse progress instead of replaying every exact local tick.
         """
         if self.activities is not None:self.activities.cleanup(minute)
-        for npc in self.state.npcs.values():
+        for npc in self._indexed_npcs():
             if not npc.alive or self._inside(npc):continue
             tier=None
             if self.lod is not None:
@@ -110,7 +149,7 @@ class NPCSystem:
         # This is the single interior routine clock. Rendering may interpolate
         # presentation but cannot execute domestic actions or move residents.
         if self.interiors is not None:self.interiors.tick_update(minute)
-        for npc in self.state.npcs.values():
+        for npc in self._indexed_npcs():
             if not npc.alive or self._inside(npc) or not self._tick_managed(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue

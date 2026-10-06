@@ -611,7 +611,12 @@ class PropertySecuritySystem:
                 if player_inside is not None:
                     if npc_inside is None or npc_inside.space_id!=player_inside.space_id:continue
                 elif npc_inside is not None:continue
-                distance=abs(npc.x-pos.x)+abs(npc.y-pos.y)
+                if player_inside is not None:
+                    # Actors share an exterior portal anchor, not an interior
+                    # position. Hearing must measure the actual local space.
+                    distance=(abs(npc_inside.x-player_inside.x)+abs(npc_inside.y-player_inside.y)+999)//1000
+                else:
+                    distance=abs(npc.x-pos.x)+abs(npc.y-pos.y)
                 if distance<=noise_radius and (npc.occupation=="guard" or npc.uid in interested):
                     seen.add(npc.uid)
         return tuple(sorted(uid for uid in seen if uid in self.state.npcs))

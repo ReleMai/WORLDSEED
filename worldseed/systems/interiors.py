@@ -19,7 +19,7 @@ from worldseed.systems.interior_state import (
 from worldseed.systems.interior_templates import profile_for, rooms_for_profile
 from worldseed.systems.workshops import STATION_PIECE_ALIASES
 from worldseed.systems.building_variants import building_variant
-from worldseed.systems.interior_furnishing import furniture_base_piece, furniture_variant
+from worldseed.systems.interior_furnishing import furniture_base_piece, furniture_variant, is_bed_piece
 
 
 def furniture_size(piece_id: str) -> tuple[int, int]:
@@ -51,42 +51,18 @@ def build_interior(structure, door, source_rooms=(), pieces=()) -> InteriorPlan:
     if variant:
         plan.name = variant["name"]
     plan.rooms, plan.walls, (plan.entry_x, plan.entry_y) = rooms_for_profile(plan.uid, profile, width, height, source_rooms)
+    from worldseed.systems.interior_furnishing import place_source_fixture
     fixture_rooms = {uid: i + 1 for i, room in enumerate(sorted(source_rooms, key=lambda r: r.uid)) for uid in room.fixture_ids}
     for piece in sorted(pieces, key=lambda p: p.uid):
         if piece.role not in {"fixture", "tile_decor"}:
             continue
         w, h = furniture_size(piece.piece_id)
-        key = piece.piece_id.lower()
-        preferred = []
-        if "bed" in key:
-            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("bed", "dorm", "bunk", "guest", "recovery"))]
-        elif any(k in key for k in ("hearth", "table", "chair", "bench")):
-            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("living", "kitchen", "tavern", "mess", "common"))]
-        elif any(k in key for k in ("chest", "shelf", "rack", "hay")):
-            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("store", "pantry", "armory", "supply", "hay", "book"))]
-        else:
-            preferred = [r for r in plan.rooms if any(k in r.name.lower() for k in ("work", "forge", "machinery", "preparation", "treatment", "class", "scribe", "sanctuary"))]
         original_room = plan.rooms[min(len(plan.rooms) - 1, fixture_rooms.get(piece.uid, 1))]
-        choices = list(dict.fromkeys(r.uid for r in preferred + [original_room] + plan.rooms))
-        rooms_by_id = {r.uid: r for r in plan.rooms}
-        placed = False
-        for uid in choices:
-            rect = rooms_by_id[uid].rect
-            # Corners first, then bounded fractional shelf rows. The free centre
-            # and a 900-unit door apron remain circulation space.
-            positions = [(rect.x + 425, rect.y + 425), (rect.x + rect.w - w - 425, rect.y + 425)]
-            positions += [(rect.x + 425 + col * (w + 575), rect.y + 425 + row * (h + 575))
-                          for row in range(1, 6) for col in range(3)]
-            for x, y in positions:
-                if x + w > rect.x + rect.w - 400 or y + h > rect.y + rect.h - 950:
-                    continue
-                furnishing = InteriorFurniture(piece.uid, furniture_variant(piece.piece_id, piece.uid), x, y, w, h, door.owner_uid, piece.uid, piece.role == "fixture")
-                if placement_clear(plan, furnishing.rect):
-                    plan.furniture.append(furnishing)
-                    placed = True
-                    break
-            if placed:
-                break
+        furnishing = place_source_fixture(plan, piece.piece_id, piece.uid, door.owner_uid,
+                                           piece.uid, solid=piece.role == "fixture",
+                                           preferred_room_uid=original_room.uid, width=w, depth=h)
+        if furnishing is not None:
+            plan.furniture.append(furnishing)
     return plan
 
 
@@ -397,9 +373,9 @@ class InteriorSystem:
     def _furnish_prepared(self, floors) -> None:
         from worldseed.systems.interior_furnishing import furnish_plan
         for floor in floors:
-            if floor.furnishing_version == 0:
+            if floor.furnishing_version < 2:
                 furnish_plan(floor, self.sim.registry, (a for _, a in self.actors_in_space(floor.uid)))
-                floor.furnishing_version = 1
+                floor.furnishing_version = 2
 
     def enter(self, door_uid: str) -> str:
         if self.player_presence():
@@ -553,7 +529,7 @@ class InteriorSystem:
             return f"{container.name}: {'locked' if container.locked else 'unlocked'} storage. Right-click to open or inspect it."
         definition = self.sim.registry.settlement_pieces.get(furniture.piece_id)
         name = definition.name if definition else furniture.piece_id.split(":")[-1].replace("_", " ")
-        if any(word in furniture_base_piece(furniture.piece_id) for word in ("bed", "chair", "bench", "stool")):
+        if is_bed_piece(furniture.piece_id) or any(word in furniture_base_piece(furniture.piece_id) for word in ("chair", "bench", "stool")):
             vitals = self.sim.entities.get(self.sim.player_id, Vitals)
             if vitals:
                 vitals.stamina = min(100, vitals.stamina + 5)
@@ -717,7 +693,7 @@ class InteriorSystem:
         floors = [self.state.interiors.get(ground_id if index == 0 else ground_id + ":floor:" + str(index))
                   for index in range(plan.floor_count)]
         assigned = next((floor for floor in floors if floor and any(f.uid == npc.bed_fixture_id for f in floor.furniture)), None)
-        return assigned or next((floor for floor in floors if floor and any("bed" in f.piece_id for f in floor.furniture)), plan)
+        return assigned or next((floor for floor in floors if floor and any(is_bed_piece(f.piece_id) for f in floor.furniture)), plan)
 
     def tick_update(self, minute: int) -> None:
         """Bounded domestic routines on simulation ticks, never rendering frames.
@@ -776,7 +752,7 @@ class InteriorSystem:
                     continue
             elif not actor.waypoints:
                 phase = minute // 30
-                candidates = [f for f in plan.furniture if "bed" in furniture_base_piece(f.piece_id)] if sleeping else [f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair", "table", "bench"))]
+                candidates = [f for f in plan.furniture if is_bed_piece(f.piece_id)] if sleeping else [f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair", "table", "bench"))]
                 candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None)
                 if candidate is None and candidates:
                     candidate = sorted(candidates, key=lambda f: f.uid)[hash_u64(self.sim.seed, "interior-household-routine", uid, phase) % len(candidates)]

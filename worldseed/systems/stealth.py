@@ -10,8 +10,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from worldseed.core.coords import WorldPos
+from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import hash_u64
+from worldseed.systems.illumination import (
+    Q, detection_scale, indoor_light, indoor_line_clear, indoor_sources,
+    interior_ambient, light_description, outdoor_light, outdoor_sources,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +43,11 @@ class StealthSystem:
         self.physicalization = physicalization
         self.environment = environment
         self.interiors = None
+        self._observer_query = None
+
+    def attach_observer_query(self,query) -> None:
+        """Use the simulation-maintained actor locator, not render-time scans."""
+        self._observer_query=query
 
     def attach_interior_system(self,system) -> None:
         self.interiors=system
@@ -48,6 +57,11 @@ class StealthSystem:
         player=self.interiors.player_presence();plan=self.interiors.current_plan()
         if player is None or plan is None:return None
         from worldseed.systems.interior_state import UNIT
+        ambient=interior_ambient(self.environment,minute,plan)
+        light=indoor_light(plan,player.x,player.y,minute,ambient_light=ambient,
+                           sources=indoor_sources(plan))
+        scale=detection_scale(light,bool(self.state.player_stealth_mode),
+                              self.state.player_skills.get("stealth",0))
         observers=[]
         for uid,actor in self.interiors.actors_in_space(plan.uid):
             npc=self.state.npcs.get(uid)
@@ -59,18 +73,16 @@ class StealthSystem:
         views=[];seen=[]
         for _,uid,npc,actor in sorted(observers,key=lambda row:row[:2])[:self.MAX_OBSERVERS]:
             fx,fy=self.facing(npc);dx,dy=player.x-actor.x,player.y-actor.y
-            radius=min(self.MAX_RANGE,10 if npc.occupation=="guard" else 7)*UNIT
+            radius=max(UNIT,min(self.MAX_RANGE,10 if npc.occupation=="guard" else 7)*UNIT*scale//Q)
             dot=dx*fx+dy*fy;cross=abs(dx*fy-dy*fx)
             sees=dx*dx+dy*dy<=radius*radius and (abs(dx)+abs(dy)<=UNIT or (dot>0 and cross<=dot))
-            if sees:
-                steps=max(1,(max(abs(dx),abs(dy))+89)//90)
-                sees=not any(wall.contains(actor.x+dx*i//steps,actor.y+dy*i//steps)
-                    for i in range(1,steps) for wall in plan.walls)
+            if sees:sees=indoor_line_clear(plan,actor.x,actor.y,player.x,player.y)
             if sees:seen.append(uid)
             views.append({"uid":uid,"x":actor.x,"y":actor.y,"z":0,"facing_dx":fx,"facing_dy":fy,"range":radius,"sees_player":sees,"space_id":plan.uid})
         room=self.interiors.room_at(player.x,player.y)
         return {"active":True,"cells":(),"observers":tuple(views),"seen_by":tuple(sorted(seen)),
-                "structure_id":plan.building_id,"room_id":room.uid if room else "","space_id":plan.uid}
+                "structure_id":plan.building_id,"room_id":room.uid if room else "","space_id":plan.uid,
+                "target_light":light,"light_label":light_description(light),"detection_scale":scale}
 
     @staticmethod
     def _sign(value: int) -> int:
@@ -107,7 +119,21 @@ class StealthSystem:
             key = (cell.x, cell.y, cell.z)
             blocked = None if opaque_cache is None else opaque_cache.get(key)
             if blocked is None:
-                tile = self.world.tile_at(cell)
+                cache=getattr(self.world,"cache",None)
+                peek=getattr(cache,"peek",None)
+                if callable(peek):
+                    key_chunk,lx,ly=split_world(cell)
+                    chunk=peek(key_chunk)
+                    # Unknown/unprepared terrain is opaque. Sight and light
+                    # reads must never load/generate hidden chunks.
+                    if chunk is None:
+                        if opaque_cache is not None:opaque_cache[key]=True
+                        return False
+                    tid=self.world.registry.terrain_id(chunk.get(lx,ly))
+                    terrain=self.world.registry.terrain(tid)
+                else:
+                    # Small injected test worlds have no materialization/cache.
+                    terrain=self.world.tile_at(cell).terrain
                 door_lookup=getattr(self.physicalization,"door_at",None)
                 physical_door=door_lookup(cell) if callable(door_lookup) else None
                 door_state=(
@@ -116,7 +142,7 @@ class StealthSystem:
                     else None
                 )
                 blocked = bool(
-                    tile.terrain.blocks_sight
+                    terrain.blocks_sight
                     or (
                         self.resources.blocks_sight(cell)
                         and not self.physicalization.clears_natural_feature(cell)
@@ -157,13 +183,6 @@ class StealthSystem:
             weather, lighting = self.environment.visual_conditions(int(minute), WorldPos(npc.x, npc.y, npc.z))
             visibility = max(3, min(8, int(weather.get("visibility", 8))))
             base = max(3, base * visibility // 8)
-            ambient = int(getattr(lighting, "ambient_light", 65535))
-            if ambient < 11000:
-                base = max(3, base * 48 // 100)
-            elif ambient < 22000:
-                base = max(3, base * 62 // 100)
-            elif ambient < 36000:
-                base = max(3, base * 78 // 100)
             if int(weather.get("fog", 0)) >= 55:
                 base -= 1
         except Exception:
@@ -195,7 +214,11 @@ class StealthSystem:
         indoor=self._interior_snapshot(minute)
         if indoor is not None:return npc.uid in indoor["seen_by"]
         if npc.uid in getattr(self.state,"interior_actors",{}):return False
-        radius = self.observer_range(npc, minute)
+        light=outdoor_light(self.environment,minute,target,state=self.state,
+                            clear_line=self.visible_from)
+        scale=detection_scale(light,bool(self.state.player_stealth_mode),
+                              self.state.player_skills.get("stealth",0))
+        radius = max(1,self.observer_range(npc,minute)*scale//Q)
         if not self._inside_cone(npc, target, radius):
             return False
         return self.visible_from(WorldPos(npc.x, npc.y, npc.z), target)
@@ -209,7 +232,14 @@ class StealthSystem:
 
     def _nearby_observers(self, player_pos: WorldPos, minute: int):
         rows = []
-        for npc in self.state.npcs.values():
+        reach=self.MAX_RANGE*2
+        if self._observer_query is not None:
+            candidates=self._observer_query(player_pos,reach)
+        else:
+            # Isolated legacy/test fixtures do not construct Simulation/NPCSystem.
+            # Their explicit fallback is tightly capped, never a world-wide scan.
+            candidates=tuple(self.state.npcs.values()) if len(self.state.npcs)<=64 else ()
+        for npc in candidates:
             if not npc.alive or npc.uid in getattr(self.state,'interior_actors',{}) or npc.z != player_pos.z:
                 continue
             radius = self.observer_range(npc, minute)
@@ -235,6 +265,11 @@ class StealthSystem:
         cell_watchers: dict[tuple[int, int, int], set[str]] = {}
         observer_views: list[StealthObserverView] = []
         opaque_cache: dict[tuple[int, int, int], bool] = {}
+        sources=outdoor_sources(self.state,player_pos,self.MAX_RANGE*2+6)
+        ambient=outdoor_light(self.environment,minute,player_pos,sources=())
+        lights={}
+        stalking=bool(self.state.player_stealth_mode)
+        skill=self.state.player_skills.get("stealth",0)
         for _, _, npc, radius in self._nearby_observers(player_pos, minute):
             origin = WorldPos(int(npc.x), int(npc.y), int(npc.z))
             sees_player = False
@@ -243,6 +278,14 @@ class StealthSystem:
                     target = WorldPos(x, y, origin.z)
                     if not self._inside_cone(npc, target, radius):
                         continue
+                    key=(x,y,origin.z)
+                    light=lights.get(key)
+                    if light is None:
+                        light=outdoor_light(self.environment,minute,target,sources=sources,
+                            ambient_light=ambient,clear_line=lambda a,b:self.visible_from(a,b,opaque_cache))
+                        lights[key]=light
+                    target_radius=max(1,radius*detection_scale(light,stalking,skill)//Q)
+                    if not self._inside_cone(npc,target,target_radius):continue
                     if not self.visible_from(origin, target, opaque_cache):
                         continue
                     cell_watchers.setdefault((x, y, origin.z), set()).add(npc.uid)
@@ -251,7 +294,9 @@ class StealthSystem:
             fx, fy = self.facing(npc)
             observer_views.append(
                 StealthObserverView(
-                    npc.uid, origin.x, origin.y, origin.z, fx, fy, radius, sees_player
+                    npc.uid, origin.x, origin.y, origin.z, fx, fy,
+                    max(1,radius*detection_scale(lights.get((player_pos.x,player_pos.y,player_pos.z),ambient),stalking,skill)//Q),
+                    sees_player
                 )
             )
         observers_by_uid = {row.uid: row for row in observer_views}
@@ -286,6 +331,9 @@ class StealthSystem:
             "seen_by": seen_by,
             "structure_id": physical.structure_id if physical is not None else "",
             "room_id": physical.room_id if physical is not None else "",
+            "target_light":lights.get((player_pos.x,player_pos.y,player_pos.z),
+                outdoor_light(self.environment,minute,player_pos,sources=sources,ambient_light=ambient,
+                              clear_line=lambda a,b:self.visible_from(a,b,opaque_cache))),
         }
 
     def witnesses(self, player_pos: WorldPos, minute: int, settlement_id: str = "") -> tuple[str, ...]:

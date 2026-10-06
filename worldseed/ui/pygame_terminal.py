@@ -3523,15 +3523,22 @@ class PygameTerminal(PointerUI):
             pg.draw.line(s,color,(cx-4,cy+3),(cx+4,cy+3),2)
 
     def _draw_hud_actions(self, rect, stance='normal'):
+        """One bounded toolbar for exterior and continuous interior views."""
         from worldseed.ui.router import HUD_BUTTONS
         pg=self.pg;screen=self.screen;th=self._theme
-        bar=pg.Rect(rect.x+9,rect.bottom-177,rect.width-18,168)
-        self._hud_tooltip_bounds=pg.Rect(rect.x+9,rect.y+3,rect.width-18,rect.height-6)
+        inset=min(9,max(0,rect.width//12));margin=min(11,max(1,rect.width//16))
+        height=max(1,min(168,rect.height-2*inset))
+        bar=pg.Rect(rect.x+inset,rect.bottom-inset-height,max(1,rect.width-2*inset),height)
+        self._hud_tooltip_bounds=pg.Rect(rect.x+inset,rect.y+3,max(1,rect.width-2*inset),max(1,rect.height-6))
+        old_clip=screen.get_clip();screen.set_clip(bar.clip(old_clip))
         pg.draw.rect(screen,(19,23,25),bar,border_radius=5)
         pg.draw.rect(screen,th['edge'],bar,1,border_radius=5)
-        screen.blit(self.small_font.render('TOOLS & ACTIONS',True,th['accent']),(bar.x+11,bar.y+7))
-        cols=5;gap=6;bw=(bar.width-22-gap*4)//cols
+        title=self._fit_ui_text('TOOLS & ACTIONS',self.small_font,max(1,bar.width-2*margin))
+        screen.blit(self.small_font.render(title,True,th['accent']),(bar.x+margin,bar.y+7))
+        cols=5;gap=min(6,max(0,bar.width//35));bw=max(1,(bar.width-2*margin-gap*4)//cols)
         buttons=HUD_BUTTONS if self._input_mode=='world' else (('Confirm','\r'),('Cancel','ESC'))
+        header=min(28,max(1,bar.height//5));stance_height=min(29,max(1,bar.height//5))
+        button_h=max(1,min(40,(bar.height-header-stance_height-18)//2))
         descriptions={
             'Inventory':'Manage carried items and equipment', 'Crafting':'Recipes and discovery',
             'Build':'Construction and placement', 'Health':'Health and condition',
@@ -3541,29 +3548,38 @@ class PygameTerminal(PointerUI):
             'Confirm':'Confirm target', 'Cancel':'Cancel target',
         }
         for i,(name,token) in enumerate(buttons):
-            box=pg.Rect(bar.x+11+(i%cols)*(bw+gap),bar.y+28+(i//cols)*46,bw,40)
+            box=pg.Rect(bar.x+margin+(i%cols)*(bw+gap),bar.y+header+(i//cols)*(button_h+gap),bw,button_h).clip(bar)
             hovered=box.collidepoint(self._last_mouse)
             pg.draw.rect(screen,(53,58,55) if hovered else th['panel2'],box,border_radius=4)
             pg.draw.rect(screen,th['edge_hi'] if hovered else th['edge'],box,1,border_radius=4)
+            screen.set_clip(box.clip(old_clip))
             self._draw_hud_icon(name,box,th['accent'] if hovered else th['text'])
+            screen.set_clip(bar.clip(old_clip))
             self._pointer_targets.append((box,token))
             hint={'\r':'Enter','\t':'Tab','ESC':'Esc'}.get(token,token.upper())
             self._hud_tooltips.append((box,name,f'{descriptions[name]}  [{hint}]'))
         if self._input_mode=='world':
-            pg.draw.line(screen,th['edge'],(bar.x+11,bar.y+122),(bar.right-11,bar.y+122))
-            self._draw_stance_buttons(pg.Rect(bar.x,bar.y+130,bar.width,29),stance)
+            sy=bar.bottom-stance_height-9
+            pg.draw.line(screen,th['edge'],(bar.x+margin,sy-7),(bar.right-margin,sy-7))
+            self._draw_stance_buttons(pg.Rect(bar.x,sy,bar.width,stance_height),stance)
+        screen.set_clip(old_clip)
         self._hud_tooltip_hover=None;self._hud_tooltip_since=self.pg.time.get_ticks()
+        return bar
 
     def _draw_stance_buttons(self,rect,stance='normal'):
         """Shared HUD-only posture selection for exterior and interior spaces."""
         pg=self.pg;screen=self.screen;th=self._theme
+        margin=min(11,max(0,rect.width//12));gap=min(2,max(0,rect.width//40))
+        width=max(1,(rect.width-2*margin-gap*3)//4)
+        height=max(1,min(29,rect.height))
         for i,(name,detail) in enumerate((('normal','Normal · fastest'),('stalk','Stalk · quieter, enables theft'),('crouch','Crouch · quietest'),('aggressive','Aggressive Stance · lockpicking, door bashing'))):
-            slot=pg.Rect(rect.x+11+i*(rect.width-22)//4,rect.y,(rect.width-28)//4,29)
+            slot=pg.Rect(rect.x+margin+i*(width+gap),rect.y,width,height).clip(rect)
             active=stance==name
             pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
             pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
-            label=self.small_font.render(self._fit_ui_text('Aggro' if name=='aggressive' else name.title(),self.small_font,slot.width-6),True,th['text'] if active else th['muted'])
-            screen.blit(label,(slot.centerx-label.get_width()//2,slot.y+6))
+            label=self.small_font.render(self._fit_ui_text('Aggro' if name=='aggressive' else name.title(),self.small_font,max(1,slot.width-6)),True,th['text'] if active else th['muted'])
+            clip=screen.get_clip();screen.set_clip(slot.clip(clip))
+            screen.blit(label,label.get_rect(center=slot.center));screen.set_clip(clip)
             self._pointer_targets.append((slot,'UI_STANCE:'+name))
             self._hud_tooltips.append((slot,name.title()+' movement',detail+'; changes movement stance'))
 
@@ -4006,7 +4022,7 @@ class PygameTerminal(PointerUI):
             self._weather_fx.draw_lighting(screen,used,lighting,elapsed_ms=now_ms)
             fire_rects=[]
             for (fx,fy,fz),fire in fire_by.items():
-                if fz!=pos.z:continue
+                if fz!=pos.z or fire.fuel<=0 or fire.intensity<=0:continue
                 fire_rects.append((pg.Rect(
                     map_rect.x+(fx-left)*tile_px,map_rect.y+(fy-top)*tile_px,tile_px,tile_px
                 ),int(getattr(fire,'intensity',60))))

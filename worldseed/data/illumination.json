@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "indoor_ambient_percent": 22,
+  "sources": {
+    "core:lamp_stand_piece": {"radius": 4700, "intensity": 43000},
+    "core:brazier_piece": {"radius": 4800, "intensity": 45000},
+    "core:house_hearth_piece": {"radius": 4500, "intensity": 42000},
+    "core:mine_lamp_post_piece": {"radius": 4500, "intensity": 42000}
+  }
+}

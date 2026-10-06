@@ -189,6 +189,7 @@ class Simulation:
             self.state,self.seed,self.world,self.resources,self.building,
             self.settlement_physicalization,self.environment,
         )
+        self.stealth.attach_observer_query(self.npcs.nearby_npcs)
         self.physical_keys=PhysicalKeySystem(self.state,self.seed)
         self.property_storage=PropertyStorageSystem(
             self.state,registry,self.seed,self.settlement_physicalization,self.civics,self.physical_keys
@@ -558,6 +559,9 @@ class Simulation:
         self.state.last_offline_summary=dict(summary)
         # Player vitals intentionally do not advance while absent in SAFE mode.
         if policy=="full":self._update_vitals(minutes)
+        # Offline/coarse relocation does not execute the local AI tick feed.
+        # Rebuild once at this explicit simulation boundary, never on rendering.
+        self.npcs.rebuild_spatial_index()
         return summary
 
     def _advance_time(self,minutes:int)->None:
@@ -707,6 +711,9 @@ class Simulation:
             with self.debug.stage("settlement_population",region=region_key,warn_ms=120):
                 self.settlement_population.reconcile_active(self.state.settlements.values())
                 self.settlement_population.bind_active(self.state.settlements.values())
+                # Activation can introduce/reposition authoritative actors. This
+                # explicit preparation keeps render/perception queries local.
+                self.npcs.rebuild_spatial_index()
 
             active_ids=tuple(self.settlement_physicalization.active_settlement_ids)
             with self.debug.stage("active_settlement_identity",region=region_key):

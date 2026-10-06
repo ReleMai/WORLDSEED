@@ -10,6 +10,7 @@ from __future__ import annotations
 from worldseed.core.rng import hash_u64
 from worldseed.presentation.clouds import CloudRenderer
 from worldseed.presentation.atmosphere import EffectFrame, WeatherSample, EffectStack
+from worldseed.systems.illumination import LightSource, MAX_FIRE_RADIUS, Q, source_strength
 
 
 class WeatherFxRenderer:
@@ -182,18 +183,24 @@ class WeatherFxRenderer:
 
     def _glow_surface(self, radius: int, strength: int):
         radius = max(8, int(radius))
-        band = max(1, min(5, int(strength) // 20 + 1))
-        key = (radius, band)
+        strength = max(0, min(100, int(strength)))
+        key = (radius, strength)
         cached = self._glow_cache.get(key)
         if cached is not None:
             return cached
         pg = self.pg
         size = radius * 2
         surf = pg.Surface((size, size), pg.SRCALPHA)
+        source = LightSource(radius, radius, radius, strength * Q // 100)
         for r in range(radius, 2, -3):
-            t = 1.0 - r / max(1, radius)
-            alpha = int((4 + band * 4) * (t + 0.15))
-            pg.draw.circle(surf, (255, 143, 52, max(0, min(36, alpha))), (radius, radius), r)
+            alpha = source_strength(source, radius + r, radius) * 95 // Q
+            # Additive blits ignore source alpha for RGB: encode strength in
+            # the color channels too, so a zero-strength edge stays black.
+            pg.draw.circle(surf, (alpha, 181 * alpha // 255, 100 * alpha // 255, 0), (radius, radius), r)
+        # Intensity uses the same finite falloff and radius as recognition.
+        # This warm tint is presentation only, not a second visibility field.
+        if len(self._glow_cache) >= 64:
+            self._glow_cache.clear()
         self._glow_cache[key] = surf
         return surf
 
@@ -201,7 +208,7 @@ class WeatherFxRenderer:
         if str(getattr(lighting, "phase", "day")) == "day" and int(getattr(lighting, "darkness_alpha", 0)) < 35:
             return
         for rect, intensity in fire_rects:
-            radius = max(rect.width * 2, int(rect.width * (2.0 + max(0, intensity) / 85.0)))
+            radius = rect.width * MAX_FIRE_RADIUS
             glow = self._glow_surface(radius, intensity)
             x = rect.centerx - glow.get_width() // 2
             y = rect.centery - glow.get_height() // 2

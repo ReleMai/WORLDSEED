@@ -24,6 +24,27 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_shared_indoor_outdoor_toolbar_tokens_and_narrow_geometry(self):
+        import os
+        from unittest.mock import patch
+        from worldseed.ui.pygame_terminal import PygameTerminal
+        from worldseed.ui.router import HUD_BUTTONS
+        if not PygameTerminal.available():self.skipTest('pygame optional')
+        with patch.dict(os.environ,{'SDL_VIDEODRIVER':'dummy','SDL_AUDIODRIVER':'dummy'}):
+            term=PygameTerminal(800,520);term.enter()
+            try:
+                term._input_mode='world'
+                for width,height in ((300,420),(146,240),(90,140)):
+                    term._pointer_targets=[];term._hud_tooltips=[]
+                    rect=term.pg.Rect(400,70,width,height)
+                    bar=term._draw_hud_actions(rect,'stalk')
+                    self.assertTrue(rect.contains(bar))
+                    self.assertEqual([token for _,token in term._pointer_targets[:10]],
+                                     [token for _,token in HUD_BUTTONS])
+                    self.assertTrue(all(rect.contains(target) for target,_ in term._pointer_targets))
+                    self.assertEqual(term.screen.get_clip(),term.screen.get_rect())
+            finally:term.restore()
+
     def test_shared_hud_stance_controls_are_pointer_only_and_bounded(self):
         import os
         from unittest.mock import patch

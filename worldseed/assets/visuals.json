@@ -3,6 +3,9 @@
   "tile_px": 32,
   "items": {},
   "interiors": {
+    "core:hearth_rug_piece": "assets/sprites/interiors/dev53/hearth_rug.png",
+    "core:bedside_runner_piece": "assets/sprites/interiors/dev53/bedside_runner.png",
+    "core:hall_carpet_piece": "assets/sprites/interiors/dev53/hall_carpet.png",
     "core:oak_armchair_piece": "assets/sprites/interiors/dev52/oak_armchair.png",
     "core:padded_armchair_piece": "assets/sprites/interiors/dev52/padded_armchair.png",
     "core:carved_bench_piece": "assets/sprites/interiors/dev52/carved_bench.png",
@@ -690,6 +693,9 @@
     "core:smoke_rack": "assets/sprites/structures/smoke_rack.png"
   },
   "settlement_pieces": {
+    "core:hearth_rug_piece": "assets/sprites/interiors/dev53/hearth_rug.png",
+    "core:bedside_runner_piece": "assets/sprites/interiors/dev53/bedside_runner.png",
+    "core:hall_carpet_piece": "assets/sprites/interiors/dev53/hall_carpet.png",
     "core:oak_armchair_piece": "assets/sprites/interiors/dev52/oak_armchair.png",
     "core:padded_armchair_piece": "assets/sprites/interiors/dev52/padded_armchair.png",
     "core:carved_bench_piece": "assets/sprites/interiors/dev52/carved_bench.png",
