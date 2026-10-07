@@ -4,7 +4,7 @@ from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import HouseholdDeliveryState, HouseholdState
 
-FOODS=("core:wheat","core:turnip","core:meat","core:dried_meat","core:beans","core:berries")
+FOODS=("core:bread","core:cooked_meat","core:smoked_fish","core:wheat","core:turnip","core:meat","core:dried_meat","core:beans","core:berries")
 DAILY_WAGE={"farmer":6,"herder":6,"miner":9,"carpenter":8,"hunter":7,"smith":10,"merchant":8,"guard":7,"healer":9,"scholar":8,"priest":6}
 ESSENTIALS=("core:wood","core:soap","core:herbal_tonic")
 
@@ -17,6 +17,7 @@ class HouseholdEconomySystem:
     """
     def __init__(self,state,seed:bytes,registry=None,economy=None):
         self.state=state;self.seed=seed;self.registry=registry;self.economy=economy;self.physicalization=None
+        self.storage_access=None;self.commerce=None;self.active_carrier=None
 
     def attach_physicalization(self,physicalization)->None:self.physicalization=physicalization
 
@@ -203,6 +204,10 @@ class HouseholdEconomySystem:
         if town is None or carrier is None or dest is None:return 0
         available=max(0,int(town.stocks.get(item_id,0)));unit=self.economy.trade_price(town.uid,item_id,buy=True);afford=self.household_wealth(h)//max(1,unit)
         qty=min(int(requested),available,afford,fit)
+        physical=bool(self.storage_access is not None and self.active_carrier is not None and self.active_carrier(carrier))
+        if physical:
+            qty=min(qty,self.storage_access.goods.carry_fit(carrier,item_id))
+            if not self.storage_access.transfer_tasks(carrier,dest,'household_dropoff',{item_id:qty}):return 0
         if qty<=0:return 0
         cost=qty*unit
         if not self._debit(h,cost):return 0
@@ -210,10 +215,20 @@ class HouseholdEconomySystem:
         uid=self.state.uid("household-delivery");market=self._market_pos(h);distance=abs(market.x-dest.x)+abs(market.y-dest.y)
         delivery=HouseholdDeliveryState(uid,h.uid,town.uid,carrier.uid,item_id,qty,dest.uid,cost,int(minute),coarse_due_minute=int(minute)+max(180,min(720,120+distance*4)))
         self.state.household_deliveries[uid]=delivery
-        carrier.tasks.extend([
-            {"kind":"move","x":market.x,"y":market.y,"delivery_uid":uid},{"kind":"perform","action":"household_pickup","delivery_uid":uid},
-            {"kind":"move","x":dest.x,"y":dest.y,"delivery_uid":uid},{"kind":"perform","action":"household_dropoff","delivery_uid":uid},
-        ])
+        if physical:
+            delivery.physical_cargo=True
+            market=self.commerce.market_position(town)
+            carrier.tasks.extend([
+                dict(kind='move',x=market.x,y=market.y,z=market.z,physical_path=True,commerce_task=True,delivery_uid=uid),
+                dict(kind='perform',action='household_pickup',commerce_task=True,delivery_uid=uid),
+            ])
+            carrier.tasks.extend(self.storage_access.transfer_tasks(carrier,dest,'household_dropoff',
+                                {item_id:qty},delivery_uid=uid,commerce_task=True))
+        else:
+            carrier.tasks.extend([
+                {"kind":"move","x":market.x,"y":market.y,"delivery_uid":uid},{"kind":"perform","action":"household_pickup","delivery_uid":uid},
+                {"kind":"move","x":dest.x,"y":dest.y,"delivery_uid":uid},{"kind":"perform","action":"household_dropoff","delivery_uid":uid},
+            ])
         h.total_spent+=cost;h.last_procurement_minute=int(minute)
         self.economy.record_transaction(town.uid,"household_purchase",h.uid,town.uid,copper_value=cost,minute=minute,requested={item_id:qty})
         self._ledger(h,minute,"purchase_reserved",item=item_id,quantity=qty,cost=cost,delivery_uid=uid)
@@ -241,12 +256,27 @@ class HouseholdEconomySystem:
     def pickup_delivery(self,delivery_uid:str,carrier_uid:str,minute:int)->bool:
         d=self.state.household_deliveries.get(str(delivery_uid))
         if d is None or d.carrier_uid!=str(carrier_uid) or d.status!="assigned":return False
+        if d.physical_cargo:
+            carrier=self.state.npcs.get(d.carrier_uid);town=self.state.settlements.get(d.settlement_id)
+            if carrier is None or town is None or self.commerce is None:return False
+            market=self.commerce.market_position(town)
+            if carrier.uid in self.state.interior_actors or carrier.z!=market.z or abs(carrier.x-market.x)+abs(carrier.y-market.y)>1:return False
+            if self.storage_access.goods.carry_fit(carrier,d.item_id)<d.quantity:return False
+            carrier.inventory[d.item_id]=carrier.inventory.get(d.item_id,0)+d.quantity
+            # Assigned quantity owns reserved market goods; once carried, this
+            # record describes the obligation and NPC.inventory owns the cargo.
         d.status="carried";d.picked_minute=int(minute);return True
 
     def _finish_delivery(self,d,minute:int)->bool:
         h=self.state.households.get(d.household_uid);dest=next((c for c in self.state.containers.values() if c.uid==d.destination_uid),None)
         if h is None or dest is None:return False
         fit=self._fit(dest,d.item_id);placed=min(d.quantity,fit)
+        if d.physical_cargo and d.status=='carried':
+            carrier=self.state.npcs.get(d.carrier_uid)
+            if carrier is None or carrier.inventory.get(d.item_id,0)<d.quantity:return False
+            if fit<d.quantity:return False
+            carrier.inventory[d.item_id]-=d.quantity
+            if not carrier.inventory[d.item_id]:carrier.inventory.pop(d.item_id)
         if placed:dest.items[d.item_id]=dest.items.get(d.item_id,0)+placed
         remainder=d.quantity-placed
         if remainder:
@@ -261,12 +291,19 @@ class HouseholdEconomySystem:
     def dropoff_delivery(self,delivery_uid:str,carrier_uid:str,minute:int)->bool:
         d=self.state.household_deliveries.get(str(delivery_uid))
         if d is None or d.carrier_uid!=str(carrier_uid) or d.status not in {"assigned","carried"}:return False
+        if d.physical_cargo:
+            carrier=self.state.npcs.get(d.carrier_uid)
+            dest=next((c for c in self.state.containers.values() if c.uid==d.destination_uid),None)
+            if d.status!='carried' or carrier is None or dest is None or self.storage_access is None:return False
+            if not self.storage_access.in_reach(carrier,dest):return False
         return self._finish_delivery(d,minute)
 
     def process_overdue(self,minute:int)->int:
         done=0
         for d in list(self.state.household_deliveries.values()):
             if d.status in {"assigned","carried"} and d.coarse_due_minute>=0 and int(minute)>=d.coarse_due_minute:
+                carrier=self.state.npcs.get(d.carrier_uid)
+                if d.physical_cargo and carrier is not None and self.active_carrier is not None and self.active_carrier(carrier):continue
                 if self._finish_delivery(d,minute):done+=1
         return done
 

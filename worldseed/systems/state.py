@@ -275,6 +275,7 @@ class HouseholdDeliveryState:
     picked_minute: int = -1
     delivered_minute: int = -1
     coarse_due_minute: int = -1
+    physical_cargo: bool = False
 
 @dataclass(slots=True)
 class WorkplaceLogisticsState:

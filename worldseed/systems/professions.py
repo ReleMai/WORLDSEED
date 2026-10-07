@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
-
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.activities import ActivityAffordance
-from worldseed.systems.state import CropPlot, SoilState, pos_key
+from worldseed.systems.state import CropPlot, SoilState, GroundPile, pos_key
 
 
 class SettlementProfessionSystem:
@@ -97,6 +95,8 @@ class SettlementProfessionSystem:
         self.physicalization=physicalization
         self.activities=activities
         self.goods=goods
+        self.storage_access=None
+        self.commerce=None
         self.resources=resources
 
     # ---------- shared profession identity / progression ----------
@@ -198,51 +198,31 @@ class SettlementProfessionSystem:
         }
 
     def _ensure_input_sources(self,npc,town,storage,inputs:dict[str,int],minute:int):
-        # Carried inputs count first.
         needed={iid:max(0,int(qty)-int(npc.inventory.get(iid,0))) for iid,qty in inputs.items()}
-        needed={iid:qty for iid,qty in needed.items() if qty>0}
-        if not needed:return []
+        sources=[]
+        # Compatibility for isolated systems: owned stores only, never free
+        # settlement stock or a neighbour's private household supplies.
+        for container in self._containers(town.uid):
+            if container.property_id not in {npc.home_id,npc.workplace_id}:continue
+            take={iid:min(qty,max(0,int(container.items.get(iid,0)))) for iid,qty in needed.items() if qty>0}
+            take={iid:qty for iid,qty in take.items() if qty>0}
+            if take:sources.append((container,take))
+            for iid,qty in take.items():needed[iid]-=qty
+        return None if any(qty>0 for qty in needed.values()) else sources
 
-        containers=self._containers(town.uid)
-        allocations=defaultdict(dict)
-        for iid in sorted(needed):
-            remaining=needed[iid]
-            ranked=sorted(
-                containers,
-                key=lambda c:(
-                    0 if c.uid==storage.uid else 1,
-                    0 if c.kind=="workplace" else 1,
-                    abs(int(npc.x)-int(c.x))+abs(int(npc.y)-int(c.y)),
-                    c.uid,
-                ),
-            )
-            for container in ranked:
-                have=max(0,int(container.items.get(iid,0)))
-                take=min(remaining,have)
-                if take>0:
-                    allocations[container.uid][iid]=allocations[container.uid].get(iid,0)+take
-                    remaining-=take
-                if remaining<=0:break
-            if remaining>0:
-                # Only now cross from aggregate stock into the exact workplace.
-                self.goods.stage_from_settlement(
-                    town,storage,minute,items={iid:remaining},
-                    source_kind="profession_input_materialization",
-                    source_uid=str(npc.assigned_process_id),
-                    metadata={"profession":npc.occupation},
-                )
-                have=max(0,int(storage.items.get(iid,0))-int(allocations[storage.uid].get(iid,0)))
-                take=min(remaining,have)
-                if take>0:
-                    allocations[storage.uid][iid]=allocations[storage.uid].get(iid,0)+take
-                    remaining-=take
-            if remaining>0:return None
+    def _output_storage(self,npc,town):
+        home=self.storage_access.home_storage(npc) if self.storage_access is not None else None
+        return home or self._work_storage(npc,town)
 
-        by_uid={c.uid:c for c in containers}
-        if storage.uid not in by_uid:by_uid[storage.uid]=storage
-        return [(by_uid[uid],items) for uid,items in sorted(allocations.items()) if items]
+    def _deposit_tasks(self,npc,storage,items,process_id):
+        if self.storage_access is not None:
+            return self.storage_access.transfer_tasks(npc,storage,'profession_deposit',list(items),process_id=process_id)
+        return [self._move(self._use_position(storage),process_id=process_id),
+                dict(kind='perform',action='profession_deposit',profession_task=True,
+                     container_uid=storage.uid,items=list(items),process_id=process_id)]
 
     def _withdraw_tasks(self,npc,town,storage,inputs,minute,process_id):
+        if self.commerce is not None:return self.commerce.plan_inputs(npc,town,inputs,minute)
         sources=self._ensure_input_sources(npc,town,storage,inputs,minute)
         if sources is None:return None
         tasks=[]
@@ -256,8 +236,10 @@ class SettlementProfessionSystem:
 
     def withdraw(self,npc,town,task:dict,minute:int)->bool:
         container=next((c for c in self.state.containers.values() if c.uid==task.get("container_uid")),None)
-        if container is None:return False
-        if max(abs(int(npc.x)-int(container.x)),abs(int(npc.y)-int(container.y)),abs(int(npc.z)-int(container.z)))>1:
+        if container is None or container.property_id not in {npc.home_id,npc.workplace_id}:return False
+        if self.storage_access is not None:
+            if not self.storage_access.in_reach(npc,container):return False
+        elif max(abs(int(npc.x)-int(container.x)),abs(int(npc.y)-int(container.y)),abs(int(npc.z)-int(container.z)))>1:
             return False
         row=self.goods.withdraw(
             npc,container,minute,items=dict(task.get("items") or {}),
@@ -271,8 +253,10 @@ class SettlementProfessionSystem:
 
     def deposit(self,npc,town,task:dict,minute:int)->bool:
         container=next((c for c in self.state.containers.values() if c.uid==task.get("container_uid")),None)
-        if container is None:return False
-        if max(abs(int(npc.x)-int(container.x)),abs(int(npc.y)-int(container.y)),abs(int(npc.z)-int(container.z)))>1:
+        if container is None or container.property_id not in {npc.home_id,npc.workplace_id}:return False
+        if self.storage_access is not None:
+            if not self.storage_access.in_reach(npc,container):return False
+        elif max(abs(int(npc.x)-int(container.x)),abs(int(npc.y)-int(container.y)),abs(int(npc.z)-int(container.z)))>1:
             return False
         requested={
             iid:int(npc.inventory.get(iid,0))
@@ -285,6 +269,8 @@ class SettlementProfessionSystem:
             source_kind="profession_output",source_uid=str(task.get("process_id","")),
             metadata={"profession":npc.occupation},
         )
+        if row is not None and self.commerce is not None:
+            self.commerce.after_deposit(npc,town,container,requested,minute)
         return row is not None
 
     # ---------- physical workshop professions ----------
@@ -305,7 +291,7 @@ class SettlementProfessionSystem:
         return None
 
     def _workshop_plan(self,npc,town,minute:int,proc):
-        storage=self._work_storage(npc,town)
+        storage=self._output_storage(npc,town)
         if storage is None:return []
         withdraw=self._withdraw_tasks(npc,town,storage,proc.inputs,minute,proc.id)
         if withdraw is None:return []
@@ -349,11 +335,7 @@ class SettlementProfessionSystem:
         for task in tasks:
             task["profession_task"]=True
             if task.get("kind")=="move":task["physical_path"]=True;task["exact"]=True
-        tasks.append(self._move(self._use_position(storage),process_id=proc.id))
-        tasks.append({
-            "kind":"perform","action":"profession_deposit","profession_task":True,
-            "container_uid":storage.uid,"items":list(proc.outputs),"process_id":proc.id,
-        })
+        tasks += self._deposit_tasks(npc,storage,proc.outputs,proc.id)
         return tasks
 
     def complete_process(self,npc,town,task:dict,minute:int)->bool:
@@ -381,9 +363,9 @@ class SettlementProfessionSystem:
                         plan.piles.append(pile)
                     pile.items[iid]=pile.items.get(iid,0)+(qty-made)
                 else:
-                    storage=self._work_storage(npc,town)
-                    if storage is not None:
-                        storage.items[iid]=storage.items.get(iid,0)+(qty-made)
+                    key=pos_key(npc.x,npc.y,npc.z)
+                    pile=self.state.ground_piles.setdefault(key,GroundPile(npc.x,npc.y,npc.z))
+                    pile.items[iid]=pile.items.get(iid,0)+(qty-made)
         skills=self.SKILLS.get(str(npc.occupation),("crafting",))
         primary=skills[0] if skills else "crafting"
         self._gain_xp(npc,primary,18)
@@ -431,15 +413,11 @@ class SettlementProfessionSystem:
         return min(candidates,key=lambda r:r[:4]) if candidates else None
 
     def _logging_plan(self,npc,town,minute:int,proc):
-        storage=self._work_storage(npc,town)
+        storage=self._output_storage(npc,town)
         if storage is None:return []
         cargo={iid for iid in self.OUTPUT_TAGS["lumberjack"] if int(npc.inventory.get(iid,0))>0}
         if cargo:
-            return [
-                self._move(self._use_position(storage),process_id=proc.id),
-                {"kind":"perform","action":"profession_deposit","profession_task":True,
-                 "container_uid":storage.uid,"items":sorted(cargo),"process_id":proc.id},
-            ]
+            return self._deposit_tasks(npc,storage,sorted(cargo),proc.id)
         target=self._tree_target(npc,town,minute)
         if target is None:return []
         _,distance,_,_,pos,use,definition=target
@@ -463,11 +441,7 @@ class SettlementProfessionSystem:
             t["profession_task"]=True;t["process_id"]=proc.id
             t["resource_pos"]=[pos.x,pos.y,0];t["resource_id"]=definition.id
             if t.get("kind")=="move":t["exact"]=True;t["physical_path"]=True
-        tasks += [
-            self._move(self._use_position(storage),process_id=proc.id),
-            {"kind":"perform","action":"profession_deposit","profession_task":True,
-             "container_uid":storage.uid,"items":sorted(definition.yields),"process_id":proc.id},
-        ]
+        tasks += self._deposit_tasks(npc,storage,sorted(definition.yields),proc.id)
         return tasks
 
     def complete_resource(self,npc,town,task:dict,minute:int)->bool:
@@ -533,7 +507,7 @@ class SettlementProfessionSystem:
     def _farmer_plan(self,npc,town,minute:int,proc):
         crop_id=self._crop_for_process(proc.id)
         crop_def=self.registry.crops.get(crop_id) if crop_id else None
-        storage=self._work_storage(npc,town)
+        storage=self._output_storage(npc,town)
         if crop_def is None or storage is None:return []
         field=self._field_cells(town,crop_id)
         if not field:return []
@@ -541,11 +515,7 @@ class SettlementProfessionSystem:
         carried={crop_def.harvest_item} if int(npc.inventory.get(crop_def.harvest_item,0))>0 else set()
         if carried:
             if int(npc.inventory.get(crop_def.seed_item,0))>0:carried.add(crop_def.seed_item)
-            return [
-                self._move(self._use_position(storage),process_id=proc.id),
-                {"kind":"perform","action":"profession_deposit","profession_task":True,
-                 "container_uid":storage.uid,"items":sorted(carried),"process_id":proc.id},
-            ]
+            return self._deposit_tasks(npc,storage,sorted(carried),proc.id)
 
         mature=[];growing=[];empty=[]
         claimed={
@@ -567,11 +537,7 @@ class SettlementProfessionSystem:
             for t in tasks:
                 t["profession_task"]=True;t["process_id"]=proc.id;t["farm_action"]="harvest";t["crop_id"]=crop_id
                 if t.get("kind")=="move":t["exact"]=True;t["physical_path"]=True
-            tasks += [
-                self._move(self._use_position(storage),process_id=proc.id),
-                {"kind":"perform","action":"profession_deposit","profession_task":True,
-                 "container_uid":storage.uid,"items":[crop_def.harvest_item,crop_def.seed_item],"process_id":proc.id},
-            ]
+            tasks += self._deposit_tasks(npc,storage,[crop_def.harvest_item,crop_def.seed_item],proc.id)
             return tasks
 
         if growing:
@@ -645,6 +611,13 @@ class SettlementProfessionSystem:
         self.ensure_profile(npc)
         proc=self._process_for(npc,minute)
         if proc is None:return []
+        outputs=set(proc.outputs)|set(self.OUTPUT_TAGS.get(npc.occupation,()))
+        storage=self._output_storage(npc,town)
+        if storage is not None and any(npc.inventory.get(iid,0)>0 for iid in outputs-set(proc.inputs)):
+            return self._deposit_tasks(npc,storage,outputs-set(proc.inputs),proc.id)
+        if self.commerce is not None:
+            sale=self.commerce.plan_surplus(npc,town,outputs,minute)
+            if sale:return sale
         if npc.occupation=="lumberjack":return self._logging_plan(npc,town,minute,proc)
         if npc.occupation=="farmer":return self._farmer_plan(npc,town,minute,proc)
         return self._workshop_plan(npc,town,minute,proc)

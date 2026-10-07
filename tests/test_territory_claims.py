@@ -133,7 +133,20 @@ class TerritoryClaimTests(unittest.TestCase):
         self.assertEqual(guard.tasks[-1]["action"], "territory_guard")
         ai.tick_update(5, SimpleNamespace(x=0, y=0, z=0))
         self.assertEqual((guard.x, guard.y), (1, 0))
-        ai.decision_update(60, SimpleNamespace(x=0, y=0, z=0))
+        # Dev55 guard duty has a full hour of physical presence, starting on
+        # the next fixed tick after arrival; an hourly decision is not a
+        # shortcut through that duration.
+        player_pos = SimpleNamespace(x=0, y=0, z=0)
+        for minute in range(10, 70, 5):
+            ai.tick_update(minute, player_pos)
+            if minute == 60:
+                ai.decision_update(minute, player_pos)
+        self.assertEqual(guard.tasks[0]["action"], "territory_guard")
+        self.assertEqual(guard.tasks[0]["complete_minute"], 70)
+        territory.daily_update(65)
+        self.assertEqual(monument.capture_progress, 0)
+        ai.tick_update(70, player_pos)
+        self.assertFalse(guard.tasks)
         territory.daily_update(1440)
         self.assertGreater(monument.capture_progress, 0)
 

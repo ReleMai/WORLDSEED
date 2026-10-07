@@ -290,6 +290,22 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
         ):
             issues.append(f"NPC equipment exceeds carried inventory: {uid}")
 
+    carried_deliveries = Counter()
+    for uid, row in _table(raw, 'household_deliveries').items():
+        physical = row.get('physical_cargo', False)
+        if type(physical) is not bool:
+            issues.append(f'invalid household cargo mode: {uid}')
+        if physical and row.get('status') == 'carried':
+            quantity = row.get('quantity', 0)
+            if type(quantity) is not int or quantity < 0:
+                issues.append(f'invalid household cargo quantity: {uid}')
+            else:
+                carried_deliveries[(row.get('carrier_uid', ''), row.get('item_id', ''))] += quantity
+    for (carrier, item), quantity in carried_deliveries.items():
+        inventory = npcs.get(carrier, {}).get('inventory', {})
+        if not isinstance(inventory, dict) or not isinstance(inventory.get(item, 0), int) or inventory.get(item, 0) < quantity:
+            issues.append(f'household delivery exceeds carried inventory: {carrier}:{item}')
+
     outbound = Counter()
     for uid, row in routes.items():
         origin = str(row.get("origin", "")); dest = str(row.get("destination", ""))

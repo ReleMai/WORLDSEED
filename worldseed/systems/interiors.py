@@ -603,6 +603,62 @@ class InteriorSystem:
         npc.x, npc.y, npc.z = door.x, door.y, door.z
         return True
 
+    def enter_storage_npc(self, npc, door_uid: str) -> bool:
+        """Cargo uses the same owned home/work portal and security checks."""
+        door = self.sim.property_security.door_by_id(door_uid)
+        if door is None:
+            return False
+        if door.property_id == npc.home_id:
+            return self.enter_npc(npc, door_uid)
+        if door.property_id == npc.workplace_id:
+            return self.enter_work_npc(npc, door_uid)
+        return False
+
+    def _storage_tick(self, npc, actor, plan, minute: int) -> bool:
+        task = npc.tasks[0] if npc.tasks else {}
+        if not task.get("storage_task"):
+            return False
+        container = next((c for c in self.state.containers.values()
+                          if c.uid == task.get("container_uid")), None)
+        target_plan = self.state.interiors.get(container.interior_space_id) if container else None
+        if target_plan is None or target_plan.building_id != plan.building_id:
+            return False
+        if plan.building_id not in {npc.home_id, npc.workplace_id}:
+            return False
+        if self._household_floor_step(npc, actor, plan, target_plan.floor_index):
+            return True
+        fixture = next((f for f in plan.furniture if f.uid == container.interior_furniture_uid), None)
+        target = self.fixture_use_position(plan, fixture)
+        if target is None:
+            # A moved/obstructed furnishing cannot be reached through a wall.
+            # Keep cargo authoritative and let the worker replan after exiting.
+            npc.tasks.pop(0)
+            return True
+        actor.action = "storing goods" if "deposit" in str(task.get("action", "")) else "collecting goods"
+        if max(abs(actor.x-target[0]), abs(actor.y-target[1])) <= 200:
+            actor.waypoints.clear()
+            if task.get("kind") == "move":
+                npc.tasks.pop(0)
+            else:
+                town = self.state.settlements.get(npc.settlement_id)
+                if town is not None:
+                    self.sim.npcs.execute_interior_storage(npc, town, minute)
+            return True
+        if (actor.target_x, actor.target_y) != target or not actor.waypoints:
+            actor.target_x, actor.target_y = target
+            self._household_route(plan, actor, target)
+        if actor.waypoints:
+            tx, ty = actor.waypoints[0]
+            dx, dy = tx-actor.x, ty-actor.y
+            distance = max(1, isqrt(dx*dx+dy*dy))
+            moved = self._move_npc(npc, plan, actor, dx*min(500, distance)//distance,
+                                   dy*min(500, distance)//distance)
+            if abs(actor.x-tx)+abs(actor.y-ty) <= 90:
+                actor.waypoints.pop(0)
+            elif not moved:
+                actor.waypoints.clear()
+        return True
+
     def _workplace_tick(self, npc, actor: InteriorActor, plan: InteriorPlan, minute: int) -> None:
         task = npc.tasks[0] if npc.tasks else {}
         reservation = self.state.activity_reservations.get(str(task.get("reservation_uid", "")))
@@ -719,12 +775,14 @@ class InteriorSystem:
                 npc.thirst = min(100, npc.thirst + elapsed_hours * 5)
                 npc.rest = min(100, npc.rest + elapsed_hours * 2)
                 actor.last_need_minute += elapsed_hours * 60
+            if self._storage_tick(npc, actor, plan, minute):
+                continue
             if plan.building_id == npc.workplace_id and (actor.action == "working" or plan.function not in {"residence", "inn", "barracks", "outskirt_camp"}
                     or any(t.get("profession_task") or t.get("space_id") == plan.uid for t in npc.tasks)):
                 self._workplace_tick(npc, actor, plan, minute)
                 continue
             answering = any(t.get("action") == "answer_door" or t.get("door_answer_uid") for t in npc.tasks)
-            leave = answering or npc.hunger >= 70 or npc.thirst >= 70 or (7 <= hour < 20 and npc.rest < 50)
+            leave = bool(npc.tasks) or answering or npc.hunger >= 70 or npc.thirst >= 70 or (7 <= hour < 20 and npc.rest < 50)
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
             if distant:
                 # Tier-C does not replay household locomotion indefinitely.

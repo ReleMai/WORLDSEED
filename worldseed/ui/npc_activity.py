@@ -6,8 +6,17 @@ def activity_label(npc) -> str:
     task = npc.tasks[0] if npc.tasks else {}
     kind = str(task.get('kind', ''))
     if kind == 'move':
+        if task.get('commerce_task'):
+            return 'Hauling goods — market trade'
+        if task.get('storage_task'):
+            return 'Hauling goods — home or work storage'
         return 'Walking — ' + str(npc.goal or 'daily routine').replace('_', ' ')
     action = str(task.get('action', ''))
+    labels = {'commerce_buy': 'Buying work supplies', 'commerce_pickup': 'Collecting surplus',
+              'commerce_sell': 'Selling goods', 'commerce_return': 'Storing unsold goods',
+              'profession_deposit': 'Storing produced goods', 'mining_deposit': 'Storing mined materials'}
+    if action in labels:
+        return labels[action]
     if action:
         return action.replace('_', ' ').capitalize()
     if kind == 'activity':

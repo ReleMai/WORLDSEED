@@ -17,6 +17,15 @@ class SettlementPhysicalGoodsSystem:
         self.state = state
         self.registry = registry
 
+    def _record(self, row):
+        # Transfers are an audit, not cargo ownership. Bound frequent local
+        # production history without pruning inventories or pending tasks.
+        rows=self.state.physical_goods_transfers
+        rows[row.uid]=row
+        if len(rows)>1000:
+            for old in sorted(rows.values(),key=lambda r:(r.minute,r.uid))[:-800]:
+                rows.pop(old.uid,None)
+
     def _item(self, item_id: str):
         return self.registry.items.get(str(item_id))
 
@@ -75,7 +84,7 @@ class SettlementPhysicalGoodsSystem:
                 uid, str(town.uid), str(actor.uid), "", "issue", int(minute),
                 source_kind="npc_equipment",
             )
-            self.state.physical_goods_transfers[uid] = row
+            self._record(row)
         row.items[item_id] = row.items.get(item_id, 0) + 1
         row.minute = int(minute)
         row.settlement_id = str(town.uid)
@@ -153,7 +162,7 @@ class SettlementPhysicalGoodsSystem:
             source_uid=str(source_uid),
             metadata=dict(metadata or {}),
         )
-        self.state.physical_goods_transfers[uid] = row
+        self._record(row)
         return row
 
     def stage_from_settlement(
@@ -189,7 +198,7 @@ class SettlementPhysicalGoodsSystem:
             items=moved,source_kind=str(source_kind),source_uid=str(source_uid),
             metadata=dict(metadata or {}),
         )
-        self.state.physical_goods_transfers[uid]=row
+        self._record(row)
         return row
 
     def return_to_settlement(
@@ -222,7 +231,7 @@ class SettlementPhysicalGoodsSystem:
             items=moved,source_kind=str(source_kind),source_uid=str(source_uid),
             metadata=dict(metadata or {}),
         )
-        self.state.physical_goods_transfers[uid]=row
+        self._record(row)
         return row
 
     def withdraw(
@@ -265,5 +274,5 @@ class SettlementPhysicalGoodsSystem:
             source_uid=str(source_uid),
             metadata=dict(metadata or {}),
         )
-        self.state.physical_goods_transfers[uid] = row
+        self._record(row)
         return row

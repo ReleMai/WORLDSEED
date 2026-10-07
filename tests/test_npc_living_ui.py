@@ -53,6 +53,13 @@ class LivingNPCUITests(unittest.TestCase):
         npc.tasks=[{'kind':'perform','action':'drink'}]
         self.assertEqual(activity_label(npc),'Drink')
 
+    def test_trade_labels_are_observational(self):
+        sim,npc=self.fixture()
+        npc.tasks=[{'kind':'perform','action':'commerce_sell','items':{'core:wood':2}}]
+        before=sim.state.to_dict()
+        self.assertEqual(activity_label(npc),'Selling goods')
+        self.assertEqual(before,sim.state.to_dict())
+
     def test_belongings_page_returns_to_selected_profile_tab_on_escape(self):
         sim,npc=self.fixture()
         npc.inventory={iid:1 for iid in list(self.registry.items)[:35]}

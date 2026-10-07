@@ -130,10 +130,18 @@ class Phase4ProfessionTests(unittest.TestCase):
             "carpenter","core:woodcraft",piece_id="core:carpenter_bench_piece"
         )
         town.stocks["core:wood"]=1
+        from worldseed.systems.npc_home_storage import NPCStorageAccess
+        from worldseed.systems.npc_commerce import NPCCommerceSystem
+        economy=EconomySystem(state,self.registry,b"trade-test",SimpleNamespace(record=lambda *a,**k:None))
+        access=NPCStorageAccess(state,world,physical,None,goods)
+        professions.storage_access=access
+        professions.commerce=NPCCommerceSystem(state,self.registry,economy,goods,physical,access)
+        npc.wealth=100
         tasks=professions.plan_work(npc,town,30)
         self.assertTrue(tasks)
-        self.assertEqual(town.stocks["core:wood"],0)
-        self.assertEqual(storage.items.get("core:wood",0),1)
+        self.assertEqual(town.stocks["core:wood"],1)
+        self.assertEqual(storage.items.get("core:wood",0),0)
+        self.assertTrue(any(t.get('action')=='commerce_buy' for t in tasks))
         self.assertTrue(any(t.get("on_complete")=="profession_process" for t in tasks))
 
         state2,town2,npc2,world2,physical2,activities2,goods2,resources2,professions2,storage2=self.make(

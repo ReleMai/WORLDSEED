@@ -86,7 +86,7 @@ jobs:
 
       - name: Living NPC routines equipment and action combat
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Living NPCs and action combat" --timeout 180 -- python -u -m unittest -v tests.test_npc_living_routines tests.test_npc_equipment tests.test_npc_living_ui tests.test_action_combat
+        run: python -u tools/run_ci_check.py --name "Living NPCs and action combat" --timeout 180 -- python -u -m unittest -v tests.test_npc_living_routines tests.test_npc_equipment tests.test_npc_living_ui tests.test_action_combat tests.test_npc_production_economy
 
       - name: Settlement economy property crime stealth security and civic regressions
         shell: pwsh

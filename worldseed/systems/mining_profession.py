@@ -31,6 +31,8 @@ class MiningProfessionSystem:
         self.physicalization = physicalization
         self.activities = activities
         self.goods = goods
+        self.storage_access = None
+        self.commerce = None
 
     def ensure_profile(self, npc) -> None:
         if npc.occupation != "miner":
@@ -246,6 +248,8 @@ class MiningProfessionSystem:
         }
 
     def _return_plan(self, npc, town, storage, *, trip_uid: str = "") -> list[dict]:
+        if self.storage_access is not None:
+            return self.storage_access.transfer_tasks(npc,storage,'mining_deposit',list(self.ORE_ITEMS),trip_uid=trip_uid)
         target = self._storage_use_position(storage)
         return [
             self._move_task(target, mining_trip_uid=trip_uid),
@@ -295,7 +299,7 @@ class MiningProfessionSystem:
         if npc.occupation != "miner":
             return []
         self.ensure_profile(npc)
-        storage = self.ensure_mining_house_storage(npc, town)
+        storage = (self.storage_access.home_storage(npc) if self.storage_access else None) or self.ensure_mining_house_storage(npc, town)
         if storage is None:
             return []
 
@@ -307,6 +311,9 @@ class MiningProfessionSystem:
             ), None)
             return self._return_plan(npc, town, storage, trip_uid=open_trip.uid if open_trip else "")
 
+        if self.commerce is not None:
+            sale=self.commerce.plan_surplus(npc,town,self.ORE_ITEMS,minute)
+            if sale:return sale
         candidates = self._material_candidates(npc, town)
         if not candidates:
             return []
@@ -361,7 +368,6 @@ class MiningProfessionSystem:
         self.state.mining_trips[trip_uid] = trip
         mouth = WorldPos(int(entrance.x), int(entrance.y), 0)
         shaft = WorldPos(int(entrance.x), int(entrance.y), target.z)
-        storage_pos = self._storage_use_position(storage)
         return [
             self._move_task(mouth, mining_trip_uid=trip_uid),
             {"kind": "mining_transition", "x": mouth.x, "y": mouth.y, "target_z": target.z, "trip_uid": trip_uid},
@@ -373,9 +379,7 @@ class MiningProfessionSystem:
             },
             self._move_task(shaft, mining_trip_uid=trip_uid),
             {"kind": "mining_transition", "x": mouth.x, "y": mouth.y, "target_z": 0, "trip_uid": trip_uid},
-            self._move_task(storage_pos, mining_trip_uid=trip_uid),
-            {"kind": "perform", "action": "mining_deposit", "trip_uid": trip_uid, "container_uid": storage.uid},
-        ]
+        ] + self._return_plan(npc,town,storage,trip_uid=trip_uid)
 
     def transition(self, npc, task: dict, minute: int) -> str:
         x = int(task.get("x", npc.x)); y = int(task.get("y", npc.y))
@@ -435,7 +439,9 @@ class MiningProfessionSystem:
         container = next((c for c in self.state.containers.values() if c.uid == str(container_uid)), None)
         if container is None:
             return False
-        if max(abs(int(npc.x)-int(container.x)), abs(int(npc.y)-int(container.y)), abs(int(npc.z)-int(container.z))) > 1:
+        if self.storage_access is not None:
+            if not self.storage_access.in_reach(npc,container):return False
+        elif max(abs(int(npc.x)-int(container.x)), abs(int(npc.y)-int(container.y)), abs(int(npc.z)-int(container.z))) > 1:
             return False
         trip = self.state.mining_trips.get(str(trip_uid)) if trip_uid else None
         cargo = self._cargo_items(npc)
@@ -474,4 +480,5 @@ class MiningProfessionSystem:
             trip.status = "completed"
             trip.completed_minute = int(minute)
         self._gain_xp(npc, "hauling", max(2, sum(transfer.items.values()) + (trip.cave_distance // 40 if trip else 0)))
+        if self.commerce is not None:self.commerce.after_deposit(npc,town,container,cargo,minute)
         return True

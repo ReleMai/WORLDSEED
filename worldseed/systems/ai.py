@@ -4,6 +4,7 @@ from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, NPCState
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.pathfinding import local_path
+from worldseed.systems.household_economy import FOODS
 
 class NPCSystem:
     # Explicit local durations release completed routines on simulation ticks.
@@ -24,6 +25,7 @@ class NPCSystem:
     def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem,world=None,building=None,lod=None):
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
         self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
+        self.storage_access=None;self.commerce=None
         self._npc_spatial_buckets={};self._npc_spatial_positions={}
         self.rebuild_spatial_index()
 
@@ -109,7 +111,7 @@ class NPCSystem:
         if self._is_active_local(npc,player_pos):
             return True
         mining_active=self.mining is not None and self.mining.has_active_trip(npc)
-        profession_active=self.professions is not None and self.professions.has_active_work(npc)
+        profession_active=(self.professions is not None and self.professions.has_active_work(npc)) or any(task.get('commerce_task') for task in npc.tasks)
         if not (mining_active or profession_active):
             return False
         # Explicit profession trips may cross the immediate viewport boundary.
@@ -160,7 +162,7 @@ class NPCSystem:
             task=npc.tasks[0] if npc.tasks else {}
             task_kind=task.get("kind","")
             profession_task=self.professions is not None and self.professions.is_physical_task(task)
-            physical_task=profession_task or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action") in {"mining_deposit","answer_door"})
+            physical_task=profession_task or task.get('commerce_task') or task.get('storage_task') or task_kind in {"move","activity","mining_transition"} or (task_kind=="perform" and task.get("action") in {"mining_deposit","answer_door"})
             if active and not execute_active and self._timed_routine(task):
                 self.execute_tick(npc,town,minute,player_pos)
             elif execute_active or not active or not physical_task:
@@ -183,7 +185,7 @@ class NPCSystem:
             if npc.tasks:
                 task=npc.tasks[0];kind=task.get("kind")
                 profession_task=self.professions is not None and self.professions.is_physical_task(task)
-                if self._timed_routine(task) or profession_task or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action") in {"mining_deposit","answer_door"}):
+                if self._timed_routine(task) or profession_task or task.get('commerce_task') or task.get('storage_task') or kind in {"move","activity","mining_transition"} or (kind=="perform" and task.get("action") in {"mining_deposit","answer_door"}):
                     self.execute_tick(npc,town,minute,player_pos)
 
     def hourly_update(self,minute:int,player_pos:WorldPos)->None:
@@ -379,9 +381,14 @@ class NPCSystem:
         if npc.tasks and npc.tasks[0].get("kind")=="activity":
             self._execute_task(npc,town,minute,WorldPos(npc.x,npc.y,npc.z),allow_interior_activity=True)
 
+    def execute_interior_storage(self,npc:NPCState,town,minute:int)->None:
+        """Complete cargo transfers only after the interior mover reaches storage."""
+        if npc.tasks and npc.tasks[0].get('kind')=='perform' and npc.tasks[0].get('storage_task'):
+            self._execute_task(npc,town,minute,WorldPos(npc.x,npc.y,npc.z),allow_interior_activity=True)
+
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos,*,allow_interior_activity:bool=False)->None:
         if not npc.tasks:return
-        if self._inside(npc) and not (allow_interior_activity and npc.tasks[0].get("kind")=="activity"):return
+        if self._inside(npc) and not (allow_interior_activity and (npc.tasks[0].get("kind")=="activity" or npc.tasks[0].get('storage_task'))):return
         task=npc.tasks[0]
         if task['kind']=='move':
             # Persisted rest walks may still aim at the former tiled bedroom or
@@ -416,6 +423,9 @@ class NPCSystem:
             distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
             reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
             if reached:
+                if task.get('interior_storage_door_uid') and self.interiors is not None:
+                    if self.interiors.enter_storage_npc(npc,task['interior_storage_door_uid']):npc.tasks.pop(0)
+                    return
                 if task.get("interior_work_door_uid") and self.interiors is not None:
                     reservation=self.state.activity_reservations.get(str(task.get("reservation_uid","")))
                     if reservation is None or reservation.status in {"completed","cancelled"}:
@@ -424,7 +434,8 @@ class NPCSystem:
                     return
                 if task.get("interior_home_door_uid") and self.interiors is not None:
                     if self.interiors.enter_npc(npc,task["interior_home_door_uid"]):
-                        npc.tasks.clear()
+                        if task.get('storage_task'):npc.tasks.pop(0)
+                        else:npc.tasks.clear()
                     return
                 npc.tasks.pop(0);return
             if self.world and (
@@ -478,7 +489,7 @@ class NPCSystem:
                     task["_local_path"]=cached
                     self._face_step(npc,old_x,old_y)
                     if (npc.x,npc.y)==(goal.x,goal.y):
-                        if not task.get("interior_home_door_uid") and not task.get("interior_work_door_uid"):npc.tasks.pop(0)
+                        if not any(task.get(key) for key in ('interior_home_door_uid','interior_work_door_uid','interior_storage_door_uid')):npc.tasks.pop(0)
                     elif not cached:
                         task.pop("_local_path",None);task.pop("_local_path_goal",None)
                 # Never fall through to coarse movement while physically local.
@@ -487,7 +498,7 @@ class NPCSystem:
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
             self._face_step(npc,old_x,old_y)
-            if (npc.x,npc.y)==(goal.x,goal.y) and not task.get("interior_home_door_uid") and not task.get("interior_work_door_uid"):npc.tasks.pop(0)
+            if (npc.x,npc.y)==(goal.x,goal.y) and not any(task.get(key) for key in ('interior_home_door_uid','interior_work_door_uid','interior_storage_door_uid')):npc.tasks.pop(0)
         elif task['kind']=='wait':
             npc.tasks.pop(0)
             return
@@ -523,7 +534,7 @@ class NPCSystem:
         elif task['kind']=='perform':
             action=task['action'];npc.tasks.pop(0)
             if action=='eat':
-                food=next((iid for iid in ('core:wheat','core:turnip','core:meat') if town.stocks.get(iid,0)>0),None)
+                food=next((iid for iid in FOODS if town.stocks.get(iid,0)>0),None)
                 if food:
                     town.stocks[food]-=1;npc.hunger=max(0,npc.hunger-45)
                     if self.economy is not None and npc.wealth>0:
@@ -548,14 +559,17 @@ class NPCSystem:
             elif action=='worship':npc.needs['faith']=max(0,npc.needs.get('faith',0)-45)
             elif action=='learn':npc.needs['learning']=max(0,npc.needs.get('learning',0)-40);npc.literacy=min(100,npc.literacy+1)
             elif action=='steal' and self.economy is not None:self.economy.npc_steal_food(npc,town,minute)
-            elif action=='household_pickup' and self.households is not None:self.households.pickup_delivery(task.get('delivery_uid',''),npc.uid,minute)
-            elif action=='household_dropoff' and self.households is not None:self.households.dropoff_delivery(task.get('delivery_uid',''),npc.uid,minute)
+            elif action in {'household_pickup','household_dropoff'} and self.households is not None:
+                transfer=self.households.pickup_delivery if action=='household_pickup' else self.households.dropoff_delivery
+                if not transfer(task.get('delivery_uid',''),npc.uid,minute) and task.get('commerce_task'):
+                    npc.tasks.insert(0,task)
             elif action=='workplace_pickup' and self.workplace_logistics is not None:self.workplace_logistics.pickup_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='workplace_dropoff' and self.workplace_logistics is not None:self.workplace_logistics.dropoff_shipment(task.get('shipment_uid',''),npc.uid,minute)
             elif action=='mining_deposit' and self.mining is not None:self.mining.deposit(npc,town,task.get('trip_uid',''),task.get('container_uid',''),minute)
             elif action=='answer_door' and self.property_security is not None:self.property_security.complete_door_answer(task.get('door_uid',''),npc.uid,minute)
             elif action=='profession_withdraw' and self.professions is not None:self.professions.withdraw(npc,town,task,minute)
             elif action=='profession_deposit' and self.professions is not None:self.professions.deposit(npc,town,task,minute)
+            elif action.startswith('commerce_') and self.commerce is not None:self.commerce.execute(npc,town,task,minute)
             elif action=='socialize':npc.needs['social']=max(0,npc.needs.get('social',0)-35)
         elif task['kind']=='social':
             npc.tasks.pop(0);other=self.state.npcs.get(task['target'])

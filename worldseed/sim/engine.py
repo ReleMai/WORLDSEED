@@ -20,6 +20,8 @@ from worldseed.systems.environment import EnvironmentSystem
 from worldseed.systems.ai import NPCSystem
 from worldseed.systems.activities import ActivitySystem
 from worldseed.systems.physical_goods import SettlementPhysicalGoodsSystem
+from worldseed.systems.npc_home_storage import NPCStorageAccess
+from worldseed.systems.npc_commerce import NPCCommerceSystem
 from worldseed.systems.mining_profession import MiningProfessionSystem
 from worldseed.systems.professions import SettlementProfessionSystem
 from worldseed.systems.factions import FactionSystem
@@ -206,6 +208,14 @@ class Simulation:
         self.activities.attach_interior_system(self.interiors)
         self.settlement_physicalization.attach_interior_state(self.state)
         self.npcs.attach_interior_system(self.interiors)
+        self.npc_storage=NPCStorageAccess(self.state,self.world,self.settlement_physicalization,self.interiors,self.physical_goods)
+        self.npc_commerce=NPCCommerceSystem(self.state,registry,self.economy,self.physical_goods,self.settlement_physicalization,self.npc_storage)
+        for system in (self.npcs,self.professions,self.mining_profession):
+            system.storage_access=self.npc_storage
+            system.commerce=self.npc_commerce
+        self.households.storage_access=self.npc_storage
+        self.households.commerce=self.npc_commerce
+        self.households.active_carrier=lambda npc:self.npcs._tick_managed(npc,self.player_pos)
         self.casing=CasingSystem(
             self.state,self.settlement_physicalization,self.civics,self.property_storage,
             self.property_security,

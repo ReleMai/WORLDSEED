@@ -1,4 +1,5 @@
 from __future__ import annotations
+from worldseed.systems.household_economy import FOODS
 
 from collections import defaultdict
 
@@ -288,15 +289,12 @@ class EconomySystem:
             represented=sum(len(h.member_uids) for h in self.state.households.values() if h.settlement_id==town.uid and h.last_consumed_minute==minute)
             aggregate_population=max(0,town.population-represented)
             food_need = self._food_need_for_population(aggregate_population)
-            eaten = min(food_need, town.stocks.get("core:wheat", 0))
-            town.stocks["core:wheat"] = town.stocks.get("core:wheat", 0) - eaten
-            remain = food_need - eaten
-            eaten2 = min(remain, town.stocks.get("core:turnip", 0))
-            town.stocks["core:turnip"] = town.stocks.get("core:turnip", 0) - eaten2
-            remain -= eaten2
-            eaten3 = min(remain, town.stocks.get("core:meat", 0))
-            town.stocks["core:meat"] = town.stocks.get("core:meat", 0) - eaten3
-            shortage = food_need - eaten - eaten2 - eaten3
+            shortage = food_need
+            for item_id in FOODS:
+                eaten = min(shortage, max(0, town.stocks.get(item_id, 0)))
+                town.stocks[item_id] = town.stocks.get(item_id, 0) - eaten
+                shortage -= eaten
+                if shortage <= 0:break
             old_stress = town.food_stress
             town.food_stress = max(0, min(100, town.food_stress + shortage * 3 - (2 if shortage == 0 else 0)))
             if old_stress < 60 <= town.food_stress:
