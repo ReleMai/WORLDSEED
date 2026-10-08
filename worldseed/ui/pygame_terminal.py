@@ -372,6 +372,11 @@ class PygameTerminal(PointerUI):
                     if self._ui_context is None:return token.replace('UI_SELECT:', 'UI_HOVER:')
                 if self._input_mode=='ui' and token and token.startswith('UI_ACTION:tab:'):
                     return 'UI_REDRAW'
+                if self._input_mode=='ui' and self._current_presentation=='npc_dialogue':
+                    topic_hover=token if token and token.startswith(('UI_ACTION:topic:','UI_ACTION:path:')) else None
+                    if topic_hover!=getattr(self,'_dialogue_topic_hover',None):
+                        self._dialogue_topic_hover=topic_hover
+                        return 'UI_REDRAW'
                 continue
             if event.type == pg.MOUSEWHEEL:
                 if self._input_mode != 'world':
@@ -1143,54 +1148,186 @@ class PygameTerminal(PointerUI):
         self._draw_floating_footer(x,y,w,h,'Tabs show known information • Drag title • Resize corner • Esc closes')
         pg.display.flip();self.clock.tick(120)
 
+    @staticmethod
+    def _dialogue_rich_lines(spans, font, max_width: int):
+        """Reflow structured speech without losing its topic or paragraph breaks.
+
+        Each fragment is measured with the font used to paint it. Unspaced
+        names and linked phrases may split across rows, retaining their topic
+        on every visible fragment rather than making a single oversized target.
+        """
+        max_width=max(1,int(max_width));lines=[];line=[];used=0
+
+        def finish():
+            nonlocal line,used
+            while line and line[-1]['text'].isspace():line.pop()
+            lines.append(line);line=[];used=0
+
+        def append(text,topic):
+            nonlocal used
+            line.append({'text':text,'topic':topic});used+=font.size(text)[0]
+
+        for span in spans:
+            text=str(span.get('text','') if isinstance(span,dict) else getattr(span,'text',''))
+            topic=str(span.get('topic','') if isinstance(span,dict) else getattr(span,'topic',''))
+            for token in re.findall(r'\r\n|[\r\n]|[^\S\r\n]+|[^\s]+',text):
+                if token in ('\n','\r','\r\n'):
+                    finish();continue
+                if token.isspace():
+                    if line and used+font.size(token)[0]<=max_width:append(token,'')
+                    continue
+                width=font.size(token)[0]
+                if width<=max_width:
+                    if line and used+width>max_width:finish()
+                    append(token,topic);continue
+                # A long word uses the remaining row before continuing on the
+                # next. It is never shortened or given an off-panel hit region.
+                part=''
+                for char in token:
+                    if font.size(part+char)[0]>max_width-used:
+                        if part:append(part,topic);part=''
+                        if line:finish()
+                    part+=char
+                if part:append(part,topic)
+        if line:finish()
+        return lines or [[]]
+
+    def _draw_dialogue_path(self, rect, data, breadcrumb=''):
+        """Bounded path chips; retained parents remain reachable with Esc."""
+        pg=self.pg;path=list(data.get('path') or [])
+        if not path:
+            path=[{'index':i,'label':r.get('label',r.get('topic','Topic'))} for i,r in enumerate(data.get('thread') or [])]
+            path.append({'index':len(path),'label':data.get('topic_label') or data.get('topic','Conversation').replace('_',' ').title()})
+        if len(path)==1 and breadcrumb:
+            path=[{'index':0,'label':breadcrumb},path[0]]
+        # Show the root and newest parents when a deep path exceeds one row.
+        # Full parent text is retained on its route, never truncated in history.
+        chip_limit=max(42,min(160,rect.width//3));gap=13
+        def chip_width(item):return min(chip_limit,self.small_font.size(str(item.get('label','Topic')))[0]+16)
+        shown=list(path)
+        while len(shown)>2 and sum(chip_width(item)+gap for item in shown)-gap>rect.width:
+            del shown[1]
+        collapsed=len(shown)<len(path)
+        xx=rect.x
+        for i,item in enumerate(shown):
+            remaining=rect.right-xx
+            if remaining<24:break
+            width=min(chip_width(item),remaining)
+            chip=pg.Rect(xx,rect.y,width,rect.height)
+            current=item is path[-1]
+            hover=chip.collidepoint(self._last_mouse)
+            pg.draw.rect(self.screen,(45,51,45) if hover and not current else self._theme['panel2'],chip,border_radius=4)
+            color=self._theme['text'] if current else self._theme['accent']
+            label=self._fit_ui_text(str(item.get('label','Topic')),self.small_font,width-12)
+            self.screen.blit(self.small_font.render(label,True,color),(chip.x+6,chip.y+4))
+            if not current:self._ui_target(chip,f"UI_ACTION:path:{int(item.get('index',i))}")
+            xx=chip.right+gap
+            if i<len(shown)-1:
+                arrow='…' if collapsed and i==0 else '›'
+                self.screen.blit(self.small_font.render(arrow,True,self._theme['muted']),(chip.right+3,chip.y+4))
+
     def _present_npc_dialogue(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
-        """Retained conversation panel: transcript, choices, and inspect access."""
+        """Nested spoken thread with inline topics and keyboard-equivalent replies."""
         data=data or {};pg=self.pg;screen=self.screen
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('npc_dialogue','CONVERSATION',str(data.get('speaker',title)),subtitle)
+        # Context and navigation have their own compact rows; the shell need
+        # not repeat the longer instruction above every spoken paragraph.
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('npc_dialogue','CONVERSATION',str(data.get('speaker',title)))
         self._button((x+w-130,y+7,82,27),'INSPECT','UI_ACTION:inspect')
-        footer_h=45;gap=12;body_bottom=y+h-footer_h
-        transcript_w=int(cw*.56);transcript=pg.Rect(cx,cy,transcript_w,body_bottom-cy-8)
-        choices=pg.Rect(transcript.right+gap,cy,cw-transcript_w-gap,transcript.height)
+        role=str(data.get('role','')).upper()
+        context='  ·  '.join(str(v) for v in data.get('context',()) if str(v).casefold()!=role.casefold())
+        summary=role+('  /  '+context if context else '')
+        relationship=data.get('relationship') or {}
+        if relationship:summary+='  /  '+ '  '.join(f'{str(k).title()} {int(v):+d}' for k,v in relationship.items())
+        screen.blit(self.small_font.render(self._fit_ui_text(summary,self.small_font,cw),True,self._theme['muted']),(cx,cy))
+        self._draw_dialogue_path(pg.Rect(cx,cy+21,cw,24),data,breadcrumb)
+        body_y=cy+50;body_bottom=y+h-46;gap=12
+        rail_w=max(176,min(270,int(cw*.32)))
+        if cw<500:rail_w=max(132,int(cw*.36))
+        transcript=pg.Rect(cx,body_y,max(1,cw-rail_w-gap),max(1,body_bottom-body_y))
+        choices=pg.Rect(transcript.right+gap,body_y,rail_w,transcript.height)
         for panel in (transcript,choices):
             pg.draw.rect(screen,self._theme['panel'],panel,border_radius=7);pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=7)
-        role=self.small_font.render(str(data.get('role','')).upper(),True,self._theme['accent']);screen.blit(role,(transcript.x+14,transcript.y+12))
-        old_clip=screen.get_clip();screen.set_clip(transcript.inflate(-12,-12))
-        context='  •  '.join(str(v) for v in data.get('context',()))
-        yy=transcript.y+36
-        for line in self._wrap_pixel_text(context,self.small_font,transcript.width-28):
-            screen.blit(self.small_font.render(line,True,self._theme['muted']),(transcript.x+14,yy));yy+=self.small_font.get_linesize()+3
-        relationship=data.get('relationship') or {}
-        rel_text='  •  '.join(f'{"Community standing" if k=="community" else str(k).title()} {int(v):+d}' for k,v in relationship.items())
-        if rel_text:
-            for line in self._wrap_pixel_text(rel_text,self.small_font,transcript.width-28):
-                screen.blit(self.small_font.render(line,True,self._theme['accent']),(transcript.x+14,yy));yy+=self.small_font.get_linesize()+3
-        text=str(data.get('response') or data.get('opening') or '...')
-        yy+=10;line_h=self.font.get_linesize()+5
-        lines=self._wrap_pixel_text(text,self.font,transcript.width-30)
-        capacity=max(1,(transcript.bottom-48-yy)//line_h)
+
+        # Ancestors are quiet nested excerpts. Their full speech stays on the
+        # parent route; returning restores the exact text page and selection.
+        yy=transcript.y+12;thread=list(data.get('thread') or [])
+        max_parents=min(2,max(0,(transcript.height-190)//39))
+        for depth,parent in enumerate(thread[-max_parents:] if max_parents else []):
+            inset=10+depth*8;xx=transcript.x+inset
+            pg.draw.line(screen,self._theme['edge_hi'],(xx,yy),(xx,yy+31),2)
+            label=str(parent.get('label','Earlier topic'))
+            excerpt=str(parent.get('text','')).replace('\n',' ')
+            screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,transcript.width-inset-22),True,self._theme['accent']),(xx+9,yy))
+            screen.blit(self.small_font.render(self._fit_ui_text(excerpt,self.small_font,transcript.width-inset-22),True,self._theme['muted']),(xx+9,yy+17))
+            yy+=39
+        label=str(data.get('topic_label') or data.get('topic','Conversation').replace('_',' ').title())
+        indent=min(20,len(thread)*5)
+        text_x=transcript.x+14+indent;text_w=max(1,transcript.right-text_x-14)
+        screen.blit(self.small_font.render(self._fit_ui_text(label.upper(),self.small_font,text_w),True,self._theme['accent']),(text_x,yy));yy+=26
+        spans=list(data.get('spans') or [])
+        if spans:
+            if data.get('response'):spans=spans+[{'text':'\n\n'+str(data['response']),'topic':''}]
+        else:spans=[{'text':str(data.get('response') or data.get('opening') or '...'),'topic':''}]
+        lines=self._dialogue_rich_lines(spans,self.font,text_w)
+        line_h=self.font.get_linesize()+5
+        text_rect=pg.Rect(text_x,yy,text_w,max(1,transcript.bottom-43-yy))
+        capacity=max(1,text_rect.height//line_h)
         pages=max(1,(len(lines)+capacity-1)//capacity)
         page=min(pages-1,max(0,int(data.get('transcript_page',0))))
-        for line in lines[page*capacity:(page+1)*capacity]:
-            surf=self.font.render(line,True,self._theme['text']);screen.blit(surf,(transcript.x+15,yy));yy+=self.font.get_linesize()+5
+        focused_topic=str(data.get('focused_topic') or '')
+        if focused_topic and focused_topic!=data.get('_rendered_focused_topic'):
+            for index,line in enumerate(lines):
+                if any(fragment['topic']==focused_topic for fragment in line):
+                    page=index//capacity;break
+        data['_rendered_focused_topic']=focused_topic
+        data['transcript_page']=page;data['transcript_pages']=pages
+        self._dialogue_text_rect=text_rect;self._dialogue_page_count=pages
+        self._dialogue_visible_page=page;self._dialogue_visible_lines=lines[page*capacity:(page+1)*capacity]
+        old_clip=screen.get_clip();screen.set_clip(text_rect.clip(old_clip))
+        for line in self._dialogue_visible_lines:
+            xx=text_x
+            for fragment in line:
+                text=fragment['text'];topic=fragment['topic'];width=self.font.size(text)[0]
+                box=pg.Rect(xx,yy,width,self.font.get_height()).clip(text_rect).clip(old_clip)
+                linked=bool(topic and text.strip());hover=linked and box.collidepoint(self._last_mouse)
+                focused=linked and topic==focused_topic
+                if hover or focused:pg.draw.rect(screen,(58,62,45),box,border_radius=3)
+                if focused:pg.draw.rect(screen,self._theme['accent'],box,1,border_radius=3)
+                color=(235,204,134) if hover or focused else self._theme['accent'] if linked else self._theme['text']
+                screen.blit(self.font.render(text,True,color),(xx,yy))
+                if linked and box.width>0 and box.height>0:
+                    pg.draw.line(screen,color,(box.x,box.bottom-2),(box.right-1,box.bottom-2),1)
+                    self._ui_target(box,f'UI_ACTION:topic:{topic}')
+                xx+=width
+            yy+=line_h
         screen.set_clip(old_clip)
         if pages>1:
-            self._button((transcript.x+10,transcript.bottom-36,72,27),'Previous','UI_ACTION:transcript_previous')
-            self._button((transcript.right-82,transcript.bottom-36,72,27),'Next','UI_ACTION:transcript_next')
-            count=self.small_font.render(f'{page+1}/{pages}',True,self._theme['muted']);screen.blit(count,(transcript.centerx-count.get_width()//2,transcript.bottom-30))
-        heading=self.small_font.render('YOUR RESPONSE',True,self._theme['accent']);screen.blit(heading,(choices.x+12,choices.y+12))
+            bw=min(72,max(32,(transcript.width-92)//2))
+            if page>0:self._button((transcript.x+10,transcript.bottom-34,bw,25),'Previous','UI_ACTION:transcript_previous')
+            if page<pages-1:self._button((transcript.right-bw-10,transcript.bottom-34,bw,25),'Next','UI_ACTION:transcript_next')
+            count=self.small_font.render(f'{page+1}/{pages}',True,self._theme['muted']);screen.blit(count,(transcript.centerx-count.get_width()//2,transcript.bottom-29))
+
+        heading=self.small_font.render('TOPICS & REPLIES',True,self._theme['accent']);screen.blit(heading,(choices.x+10,choices.y+12))
         yy=choices.y+40
+        actions={'gift':'+','trade':'$','attack':'!','inspect':'i','goodbye':'×','introduce':'+','back':'‹'}
         for i,row in enumerate(rows):
-            if yy+38>choices.bottom-44:break
+            if yy+34>choices.bottom-44:break
+            key=str(getattr(row,'key',''));label=str(getattr(row,'label',row))
             rect=pg.Rect(choices.x+8,yy,choices.width-16,34);self._ui_target(rect,f'UI_SELECT:{i}')
-            active=i==selected;pg.draw.rect(screen,(45,51,49) if active else self._theme['panel2'],rect,border_radius=5)
-            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=5)
-            label=str(getattr(row,'label',row));surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-18),True,self._theme['text'])
-            screen.blit(surf,(rect.x+9,rect.centery-surf.get_height()//2));yy+=39
+            active=i==selected;hover=rect.collidepoint(self._last_mouse)
+            pg.draw.rect(screen,(45,51,49) if active or hover else self._theme['panel2'],rect,border_radius=5)
+            edge=self._theme['danger'] if key=='attack' else self._theme['accent'] if active else self._theme['edge']
+            pg.draw.rect(screen,edge,rect,2 if active else 1,border_radius=5)
+            badge=actions.get(key,'›');badge_color=self._theme['danger'] if key=='attack' else self._theme['muted'] if key in actions else self._theme['accent']
+            screen.blit(self.small_font.render(badge,True,badge_color),(rect.x+8,rect.y+8))
+            surf=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-32),True,self._theme['text'])
+            screen.blit(surf,(rect.x+24,rect.centery-surf.get_height()//2));yy+=38
         if total is not None and total>len(rows):
-            self._button((choices.x+8,choices.bottom-36,72,27),'Previous','PGUP')
-            self._button((choices.right-80,choices.bottom-36,72,27),'Next','PGDN')
-            count=self.small_font.render(f'{page_start+1}-{page_start+len(rows)} / {total}',True,self._theme['muted']);screen.blit(count,(choices.centerx-count.get_width()//2,choices.bottom-30))
-        self._draw_floating_footer(x,y,w,h,'Choose a reply • Inspect shows visible and learned facts • Esc closes')
+            bw=min(72,max(32,(choices.width-70)//2))
+            self._button((choices.x+8,choices.bottom-34,bw,25),'Previous','PGUP')
+            self._button((choices.right-bw-8,choices.bottom-34,bw,25),'Next','PGDN')
+            count=self.small_font.render(f'{page_start+1}-{page_start+len(rows)}/{total}',True,self._theme['muted']);screen.blit(count,(choices.centerx-count.get_width()//2,choices.bottom-29))
+        self._draw_floating_footer(x,y,w,h,'Click / Tab words • Enter opens • Arrows choose replies • Esc returns one topic')
         pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):

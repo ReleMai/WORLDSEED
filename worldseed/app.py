@@ -19,6 +19,7 @@ from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator
 from worldseed.systems.settlement_planner import SettlementSkeletonPlanner, settlement_rank_for_population
 from worldseed.systems.dialogue import DialogueSystem
+from worldseed.systems.dialogue_context import build_dialogue_facts
 from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
@@ -686,23 +687,63 @@ def _gift_npc(ctx:GameContext,term:Terminal,npc)->str:
 
 def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
     sim=ctx.sim;dialogue=DialogueSystem(sim.state,sim.seed)
-    nav=NavigationStack(RouteState('npc-dialogue','Stranger',payload={'topic':'root'}))
-    transcript_page=0
+    if target.uid not in sim.state.introduced_npcs:response=''
+    nav=NavigationStack(RouteState('npc-dialogue','Stranger',payload={'topic':'root','response':response}))
+
+    def open_topic(topic_id:str)->None:
+        # Returning to an ancestor restores that exact route, including its
+        # spoken answer, selection and text page. Cyclic links cannot grow an
+        # unbounded session stack. This state is never written into a save.
+        for index,route in enumerate(nav._stack):
+            if route.payload.get('topic')==topic_id:
+                while nav.depth>index+1:nav.back()
+                return
+        route=RouteState(f'npc-dialogue:{topic_id}',topic_id.replace('_',' ').upper(),payload={'topic':topic_id})
+        if nav.depth>=24:nav.replace(route)
+        else:nav.push(route)
+
     while True:
-        topic=str(nav.current.payload.get('topic','root'))
+        route=nav.current;topic=str(route.payload.get('topic','root'))
         vitals=ctx.entities.get(ctx.player_id,Vitals)
         scene=dialogue.scene(target,sim.clock.minute,vitals,known=target.uid in sim.known_npc_ids(),topic=topic,
-                             introduced=target.uid in sim.state.introduced_npcs)
+                             introduced=target.uid in sim.state.introduced_npcs,
+                             facts=build_dialogue_facts(ctx,target))
         if nav.depth==1:nav.current.title=scene.speaker
+        # Prose is a retained utterance. New branches sample current world
+        # conditions, while returning to a parent preserves what was said.
+        route.payload.setdefault('opening',scene.opening)
+        route.payload.setdefault('spans',[{'text':span.text,'topic':span.topic} for span in scene.spans])
+        route.payload.setdefault('label',scene.topic_label or scene.topic.replace('_',' ').title())
+        response=str(route.payload.get('response',''))
         rows=[(option.key,option.label) for option in scene.options]
-        data={'speaker':scene.speaker,'role':scene.role,'opening':scene.opening,'response':response,
+        data={'speaker':scene.speaker,'role':scene.role,'opening':route.payload['opening'],'response':response,
               'context':scene.context,'npc_uid':target.uid,'options':rows,'topic':scene.topic,
-              'relationship':dict(scene.relationship),'transcript_page':transcript_page}
-        choice=_stack_menu(term,nav,rows,subtitle='Conversation continues in real time. Trust, familiarity, and community standing gate information.',presentation='npc_dialogue',presentation_data=data)
+              'relationship':dict(scene.relationship),'transcript_page':route.scroll,
+              'spans':route.payload['spans'],'topic_label':route.payload['label'],
+              'path':[{'index':i,'label':r.payload.get('label',r.title),'topic':r.payload.get('topic','root')} for i,r in enumerate(nav._stack)],
+              'thread':[{'topic':r.payload.get('topic','root'),'label':r.payload.get('label',r.title),
+                         'text':r.payload.get('opening',''),'response':r.payload.get('response','')} for r in nav._stack[:-1]]}
+        choice=_stack_menu(term,nav,rows,subtitle='Follow highlighted words to explore a topic. Esc returns to the previous thread.',presentation='npc_dialogue',presentation_data=data)
+        route.scroll=max(0,int(data.get('transcript_page',route.scroll)))
         if choice in (None,'goodbye'):return response or scene.opening
         if choice=='__BACK__':continue
         if choice in ('UI_ACTION:transcript_previous','UI_ACTION:transcript_next'):
-            transcript_page=max(0,transcript_page+(-1 if choice.endswith('previous') else 1));continue
+            maximum=max(0,int(data.get('transcript_pages',route.scroll+2))-1)
+            route.scroll=max(0,min(maximum,route.scroll+(-1 if choice.endswith('previous') else 1)));continue
+        if isinstance(choice,str) and choice.startswith('UI_ACTION:path:'):
+            try:index=int(choice.rsplit(':',1)[1])
+            except ValueError:continue
+            if 0<=index<nav.depth-1:
+                while nav.depth>index+1:nav.back()
+            continue
+        if isinstance(choice,str) and choice.startswith('UI_ACTION:topic:'):
+            topic_id=choice[len('UI_ACTION:topic:'):]
+            # Pointer tokens are untrusted UI input. Only links actually
+            # offered in this utterance and the current scene may navigate.
+            offered={span.topic for span in scene.spans if span.topic}
+            spoken={span['topic'] for span in route.payload['spans'] if span.get('topic')}
+            if topic_id in offered & spoken:open_topic(topic_id)
+            continue
         if choice=='UI_ACTION:inspect':choice='inspect'
         if choice=='inspect' and not any(o.key=='inspect' for o in scene.options):
             push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
@@ -714,17 +755,17 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
         option=next((row for row in scene.options if row.key==choice),None)
         if option is None:continue
         if option.next_topic:
-            transcript_page=0
             if option.key=='back':nav.back()
-            else:nav.push(RouteState(f'npc-dialogue:{option.next_topic}',option.next_topic.replace('_',' ').upper(),payload={'topic':option.next_topic}))
+            else:open_topic(option.next_topic)
             continue
         if option.action=='introduce':
             sim.execute(IntroduceNPCCommand(ctx.player_id,target.uid))
             response=sim.log[-1].message if sim.log else ''
-            nav.reset_to_root();nav.current.selected=0;transcript_page=0
+            nav.reset_to_root();nav.current.selected=0;nav.current.scroll=0
+            nav.current.payload={'topic':'root','response':response}
             continue
         dialogue.apply_option(target,option,sim.clock.minute)
-        transcript_page=0
+        route.scroll=0
         if option.action=='inspect':
             push=getattr(term,'push_floating_panel',None);pop=getattr(term,'pop_floating_panel',None)
             if callable(push):push()
@@ -732,24 +773,27 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
             finally:
                 if callable(pop):pop()
             continue
-        if option.action=='area':response=_learn_area_from_npc(ctx,target);continue
+        if option.action=='area':route.payload['response']=_learn_area_from_npc(ctx,target);continue
         if option.action=='local_knowledge':
             from worldseed.systems.npc_knowledge import NPCKnowledgeSystem
             knowledge=NPCKnowledgeSystem(sim.state,sim.registry)
             response,facts=knowledge.answer(target,option.key)
             knowledge.disclose(facts)
+            route.payload['response']=response
             continue
         if option.action=='knowledge':
             before=len(sim.log);sim.begin_conversation(target.uid)
             response=sim.log[-1].message if len(sim.log)>before else f'{target.name} has nothing new to add.'
+            route.payload['response']=response
             continue
-        if option.action=='gift':response=_gift_npc(ctx,term,target);continue
+        if option.action=='gift':route.payload['response']=_gift_npc(ctx,term,target);continue
         if option.action=='trade':
             response=(f'{target.name} is willing to trade through the settlement market.' if target.occupation=='merchant' else f'{target.name} directs you to the local market; they are not a trader.')
+            route.payload['response']=response
             continue
         if option.action=='attack':
             return 'You end the conversation aggressively. Direct NPC combat is not yet part of the combat authority.'
-        response=option.response
+        route.payload['response']=option.response
 
 def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     sim=ctx.sim;p=sim.player_pos

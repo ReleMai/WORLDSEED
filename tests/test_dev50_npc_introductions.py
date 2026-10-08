@@ -115,7 +115,9 @@ class NPCIntroductionTests(unittest.TestCase):
         self.assertEqual(next(m for m in npc.memories if m['type'] == 'introduction')['player_name'], 'Mara')
         scene = DialogueSystem(sim.state, sim.seed).scene(npc, 600, Vitals(), known=True, introduced=True)
         self.assertIn('knowledge', {o.key for o in scene.options})
-        sim._advance_time.assert_called_with(0)
+        # Zero-duration chat commands leave advancement to the realtime driver.
+        sim._advance_time.assert_not_called()
+        self.assertEqual(sim.clock.minute,600)
 
     def test_repeat_introduction_is_idempotent_even_in_a_later_time_bucket(self):
         sim, npc, _ = self.fixture()

@@ -55,6 +55,39 @@ def _ui_key(raw: str) -> str:
     return raw
 
 
+def _dialogue_terminal_page(data: dict, width: int, height: int, choice_rows: int) -> list[str]:
+    """Reflow the complete spoken thread for the terminal fallback.
+
+    Topic links also appear in the ordinary arrow/Enter choices. Text paging
+    uses the same route scroll as the graphical backend and never consumes a
+    gameplay key. Only the current utterance is paged; earlier ones remain on
+    their retained parent routes.
+    """
+    inner=max(8,width-4)
+    path=' > '.join(str(row.get('label','')) for row in data.get('path',()))
+    heading=str(data.get('role',''))+' · '+str(data.get('topic_label') or data.get('topic','Conversation'))
+    body=[heading[:inner]]
+    if path:body.append(('‹ '+path)[-inner:])
+    spans=data.get('spans') or ()
+    focus=data.get('focused_topic','')
+    text=''.join(('['+str(span.get('text',''))+']' if span.get('topic')==focus else '‹'+str(span.get('text',''))+'›')
+                 if span.get('topic') else str(span.get('text','')) for span in spans) if spans else str(data.get('opening') or '')
+    response=str(data.get('response') or '')
+    if response:text+=('\n\n' if text else '')+response
+    flowed=[]
+    for paragraph in text.splitlines():flowed.extend(wrap_line(paragraph,inner))
+    if not flowed:flowed=['...']
+    # Reserve borders/footer, topic choices, choice paging and text status.
+    capacity=max(1,height-7-len(body)-choice_rows)
+    pages=max(1,(len(flowed)+capacity-1)//capacity)
+    page=min(pages-1,max(0,int(data.get('transcript_page',0))))
+    data['transcript_page']=page;data['transcript_pages']=pages
+    body.extend(flowed[page*capacity:(page+1)*capacity])
+    body.append(f'Text {page+1}/{pages} [ / ]')
+    body.append('Topics / actions:')
+    return body
+
+
 def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *, allow_escape: bool = True,
                 subtitle: str = '', initial: int = 0, breadcrumb: str = '', state=None,
                 presentation: str = '', presentation_data: dict | None = None) -> str | None:
@@ -67,31 +100,44 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
     if not items:
         return None
     selected = max(0, min(len(items)-1, getattr(state, 'selected', initial) if state is not None else initial))
+    focused_topic=''
     while True:
         cols, lines = term.size()
         width = max(34, min(96, cols - 2))
         available = max(5, lines - 8)
+        feature_graphical = getattr(term, 'present_feature_menu', None)
+        graphical = getattr(term, 'present_menu', None)
+        terminal_dialogue=presentation=='npc_dialogue' and not callable(feature_graphical) and not callable(graphical)
+        if terminal_dialogue:
+            width=max(24,min(96,cols-2))
+            available=max(1,(lines-10)//3)
         capacity=getattr(term,'menu_page_size',None)
         if callable(capacity):available=max(1,capacity(presentation))
         page_start = (selected // available) * available
         page_items = items[page_start:page_start + available]
+        if presentation=='npc_dialogue' and presentation_data is not None:
+            presentation_data['focused_topic']=focused_topic
         body = []
-        if breadcrumb:
+        if terminal_dialogue:
+            body=_dialogue_terminal_page(presentation_data or {},width,lines,len(page_items))
+        elif breadcrumb:
             body += [f'‹ {breadcrumb}', '']
-        if subtitle:
+        if subtitle and not terminal_dialogue:
             body += [subtitle, '']
         for idx, row in enumerate(page_items, start=page_start):
             marker = '>' if idx == selected else ' '
             quick = str(idx - page_start + 1) if idx - page_start < 9 else ' '
             text = f'{marker} {quick}. {row.label}'
+            if terminal_dialogue and len(text)>width-4:text=text[:width-5]+'…'
             body.append(text)
-            if idx == selected and row.hint:
+            if idx == selected and row.hint and not terminal_dialogue:
                 body.append(f'     {row.hint}')
         if len(items) > available:
-            body += ['', f'{selected+1}/{len(items)}  Page {page_start//available + 1}/{(len(items)+available-1)//available}']
+            status=f'{selected+1}/{len(items)}  Page {page_start//available + 1}/{(len(items)+available-1)//available}'
+            body += [status] if terminal_dialogue else ['',status]
         footer = 'Click to select • Wheel to page • ↑/↓ and Enter optional' + (' • Esc back' if allow_escape else '')
-        feature_graphical = getattr(term, 'present_feature_menu', None)
-        graphical = getattr(term, 'present_menu', None)
+        if presentation=='npc_dialogue':
+            if terminal_dialogue:footer='Tab/↑↓ Enter Esc'
         if presentation and callable(feature_graphical):
             feature_graphical(presentation, title, page_items, selected - page_start,
                               subtitle=subtitle, breadcrumb=breadcrumb, footer=footer,
@@ -107,6 +153,17 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             state.selected = selected
         if k == 'UI_REDRAW':
             continue
+        if presentation=='npc_dialogue' and k in {'\t','TAB'}:
+            topics=list(dict.fromkeys(str(span.get('topic','')) for span in (presentation_data or {}).get('spans',()) if span.get('topic')))
+            if topics:
+                focused_topic=topics[(topics.index(focused_topic)+1)%len(topics)] if focused_topic in topics else topics[0]
+            continue
+        if presentation=='npc_dialogue' and focused_topic and k in {'\r','\n',' ','RIGHT'}:
+            return 'UI_ACTION:topic:'+focused_topic
+        if k in {'UP','DOWN','HOME','END','PGUP','PGDN'} or k.startswith(('UI_SELECT:','UI_HOVER:')):
+            focused_topic=''
+        if presentation=='npc_dialogue' and k in {'[',']'}:
+            return 'UI_ACTION:transcript_previous' if k=='[' else 'UI_ACTION:transcript_next'
         if k.startswith('UI_CONTEXT:'):
             try:idx=page_start+int(k.split(':',1)[1])
             except ValueError:continue

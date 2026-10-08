@@ -1,6 +1,15 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import math
+from typing import Mapping
 from worldseed.core.rng import hash_u64
+from worldseed.systems.dialogue_tree import LEGACY_TOPICS, TopicLink, load_dialogue_tree
+
+@dataclass(frozen=True, slots=True)
+class DialogueSpan:
+    """A piece of speech; a topic makes its words a conversation link."""
+    text: str
+    topic: str = ""
 
 @dataclass(frozen=True, slots=True)
 class DialogueOption:
@@ -13,6 +22,7 @@ class DialogueOption:
     next_topic: str = ""
     affection_delta: int = 0
     familiarity_delta: int = 0
+    effect_id: str = ""
 
 @dataclass(frozen=True, slots=True)
 class DialogueScene:
@@ -23,9 +33,11 @@ class DialogueScene:
     options: tuple[DialogueOption, ...]
     topic: str = "root"
     relationship: tuple[tuple[str, int], ...] = ()
+    spans: tuple[DialogueSpan, ...] = ()
+    topic_label: str = ""
 
 class DialogueSystem:
-    """Small state-driven storylet selector for living-world conversations.
+    """State-driven, nested conversations selected from authoritative facts.
 
     Dialogue is selected from simulation facts instead of one fixed tree.  The
     UI can therefore ask the same NPC the same topic on another day and receive
@@ -51,15 +63,20 @@ class DialogueSystem:
 
     @staticmethod
     def settlement_standing(state,settlement_id:str)->int:
+        # Legacy callers lack a local NPC index. Use a bounded witness sample
+        # rather than walking the total realized population on every read.
         rows=[]
-        for person in state.npcs.values():
+        for uid in getattr(state,"introduced_npcs",())[-128:]:
+            person=state.npcs.get(uid)
+            if person is None:continue
             if not person.alive or person.settlement_id!=settlement_id:continue
             rel=person.relationships.get("player",{})
             if int(rel.get("familiarity",0))<=0:continue
             rows.append((int(rel.get("trust",0))+int(rel.get("affection",0)))//2)
         return sum(rows)//len(rows) if rows else 0
 
-    def scene(self,npc,minute:int,player_vitals,known:bool=True,topic:str="root",introduced:bool|None=None)->DialogueScene:
+    def scene(self,npc,minute:int,player_vitals,known:bool=True,topic:str="root",introduced:bool|None=None,
+              facts:Mapping[str,object]|None=None)->DialogueScene:
         phase=self._phase(minute)
         if introduced is None:introduced=npc.uid in self.state.introduced_npcs
         if not known or introduced is False:
@@ -70,7 +87,7 @@ class DialogueSystem:
                 DialogueOption("inspect","Inspect visible clothing and injuries","",action="inspect"),
                 DialogueOption("goodbye","Leave without an introduction","You leave without exchanging names.",action="goodbye"),
             )
-            return DialogueScene("Stranger","Unknown person","You have not exchanged introductions. What would you like to say?",(phase.title(),),options,"introduction")
+            return DialogueScene("Stranger","Unknown person","You have not exchanged introductions. What would you like to say?",(phase.title(),),options,"introduction",topic_label="Introductions")
         town=self.state.settlements.get(npc.settlement_id)
         rel=npc.relationships.get("player",{}) if isinstance(npc.relationships,dict) else {}
         trust=int(rel.get("trust",0));affection=int(rel.get("affection",0))
@@ -81,12 +98,18 @@ class DialogueSystem:
         stressed=bool(town and (town.food_stress>=45 or town.unemployment>=35))
         role=str(npc.occupation or "villager").replace("_"," ")
         routine=str(npc.routine_phase or npc.goal or "").replace("_"," ")
+        snapshot=self._facts(npc,town,minute,player_vitals,facts)
+        tree=load_dialogue_tree()
+        if topic not in LEGACY_TOPICS and topic not in tree.nodes:topic="root"
 
         context=[phase.title(),role.title()]
         if routine:context.append(routine.title())
         if heat or bounty:context.append("Wanted / watched")
         if hurt:context.append("Player visibly hurt")
         if stressed:context.append("Settlement under strain")
+        if snapshot.get("weather.wet"):context.append("Wet weather")
+        if snapshot.get("player.wealth",0)>=100:context.append("Substantial purse")
+        elif snapshot.get("player.wealth",0)==0:context.append("Empty purse")
 
         greetings={
             "guard":["Hold there. State your business.","Keep the road clear and your hands where I can see them.","Morning. Trouble has been keeping us busy."],
@@ -113,7 +136,32 @@ class DialogueSystem:
         elif phase=="night" and npc.occupation not in {"guard","healer"}:
             opening=self._pick(npc,"night",["It is late. Make it quick.","Most decent people are asleep by now. What is it?"],minute)
 
-        topic=topic if topic in {"root","area","personal","relations","knowledge"} else "root"
+        if topic in tree.nodes:
+            node=tree.nodes[topic]
+            if not tree.allows(topic,snapshot):
+                if topic.startswith(("personal.","relations.confidence")):
+                    opening=("That is personal. We do not know one another well enough yet.\n\n"
+                             "I can speak about ordinary work and public concerns. Let trust grow through your conduct before asking me to open that part of my life.")
+                elif topic.startswith("work.professions."):
+                    opening=("That calls for experience in a different line of work. I would rather admit the limits of my knowledge than give you a confident answer I cannot support.\n\n"
+                             "Ask someone who does that work, or we can return to the parts of working life I know firsthand.")
+                else:
+                    opening=("I do not have enough firsthand knowledge to answer that under the present circumstances. A useful answer needs a sound basis, not just a plausible story.\n\n"
+                             "We can return to public matters I can speak about, and leave this detail until there is a better reason to discuss it.")
+                # A denied direct/forged request must not reveal descendant
+                # labels, links, private backstory or hidden proper names.
+                options=[DialogueOption("back","Back to other topics","",next_topic="root")]
+                spans=(DialogueSpan(opening),)
+            else:
+                opening="\n\n".join(tree.paragraphs(topic,snapshot,self.seed,npc.uid,minute))
+                links=tuple(link for link in node.links if link.phrase in opening and tree.allows(link.topic,snapshot))
+                spans=self._spans(opening,links)
+                options=[DialogueOption(link.topic,tree.nodes[link.topic].label if link.topic in tree.nodes else link.topic.title(),"",next_topic=link.topic) for link in links]
+                options.append(DialogueOption("back","Back to "+(tree.nodes[node.parent].label if node.parent in tree.nodes else node.parent.title()),"",next_topic=node.parent))
+                options.append(DialogueOption("root","Return to the conversation","",next_topic="root"))
+            standing=self._community(snapshot,npc)
+            relationship=(("trust",trust),("affection",affection),("familiarity",int(rel.get("familiarity",0))),("community",standing))
+            return DialogueScene(npc.name,role.title(),opening,tuple(context),tuple(options),topic,relationship,spans,node.label)
         if topic=="knowledge":
             options=[
                 DialogueOption(key,label,"",action="local_knowledge") for key,label in (
@@ -134,16 +182,16 @@ class DialogueSystem:
             ]
         elif topic=="personal":
             options=[
-                DialogueOption("wellbeing","Ask how they are really doing",self._personal_response(npc,minute),"warm",1,"chat","",1,3),
-                DialogueOption("family","Ask about family",self._family_response(npc,trust,minute),"warm",0,"chat","",1,2),
-                DialogueOption("history","Ask about their past",self._history_response(npc,trust,minute),"neutral",1,"chat","",0,3),
+                DialogueOption("wellbeing","Ask how they are really doing",self._personal_response(npc,minute),"warm",1,"chat","personal.wellbeing",1,3),
+                DialogueOption("family","Ask about family",self._family_response(npc,trust,minute),"warm",0,"chat","personal.family",1,2),
+                DialogueOption("history","Ask about their past",self._history_response(npc,trust,minute),"neutral",1,"chat","personal.history",0,3),
                 DialogueOption("back","Back to other topics","",next_topic="root"),
             ]
         elif topic=="relations":
             options=[
                 DialogueOption("listen","Listen without pressing for information",self._listen_response(npc,minute),"warm",1,"chat","",1,4),
                 DialogueOption("gift","Offer food or drink","",action="gift"),
-                DialogueOption("trust","Ask what would earn their trust",self._trust_response(npc,trust,minute)),
+                DialogueOption("trust","Ask what would earn their trust",self._trust_response(npc,trust,minute),next_topic="relations.trust"),
                 DialogueOption("back","Back to other topics","",next_topic="root"),
             ]
         else:
@@ -152,18 +200,148 @@ class DialogueSystem:
                 DialogueOption("knowledge","Discuss nature, resources, towns, and skills","",next_topic="knowledge"),
                 DialogueOption("personal","Talk about their life","",next_topic="personal"),
                 DialogueOption("relations","Build the relationship","",next_topic="relations"),
-                DialogueOption("work","Ask about their work",self._work_response(npc,town,stressed,minute),familiarity_delta=1),
+                DialogueOption("work","Ask about their work",self._work_response(npc,town,stressed,minute),next_topic="work",familiarity_delta=1),
+                DialogueOption("economy","Discuss money, prices, and your circumstances","",next_topic="economy"),
                 DialogueOption("trade","Trade","",action="trade"),
                 DialogueOption("inspect","Inspect","",action="inspect"),
             ]
-            if hurt:options.append(DialogueOption("health","Mention your injuries",self._health_response(npc,minute),"concerned",1 if npc.occupation=="healer" else 0,familiarity_delta=1))
-            if heat or bounty:options.append(DialogueOption("crime","Ask about the trouble around your name",self._crime_response(npc,heat,bounty,minute),"wary",-1 if npc.occupation=="guard" else 0,familiarity_delta=1))
-            if hungry:options.append(DialogueOption("needs","Ask where to find food or water",self._needs_response(npc,town,minute),familiarity_delta=1))
+            if hurt:options.append(DialogueOption("health","Mention your injuries",self._health_response(npc,minute),"concerned",1 if npc.occupation=="healer" else 0,next_topic="health",familiarity_delta=1))
+            if heat or bounty:options.append(DialogueOption("crime","Ask about the trouble around your name",self._crime_response(npc,heat,bounty,minute),"wary",-1 if npc.occupation=="guard" else 0,next_topic="crime",familiarity_delta=1))
+            if hungry:options.append(DialogueOption("needs","Ask where to find food or water",self._needs_response(npc,town,minute),next_topic="needs",familiarity_delta=1))
             options.append(DialogueOption("attack","Attack","You end the conversation and square up for violence.","hostile",-20,"attack",affection_delta=-15,familiarity_delta=5))
             options.append(DialogueOption("goodbye","End conversation",self._pick(npc,"bye",["Safe travels.","Until next time.","Take care of yourself."],minute),action="goodbye"))
-        standing=self.settlement_standing(self.state,npc.settlement_id)
+        opening,links=self._legacy_speech(topic,opening,npc,town,snapshot,minute)
+        spans=self._spans(opening,tuple(link for link in links if tree.allows(link.topic,snapshot)))
+        # The five expertise options retain their established disclosure action
+        # contract; their inline words open the richer explanatory subtrees.
+        if topic not in {"root","knowledge"}:
+            keys={option.next_topic for option in options}
+            for link in links:
+                if link.topic not in keys and tree.allows(link.topic,snapshot):
+                    options.insert(-1,DialogueOption(link.topic,tree.nodes[link.topic].label if link.topic in tree.nodes else link.topic.title(),"",next_topic=link.topic))
+                    keys.add(link.topic)
+        standing=self._community(snapshot,npc)
         relationship=(("trust",trust),("affection",affection),("familiarity",int(rel.get("familiarity",0))),("community",standing))
-        return DialogueScene(npc.name if known else "Stranger",role.title(),opening,tuple(context),tuple(options),topic,relationship)
+        return DialogueScene(npc.name if known else "Stranger",role.title(),opening,tuple(context),tuple(options),topic,relationship,spans,"Conversation" if topic=="root" else topic.title())
+
+    @staticmethod
+    def _spans(text:str,links:tuple[TopicLink,...])->tuple[DialogueSpan,...]:
+        """Split speech without losing punctuation, spacing, or paragraphs."""
+        candidates=[]
+        for link in links:
+            start=text.find(link.phrase)
+            if start>=0:candidates.append((start,-len(link.phrase),link))
+        cursor=0;spans=[]
+        for start,_,link in sorted(candidates,key=lambda row:(row[0],row[1],row[2].topic)):
+            if start<cursor:continue
+            if start>cursor:spans.append(DialogueSpan(text[cursor:start]))
+            spans.append(DialogueSpan(link.phrase,link.topic));cursor=start+len(link.phrase)
+        if cursor<len(text):spans.append(DialogueSpan(text[cursor:]))
+        return tuple(spans)
+
+    def _facts(self,npc,town,minute,vitals,provided)->dict[str,object]:
+        # External adapters can expose hundreds of authoritative scalar facts;
+        # immutable content never retains the mutable simulation or snapshot.
+        facts={key:value for key,value in (provided or {}).items() if isinstance(key,str) and
+               isinstance(value,(str,int,float,bool)) and (not isinstance(value,float) or math.isfinite(value))}
+        relationship=npc.relationships.get("player",{})
+        for key in ("trust","affection","familiarity"):
+            value=int(relationship.get(key,0));facts["relationship."+key]=value;facts["player."+key]=value
+        for key in ("hp","max_hp","hunger","thirst","pain","blood","stamina","body_temp"):
+            facts["player."+key]=getattr(vitals,key,100 if key=="stamina" else 50 if key=="body_temp" else 0)
+        facts["player.hurt"]=vitals.hp<max(25,vitals.max_hp//2) or vitals.pain>=45 or vitals.blood<65
+        facts["player.hungry"]=vitals.hunger>=70 or vitals.thirst>=70
+        facts["player.crime_heat"]=int(self.state.player_crime_heat.get(npc.settlement_id,0))
+        facts["player.bounty"]=int(self.state.player_bounties.get(npc.settlement_id,0))
+        facts.setdefault("player.wealth",0)
+        if isinstance(facts["player.wealth"],bool) or not isinstance(facts["player.wealth"],(int,float)):
+            facts["player.wealth"]=0
+        facts["npc.occupation"]=npc.occupation
+        facts["npc.health"]=getattr(npc,"hp",100)
+        for key in ("age","hp","hunger","thirst","rest","wealth","literacy","routine_phase","goal"):
+            facts["npc."+key]=getattr(npc,key,0 if key not in {"routine_phase","goal"} else "")
+        facts["npc.hungry"]=facts["npc.hunger"]>=70
+        facts["npc.thirsty"]=facts["npc.thirst"]>=70
+        facts["npc.tired"]=facts["npc.rest"]>=70
+        facts["npc.hurt"]=facts["npc.hp"]<70
+        facts["npc.family_count"]=len(npc.parents)+len(npc.children)+int(bool(npc.spouse_uid))
+        for trait in getattr(npc,"traits",()):
+            facts["npc.traits."+trait]=True;facts["npc.trait."+trait]=True
+        facts.setdefault("npc.trait.suspicious",False)
+        for key,value in getattr(npc,"needs",{}).items():facts["npc.needs."+key]=value
+        for key in ("hunger","thirst","rest"):facts.setdefault("npc.needs."+key,facts["npc."+key])
+        for key,value in getattr(npc,"skills",{}).items():facts["npc.skills."+key]=value
+        facts["town.present"]=facts["settlement.has_town"]=bool(town)
+        for key in ("food_stress","unemployment","prosperity","wealth","population","sanitation","homeless","quarantine_level","religious_tension","frontier_status","border_pressure","patrol_pressure"):
+            value=getattr(town,key,0) if town else 0
+            if isinstance(value,(str,int,float,bool)):facts["town."+key]=value;facts["settlement."+key]=value
+        facts["town.unsanitary"]=bool(town and town.sanitation<35)
+        facts["town.quarantined"]=bool(town and town.quarantine_level>0)
+        facts["town.housing_shortage"]=bool(town and (town.homeless>0 or town.population>town.housing_capacity))
+        facts["player.exhausted"]=facts["player.stamina"]<=20
+        facts["player.cold"]=facts["player.body_temp"]<=25
+        facts["player.hot"]=facts["player.body_temp"]>=75
+        facts["time.phase"]=self._phase(minute)
+        facts.setdefault("environment.phase",facts["time.phase"])
+        facts["weather.wet"]=bool(facts.get("environment.rain",0) or facts.get("environment.wetness",0) or facts.get("weather.wet",False))
+        return facts
+
+    def _community(self,facts,npc):
+        if "relationship.community" in facts:return int(facts["relationship.community"])
+        return self.settlement_standing(self.state,npc.settlement_id)
+
+    def _legacy_speech(self,topic,greeting,npc,town,facts,minute):
+        links=[]
+        def link(phrase,target):links.append(TopicLink(phrase,target));return phrase
+        if topic=="root":
+            text=(greeting+"\n\nThere is always more behind a short answer. We can talk about "+link("the area","area")+", "+
+                  link("my life","personal")+", or "+link("what trust means","relations")+". If you want practical knowledge, ask about "+
+                  link("nature and skills","knowledge")+"; "+link("my work","work")+" touches all of those things in one way or another.")
+            if facts["player.bounty"] or facts["player.crime_heat"]:
+                text+="\n\nBefore anything else, "+link("the attention following you","crime")+" changes how openly people will speak. A purse cannot settle every suspicion."
+            elif facts["player.hurt"]:
+                text+="\n\nI can see "+link("your injuries","health")+". Pain and blood loss make a long conversation harder; shelter and safety come first."
+            if facts["player.hurt"] and not any(l.topic=="health" for l in links):
+                text+=" Your "+link("injuries","health")+" need attention as well."
+            if facts["player.hungry"]:text+="\n\nWe should also consider "+link("food and water","needs")+" before you push yourself farther."
+            if facts["player.wealth"]>=100:
+                text+="\n\nYou have means, but "+link("money and obligations","economy")+" are different things. Someone with choices can afford patience; people with empty stores cannot."
+            elif facts["player.wealth"]<=0:
+                text+="\n\nAn empty purse narrows your choices. We can discuss "+link("making ends meet","economy")+", though goodwill still depends on how you act."
+            else:text+="\n\nIf the road is costing more than you expected, we can discuss "+link("prices and your purse","economy")+"."
+            if facts["weather.wet"]:text+=" Rain changes the work, the journey, and what you need to keep dry."
+            if facts["settlement.food_stress"]>=45:text+=" Short supplies are pressing on ordinary decisions here; listen for the causes behind complaints."
+            return text,tuple(links)
+        if topic=="area":
+            text=("An area is more than the houses you can see. "+link("Roads and crossings","area.roads")+
+                  " decide which supplies arrive, while "+link("local dangers","area.dangers")+" determine how safely people can move. Weather and available work change those answers.\n\n"
+                  "Ask for public facts before assuming that any field, door, or store is open to travelers. The watch and the people doing the work usually know the limits of what they can promise.")
+        elif topic=="personal":
+            text=(self._personal_response(npc,minute)+"\n\nYou can ask about "+link("how I am managing","personal.wellbeing")+
+                  ". "+link("Family","personal.family")+" is a more personal matter, and "+link("my past","personal.history")+
+                  " takes greater trust. A conversation is easier when neither person feels every silence must be filled.\n\n"
+                  "People have immediate worries and longer hopes. I will tell you what I can, but the right to ask does not oblige another person to share every detail.")
+        elif topic=="relations":
+            text=("Knowing a name is the beginning of a relationship. "+link("Earning trust","relations.trust")+
+                  " takes conduct that remains decent when no one is rewarding it. Listening and respecting boundaries matter more than repeating a pleasing phrase.\n\n"
+                  "There are things I would speak about "+link("in confidence","relations.confidence")+
+                  " once we know each other better. Gifts may help with an actual need, but you cannot buy an obligation to reveal someone else's life.")
+        else:
+            text=("Practical knowledge starts with observations. We can discuss "+link("animals","knowledge.animals")+", "+link("plants","knowledge.plants")+
+                  ", or "+link("resources","knowledge.resources")+" and how to judge what you find. The same landscape can support very different work when the season or tools change.\n\n"
+                  "I can explain how people think about "+link("other towns","knowledge.towns")+" and "+link("skills","knowledge.skills")+
+                  ". Specific names and discoveries still need an explicit question; general advice is not proof that an unseen place or creature is nearby.")
+        # Legacy groups remain stable entry points while authored direct-child
+        # additions stay reachable automatically. This walks bounded cached
+        # content, never simulation populations or undiscovered world records.
+        tree=load_dialogue_tree()
+        linked={item.topic for item in links}
+        extra=[]
+        for node in sorted(tree.nodes.values(),key=lambda row:row.uid):
+            if node.parent==topic and node.uid not in linked and tree.allows(node.uid,facts):
+                extra.append(link(node.label.lower(),node.uid))
+        if extra:text+="\n\nThere is more to that question: we can discuss "+", ".join(extra)+". Follow whichever detail matters to you, and we can take it one part at a time."
+        return text,tuple(links)
 
     def _work_response(self,npc,town,stressed,minute):
         role=npc.occupation
@@ -203,9 +381,10 @@ class DialogueSystem:
 
     def _personal_response(self,npc,minute):
         if npc.needs:
-            urgent=max(npc.needs.items(),key=lambda kv:kv[1])
+            visible={key:value for key,value in npc.needs.items() if key in {"hunger","thirst","rest","social","safety","warmth","health"} and isinstance(value,(int,float))}
+            urgent=max(visible.items(),key=lambda kv:(kv[1],kv[0])) if visible else ("rest",0)
             if urgent[1]>=55:return f"Truthfully? {urgent[0].replace('_',' ')} has been on my mind more than I like."
-        if npc.wants:return f"I keep thinking about {str(npc.wants[0]).replace('_',' ')}. Hard to know whether that is hope or foolishness."
+        if npc.wants:return "I have hopes beyond the next day's work. I am still deciding which of them to share."
         return self._pick(npc,"personal",["I am managing. That is enough for today.","Some days are quieter inside than others."],minute)
 
     def _danger_response(self,npc,town,heat,minute):
@@ -223,8 +402,12 @@ class DialogueSystem:
     def _history_response(self,npc,trust,minute):
         if trust<18:return "Some history is earned, not requested. Give me time to know you."
         if npc.backstory:
-            value=next((str(npc.backstory.get(k,'')) for k in ("formative_event","upbringing","birthplace","ambition") if npc.backstory.get(k)),"")
-            if value:return value[:1].upper()+value[1:]+"."
+            # Raw backstory may contain undiscovered people or places. General
+            # recollections do not constitute explicit knowledge disclosure.
+            if npc.backstory.get("formative_event"):return "There was a time that changed what I expect from people. I judge promises by what follows them now."
+            if npc.backstory.get("upbringing"):return "The way I was raised still shapes how I work and how slowly I place my trust."
+            if npc.backstory.get("birthplace"):return "I remember the place I came from, but a place name alone would not explain the life I had there."
+            if npc.backstory.get("ambition"):return "I have carried some hopes for a long time. Work and difficult seasons have changed how I think about them."
         return "My past is mostly ordinary work, hard seasons, and people I remember."
 
     def _listen_response(self,npc,minute):
@@ -238,12 +421,22 @@ class DialogueSystem:
     def apply_option(self,npc,option:DialogueOption,minute:int)->bool:
         if not (option.trust_delta or option.affection_delta or option.familiarity_delta):return False
         bucket=int(minute)//180
-        marker=f"{option.key}:{bucket}"
+        effect=option.effect_id or option.key
+        marker=f"dialogue:v2:{npc.uid}:player:{effect}:{bucket}"
         if any(m.get("type")=="dialogue_choice" and m.get("marker")==marker for m in npc.memories):return False
         rel=npc.relationships.setdefault("player",{})
-        for key,delta in (("trust",option.trust_delta),("affection",option.affection_delta),("familiarity",option.familiarity_delta)):
+        positive=option.trust_delta>0 or option.affection_delta>0 or option.familiarity_delta>0
+        spent=int(rel.get("dialogue_positive_bucket",-1))==bucket
+        changes=tuple((key,0 if spent and delta>0 else delta) for key,delta in
+                      (("trust",option.trust_delta),("affection",option.affection_delta),("familiarity",option.familiarity_delta)))
+        if not any(delta for _,delta in changes):return False
+        for key,delta in changes:
             low=0 if key=="familiarity" else -100
             rel[key]=max(low,min(100,int(rel.get(key,0))+int(delta)))
-        npc.memories.append({"minute":int(minute),"type":"dialogue_choice","subject":"player","marker":marker,"salience":3,"valence":option.trust_delta+option.affection_delta})
+        # A single positive interaction budget survives bounded memory pruning
+        # and save/load, so cycling topic aliases cannot farm relationship gains.
+        if positive and not spent:rel["dialogue_positive_bucket"]=bucket
+        valence=sum(delta for key,delta in changes if key in {"trust","affection"})
+        npc.memories.append({"minute":int(minute),"type":"dialogue_choice","subject":"player","marker":marker,"salience":3,"valence":valence})
         npc.memories=npc.memories[-40:]
         return True

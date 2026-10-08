@@ -1,0 +1,2872 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "area.roads",
+      "parent": "area",
+      "label": "Roads and crossings",
+      "paragraphs": [
+        "A road is a promise people keep by using it, and weather can break that promise quickly. I would think about crossings before distance: a short route that cannot be crossed is no route at all.",
+        "Look at the surface, the banks, and whether you can turn back with your load. Road wear tells you something about the ground beneath your feet, while shelter matters when a delay leaves you exposed."
+      ],
+      "links": [
+        {
+          "phrase": "crossings",
+          "topic": "area.roads.crossings"
+        },
+        {
+          "phrase": "Road wear",
+          "topic": "area.roads.wear"
+        },
+        {
+          "phrase": "shelter",
+          "topic": "area.shelter"
+        }
+      ],
+      "variants": [
+        {
+          "id": "wet",
+          "priority": 30,
+          "requirements": {
+            "fact": "weather.wet",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "In this wet weather, crossings deserve another look even if you have used them before. Water can change the footing faster than a traveler changes plans, and the bank may be less sound than the path leading to it.",
+            "Road wear becomes easier to overlook when every hollow looks like the same dark puddle. Keep shelter in your plans, and leave yourself a way back instead of spending all your strength on the outward journey."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.area.roads"
+    },
+    {
+      "id": "area.roads.crossings",
+      "parent": "area.roads",
+      "label": "Reading a crossing",
+      "paragraphs": [
+        "At a crossing I would look for a flood before I looked for a convenient place to step. A familiar channel can carry unfamiliar water, especially after rain beyond what you can see.",
+        "A calm-looking surface is only one piece of evidence; soft banks, floating debris, and uncertain footing deserve attention too. If the crossing would leave you unable to retreat, waiting is a decision rather than a failure."
+      ],
+      "links": [
+        {
+          "phrase": "flood",
+          "topic": "area.roads.crossings.flood"
+        }
+      ],
+      "content_id": "core:dialogue.area.roads.crossings",
+      "variants": [
+        {
+          "id": "wet_and_untrained",
+          "priority": 40,
+          "requirements": {
+            "all": [
+              {
+                "fact": "weather.wet",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "fact": "player.skills.swimming",
+                "op": "lt",
+                "value": 3
+              }
+            ]
+          },
+          "paragraphs": [
+            "After wet weather, a crossing is a poor place to discover the limits of your swimming skill. A flood can change the approach and current even when the visible path still seems familiar.",
+            "Choose a route that does not depend on a skill you have little margin to use safely. Waiting or finding a verified safe alternative may cost time, but uncertainty in moving water can cost far more."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "area.roads.crossings.flood",
+      "parent": "area.roads.crossings",
+      "label": "High water",
+      "paragraphs": [
+        "High water makes small mistakes expensive because it takes away your margin for correcting them. A waterline on a bank can help you judge change, but it does not tell you the strength of the current beneath the surface.",
+        "Watch from a safe place and compare what you can actually observe. If the level is changing or the approach is failing, keep your distance; neither a full purse nor a tight schedule makes the water answer to you."
+      ],
+      "links": [
+        {
+          "phrase": "waterline",
+          "topic": "area.roads.crossings.flood.waterline"
+        }
+      ],
+      "content_id": "core:dialogue.area.roads.crossings.flood"
+    },
+    {
+      "id": "area.roads.crossings.flood.waterline",
+      "parent": "area.roads.crossings.flood",
+      "label": "Reading water marks",
+      "paragraphs": [
+        "A waterline is useful because it gives you a fixed point for comparison. Freshly wet soil, snagged debris, and submerged edges may show that the channel has changed, though no single mark proves it is safe now.",
+        "Treat an uncertain reading as uncertainty, and choose a place where you can observe without approaching an unstable bank. A sensible plan survives the discovery that the first interpretation was wrong."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.area.roads.crossings.flood.waterline"
+    },
+    {
+      "id": "area.roads.wear",
+      "parent": "area.roads",
+      "label": "Ruts and footing",
+      "paragraphs": [
+        "Road wear collects where loads, feet, and weather keep making the same argument with the soil. Deep ruts may hold water, and the firm-looking ridge beside them may crumble when you put weight on it.",
+        "Your load changes the cost of poor footing: what is manageable on an empty walk can be dangerous when you cannot recover your balance. Travel with enough room to stop and choose your next step deliberately."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.area.roads.wear"
+    },
+    {
+      "id": "area.shelter",
+      "parent": "area",
+      "label": "Shelter and exposure",
+      "paragraphs": [
+        "Shelter is more than a roof; it is a place where you can stop losing warmth and recover enough attention to make good decisions. Exposure begins before you feel desperate, especially when your clothes and gear are wet.",
+        "Consider permission as well as protection when a building seems convenient. Someone else may depend on that space, and asking first can prevent a practical problem from becoming a quarrel."
+      ],
+      "links": [
+        {
+          "phrase": "Exposure",
+          "topic": "area.shelter.exposure"
+        },
+        {
+          "phrase": "permission",
+          "topic": "crime.property.permission"
+        }
+      ],
+      "variants": [
+        {
+          "id": "night",
+          "priority": 20,
+          "requirements": {
+            "fact": "time.phase",
+            "op": "eq",
+            "value": "night"
+          },
+          "paragraphs": [
+            "At night, shelter is harder to judge because you cannot easily read an approach or see who already occupies a space. Exposure still matters, but so does the risk of walking into a place you have misunderstood.",
+            "A light or an open door is not permission to enter. Keep your approach plain, ask before crossing a threshold, and prefer a known place over a hopeful guess made in the dark."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.area.shelter"
+    },
+    {
+      "id": "area.shelter.exposure",
+      "parent": "area.shelter",
+      "label": "When the weather wears you down",
+      "paragraphs": [
+        "Exposure is a slow theft of strength and concentration, which is why people often notice it late. Warmth, dryness, and rest work together; trying to replace all three with determination usually ends badly.",
+        "Look at how much effort the next leg requires and how much reserve you have left. If you are already tired or hurt, shorten the plan before the conditions shorten it for you."
+      ],
+      "links": [
+        {
+          "phrase": "Warmth",
+          "topic": "needs.shelter.warmth"
+        }
+      ],
+      "content_id": "core:dialogue.area.shelter.exposure"
+    },
+    {
+      "id": "area.terrain",
+      "parent": "area",
+      "label": "Reading the ground",
+      "paragraphs": [
+        "Different ground asks different questions of a traveler. Forest cover makes visibility and orientation important, while wet ground makes footing and retreat important.",
+        "Hills can hide how much effort a route will take until you are committed to it. Judge the next stretch by what you can see and carry, and leave room for what you cannot yet know."
+      ],
+      "links": [
+        {
+          "phrase": "Forest cover",
+          "topic": "area.terrain.forest"
+        },
+        {
+          "phrase": "wet ground",
+          "topic": "area.terrain.marsh"
+        },
+        {
+          "phrase": "Hills",
+          "topic": "area.terrain.hills"
+        }
+      ],
+      "content_id": "core:dialogue.area.terrain"
+    },
+    {
+      "id": "area.terrain.forest",
+      "parent": "area.terrain",
+      "label": "Under the trees",
+      "paragraphs": [
+        "Forest cover can make a short walk confusing because familiar shapes repeat and the horizon disappears. Pick a reliable reference before you need it, and notice how your return route looks from the other direction.",
+        "Do not let cover convince you that you are unseen or alone. A clear approach and careful attention are useful whether you meet another traveler, an animal, or simply ground you did not expect."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.area.terrain.forest"
+    },
+    {
+      "id": "area.terrain.marsh",
+      "parent": "area.terrain",
+      "label": "Soft ground",
+      "paragraphs": [
+        "Wet ground can look solid until a foot or a heavy load proves otherwise. Vegetation and a dry surface do not guarantee that the ground underneath will carry you.",
+        "Test what you can from a stable position and avoid committing your whole weight where you cannot recover it. Turning back early usually costs less than discovering that every step forward makes the return harder."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.area.terrain.marsh"
+    },
+    {
+      "id": "area.terrain.hills",
+      "parent": "area.terrain",
+      "label": "Slopes and effort",
+      "paragraphs": [
+        "Hills charge for both the climb and the descent, though people often budget only for getting up. A tired traveler carrying weight may find the way down harder to control than the way up.",
+        "Choose footing with the return in mind and rest before your attention begins to wander. A route that suits someone unburdened may be a poor choice for someone hurt, hungry, or hauling goods."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.area.terrain.hills"
+    },
+    {
+      "id": "area.settlement",
+      "parent": "area",
+      "label": "How a settlement holds together",
+      "paragraphs": [
+        "A settlement works because many ordinary tasks fit together, not because one impressive building stands in the middle. Services depend on people having time, supplies, and enough stability to keep their work going.",
+        "Stores tell another part of the story: what is available, what must be replaced, and what people are trying to save for later. Listen to shortages and delays as carefully as you listen to offers."
+      ],
+      "links": [
+        {
+          "phrase": "Services",
+          "topic": "area.settlement.services"
+        },
+        {
+          "phrase": "Stores",
+          "topic": "area.settlement.stores"
+        }
+      ],
+      "requirements": {
+        "fact": "settlement.has_town",
+        "op": "eq",
+        "value": true
+      },
+      "content_id": "core:dialogue.area.settlement"
+    },
+    {
+      "id": "area.settlement.services",
+      "parent": "area.settlement",
+      "label": "Work behind the doors",
+      "paragraphs": [
+        "Services take more than willingness; a craftsperson without materials or a healer without supplies has limits. Occupation tells you the sort of work someone does, but it does not guarantee that every request can be met immediately.",
+        "Ask what is possible and what the work requires before treating a delay as an insult. Supply and labor are connected, and a missing input can slow several kinds of work at once."
+      ],
+      "links": [
+        {
+          "phrase": "Supply",
+          "topic": "work.supply"
+        }
+      ],
+      "content_id": "core:dialogue.area.settlement.services"
+    },
+    {
+      "id": "area.settlement.stores",
+      "parent": "area.settlement",
+      "label": "What the stores can support",
+      "paragraphs": [
+        "Stores are a buffer between ordinary life and a bad run of weather, work, or trade. A pile of goods is only useful if it covers the things people actually need and can be replenished.",
+        "Scarcity makes people protective of supplies that used to seem ordinary. When food is tight, buying everything you can carry may solve your own problem while deepening the pressure around you."
+      ],
+      "links": [
+        {
+          "phrase": "Scarcity",
+          "topic": "economy.prices.scarcity"
+        }
+      ],
+      "variants": [
+        {
+          "id": "food_pressure",
+          "priority": 30,
+          "requirements": {
+            "fact": "settlement.food_stress",
+            "op": "gte",
+            "value": 30
+          },
+          "paragraphs": [
+            "The pressure on food makes stores a serious subject. People will think about the next meal and the next day before they think about the convenience of selling every spare portion.",
+            "Scarcity changes what an ordinary purchase means to everyone watching. Ask what can be spared, and remember that a large purse cannot replace food that has already left the shelves."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.area.settlement.stores"
+    },
+    {
+      "id": "personal.family",
+      "parent": "personal",
+      "label": "Households and dependents",
+      "paragraphs": [
+        "Family is not a subject I unfold to everyone who happens to ask. Household life is made of responsibilities, and those responsibilities can explain why a person guards their time or thinks carefully before taking a risk.",
+        "It is better to ask how someone is managing than to demand names and private details. Practical concern leaves room for a person to answer honestly, and it also leaves them room to decline."
+      ],
+      "links": [
+        {
+          "phrase": "responsibilities",
+          "topic": "personal.family.responsibilities"
+        }
+      ],
+      "requirements": {
+        "fact": "player.trust",
+        "op": "gte",
+        "value": 8
+      },
+      "content_id": "core:dialogue.personal.family"
+    },
+    {
+      "id": "personal.family.responsibilities",
+      "parent": "personal.family",
+      "label": "The work of looking after others",
+      "paragraphs": [
+        "Responsibilities make a wage or a bag of food mean more than its weight. When other people rely on what you bring home, a delay can trouble you even if the work itself is going well.",
+        "That is why promises matter: someone may be building a whole day around the time you said you would return. Be realistic about what you can do, and give people a chance to make another plan when you cannot do it."
+      ],
+      "links": [
+        {
+          "phrase": "promises",
+          "topic": "relations.trust.promises"
+        }
+      ],
+      "variants": [
+        {
+          "id": "hardship",
+          "priority": 35,
+          "requirements": {
+            "fact": "household.hardship_score",
+            "op": "gte",
+            "value": 35
+          },
+          "paragraphs": [
+            "Responsibilities weigh more heavily when ordinary needs are already difficult to meet. Small delays and uncertain promises can have consequences that a visitor would not see from a brief exchange.",
+            "Be realistic about what you can offer and give people room to put urgent needs first. Practical concern starts with understanding the pressure rather than assuming that one generous phrase has relieved it."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.personal.family.responsibilities"
+    },
+    {
+      "id": "personal.history",
+      "parent": "personal",
+      "label": "Experience and memory",
+      "paragraphs": [
+        "History is easier to ask for than to give. A memory can carry lessons without becoming a complete account of a life, and sometimes that is all a person is ready to share.",
+        "If you want to understand someone, listen to what they learned as carefully as you listen to what happened. Leave room for gaps; trust does not turn every private experience into public property."
+      ],
+      "links": [
+        {
+          "phrase": "lessons",
+          "topic": "personal.history.lessons"
+        }
+      ],
+      "requirements": {
+        "fact": "player.trust",
+        "op": "gte",
+        "value": 18
+      },
+      "content_id": "core:dialogue.personal.history"
+    },
+    {
+      "id": "personal.history.lessons",
+      "parent": "personal.history",
+      "label": "What experience teaches",
+      "paragraphs": [
+        "Lessons tend to be smaller and more useful than the grand stories people tell about learning them. Checking an assumption, keeping a promise modest, or noticing a change early can spare a great deal of trouble.",
+        "Experience is not a guarantee that the next situation will be the same. The useful part is knowing what to watch for, and admitting when the facts no longer support the old conclusion."
+      ],
+      "links": [
+        {
+          "phrase": "assumption",
+          "topic": "knowledge.learning.evidence"
+        }
+      ],
+      "content_id": "core:dialogue.personal.history.lessons"
+    },
+    {
+      "id": "personal.temperament",
+      "parent": "personal",
+      "label": "How people approach uncertainty",
+      "paragraphs": [
+        "Temperament affects what a person notices first: an opportunity, a duty, or a reason for caution. None of those habits is a complete description of them, and one hurried exchange rarely tells you enough.",
+        "Give someone time to judge your words against your conduct. Patience is especially useful when your intentions are clear to you but your reasons are not yet clear to them."
+      ],
+      "links": [
+        {
+          "phrase": "caution",
+          "topic": "personal.temperament.caution"
+        },
+        {
+          "phrase": "Patience",
+          "topic": "relations.affection.patience"
+        }
+      ],
+      "variants": [
+        {
+          "id": "suspicious",
+          "priority": 30,
+          "requirements": {
+            "fact": "npc.traits.suspicious",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A little caution comes naturally when a request arrives before a reason for trusting it. I notice what a person avoids saying as well as what they say, though that does not make every unfamiliar face a threat.",
+            "Patience helps more than pressure when someone is still judging your intentions. Give a straight account of what you want and let your conduct make the rest of the argument."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.personal.temperament"
+    },
+    {
+      "id": "personal.temperament.caution",
+      "parent": "personal.temperament",
+      "label": "Caution without accusation",
+      "paragraphs": [
+        "Caution is a way of keeping enough room to change your mind when new evidence arrives. It becomes unfair when a person treats uncertainty as proof of guilt and refuses to look again.",
+        "A clear request helps because it gives the other person something specific to consider. If they decline, understand the boundary before you decide what the refusal means."
+      ],
+      "links": [
+        {
+          "phrase": "boundary",
+          "topic": "personal.boundaries"
+        }
+      ],
+      "content_id": "core:dialogue.personal.temperament.caution"
+    },
+    {
+      "id": "personal.boundaries",
+      "parent": "personal",
+      "label": "Respecting a private answer",
+      "paragraphs": [
+        "A boundary is not an invitation to find a more clever way around it. People can speak warmly about ordinary matters and still keep part of their lives private.",
+        "Privacy is easier to respect when you remember that a conversation belongs to both people. Ask plainly, accept an answer that is shorter than you hoped, and let familiarity grow through ordinary contact."
+      ],
+      "links": [
+        {
+          "phrase": "Privacy",
+          "topic": "personal.boundaries.privacy"
+        }
+      ],
+      "content_id": "core:dialogue.personal.boundaries"
+    },
+    {
+      "id": "personal.boundaries.privacy",
+      "parent": "personal.boundaries",
+      "label": "When to leave a subject alone",
+      "paragraphs": [
+        "Privacy protects more than secrets; it protects the right to decide when and how to speak. Repeating a question after a refusal can make even a harmless subject feel like an interrogation.",
+        "A change of topic can be a considerate act. There is plenty to discuss about work, weather, and shared concerns without making closeness into a debt someone must repay on demand."
+      ],
+      "links": [
+        {
+          "phrase": "work",
+          "topic": "work"
+        }
+      ],
+      "content_id": "core:dialogue.personal.boundaries.privacy"
+    },
+    {
+      "id": "relations.trust",
+      "parent": "relations",
+      "label": "Trust through conduct",
+      "paragraphs": [
+        "Trust grows when conduct makes words easier to believe. Promises are part of it, but proof often comes from small choices made when nobody needs a speech about them.",
+        "If trust is damaged, repair starts with understanding what actually went wrong. Demanding that someone forget the trouble usually makes them wonder whether you understood it at all."
+      ],
+      "links": [
+        {
+          "phrase": "Promises",
+          "topic": "relations.trust.promises"
+        },
+        {
+          "phrase": "proof",
+          "topic": "relations.trust.proof"
+        },
+        {
+          "phrase": "repair",
+          "topic": "relations.trust.repair"
+        }
+      ],
+      "variants": [
+        {
+          "id": "familiar",
+          "priority": 20,
+          "requirements": {
+            "fact": "player.familiarity",
+            "op": "gte",
+            "value": 20
+          },
+          "paragraphs": [
+            "Familiarity gives people more chances to compare Promises with conduct. It can make an honest explanation easier to hear, but it can also make repeated excuses harder to overlook.",
+            "The proof still lies in what happens after the conversation. If there is damage between people, repair needs consistency over time as well as a careful choice of words."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.relations.trust"
+    },
+    {
+      "id": "relations.trust.promises",
+      "parent": "relations.trust",
+      "label": "Making a promise that can be kept",
+      "paragraphs": [
+        "Promises become useful when the other person can tell what you mean and when you mean to do it. A generous-sounding promise with no limits may leave both people with different expectations.",
+        "Say what you can actually manage, including any uncertainty that matters. Keeping a modest undertaking is worth more than making a large one that collapses as soon as circumstances become inconvenient."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.relations.trust.promises"
+    },
+    {
+      "id": "relations.trust.proof",
+      "parent": "relations.trust",
+      "label": "What makes words believable",
+      "paragraphs": [
+        "Proof in an ordinary relationship is often a pattern, not a single dramatic act. Showing up when agreed, respecting a refusal, and treating another person fairly give them something firmer than a claim about your character.",
+        "You cannot force someone to trust you on a schedule. Make your conduct understandable and let them decide how much confidence it earns."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.relations.trust.proof",
+      "variants": [
+        {
+          "id": "remembered_pattern",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.memories.player_count",
+            "op": "gte",
+            "value": 3
+          },
+          "paragraphs": [
+            "Several remembered encounters give people a pattern to compare with your words. A new claim will be heard alongside what has happened before, including whether ordinary promises and boundaries were respected.",
+            "Do not expect one polished exchange to erase that pattern. Consistent conduct gives the next memory a reason to fit a better account of you."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "relations.trust.repair",
+      "parent": "relations.trust",
+      "label": "Repairing a strained relationship",
+      "paragraphs": [
+        "Repair begins with a clear account of the harm, including the part you would rather pass over. If the other person must spend the whole conversation persuading you that something happened, there is little room left for rebuilding.",
+        "A useful response changes the conditions that caused the trouble. Apologies may matter, but they become easier to believe when the next decision is different from the last one."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.relations.trust.repair"
+    },
+    {
+      "id": "relations.confidence",
+      "parent": "relations",
+      "label": "Speaking in confidence",
+      "paragraphs": [
+        "Confidence is easier between people who have shown that they can listen without turning every difficulty into a spectacle. A worry may be real even when the speaker cannot offer a neat account of it.",
+        "Reciprocity does not mean exchanging private details of equal value. It means treating what someone shares with the same care you would want for your own words."
+      ],
+      "links": [
+        {
+          "phrase": "worry",
+          "topic": "relations.confidence.worry"
+        },
+        {
+          "phrase": "Reciprocity",
+          "topic": "relations.confidence.reciprocity"
+        }
+      ],
+      "requirements": {
+        "fact": "player.trust",
+        "op": "gte",
+        "value": 25
+      },
+      "content_id": "core:dialogue.relations.confidence"
+    },
+    {
+      "id": "relations.confidence.worry",
+      "parent": "relations.confidence",
+      "label": "Listening before giving advice",
+      "paragraphs": [
+        "A worry is not always a request for instructions. Sometimes a person needs to separate what is known from what they fear before deciding what help would be useful.",
+        "Ask yourself whether your advice fits the difficulty they described or merely the difficulty you expected. A little patient listening can prevent a confident answer to the wrong question."
+      ],
+      "links": [
+        {
+          "phrase": "known",
+          "topic": "knowledge.learning.evidence"
+        }
+      ],
+      "content_id": "core:dialogue.relations.confidence.worry"
+    },
+    {
+      "id": "relations.confidence.reciprocity",
+      "parent": "relations.confidence",
+      "label": "Care without a ledger",
+      "paragraphs": [
+        "Reciprocity works poorly when every kindness is entered as a debt. People have different reserves of time, confidence, and strength, so equal care does not always look like equal gestures.",
+        "Keep your own limits clear while respecting the other person's. A dependable relationship has room for an honest refusal as well as a willing answer."
+      ],
+      "links": [
+        {
+          "phrase": "limits",
+          "topic": "personal.boundaries"
+        }
+      ],
+      "content_id": "core:dialogue.relations.confidence.reciprocity"
+    },
+    {
+      "id": "relations.affection",
+      "parent": "relations",
+      "label": "Warmth and familiarity",
+      "paragraphs": [
+        "Affection makes company welcome, but it does not erase every difference between two people. Patience helps because understanding usually arrives through many ordinary exchanges rather than one perfect conversation.",
+        "Give warmth without making it a demand for agreement. Someone can value your company and still see a choice differently, especially when the consequences fall on them."
+      ],
+      "links": [
+        {
+          "phrase": "Patience",
+          "topic": "relations.affection.patience"
+        }
+      ],
+      "variants": [
+        {
+          "id": "warm",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.affection",
+            "op": "gte",
+            "value": 15
+          },
+          "paragraphs": [
+            "It is easier to speak warmly when company has become familiar and welcome. Patience still matters, because closeness gives us more reasons to listen carefully rather than fewer.",
+            "A good conversation can hold disagreement without making every difference feel like a rejection. Give the other person room to explain what the choice means from where they stand."
+          ]
+        },
+        {
+          "id": "same_culture",
+          "priority": 20,
+          "requirements": {
+            "fact": "comparison.same_culture",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Shared customs can make a greeting feel easier, but they do not tell you everything about another person. Patience remains useful because familiar manners can hide differences in what people need or expect.",
+            "Let the shared ground help the conversation without turning it into an assumption of agreement. Warmth grows more naturally when a person can explain their own view rather than merely confirm yours."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.relations.affection"
+    },
+    {
+      "id": "relations.affection.patience",
+      "parent": "relations.affection",
+      "label": "Making room for another person",
+      "paragraphs": [
+        "Patience means leaving enough space for an answer you did not prepare in advance. It is difficult when you are anxious or hurried, but it often tells the other person more than a polished greeting does.",
+        "You do not have to abandon your own needs to listen well. State them clearly, then let the other person state theirs without rushing to decide whose account matters more."
+      ],
+      "links": [
+        {
+          "phrase": "needs",
+          "topic": "needs"
+        }
+      ],
+      "content_id": "core:dialogue.relations.affection.patience",
+      "variants": [
+        {
+          "id": "religious_tension",
+          "priority": 35,
+          "requirements": {
+            "fact": "town.religious_tension",
+            "op": "gte",
+            "value": 35
+          },
+          "paragraphs": [
+            "When beliefs are a source of tension, patience includes refusing to turn every difference into a challenge. Listen to what a person actually says rather than assigning them the views you expect their neighbors to hold.",
+            "Ordinary needs can provide common ground without making the disagreement disappear. A careful conversation allows a boundary and avoids making a private person answer for a whole community."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "relations.reputation",
+      "parent": "relations",
+      "label": "How a reputation travels",
+      "paragraphs": [
+        "Reputation travels through witnesses, repeated accounts, and the choices people remember. A familiar name may open a conversation or close it, depending on what has reached the listener.",
+        "An account can be incomplete without being harmless. If your conduct has raised concern, calm words help most when there is enough visible restraint to support them."
+      ],
+      "links": [
+        {
+          "phrase": "witnesses",
+          "topic": "crime.heat.witnesses"
+        }
+      ],
+      "variants": [
+        {
+          "id": "notorious",
+          "priority": 40,
+          "requirements": {
+            "fact": "player.crime_heat",
+            "op": "gte",
+            "value": 20
+          },
+          "paragraphs": [
+            "When your conduct has drawn attention, witnesses become part of every conversation whether you mention them or not. People may listen for a threat in words you intended as ordinary bargaining.",
+            "Keep requests clear and give others room to refuse. Reputation does not change because you insist on a kinder reading; it changes when your next choices give people reason to revise the old one."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.relations.reputation"
+    },
+    {
+      "id": "knowledge.learning",
+      "parent": "knowledge",
+      "label": "Learning from a careful account",
+      "paragraphs": [
+        "Learning starts with evidence: what someone observed, what they inferred, and what they merely heard repeated. Mixing those together makes a confident story, but not necessarily a useful one.",
+        "A contradiction can be useful if you examine it instead of hiding it. It may show that the conditions changed, that two people saw different parts of the event, or that an explanation was too simple."
+      ],
+      "links": [
+        {
+          "phrase": "evidence",
+          "topic": "knowledge.learning.evidence"
+        },
+        {
+          "phrase": "contradiction",
+          "topic": "knowledge.learning.contradiction"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.learning",
+      "variants": [
+        {
+          "id": "limited_trade_language",
+          "priority": 35,
+          "requirements": {
+            "fact": "player.languages.core:trade_tongue",
+            "op": "lt",
+            "value": 60
+          },
+          "paragraphs": [
+            "When a shared tongue is not fluent, evidence needs especially plain wording. A contradiction may come from a misunderstood term or an unfinished explanation rather than a disagreement about what happened.",
+            "Ask for a shorter account and check the important meaning before acting on it. Neither person should have to pretend understanding merely to keep the conversation moving."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knowledge.learning.evidence",
+      "parent": "knowledge.learning",
+      "label": "Observation and inference",
+      "paragraphs": [
+        "Evidence becomes clearer when you say how it reached you. Seeing a damaged tool is different from seeing how it was damaged, and both are different from hearing a guess about the cause.",
+        "Keep observations close to their limits and let conclusions remain open to correction. An honest uncertainty is easier to build on than a precise claim with no sound footing."
+      ],
+      "links": [],
+      "variants": [
+        {
+          "id": "keen_perception",
+          "priority": 20,
+          "requirements": {
+            "fact": "player.attributes.perception",
+            "op": "gte",
+            "value": 8
+          },
+          "paragraphs": [
+            "Evidence can become more detailed when you are good at noticing small differences. The important step is still separating the detail you observed from the explanation you attached to it.",
+            "Use that attention to test a conclusion rather than merely decorate it. A sharp eye should make you more willing to revise an account when the details stop fitting."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.learning.evidence"
+    },
+    {
+      "id": "knowledge.learning.contradiction",
+      "parent": "knowledge.learning",
+      "label": "When accounts disagree",
+      "paragraphs": [
+        "A contradiction is a reason to compare details, not an automatic reason to call someone a liar. People notice different things, remember different portions, and sometimes describe the same thing with different words.",
+        "Look for the part that both accounts can support before deciding where they separate. If the disagreement affects a serious choice, seek better evidence rather than choosing the story that suits you best."
+      ],
+      "links": [
+        {
+          "phrase": "evidence",
+          "topic": "knowledge.learning.evidence"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.learning.contradiction"
+    },
+    {
+      "id": "knowledge.craft",
+      "parent": "knowledge",
+      "label": "The reasoning inside a craft",
+      "paragraphs": [
+        "A craft is a set of decisions about materials, tools, and the result the work must bear. Quality comes from matching those decisions to the purpose, not merely from making the finished piece look impressive.",
+        "A good question asks why a choice was made and what would change it. That teaches more than memorizing a rule without understanding the conditions it was meant for."
+      ],
+      "links": [
+        {
+          "phrase": "materials",
+          "topic": "knowledge.craft.materials"
+        },
+        {
+          "phrase": "Quality",
+          "topic": "knowledge.craft.quality"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.craft",
+      "variants": [
+        {
+          "id": "cultural_craft",
+          "priority": 20,
+          "requirements": {
+            "fact": "culture.present",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A craft can carry local habits as well as practical knowledge: people learn which materials and methods are familiar from the work around them. Quality still needs to be judged against the purpose rather than familiarity alone.",
+            "Ask what a method serves and what conditions would make the maker choose another. That shows respect for local experience while leaving room for an unfamiliar solution to have a sound reason."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knowledge.craft.materials",
+      "parent": "knowledge.craft",
+      "label": "Choosing suitable materials",
+      "paragraphs": [
+        "Materials have strengths and limits, and work goes badly when a maker asks them to ignore either one. Condition matters too: a suitable material can still fail if it has been damaged or handled poorly.",
+        "Explain the use before choosing the piece. Weight, wear, moisture, and the ability to repair it may matter more than appearance when the item must serve every day."
+      ],
+      "links": [
+        {
+          "phrase": "repair",
+          "topic": "work.tools.repair"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.craft.materials",
+      "variants": [
+        {
+          "id": "known_stoneworking",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.knowledge.craft:stoneworking",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Knowledge of stoneworking gives you a reason to ask about grain, soundness, and the purpose of a piece rather than its size alone. A visible crack or an unsuitable shape can change what the material is fit to bear.",
+            "A repair or a joint must be judged by the load and setting it will face. Use your existing knowledge to make the question precise, and leave room for the particular piece to demand a different answer."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knowledge.craft.quality",
+      "parent": "knowledge.craft",
+      "label": "Fitness for the job",
+      "paragraphs": [
+        "Quality means that a piece will do the work expected of it under the conditions it will face. Fine decoration may be welcome, but it cannot stand in for a sound joint, a useful edge, or the right material.",
+        "Ask how you should care for an item as well as how it was made. A durable thing treated carelessly can become less useful than a modest thing kept in good condition."
+      ],
+      "links": [
+        {
+          "phrase": "care",
+          "topic": "work.tools.upkeep"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.craft.quality"
+    },
+    {
+      "id": "knowledge.survival",
+      "parent": "knowledge",
+      "label": "Keeping a margin for mistakes",
+      "paragraphs": [
+        "Survival is often a matter of keeping ordinary needs from becoming emergencies. Water, food, rest, and a sensible route support one another; neglecting one makes the others harder to manage.",
+        "The best plan includes what you will do if your first assumption fails. Reserve strength, time, and supplies so that turning back remains possible when it becomes the sensible choice."
+      ],
+      "links": [
+        {
+          "phrase": "Water",
+          "topic": "knowledge.survival.water"
+        },
+        {
+          "phrase": "food",
+          "topic": "needs.food"
+        },
+        {
+          "phrase": "rest",
+          "topic": "health.fatigue"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.survival"
+    },
+    {
+      "id": "knowledge.survival.water",
+      "parent": "knowledge.survival",
+      "label": "Water and uncertainty",
+      "paragraphs": [
+        "Water that looks clear is not automatically clean enough to drink. Boiling can reduce some dangers when done properly, but it does not remove every substance that may make water unsafe.",
+        "Choose the cleanest source you can verify and keep your vessel clean after treatment. If you cannot establish what is in the water, do not turn a hopeful guess into a confident claim of safety."
+      ],
+      "links": [
+        {
+          "phrase": "Boiling",
+          "topic": "knowledge.survival.water.boiling"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.survival.water"
+    },
+    {
+      "id": "knowledge.survival.water.boiling",
+      "parent": "knowledge.survival.water",
+      "label": "The limits of treatment",
+      "paragraphs": [
+        "Boiling is a useful method with limits, not a promise that any water becomes safe. Fuel, a suitable vessel, and time all matter, and contaminated containers can spoil careful treatment afterward.",
+        "Do not rely on boiling to remove chemicals or unknown pollutants. When a source gives you reason for concern, finding verified clean water is more sensible than inventing certainty about a treatment."
+      ],
+      "links": [
+        {
+          "phrase": "Fuel",
+          "topic": "needs.shelter.warmth.fuel"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.survival.water.boiling"
+    },
+    {
+      "id": "knowledge.lore",
+      "parent": "knowledge",
+      "label": "Stories and their limits",
+      "paragraphs": [
+        "A story can preserve a useful warning long after the original circumstances have been forgotten. Uncertainty begins when people repeat the warning as if every detail had been checked yesterday.",
+        "Enjoy an account without confusing it with a map or a promise. If a tale is going to guide a real decision, ask what part anyone can support with present evidence."
+      ],
+      "links": [
+        {
+          "phrase": "Uncertainty",
+          "topic": "knowledge.lore.uncertainty"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.lore",
+      "variants": [
+        {
+          "id": "living_tradition",
+          "priority": 25,
+          "requirements": {
+            "fact": "religion.present",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Religious stories can hold a community's duties, hopes, and warnings, so people may hear more in them than a visitor expects. Uncertainty still matters when a story is used to make a claim about a place, event, or practical remedy.",
+            "Ask what the account means to those who keep it rather than inventing private belief from a public custom. Respectful interest does not require treating every detail as verified evidence."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knowledge.lore.uncertainty",
+      "parent": "knowledge.lore",
+      "label": "What a tale can tell you",
+      "paragraphs": [
+        "Uncertainty is easier to handle when it is named honestly. A tale may reveal what people fear, value, or remember even when it cannot prove where something is or whether it still exists.",
+        "Keep the meaning of the story separate from a claim about the world. That lets you learn from it without sending yourself or someone else after a detail nobody has verified."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.knowledge.lore.uncertainty"
+    },
+    {
+      "id": "work",
+      "parent": "root",
+      "label": "Work and livelihood",
+      "paragraphs": [
+        "Work joins skill to the things people need, but even a skilled pair of hands depends on tools and supply. When either is missing, effort alone may not produce much.",
+        "Wages matter because a living must support more than the hours spent earning it. Different professions see different parts of the same problem, so ask what the work requires before judging the result."
+      ],
+      "links": [
+        {
+          "phrase": "tools",
+          "topic": "work.tools"
+        },
+        {
+          "phrase": "supply",
+          "topic": "work.supply"
+        },
+        {
+          "phrase": "Wages",
+          "topic": "work.wages"
+        },
+        {
+          "phrase": "professions",
+          "topic": "work.professions"
+        }
+      ],
+      "variants": [
+        {
+          "id": "unemployment",
+          "priority": 25,
+          "requirements": {
+            "fact": "settlement.unemployment",
+            "op": "gte",
+            "value": 20
+          },
+          "paragraphs": [
+            "When willing hands cannot find steady work, tools and supply become part of a larger worry. A task may still need doing while the means to pay for it or provide its inputs are missing.",
+            "Wages are difficult to discuss fairly when desperation narrows a person's choices. The professions still differ, but every worker needs an agreement clear enough to judge before committing their time."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.work"
+    },
+    {
+      "id": "work.tools",
+      "parent": "work",
+      "label": "Tools and care",
+      "paragraphs": [
+        "Tools reward upkeep because a small fault is easier to handle before it interrupts the whole job. A loose fitting, a neglected edge, or damage that seems slight can change how safely a tool can be used.",
+        "Repair begins with understanding what has failed and what loads the tool must carry afterward. Do not treat a temporary fix as a sound one merely because it holds long enough for the first attempt."
+      ],
+      "links": [
+        {
+          "phrase": "upkeep",
+          "topic": "work.tools.upkeep"
+        },
+        {
+          "phrase": "Repair",
+          "topic": "work.tools.repair"
+        }
+      ],
+      "content_id": "core:dialogue.work.tools"
+    },
+    {
+      "id": "work.tools.upkeep",
+      "parent": "work.tools",
+      "label": "Preventing avoidable damage",
+      "paragraphs": [
+        "Upkeep is quiet work, which is why people are tempted to postpone it. Cleaning, inspecting, and storing a tool properly protect both the item and the person who must rely on it later.",
+        "Build inspection into the task rather than waiting for trouble to announce itself. The time saved by skipping it can disappear many times over when a tool fails halfway through useful work."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.work.tools.upkeep",
+      "variants": [
+        {
+          "id": "equipped_gear",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.equipment.count",
+            "op": "gt",
+            "value": 0
+          },
+          "paragraphs": [
+            "The gear you wear deserves the same attention as a tool you take out only for a task. Straps, fittings, and exposed surfaces can deteriorate during ordinary travel, so inspection should happen before you need to depend on them.",
+            "Keep each item cared for according to its material and use rather than assuming every piece needs the same treatment. Equipment extends your options, but carrying it does not remove the work of maintaining it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "work.tools.repair",
+      "parent": "work.tools",
+      "label": "A repair that can be trusted",
+      "paragraphs": [
+        "Repair is not always the right answer; some damage leaves a tool unsafe even after it looks whole. The intended use determines how much confidence a repair needs to earn.",
+        "Get suitable help when the failure could hurt someone or ruin other work. It is better to admit the limit of your skill than to hide an uncertain repair inside someone else's next task."
+      ],
+      "links": [
+        {
+          "phrase": "skill",
+          "topic": "knowledge.craft"
+        }
+      ],
+      "content_id": "core:dialogue.work.tools.repair"
+    },
+    {
+      "id": "work.supply",
+      "parent": "work",
+      "label": "Inputs before output",
+      "paragraphs": [
+        "Supply shapes what a worker can finish, even when the skill and the demand are present. A shortage in one ordinary input can hold up several tasks that appear unrelated from the outside.",
+        "Substitutes may help, but only when they can meet the purpose safely and honestly. Explain a changed material or method before the other person discovers that the result behaves differently than expected."
+      ],
+      "links": [
+        {
+          "phrase": "shortage",
+          "topic": "work.supply.shortage"
+        },
+        {
+          "phrase": "Substitutes",
+          "topic": "work.supply.substitutes"
+        }
+      ],
+      "content_id": "core:dialogue.work.supply",
+      "variants": [
+        {
+          "id": "ore_shortage",
+          "priority": 30,
+          "requirements": {
+            "fact": "town.shortages.core:iron_ore",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "An ore shortage can slow work even while the workshop has hands ready and customers waiting. A shortage at the beginning of a chain often reaches several kinds of finished goods later.",
+            "Substitutes depend on what the finished item must do, not only on what is available today. Explain the limit before promising a result, and consider which essential work should receive the next suitable input."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "work.supply.shortage",
+      "parent": "work.supply",
+      "label": "Working through a shortage",
+      "paragraphs": [
+        "A shortage makes priorities visible: essential repairs and ordinary needs may compete with work that can wait. The hardest part is often deciding what should receive the next available input.",
+        "Be clear about delays and avoid promising the same limited supply to several people. An honest queue is easier to live with than discovering that every assurance depended on goods that were not there."
+      ],
+      "links": [
+        {
+          "phrase": "priorities",
+          "topic": "economy.prices.scarcity.ration"
+        }
+      ],
+      "variants": [
+        {
+          "id": "task_supply",
+          "priority": 35,
+          "requirements": {
+            "fact": "npc.task_action",
+            "op": "eq",
+            "value": "profession_withdraw"
+          },
+          "paragraphs": [
+            "Collecting inputs is part of work, but a missing supply can keep the planned production from beginning. Those priorities deserve attention before anyone treats the delay as a lack of effort.",
+            "Ask what is needed and what is available rather than assuming the worker can substitute anything at hand. A realistic agreement must fit the input that is missing as well as the task it would support."
+          ]
+        },
+        {
+          "id": "waiting_for_inputs",
+          "priority": 40,
+          "requirements": {
+            "fact": "npc.routine_phase",
+            "op": "eq",
+            "value": "waiting_for_supplies"
+          },
+          "paragraphs": [
+            "Waiting for supplies is still part of work when the next task cannot begin without its inputs. The shortage turns priorities into a practical question: what can be finished now, and what must remain unfinished?",
+            "A clear explanation is better than pretending every delay is within the worker's control. Ask what is missing and let any agreement reflect that limit rather than promising the finished result twice."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.work.supply.shortage"
+    },
+    {
+      "id": "work.supply.substitutes",
+      "parent": "work.supply",
+      "label": "When another material will do",
+      "paragraphs": [
+        "Substitutes need to be judged by the task, not by how convenient they are to obtain. A material that works for a light duty may be unsuitable for heat, weather, or a heavy load.",
+        "If the change affects durability or use, say so plainly. A cheaper solution can be fair when its limits are understood, but an undisclosed limit turns economy into disappointment."
+      ],
+      "links": [
+        {
+          "phrase": "durability",
+          "topic": "knowledge.craft.quality"
+        }
+      ],
+      "content_id": "core:dialogue.work.supply.substitutes"
+    },
+    {
+      "id": "work.wages",
+      "parent": "work",
+      "label": "Pay and the cost of living",
+      "paragraphs": [
+        "Wages should be judged against time, difficulty, and what it costs a person to keep working. A number can sound generous while leaving someone short of food, materials, or the rest needed to do the job well.",
+        "Negotiation is clearer when both people know what the work includes and what happens if conditions change. Ambiguous bargains tend to produce very definite arguments later."
+      ],
+      "links": [
+        {
+          "phrase": "Negotiation",
+          "topic": "work.wages.negotiation"
+        }
+      ],
+      "content_id": "core:dialogue.work.wages"
+    },
+    {
+      "id": "work.wages.negotiation",
+      "parent": "work.wages",
+      "label": "Agreeing before the work begins",
+      "paragraphs": [
+        "Negotiation should settle the task, payment, and important limits before effort is spent. If someone cannot explain what completion means, neither side can judge whether the bargain has been met.",
+        "Ask about materials and delays rather than assuming every difficulty belongs to the worker. A fair agreement makes responsibility understandable without demanding that anyone predict the weather or invent missing supplies."
+      ],
+      "links": [
+        {
+          "phrase": "materials",
+          "topic": "knowledge.craft.materials"
+        }
+      ],
+      "content_id": "core:dialogue.work.wages.negotiation"
+    },
+    {
+      "id": "work.professions",
+      "parent": "work",
+      "label": "Different kinds of work",
+      "paragraphs": [
+        "Fields and workshops depend on different skills, but both suffer when materials, weather, or timing are misunderstood. A person's occupation is a good reason to ask a focused question rather than expect knowledge of everything.",
+        "Watchkeeping and care work place another sort of responsibility on a person: attention must stay useful even when a day becomes long. The cost of a mistake can fall on someone who did not make it."
+      ],
+      "links": [
+        {
+          "phrase": "Fields",
+          "topic": "work.professions.fields"
+        },
+        {
+          "phrase": "workshops",
+          "topic": "work.professions.workshop"
+        },
+        {
+          "phrase": "Watchkeeping",
+          "topic": "work.professions.guard"
+        },
+        {
+          "phrase": "care work",
+          "topic": "work.professions.healer"
+        }
+      ],
+      "content_id": "core:dialogue.work.professions"
+    },
+    {
+      "id": "work.professions.fields",
+      "parent": "work.professions",
+      "label": "Field work and timing",
+      "paragraphs": [
+        "Field work ties effort to soil, weather, and the right time for a task. More hands can help, but they cannot always make a missed window or an unsuitable patch of ground behave differently.",
+        "Soil deserves attention because the visible crop is only part of the work. Judge a method by the conditions it serves rather than assuming what succeeded once will succeed everywhere."
+      ],
+      "links": [
+        {
+          "phrase": "Soil",
+          "topic": "work.professions.fields.soil"
+        }
+      ],
+      "requirements": {
+        "fact": "npc.occupation",
+        "op": "in",
+        "value": [
+          "farmer",
+          "herder",
+          "wanderer"
+        ]
+      },
+      "variants": [
+        {
+          "id": "farmer",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.occupation",
+            "op": "eq",
+            "value": "farmer"
+          },
+          "paragraphs": [
+            "Field work asks you to notice timing as carefully as effort. Soil and weather do not reward a task merely because it took a long day to complete; the task has to suit the conditions.",
+            "A useful question is what the ground and crop need now, rather than what would make the day look productive. That distinction can keep busy work from consuming the time needed for essential work."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.work.professions.fields"
+    },
+    {
+      "id": "work.professions.fields.soil",
+      "parent": "work.professions.fields",
+      "label": "Looking below the crop",
+      "paragraphs": [
+        "Soil carries the history of water, use, and treatment, though it does not reveal all of that at a glance. Its condition affects which work is useful and how long the result may take to appear.",
+        "Do not infer a whole field from one convenient handful or a single good patch. Compare observations and use local experience carefully, with room for a different season to change the answer."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.work.professions.fields.soil"
+    },
+    {
+      "id": "work.professions.workshop",
+      "parent": "work.professions",
+      "label": "Workshop decisions",
+      "paragraphs": [
+        "Workshop work turns measurements and materials into something another person must trust. Tolerance matters because small errors can collect where parts meet, especially when a piece has to bear weight or move repeatedly.",
+        "The pace should fit the consequence of failure. It is a poor saving to hurry a critical step and spend the rest of the job hiding the result."
+      ],
+      "links": [
+        {
+          "phrase": "Tolerance",
+          "topic": "work.professions.workshop.tolerance"
+        }
+      ],
+      "requirements": {
+        "fact": "npc.occupation",
+        "op": "in",
+        "value": [
+          "smith",
+          "carpenter",
+          "mason",
+          "potter",
+          "weaver",
+          "tanner"
+        ]
+      },
+      "variants": [
+        {
+          "id": "smith",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.occupation",
+            "op": "eq",
+            "value": "smith"
+          },
+          "paragraphs": [
+            "In smithing, the material and the intended use have to remain in the same conversation. Tolerance matters where parts meet, and care matters where a fault would be hidden until the piece is put under strain.",
+            "A sound result cannot be judged only by its finish. Ask what work the item must do, then allow the maker enough time and suitable materials to answer that need."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.work.professions.workshop"
+    },
+    {
+      "id": "work.professions.workshop.tolerance",
+      "parent": "work.professions.workshop",
+      "label": "Small errors and larger failures",
+      "paragraphs": [
+        "Tolerance is the amount of variation a piece can accept and still serve its purpose. It differs between jobs, so a rough fit that is harmless in one place may ruin another.",
+        "Check the parts that interact instead of admiring each piece separately. A well-made object can still belong to a poorly matched assembly if nobody considered how it would meet the rest."
+      ],
+      "links": [
+        {
+          "phrase": "purpose",
+          "topic": "knowledge.craft.quality"
+        }
+      ],
+      "content_id": "core:dialogue.work.professions.workshop.tolerance"
+    },
+    {
+      "id": "work.professions.guard",
+      "parent": "work.professions",
+      "label": "The work of watching",
+      "paragraphs": [
+        "Watchkeeping asks for attention without making suspicion the only way to see people. Clear conduct and permission matter because they help a guard distinguish ordinary activity from a reason to intervene.",
+        "A watch becomes less useful when every unfamiliar movement is treated as proof of trouble. Evidence, location, and the circumstances of an encounter should matter alongside a person's reputation."
+      ],
+      "links": [
+        {
+          "phrase": "permission",
+          "topic": "crime.property.permission"
+        },
+        {
+          "phrase": "Evidence",
+          "topic": "knowledge.learning.evidence"
+        }
+      ],
+      "requirements": {
+        "fact": "npc.occupation",
+        "op": "eq",
+        "value": "guard"
+      },
+      "variants": [
+        {
+          "id": "border_pressure",
+          "priority": 35,
+          "requirements": {
+            "fact": "town.border_pressure",
+            "op": "gte",
+            "value": 35
+          },
+          "paragraphs": [
+            "Pressure at a border can make watchkeeping more cautious because the consequences of a missed sign feel larger. Evidence and permission still matter; concern is not a reason to turn every unfamiliar person into a threat.",
+            "Make your purpose easy to understand and respect lawful directions at a boundary. A tense setting asks for more clarity and restraint, not a performance of fearlessness."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.work.professions.guard"
+    },
+    {
+      "id": "work.professions.healer",
+      "parent": "work.professions",
+      "label": "Care and priorities",
+      "paragraphs": [
+        "Care work begins with triage: deciding what needs attention first and what can wait safely. Urgency, available supplies, and a person's condition matter more than how loudly someone asks.",
+        "Good care also knows its limits. An uncertain condition deserves proper assessment, and confident words cannot replace missing knowledge or the help a serious injury needs."
+      ],
+      "links": [
+        {
+          "phrase": "triage",
+          "topic": "work.professions.healer.triage"
+        }
+      ],
+      "requirements": {
+        "fact": "npc.occupation",
+        "op": "eq",
+        "value": "healer"
+      },
+      "content_id": "core:dialogue.work.professions.healer"
+    },
+    {
+      "id": "work.professions.healer.triage",
+      "parent": "work.professions.healer",
+      "label": "What needs attention first",
+      "paragraphs": [
+        "Triage is a way of directing limited attention where delay could do the most harm. It requires judging the condition, not making a contest of who has the strongest claim on the healer's sympathy.",
+        "Serious bleeding, worsening illness, or other alarming signs deserve immediate qualified help. Keep ordinary conversation from delaying necessary care, and give a clear account of what changed and when."
+      ],
+      "links": [
+        {
+          "phrase": "worsening illness",
+          "topic": "health.wounds.infection"
+        }
+      ],
+      "content_id": "core:dialogue.work.professions.healer.triage"
+    },
+    {
+      "id": "health",
+      "parent": "root",
+      "label": "Health and endurance",
+      "paragraphs": [
+        "Health affects how far good intentions can carry you. Wounds, fatigue, and hunger change your reserve for work or travel, and pushing through all three can turn a manageable day into a dangerous one.",
+        "Pay attention to changes rather than treating your condition as fixed. A practical plan fits the strength you have now and leaves room for recovery before the next demand."
+      ],
+      "links": [
+        {
+          "phrase": "Wounds",
+          "topic": "health.wounds"
+        },
+        {
+          "phrase": "fatigue",
+          "topic": "health.fatigue"
+        },
+        {
+          "phrase": "hunger",
+          "topic": "health.hunger"
+        }
+      ],
+      "variants": [
+        {
+          "id": "hurt",
+          "priority": 40,
+          "requirements": {
+            "fact": "player.hurt",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "If you are hurt, Wounds should shape your plans before pride does. fatigue can make a small difficulty harder to judge, and hunger may leave you with less reserve for recovering from a mistake.",
+            "Reduce avoidable strain and seek qualified help for serious or worsening symptoms. The next journey or job should be planned around your condition, not around the condition you wish you had."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.health"
+    },
+    {
+      "id": "health.wounds",
+      "parent": "health",
+      "label": "Looking after an injury",
+      "paragraphs": [
+        "Wounds deserve attention even when they seem small, because use and dirt can complicate recovery. Cleanliness matters, and so does recognizing when an injury needs more than ordinary care.",
+        "Watch for infection or a change that makes the injury harder to ignore. Serious bleeding, deep injury, or worsening symptoms call for qualified help rather than a long conversation about enduring them."
+      ],
+      "links": [
+        {
+          "phrase": "Cleanliness",
+          "topic": "health.wounds.cleanliness"
+        },
+        {
+          "phrase": "infection",
+          "topic": "health.wounds.infection"
+        }
+      ],
+      "content_id": "core:dialogue.health.wounds"
+    },
+    {
+      "id": "health.wounds.cleanliness",
+      "parent": "health.wounds",
+      "label": "Keeping care clean",
+      "paragraphs": [
+        "Cleanliness reduces avoidable problems during care, but it does not turn every injury into a simple one. Clean hands, suitable materials, and a clean environment matter when someone is helping you.",
+        "Avoid packing unknown substances into a wound or trusting a treatment merely because it is familiar. If the injury is serious or not improving, proper assessment is more useful than repeating an uncertain remedy."
+      ],
+      "links": [],
+      "variants": [
+        {
+          "id": "hygiene_shortage",
+          "priority": 30,
+          "requirements": {
+            "fact": "household.hygiene_shortage",
+            "op": "gt",
+            "value": 0
+          },
+          "paragraphs": [
+            "Cleanliness is harder to maintain when suitable supplies are missing, and that is a practical limit rather than a failure of intention. Avoid making care more hazardous by using unknown substances or contaminated materials.",
+            "Seek suitable help and reliable supplies for injuries that need attention. Explain the shortage clearly so that advice can fit what is actually available rather than depend on materials nobody has."
+          ]
+        },
+        {
+          "id": "soap_shortage",
+          "priority": 35,
+          "requirements": {
+            "fact": "town.shortages.core:soap",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A soap shortage makes ordinary hygiene harder to maintain and can affect the care of an injury. Cleanliness still matters, but advice should fit the reliable supplies people can actually obtain.",
+            "Seek qualified help for serious injuries and suitable materials for care. Do not replace a missing supply with an unknown substance merely because doing something feels better than admitting what is unavailable."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.health.wounds.cleanliness"
+    },
+    {
+      "id": "health.wounds.infection",
+      "parent": "health.wounds",
+      "label": "When a wound changes",
+      "paragraphs": [
+        "Infection is a concern when a wound worsens rather than settles, especially if pain, swelling, redness, or illness are increasing. Those signs need qualified attention; they are not a test of how much discomfort you can tolerate.",
+        "Describe what changed and when, and keep further dirt or strain from making the problem worse. A conversational explanation cannot diagnose what is happening inside an injury."
+      ],
+      "links": [],
+      "content_id": "core:dialogue.health.wounds.infection"
+    },
+    {
+      "id": "health.fatigue",
+      "parent": "health",
+      "label": "Fatigue and judgment",
+      "paragraphs": [
+        "Fatigue affects judgment before a person necessarily admits that they need sleep. Mistakes arrive more easily when attention slips, and a heavy load or uncertain footing makes those mistakes costly.",
+        "Pacing can preserve enough strength to finish safely. Rest before exhaustion removes your choices, and judge the return journey as carefully as the outward one."
+      ],
+      "links": [
+        {
+          "phrase": "sleep",
+          "topic": "health.fatigue.sleep"
+        },
+        {
+          "phrase": "Pacing",
+          "topic": "health.fatigue.pacing"
+        }
+      ],
+      "variants": [
+        {
+          "id": "night",
+          "priority": 25,
+          "requirements": {
+            "fact": "time.phase",
+            "op": "eq",
+            "value": "night"
+          },
+          "paragraphs": [
+            "At night, fatigue joins poor visibility and makes simple decisions less reliable. sleep may be more useful than trying to stretch a tired day into a difficult journey.",
+            "Pacing still matters if a task cannot wait, but it does not replace rest. Shorten the plan where you can and avoid treating every remaining hour as equally productive."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.health.fatigue"
+    },
+    {
+      "id": "health.fatigue.sleep",
+      "parent": "health.fatigue",
+      "label": "Rest that restores attention",
+      "paragraphs": [
+        "Sleep is useful because recovery needs more than a pause while you remain on watch for the next demand. A suitable place and enough protection from weather help make rest restorative.",
+        "Do not expect one brief stop to undo a long period of exhaustion. Plan ordinary work with recovery in mind so that tiredness does not become the condition you rely on every day."
+      ],
+      "links": [
+        {
+          "phrase": "protection",
+          "topic": "needs.shelter"
+        }
+      ],
+      "content_id": "core:dialogue.health.fatigue.sleep"
+    },
+    {
+      "id": "health.fatigue.pacing",
+      "parent": "health.fatigue",
+      "label": "Saving a useful reserve",
+      "paragraphs": [
+        "Pacing means spending effort so that some remains for an unexpected difficulty. It may make the first stretch slower, but it keeps a delay or a return journey from demanding strength you have already spent.",
+        "Your reserve should grow when you are hurt, hungry, carrying weight, or uncertain of the conditions ahead. The right pace is the one that fits the whole task rather than the most flattering first hour."
+      ],
+      "links": [],
+      "variants": [
+        {
+          "id": "burden_of_strength",
+          "priority": 20,
+          "requirements": {
+            "fact": "player.attributes.strength",
+            "op": "lte",
+            "value": 5
+          },
+          "paragraphs": [
+            "Pacing is especially important when the task demands more strength than you can comfortably spare. Make the load and distance fit your reserve rather than assuming effort will increase it halfway through.",
+            "Divide work where possible and leave enough capacity for a return or a mistake. A manageable task done steadily is more useful than a demanding start that leaves no strength for finishing."
+          ]
+        },
+        {
+          "id": "poor_reserve",
+          "priority": 35,
+          "requirements": {
+            "any": [
+              {
+                "fact": "player.cold",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "fact": "player.hurt",
+                "op": "eq",
+                "value": true
+              }
+            ]
+          },
+          "paragraphs": [
+            "Cold or injury reduces the reserve a plan can safely spend. Pacing should leave more room for delay, because a small difficulty can become a larger one when recovery and attention are already under pressure.",
+            "Shorten the task where possible and seek suitable help for a serious condition. The sensible pace is the one your present body can support, not the one an easier day would have allowed."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.health.fatigue.pacing"
+    },
+    {
+      "id": "health.hunger",
+      "parent": "health",
+      "label": "Hunger and recovery",
+      "paragraphs": [
+        "Hunger narrows a person's attention and makes ordinary effort feel less forgiving. Recovery needs food that you can actually obtain and tolerate, along with enough rest to make use of it.",
+        "A full plan made on an empty stomach can become unrealistic halfway through. Settle basic needs before committing to work or travel that leaves little room for stopping."
+      ],
+      "links": [
+        {
+          "phrase": "Recovery",
+          "topic": "health.hunger.recovery"
+        },
+        {
+          "phrase": "food",
+          "topic": "needs.food"
+        }
+      ],
+      "variants": [
+        {
+          "id": "hungry",
+          "priority": 30,
+          "requirements": {
+            "fact": "player.hungry",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "If you are hungry, do not leave food as the reward for finishing an uncertain journey. Recovery starts by addressing the need you have now, before effort makes it harder to solve.",
+            "Choose what you can obtain safely and allow yourself a manageable pace. An ambitious plan is not improved by ignoring the condition of the person expected to carry it out."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.health.hunger"
+    },
+    {
+      "id": "health.hunger.recovery",
+      "parent": "health.hunger",
+      "label": "Returning to ordinary strength",
+      "paragraphs": [
+        "Recovery is usually a process rather than a switch you throw with one meal. Food, water, rest, and appropriate care each contribute, and the next demand should leave them time to help.",
+        "If weakness or illness persists despite meeting ordinary needs, seek qualified advice. Guessing at a cause is less useful than noticing the pattern and describing it clearly."
+      ],
+      "links": [
+        {
+          "phrase": "water",
+          "topic": "needs.water"
+        }
+      ],
+      "content_id": "core:dialogue.health.hunger.recovery"
+    },
+    {
+      "id": "crime",
+      "parent": "root",
+      "label": "Conduct, suspicion, and the law",
+      "paragraphs": [
+        "Trouble with the law affects how people read an encounter before a word is spoken. Scrutiny grows when conduct gives people reason for concern, while a bounty makes that concern harder to ignore.",
+        "Property is another ordinary source of conflict: an open way is not always an invitation. Respecting a boundary is a practical way to keep a simple request from becoming a serious dispute."
+      ],
+      "links": [
+        {
+          "phrase": "Scrutiny",
+          "topic": "crime.heat"
+        },
+        {
+          "phrase": "bounty",
+          "topic": "crime.bounty"
+        },
+        {
+          "phrase": "Property",
+          "topic": "crime.property"
+        }
+      ],
+      "variants": [
+        {
+          "id": "wanted",
+          "priority": 50,
+          "requirements": {
+            "fact": "player.bounty",
+            "op": "gt",
+            "value": 0
+          },
+          "paragraphs": [
+            "A bounty makes this a serious conversation, because other people must consider the consequences of helping you. Scrutiny will not disappear because the greeting is polite or the request sounds ordinary.",
+            "Keep your conduct clear, respect refusals, and avoid turning concern into a confrontation. Property boundaries still matter, and crossing one while already under suspicion can make an encounter worse."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.crime"
+    },
+    {
+      "id": "crime.heat",
+      "parent": "crime",
+      "label": "Living under scrutiny",
+      "paragraphs": [
+        "Scrutiny changes an encounter because people start asking what an action might mean before accepting what you call it. Witnesses can make a quiet-looking choice public, and their accounts may travel beyond the place where it happened.",
+        "If you want fewer misunderstandings, make your conduct easy to read and your requests easy to refuse. Pressure, secrecy, or an unexpected approach can add concern instead of removing it."
+      ],
+      "links": [
+        {
+          "phrase": "Witnesses",
+          "topic": "crime.heat.witnesses"
+        }
+      ],
+      "variants": [
+        {
+          "id": "armed",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.armed",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "When you are armed, an unfamiliar approach can carry more weight than you intend. Witnesses may remember the visible weapon alongside your words, particularly if the encounter already feels tense.",
+            "Keep your conduct clear and give people space to refuse a request. Calm behavior and respect for a boundary can keep ordinary uncertainty from becoming a confrontation."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.crime.heat"
+    },
+    {
+      "id": "crime.heat.witnesses",
+      "parent": "crime.heat",
+      "label": "What observers can know",
+      "paragraphs": [
+        "Witnesses see from a particular place and moment, which gives their accounts both value and limits. Someone may observe an act without hearing the explanation, or hear a dispute without seeing how it began.",
+        "That does not make an account meaningless. It means serious judgments need attention to what was actually observed, and your own explanation should be just as clear about its limits."
+      ],
+      "links": [
+        {
+          "phrase": "observed",
+          "topic": "knowledge.learning.evidence"
+        }
+      ],
+      "content_id": "core:dialogue.crime.heat.witnesses"
+    },
+    {
+      "id": "crime.bounty",
+      "parent": "crime",
+      "label": "A bounty and its consequences",
+      "paragraphs": [
+        "A bounty is a public reason for people to be cautious, and it can change a conversation that would otherwise be routine. Accountability matters more than demanding that everyone accept your version at once.",
+        "Do not turn a tense situation into a worse one by threatening a person who is keeping their distance. Deal with the issue through the appropriate lawful channels, and keep ordinary encounters calm while it remains unresolved."
+      ],
+      "links": [
+        {
+          "phrase": "Accountability",
+          "topic": "crime.bounty.accountability"
+        }
+      ],
+      "content_id": "core:dialogue.crime.bounty"
+    },
+    {
+      "id": "crime.bounty.accountability",
+      "parent": "crime.bounty",
+      "label": "Answering for conduct",
+      "paragraphs": [
+        "Accountability begins by treating consequences as real rather than as an inconvenience someone invented for you. A clear account can matter, but it is not the same as resolving a charge or repairing harm.",
+        "Use lawful ways to address the issue and avoid asking uninvolved people to take risks on your behalf. Restoring confidence depends on what is resolved and how you behave afterward."
+      ],
+      "links": [
+        {
+          "phrase": "repairing harm",
+          "topic": "relations.trust.repair"
+        }
+      ],
+      "content_id": "core:dialogue.crime.bounty.accountability"
+    },
+    {
+      "id": "crime.property",
+      "parent": "crime",
+      "label": "Boundaries around property",
+      "paragraphs": [
+        "Property boundaries exist even when a door is open or a place looks empty. Permission is the simplest way to learn whether your purpose is welcome before someone has to stop you.",
+        "Boundaries can also apply within a place you have been invited to enter. An invitation to speak or trade does not automatically include handling goods, opening storage, or walking into every room."
+      ],
+      "links": [
+        {
+          "phrase": "Permission",
+          "topic": "crime.property.permission"
+        },
+        {
+          "phrase": "Boundaries",
+          "topic": "crime.property.boundaries"
+        }
+      ],
+      "content_id": "core:dialogue.crime.property"
+    },
+    {
+      "id": "crime.property.permission",
+      "parent": "crime.property",
+      "label": "Asking before entering",
+      "paragraphs": [
+        "Permission should fit the action: entering, using, borrowing, and taking are different requests. Make the purpose clear so the other person can consent to what you actually intend.",
+        "If permission is uncertain, stop and ask again instead of treating silence as agreement. A moment of patience can save a much longer argument about what each person thought was allowed."
+      ],
+      "links": [],
+      "variants": [
+        {
+          "id": "trespassing",
+          "priority": 40,
+          "requirements": {
+            "fact": "player.trespassing",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Permission matters immediately if you are in a place you are not entitled to enter. Stop extending the intrusion and follow a lawful request to leave or step back while you clarify the situation.",
+            "Explain your purpose calmly after respecting the boundary. A harmless intention is easier to consider when your actions no longer continue the problem."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.crime.property.permission"
+    },
+    {
+      "id": "crime.property.boundaries",
+      "parent": "crime.property",
+      "label": "The limits of an invitation",
+      "paragraphs": [
+        "Boundaries are easier to respect when you notice them before being challenged. A private room, stored supplies, or a work area can carry a different expectation from the space where a conversation began.",
+        "If someone asks you to step back or leave an item alone, make your response plain. Explaining your harmless intent works better after respecting the request than while continuing the action."
+      ],
+      "links": [
+        {
+          "phrase": "private",
+          "topic": "personal.boundaries.privacy"
+        }
+      ],
+      "content_id": "core:dialogue.crime.property.boundaries"
+    },
+    {
+      "id": "needs",
+      "parent": "root",
+      "label": "Ordinary needs and hard choices",
+      "paragraphs": [
+        "Needs are ordinary until several arrive together and leave you fewer choices. Food, shelter, and water support every larger plan, so treating them as interruptions tends to make the plan fragile.",
+        "People under pressure may have little patience for a request that ignores their immediate condition. Notice what the moment asks of them before deciding how much attention they can spare."
+      ],
+      "links": [
+        {
+          "phrase": "Food",
+          "topic": "needs.food"
+        },
+        {
+          "phrase": "shelter",
+          "topic": "needs.shelter"
+        },
+        {
+          "phrase": "water",
+          "topic": "needs.water"
+        }
+      ],
+      "variants": [
+        {
+          "id": "npc_hungry",
+          "priority": 30,
+          "requirements": {
+            "fact": "npc.hunger",
+            "op": "gte",
+            "value": 65
+          },
+          "paragraphs": [
+            "Food is difficult to put aside as a subject when hunger is pressing. Ordinary shelter and water still matter, but attention keeps returning to the need that has not been met.",
+            "A person in that state may answer more briefly than they would on an easier day. Make your request clear and allow room for ordinary needs instead of taking every sign of impatience personally."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.needs"
+    },
+    {
+      "id": "needs.food",
+      "parent": "needs",
+      "label": "Food for today and later",
+      "paragraphs": [
+        "Food is both an immediate need and a problem of keeping enough for later. Rationing can stretch supplies, but it cannot turn an inadequate supply into an adequate one indefinitely.",
+        "Cooking changes how food can be used, and safe handling matters before and after the heat. Think about fuel, time, and what you can actually prepare when choosing what to carry."
+      ],
+      "links": [
+        {
+          "phrase": "Rationing",
+          "topic": "needs.food.ration"
+        },
+        {
+          "phrase": "Cooking",
+          "topic": "needs.food.cooking"
+        }
+      ],
+      "variants": [
+        {
+          "id": "food_stress",
+          "priority": 25,
+          "requirements": {
+            "fact": "settlement.food_stress",
+            "op": "gte",
+            "value": 30
+          },
+          "paragraphs": [
+            "When food is under pressure, Rationing is no longer an abstract question. Every portion has to serve an immediate need while leaving something for the needs that will arrive tomorrow.",
+            "Cooking can help make available supplies usable, but it still asks for fuel and time. Be careful with food that may be spoiled, and do not confuse a shortage with a reason to ignore safe handling."
+          ]
+        },
+        {
+          "id": "household_short",
+          "priority": 35,
+          "requirements": {
+            "fact": "household.food_shortage",
+            "op": "gt",
+            "value": 0
+          },
+          "paragraphs": [
+            "A household short of food must think about the next meal before many other concerns. Rationing may help manage what remains, but it does not remove the need for an adequate replacement supply.",
+            "Cooking depends on fuel, time, and usable ingredients as well as willingness. Ask what can be spared instead of assuming that a sale or a favor is easy merely because there is something visible to offer."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.needs.food"
+    },
+    {
+      "id": "needs.food.ration",
+      "parent": "needs.food",
+      "label": "Making a supply last",
+      "paragraphs": [
+        "Rationing starts with knowing what is available and how many needs it must cover. Vague confidence that there will be enough can consume a reserve before anyone agrees what the reserve was for.",
+        "Keep the plan realistic about work, travel, and people who need more care. Fairness requires attention to actual need, not only the appearance of giving everyone an identical share."
+      ],
+      "links": [
+        {
+          "phrase": "Fairness",
+          "topic": "economy.exchange.fairness"
+        }
+      ],
+      "content_id": "core:dialogue.needs.food.ration"
+    },
+    {
+      "id": "needs.food.cooking",
+      "parent": "needs.food",
+      "label": "Preparation and care",
+      "paragraphs": [
+        "Cooking takes resources as well as ingredients, and a useful plan accounts for fuel, clean water, and a suitable vessel. Safe preparation cannot rescue every food that has spoiled or become contaminated.",
+        "Keep raw and ready-to-eat foods handled carefully and do not assume a pleasant smell proves safety. If you do not know that something is edible and fit to use, uncertainty is a reason for caution."
+      ],
+      "links": [
+        {
+          "phrase": "fuel",
+          "topic": "needs.shelter.warmth.fuel"
+        },
+        {
+          "phrase": "clean water",
+          "topic": "needs.water"
+        }
+      ],
+      "content_id": "core:dialogue.needs.food.cooking"
+    },
+    {
+      "id": "needs.shelter",
+      "parent": "needs",
+      "label": "A place to recover",
+      "paragraphs": [
+        "Shelter gives you a chance to recover instead of spending all your strength resisting the conditions. Warmth matters, but so do dryness, ventilation, and a place where resting does not create another danger.",
+        "Ask what you need the space to do before judging it by appearance. A useful shelter must fit the weather and your condition, and any shared space asks for consideration toward the people already relying on it."
+      ],
+      "links": [
+        {
+          "phrase": "Warmth",
+          "topic": "needs.shelter.warmth"
+        }
+      ],
+      "content_id": "core:dialogue.needs.shelter"
+    },
+    {
+      "id": "needs.shelter.warmth",
+      "parent": "needs.shelter",
+      "label": "Warmth without a new danger",
+      "paragraphs": [
+        "Warmth is useful only when the way of obtaining it remains safe. Fuel, a suitable fire or heat source, and ventilation belong in the same plan rather than being treated as separate details.",
+        "Keep heat away from materials that can ignite and avoid smoke building up where people rest. Dry clothing and insulation can reduce how much heat you need to replace in the first place."
+      ],
+      "links": [
+        {
+          "phrase": "Fuel",
+          "topic": "needs.shelter.warmth.fuel"
+        }
+      ],
+      "content_id": "core:dialogue.needs.shelter.warmth",
+      "variants": [
+        {
+          "id": "cold",
+          "priority": 40,
+          "requirements": {
+            "fact": "player.cold",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "If you are cold, reducing further heat loss should come before an ambitious next step. Fuel is only part of the answer: shelter, dryness, and safe insulation can make the warmth you obtain more useful.",
+            "Use any heat source with proper ventilation and care around things that can ignite. If cold is severe or symptoms are concerning, seek suitable help rather than relying on conversation or determination to resolve it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "needs.shelter.warmth.fuel",
+      "parent": "needs.shelter.warmth",
+      "label": "Fuel and competing uses",
+      "paragraphs": [
+        "Fuel can be needed for warmth, cooking, and work, so using it for one purpose may leave another short. Condition matters too; unsuitable or wet fuel can produce poor heat and more smoke.",
+        "Plan for the safe handling and ventilation of any fire before lighting it. If the supply is limited, reduce avoidable heat loss and choose priorities deliberately instead of feeding the fire until the last piece is gone."
+      ],
+      "links": [
+        {
+          "phrase": "cooking",
+          "topic": "needs.food.cooking"
+        }
+      ],
+      "content_id": "core:dialogue.needs.shelter.warmth.fuel",
+      "variants": [
+        {
+          "id": "wood_supply",
+          "priority": 30,
+          "requirements": {
+            "fact": "town.shortages.core:wood",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A short wood supply brings warmth, cooking, and other work into closer competition. A demand that looked modest before the shortage may now take part of a reserve someone else expected to use.",
+            "Ask what can be spared and reduce avoidable use where possible. Suitable substitutes still need safe handling and ventilation; shortage is not a reason to burn unknown materials in a place where people breathe the smoke."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "needs.water",
+      "parent": "needs",
+      "label": "Obtaining and carrying water",
+      "paragraphs": [
+        "Water must be available, usable, and carried in a way that keeps it clean. Treatment can address some problems, but it has limits and depends on knowing something about the source.",
+        "Consider the whole journey rather than only the thirst you feel now. A vessel that is too small or poorly kept can turn a reasonable route into a need you cannot meet along the way."
+      ],
+      "links": [
+        {
+          "phrase": "Treatment",
+          "topic": "knowledge.survival.water"
+        }
+      ],
+      "content_id": "core:dialogue.needs.water"
+    },
+    {
+      "id": "economy",
+      "parent": "root",
+      "label": "Trade, wealth, and shared pressure",
+      "paragraphs": [
+        "An economy is made of needs, work, and exchanges that people can actually complete. Prices say something about available goods, while wealth changes how much freedom someone has to choose between offers.",
+        "Exchange works best when both people understand what is changing hands. Labor belongs in the same picture, because the goods on a shelf depend on time and effort spent elsewhere."
+      ],
+      "links": [
+        {
+          "phrase": "Prices",
+          "topic": "economy.prices"
+        },
+        {
+          "phrase": "wealth",
+          "topic": "economy.wealth"
+        },
+        {
+          "phrase": "Exchange",
+          "topic": "economy.exchange"
+        },
+        {
+          "phrase": "Labor",
+          "topic": "economy.labor"
+        }
+      ],
+      "variants": [
+        {
+          "id": "prosperous",
+          "priority": 20,
+          "requirements": {
+            "fact": "town.wealth",
+            "op": "gte",
+            "value": 1000
+          },
+          "paragraphs": [
+            "Prosperity can make trade look effortless, but Prices still depend on goods arriving and work being completed. Greater wealth gives people more room to absorb a delay; it does not make supply unnecessary.",
+            "Exchange and Labor deserve attention even during a comfortable stretch. A settlement can look well supplied while a particular household or line of work remains under pressure."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.economy"
+    },
+    {
+      "id": "economy.prices",
+      "parent": "economy",
+      "label": "What a price reflects",
+      "paragraphs": [
+        "Prices can reflect scarcity, replacement cost, and how urgently a good is needed. A familiar item may cost more when obtaining the next one becomes difficult, even if the object itself has not changed.",
+        "Ask what conditions shaped an offer before assuming every difference is dishonesty. You can still decline a bargain while understanding why the seller sees it differently."
+      ],
+      "links": [
+        {
+          "phrase": "scarcity",
+          "topic": "economy.prices.scarcity"
+        }
+      ],
+      "content_id": "core:dialogue.economy.prices"
+    },
+    {
+      "id": "economy.prices.scarcity",
+      "parent": "economy.prices",
+      "label": "When demand meets a thin supply",
+      "paragraphs": [
+        "Scarcity brings needs into competition, and a higher price does not always settle that competition fairly. Rationing is one way people try to preserve access when supplies cannot meet every demand at once.",
+        "A shortage may be temporary or part of a deeper problem with work and replacement. Be careful about drawing a whole picture of the settlement from one expensive item or one well-stocked stall."
+      ],
+      "links": [
+        {
+          "phrase": "Rationing",
+          "topic": "economy.prices.scarcity.ration"
+        }
+      ],
+      "content_id": "core:dialogue.economy.prices.scarcity"
+    },
+    {
+      "id": "economy.prices.scarcity.ration",
+      "parent": "economy.prices.scarcity",
+      "label": "Allocating a limited supply",
+      "paragraphs": [
+        "Rationing makes an argument about which needs should be served first and how much reserve should remain. The argument ought to be clear enough for people to understand why a request was limited.",
+        "Rules work better when they consider necessary work and vulnerable people rather than treating every demand as interchangeable. Even a careful allocation cannot remove the need to restore the underlying supply."
+      ],
+      "links": [
+        {
+          "phrase": "supply",
+          "topic": "work.supply"
+        }
+      ],
+      "content_id": "core:dialogue.economy.prices.scarcity.ration"
+    },
+    {
+      "id": "economy.wealth",
+      "parent": "economy",
+      "label": "What money changes",
+      "paragraphs": [
+        "Wealth changes your range of choices, but it also changes what others may expect from you. Bargaining with someone under pressure calls for care, especially when refusing you would cost them more than refusing another buyer.",
+        "Display is a separate choice from spending. An obvious purse can attract attention that has little to do with the task you meant to discuss."
+      ],
+      "links": [
+        {
+          "phrase": "Bargaining",
+          "topic": "economy.wealth.bargaining"
+        },
+        {
+          "phrase": "Display",
+          "topic": "economy.wealth.display"
+        }
+      ],
+      "variants": [
+        {
+          "id": "wealthy",
+          "priority": 30,
+          "requirements": {
+            "fact": "player.wealth",
+            "op": "gte",
+            "value": 250
+          },
+          "paragraphs": [
+            "A substantial purse gives you options that others may not have, and people will notice how you use that freedom. Bargaining is easier for you to leave than for someone who urgently needs the sale.",
+            "Display can make a simple exchange feel like a demonstration of power. State what you need plainly, pay attention to a fair agreement, and let the goods rather than the purse dominate the conversation."
+          ]
+        },
+        {
+          "id": "poor",
+          "priority": 30,
+          "requirements": {
+            "fact": "player.wealth",
+            "op": "lte",
+            "value": 10
+          },
+          "paragraphs": [
+            "When your purse is thin, Bargaining carries more consequence because there is little room for a mistake. Ask about the full cost before agreeing to anything that could leave ordinary needs unmet.",
+            "Display will not solve a shortage of coin, and pretending to have more than you do can make the agreement worse. Be plain about what you can offer and consider whether another exchange is possible."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.economy.wealth"
+    },
+    {
+      "id": "economy.wealth.bargaining",
+      "parent": "economy.wealth",
+      "label": "A bargain both sides understand",
+      "paragraphs": [
+        "Bargaining is easier to judge when the goods, condition, quantity, and payment are clear. A lower price is not automatically a better bargain if the item cannot do the work you need.",
+        "Give the other person room to decline without a threat or an insult. Fairness becomes difficult when one side uses urgency or fear to prevent the other from making a real choice."
+      ],
+      "links": [
+        {
+          "phrase": "Fairness",
+          "topic": "economy.exchange.fairness"
+        }
+      ],
+      "content_id": "core:dialogue.economy.wealth.bargaining"
+    },
+    {
+      "id": "economy.wealth.display",
+      "parent": "economy.wealth",
+      "label": "When a purse becomes the topic",
+      "paragraphs": [
+        "Display can invite assumptions about generosity, arrogance, or opportunity, even when none was your intention. People will read the visible choices they have, not the private explanation you have not offered.",
+        "Keep money proportionate to the exchange you are making. A clear, ordinary transaction gives people fewer reasons to wonder what else you are trying to buy."
+      ],
+      "links": [
+        {
+          "phrase": "assumptions",
+          "topic": "relations.reputation"
+        }
+      ],
+      "content_id": "core:dialogue.economy.wealth.display",
+      "variants": [
+        {
+          "id": "greedy_attention",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.traits.greedy",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A visible purse can invite assumptions about what you might spend rather than what you came to discuss. That can change the tone of an exchange before either person has stated the actual terms.",
+            "Keep the transaction clear and judge the offer by the goods and agreement. If someone reads more value into the purse than into the task, do not let that replace a careful decision about what you need."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "economy.exchange",
+      "parent": "economy",
+      "label": "What can change hands",
+      "paragraphs": [
+        "Exchange need not begin with coin, but barter still needs a shared understanding of value and use. An object worth much to one person may be worth little to someone who cannot use, store, or trade it onward.",
+        "Fairness depends on accurate terms and enough freedom to accept or refuse. Hidden damage or a concealed obligation can turn an agreeable exchange into a lasting grievance."
+      ],
+      "links": [
+        {
+          "phrase": "barter",
+          "topic": "economy.exchange.barter"
+        },
+        {
+          "phrase": "Fairness",
+          "topic": "economy.exchange.fairness"
+        }
+      ],
+      "variants": [
+        {
+          "id": "merchant",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.occupation",
+            "op": "eq",
+            "value": "merchant"
+          },
+          "paragraphs": [
+            "Trade asks whether goods can be used, stored, or moved onward, not merely whether they look valuable. Ordinary barter still needs terms both people understand, especially when condition and replacement cost differ.",
+            "Fairness is practical as well as courteous: a buyer who discovers hidden trouble remembers the seller. A clear agreement is worth taking time over because confidence helps the next exchange happen."
+          ]
+        },
+        {
+          "id": "barter_when_poor",
+          "priority": 35,
+          "requirements": {
+            "all": [
+              {
+                "fact": "town.barter_enabled",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "fact": "player.wealth",
+                "op": "lte",
+                "value": 10
+              }
+            ]
+          },
+          "paragraphs": [
+            "When coin is scarce and barter is accepted, the useful question is what you can offer that the other person actually needs. Value still depends on condition, quantity, and the ability to use or move the goods.",
+            "Fairness needs clear terms even when no coins change hands. Do not offer an item you cannot spare from ordinary needs, and do not assume a seller wants something merely because it matters to you."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.economy.exchange"
+    },
+    {
+      "id": "economy.exchange.barter",
+      "parent": "economy.exchange",
+      "label": "Trading useful things",
+      "paragraphs": [
+        "Barter works when each side wants what the other can actually provide. Agree on quantities and condition, and be clear whether the exchange happens now or depends on something being delivered later.",
+        "Do not mistake a possible use for an immediate need. A person short of food may have no practical reason to accept an impressive object that cannot help with the next meal."
+      ],
+      "links": [
+        {
+          "phrase": "delivered later",
+          "topic": "relations.trust.promises"
+        }
+      ],
+      "content_id": "core:dialogue.economy.exchange.barter"
+    },
+    {
+      "id": "economy.exchange.fairness",
+      "parent": "economy.exchange",
+      "label": "Freedom to agree or decline",
+      "paragraphs": [
+        "Fairness needs honest information and a real opportunity to say no. An agreement reached through concealed facts or intimidation may have the shape of a bargain without the substance of one.",
+        "Consider the conditions each person is choosing under, especially urgency and dependence. You can look after your own needs while still refusing to profit from a difficulty the other person cannot escape."
+      ],
+      "links": [
+        {
+          "phrase": "needs",
+          "topic": "needs"
+        }
+      ],
+      "content_id": "core:dialogue.economy.exchange.fairness"
+    },
+    {
+      "id": "economy.labor",
+      "parent": "economy",
+      "label": "The work behind the goods",
+      "paragraphs": [
+        "Labor supplies the time and skill behind goods that seem to appear simply because a market has opened. Demand can create work, but the needed tools, inputs, and payment must be present for that work to continue.",
+        "A settlement can have willing workers and unmet needs at the same time. Understanding what prevents the two from meeting is more useful than blaming either side for a shortage in the middle."
+      ],
+      "links": [
+        {
+          "phrase": "Demand",
+          "topic": "economy.labor.demand"
+        }
+      ],
+      "content_id": "core:dialogue.economy.labor"
+    },
+    {
+      "id": "economy.labor.demand",
+      "parent": "economy.labor",
+      "label": "Useful work and available means",
+      "paragraphs": [
+        "Demand is a need joined to the means of obtaining what meets it. People may badly want a repair or a good while lacking the coin, materials, or time needed to arrange it.",
+        "That gap explains why willing labor does not automatically find a place. Clear tasks, suitable inputs, and dependable terms can matter as much as the number of people ready to work."
+      ],
+      "links": [
+        {
+          "phrase": "dependable terms",
+          "topic": "work.wages.negotiation"
+        }
+      ],
+      "content_id": "core:dialogue.economy.labor.demand",
+      "variants": [
+        {
+          "id": "war_weariness",
+          "priority": 35,
+          "requirements": {
+            "fact": "faction.war_exhaustion",
+            "op": "gte",
+            "value": 40
+          },
+          "paragraphs": [
+            "A long conflict can strain labor and resources while ordinary needs continue to arrive. Wanting useful work done does not mean the people, materials, or means of payment are all ready at the same time.",
+            "Look at the bottleneck before blaming the delay on a lack of effort. Keeping necessary work possible may ask for clearer priorities and dependable terms rather than a louder demand for the old pace."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "area.dangers",
+      "parent": "area",
+      "label": "Risk and changing conditions",
+      "paragraphs": [
+        "Danger is often a combination of ordinary conditions rather than one dramatic threat. Weather, tiredness, poor visibility, and an uncertain route can leave you without a good way to correct a mistake.",
+        "Think about exposure and the distance to a place where you can safely stop. Read crossings with the conditions you have now, and avoid treating yesterday's easy passage as evidence that today's is unchanged."
+      ],
+      "links": [
+        {
+          "phrase": "exposure",
+          "topic": "area.shelter.exposure"
+        },
+        {
+          "phrase": "crossings",
+          "topic": "area.roads.crossings"
+        }
+      ],
+      "variants": [
+        {
+          "id": "storm",
+          "priority": 40,
+          "requirements": {
+            "fact": "environment.storm",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "During a storm, exposure can become the main danger even when the route itself is familiar. Conditions may change faster than you can complete an ambitious journey, and a delay can remove the reserve you expected to keep.",
+            "Reconsider crossings and places where retreat would be difficult. If the trip can wait, use the time to protect your supplies and yourself rather than proving that you can start in bad conditions."
+          ]
+        },
+        {
+          "id": "exposed",
+          "priority": 30,
+          "requirements": {
+            "fact": "environment.exposed",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "The risk of exposure deserves attention when the surroundings offer little protection from weather. A route may be easy to walk and still leave you with nowhere suitable to recover if your strength gives out.",
+            "Keep crossings and other points of commitment in proportion to your reserve. A plan should include the place where you can stop safely, not only the place you intend to reach."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.area.dangers"
+    },
+    {
+      "id": "personal.wellbeing",
+      "parent": "personal",
+      "label": "How the day is treating us",
+      "paragraphs": [
+        "Wellbeing is shaped by what a person has been doing and what they have not yet had time to address. Ordinary needs and fatigue can explain a short answer more honestly than a guess about their character.",
+        "Listen to the immediate situation before steering the conversation toward a favor or a private subject. Concern is useful when it makes room for the person's condition rather than demanding a reassuring performance."
+      ],
+      "links": [
+        {
+          "phrase": "needs",
+          "topic": "needs"
+        },
+        {
+          "phrase": "fatigue",
+          "topic": "health.fatigue"
+        }
+      ],
+      "variants": [
+        {
+          "id": "npc_rest",
+          "priority": 30,
+          "requirements": {
+            "fact": "npc.needs.rest",
+            "op": "gte",
+            "value": 65
+          },
+          "paragraphs": [
+            "This fatigue makes conversation harder to sustain when rest has become a pressing need. There may be nothing personal in a brief answer; attention can run short just as strength can.",
+            "Ordinary needs deserve room before a long request or a delicate subject. Speak plainly, allow a pause, and do not ask a tired person to prove goodwill by staying at the conversation indefinitely."
+          ]
+        },
+        {
+          "id": "npc_social",
+          "priority": 25,
+          "requirements": {
+            "fact": "npc.needs.social",
+            "op": "gte",
+            "value": 65
+          },
+          "paragraphs": [
+            "Company can matter when ordinary needs have left a person with little chance for a useful exchange. That does not mean every question should be intimate; familiar subjects can make room for an easier conversation.",
+            "Notice fatigue as well as willingness to speak. A conversation goes better when both people can choose its pace, and a welcome greeting need not become an obligation to disclose private things."
+          ]
+        },
+        {
+          "id": "exhausted",
+          "priority": 40,
+          "requirements": {
+            "fact": "player.exhausted",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Your fatigue should have a place in this conversation before another demand does. A tired person can make a promise with less reserve than the promise requires.",
+            "Settle ordinary needs and consider what can wait until your attention recovers. You can explain a limit without pretending that exhaustion is a measure of your intentions."
+          ]
+        },
+        {
+          "id": "infected",
+          "priority": 50,
+          "requirements": {
+            "fact": "player.infected",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "If illness is affecting you, ordinary needs and proper care deserve attention before a long conversation. Increasing fatigue may be part of a condition that should not be dismissed as a difficult day.",
+            "Seek appropriate qualified help for concerning or worsening symptoms and describe the changes clearly. Do not ask conversation to establish a diagnosis or delay the care you need."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.personal.wellbeing"
+    },
+    {
+      "id": "relations.listen",
+      "parent": "relations",
+      "label": "Listening and timing",
+      "paragraphs": [
+        "Listening means noticing what the other person is ready to discuss as well as hearing the words they choose. Boundaries and immediate needs can make the same question welcome at one moment and burdensome at another.",
+        "A remembered encounter may shape the answer before you reach the point of your request. Trust develops more easily when you consider that history instead of expecting every meeting to begin from nothing."
+      ],
+      "links": [
+        {
+          "phrase": "Boundaries",
+          "topic": "personal.boundaries"
+        },
+        {
+          "phrase": "needs",
+          "topic": "needs"
+        },
+        {
+          "phrase": "Trust",
+          "topic": "relations.trust"
+        }
+      ],
+      "variants": [
+        {
+          "id": "negative_memory",
+          "priority": 35,
+          "requirements": {
+            "fact": "npc.memories.player_valence",
+            "op": "lt",
+            "value": 0
+          },
+          "paragraphs": [
+            "A remembered difficult encounter can make Trust harder to extend before a new request has even been explained. People carry the effect of what happened, not only the version you would prefer to tell.",
+            "Boundaries and ordinary needs still deserve respect while that concern remains. Listen carefully, keep your conduct calm, and give the next exchange a chance to become better evidence than the last one."
+          ]
+        },
+        {
+          "id": "busy_routine",
+          "priority": 25,
+          "requirements": {
+            "all": [
+              {
+                "fact": "npc.task_count",
+                "op": "gt",
+                "value": 0
+              },
+              {
+                "fact": "npc.task_action",
+                "op": "ne",
+                "value": "idle"
+              }
+            ]
+          },
+          "paragraphs": [
+            "Listening also means noticing that a person has work or other needs competing for attention. Trust is not measured by whether someone abandons everything the moment you want a conversation.",
+            "Boundaries are practical here: a brief question may fit the moment when a long one does not. Be clear about what you want, and let the person's immediate task help determine how much can be discussed."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.relations.listen"
+    },
+    {
+      "id": "knowledge.animals",
+      "parent": "knowledge",
+      "label": "Animals and uncertain encounters",
+      "paragraphs": [
+        "Animals require observation rather than assumptions drawn from a familiar shape or a quiet moment. Evidence about their behavior and the surroundings is more useful than deciding that every still creature is harmless.",
+        "Keep enough distance to avoid creating the danger you were trying to inspect. If your plans depend on food or materials from animals, remember that skill, suitable equipment, and local conditions all affect what is realistic."
+      ],
+      "links": [
+        {
+          "phrase": "Evidence",
+          "topic": "knowledge.learning.evidence"
+        },
+        {
+          "phrase": "food",
+          "topic": "needs.food"
+        }
+      ],
+      "variants": [
+        {
+          "id": "hunter",
+          "priority": 30,
+          "requirements": {
+            "fact": "npc.occupation",
+            "op": "eq",
+            "value": "hunter"
+          },
+          "paragraphs": [
+            "Evidence matters when reading animals because a sign can be old, incomplete, or misunderstood. Hunting knowledge is not a guarantee that a particular creature is nearby or that every approach is safe.",
+            "If food is the reason for the question, consider the whole task: finding, handling, and making use of what is obtained. A confident guess about an animal is a poor substitute for a careful assessment of the conditions."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.animals"
+    },
+    {
+      "id": "knowledge.plants",
+      "parent": "knowledge",
+      "label": "Plants and recognition",
+      "paragraphs": [
+        "Plants must be identified carefully before anyone calls them food or medicine. Evidence includes more than a familiar-looking leaf, and an uncertain identification should remain uncertain rather than becoming advice to consume it.",
+        "Foraging depends on knowledge as well as availability. A useful conversation separates what you recognize, what you can verify, and what you only hope is the right thing."
+      ],
+      "links": [
+        {
+          "phrase": "Evidence",
+          "topic": "knowledge.learning.evidence"
+        },
+        {
+          "phrase": "Foraging",
+          "topic": "knowledge.plants.foraging"
+        }
+      ],
+      "variants": [
+        {
+          "id": "experienced_forager",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.skills.foraging",
+            "op": "gte",
+            "value": 4
+          },
+          "paragraphs": [
+            "Your experience with Foraging makes a precise question more useful than a broad list of possibilities. Evidence still needs to fit the specimen and its condition rather than merely resemble something you have seen before.",
+            "Compare the details that distinguish similar plants, and keep consumption separate from an uncertain identification. Skill should make you better at recognizing limits as well as better at finding useful things."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.plants"
+    },
+    {
+      "id": "knowledge.plants.foraging",
+      "parent": "knowledge.plants",
+      "label": "Gathering without guessing",
+      "paragraphs": [
+        "Foraging is not a license to treat every promising plant as useful. Correct recognition, condition, and appropriate handling all matter, and a successful find does not establish that another similar-looking one is safe.",
+        "Take only what you can identify and use responsibly, with attention to ownership and local rules. Where identification is uncertain, seek reliable help instead of testing the guess on yourself or someone else."
+      ],
+      "links": [
+        {
+          "phrase": "ownership",
+          "topic": "crime.property"
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.plants.foraging"
+    },
+    {
+      "id": "knowledge.resources",
+      "parent": "knowledge",
+      "label": "Resources and practical limits",
+      "paragraphs": [
+        "Resources become useful when knowledge, materials, and work can turn them into what is needed. A visible supply does not prove that it is suitable, available to take, or practical to carry.",
+        "Check permission before treating a place or a pile of goods as yours to use. If you want to understand a resource, ask how its condition affects the task rather than asking for an unverified promise of abundance."
+      ],
+      "links": [
+        {
+          "phrase": "materials",
+          "topic": "knowledge.craft.materials"
+        },
+        {
+          "phrase": "permission",
+          "topic": "crime.property.permission"
+        }
+      ],
+      "variants": [
+        {
+          "id": "fuel_shortage",
+          "priority": 30,
+          "requirements": {
+            "fact": "household.fuel_shortage",
+            "op": "gt",
+            "value": 0
+          },
+          "paragraphs": [
+            "When fuel is short, resources have to serve competing needs rather than simply appear plentiful. Suitable materials for one task may be poor or unsafe for another, so condition and intended use both matter.",
+            "Shortage does not remove the need for permission. Ask what can be spared and consider reducing the demand as well as finding another supply; taking someone else's reserve only moves the difficulty."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.resources"
+    },
+    {
+      "id": "knowledge.towns",
+      "parent": "knowledge",
+      "label": "Reading a settlement carefully",
+      "paragraphs": [
+        "A settlement should be understood through services, work, and the conditions people are living under. A busy market can tell you something useful without telling you whether every household has enough.",
+        "Sanitation and housing are part of that picture as much as trade is. Look for the connections between ordinary needs and public conditions before drawing a conclusion from one pleasant or troubling encounter."
+      ],
+      "links": [
+        {
+          "phrase": "services",
+          "topic": "area.settlement.services"
+        },
+        {
+          "phrase": "Sanitation",
+          "topic": "knowledge.towns.sanitation"
+        },
+        {
+          "phrase": "housing",
+          "topic": "knowledge.towns.housing"
+        }
+      ],
+      "variants": [
+        {
+          "id": "war",
+          "priority": 40,
+          "requirements": {
+            "fact": "faction.at_war",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Conflict can change how a settlement uses labor, supplies, and services even away from a direct encounter. People may judge strangers more carefully while trying to keep ordinary work going under uncertainty.",
+            "Sanitation and housing still matter during that pressure; neglecting daily needs creates another kind of vulnerability. Ask about present conditions without assuming that every anxious exchange reveals a secret or a threat."
+          ]
+        },
+        {
+          "id": "quarantine",
+          "priority": 45,
+          "requirements": {
+            "fact": "town.quarantined",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "Quarantine makes services and contact subject to restrictions that deserve careful attention. Follow the applicable instructions rather than treating inconvenience as evidence that the concern is unreal.",
+            "Sanitation and housing can become especially important when movement is limited. Keep necessary exchanges clear and seek qualified guidance for health concerns instead of improvising around the restrictions."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.towns"
+    },
+    {
+      "id": "knowledge.towns.sanitation",
+      "parent": "knowledge.towns",
+      "label": "Shared conditions and health",
+      "paragraphs": [
+        "Sanitation is shared work because the consequences of neglected waste or contaminated supplies rarely stay with one household. Good handling, clean water, and appropriate disposal protect more than the person doing the task.",
+        "A troubling condition needs a practical response and reliable assessment, not a rumor that grows more specific each time it is repeated. Keep claims close to observations and use qualified help for serious health concerns."
+      ],
+      "links": [
+        {
+          "phrase": "clean water",
+          "topic": "needs.water"
+        }
+      ],
+      "variants": [
+        {
+          "id": "unsanitary",
+          "priority": 35,
+          "requirements": {
+            "fact": "town.unsanitary",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "When conditions are unsanitary, clean water and careful handling become urgent parts of ordinary life. The problem may affect several households, so private improvisation alone may leave the shared cause untouched.",
+            "Report observable conditions through the appropriate channels and follow reliable health guidance. Avoid inventing a precise source of illness from a single impression; serious concerns need assessment and coordinated care."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.towns.sanitation"
+    },
+    {
+      "id": "knowledge.towns.housing",
+      "parent": "knowledge.towns",
+      "label": "Having a place to live",
+      "paragraphs": [
+        "Housing is more than a count of roofs because a person needs a usable, safe place that fits ordinary life. Shelter, access, and the demands of sharing all affect whether a space actually meets that need.",
+        "A shortage can put pressure on families and work long before it becomes obvious to a visitor. Ask about conditions without treating private living arrangements as information anyone owes you."
+      ],
+      "links": [
+        {
+          "phrase": "Shelter",
+          "topic": "needs.shelter"
+        }
+      ],
+      "variants": [
+        {
+          "id": "housing_shortage",
+          "priority": 35,
+          "requirements": {
+            "fact": "town.housing_shortage",
+            "op": "eq",
+            "value": true
+          },
+          "paragraphs": [
+            "A housing shortage makes Shelter a concern that can overshadow a routine question about work or trade. Crowding and uncertain access to a place of rest can leave people with little reserve for anything else.",
+            "Treat those conditions with care and respect privacy when asking about them. A spare-looking space is not automatically available, and permission matters before someone relies on it as a solution."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.towns.housing"
+    },
+    {
+      "id": "knowledge.skills",
+      "parent": "knowledge",
+      "label": "Skill and honest limits",
+      "paragraphs": [
+        "Skills are useful when a person understands both what they can do and what the task requires. Learning from evidence helps keep confidence proportionate to experience instead of letting a good result once become a universal rule.",
+        "Craft decisions and careful practice support one another. Ask a focused question about the step you do not understand, and do not hide uncertainty when someone else will depend on the result."
+      ],
+      "links": [
+        {
+          "phrase": "evidence",
+          "topic": "knowledge.learning.evidence"
+        },
+        {
+          "phrase": "Craft",
+          "topic": "knowledge.craft"
+        }
+      ],
+      "variants": [
+        {
+          "id": "farming_skill",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.skills.farming",
+            "op": "gte",
+            "value": 4
+          },
+          "paragraphs": [
+            "Your farming experience may let us discuss a method in terms of the conditions it serves rather than repeat a broad rule. Present evidence about the ground, timing, and available work is still needed before judging a plan.",
+            "Craft knowledge works best when it can adapt without pretending that every change is obvious. Explain what you have observed and where the uncertainty lies, so a focused answer can be useful."
+          ]
+        },
+        {
+          "id": "crafting_skill",
+          "priority": 25,
+          "requirements": {
+            "fact": "player.skills.crafting",
+            "op": "gte",
+            "value": 4
+          },
+          "paragraphs": [
+            "Your crafting experience should make the intended use and material part of the same question. Craft knowledge helps you notice where the result needs precision and where an uncertain method deserves another look.",
+            "Keep evidence close to the piece and the conditions under which it will be used. Skill makes a careful discussion more detailed; it does not remove the obligation to disclose a limit."
+          ]
+        }
+      ],
+      "content_id": "core:dialogue.knowledge.skills"
+    }
+  ]
+}

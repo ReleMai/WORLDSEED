@@ -4,6 +4,20 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev60 — Layered NPC conversations
+
+Follow highlighted words in an NPC's speech to open deeper topics. Conversations
+use the world's existing weather, player attributes and skills, carried wealth,
+equipment, notoriety, relationships, NPC routines and settlement conditions to
+choose deterministic answers. Private branches require earned trust.
+
+The conversation panel keeps a nested thread and clickable topic path. Returning
+to a parent restores its answer, selection and text page. Every linked topic is
+also available through Tab/Enter navigation; terminal mode shows the complete
+paged speech with `[` / `]` text paging. Introductions and explicit gifts,
+knowledge disclosures and other actions retain their existing boundaries.
+See the [Dev60 handoff](docs/handoffs/DEV60_DIALOGUE_TREES_HANDOFF.md).
+
 ## RC14 Dev59 — Personal NPC schedules and faster simulation
 
 NPCs follow individual daily timelines for work, meals, leisure and sleep.

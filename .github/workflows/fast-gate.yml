@@ -148,6 +148,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev44 interaction regressions" --timeout 90 -- python -u -m unittest -v tests.test_dev44_stance_dialogue_respawn tests.test_ui_rc2.AggressiveStanceRoutingTests
 
+      - name: Dev60 deterministic dialogue trees and nested text UI
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev60 conversations" --timeout 90 -- python -u -m unittest -v tests.test_dialogue_trees tests.test_dialogue_context tests.test_dialogue_tree_ui tests.test_dialogue_tree_navigation
+
       - name: Dev46 continuous interior regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev46 interiors" --timeout 180 -- python -u -m unittest -v tests.test_interiors tests.test_interior_engine tests.test_interior_ai tests.test_interior_knocking tests.test_interior_presentation tests.test_interior_projection
