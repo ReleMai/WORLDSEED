@@ -14,13 +14,14 @@ class WorkplaceLogisticsSystem:
 
     def __init__(self,state,registry,seed:bytes,physicalization=None):
         self.state=state;self.registry=registry;self.seed=seed;self.physicalization=physicalization
+        self.storage_access=None
 
     def attach_physicalization(self,physicalization)->None:self.physicalization=physicalization
 
     def _storage_for_property(self,property_id:str):
         rows=sorted(
-            (c for c in self.state.containers.values() if c.kind=="property" and c.property_id==str(property_id) and not c.interior_space_id),
-            key=lambda c:c.uid,
+            (c for c in self.state.containers.values() if c.kind=="property" and c.property_id==str(property_id)),
+            key=lambda c:(c.uid!='property-storage:'+str(property_id),c.uid),
         )
         return rows[0] if rows else None
 
@@ -121,6 +122,11 @@ class WorkplaceLogisticsSystem:
         qty=min(max(0,int(qty)),max(0,int(storage.items.get(item_id,0))))
         carrier=self._carrier(row)
         if qty<=0 or carrier is None:return 0
+        pickup=None
+        if storage.interior_space_id:
+            if self.storage_access is None:return 0
+            pickup=self.storage_access.transfer_tasks(carrier,storage,'workplace_pickup',{})
+            if not pickup:return 0
         left=storage.items.get(item_id,0)-qty
         if left>0:storage.items[item_id]=left
         else:storage.items.pop(item_id,None)
@@ -131,9 +137,11 @@ class WorkplaceLogisticsSystem:
             coarse_due_minute=int(minute)+max(180,min(720,120+distance*4)),
         )
         self.state.workplace_shipments[uid]=shipment
-        carrier.tasks.extend([
-            {"kind":"move","x":storage.x,"y":storage.y,"shipment_uid":uid},
-            {"kind":"perform","action":"workplace_pickup","shipment_uid":uid},
+        if pickup is None:
+            pickup=[{"kind":"move","x":storage.x,"y":storage.y},
+                    {"kind":"perform","action":"workplace_pickup"}]
+        for task in pickup:task['shipment_uid']=uid
+        carrier.tasks.extend(pickup+[
             {"kind":"move","x":market.x,"y":market.y,"shipment_uid":uid},
             {"kind":"perform","action":"workplace_dropoff","shipment_uid":uid},
         ])
@@ -211,6 +219,10 @@ class WorkplaceLogisticsSystem:
     def pickup_shipment(self,shipment_uid:str,carrier_uid:str,minute:int)->bool:
         s=self.state.workplace_shipments.get(str(shipment_uid))
         if s is None or s.carrier_uid!=str(carrier_uid) or s.status!="assigned":return False
+        container=next((c for c in self.state.containers.values() if c.uid==s.source_uid),None)
+        if container is not None and container.interior_space_id:
+            npc=self.state.npcs.get(str(carrier_uid))
+            if self.storage_access is None or npc is None or not self.storage_access.in_reach(npc,container):return False
         s.status="carried";s.picked_minute=int(minute);return True
 
     def _finish_shipment(self,s,minute:int)->bool:

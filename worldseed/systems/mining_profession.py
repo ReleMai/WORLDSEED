@@ -91,11 +91,22 @@ class MiningProfessionSystem:
         if not npc.workplace_id:
             return None
         uid = f"mining-house-storage:{npc.workplace_id}"
+        structure=getattr(self.physicalization,'structure_by_id',lambda _:None)(npc.workplace_id)
         existing = next((c for c in self.state.containers.values() if c.uid == uid), None)
         if existing is not None:
+            if structure is not None:
+                from worldseed.systems.building_storage import move_storage_indoors
+                move_storage_indoors(self.state,existing,structure)
             if npc.uid not in existing.keyholder_uids:
                 existing.keyholder_uids = sorted(set(existing.keyholder_uids + [npc.uid]))
             return existing
+        if self.storage_access is not None:
+            shared=self.storage_access.property_storage(npc,npc.workplace_id,self.ORE_ITEMS)
+            if shared is not None:return shared
+        if structure is not None and structure.enclosed:
+            # Wait for the authoritative building inventory; never recreate a
+            # blocking outdoor bin because the indoor fixture is unavailable.
+            return None
         position = self._storage_position(npc)
         if position is None:
             return None

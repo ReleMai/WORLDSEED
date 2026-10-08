@@ -70,7 +70,8 @@ def _surface_key(function, path, shell, width, height):
     entrance = (shell.entrance[0] - shell.bounds[0], shell.entrance[1] - shell.bounds[1]) if shell.entrance else None
     grid = (shell.bounds[2] - shell.bounds[0] + 1, shell.bounds[3] - shell.bounds[1] + 1)
     return ('whole-building-ground-fit', function, shell.function, str(path), width, height,
-            grid, entrance, shell.door_side)
+            grid, entrance, shell.door_side,
+            tuple((x-shell.bounds[0],y-shell.bounds[1]) for x,y in shell.footprint))
 
 
 def _whole_surface(term, shell, width, height, interior_plans=None):
@@ -118,6 +119,18 @@ def _whole_surface(term, shell, width, height, interior_plans=None):
         surface.blit(label, label.get_rect(center=surface.get_rect().center))
         _, fitted_door = _fit_geometry(shell, width, height, None,
                                        _door_anchor(function, path))
+    # Bounding boxes are not collision geometry. Clear cutouts/courtyards so
+    # their walkable ground cannot look or select like a solid building body.
+    columns=shell.bounds[2]-shell.bounds[0]+1
+    rows=shell.bounds[3]-shell.bounds[1]+1
+    cells=set(shell.footprint)
+    if len(cells)<columns*rows:
+        for gy in range(rows):
+            for gx in range(columns):
+                if (shell.bounds[0]+gx,shell.bounds[1]+gy) not in cells:
+                    x0,x1=gx*width//columns,(gx+1)*width//columns
+                    y0,y1=gy*height//rows,(gy+1)*height//rows
+                    surface.fill((0,0,0,0),(x0,y0,x1-x0,y1-y0))
     if len(cache) >= 96:
         cache.clear()
     # Geometry and fitted pixels have one lifetime. Source-cache eviction can
@@ -331,6 +344,10 @@ def draw_shells(term, shells, used, left, top, size, known, visible, hit_regions
                 # Show their real side portal, never an inaccessible painted
                 # front door that secretly targets a different world cell.
                 x, y = shell.entrance
+                # A side portal belongs to its real threshold tile; a tall
+                # front-door fit must not spill across the neighbour's path.
+                scale=min(1,(size-max(1,size//10))/max(1,recess.height),(size-2)/max(1,recess.width))
+                recess.size=(max(2,round(recess.width*scale)),max(3,round(recess.height*scale)))
                 recess.midbottom = (used.x + (x - left) * size + size // 2,
                                     used.y + (y - top + 1) * size - max(1, size // 10))
                 role = 'physical-side'

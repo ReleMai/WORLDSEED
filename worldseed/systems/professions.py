@@ -168,11 +168,15 @@ class SettlementProfessionSystem:
 
     def _containers(self,town_uid:str):
         return sorted(
-            (c for c in self.state.containers.values() if c.settlement_id==str(town_uid) and not c.interior_space_id),
+            (c for c in self.state.containers.values() if c.settlement_id==str(town_uid)
+             and (not c.interior_space_id or self.storage_access is not None)),
             key=lambda c:c.uid,
         )
 
     def _work_storage(self,npc,town):
+        if self.storage_access is not None:
+            proc=self.registry.settlement_processes.get(npc.assigned_process_id)
+            return self.storage_access.property_storage(npc,npc.workplace_id,proc.outputs if proc else ())
         rows=[
             c for c in self._containers(town.uid)
             if c.property_id==str(npc.workplace_id)
@@ -228,6 +232,9 @@ class SettlementProfessionSystem:
         if sources is None:return None
         tasks=[]
         for container,items in sources:
+            if self.storage_access is not None:
+                tasks.extend(self.storage_access.transfer_tasks(npc,container,'profession_withdraw',dict(items),process_id=process_id))
+                continue
             tasks.append(self._move(self._use_position(container),process_id=process_id))
             tasks.append({
                 "kind":"perform","action":"profession_withdraw","profession_task":True,

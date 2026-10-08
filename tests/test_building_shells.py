@@ -75,7 +75,7 @@ class BuildingShellTests(unittest.TestCase):
         outside=WorldPos(30,30)
         self.assertEqual(physical.displace_shell_position(outside,lambda pos:False),outside)
 
-    def test_workshop_storage_moves_to_service_court_without_copying_goods(self):
+    def test_workshop_storage_moves_inside_without_copying_goods(self):
         physical,structure,_,registry=self.fixture("workshop")
         state=LivingWorldState()
         town=SettlementState("settlement:test","Millford",0,0,4,4,20,"culture:test","religion:test","")
@@ -87,12 +87,13 @@ class BuildingShellTests(unittest.TestCase):
         system=PropertyStorageSystem(state,registry,b"shell-test",physical,civics)
         system.sync_settlement(town.uid)
         frontage=physical.frontage_for(structure.uid)
-        self.assertFalse(physical.shell_blocks(WorldPos(storage.x,storage.y,storage.z)))
-        self.assertLessEqual(max(abs(storage.x-frontage.x),abs(storage.y-frontage.y)),1)
+        self.assertEqual(storage.interior_space_id,'interior:'+structure.uid)
+        self.assertIs(state.containers['indoor-storage:'+storage.uid],storage)
+        self.assertNotIn(pos_key(frontage.x,frontage.y,frontage.z),state.containers)
         self.assertEqual(storage.items,{"core:wood":3})
         self.assertEqual(town.stocks,{"core:wood":10})
         self.assertEqual(len(state.containers),2)
-        indoor=next(c for c in state.containers.values() if c.interior_space_id)
+        indoor=next(c for c in state.containers.values() if c.profile_id=='core:tool_chest')
         self.assertEqual(indoor.profile_id,"core:tool_chest")
         self.assertEqual(indoor.items,{})
         self.assertNotIn(pos_key(4,4,0),state.containers)

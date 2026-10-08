@@ -20,13 +20,16 @@ class NPCStorageAccess:
                       key=lambda c: (c.property_id != npc.home_id, c.uid))
 
     def home_storage(self, npc, item_ids=()):
-        if not npc.home_id:
+        return self.property_storage(npc,npc.home_id,item_ids)
+
+    def property_storage(self,npc,property_id,item_ids=()):
+        if not property_id:
             return None
         if self.interiors is not None:
-            self.interiors.prepare_workplace(npc.home_id)
+            self.interiors.prepare_workplace(property_id)
         item_ids=tuple(item_ids)
         rows = sorted((c for c in self.state.containers.values()
-                       if c.property_id == npc.home_id and c.settlement_id == npc.settlement_id),
+                       if c.property_id == property_id and c.settlement_id == npc.settlement_id),
                       key=lambda c: (not bool(c.interior_space_id),
                                      storage_preference(c,item_ids,self.goods.registry) if self.goods else 0,
                                      -c.capacity_volume_ml,c.uid))
@@ -38,6 +41,29 @@ class NPCStorageAccess:
             if self._interior_target(npc, container) is not None:
                 return container
         return None
+
+    def repair_indoor_route(self,npc):
+        """Upgrade saved outdoor cargo walks after their container moves inside."""
+        task=npc.tasks[0]
+        if task.get('kind') not in {'move','perform'} or task.get('interior_storage_door_uid'):
+            return True
+        action_task=npc.tasks[1] if task.get('kind')=='move' and len(npc.tasks)>1 else task
+        uid=task.get('container_uid') or action_task.get('container_uid')
+        if action_task.get('action')=='workplace_pickup':
+            shipment=self.state.workplace_shipments.get(action_task.get('shipment_uid',''))
+            if shipment is not None:uid=shipment.source_uid
+        if not uid:return True
+        container=next((c for c in self.state.containers.values() if c.uid==uid),None)
+        if container is None or not container.interior_space_id or self.in_reach(npc,container):return True
+        steps=self.transfer_tasks(npc,container,action_task.get('action',''),action_task.get('items',{}))
+        if not steps:return False
+        action_task.update(storage_task=True,container_uid=container.uid)
+        if task.get('kind')=='move':
+            task.update(steps[0]);task.pop('_local_path',None);task.pop('_local_path_goal',None)
+        elif npc.uid not in self.state.interior_actors:
+            npc.tasks.insert(0,steps[0])
+            return False
+        return True
 
     def _interior_target(self, npc, container):
         if self.interiors is None or container.property_id not in {npc.home_id, npc.workplace_id}:

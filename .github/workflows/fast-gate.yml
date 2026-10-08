@@ -98,7 +98,11 @@ jobs:
 
       - name: Functional home furniture and storage
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui
+        run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_indoor_building_storage tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui
+
+      - name: Audit every building facade
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Building asset geometry" --timeout 90 -- python -u tools/audit_building_assets.py --output dist/building-audit
 
       - name: Biome atlas regressions
         shell: pwsh

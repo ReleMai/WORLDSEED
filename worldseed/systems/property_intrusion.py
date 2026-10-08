@@ -101,13 +101,8 @@ class PropertyStorageSystem:
         return WorldPos(x,y,0),room.uid
 
     def _service_storage_position(self,structure,ignore_uid:str=""):
-        """Move existing workshop cargo to its stable exterior service court.
-
-        Exact workers continue using original fixtures and labor reservations
-        through the frontage while interior activity migration is in progress.
-        No second container, inventory, road or production authority is created.
-        """
-        if structure.function=="residence":return None
+        """Open yards alone may use a service court, never an actual road cell."""
+        if structure.enclosed:return None
         frontage_lookup=getattr(self.physicalization,"frontage_for",None)
         frontage=frontage_lookup(structure.uid) if callable(frontage_lookup) else None
         if frontage is None:return None
@@ -129,6 +124,7 @@ class PropertyStorageSystem:
                     environment=getattr(world,"environment_at",None)
                     if callable(environment) and bool(getattr(environment(pos),"open_water",False)):continue
             cell=self.physicalization.cell_at(pos)
+            if cell is not None and cell.road_ids:continue
             candidates.append((1 if cell is not None and cell.road_ids else 0,pos.y,pos.x,pos))
         return min(candidates,key=lambda r:r[:3])[3] if candidates else None
 
@@ -169,7 +165,10 @@ class PropertyStorageSystem:
             if actor.space_id in space_ids:
                 occupants.setdefault(actor.space_id,[]).append(actor)
         furniture_stores={}
+        building_stores={}
         for container in self.state.containers.values():
+            if container.property_id and container.kind in {'property','workplace'}:
+                building_stores.setdefault(container.property_id,[]).append(container)
             if container.uid.startswith('furniture-storage:'):
                 furniture_stores.setdefault(container.property_id,[]).append(container)
         created=reserved=eligible=0
@@ -183,7 +182,7 @@ class PropertyStorageSystem:
             owner=self.civics.owner_for_structure(town.uid,structure.uid) or town.uid
             # The original primary UID is retained for existing logistics and
             # keys. Additional indoor storage has its own stable slot identity.
-            slots=[(f"property-storage:{structure.uid}",profile.primary,not profile.outside,profile.stock)]
+            slots=[(f"property-storage:{structure.uid}",profile.primary,bool(structure.enclosed),profile.stock)]
             if getattr(structure,"enclosed",False):
                 slots += [(f"property-storage:{structure.uid}:inside:{uid.split(':',1)[-1]}",uid,True,())
                           for uid in profile.inside]
@@ -240,6 +239,12 @@ class PropertyStorageSystem:
                     interior_furniture_uid="storage-furniture:"+uid if indoors else "",
                 )
                 created+=1
+            # Older miner/workplace bins also keep their stable identity and
+            # contents, but no longer occupy a road or frontage tile.
+            from worldseed.systems.building_storage import move_storage_indoors
+            for container in building_stores.get(structure.uid,()):
+                if not container.interior_space_id:
+                    move_storage_indoors(self.state,container,structure)
             plan=self.state.interiors.get("interior:"+structure.uid)
             # Furniture inventories follow the same property owner; their
             # saved floor, contents, locks and furniture identity stay intact.

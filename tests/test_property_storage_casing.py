@@ -166,7 +166,7 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertTrue(any(c.lock_level>0 and c.locked for c in containers))
         self.assertTrue(any(c.lock_level==0 and not c.locked for c in containers))
 
-    def test_prepared_workshop_retains_reachable_service_storage_and_real_goods(self):
+    def test_prepared_workshop_retains_reachable_indoor_storage_and_real_goods(self):
         from worldseed.systems.interiors import InteriorSystem
         base,security=self._security_fixture()
         state,town,physical,_,_,_,storage,building,_,_,_=base
@@ -182,14 +182,19 @@ class PropertyStorageCasingTests(unittest.TestCase):
         self.assertIsNotNone(plan)
         storage.sync_active()
         self.assertEqual(town.stocks,stocks_before)
-        self.assertEqual({c.uid:dict(c.items) for c in state.containers.values()},contents_before)
+        self.assertTrue(all(c.items==contents_before.get(c.uid,{}) for c in state.containers.values()))
+        self.assertLessEqual(set(contents_before),{c.uid for c in state.containers.values()})
         self.assertIs(storage.by_id(container.uid),container)
         self.assertEqual((container.x,container.y,container.z),location_before)
-        self.assertFalse(physical.shell_blocks(WorldPos(*location_before)))
+        self.assertEqual(container.interior_space_id,plan.uid)
         inv=Inventory();messages=[]
         harness=SimpleNamespace(state=state,settlement_physicalization=physical,building=building,
-            property_storage=storage,player_pos=frontage,entities=SimpleNamespace(get=lambda *_:inv),_message=messages.append)
+            property_storage=storage,interiors=sim.interiors,player_pos=frontage,entities=SimpleNamespace(get=lambda *_:inv),_message=messages.append)
         harness._command_container=lambda uid:Simulation._command_container(harness,uid)
+        self.assertIsNone(harness._command_container(container.uid))
+        from worldseed.systems.interior_state import InteriorActor
+        fixture=next(f for f in plan.furniture if f.uid==container.interior_furniture_uid)
+        sim.interiors._put_actor('player',InteriorActor(plan.uid,*sim.interiors.fixture_use_position(plan,fixture)))
         self.assertIs(harness._command_container(container.uid),container)
         item,quantity=next(iter(container.items.items()))
         # Reachability does not bypass the original container's ownership.

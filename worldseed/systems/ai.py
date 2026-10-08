@@ -389,6 +389,7 @@ class NPCSystem:
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos,*,allow_interior_activity:bool=False)->None:
         if not npc.tasks:return
         if self._inside(npc) and not (allow_interior_activity and (npc.tasks[0].get("kind")=="activity" or npc.tasks[0].get('storage_task'))):return
+        if self.storage_access is not None and not self.storage_access.repair_indoor_route(npc):return
         task=npc.tasks[0]
         if task['kind']=='move':
             # Persisted rest walks may still aim at the former tiled bedroom or

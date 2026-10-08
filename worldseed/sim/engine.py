@@ -214,6 +214,7 @@ class Simulation:
             system.storage_access=self.npc_storage
             system.commerce=self.npc_commerce
         self.households.storage_access=self.npc_storage
+        self.workplace_logistics.storage_access=self.npc_storage
         self.households.commerce=self.npc_commerce
         self.households.active_carrier=lambda npc:self.npcs._tick_managed(npc,self.player_pos)
         self.casing=CasingSystem(

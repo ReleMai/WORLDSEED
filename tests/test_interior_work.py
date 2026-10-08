@@ -51,6 +51,9 @@ class InteriorWorkshopTests(unittest.TestCase):
         ai.attach_profession_system(professions)
         ai.attach_interior_system(sim.interiors)
         sim.npcs = ai
+        from worldseed.systems.npc_home_storage import NPCStorageAccess
+        access=NPCStorageAccess(sim.state,sim.world,physical,sim.interiors,goods)
+        ai.storage_access=access;professions.storage_access=access
         storage = professions._work_storage(npc, town)
         storage.items["core:iron_ore"] = 2
         storage.items["core:coal"] = 1
