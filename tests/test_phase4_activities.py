@@ -171,7 +171,7 @@ class Phase4ActivityTests(unittest.TestCase):
         ai.generate_plan(other, town, 600, "work")
         # A busy station now sends the actor to the real workplace to wait;
         # it still cannot bypass the reservation with abstract ghost work.
-        self.assertEqual(other.tasks[0], {"kind":"move", "x":10, "y":9})
+        self.assertEqual(other.tasks[0], {"kind":"move", "x":10, "y":9, "schedule_goal":"work"})
         self.assertEqual(other.tasks[1]["kind"], "wait")
         self.assertFalse(any(t.get("action")=="work" for t in other.tasks))
         for minute in range(605, 630, 5):

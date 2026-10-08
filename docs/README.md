@@ -12,6 +12,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev59 personal NPC schedules and faster simulation](handoffs/DEV59_NPC_SCHEDULES_HANDOFF.md)
 - [Separate NPC/job lab](handoffs/NPC_JOB_LAB_HANDOFF.md)
 - [Dev55 moving residents, equipment and action combat](handoffs/DEV55_LIVING_NPCS_ACTION_COMBAT_HANDOFF.md)
 - [Dev43 diverse living settlements](handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md)

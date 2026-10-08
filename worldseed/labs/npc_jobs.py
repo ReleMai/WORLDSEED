@@ -21,6 +21,7 @@ from worldseed.systems.environment import EnvironmentSystem
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.npc_commerce import NPCCommerceSystem
 from worldseed.systems.npc_home_storage import NPCStorageAccess
+from worldseed.systems.npc_schedule import daily_schedule, schedule_at
 from worldseed.systems.physical_goods import SettlementPhysicalGoodsSystem
 from worldseed.systems.professions import SettlementProfessionSystem
 from worldseed.systems.resources import FeatureView
@@ -480,7 +481,8 @@ class NPCJobLab:
         # Unreachable paths are deliberate in one experiment. Keep explanatory
         # conditions visible without classifying them as conservation failures.
         return [f"No path progress for at least one hour: {npc.name}"
-                for npc in self.state.npcs.values() if self._stalls.get(npc.uid, 0) >= 12]
+                for npc in self.state.npcs.values()
+                if self._stalls.get(npc.uid, 0) * SIMULATION_TICK_MINUTES >= 60]
 
     @staticmethod
     def _task_label(npc):
@@ -495,12 +497,16 @@ class NPCJobLab:
 
     def snapshot(self):
         """Inspect without executing work, cleaning reservations or changing state."""
+        seed = self.seed.encode('utf-8')
         npcs = [dict(
             uid=n.uid, name=n.name, occupation=n.occupation, x=n.x, y=n.y, z=n.z,
             goal=n.goal, task=self._task_label(n), tasks=n.tasks, inventory=n.inventory,
             skills=n.skills, needs=n.needs, hunger=n.hunger, thirst=n.thirst,
             rest=n.rest, wealth=n.wealth, workplace_id=n.workplace_id, home_id=n.home_id,
             process_id=n.assigned_process_id,
+            routine_phase=n.routine_phase,
+            schedule_current=self._schedule_block(schedule_at(n, seed, self.minute)),
+            schedule=[self._schedule_block(block) for block in daily_schedule(n, seed)],
         ) for n in self.state.npcs.values()]
         fixtures = [dict(uid=p.uid, x=p.x, y=p.y,
                          label=self.registry.settlement_pieces[p.piece_id].name,
@@ -519,7 +525,8 @@ class NPCJobLab:
         piles = [dict(x=p.x, y=p.y, z=p.z, items=p.items)
                  for p in self.state.ground_piles.values()]
         return deepcopy(dict(
-            minute=self.minute, scenario=self.scenario, seed=self.seed, workers=self.workers,
+            minute=self.minute, tick_minutes=SIMULATION_TICK_MINUTES,
+            scenario=self.scenario, seed=self.seed, workers=self.workers,
             bounds=list(self.world.bounds), blocked=[list(p) for p in sorted(self.world.blocked)],
             fixtures=fixtures, trees=trees, crops=crops, piles=piles, npcs=npcs, containers=containers,
             market=dict(stocks=self.town.stocks, wealth=self.town.wealth), reservations=reservations,
@@ -531,3 +538,8 @@ class NPCJobLab:
                          cash_total=self._cash_total(), cash_delta=self._cash_total()-self.initial_cash,
                          warnings=self._warnings(), diagnostics=self._diagnostics()), events=list(self.events),
         ))
+
+    @staticmethod
+    def _schedule_block(block):
+        return dict(start_minute=block.start_minute, end_minute=block.end_minute,
+                    activity=block.activity, label=block.label)

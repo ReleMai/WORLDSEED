@@ -43,23 +43,30 @@ optionally writes that same snapshot to `--output`. Exit status is nonzero for
 reported invariant violations or invalid arguments. Waiting for supplies is
 expected in scarcity experiments and is not itself a conservation failure.
 
-The lab begins during the working day. Advances use the configured five-minute
-simulation tick anchored to game time, with hourly needs/decisions. Every job
-keeps its real duration and reservation; changing viewer speed changes how
-quickly ticks are requested, rather than producing extra work per frame.
+The lab begins at 07:00. Each worker follows the same personal daily schedule
+used in the game: meals, work, leisure and sleep vary with the worker's profile,
+skills and needs. Urgent needs can interrupt planned activities. Advances use
+the configured one-minute simulation tick anchored to game time, with hourly
+needs updates and schedule changes on the fixed tick. Every job keeps its real
+duration and reservation; changing viewer speed changes how quickly ticks are
+requested, rather than producing extra work per frame.
 Experiments are limited to seven simulated days per lab instance. Reset starts
 the original scenario and seed again.
 
 ## Observation and controls
 
 The viewer starts paused. Space pauses/resumes, Right advances one tick and R
-resets. The toolbar selects scenarios and speed. Click a worker to inspect its
-goal, queue, cargo, skills, needs and money; click stations/storage for their
-records. Scroll the detail panel for longer queues and inventories. Escape
+resets. The toolbar selects scenarios and speed, expressed in game minutes per
+real second. Normal speed is two game minutes per second, matching the game's
+new default. The higher settings are 8, 24 and 60 game minutes per second.
+Click a worker to inspect its goal, personal timeline, current schedule block,
+queue, cargo, skills, needs and money; click stations/storage for their records.
+Scroll the detail panel for longer queues and inventories. Escape
 closes the lab. The map, inspector and event log read detached snapshots.
 Resizing and inspecting do not advance simulation time.
 
-Reports contain worker task queues, inventories, skills and needs; container
+Reports contain worker timelines, current schedule blocks, task queues,
+inventories, skills and needs; container
 contents; market goods and cash; station reservation records; totals and recent
 events. Goods totals count each current inventory, container and market ledger
 once. Transfers and transactions are audit records, not additional cargo.

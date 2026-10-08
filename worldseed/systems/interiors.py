@@ -20,6 +20,7 @@ from worldseed.systems.interior_templates import profile_for, rooms_for_profile
 from worldseed.systems.workshops import STATION_PIECE_ALIASES
 from worldseed.systems.building_variants import building_variant
 from worldseed.systems.interior_furnishing import furniture_base_piece, furniture_variant, is_bed_piece
+from worldseed.systems.npc_schedule import preferred_goal, schedule_at
 
 
 def furniture_size(piece_id: str) -> tuple[int, int]:
@@ -764,7 +765,6 @@ class InteriorSystem:
         after continuous station arrival. Household routines create no goods.
         """
         minute = int(minute)
-        hour = minute % 1440 // 60
         for uid, actor in tuple(self.state.interior_actors.items()):
             if uid == "player" or actor.last_tick == minute:
                 continue
@@ -781,6 +781,10 @@ class InteriorSystem:
                 npc.thirst = min(100, npc.thirst + elapsed_hours * 5)
                 npc.rest = min(100, npc.rest + elapsed_hours * 2)
                 actor.last_need_minute += elapsed_hours * 60
+            town = self.state.settlements.get(npc.settlement_id)
+            refresh = getattr(getattr(self.sim, "npcs", None), "refresh_schedule", None)
+            if town is not None and callable(refresh):
+                refresh(npc, town, minute)
             if self._storage_tick(npc, actor, plan, minute):
                 continue
             if plan.building_id == npc.workplace_id and (actor.action == "working" or plan.function not in {"residence", "inn", "barracks", "outskirt_camp"}
@@ -788,7 +792,16 @@ class InteriorSystem:
                 self._workplace_tick(npc, actor, plan, minute)
                 continue
             answering = any(t.get("action") == "answer_door" or t.get("door_answer_uid") for t in npc.tasks)
-            leave = bool(npc.tasks) or answering or npc.hunger >= 70 or npc.thirst >= 70 or (7 <= hour < 20 and npc.rest < 50)
+            block = schedule_at(npc, self.sim.seed, minute)
+            scheduled_goal = preferred_goal(npc, self.sim.seed, minute, block)
+            urgent = npc.hunger >= 80 or npc.thirst >= 75 or npc.hp <= 50 or npc.needs.get("health", 0) >= 60
+            # A voluntary recovery walk is allowed to finish even during work
+            # hours. Bed recovery consumes fatigue at the existing half-hour
+            # cadence; once satisfied, a stale rest goal cannot retain them.
+            recovering = npc.goal == "rest" and npc.rest > 0
+            sleeping = block.activity == "sleep" or npc.rest >= 80 or recovering
+            domestic = sleeping or scheduled_goal == "rest"
+            leave = bool(npc.tasks) or answering or urgent or not domestic
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
             if distant:
                 # Tier-C does not replay household locomotion indefinitely.
@@ -800,7 +813,6 @@ class InteriorSystem:
                     npc.x, npc.y, npc.z = landing.x, landing.y, landing.z
                     self._remove_actor(uid)
                 continue
-            sleeping = npc.rest >= 45 or hour >= 22 or hour < 6
             desired_floor = 0 if leave or not sleeping else self._sleep_floor(npc, plan).floor_index
             if self._household_floor_step(npc, actor, plan, desired_floor):
                 continue
@@ -814,7 +826,10 @@ class InteriorSystem:
                         npc.x, npc.y, npc.z = landing.x, landing.y, landing.z
                         self._remove_actor(uid)
                     continue
-            elif not actor.waypoints:
+            elif actor.action in {"resting", "relaxing"} and actor.action != ("resting" if sleeping else "relaxing"):
+                actor.waypoints.clear()
+                actor.target_x = actor.target_y = None
+            if not leave and not actor.waypoints:
                 phase = minute // 30
                 candidates = [f for f in plan.furniture if is_bed_piece(f.piece_id)] if sleeping else [f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair", "table", "bench"))]
                 candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None)

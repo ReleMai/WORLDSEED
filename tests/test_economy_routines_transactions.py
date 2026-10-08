@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-from worldseed.config import DATA_DIR
+from worldseed.config import DATA_DIR, SIMULATION_TICK_MINUTES
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory
@@ -10,6 +10,7 @@ from worldseed.sim.engine import Simulation
 from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.ai import NPCSystem
 from worldseed.systems.economy import EconomySystem
+from worldseed.systems.npc_schedule import daily_schedule
 from worldseed.systems.state import CultureState, LivingWorldState, NPCState, SettlementState
 
 
@@ -47,8 +48,9 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         return state,town,economy
 
     def test_phase4_fixed_tick_boundaries_are_absolute_and_bounded(self):
-        self.assertEqual(list(crossed_simulation_ticks(1,14)),[5,10])
-        self.assertEqual(list(crossed_simulation_ticks(10,15)),[15])
+        self.assertEqual(SIMULATION_TICK_MINUTES,1)
+        self.assertEqual(list(crossed_simulation_ticks(1,14)),list(range(2,15)))
+        self.assertEqual(list(crossed_simulation_ticks(10,15)),list(range(11,16)))
         self.assertEqual(list(crossed_simulation_ticks(15,15)),[])
         self.assertTrue(should_replay_active_ticks(360))
         self.assertFalse(should_replay_active_ticks(361))
@@ -102,7 +104,7 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
         sim.npcs=SimpleNamespace(tick_update=lambda minute,player:calls.append(minute))
         sim._update_vitals=lambda minutes:None
         Simulation._advance_time(sim,12)
-        self.assertEqual(calls,[5,10])
+        self.assertEqual(calls,list(range(1,13)))
         self.assertEqual(sim.clock.minute,12)
         self.assertEqual(sim.state.clock_minute,12)
 
@@ -152,9 +154,10 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
             faction_id=town.faction_id,
         )
         ai=NPCSystem(state,b'routine-test',NullHistory())
-        self.assertGreater(ai._routine_bias(npc,10*60)['work'],0)
-        self.assertGreater(ai._routine_bias(npc,18*60)['eat'],0)
-        self.assertGreater(ai._routine_bias(npc,23*60)['rest'],0)
+        blocks=daily_schedule(npc,ai.seed)
+        for activity,goal in (("work","work"),("meal","eat"),("sleep","rest")):
+            block=next(row for row in blocks if row.activity==activity)
+            self.assertGreater(ai._routine_bias(npc,(block.start_minute+block.end_minute)//2)[goal],0)
         guard=NPCState(
             uid='npc:guard',name='Guard',age=30,occupation='guard',
             traits=[],x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,

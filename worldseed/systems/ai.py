@@ -5,6 +5,7 @@ from worldseed.systems.state import LivingWorldState, NPCState
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.pathfinding import local_path
 from worldseed.systems.household_economy import FOODS
+from worldseed.systems.npc_schedule import preferred_goal, schedule_at
 
 class NPCSystem:
     # Explicit local durations release completed routines on simulation ticks.
@@ -26,6 +27,7 @@ class NPCSystem:
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
         self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
         self.storage_access=None;self.commerce=None
+        self._schedule_blocks={}
         self._npc_spatial_buckets={};self._npc_spatial_positions={}
         self.rebuild_spatial_index()
 
@@ -45,6 +47,8 @@ class NPCSystem:
     def rebuild_spatial_index(self)->None:
         """Explicit startup/activation preparation only, never a UI query."""
         self._npc_spatial_buckets.clear();self._npc_spatial_positions.clear()
+        self._schedule_blocks={uid:token for uid,token in self._schedule_blocks.items()
+                               if uid in self.state.npcs and self.state.npcs[uid].alive}
         for npc in self.state.npcs.values():self._index_npc(npc)
 
     def _indexed_npcs(self):
@@ -137,10 +141,16 @@ class NPCSystem:
         fast-forwards may request execute_active to retain bounded legacy
         coarse progress instead of replaying every exact local tick.
         """
+        for uid in tuple(self._schedule_blocks):
+            actor=self.state.npcs.get(uid)
+            if actor is None or not actor.alive:self._schedule_blocks.pop(uid,None)
         if self.activities is not None:self.activities.cleanup(minute)
         provisioned_towns=set()
         for npc in self._indexed_npcs():
-            if not npc.alive or self._inside(npc):continue
+            if not npc.alive:
+                self._schedule_blocks.pop(npc.uid,None)
+                continue
+            if self._inside(npc):continue
             tier=None
             if self.lod is not None:
                 tier=self.lod.npc_tier(player_pos,npc)
@@ -150,6 +160,7 @@ class NPCSystem:
             if not town:continue
             self._advance_needs(npc,town)
             if not npc.home_id:self._assign_property(npc,town)
+            self.refresh_schedule(npc,town,minute)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
             active=self._tick_managed(npc,player_pos)
             if active and town.uid not in provisioned_towns:
@@ -173,12 +184,14 @@ class NPCSystem:
         if self.activities is not None:self.activities.cleanup(minute)
         # This is the single interior routine clock. Rendering may interpolate
         # presentation but cannot execute domestic actions or move residents.
+        interior_start=set(getattr(self.state,"interior_actors",{})) if self.interiors is not None else set()
         if self.interiors is not None:self.interiors.tick_update(minute)
         for npc in self._indexed_npcs():
-            if not npc.alive or self._inside(npc) or not self._tick_managed(npc,player_pos):continue
+            if not npc.alive or npc.uid in interior_start or self._inside(npc) or not self._tick_managed(npc,player_pos):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
+            self.refresh_schedule(npc,town,minute)
             if not npc.tasks:self._choose_goal_and_plan(npc,town,minute)
             # Timed domestic routines release their next walk on this tick;
             # productive work remains on its own duration/reservation authority.
@@ -204,61 +217,96 @@ class NPCSystem:
             if target is not None:return target
         return WorldPos(int(town.x),int(town.y),0)
 
-    def _routine_bias(self,npc:NPCState,minute:int)->dict[str,int]:
-        """Soft daily rhythm. Urgent needs still override these preferences."""
-        hour=(int(minute)%1440)//60
-        out={"eat":0,"rest":0,"work":0,"socialize":0,"guard":0,"worship":0,"learn":0}
-        if npc.age<16:
-            if 8<=hour<15:out["learn"]+=55
-            if 16<=hour<20:out["socialize"]+=45
-            if hour>=21 or hour<7:out["rest"]+=100
-            return out
-        if npc.occupation=="guard":
-            shift=int(hash_u64(self.seed,"guard-shift",npc.uid)%3)
-            start=(0,8,16)[shift]
-            active=((hour-start)%24)<8
-            if active:out["guard"]+=90
-            else:out["rest"]+=35
-        else:
-            start,end={
-                "farmer":(6,15),"herder":(6,15),"merchant":(8,18),
-                "healer":(7,18),"scholar":(9,17),"priest":(7,15),
-                "miner":(7,16),"lumberjack":(6,15),"carpenter":(7,16),
-                "smith":(7,16),"cook":(6,18),"hunter":(6,14),
-            }.get(npc.occupation,(8,17))
-            if start<=hour<end:out["work"]+=55
-        if hour in (7,12,18):out["eat"]+=55
-        if 18<=hour<21:
-            out["socialize"]+=45
-            if npc.occupation=="priest" or npc.needs.get("faith",0)>45:out["worship"]+=35
-        if npc.occupation=="scholar" and 17<=hour<20:out["learn"]+=35
-        if hour>=22 or hour<6:out["rest"]+=105
+    def _routine_bias(self,npc:NPCState,minute:int,block=None,goal:str|None=None)->dict[str,int]:
+        """Personal timeline preferences; urgent needs retain priority."""
+        block=block or schedule_at(npc,self.seed,minute)
+        goal=goal or preferred_goal(npc,self.seed,minute,block)
+        out={key:0 for key in ("eat","drink","rest","work","socialize","guard","worship","learn","heal")}
+        bonus={"work":55,"guard":90,"school":165,"meal":120,"sleep":220,
+               "leisure":150,"personal":150}[block.activity]
+        out[goal]=bonus
         return out
+
+    def _urgent_goals(self,npc:NPCState,town)->set[str]:
+        goals=set()
+        if npc.hunger>=80:goals.add("eat")
+        if npc.thirst>=75:goals.add("drink")
+        if npc.rest>=80:goals.add("rest")
+        if npc.hp<=50 or npc.needs.get("health",0)>=60:goals.add("heal")
+        if npc.hunger>=85 and npc.wealth<=1 and ("greedy" in npc.traits or town.food_stress>=70):goals.add("steal")
+        return goals
+
+    def _protected_plan(self,npc:NPCState)->bool:
+        """Finish a reserved batch, cargo transfer or paid trade before replanning.
+
+        Timelines never own goods or station reservations. Those authorities
+        keep their current chain until its existing completion/deposit path runs.
+        """
+        if self.mining is not None and self.mining.has_active_trip(npc):return True
+        for task in npc.tasks:
+            if any(task.get(key) for key in ("profession_task","commerce_task","storage_task",
+                    "reservation_uid","trip_uid","delivery_uid","shipment_uid","door_answer_uid")):
+                return True
+            if task.get("action")=="answer_door":return True
+            if (task.get("kind")=="perform" and task.get("action") in
+                    {"work","eat","heal","learn","steal","guard","territory_guard"}
+                    and "started_minute" in task):return True
+        return False
+
+    def refresh_schedule(self,npc:NPCState,town,minute:int)->None:
+        """Reconsider safe routines at a phase boundary or an urgent need.
+
+        This fixed-tick check does not advance needs or execute economic effects.
+        The first observation keeps an existing save's plan until its next
+        boundary, while urgent needs can redirect an ordinary domestic walk.
+        """
+        block=schedule_at(npc,self.seed,minute)
+        token=(int(minute)//1440,block.start_minute,block.end_minute,block.activity)
+        previous=self._schedule_blocks.get(npc.uid)
+        self._schedule_blocks[npc.uid]=token
+        if not npc.tasks or self._protected_plan(npc):return
+        planned=next((str(task["schedule_goal"]) for task in npc.tasks if task.get("schedule_goal")),"")
+        # Unmarked/legacy tasks may be an explicit caller/player plan rather
+        # than a scheduled AI routine. Finish that bounded plan before taking
+        # ownership; the default NPC goal alone is not evidence of ownership.
+        if not planned:return
+        urgent=self._urgent_goals(npc,town)
+        changed=previous is not None and previous!=token
+        if not changed and not (urgent and planned not in urgent):return
+        goal,_=self.select_utility_goal(npc,town,minute)
+        if goal==planned:return
+        if self.activities is not None:self.activities.cancel_actor(npc.uid,minute)
+        npc.tasks.clear()
+        if not self._inside(npc):self.generate_plan(npc,town,minute,goal)
 
     def select_utility_goal(self,npc:NPCState,town,minute:int)->tuple[str,int]:
         war=bool(self.state.factions.get(npc.faction_id).at_war) if npc.faction_id in self.state.factions else False
         needs=npc.needs
-        routine=self._routine_bias(npc,minute)
+        block=schedule_at(npc,self.seed,minute)
+        scheduled_goal=preferred_goal(npc,self.seed,minute,block)
+        routine=self._routine_bias(npc,minute,block,scheduled_goal)
         scores={
             "eat":npc.hunger*3+routine["eat"],
-            "drink":npc.thirst*4,
+            "drink":npc.thirst*4+routine["drink"],
             "rest":npc.rest*2+routine["rest"]+(80 if npc.rest>=80 else 0),
-            "work":((65+(25 if "ambitious" in npc.traits else 0)-npc.hunger)+routine["work"]) if npc.workplace_id else 10,
+            "work":((65+(25 if "ambitious" in npc.traits else 0)-npc.hunger)+routine["work"]) if npc.workplace_id and block.activity=="work" else 0,
             "socialize":needs.get("social",0)*2+(15 if "kind" in npc.traits else 0)+routine["socialize"],
-            "guard":((50 if npc.occupation=="guard" else 0)+(35 if war else 0)+routine["guard"]),
-            "heal":max((100-npc.hp)*4,needs.get("health",0)*3),
-            "worship":(needs.get("faith",0)*2+routine["worship"]) if npc.occupation=="priest" or needs.get("faith",0)>55 else 0,
-            "learn":(needs.get("learning",0)*2+routine["learn"]) if npc.occupation=="scholar" or "curious" in npc.traits or npc.age<16 else 0,
+            "guard":((50 if npc.occupation=="guard" else 0)+(35 if war else 0)+routine["guard"]) if block.activity=="guard" else 0,
+            "heal":max((100-npc.hp)*4,needs.get("health",0)*3)+routine["heal"],
+            "worship":(needs.get("faith",0)*2+routine["worship"]) if npc.occupation=="priest" or needs.get("faith",0)>55 or scheduled_goal=="worship" else 0,
+            "learn":(needs.get("learning",0)*2+routine["learn"]) if npc.occupation=="scholar" or "curious" in npc.traits or npc.age<16 or scheduled_goal=="learn" else 0,
         }
         if npc.hunger>=80:scores["eat"]+=90
         if npc.thirst>=75:scores["drink"]+=100
         if npc.hunger>=85 and npc.wealth<=1 and ("greedy" in npc.traits or town.food_stress>=70):
             scores["steal"]=npc.hunger*3+25
-        best=max(scores,key=scores.get);best_score=scores[best]
+        urgent=self._urgent_goals(npc,town)
+        eligible=urgent or scores.keys()
+        best=max(eligible,key=lambda key:(scores[key],key));best_score=scores[best]
         # Hysteresis compares today's utility, never the historical peak. A
         # satisfied thirst/sleep goal must release the actor to their next need.
         current_score=scores.get(npc.goal,0)
-        if npc.goal in scores and current_score*110//100>=best_score:
+        if npc.goal in eligible and current_score*110//100>=best_score:
             best=npc.goal;best_score=current_score
         npc.goal=best;npc.goal_score=best_score
         return best,best_score
@@ -266,6 +314,11 @@ class NPCSystem:
     def generate_plan(self,npc:NPCState,town,minute:int,goal:str|None=None)->None:
         if self._inside(npc):return
         goal=npc.goal if goal is None else goal
+        self._generate_plan(npc,town,minute,goal)
+        for task in npc.tasks:task["schedule_goal"]=goal
+
+    def _generate_plan(self,npc:NPCState,town,minute:int,goal:str)->None:
+        if self._inside(npc):return
         center=WorldPos(int(town.x),int(town.y),0)
         if goal=="work":
             ensure_assignments=getattr(self.economy,"ensure_work_assignments",None)

@@ -11,9 +11,11 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from worldseed.config import SIMULATION_TICK_MINUTES
 from worldseed.core.coords import WorldPos
 from worldseed.labs.npc_jobs import MAX_MINUTES, NPCJobLab, SCENARIOS, START_MINUTE
 from worldseed.systems.household_economy import FOODS
+from worldseed.systems.npc_schedule import daily_schedule, schedule_at
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,7 +70,7 @@ class NPCJobLabTests(unittest.TestCase):
         seen_home_wood = False
         positions = set()
 
-        for _ in range(180):
+        for _ in range(900 // SIMULATION_TICK_MINUTES):
             lab.step()
             positions.add((logger.x, logger.y, logger.z))
             seen_carried_wood |= logger.inventory.get("core:wood", 0) > 0
@@ -110,7 +112,7 @@ class NPCJobLabTests(unittest.TestCase):
                 first = NPCJobLab(scenario=scenario, seed="repeatable-job-lab", workers=2)
                 second = NPCJobLab(scenario=scenario, seed="repeatable-job-lab", workers=2)
                 first.run(600)
-                second.step(120)
+                second.step(600 // SIMULATION_TICK_MINUTES)
                 self.assertEqual(first.snapshot(), second.snapshot())
                 self.assertEqual(first.state.to_dict(), second.state.to_dict())
                 self.assertTrue(all(
@@ -145,6 +147,31 @@ class NPCJobLabTests(unittest.TestCase):
         contaminate(snapshot)
         self.assertEqual(lab.snapshot(), expected)
         self.assertEqual(lab.state.to_dict(), state_before)
+
+    def test_snapshot_exposes_the_shared_personal_timeline_without_updating_routines(self):
+        lab = NPCJobLab(scenario="workshops", seed="lab-personal-timelines")
+        before = lab.state.to_dict()
+        snapshot = lab.snapshot()
+        self.assertEqual(snapshot["tick_minutes"], SIMULATION_TICK_MINUTES)
+        for record in snapshot["npcs"]:
+            npc = lab.state.npcs[record["uid"]]
+            blocks = daily_schedule(npc, lab.seed.encode("utf-8"))
+            self.assertEqual(record["schedule"], [
+                dict(start_minute=b.start_minute, end_minute=b.end_minute,
+                     activity=b.activity, label=b.label) for b in blocks
+            ])
+            current = schedule_at(npc, lab.seed.encode("utf-8"), lab.minute)
+            self.assertEqual(record["schedule_current"]["activity"], current.activity)
+            self.assertEqual(record["routine_phase"], npc.routine_phase)
+        self.assertEqual(lab.state.to_dict(), before)
+
+    def test_path_stall_diagnostic_uses_elapsed_game_minutes(self):
+        lab = NPCJobLab(scenario="blocked_path")
+        npc = next(iter(lab.state.npcs.values()))
+        lab._stalls[npc.uid] = 60 // SIMULATION_TICK_MINUTES - 1
+        self.assertEqual(lab.snapshot()["metrics"]["diagnostics"], [])
+        lab._stalls[npc.uid] += 1
+        self.assertIn(npc.name, lab.snapshot()["metrics"]["diagnostics"][0])
 
     def test_scarcity_blocks_crafting_without_inventing_inputs_or_output(self):
         lab = NPCJobLab(scenario="scarcity", seed="scarce-inputs", workers=2)
@@ -218,7 +245,7 @@ class NPCJobLabTests(unittest.TestCase):
     def test_blocked_work_is_diagnostic_without_failing_invariants(self):
         lab = NPCJobLab(scenario="blocked_path", seed="expected-path-stall")
         saw_stall = False
-        for _ in range(180):
+        for _ in range(900 // SIMULATION_TICK_MINUTES):
             metrics = lab.step()["metrics"]
             self.assertEqual(metrics["warnings"], [])
             saw_stall |= any("No path progress" in message for message in metrics["diagnostics"])
@@ -236,7 +263,8 @@ class NPCJobLabTests(unittest.TestCase):
         for npc in eaters:
             npc.hunger = 90
             npc.tasks = [dict(kind="perform", action="eat",
-                              started_minute=lab.minute - 60, complete_minute=lab.minute + 5)]
+                              started_minute=lab.minute - 60,
+                              complete_minute=lab.minute + SIMULATION_TICK_MINUTES)]
         metrics = lab.step()["metrics"]
         self.assertEqual(metrics["consumed"], {"core:bread": len(eaters)})
         self.assertEqual(len(lab.state.market_transactions), len(eaters) - 1)
@@ -253,7 +281,7 @@ class NPCJobLabTests(unittest.TestCase):
             self.assertFalse(lab.world.is_passable(WorldPos(4, y, 0)))
         initial_bowls = goods(lab, "core:wooden_bowl")
         previous = (carpenter.x, carpenter.y, carpenter.z)
-        for _ in range(180):
+        for _ in range(900 // SIMULATION_TICK_MINUTES):
             lab.step()
             current = (carpenter.x, carpenter.y, carpenter.z)
             self.assertLess(carpenter.x, 4)
@@ -267,7 +295,7 @@ class NPCJobLabTests(unittest.TestCase):
         workers = [n for n in lab.state.npcs.values() if n.occupation == "carpenter"]
         self.assertGreaterEqual(len(workers), 2)
         saw_active_work = False
-        for _ in range(180):
+        for _ in range(900 // SIMULATION_TICK_MINUTES):
             lab.step()
             reservations = [r for r in lab.state.activity_reservations.values() if r.status in {"reserved", "active"}]
             targets = [r.target_uid for r in reservations]
@@ -287,11 +315,15 @@ class NPCJobLabTests(unittest.TestCase):
         lab = NPCJobLab()
         lab.step()
         before = lab.snapshot()
-        for minutes in (-5, 1, 5.0, True, "5", 7 * 1440, 7 * 1440 + 5):
+        invalid_minutes = [-SIMULATION_TICK_MINUTES, 5.0, True, "5", MAX_MINUTES,
+                           MAX_MINUTES + SIMULATION_TICK_MINUTES]
+        if SIMULATION_TICK_MINUTES > 1:
+            invalid_minutes.append(SIMULATION_TICK_MINUTES - 1)
+        for minutes in invalid_minutes:
             with self.subTest(minutes=minutes), self.assertRaises((TypeError, ValueError)):
                 lab.run(minutes)
             self.assertEqual(lab.snapshot(), before)
-        for ticks in (-1, True, 1.5, "1", 7 * 1440 // 5):
+        for ticks in (-1, True, 1.5, "1", MAX_MINUTES // SIMULATION_TICK_MINUTES):
             with self.subTest(ticks=ticks), self.assertRaises((TypeError, ValueError)):
                 lab.step(ticks)
             self.assertEqual(lab.snapshot(), before)
@@ -346,7 +378,7 @@ class NPCJobLabCLITests(unittest.TestCase):
 
     def test_headless_rejects_invalid_duration_with_nonzero_exit(self):
         result = subprocess.run(
-            [sys.executable, "-m", "worldseed.labs.npc_job_cli", "--headless", "--minutes", "1"],
+            [sys.executable, "-m", "worldseed.labs.npc_job_cli", "--headless", "--minutes", "-1"],
             cwd=ROOT, capture_output=True, text=True, timeout=15,
         )
         self.assertNotEqual(result.returncode, 0)
@@ -385,6 +417,26 @@ class NPCJobLabViewerTests(unittest.TestCase):
                 self.assertEqual(lab.state.to_dict(), state_before)
                 self.assertEqual(lab.snapshot(), snapshot_before)
 
+    def test_worker_inspector_displays_current_block_and_complete_timeline(self):
+        from worldseed.labs.npc_job_viewer import _Renderer
+
+        lab = NPCJobLab(scenario="workshops", seed="viewer-timeline")
+        before = lab.state.to_dict()
+        snapshot = lab.snapshot()
+        worker = snapshot["npcs"][0]
+        renderer = _Renderer(self.pygame.Surface((1180, 760)), snapshot, worker["uid"])
+        with patch.object(renderer, "scroll_lines", return_value=0) as scroll_lines:
+            renderer.draw_inspector(self.pygame.Rect(0, 0, 380, 760))
+        text = "\n".join(row[0] for row in scroll_lines.call_args.args[1])
+        self.assertIn("PERSONAL TIMELINE", text)
+        self.assertIn("Scheduled now: " + worker["schedule_current"]["label"], text)
+        self.assertIn("Routine phase:", text)
+        for block in worker["schedule"]:
+            start, end = block["start_minute"], block["end_minute"]
+            self.assertIn(f"{start // 60:02d}:{start % 60:02d}–{end // 60:02d}:{end % 60:02d}", text)
+            self.assertIn(block["label"], text)
+        self.assertEqual(lab.state.to_dict(), before)
+
     def test_paused_update_resize_and_single_step_have_explicit_time_effects(self):
         lab = NPCJobLab(seed="viewer-controls")
         viewer = self.viewer_class(lab)
@@ -402,10 +454,37 @@ class NPCJobLabViewerTests(unittest.TestCase):
         viewer.update(2.0)
         self.assertEqual(lab.snapshot(), expected.snapshot())
 
+    def test_normal_viewer_speed_matches_two_game_minutes_per_real_second(self):
+        lab = NPCJobLab(seed="viewer-game-cadence")
+        viewer = self.viewer_class(lab)
+        self.assertEqual(viewer.speed, 2)
+        viewer.running = True
+        for _ in range(4):
+            viewer.update(0.25)
+        expected = NPCJobLab(seed="viewer-game-cadence")
+        expected.run(2)
+        self.assertEqual(lab.snapshot(), expected.snapshot())
+
+    def test_viewer_speed_is_independent_of_simulation_tick_duration(self):
+        from types import SimpleNamespace
+
+        lab = SimpleNamespace(minute=START_MINUTE)
+        def step(*, ticks):
+            lab.minute += ticks * 5
+        lab.step = step
+        viewer = self.viewer_class(lab)
+        viewer.running = True
+        with patch("worldseed.labs.npc_job_viewer.SIMULATION_TICK_MINUTES", 5):
+            for _ in range(9):
+                viewer.update(0.25)
+            self.assertEqual(lab.minute, START_MINUTE)
+            viewer.update(0.25)
+            self.assertEqual(lab.minute, START_MINUTE + 5)
+
     def test_manual_step_at_limit_pauses_and_reset_restores_original_experiment(self):
         lab = NPCJobLab(seed="viewer-manual-limit")
         initial = lab.snapshot()
-        lab.state.clock_minute = START_MINUTE + MAX_MINUTES - 5
+        lab.state.clock_minute = START_MINUTE + MAX_MINUTES - SIMULATION_TICK_MINUTES
         viewer = self.viewer_class(lab)
         right = self.pygame.event.Event(self.pygame.KEYDOWN, key=self.pygame.K_RIGHT)
         viewer.handle_event(right)
@@ -421,7 +500,7 @@ class NPCJobLabViewerTests(unittest.TestCase):
 
     def test_automatic_update_advances_remaining_tick_then_pauses_at_limit(self):
         lab = NPCJobLab(seed="viewer-auto-limit")
-        lab.state.clock_minute = START_MINUTE + MAX_MINUTES - 5
+        lab.state.clock_minute = START_MINUTE + MAX_MINUTES - SIMULATION_TICK_MINUTES
         viewer = self.viewer_class(lab)
         viewer.speed = 30
         viewer.running = True

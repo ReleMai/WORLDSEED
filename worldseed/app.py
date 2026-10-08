@@ -22,7 +22,7 @@ from worldseed.systems.dialogue import DialogueSystem
 from worldseed.systems.workshops import WORKSHOP_PROFILES, STATION_PIECE_ALIASES, recipes_for_station, profile_dict
 from worldseed.world.region_blocks import RegionBlockPlanner
 from worldseed.ui.renderer import Renderer
-from worldseed.ui.npc_activity import activity_label, possessions_rows
+from worldseed.ui.npc_activity import activity_label, possessions_rows, schedule_label, timeline_rows
 from worldseed.ui.combat_range import ranged_overlay, melee_overlay
 from worldseed.ui.screens import *
 from worldseed.ui.terminal import Terminal
@@ -1911,6 +1911,10 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         for key in ('birthplace','upbringing','formative_event','ambition'):
             if npc.backstory.get(key):
                 overview.append((key.replace('_',' ').title(),str(npc.backstory[key]).capitalize()))
+    summary['schedule']=schedule_label(npc,getattr(sim,'seed',b''),sim.state.clock_minute)
+    overview.append(('Scheduled now',summary['schedule']))
+    overview.append(('Personal timeline','Needs and urgent situations can interrupt these plans'))
+    overview.extend(timeline_rows(npc,getattr(sim,'seed',b'')))
     tabs['overview']=overview
     registry=getattr(sim,'registry',None)
     if registry is not None:tabs['belongings']=possessions_rows(npc,registry)

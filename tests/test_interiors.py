@@ -199,7 +199,17 @@ class InteriorPortalTests(unittest.TestCase):
         self.assertIn("You enter", sim.interiors.enter(door.uid))
         self.assertEqual(sim.interiors.current_plan().building_id, house.uid)
         self.assertEqual(stocks, {uid: dict(t.stocks) for uid, t in sim.state.settlements.items()})
-        self.assertEqual(containers, {uid: dict(c.items) for uid, c in sim.state.containers.items()})
+        prepared = {uid: dict(c.items) for uid, c in sim.state.containers.items()}
+        for uid, items in containers.items():
+            self.assertIn(uid, prepared)
+            self.assertEqual(items, prepared[uid])
+        # Preparing a furnished interior registers empty physical storage.
+        # Existing inventories and all goods must remain unchanged.
+        for uid in prepared.keys() - containers.keys():
+            self.assertEqual(prepared[uid], {})
+        sim.interiors.exit()
+        self.assertIn("You enter", sim.interiors.enter(door.uid))
+        self.assertEqual(prepared, {uid: dict(c.items) for uid, c in sim.state.containers.items()})
         restored = LivingWorldState.from_dict(sim.state.to_dict())
         self.assertEqual(restored.interiors["interior:" + house.uid].to_dict(), sim.interiors.current_plan().to_dict())
         self.assertEqual(restored.interior_actors["player"].to_dict(), sim.interiors.player_presence().to_dict())

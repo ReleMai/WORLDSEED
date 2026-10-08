@@ -15,6 +15,8 @@ from typing import Any
 
 import pygame
 
+from worldseed.config import SIMULATION_TICK_MINUTES
+
 
 BG = (15, 22, 30)
 PANEL = (23, 33, 43)
@@ -35,7 +37,7 @@ JOB_COLORS = {
     "merchant": (130, 195, 239),
     "hauler": (162, 171, 230),
 }
-SPEEDS = (1, 4, 12, 30)
+SPEEDS = (2, 8, 24, 60)
 
 
 @lru_cache(maxsize=12)
@@ -110,7 +112,7 @@ class _Renderer:
         selected_uid: str | None,
         *,
         running: bool = False,
-        speed: int = 1,
+        speed: int = 2,
         inspector_scroll: int = 0,
         events_scroll: int = 0,
         compact_tab: str = "inspect",
@@ -167,7 +169,7 @@ class _Renderer:
             ("Pause [Space]" if self.running else "Run [Space]", "toggle", None, self.running),
             ("Step [Right]", "step", None, False),
             ("-", "slower", None, False),
-            (f"{self.speed} ticks/s +", "faster", None, False),
+            (f"{self.speed} game min/s +", "faster", None, False),
             ("Scenario [C]", "scenario", None, False),
             ("Reset [R]", "reset", None, False),
             ("Export [E]", "export", None, False),
@@ -351,6 +353,16 @@ class _Renderer:
             section("Intent")
             line(f"Goal: {_label(selected.get('goal') or 'idle')}")
             line(f"Now: {selected.get('task') or 'Idle'}")
+            line(f"Routine phase: {_label(selected.get('routine_phase') or 'idle')}", MUTED)
+            section("Personal timeline")
+            current = selected.get("schedule_current", {})
+            line(f"Scheduled now: {current.get('label', 'Unknown')}")
+            for block in selected.get("schedule", []):
+                start, end = block["start_minute"], block["end_minute"]
+                time_range = f"{start // 60:02d}:{start % 60:02d}–{end // 60:02d}:{end % 60:02d}"
+                marker = "Now  " if block == current else ""
+                line(f"{marker}{time_range}  {block['label']}", ACCENT if block == current else TEXT)
+            line("Needs and urgent situations can interrupt the timeline.", MUTED)
             section("Task queue")
             tasks = selected.get("tasks", [])
             if not tasks:
@@ -536,14 +548,13 @@ class LabViewer:
             return
         # A suspended/dragged window never catches up with unbounded local ticks.
         self._accumulator += max(0.0, min(0.25, elapsed_seconds)) * self.speed
-        ticks = int(self._accumulator)
+        ticks = int(self._accumulator // SIMULATION_TICK_MINUTES)
         if ticks:
-            self._accumulator -= ticks
+            self._accumulator -= ticks * SIMULATION_TICK_MINUTES
             self._advance(ticks)
 
     def _advance(self, ticks: int) -> None:
         """Finish the bounded experiment and leave its final state inspectable."""
-        from worldseed.config import SIMULATION_TICK_MINUTES
         from .npc_jobs import MAX_MINUTES, START_MINUTE
 
         remaining = max(0, (START_MINUTE + MAX_MINUTES - self.lab.minute) // SIMULATION_TICK_MINUTES)

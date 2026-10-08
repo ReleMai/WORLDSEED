@@ -1,5 +1,5 @@
 from __future__ import annotations
-from worldseed.ui.npc_activity import activity_label, possessions_rows
+from worldseed.ui.npc_activity import activity_label, possessions_rows, schedule_label, timeline_rows
 
 from collections import Counter, defaultdict
 
@@ -534,7 +534,10 @@ def npc_detail_screen(sim:Simulation,npc_uid:str,width:int=112)->str:
     known_people=sim.known_npc_ids();spouse=sim.state.npcs.get(n.spouse_uid) if n.spouse_uid in known_people else None;home=sim.state.properties.get(n.home_id);work=sim.state.properties.get(n.workplace_id)
     body=[f'{n.name} [{n.uid}]  {"ALIVE" if n.alive else "DECEASED"}',f'Age {n.age} | occupation {n.occupation} | HP {n.hp} | wealth {n.wealth}c',f'Position ({n.x},{n.y},z{n.z}) | settlement {town.name if town else n.settlement_id or "none"}',f'Faction {fac.name if fac else n.faction_id or "none"} | culture {culture.name if culture else n.culture_id or "none"} | religion {religion.name if religion else n.religion_id or "none"}',f'Traits: {", ".join(n.traits) if n.traits else "none"}',f'Needs: hunger {n.hunger} thirst {n.thirst} rest {n.rest} | goal {n.goal} ({n.goal_score})',f'Infections: {len(n.infections)} | immunities: {len(n.immunities)} | disease history: {", ".join(n.disease_history[-6:]) if n.disease_history else "none"}','', 'HOUSEHOLD / WORK',f'Spouse: {spouse.name if spouse else "none"}',f'Parents: {", ".join(sim.state.npcs[x].name for x in n.parents if x in known_people and x in sim.state.npcs) or "unknown / none"}',f'Children: {", ".join(sim.state.npcs[x].name for x in n.children if x in known_people and x in sim.state.npcs) or "unknown / none"}',f'Home: {home.kind+" / "+home.uid if home else n.home_id or "none"}',f'Workplace: {work.kind+" / "+work.uid if work else n.workplace_id or "none"}','', 'LANGUAGE / KNOWLEDGE',f'Literacy: {n.literacy}%']
     body += [f'  {lang}: {pct}%' for lang,pct in sorted(n.language_fluency.items())] or ['  no recorded language fluency']
-    body += ['Knowledge: '+(', '.join(n.knowledge[:20]) if n.knowledge else 'none'),'','CURRENT TASKS — '+activity_label(n)]
+    body += ['Knowledge: '+(', '.join(n.knowledge[:20]) if n.knowledge else 'none'),'','PERSONAL TIMELINE']
+    body += ['Scheduled now: '+schedule_label(n,getattr(sim,'seed',b''),sim.state.clock_minute)]
+    body += [f'{time_range}: {label}' for time_range,label in timeline_rows(n,getattr(sim,'seed',b''))]
+    body += ['Needs and urgent situations can interrupt the timeline.','','CURRENT TASKS — '+activity_label(n)]
     body += [f'  {t}' for t in n.tasks[:10]] or ['  no queued tasks']
     body += ['', 'CARRIED CASH / GEAR / PACK']
     body += [f'{label}: {value}' for label,value in possessions_rows(n,sim.registry)]

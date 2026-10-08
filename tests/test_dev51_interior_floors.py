@@ -17,6 +17,7 @@ from worldseed.systems.interior_floors import prepare_floors, residential_floor_
 from worldseed.systems.interior_state import InteriorActor, InteriorPlan
 from worldseed.systems.interior_templates import profile_for
 from worldseed.systems.interiors import InteriorSystem, position_clear
+from worldseed.systems.npc_schedule import daily_schedule
 from worldseed.systems.state import LivingWorldState
 from worldseed.world.regional_plan import StructurePlanState
 
@@ -172,7 +173,13 @@ class ScheduledHouseholdFloorsTests(unittest.TestCase):
         self.assertLess(npc.rest, 95)
         self.assertEqual(npc.inventory, {"core:wood": 2})
         npc.rest, npc.hunger, npc.thirst = 0, 0, 0
-        for minute in range(1860, 1960):
+        # This merchant's own morning can begin later than the old universal
+        # 07:00 wake time. Keep the same bounded stair/portal egress window,
+        # anchored to the end of their actual overnight sleep block.
+        morning_sleep = next(block for block in daily_schedule(npc, sim.seed)
+                             if block.activity == "sleep" and block.start_minute == 0)
+        wake_minute = 1440 + morning_sleep.end_minute
+        for minute in range(wake_minute, wake_minute + 100):
             sim.clock.minute = minute
             sim.interiors.tick_update(minute)
             if npc.uid not in sim.state.interior_actors:

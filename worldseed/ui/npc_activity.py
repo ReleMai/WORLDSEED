@@ -1,6 +1,21 @@
 """Observational labels for the task an actor is executing right now."""
 from __future__ import annotations
 
+from worldseed.systems.npc_schedule import schedule_at, schedule_rows
+
+
+def schedule_label(npc, seed: bytes, minute: int) -> str:
+    """Read the current personal block without updating the actor's routine."""
+    block = schedule_at(npc, seed, minute)
+    start = f'{block.start_minute // 60:02d}:{block.start_minute % 60:02d}'
+    end = f'{block.end_minute // 60:02d}:{block.end_minute % 60:02d}'
+    return f'{start}–{end} | {block.label}'
+
+
+def timeline_rows(npc, seed: bytes) -> list[tuple[str, str]]:
+    """Expose the same deterministic daily timeline consumed by simulation."""
+    return schedule_rows(npc, seed)
+
 
 def activity_label(npc) -> str:
     task = npc.tasks[0] if npc.tasks else {}

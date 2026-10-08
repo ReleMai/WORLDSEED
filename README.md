@@ -4,6 +4,21 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev59 — Personal NPC schedules and faster simulation
+
+NPCs follow individual daily timelines for work, meals, leisure and sleep.
+Occupations have staggered starts, guards cover different shifts, and children
+have school hours. Needs, skills and traits guide free-time activities; urgent
+needs interrupt ordinary routines. Reserved jobs and cargo transfers finish
+before workers leave. Known NPC profiles and the separate lab show the same
+timeline used by the AI.
+
+The game clock now advances two game minutes per real second, and local NPCs
+update every game minute instead of every five. Movement updates are ten times
+more frequent in real time; timed jobs progress twice as fast in real time while
+retaining their game-time durations. See the
+[Dev59 handoff](docs/handoffs/DEV59_NPC_SCHEDULES_HANDOFF.md).
+
 ## Separate NPC/job simulation lab
 
 Run `python run_npc_job_lab.py` (Windows: `RUN_NPC_JOB_LAB.bat`) to observe

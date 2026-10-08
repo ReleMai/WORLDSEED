@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from worldseed.core.coords import WorldPos
+from worldseed.config import REALTIME_SECONDS_PER_GAME_MINUTE, SIMULATION_TICK_MINUTES
 from worldseed.sim.realtime import RealtimeSimulationDriver
 from worldseed.sim.engine import Simulation
 from worldseed.systems.dialogue import DialogueSystem
@@ -44,6 +45,30 @@ class SocialRealtimePhaseTests(unittest.TestCase):
         self.assertEqual(driver.pump(40.0),5)
         self.assertEqual(sim.advances,[2,5])
         driver.pause();self.assertEqual(driver.pump(50.0),0)
+
+    def test_default_pace_feeds_two_minute_ticks_per_wall_second(self):
+        sim=FakeSimulation();driver=RealtimeSimulationDriver(sim)
+        self.assertEqual(REALTIME_SECONDS_PER_GAME_MINUTE,0.5)
+        self.assertEqual(SIMULATION_TICK_MINUTES,1)
+        driver.resume(0.0)
+        self.assertEqual(driver.pump(.49),0)
+        self.assertEqual(driver.pump(.5),1)
+        self.assertEqual(driver.pump(1.0),1)
+        self.assertEqual(sim.advances,[1,1])
+        self.assertEqual(driver.pump(500.0),5)
+        self.assertEqual(sim.advances[-1],5)
+
+    def test_default_pace_is_frame_partition_independent_and_pause_discards_backlog(self):
+        direct=FakeSimulation();split=FakeSimulation()
+        first=RealtimeSimulationDriver(direct);second=RealtimeSimulationDriver(split)
+        first.resume(0.0);second.resume(0.0)
+        first.pump(2.0)
+        for now in (.1,.25,.5,.75,1.0,1.2,1.5,1.75,2.0):second.pump(now)
+        self.assertEqual(sum(direct.advances),sum(split.advances))
+        self.assertEqual(sum(direct.advances),4)
+        second.pause();self.assertEqual(second.pump(1000.0),0)
+        second.resume(1000.0)
+        self.assertEqual(second.pump(1000.5),1)
 
     def test_one_minute_heartbeats_accumulate_vitals_on_absolute_boundaries(self):
         vitals=SimpleNamespace(hunger=0,thirst=0,stamina=50,hp=100,blood=100,body_temp=50)
