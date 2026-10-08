@@ -299,7 +299,7 @@ class MiningProfessionSystem:
         if npc.occupation != "miner":
             return []
         self.ensure_profile(npc)
-        storage = (self.storage_access.home_storage(npc) if self.storage_access else None) or self.ensure_mining_house_storage(npc, town)
+        storage = (self.storage_access.home_storage(npc,self.ORE_ITEMS) if self.storage_access else None) or self.ensure_mining_house_storage(npc, town)
         if storage is None:
             return []
 

@@ -168,6 +168,10 @@ class PropertyStorageSystem:
         for actor in self.state.interior_actors.values():
             if actor.space_id in space_ids:
                 occupants.setdefault(actor.space_id,[]).append(actor)
+        furniture_stores={}
+        for container in self.state.containers.values():
+            if container.uid.startswith('furniture-storage:'):
+                furniture_stores.setdefault(container.property_id,[]).append(container)
         created=reserved=eligible=0
         for structure in sorted(skeleton.structures,key=lambda s:s.uid):
             saved_plan=self.state.interiors.get('interior:'+structure.uid)
@@ -237,6 +241,11 @@ class PropertyStorageSystem:
                 )
                 created+=1
             plan=self.state.interiors.get("interior:"+structure.uid)
+            # Furniture inventories follow the same property owner; their
+            # saved floor, contents, locks and furniture identity stay intact.
+            for container in furniture_stores.get(structure.uid,()):
+                container.owner=owner
+                container.settlement_id=town.uid
             if plan is not None:
                 from worldseed.systems.interior_storage import bind_storage
                 bind_storage(plan,self.state.containers.values(),occupants.get(plan.uid,()))

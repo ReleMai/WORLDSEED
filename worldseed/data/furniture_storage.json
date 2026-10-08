@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "pieces": {
+    "core:house_chest_piece": {"profile": "core:household_chest", "purpose": "Household goods and work supplies", "mass_g": 90000, "volume_ml": 140000},
+    "core:wardrobe_piece": {"profile": "core:wardrobe", "purpose": "Clothes, leather and textiles", "mass_g": 90000, "volume_ml": 180000},
+    "core:cupboard_piece": {"profile": "core:pantry_cabinet", "purpose": "Food and household provisions", "mass_g": 120000, "volume_ml": 180000},
+    "core:wicker_hamper_piece": {"profile": "core:grain_bin", "purpose": "Grain, seeds and dry supplies", "mass_g": 50000, "volume_ml": 80000},
+    "core:wall_shelf_piece": {"profile": "core:archive_bookcase", "purpose": "Books and small household supplies", "mass_g": 30000, "volume_ml": 60000},
+    "core:apothecary_shelf_piece": {"profile": "core:medicine_cabinet", "purpose": "Medicine and washing supplies", "mass_g": 60000, "volume_ml": 120000},
+    "core:water_barrel_piece": {"profile": "core:inn_barrel", "purpose": "Stored provisions and water vessels", "mass_g": 160000, "volume_ml": 260000},
+    "core:writing_desk_piece": {"profile": "core:archive_bookcase", "purpose": "Writing materials and books", "mass_g": 20000, "volume_ml": 35000},
+    "core:scribe_desk_piece": {"profile": "core:archive_bookcase", "purpose": "Writing materials and books", "mass_g": 20000, "volume_ml": 35000},
+    "core:small_table_piece": {"profile": "core:household_chest", "purpose": "Tabletop items and meals", "mass_g": 12000, "volume_ml": 20000},
+    "core:large_table_piece": {"profile": "core:household_chest", "purpose": "Tabletop items and meals", "mass_g": 25000, "volume_ml": 40000},
+    "core:carpenter_bench_piece": {"profile": "core:tool_chest", "purpose": "Workbench tools and materials; crafting station", "mass_g": 60000, "volume_ml": 90000}
+  }
+}

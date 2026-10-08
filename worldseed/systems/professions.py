@@ -211,7 +211,8 @@ class SettlementProfessionSystem:
         return None if any(qty>0 for qty in needed.values()) else sources
 
     def _output_storage(self,npc,town):
-        home=self.storage_access.home_storage(npc) if self.storage_access is not None else None
+        proc=self.registry.settlement_processes.get(npc.assigned_process_id)
+        home=self.storage_access.home_storage(npc,proc.outputs if proc else ()) if self.storage_access is not None else None
         return home or self._work_storage(npc,town)
 
     def _deposit_tasks(self,npc,storage,items,process_id):

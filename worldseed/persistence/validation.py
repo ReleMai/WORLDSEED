@@ -157,6 +157,7 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
         fixture_ids={f.get('uid') for f in plan.get('furniture',[]) if isinstance(f,dict)}
         if reservation.get('target_uid') not in fixture_ids:
             issues.append(f'orphan interior activity fixture: {uid}')
+    storage_bindings: set[tuple[str,str]] = set()
     for key,container in _table(raw,'containers').items():
         if not isinstance(container,dict):continue
         space_id=container.get('interior_space_id','')
@@ -167,6 +168,11 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
             issues.append(f'invalid interior storage binding type: {uid}')
             continue
         linked_plan = plans.get(space_id)
+        if furnishing_uid:
+            binding=(space_id,furnishing_uid)
+            if binding in storage_bindings:
+                issues.append(f'duplicate interior storage furnishing: {uid}')
+            storage_bindings.add(binding)
         if (space_id!='interior:'+str(container.get('property_id',''))
                 and not (isinstance(linked_plan,dict)
                          and linked_plan.get('building_id')==container.get('property_id'))):

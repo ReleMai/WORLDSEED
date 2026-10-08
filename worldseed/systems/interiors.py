@@ -372,10 +372,16 @@ class InteriorSystem:
 
     def _furnish_prepared(self, floors) -> None:
         from worldseed.systems.interior_furnishing import furnish_plan
+        from worldseed.systems.furniture_storage import materialize_storage
         for floor in floors:
             if floor.furnishing_version < 2:
                 furnish_plan(floor, self.sim.registry, (a for _, a in self.actors_in_space(floor.uid)))
                 floor.furnishing_version = 2
+            # Furnishings on every prepared floor share the same inventory
+            # objects as player storage, theft, household supply and NPC hauling.
+            self._bind_storage(floor)
+            materialize_storage(self.state,floor,self.sim.registry)
+            self._bind_storage(floor)
 
     def enter(self, door_uid: str) -> str:
         if self.player_presence():

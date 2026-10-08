@@ -3341,6 +3341,8 @@ def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:st
                 if not blocked:rows.append(('open_storage',f'Open {label}'))
                 elif sim.state.player_hunting_stance=='aggressive':
                     rows.append(('pick_storage',f'Pick {label} lock'))
+            if furniture.piece_id in STATION_PIECE_ALIASES:
+                rows.append(('use','Craft at '+label))
         else:
             rows=[('inspect',f'Inspect {label}'),('use',f'Use {label}')]
         if sim.interiors.can_rearrange(furniture):rows.append(('move',f'Reposition {label} freely'))
@@ -3375,6 +3377,10 @@ def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:st
               'Private property: unauthorized removal is theft.' if container.owner!='player' and container.access!='public' else 'Accessible storage.',
               'Move closer; walls block interaction.' if not reachable else
               ('Contents concealed by the lock.' if blocked else 'Open to inspect the contents.')]
+        from worldseed.systems.furniture_storage import storage_function
+        function=storage_function(furniture.piece_id)
+        if function:rows.append('Use: '+function['purpose'])
+        rows.append(f'Capacity: {container.capacity_mass_g/1000:g} kg / {container.capacity_volume_ml/1000:g} L')
         _view_text(term,box('INDOOR STORAGE',rows,screen_width(term.size()[0],88)))
         return UI_BACK
     elif choice=='use' and furniture is not None:

@@ -196,7 +196,8 @@ class HouseholdEconomySystem:
     def _destination(self,h,item_id:str):
         options=[(self._fit(c,item_id),c) for c in self._containers(h)];options=[row for row in options if row[0]>0]
         if not options:return None,0
-        fit,c=max(options,key=lambda row:(row[0],-row[1].y,-row[1].x,row[1].uid));return c,fit
+        from worldseed.systems.furniture_storage import storage_preference
+        fit,c=min(options,key=lambda row:(storage_preference(row[1],(item_id,),self.registry),-row[0],row[1].uid));return c,fit
 
     def _queue_purchase(self,h,item_id:str,requested:int,minute:int)->int:
         if self.economy is None or requested<=0:return 0

@@ -16,16 +16,19 @@ def bind_storage(plan, containers, actors=()):
     occupants=tuple(actor for actor in actors if actor.space_id==plan.uid)
     occupied=[InteriorRect(actor.x-ACTOR_RADIUS,actor.y-ACTOR_RADIUS,
                            ACTOR_RADIUS*2,ACTOR_RADIUS*2) for actor in occupants]
-    bound={c.interior_furniture_uid for c in rows
-           if any(f.uid==c.interior_furniture_uid for f in plan.furniture)}
+    bound=set()
+    reserved={c.interior_furniture_uid for c in rows if c.interior_furniture_uid}
     for container in rows:
         style=container_profile(container.profile_id)
         if style is None:continue
         fixture=next((f for f in plan.furniture if f.uid==container.interior_furniture_uid),None)
+        if fixture is not None and fixture.uid in bound:
+            fixture=None
         if fixture is None:
             # Bind a real chest/cabinet already in the building before adding
             # another silhouette. Neither path creates another item inventory.
-            fixture=next((f for f in plan.furniture if furniture_base_piece(f.piece_id)==style.piece_id and f.uid not in bound),None)
+            fixture=next((f for f in plan.furniture if furniture_base_piece(f.piece_id)==style.piece_id
+                          and f.uid not in bound and f.uid not in reserved),None)
         if fixture is None:
             rooms={room.uid:room for room in plan.rooms}
             preferred=next((room.uid for room in sorted(plan.rooms,key=lambda r:r.uid)

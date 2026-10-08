@@ -224,7 +224,7 @@ class InteriorHomeCargoTests(unittest.TestCase):
         for system in (sim.npcs,professions):system.storage_access=access;system.commerce=commerce
         for c in sim.state.containers.values():c.items.pop('core:iron_bloom',None)
         sim.interiors.prepare_workplace(npc.home_id)
-        home=access.home_storage(npc)
+        home=access.home_storage(npc,('core:iron_bloom',))
         self.assertIsNotNone(home)
         town.stocks['core:iron_bloom']=0;town.wealth=1000
         npc.tasks=professions.plan_work(npc,town,600)

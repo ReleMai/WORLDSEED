@@ -96,6 +96,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Item asset catalog regressions" --timeout 90 -- python -u -m unittest -v tests.test_item_asset_catalog
 
+      - name: Functional home furniture and storage
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui
+
       - name: Biome atlas regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Biome atlas regressions" --timeout 90 -- python -u -m unittest -v tests.test_biome_atlas

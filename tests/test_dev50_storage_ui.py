@@ -20,7 +20,7 @@ class IndoorStorageMenuTests(unittest.TestCase):
         house = next(s for s in self.sim.settlement_physicalization.skeleton_for(town.uid).structures
                      if s.function == 'residence')
         self.plan = self.sim.interiors.prepare_workplace(house.uid)
-        self.container = next(c for c in storage.for_property(house.uid) if c.profile_id == 'core:household_chest')
+        self.container = next(c for c in storage.for_property(house.uid) if c.uid == 'property-storage:'+house.uid)
         self.furniture = next(f for f in self.plan.furniture if f.uid == self.container.interior_furniture_uid)
         self.actor = InteriorActor(self.plan.uid, *self.sim.interiors.fixture_use_position(self.plan, self.furniture))
         self.sim.interiors._put_actor('player', self.actor)

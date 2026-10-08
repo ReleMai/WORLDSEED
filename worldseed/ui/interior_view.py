@@ -411,7 +411,8 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
             piece = registry.settlement_pieces.get(furniture.piece_id)
             path = term._visuals.resolve(term._visuals.ref('interiors', furniture.piece_id))
             container = getattr(sim.interiors, 'container_for_furniture', lambda uid: None)(furniture.uid)
-            if container is not None and furniture_base_piece(furniture.piece_id) == furniture.piece_id:
+            if (container is not None and not container.uid.startswith('furniture-storage:')
+                    and furniture_base_piece(furniture.piece_id) == furniture.piece_id):
                 path = term._visuals.resolve(term._visuals.ref('containers', container.profile_id)) or path
             # Exact authored furniture IDs prevent the old generic grey/black
             # block stand-ins. Existing workshop art is resolved by its real

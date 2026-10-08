@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from worldseed.core.coords import WorldPos
+from worldseed.systems.furniture_storage import storage_preference
 
 
 class NPCStorageAccess:
@@ -18,13 +19,20 @@ class NPCStorageAccess:
                        if c.settlement_id == town.uid and c.property_id in properties),
                       key=lambda c: (c.property_id != npc.home_id, c.uid))
 
-    def home_storage(self, npc):
+    def home_storage(self, npc, item_ids=()):
         if not npc.home_id:
             return None
+        if self.interiors is not None:
+            self.interiors.prepare_workplace(npc.home_id)
+        item_ids=tuple(item_ids)
         rows = sorted((c for c in self.state.containers.values()
                        if c.property_id == npc.home_id and c.settlement_id == npc.settlement_id),
-                      key=lambda c: c.uid)
+                      key=lambda c: (not bool(c.interior_space_id),
+                                     storage_preference(c,item_ids,self.goods.registry) if self.goods else 0,
+                                     -c.capacity_volume_ml,c.uid))
         for container in rows:
+            if item_ids and self.goods and not any(self.goods.container_fit(container,iid)>0 for iid in item_ids):
+                continue
             if not container.interior_space_id:
                 return container
             if self._interior_target(npc, container) is not None:
@@ -34,10 +42,10 @@ class NPCStorageAccess:
     def _interior_target(self, npc, container):
         if self.interiors is None or container.property_id not in {npc.home_id, npc.workplace_id}:
             return None
-        plan = self.interiors.prepare_workplace(container.property_id)
-        if plan is None:
-            return None
         plan = self.state.interiors.get(container.interior_space_id)
+        if plan is None:
+            self.interiors.prepare_workplace(container.property_id)
+            plan = self.state.interiors.get(container.interior_space_id)
         if plan is None:
             return None
         fixture = next((f for f in plan.furniture if f.uid == container.interior_furniture_uid), None)
