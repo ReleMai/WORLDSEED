@@ -4,6 +4,16 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## Separate NPC/job simulation lab
+
+Run `python run_npc_job_lab.py` (Windows: `RUN_NPC_JOB_LAB.bat`) to observe
+NPC production, transport, trade and workstation use in an isolated developer
+sandbox. It uses the game's NPC/job systems with a small prepared test map and
+fresh in-memory state. Pause, step, change speed and inspect workers without
+loading a game or touching saves. A headless runner produces reproducible JSON
+reports for production-chain, scarcity, blocked-route and station-contention
+experiments. See [the lab guide](docs/development/NPC_JOB_LAB.md).
+
 ## RC14 Dev45 — Large farm compounds and working farmers
 
 New worlds use settlement-plan v10: large connected crop blocks share an outer

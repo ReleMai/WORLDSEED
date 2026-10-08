@@ -22,6 +22,8 @@ ROOT_FILES = (
     "requirements.txt",
     "requirements-pygame-ce.txt",
     "run_worldseed.py",
+    "run_npc_job_lab.py",
+    "RUN_NPC_JOB_LAB.bat",
 )
 CONTENT_DIRECTORIES = ("worldseed", "docs")
 EXCLUDED_PARTS = {"__pycache__"}

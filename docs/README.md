@@ -5,12 +5,14 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 ## Development
 
 - [Development workflow](development/DEVELOPMENT.md)
+- [Separate NPC/job simulation lab](development/NPC_JOB_LAB.md)
 - [Settlement and interior redesign plan](development/SETTLEMENT_INTERIOR_REDESIGN.md)
 - [Branch audit](development/BRANCH_AUDIT.md)
 - [Build-system audit](development/BUILD_SYSTEM_AUDIT.md)
 
 ## Current handoffs
 
+- [Separate NPC/job lab](handoffs/NPC_JOB_LAB_HANDOFF.md)
 - [Dev55 moving residents, equipment and action combat](handoffs/DEV55_LIVING_NPCS_ACTION_COMBAT_HANDOFF.md)
 - [Dev43 diverse living settlements](handoffs/DEV43_SETTLEMENT_DIVERSITY_HANDOFF.md)
 - [Dev42 normalized character sprites](handoffs/DEV42_CHARACTER_SPRITES_HANDOFF.md)
