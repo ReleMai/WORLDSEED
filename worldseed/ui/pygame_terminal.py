@@ -19,6 +19,7 @@ from worldseed.presentation.local_terrain import (
 )
 from worldseed.systems.state import pos_key
 from worldseed.ui.layout import centered_tile_grid
+from worldseed.ui.terminal import pause_realtime_callback
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
@@ -180,10 +181,15 @@ class PygameTerminal(PointerUI):
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
+    def pause_realtime(self):
+        return pause_realtime_callback(self)
+
     def set_combat_callback(self, callback) -> None:
         self._combat_active_callback = callback
 
     def _pump_realtime(self) -> bool:
+        if getattr(self, '_realtime_pause_depth', 0):
+            return False
         callback=self._realtime_callback
         return bool(callback and callback())
 
@@ -829,7 +835,7 @@ class PygameTerminal(PointerUI):
         self._floating_panel_id=panel_id;self._floating_backdrop=backdrop
         self._floating_panel_parent=parent
 
-    def _floating_feature_shell(self, panel_id: str, domain: str, title: str, subtitle: str=''):
+    def _floating_feature_shell(self, panel_id: str, domain: str, title: str, subtitle: str='', *, show_heading: bool=True):
         pg=self.pg;screen=self.screen;assert screen is not None
         self._suspend_world_hover_animation()
         if self._floating_backdrop is None or self._floating_panel_id!=panel_id:
@@ -861,10 +867,25 @@ class PygameTerminal(PointerUI):
         pg.draw.line(screen,self._theme['edge'],(grip.x+7,grip.bottom-2),(grip.right-2,grip.y+7),2)
         self._ui_target(grip,f'UI_WINDOW_RESIZE:{panel_id}')
         cx=x+16;cy=y+52;cw=w-32
-        heading=self.title_font.render(self._fit_ui_text(title,self.title_font,cw),True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+5
+        if show_heading:
+            heading=self.title_font.render(self._fit_ui_text(title,self.title_font,cw),True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+5
         if subtitle:
             sub=self.small_font.render(self._fit_ui_text(subtitle,self.small_font,cw),True,self._theme['muted']);screen.blit(sub,(cx,cy));cy+=19
         return x,y,w,h,cx,cy,cw
+
+    def _draw_npc_portrait(self, spec, rect) -> None:
+        """Paint the same composite face in every NPC panel, without world reads."""
+        pg=self.pg;rect=pg.Rect(rect)
+        pg.draw.rect(self.screen,(12,17,18),rect,border_radius=5)
+        if spec is not None:
+            from worldseed.presentation.portraits import PortraitComposer
+            composer=getattr(self,'_portrait_composer',None)
+            if composer is None:
+                composer=self._portrait_composer=PortraitComposer(max_entries=96)
+            portrait=composer.render(spec,size=min(rect.width,rect.height))
+            self.screen.blit(portrait,portrait.get_rect(center=rect.center))
+        pg.draw.rect(self.screen,self._theme['edge_hi'],rect,1,border_radius=5)
+        self._npc_portrait_rect=rect
 
     def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str='Drag title • Resize corner • Esc closes') -> None:
         self.pg.draw.line(self.screen,self._theme['edge'],(x+16,y+h-39),(x+w-16,y+h-39))
@@ -1060,10 +1081,11 @@ class PygameTerminal(PointerUI):
         data=data or {};pg=self.pg;screen=self.screen
         summary=data.get('summary',{});tabs=data.get('tabs',{});active=str(data.get('active_tab','overview'))
         x,y,w,h,cx,cy,cw=self._floating_feature_shell(
-            'npc_profile','PERSON',str(summary.get('name',title)),subtitle
+            'npc_profile','PERSON',str(summary.get('name',title)),show_heading=False
         )
         footer_h=45;body_bottom=y+h-footer_h
         top_h=64;gap=10
+        self._draw_npc_portrait(data.get('portrait'),pg.Rect(cx,cy,top_h,top_h))
         # Four small facts provide orientation without repeating every social field.
         facts=[
             ('Age',str(summary.get('age') if summary.get('age') is not None else 'Unknown')),
@@ -1071,12 +1093,13 @@ class PygameTerminal(PointerUI):
             ('Settlement',str(summary.get('settlement','Unknown'))),
             ('Now',str(summary.get('activity','Idle'))),
         ]
-        fw=max(86,(cw-gap*3)//4)
+        facts_x=cx+top_h+gap;facts_w=cw-top_h-gap
+        fw=max(1,(facts_w-gap*3)//4)
         for i,(label,value) in enumerate(facts):
-            rect=pg.Rect(cx+i*(fw+gap),cy,fw,top_h)
+            rect=pg.Rect(facts_x+i*(fw+gap),cy,fw,top_h)
             pg.draw.rect(screen,self._theme['panel'],rect,border_radius=6)
             pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=6)
-            ls=self.small_font.render(label.upper(),True,self._theme['muted']);screen.blit(ls,(rect.x+9,rect.y+8))
+            ls=self.small_font.render(self._fit_ui_text(label.upper(),self.small_font,rect.width-18),True,self._theme['muted']);screen.blit(ls,(rect.x+9,rect.y+8))
             vs=self.small_font.render(self._fit_ui_text(value,self.small_font,rect.width-18),True,self._theme['text'])
             screen.blit(vs,(rect.x+9,rect.y+31))
         body_y=cy+top_h+12
@@ -1104,6 +1127,12 @@ class PygameTerminal(PointerUI):
         screen.blit(heading,(content.x+14,content.y+12))
         yy=content.y+44
         entries=list(tabs.get(active,()))
+        if active=='overview':
+            # The identity cards already own these facts. Keep the underlying
+            # profile rows intact for the terminal backend and other callers.
+            repeated={'age','occupation','settlement','current activity'}
+            entries=[row for row in entries if str(row[0]).strip().casefold() not in repeated]
+        rendered_traits=False
         if active in {'needs','relations'}:
             for row in entries[:9]:
                 if yy+38>content.bottom-10:break
@@ -1138,10 +1167,11 @@ class PygameTerminal(PointerUI):
                 value_x=card.x+max(104,card.width//3)
                 vs=self.small_font.render(self._fit_ui_text(str(value),self.small_font,card.right-value_x-9),True,self._theme['text'])
                 screen.blit(vs,(value_x,card.centery-vs.get_height()//2))
+                rendered_traits=rendered_traits or str(label).strip().casefold()=='traits'
                 yy+=39
 
         traits=list(summary.get('traits') or [])
-        if traits and active=='overview' and yy+24<content.bottom:
+        if traits and active=='overview' and not rendered_traits and yy+24<content.bottom:
             txt='Traits: '+', '.join(traits[:4])
             surf=self.small_font.render(self._fit_ui_text(txt,self.small_font,content.width-28),True,self._theme['muted'])
             screen.blit(surf,(content.x+14,content.bottom-27))
@@ -1231,16 +1261,27 @@ class PygameTerminal(PointerUI):
         data=data or {};pg=self.pg;screen=self.screen
         # Context and navigation have their own compact rows; the shell need
         # not repeat the longer instruction above every spoken paragraph.
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('npc_dialogue','CONVERSATION',str(data.get('speaker',title)))
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell(
+            'npc_dialogue','CONVERSATION',str(data.get('speaker',title)),show_heading=False
+        )
         self._button((x+w-130,y+7,82,27),'INSPECT','UI_ACTION:inspect')
+        identity_h=64
+        self._draw_npc_portrait(data.get('portrait'),pg.Rect(cx,cy,identity_h,identity_h))
+        identity_x=cx+identity_h+12;identity_w=max(1,cw-identity_h-12)
         role=str(data.get('role','')).upper()
         context='  ·  '.join(str(v) for v in data.get('context',()) if str(v).casefold()!=role.casefold())
-        summary=role+('  /  '+context if context else '')
+        role_w=identity_w
+        if data.get('time_paused'):
+            status=self.small_font.render('TIME PAUSED',True,self._theme['good'])
+            screen.blit(status,(cx+cw-status.get_width(),cy+5))
+            role_w=max(1,identity_w-status.get_width()-18)
+        screen.blit(self.small_font.render(self._fit_ui_text(role or 'PERSON',self.small_font,role_w),True,self._theme['text']),(identity_x,cy+5))
+        screen.blit(self.small_font.render(self._fit_ui_text(context,self.small_font,identity_w),True,self._theme['muted']),(identity_x,cy+25))
         relationship=data.get('relationship') or {}
-        if relationship:summary+='  /  '+ '  '.join(f'{str(k).title()} {int(v):+d}' for k,v in relationship.items())
-        screen.blit(self.small_font.render(self._fit_ui_text(summary,self.small_font,cw),True,self._theme['muted']),(cx,cy))
-        self._draw_dialogue_path(pg.Rect(cx,cy+21,cw,24),data,breadcrumb)
-        body_y=cy+50;body_bottom=y+h-46;gap=12
+        relationship_text='  ·  '.join(f'{str(k).title()} {int(v):+d}' for k,v in relationship.items())
+        screen.blit(self.small_font.render(self._fit_ui_text(relationship_text,self.small_font,identity_w),True,self._theme['muted']),(identity_x,cy+45))
+        self._draw_dialogue_path(pg.Rect(cx,cy+identity_h+6,cw,24),data,breadcrumb)
+        body_y=cy+identity_h+36;body_bottom=y+h-46;gap=12
         rail_w=max(176,min(270,int(cw*.32)))
         if cw<500:rail_w=max(132,int(cw*.36))
         transcript=pg.Rect(cx,body_y,max(1,cw-rail_w-gap),max(1,body_bottom-body_y))

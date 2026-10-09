@@ -256,7 +256,7 @@ class DialogueTreeNavigationTests(unittest.TestCase):
         for frame in term.frames:
             data = frame['data']
             self.assertEqual(frame['title'], 'Stranger')
-            self.assertEqual(frame['rows'], ['introduce', 'inspect', 'goodbye'])
+            self.assertEqual(frame['rows'], ['introduce', 'goodbye'])
             self.assertFalse(any(span.get('topic') for span in data['spans']))
             for private in (npc.name, npc.occupation, 'secret family history', 'private:home'):
                 self.assertNotIn(private, str(data))

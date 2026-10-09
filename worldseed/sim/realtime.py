@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from contextlib import contextmanager
 
 from worldseed.config import REALTIME_MAX_CATCHUP_MINUTES, REALTIME_SECONDS_PER_GAME_MINUTE
 
@@ -22,6 +23,7 @@ class RealtimeSimulationDriver:
         self._last = None
         self._accumulator = 0.0
         self.paused = False
+        self._pause_depth = 0
 
     def resume(self, now: float | None = None) -> None:
         self.paused = False
@@ -33,10 +35,29 @@ class RealtimeSimulationDriver:
         self._last = None
         self._accumulator = 0.0
 
+    @contextmanager
+    def pause_realtime(self):
+        """Hold the clock without changing an existing explicit pause.
+
+        Conversation routes can acquire nested holds. Wall time spent reading
+        is discarded even when nobody pumps the driver while the route is open;
+        release starts a fresh baseline rather than catching up that interval.
+        Explicit pause/resume and combat retain their own pause semantics.
+        """
+        self._pause_depth += 1
+        self._last = None
+        self._accumulator = 0.0
+        try:
+            yield
+        finally:
+            self._pause_depth -= 1
+            self._last = None if self.paused or self._pause_depth else time.monotonic()
+            self._accumulator = 0.0
+
     def pump(self, now: float | None = None) -> int:
         current = time.monotonic() if now is None else float(now)
         combat_active=getattr(self.simulation,'combat_active',lambda:False)
-        if self.paused or combat_active():
+        if self.paused or self._pause_depth or combat_active():
             self._last = current
             self._accumulator = 0.0
             self._combat_paused=bool(combat_active())

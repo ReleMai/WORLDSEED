@@ -1,0 +1,1782 @@
+{
+  "version": 1,
+  "description": "Composable front-facing pixel portrait parts. Weights express overlapping male/female silhouette tendencies; every non-facial-hair pool is shared. No role, trust or wealth affects permanent identity.",
+  "parts": {
+    "head": {
+      "core:oval": {
+        "width": 13,
+        "height": 17,
+        "temple": 0,
+        "cheek": 0,
+        "weights": {
+          "male": 4,
+          "female": 6,
+          "unknown": 5
+        }
+      },
+      "core:round": {
+        "width": 14,
+        "height": 16,
+        "temple": 1,
+        "cheek": 1,
+        "weights": {
+          "male": 3,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:long": {
+        "width": 12,
+        "height": 19,
+        "temple": 0,
+        "cheek": 0,
+        "weights": {
+          "male": 4,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:angular": {
+        "width": 14,
+        "height": 18,
+        "temple": 1,
+        "cheek": -1,
+        "weights": {
+          "male": 6,
+          "female": 2,
+          "unknown": 4
+        }
+      },
+      "core:heart": {
+        "width": 14,
+        "height": 17,
+        "temple": 1,
+        "cheek": -1,
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:narrow": {
+        "width": 11,
+        "height": 18,
+        "temple": 0,
+        "cheek": -1,
+        "weights": {
+          "male": 2,
+          "female": 3,
+          "unknown": 2
+        }
+      },
+      "core:broad": {
+        "width": 15,
+        "height": 17,
+        "temple": 1,
+        "cheek": 1,
+        "weights": {
+          "male": 5,
+          "female": 2,
+          "unknown": 3
+        }
+      }
+    },
+    "jaw": {
+      "core:soft": {
+        "width": -2,
+        "chin": 0,
+        "weights": {
+          "male": 2,
+          "female": 6,
+          "unknown": 4
+        }
+      },
+      "core:square": {
+        "width": 2,
+        "chin": 0,
+        "weights": {
+          "male": 6,
+          "female": 2,
+          "unknown": 4
+        }
+      },
+      "core:tapered": {
+        "width": -3,
+        "chin": 1,
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:broad": {
+        "width": 3,
+        "chin": -1,
+        "weights": {
+          "male": 4,
+          "female": 1,
+          "unknown": 2
+        }
+      },
+      "core:rounded": {
+        "width": 0,
+        "chin": 0,
+        "weights": {
+          "male": 4,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:long_chin": {
+        "width": -1,
+        "chin": 2,
+        "weights": {
+          "male": 3,
+          "female": 2,
+          "unknown": 2
+        }
+      }
+    },
+    "ears": {
+      "core:close": {
+        "width": 2,
+        "height": 6,
+        "lift": 0,
+        "weights": {
+          "male": 4,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:wide": {
+        "width": 3,
+        "height": 7,
+        "lift": 0,
+        "weights": {
+          "male": 2,
+          "female": 2,
+          "unknown": 2
+        }
+      },
+      "core:small": {
+        "width": 2,
+        "height": 5,
+        "lift": 1,
+        "weights": {
+          "male": 3,
+          "female": 5,
+          "unknown": 4
+        }
+      },
+      "core:long": {
+        "width": 2,
+        "height": 8,
+        "lift": -1,
+        "weights": {
+          "male": 3,
+          "female": 2,
+          "unknown": 2
+        }
+      },
+      "core:pointed": {
+        "width": 3,
+        "height": 7,
+        "lift": 1,
+        "weights": {
+          "male": 2,
+          "female": 2,
+          "unknown": 2
+        }
+      }
+    },
+    "nose": {
+      "core:straight": {
+        "width": 2,
+        "length": 6,
+        "bridge": 0,
+        "tip": 0,
+        "weights": {
+          "male": 5,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:broad": {
+        "width": 3,
+        "length": 5,
+        "bridge": 0,
+        "tip": 1,
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:button": {
+        "width": 2,
+        "length": 4,
+        "bridge": -1,
+        "tip": 1,
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:aquiline": {
+        "width": 2,
+        "length": 7,
+        "bridge": 1,
+        "tip": 0,
+        "weights": {
+          "male": 4,
+          "female": 2,
+          "unknown": 3
+        }
+      },
+      "core:long": {
+        "width": 2,
+        "length": 8,
+        "bridge": 0,
+        "tip": 0,
+        "weights": {
+          "male": 3,
+          "female": 2,
+          "unknown": 2
+        }
+      },
+      "core:upturned": {
+        "width": 2,
+        "length": 5,
+        "bridge": -1,
+        "tip": -1,
+        "weights": {
+          "male": 2,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:flat": {
+        "width": 3,
+        "length": 4,
+        "bridge": -1,
+        "tip": 1,
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      }
+    },
+    "eyes": {
+      "core:almond": {
+        "width": 5,
+        "slant": -1,
+        "lid": 1,
+        "weights": {
+          "male": 4,
+          "female": 5,
+          "unknown": 4
+        }
+      },
+      "core:round": {
+        "width": 4,
+        "slant": 0,
+        "lid": 0,
+        "weights": {
+          "male": 3,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:narrow": {
+        "width": 5,
+        "slant": 0,
+        "lid": 2,
+        "weights": {
+          "male": 5,
+          "female": 2,
+          "unknown": 3
+        }
+      },
+      "core:deep_set": {
+        "width": 4,
+        "slant": 1,
+        "lid": 2,
+        "weights": {
+          "male": 4,
+          "female": 2,
+          "unknown": 3
+        }
+      },
+      "core:wide": {
+        "width": 6,
+        "slant": 0,
+        "lid": 1,
+        "weights": {
+          "male": 2,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:hooded": {
+        "width": 5,
+        "slant": 1,
+        "lid": 2,
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      }
+    },
+    "brows": {
+      "core:straight": {
+        "width": 5,
+        "thick": 1,
+        "arch": 0,
+        "weights": {
+          "male": 5,
+          "female": 3,
+          "unknown": 4
+        }
+      },
+      "core:heavy": {
+        "width": 6,
+        "thick": 2,
+        "arch": 0,
+        "weights": {
+          "male": 5,
+          "female": 1,
+          "unknown": 3
+        }
+      },
+      "core:arched": {
+        "width": 5,
+        "thick": 1,
+        "arch": 2,
+        "weights": {
+          "male": 2,
+          "female": 6,
+          "unknown": 4
+        }
+      },
+      "core:sloped": {
+        "width": 5,
+        "thick": 1,
+        "arch": -1,
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:soft": {
+        "width": 4,
+        "thick": 1,
+        "arch": 1,
+        "weights": {
+          "male": 2,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:broken": {
+        "width": 5,
+        "thick": 2,
+        "arch": 1,
+        "weights": {
+          "male": 2,
+          "female": 1,
+          "unknown": 1
+        }
+      }
+    },
+    "mouth": {
+      "core:thin": {
+        "width": 6,
+        "fullness": 0,
+        "curve": 0,
+        "weights": {
+          "male": 5,
+          "female": 2,
+          "unknown": 3
+        }
+      },
+      "core:full": {
+        "width": 6,
+        "fullness": 2,
+        "curve": 0,
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:wide": {
+        "width": 8,
+        "fullness": 1,
+        "curve": 0,
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:small": {
+        "width": 5,
+        "fullness": 1,
+        "curve": 0,
+        "weights": {
+          "male": 2,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:bowed": {
+        "width": 6,
+        "fullness": 1,
+        "curve": 1,
+        "weights": {
+          "male": 2,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:downturned": {
+        "width": 6,
+        "fullness": 0,
+        "curve": -1,
+        "weights": {
+          "male": 3,
+          "female": 2,
+          "unknown": 2
+        }
+      }
+    },
+    "hair": {
+      "core:crop": {
+        "style": "crop",
+        "weights": {
+          "male": 6,
+          "female": 2,
+          "unknown": 4
+        }
+      },
+      "core:swept": {
+        "style": "swept",
+        "weights": {
+          "male": 5,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:parted": {
+        "style": "parted",
+        "weights": {
+          "male": 5,
+          "female": 5,
+          "unknown": 5
+        }
+      },
+      "core:curls": {
+        "style": "curls",
+        "weights": {
+          "male": 3,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:waves": {
+        "style": "waves",
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:long": {
+        "style": "long",
+        "weights": {
+          "male": 2,
+          "female": 6,
+          "unknown": 4
+        }
+      },
+      "core:braid": {
+        "style": "braid",
+        "weights": {
+          "male": 1,
+          "female": 4,
+          "unknown": 2
+        }
+      },
+      "core:tied": {
+        "style": "tied",
+        "weights": {
+          "male": 3,
+          "female": 4,
+          "unknown": 3
+        }
+      },
+      "core:bun": {
+        "style": "bun",
+        "weights": {
+          "male": 1,
+          "female": 4,
+          "unknown": 2
+        }
+      },
+      "core:shag": {
+        "style": "shag",
+        "weights": {
+          "male": 4,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:coils": {
+        "style": "coils",
+        "weights": {
+          "male": 3,
+          "female": 3,
+          "unknown": 3
+        }
+      },
+      "core:bald": {
+        "style": "bald",
+        "weights": {
+          "male": 2,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:receding": {
+        "style": "receding",
+        "weights": {
+          "male": 3,
+          "female": 1,
+          "unknown": 2
+        }
+      },
+      "core:undercut": {
+        "style": "undercut",
+        "weights": {
+          "male": 3,
+          "female": 2,
+          "unknown": 2
+        }
+      }
+    },
+    "facial_hair": {
+      "core:none": {
+        "style": "none",
+        "weights": {
+          "male": 11,
+          "female": 40,
+          "unknown": 25
+        }
+      },
+      "core:stubble": {
+        "style": "stubble",
+        "weights": {
+          "male": 5,
+          "female": 0,
+          "unknown": 2
+        }
+      },
+      "core:moustache": {
+        "style": "moustache",
+        "weights": {
+          "male": 3,
+          "female": 0,
+          "unknown": 1
+        }
+      },
+      "core:goatee": {
+        "style": "goatee",
+        "weights": {
+          "male": 3,
+          "female": 0,
+          "unknown": 1
+        }
+      },
+      "core:short_beard": {
+        "style": "short_beard",
+        "weights": {
+          "male": 5,
+          "female": 0,
+          "unknown": 2
+        }
+      },
+      "core:full_beard": {
+        "style": "full_beard",
+        "weights": {
+          "male": 3,
+          "female": 0,
+          "unknown": 1
+        }
+      },
+      "core:forked_beard": {
+        "style": "forked_beard",
+        "weights": {
+          "male": 2,
+          "female": 0,
+          "unknown": 1
+        }
+      },
+      "core:sideburns": {
+        "style": "sideburns",
+        "weights": {
+          "male": 3,
+          "female": 0,
+          "unknown": 1
+        }
+      }
+    },
+    "neck": {
+      "core:slender": {
+        "width": 4,
+        "weights": {
+          "male": 2,
+          "female": 6,
+          "unknown": 4
+        }
+      },
+      "core:regular": {
+        "width": 5,
+        "weights": {
+          "male": 5,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:thick": {
+        "width": 7,
+        "weights": {
+          "male": 5,
+          "female": 1,
+          "unknown": 3
+        }
+      }
+    },
+    "bust": {
+      "core:narrow": {
+        "width": 22,
+        "style": "tunic",
+        "weights": {
+          "male": 2,
+          "female": 6,
+          "unknown": 4
+        }
+      },
+      "core:broad": {
+        "width": 28,
+        "style": "tunic",
+        "weights": {
+          "male": 5,
+          "female": 2,
+          "unknown": 3
+        }
+      },
+      "core:mantle": {
+        "width": 26,
+        "style": "mantle",
+        "weights": {
+          "male": 4,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:collar": {
+        "width": 25,
+        "style": "collar",
+        "weights": {
+          "male": 4,
+          "female": 4,
+          "unknown": 4
+        }
+      },
+      "core:shawl": {
+        "width": 24,
+        "style": "shawl",
+        "weights": {
+          "male": 2,
+          "female": 5,
+          "unknown": 3
+        }
+      },
+      "core:layered": {
+        "width": 26,
+        "style": "layered",
+        "weights": {
+          "male": 4,
+          "female": 3,
+          "unknown": 3
+        }
+      }
+    }
+  },
+  "palettes": {
+    "skin": {
+      "core:ivory": {
+        "colors": [
+          [
+            244,
+            219,
+            185
+          ],
+          [
+            215,
+            174,
+            135
+          ],
+          [
+            168,
+            120,
+            91
+          ],
+          [
+            104,
+            70,
+            60
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:porcelain": {
+        "colors": [
+          [
+            244,
+            221,
+            214
+          ],
+          [
+            219,
+            175,
+            161
+          ],
+          [
+            170,
+            116,
+            113
+          ],
+          [
+            103,
+            70,
+            77
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:rose": {
+        "colors": [
+          [
+            239,
+            207,
+            178
+          ],
+          [
+            207,
+            159,
+            133
+          ],
+          [
+            153,
+            102,
+            89
+          ],
+          [
+            90,
+            64,
+            63
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:sand": {
+        "colors": [
+          [
+            229,
+            197,
+            153
+          ],
+          [
+            192,
+            149,
+            104
+          ],
+          [
+            143,
+            99,
+            71
+          ],
+          [
+            88,
+            61,
+            50
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:olive": {
+        "colors": [
+          [
+            217,
+            199,
+            156
+          ],
+          [
+            176,
+            154,
+            107
+          ],
+          [
+            125,
+            105,
+            72
+          ],
+          [
+            75,
+            62,
+            47
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:copper": {
+        "colors": [
+          [
+            222,
+            175,
+            130
+          ],
+          [
+            181,
+            128,
+            89
+          ],
+          [
+            130,
+            83,
+            61
+          ],
+          [
+            77,
+            51,
+            44
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:amber": {
+        "colors": [
+          [
+            202,
+            159,
+            113
+          ],
+          [
+            161,
+            117,
+            76
+          ],
+          [
+            111,
+            76,
+            51
+          ],
+          [
+            66,
+            48,
+            42
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:umber": {
+        "colors": [
+          [
+            178,
+            133,
+            103
+          ],
+          [
+            139,
+            96,
+            72
+          ],
+          [
+            94,
+            62,
+            50
+          ],
+          [
+            57,
+            43,
+            40
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:sienna": {
+        "colors": [
+          [
+            192,
+            145,
+            117
+          ],
+          [
+            150,
+            102,
+            85
+          ],
+          [
+            104,
+            65,
+            60
+          ],
+          [
+            60,
+            42,
+            44
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:brown": {
+        "colors": [
+          [
+            156,
+            119,
+            91
+          ],
+          [
+            117,
+            83,
+            63
+          ],
+          [
+            79,
+            56,
+            46
+          ],
+          [
+            47,
+            36,
+            33
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:ebony": {
+        "colors": [
+          [
+            122,
+            96,
+            82
+          ],
+          [
+            88,
+            67,
+            58
+          ],
+          [
+            57,
+            43,
+            39
+          ],
+          [
+            33,
+            28,
+            28
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:deep_umber": {
+        "colors": [
+          [
+            137,
+            105,
+            87
+          ],
+          [
+            101,
+            73,
+            63
+          ],
+          [
+            65,
+            45,
+            42
+          ],
+          [
+            39,
+            30,
+            32
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      }
+    },
+    "hair": {
+      "core:black": {
+        "colors": [
+          [
+            70,
+            68,
+            71
+          ],
+          [
+            39,
+            39,
+            46
+          ],
+          [
+            23,
+            25,
+            33
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:raven": {
+        "colors": [
+          [
+            63,
+            75,
+            84
+          ],
+          [
+            34,
+            43,
+            54
+          ],
+          [
+            20,
+            25,
+            36
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:brown": {
+        "colors": [
+          [
+            125,
+            88,
+            65
+          ],
+          [
+            80,
+            51,
+            40
+          ],
+          [
+            43,
+            32,
+            29
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:chestnut": {
+        "colors": [
+          [
+            150,
+            96,
+            62
+          ],
+          [
+            97,
+            56,
+            39
+          ],
+          [
+            52,
+            33,
+            29
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:auburn": {
+        "colors": [
+          [
+            179,
+            102,
+            60
+          ],
+          [
+            125,
+            61,
+            36
+          ],
+          [
+            67,
+            34,
+            27
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:copper": {
+        "colors": [
+          [
+            204,
+            132,
+            73
+          ],
+          [
+            153,
+            83,
+            43
+          ],
+          [
+            83,
+            45,
+            31
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:gold": {
+        "colors": [
+          [
+            225,
+            191,
+            119
+          ],
+          [
+            171,
+            136,
+            77
+          ],
+          [
+            97,
+            78,
+            50
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:flax": {
+        "colors": [
+          [
+            226,
+            215,
+            174
+          ],
+          [
+            176,
+            158,
+            115
+          ],
+          [
+            105,
+            95,
+            73
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:ash": {
+        "colors": [
+          [
+            177,
+            171,
+            152
+          ],
+          [
+            122,
+            118,
+            105
+          ],
+          [
+            68,
+            68,
+            65
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:silver": {
+        "colors": [
+          [
+            225,
+            227,
+            214
+          ],
+          [
+            160,
+            168,
+            163
+          ],
+          [
+            88,
+            98,
+            102
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:warm_black": {
+        "colors": [
+          [
+            89,
+            70,
+            61
+          ],
+          [
+            52,
+            38,
+            35
+          ],
+          [
+            29,
+            26,
+            27
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      }
+    },
+    "eye": {
+      "core:brown": {
+        "colors": [
+          [
+            103,
+            66,
+            42
+          ],
+          [
+            48,
+            36,
+            29
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:hazel": {
+        "colors": [
+          [
+            138,
+            118,
+            63
+          ],
+          [
+            56,
+            52,
+            32
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:amber": {
+        "colors": [
+          [
+            175,
+            137,
+            50
+          ],
+          [
+            67,
+            52,
+            25
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:green": {
+        "colors": [
+          [
+            91,
+            125,
+            87
+          ],
+          [
+            33,
+            55,
+            43
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:grey": {
+        "colors": [
+          [
+            128,
+            151,
+            151
+          ],
+          [
+            52,
+            64,
+            72
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:blue": {
+        "colors": [
+          [
+            112,
+            158,
+            175
+          ],
+          [
+            36,
+            70,
+            87
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:dark": {
+        "colors": [
+          [
+            53,
+            51,
+            45
+          ],
+          [
+            22,
+            23,
+            24
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:ice": {
+        "colors": [
+          [
+            161,
+            184,
+            188
+          ],
+          [
+            73,
+            104,
+            115
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      }
+    },
+    "cloth": {
+      "core:moss": {
+        "colors": [
+          [
+            126,
+            144,
+            105
+          ],
+          [
+            73,
+            92,
+            67
+          ],
+          [
+            40,
+            55,
+            47
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:wine": {
+        "colors": [
+          [
+            160,
+            100,
+            110
+          ],
+          [
+            99,
+            52,
+            67
+          ],
+          [
+            55,
+            34,
+            47
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:indigo": {
+        "colors": [
+          [
+            117,
+            133,
+            164
+          ],
+          [
+            67,
+            79,
+            112
+          ],
+          [
+            36,
+            46,
+            72
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:ocher": {
+        "colors": [
+          [
+            198,
+            166,
+            96
+          ],
+          [
+            132,
+            103,
+            54
+          ],
+          [
+            74,
+            58,
+            38
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:linen": {
+        "colors": [
+          [
+            206,
+            202,
+            174
+          ],
+          [
+            148,
+            145,
+            121
+          ],
+          [
+            84,
+            86,
+            76
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:umber": {
+        "colors": [
+          [
+            154,
+            124,
+            92
+          ],
+          [
+            98,
+            74,
+            56
+          ],
+          [
+            56,
+            46,
+            39
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:teal": {
+        "colors": [
+          [
+            104,
+            159,
+            155
+          ],
+          [
+            53,
+            103,
+            103
+          ],
+          [
+            29,
+            62,
+            68
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:clay": {
+        "colors": [
+          [
+            186,
+            129,
+            105
+          ],
+          [
+            125,
+            76,
+            60
+          ],
+          [
+            73,
+            46,
+            41
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:slate": {
+        "colors": [
+          [
+            146,
+            155,
+            162
+          ],
+          [
+            89,
+            101,
+            115
+          ],
+          [
+            49,
+            61,
+            77
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:plum": {
+        "colors": [
+          [
+            155,
+            126,
+            161
+          ],
+          [
+            98,
+            72,
+            111
+          ],
+          [
+            57,
+            42,
+            72
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:pine": {
+        "colors": [
+          [
+            90,
+            128,
+            115
+          ],
+          [
+            45,
+            79,
+            68
+          ],
+          [
+            28,
+            47,
+            43
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      },
+      "core:charcoal": {
+        "colors": [
+          [
+            112,
+            115,
+            120
+          ],
+          [
+            66,
+            70,
+            82
+          ],
+          [
+            36,
+            41,
+            54
+          ]
+        ],
+        "weights": {
+          "male": 1,
+          "female": 1,
+          "unknown": 1
+        }
+      }
+    }
+  }
+}

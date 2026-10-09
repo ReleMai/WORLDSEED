@@ -48,10 +48,10 @@ class PointerUI:
         w,h=self.screen.get_size()
         if presentation=='npc_dialogue':
             panel=self._floating_panel_state('npc_dialogue')
-            # Match the compact context/path rows, reply heading, and reserved
-            # paging strip. Every row handed to the renderer gets a hit target.
-            heading_h=self.title_font.get_height() if self.title_font is not None else 25
-            return max(1,(panel['h']-237-heading_h)//38)
+            # Match the 52px shell, 64px portrait strip, 36px path, 46px
+            # footer, 40px reply heading, and 44px paging reserve. The last
+            # 34px row uses no trailing gap, so add four before division.
+            return max(1,(panel['h']-278)//38)
         if presentation in ('container_inventory','inventory_unified','crafting_unified','discovery_pot','crafting_index'):
             panel_id='crafting' if presentation in ('crafting_unified','discovery_pot','crafting_index') else presentation
             state=getattr(self,'_floating_panels',{}).get(panel_id)

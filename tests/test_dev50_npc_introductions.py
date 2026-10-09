@@ -209,7 +209,7 @@ class NPCIntroductionTests(unittest.TestCase):
         term = RecordingTerm(['ESC'])
         _conversation_menu(ctx, term, npc)
         self.assertEqual(term.frames[0][1], 'Stranger')
-        self.assertEqual(term.frames[0][2], ['introduce', 'inspect', 'goodbye'])
+        self.assertEqual(term.frames[0][2], ['introduce', 'goodbye'])
         self.assertEqual(before, sim.state.to_dict())
 
     def test_intro_then_nested_topic_esc_preserves_parent_selection(self):

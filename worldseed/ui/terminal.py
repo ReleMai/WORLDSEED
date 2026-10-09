@@ -5,6 +5,7 @@ import shutil
 import sys
 import time
 import ctypes
+from contextlib import contextmanager, nullcontext
 
 CSI = "\x1b["
 
@@ -27,6 +28,24 @@ def normalize_raw_key(key: str) -> str:
     return key
 
 
+@contextmanager
+def pause_realtime_callback(backend):
+    """Suspend a backend's installed clock throughout a nested modal route.
+
+    Bound simulation drivers own the clock baseline, so they also receive a
+    scoped hold. Backends without a clock remain safe for terminal/debug use.
+    """
+    backend._realtime_pause_depth = getattr(backend, '_realtime_pause_depth', 0) + 1
+    callback = getattr(backend, '_realtime_callback', None)
+    owner = getattr(callback, '__self__', None)
+    pause = getattr(owner, 'pause_realtime', None)
+    try:
+        with pause() if callable(pause) else nullcontext():
+            yield
+    finally:
+        backend._realtime_pause_depth -= 1
+
+
 class Terminal:
     def __init__(self) -> None:
         self.use_unicode = True
@@ -39,7 +58,12 @@ class Terminal:
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
+    def pause_realtime(self):
+        return pause_realtime_callback(self)
+
     def _pump_realtime(self) -> bool:
+        if getattr(self, '_realtime_pause_depth', 0):
+            return False
         callback=self._realtime_callback
         return bool(callback and callback())
 

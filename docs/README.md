@@ -12,6 +12,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev61 paused conversations and composite NPC portraits](handoffs/DEV61_CONVERSATION_PORTRAITS_HANDOFF.md)
 - [Dev60 layered deterministic NPC conversations](handoffs/DEV60_DIALOGUE_TREES_HANDOFF.md)
 - [Dev59 personal NPC schedules and faster simulation](handoffs/DEV59_NPC_SCHEDULES_HANDOFF.md)
 - [Separate NPC/job lab](handoffs/NPC_JOB_LAB_HANDOFF.md)

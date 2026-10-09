@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from pathlib import Path
 import json,secrets,sys,time,traceback
@@ -685,7 +686,22 @@ def _gift_npc(ctx:GameContext,term:Terminal,npc)->str:
     npc.memories=npc.memories[-40:]
     return f'{npc.name} accepts the {item.name.lower()}'+(' gratefully; it answers an immediate need.' if needed else ' with thanks.')
 
+def _conversation_clock_hold(term):
+    pause=getattr(term,'pause_realtime',None)
+    return pause() if callable(pause) else nullcontext()
+
+
+def _npc_portrait(sim,npc):
+    from worldseed.presentation.portraits import portrait_spec
+    return portrait_spec(getattr(sim,'seed',b''),npc.uid,getattr(npc,'sex',''),getattr(npc,'age',30))
+
+
 def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
+    with _conversation_clock_hold(term):
+        return _conversation_thread(ctx,term,target,response)
+
+
+def _conversation_thread(ctx:GameContext,term:Terminal,target,response:str='')->str:
     sim=ctx.sim;dialogue=DialogueSystem(sim.state,sim.seed)
     if target.uid not in sim.state.introduced_npcs:response=''
     nav=NavigationStack(RouteState('npc-dialogue','Stranger',payload={'topic':'root','response':response}))
@@ -715,9 +731,12 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
         route.payload.setdefault('spans',[{'text':span.text,'topic':span.topic} for span in scene.spans])
         route.payload.setdefault('label',scene.topic_label or scene.topic.replace('_',' ').title())
         response=str(route.payload.get('response',''))
-        rows=[(option.key,option.label) for option in scene.options]
+        graphical=callable(getattr(term,'present_feature_menu',None))
+        rows=[(option.key,option.label) for option in scene.options
+              if not (graphical and option.action=='inspect')]
         data={'speaker':scene.speaker,'role':scene.role,'opening':route.payload['opening'],'response':response,
               'context':scene.context,'npc_uid':target.uid,'options':rows,'topic':scene.topic,
+              'portrait':_npc_portrait(sim,target),'time_paused':True,
               'relationship':dict(scene.relationship),'transcript_page':route.scroll,
               'spans':route.payload['spans'],'topic_label':route.payload['label'],
               'path':[{'index':i,'label':r.payload.get('label',r.title),'topic':r.payload.get('topic','root')} for i,r in enumerate(nav._stack)],
@@ -796,6 +815,11 @@ def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->st
         route.payload['response']=option.response
 
 def _talk_action(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
+    with _conversation_clock_hold(term):
+        return _talk_action_paused(ctx,term,npc_uid)
+
+
+def _talk_action_paused(ctx:GameContext,term:Terminal,npc_uid:str='')->str:
     sim=ctx.sim;p=sim.player_pos
     inside=sim.interiors.player_presence()
     if inside is not None:
@@ -1939,7 +1963,7 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         summary={'name':'Stranger','age':None,'occupation':'Unknown','settlement':'Unknown',
                  'activity':'Unknown','home':'','workplace':'','traits':[],'familiarity':0}
         tabs['overview']=[('Identity','Not introduced'),('Information','Introduce yourself to learn about this person')]
-        return {'summary':summary,'tabs':tabs,'active_tab':active_tab}
+        return {'summary':summary,'tabs':tabs,'active_tab':active_tab,'portrait':_npc_portrait(sim,npc)}
     overview=[
         ('Age',str(npc.age) if npc.uid in known else 'Unknown'),
         ('Occupation',occupation),
@@ -2037,7 +2061,7 @@ def _npc_profile_data(sim:Simulation,npc,active_tab:str)->dict:
         history=[('History','No personal history has been learned yet')]
     tabs['history']=history
 
-    return {'summary':summary,'tabs':tabs,'active_tab':active_tab}
+    return {'summary':summary,'tabs':tabs,'active_tab':active_tab,'portrait':_npc_portrait(sim,npc)}
 
 
 def _npc_profile_menu(ctx:GameContext,term:Terminal,npc_uid:str)->str:

@@ -83,13 +83,14 @@ class DialoguePanelRenderTests(unittest.TestCase):
         self.term.restore()
 
     def test_dialogue_panel_has_transcript_choices_and_inspect_button(self):
-        rows=[MenuRow('area','Ask about the area'),MenuRow('chat','Just chat'),MenuRow('trade','Trade'),MenuRow('inspect','Inspect'),MenuRow('attack','Attack')]
+        rows=[MenuRow('area','Ask about the area'),MenuRow('chat','Just chat'),MenuRow('trade','Trade'),MenuRow('attack','Attack')]
         self.term.present_feature_menu('npc_dialogue','Eda',rows,0,subtitle='Choose a response.',data={
             'speaker':'Eda','role':'Healer','opening':'You look tired.','response':'The road is quiet.',
             'context':('Evening','Healer'),'npc_uid':'npc:eda',
         })
         tokens={token for _,token in self.term._pointer_targets}
         self.assertIn('UI_SELECT:3',tokens)
+        self.assertEqual(sum(token=='UI_ACTION:inspect' for _,token in self.term._pointer_targets),1)
         self.assertEqual(self.term._floating_panel_id,'npc_dialogue')
 
 

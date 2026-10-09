@@ -4,6 +4,19 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev61 — Paused conversations and composite portraits
+
+Time freezes from NPC selection through the entire conversation, including
+nested inspection and gift panels. Leaving resumes the clock without replaying
+the time spent reading. NPC panels show one character name and conversations
+have one Inspect control.
+
+NPC portraits combine independently selected head, facial, hair and bust parts,
+with male and female variations and diverse palettes. Each face stays consistent
+across conversations, profiles, reloads and resizing; age changes its details.
+See the [Dev61 handoff](docs/handoffs/DEV61_CONVERSATION_PORTRAITS_HANDOFF.md)
+and [portrait gallery](artifacts/dev61-portrait-sheet.png).
+
 ## RC14 Dev60 — Layered NPC conversations
 
 Follow highlighted words in an NPC's speech to open deeper topics. Conversations

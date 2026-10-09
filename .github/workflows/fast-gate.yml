@@ -84,6 +84,14 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
+      - name: Dev60 deterministic dialogue trees and nested text UI
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev60 conversations" --timeout 90 -- python -u -m unittest -v tests.test_dialogue_trees tests.test_dialogue_context tests.test_dialogue_tree_ui tests.test_dialogue_tree_navigation
+
+      - name: Dev61 paused conversations and composite portraits
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev61 conversation portraits" --timeout 90 -- python -u -m unittest -v tests.test_conversation_pause tests.test_npc_portraits tests.test_conversation_portrait_ui tests.test_dev61_conversation_integration
+
       - name: Living NPC routines equipment and action combat
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Living NPCs and action combat" --timeout 180 -- python -u -m unittest -v tests.test_npc_schedules tests.test_npc_schedule_integration tests.test_npc_living_routines tests.test_npc_equipment tests.test_npc_living_ui tests.test_action_combat tests.test_npc_production_economy tests.test_npc_job_lab
@@ -147,10 +155,6 @@ jobs:
       - name: Dev44 stance dialogue and respawn regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev44 interaction regressions" --timeout 90 -- python -u -m unittest -v tests.test_dev44_stance_dialogue_respawn tests.test_ui_rc2.AggressiveStanceRoutingTests
-
-      - name: Dev60 deterministic dialogue trees and nested text UI
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev60 conversations" --timeout 90 -- python -u -m unittest -v tests.test_dialogue_trees tests.test_dialogue_context tests.test_dialogue_tree_ui tests.test_dialogue_tree_navigation
 
       - name: Dev46 continuous interior regressions
         shell: pwsh
