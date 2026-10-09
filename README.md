@@ -4,6 +4,16 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev62 — Expanded portrait features
+
+The portrait composer adds more eye shapes, hairstyles, facial proportions,
+clothing silhouettes and colors, plus tattoo motifs, skin details, accessories,
+cloth patterns and shading styles. New NPCs use the expanded catalog; existing
+saved NPCs keep their original face and portrait version. Each portrait remains
+deterministic across conversation, inspection, resizing and reloads.
+See the [Dev62 handoff](docs/handoffs/DEV62_PORTRAIT_EXPANSION_HANDOFF.md)
+and [expanded portrait gallery](artifacts/dev62-portrait-gallery.png).
+
 ## RC14 Dev61 — Paused conversations and composite portraits
 
 Time freezes from NPC selection through the entire conversation, including

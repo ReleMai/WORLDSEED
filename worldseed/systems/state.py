@@ -374,6 +374,10 @@ class NPCState:
     # of the carried goods. Cash continues to use the existing wealth ledger.
     equipment: dict[str, str] = field(default_factory=dict)
 
+    # Keep an established face pinned to the feature catalog it was born with.
+    # Rows saved before this field existed load as v1; newly born NPCs use v2.
+    portrait_version: int = 2
+
     def __post_init__(self) -> None:
         if self.sex not in ('male','female'):
             self.sex=npc_sex_for_identity(self.name,self.uid)
@@ -1331,7 +1335,12 @@ class LivingWorldState:
         s.player_skills.setdefault("shield",0)
         s.player_skills.setdefault("stealth",0)
         for key, typ in maps.items():
-            setattr(s, key, {k:typ(**v) for k,v in raw.get(key, {}).items()})
+            values = raw.get(key, {})
+            if key == "npcs":
+                # Copy the row rather than adding a migration field to the
+                # caller's raw save. Explicit v1/v2 pins survive later saves.
+                values = {uid: {"portrait_version": 1, **row} for uid, row in values.items()}
+            setattr(s, key, {k:typ(**v) for k,v in values.items()})
         s.history = [HistoricEvent(**v) for v in raw.get("history", [])]
         s.legacy = [LegacyCharacter(**v) for v in raw.get("legacy", [])]
         return s

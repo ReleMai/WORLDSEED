@@ -260,6 +260,9 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
             issues.append(f"orphan settlement faction: {uid}->{fid}")
 
     for uid, row in npcs.items():
+        portrait_version = row.get("portrait_version", 1)
+        if type(portrait_version) is not int or portrait_version not in (1, 2):
+            issues.append(f"invalid NPC portrait version: {uid}")
         sid = str(row.get("settlement_id", ""))
         if sid and sid not in settlements:
             issues.append(f"orphan NPC settlement: {uid}->{sid}")

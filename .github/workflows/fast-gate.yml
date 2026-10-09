@@ -92,6 +92,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev61 conversation portraits" --timeout 90 -- python -u -m unittest -v tests.test_conversation_pause tests.test_npc_portraits tests.test_conversation_portrait_ui tests.test_dev61_conversation_integration
 
+      - name: Dev62 expanded portrait layers and version compatibility
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev62 portrait expansion" --timeout 90 -- python -u -m unittest -v tests.test_portrait_expansion tests.test_portrait_version_persistence
+
       - name: Living NPC routines equipment and action combat
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Living NPCs and action combat" --timeout 180 -- python -u -m unittest -v tests.test_npc_schedules tests.test_npc_schedule_integration tests.test_npc_living_routines tests.test_npc_equipment tests.test_npc_living_ui tests.test_action_combat tests.test_npc_production_economy tests.test_npc_job_lab
@@ -142,7 +146,11 @@ jobs:
 
       - name: Dev41 real-time social world regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev41 real-time social world regressions" --timeout 120 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_dev31_playtest_fixes
+        run: python -u tools/run_ci_check.py --name "Dev41 real-time social world regressions" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase
+
+      - name: Dev31 world-startup playtest regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev31 world-startup playtest regressions" --timeout 180 -- python -u -m unittest -v tests.test_dev31_playtest_fixes
 
       - name: Dev42 normalized character art regressions
         shell: pwsh

@@ -693,7 +693,8 @@ def _conversation_clock_hold(term):
 
 def _npc_portrait(sim,npc):
     from worldseed.presentation.portraits import portrait_spec
-    return portrait_spec(getattr(sim,'seed',b''),npc.uid,getattr(npc,'sex',''),getattr(npc,'age',30))
+    return portrait_spec(getattr(sim,'seed',b''),npc.uid,getattr(npc,'sex',''),getattr(npc,'age',30),
+                         version=getattr(npc,'portrait_version',1))
 
 
 def _conversation_menu(ctx:GameContext,term:Terminal,target,response:str='')->str:
