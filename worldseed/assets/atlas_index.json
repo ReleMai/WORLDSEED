@@ -136,7 +136,7 @@
             64
           ]
         },
-        "core:beachgrass": {
+        "core:alder_cone_cluster": {
           "cell": [
             0,
             1
@@ -148,7 +148,7 @@
             64
           ]
         },
-        "core:berries": {
+        "core:alpine_sorrel_root": {
           "cell": [
             1,
             1
@@ -160,7 +160,7 @@
             64
           ]
         },
-        "core:blueberries": {
+        "core:amberroot_crown": {
           "cell": [
             2,
             1
@@ -172,7 +172,7 @@
             64
           ]
         },
-        "core:cattail_root": {
+        "core:beachgrass": {
           "cell": [
             3,
             1
@@ -184,7 +184,7 @@
             64
           ]
         },
-        "core:duckweed": {
+        "core:beech_nut_cup": {
           "cell": [
             4,
             1
@@ -196,7 +196,7 @@
             64
           ]
         },
-        "core:eelgrass": {
+        "core:berries": {
           "cell": [
             5,
             1
@@ -208,7 +208,7 @@
             64
           ]
         },
-        "core:kelp": {
+        "core:birch_catkin_cluster": {
           "cell": [
             6,
             1
@@ -220,7 +220,7 @@
             64
           ]
         },
-        "core:nettles": {
+        "core:bladderwrack_holdfast": {
           "cell": [
             7,
             1
@@ -232,7 +232,7 @@
             64
           ]
         },
-        "core:pickerelweed": {
+        "core:blueberries": {
           "cell": [
             8,
             1
@@ -244,7 +244,7 @@
             64
           ]
         },
-        "core:raspberries": {
+        "core:bog_myrtle_branch": {
           "cell": [
             9,
             1
@@ -256,7 +256,7 @@
             64
           ]
         },
-        "core:saltmarsh_grass": {
+        "core:burdock_burr_cluster": {
           "cell": [
             10,
             1
@@ -268,7 +268,7 @@
             64
           ]
         },
-        "core:wild_strawberries": {
+        "core:cattail_root": {
           "cell": [
             11,
             1
@@ -280,7 +280,7 @@
             64
           ]
         },
-        "core:water_lily_root": {
+        "core:cattail_seed_head": {
           "cell": [
             12,
             1
@@ -292,7 +292,7 @@
             64
           ]
         },
-        "core:wild_carrot": {
+        "core:chicory_root_crown": {
           "cell": [
             13,
             1
@@ -304,7 +304,7 @@
             64
           ]
         },
-        "core:wild_grain": {
+        "core:cotton_grass_tuft": {
           "cell": [
             14,
             1
@@ -316,7 +316,7 @@
             64
           ]
         },
-        "core:wild_onion": {
+        "core:crowberry_stem_mat": {
           "cell": [
             15,
             1
@@ -328,7 +328,7 @@
             64
           ]
         },
-        "core:barley": {
+        "core:dogwood_stem_bundle": {
           "cell": [
             0,
             2
@@ -340,7 +340,7 @@
             64
           ]
         },
-        "core:beans": {
+        "core:dried_teasel_head": {
           "cell": [
             1,
             2
@@ -352,7 +352,7 @@
             64
           ]
         },
-        "core:cabbage": {
+        "core:duckweed": {
           "cell": [
             2,
             2
@@ -364,7 +364,7 @@
             64
           ]
         },
-        "core:carrot": {
+        "core:dwarf_willow_twigs": {
           "cell": [
             3,
             2
@@ -376,7 +376,7 @@
             64
           ]
         },
-        "core:flax": {
+        "core:eelgrass": {
           "cell": [
             4,
             2
@@ -388,7 +388,7 @@
             64
           ]
         },
-        "core:onion": {
+        "core:flax_seed_capsule": {
           "cell": [
             5,
             2
@@ -400,7 +400,7 @@
             64
           ]
         },
-        "core:turnip": {
+        "core:goldenrod_spray": {
           "cell": [
             6,
             2
@@ -412,7 +412,7 @@
             64
           ]
         },
-        "core:wheat": {
+        "core:hazel_catkin_spray": {
           "cell": [
             7,
             2
@@ -424,7 +424,103 @@
             64
           ]
         },
-        "core:dandelion_greens": {
+        "core:juniper_bough": {
+          "cell": [
+            8,
+            2
+          ],
+          "rect": [
+            512,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:kelp": {
+          "cell": [
+            9,
+            2
+          ],
+          "rect": [
+            576,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:marsh_mallow_stems": {
+          "cell": [
+            10,
+            2
+          ],
+          "rect": [
+            640,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:milkweed_pod": {
+          "cell": [
+            11,
+            2
+          ],
+          "rect": [
+            704,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:mountain_avens_seedhead": {
+          "cell": [
+            12,
+            2
+          ],
+          "rect": [
+            768,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:mullein_flower_spike": {
+          "cell": [
+            13,
+            2
+          ],
+          "rect": [
+            832,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:nettles": {
+          "cell": [
+            14,
+            2
+          ],
+          "rect": [
+            896,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:oak_gall_cluster": {
+          "cell": [
+            15,
+            2
+          ],
+          "rect": [
+            960,
+            128,
+            64,
+            64
+          ]
+        },
+        "core:pearl_kelp_knot": {
           "cell": [
             0,
             3
@@ -436,7 +532,187 @@
             64
           ]
         },
-        "core:medicinal_herb": {
+        "core:peat_moss_clump": {
+          "cell": [
+            1,
+            3
+          ],
+          "rect": [
+            64,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:pickerelweed": {
+          "cell": [
+            2,
+            3
+          ],
+          "rect": [
+            128,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:raspberries": {
+          "cell": [
+            3,
+            3
+          ],
+          "rect": [
+            192,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:reindeer_lichen_mat": {
+          "cell": [
+            4,
+            3
+          ],
+          "rect": [
+            256,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:resinous_pine_cone": {
+          "cell": [
+            5,
+            3
+          ],
+          "rect": [
+            320,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:rock_samphire_stems": {
+          "cell": [
+            6,
+            3
+          ],
+          "rect": [
+            384,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:rose_hip_branch": {
+          "cell": [
+            7,
+            3
+          ],
+          "rect": [
+            448,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:rush_pith_bundle": {
+          "cell": [
+            8,
+            3
+          ],
+          "rect": [
+            512,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:saltmarsh_grass": {
+          "cell": [
+            9,
+            3
+          ],
+          "rect": [
+            576,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:sea_lavender_spray": {
+          "cell": [
+            10,
+            3
+          ],
+          "rect": [
+            640,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:sedge_root_mat": {
+          "cell": [
+            11,
+            3
+          ],
+          "rect": [
+            704,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:spruce_pitch_knot": {
+          "cell": [
+            12,
+            3
+          ],
+          "rect": [
+            768,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:star_reed_tuft": {
+          "cell": [
+            13,
+            3
+          ],
+          "rect": [
+            832,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:wild_strawberries": {
+          "cell": [
+            14,
+            3
+          ],
+          "rect": [
+            896,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:sweet_clover_tops": {
+          "cell": [
+            15,
+            3
+          ],
+          "rect": [
+            960,
+            192,
+            64,
+            64
+          ]
+        },
+        "core:sweet_flag_root": {
           "cell": [
             0,
             4
@@ -448,7 +724,7 @@
             64
           ]
         },
-        "core:plantain_leaf": {
+        "core:water_iris_rhizome": {
           "cell": [
             1,
             4
@@ -460,7 +736,7 @@
             64
           ]
         },
-        "core:yarrow": {
+        "core:water_lily_root": {
           "cell": [
             2,
             4
@@ -468,6 +744,330 @@
           "rect": [
             128,
             256,
+            64,
+            64
+          ]
+        },
+        "core:wild_carrot": {
+          "cell": [
+            3,
+            4
+          ],
+          "rect": [
+            192,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:wild_grain": {
+          "cell": [
+            4,
+            4
+          ],
+          "rect": [
+            256,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:wild_onion": {
+          "cell": [
+            5,
+            4
+          ],
+          "rect": [
+            320,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:willow_bark_curl": {
+          "cell": [
+            6,
+            4
+          ],
+          "rect": [
+            384,
+            256,
+            64,
+            64
+          ]
+        },
+        "core:barley": {
+          "cell": [
+            0,
+            5
+          ],
+          "rect": [
+            0,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:beans": {
+          "cell": [
+            1,
+            5
+          ],
+          "rect": [
+            64,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:cabbage": {
+          "cell": [
+            2,
+            5
+          ],
+          "rect": [
+            128,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:carrot": {
+          "cell": [
+            3,
+            5
+          ],
+          "rect": [
+            192,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:corn": {
+          "cell": [
+            4,
+            5
+          ],
+          "rect": [
+            256,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:flax": {
+          "cell": [
+            5,
+            5
+          ],
+          "rect": [
+            320,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:onion": {
+          "cell": [
+            6,
+            5
+          ],
+          "rect": [
+            384,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:pumpkin": {
+          "cell": [
+            7,
+            5
+          ],
+          "rect": [
+            448,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:turnip": {
+          "cell": [
+            8,
+            5
+          ],
+          "rect": [
+            512,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:wheat": {
+          "cell": [
+            9,
+            5
+          ],
+          "rect": [
+            576,
+            320,
+            64,
+            64
+          ]
+        },
+        "core:dandelion_greens": {
+          "cell": [
+            0,
+            6
+          ],
+          "rect": [
+            0,
+            384,
+            64,
+            64
+          ]
+        },
+        "core:frost_sage_branch": {
+          "cell": [
+            1,
+            6
+          ],
+          "rect": [
+            64,
+            384,
+            64,
+            64
+          ]
+        },
+        "core:moonmint_sprig": {
+          "cell": [
+            2,
+            6
+          ],
+          "rect": [
+            128,
+            384,
+            64,
+            64
+          ]
+        },
+        "core:saffron_crocus_tuft": {
+          "cell": [
+            3,
+            6
+          ],
+          "rect": [
+            192,
+            384,
+            64,
+            64
+          ]
+        },
+        "core:sunspice_rhizome": {
+          "cell": [
+            4,
+            6
+          ],
+          "rect": [
+            256,
+            384,
+            64,
+            64
+          ]
+        },
+        "core:blue_lotus_stalk": {
+          "cell": [
+            0,
+            7
+          ],
+          "rect": [
+            0,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:crimson_stonecrop_crown": {
+          "cell": [
+            1,
+            7
+          ],
+          "rect": [
+            64,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:ghost_orchid_stem": {
+          "cell": [
+            2,
+            7
+          ],
+          "rect": [
+            128,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:marsh_amber_bulb": {
+          "cell": [
+            3,
+            7
+          ],
+          "rect": [
+            192,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:medicinal_herb": {
+          "cell": [
+            4,
+            7
+          ],
+          "rect": [
+            256,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:plantain_leaf": {
+          "cell": [
+            5,
+            7
+          ],
+          "rect": [
+            320,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:silverleaf_sprig": {
+          "cell": [
+            6,
+            7
+          ],
+          "rect": [
+            384,
+            448,
+            64,
+            64
+          ]
+        },
+        "core:yarrow": {
+          "cell": [
+            7,
+            7
+          ],
+          "rect": [
+            448,
+            448,
             64,
             64
           ]
@@ -475,11 +1075,11 @@
         "core:animal_fat": {
           "cell": [
             0,
-            5
+            8
           ],
           "rect": [
             0,
-            320,
+            512,
             64,
             64
           ]
@@ -487,11 +1087,11 @@
         "core:atlantic_cod": {
           "cell": [
             1,
-            5
+            8
           ],
           "rect": [
             64,
-            320,
+            512,
             64,
             64
           ]
@@ -499,251 +1099,899 @@
         "core:atlantic_mackerel": {
           "cell": [
             2,
-            5
+            8
           ],
           "rect": [
             128,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:barley_meal": {
+          "cell": [
+            3,
+            8
+          ],
+          "rect": [
+            192,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:bean_crispbread": {
+          "cell": [
+            4,
+            8
+          ],
+          "rect": [
+            256,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:bean_flour": {
+          "cell": [
+            5,
+            8
+          ],
+          "rect": [
             320,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:berry_reduction": {
+          "cell": [
+            6,
+            8
+          ],
+          "rect": [
+            384,
+            512,
             64,
             64
           ]
         },
         "core:blue_mussels": {
           "cell": [
-            3,
-            5
+            7,
+            8
           ],
           "rect": [
-            192,
-            320,
+            448,
+            512,
             64,
             64
           ]
         },
         "core:bluegill": {
           "cell": [
-            4,
-            5
+            8,
+            8
           ],
           "rect": [
-            256,
-            320,
+            512,
+            512,
             64,
             64
           ]
         },
         "core:bolete": {
           "cell": [
-            5,
-            5
+            9,
+            8
           ],
           "rect": [
-            320,
-            320,
+            576,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:bone_stock": {
+          "cell": [
+            10,
+            8
+          ],
+          "rect": [
+            640,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:braised_meat": {
+          "cell": [
+            11,
+            8
+          ],
+          "rect": [
+            704,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:bread_dough": {
+          "cell": [
+            12,
+            8
+          ],
+          "rect": [
+            768,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:brewing_wort": {
+          "cell": [
+            13,
+            8
+          ],
+          "rect": [
+            832,
+            512,
             64,
             64
           ]
         },
         "core:brook_trout": {
           "cell": [
-            6,
-            5
+            14,
+            8
           ],
           "rect": [
-            384,
-            320,
+            896,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:cabbage_ferment": {
+          "cell": [
+            15,
+            8
+          ],
+          "rect": [
+            960,
+            512,
+            64,
+            64
+          ]
+        },
+        "core:cattail_starch": {
+          "cell": [
+            0,
+            9
+          ],
+          "rect": [
+            0,
+            576,
             64,
             64
           ]
         },
         "core:channel_catfish": {
           "cell": [
-            7,
-            5
+            1,
+            9
           ],
           "rect": [
-            448,
-            320,
+            64,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:coastal_kelp_vinegar": {
+          "cell": [
+            2,
+            9
+          ],
+          "rect": [
+            128,
+            576,
             64,
             64
           ]
         },
         "core:common_carp": {
           "cell": [
-            8,
-            5
+            3,
+            9
           ],
           "rect": [
-            512,
-            320,
+            192,
+            576,
             64,
             64
           ]
         },
         "core:cooked_meat": {
           "cell": [
-            9,
-            5
+            4,
+            9
           ],
           "rect": [
+            256,
             576,
+            64,
+            64
+          ]
+        },
+        "core:corn_griddle_cake": {
+          "cell": [
+            5,
+            9
+          ],
+          "rect": [
             320,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:cornmeal": {
+          "cell": [
+            6,
+            9
+          ],
+          "rect": [
+            384,
+            576,
             64,
             64
           ]
         },
         "core:dried_meat": {
           "cell": [
+            7,
+            9
+          ],
+          "rect": [
+            448,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:fine_sifted_flour": {
+          "cell": [
+            8,
+            9
+          ],
+          "rect": [
+            512,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:flax_meal": {
+          "cell": [
+            9,
+            9
+          ],
+          "rect": [
+            576,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:flax_travel_cake": {
+          "cell": [
             10,
-            5
+            9
           ],
           "rect": [
             640,
-            320,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:flour": {
+          "cell": [
+            11,
+            9
+          ],
+          "rect": [
+            704,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:frost_sage_brew": {
+          "cell": [
+            12,
+            9
+          ],
+          "rect": [
+            768,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:fruit_preserve": {
+          "cell": [
+            13,
+            9
+          ],
+          "rect": [
+            832,
+            576,
             64,
             64
           ]
         },
         "core:raw_game_meat": {
           "cell": [
-            11,
-            5
+            14,
+            9
           ],
           "rect": [
-            704,
-            320,
+            896,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:grain_porridge": {
+          "cell": [
+            15,
+            9
+          ],
+          "rect": [
+            960,
+            576,
+            64,
+            64
+          ]
+        },
+        "core:grain_table_beer": {
+          "cell": [
+            0,
+            10
+          ],
+          "rect": [
+            0,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:grain_vinegar": {
+          "cell": [
+            1,
+            10
+          ],
+          "rect": [
+            64,
+            640,
             64,
             64
           ]
         },
         "core:largemouth_bass": {
           "cell": [
-            12,
-            5
+            2,
+            10
           ],
           "rect": [
-            768,
-            320,
+            128,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:malt_tonic_drink": {
+          "cell": [
+            3,
+            10
+          ],
+          "rect": [
+            192,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:malted_grain": {
+          "cell": [
+            4,
+            10
+          ],
+          "rect": [
+            256,
+            640,
             64,
             64
           ]
         },
         "core:meat": {
           "cell": [
-            13,
-            5
+            5,
+            10
           ],
           "rect": [
-            832,
             320,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:minced_game": {
+          "cell": [
+            6,
+            10
+          ],
+          "rect": [
+            384,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:moonmint_infusion": {
+          "cell": [
+            7,
+            10
+          ],
+          "rect": [
+            448,
+            640,
             64,
             64
           ]
         },
         "core:morel": {
           "cell": [
-            14,
-            5
+            8,
+            10
           ],
           "rect": [
-            896,
-            320,
+            512,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:mushroom_powder": {
+          "cell": [
+            9,
+            10
+          ],
+          "rect": [
+            576,
+            640,
             64,
             64
           ]
         },
         "core:northern_pike": {
           "cell": [
-            15,
-            5
+            10,
+            10
           ],
           "rect": [
-            960,
-            320,
+            640,
+            640,
             64,
             64
           ]
         },
         "core:offal": {
           "cell": [
-            0,
-            6
+            11,
+            10
           ],
           "rect": [
-            0,
-            384,
+            704,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:potted_meat": {
+          "cell": [
+            12,
+            10
+          ],
+          "rect": [
+            768,
+            640,
             64,
             64
           ]
         },
         "core:raw_poultry": {
           "cell": [
-            1,
-            6
+            13,
+            10
           ],
           "rect": [
+            832,
+            640,
             64,
-            384,
+            64
+          ]
+        },
+        "core:rack_dried_fish": {
+          "cell": [
+            14,
+            10
+          ],
+          "rect": [
+            896,
+            640,
             64,
             64
           ]
         },
         "core:red_drum": {
           "cell": [
+            15,
+            10
+          ],
+          "rect": [
+            960,
+            640,
+            64,
+            64
+          ]
+        },
+        "core:rendered_tallow": {
+          "cell": [
+            0,
+            11
+          ],
+          "rect": [
+            0,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:roasted_grain_crumble": {
+          "cell": [
+            1,
+            11
+          ],
+          "rect": [
+            64,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:root_broth": {
+          "cell": [
             2,
-            6
+            11
           ],
           "rect": [
             128,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:root_dumplings": {
+          "cell": [
+            3,
+            11
+          ],
+          "rect": [
+            192,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:root_flour": {
+          "cell": [
+            4,
+            11
+          ],
+          "rect": [
+            256,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:bread": {
+          "cell": [
+            5,
+            11
+          ],
+          "rect": [
+            320,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:savory_hand_pie": {
+          "cell": [
+            6,
+            11
+          ],
+          "rect": [
             384,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:seared_game_portions": {
+          "cell": [
+            7,
+            11
+          ],
+          "rect": [
+            448,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:small_ale": {
+          "cell": [
+            8,
+            11
+          ],
+          "rect": [
+            512,
+            704,
             64,
             64
           ]
         },
         "core:raw_small_game": {
           "cell": [
-            3,
-            6
+            9,
+            11
           ],
           "rect": [
-            192,
-            384,
+            576,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:smoked_fish": {
+          "cell": [
+            10,
+            11
+          ],
+          "rect": [
+            640,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:smoked_offal_sausage": {
+          "cell": [
+            11,
+            11
+          ],
+          "rect": [
+            704,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:sourdough_loaf": {
+          "cell": [
+            12,
+            11
+          ],
+          "rect": [
+            768,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:sourdough_starter": {
+          "cell": [
+            13,
+            11
+          ],
+          "rect": [
+            832,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:soured_root_pickle": {
+          "cell": [
+            14,
+            11
+          ],
+          "rect": [
+            896,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:spiced_grain_cordial": {
+          "cell": [
+            15,
+            11
+          ],
+          "rect": [
+            960,
+            704,
+            64,
+            64
+          ]
+        },
+        "core:split_fish_fillets": {
+          "cell": [
+            0,
+            12
+          ],
+          "rect": [
+            0,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:steam_raised_grain_bun": {
+          "cell": [
+            1,
+            12
+          ],
+          "rect": [
+            64,
+            768,
             64,
             64
           ]
         },
         "core:striped_bass": {
           "cell": [
-            4,
-            6
+            2,
+            12
           ],
           "rect": [
-            256,
-            384,
+            128,
+            768,
             64,
             64
           ]
         },
         "core:striped_mullet": {
           "cell": [
-            5,
-            6
+            3,
+            12
           ],
           "rect": [
-            320,
-            384,
+            192,
+            768,
             64,
             64
           ]
         },
         "core:summer_flounder": {
           "cell": [
+            4,
+            12
+          ],
+          "rect": [
+            256,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:thickened_mushroom_soup": {
+          "cell": [
+            5,
+            12
+          ],
+          "rect": [
+            320,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:trail_hardtack": {
+          "cell": [
             6,
-            6
+            12
           ],
           "rect": [
             384,
-            384,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:travel_stew_concentrate": {
+          "cell": [
+            7,
+            12
+          ],
+          "rect": [
+            448,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:twice_baked_rusk": {
+          "cell": [
+            8,
+            12
+          ],
+          "rect": [
+            512,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:unleavened_flatbread": {
+          "cell": [
+            9,
+            12
+          ],
+          "rect": [
+            576,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:vinegar_preserved_fish": {
+          "cell": [
+            10,
+            12
+          ],
+          "rect": [
+            640,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:wholegrain_flour": {
+          "cell": [
+            11,
+            12
+          ],
+          "rect": [
+            704,
+            768,
+            64,
+            64
+          ]
+        },
+        "core:wilted_greens": {
+          "cell": [
+            12,
+            12
+          ],
+          "rect": [
+            768,
+            768,
             64,
             64
           ]
@@ -751,11 +1999,11 @@
         "core:barley_seed": {
           "cell": [
             0,
-            7
+            13
           ],
           "rect": [
             0,
-            448,
+            832,
             64,
             64
           ]
@@ -763,11 +2011,11 @@
         "core:beans_seed": {
           "cell": [
             1,
-            7
+            13
           ],
           "rect": [
             64,
-            448,
+            832,
             64,
             64
           ]
@@ -775,11 +2023,11 @@
         "core:cabbage_seed": {
           "cell": [
             2,
-            7
+            13
           ],
           "rect": [
             128,
-            448,
+            832,
             64,
             64
           ]
@@ -787,203 +2035,995 @@
         "core:carrot_seed": {
           "cell": [
             3,
-            7
+            13
           ],
           "rect": [
             192,
-            448,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:corn_seed": {
+          "cell": [
+            4,
+            13
+          ],
+          "rect": [
+            256,
+            832,
             64,
             64
           ]
         },
         "core:flax_seed": {
           "cell": [
-            4,
-            7
+            5,
+            13
           ],
           "rect": [
-            256,
-            448,
+            320,
+            832,
             64,
             64
           ]
         },
         "core:onion_seed": {
           "cell": [
-            5,
-            7
+            6,
+            13
           ],
           "rect": [
-            320,
+            384,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:pumpkin_seed": {
+          "cell": [
+            7,
+            13
+          ],
+          "rect": [
             448,
+            832,
             64,
             64
           ]
         },
         "core:turnip_seed": {
           "cell": [
-            6,
-            7
+            8,
+            13
           ],
           "rect": [
-            384,
-            448,
+            512,
+            832,
             64,
             64
           ]
         },
         "core:wheat_seed": {
           "cell": [
-            7,
-            7
+            9,
+            13
           ],
           "rect": [
-            448,
-            448,
+            576,
+            832,
+            64,
+            64
+          ]
+        },
+        "core:abrasive_powder": {
+          "cell": [
+            0,
+            14
+          ],
+          "rect": [
+            0,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:aromatic_oil": {
+          "cell": [
+            1,
+            14
+          ],
+          "rect": [
+            64,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:bark_felt": {
+          "cell": [
+            2,
+            14
+          ],
+          "rect": [
+            128,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:bentwood_frame": {
+          "cell": [
+            3,
+            14
+          ],
+          "rect": [
+            192,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:binding_cord": {
+          "cell": [
+            4,
+            14
+          ],
+          "rect": [
+            256,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:bitter_herbal_extract": {
+          "cell": [
+            5,
+            14
+          ],
+          "rect": [
+            320,
+            896,
             64,
             64
           ]
         },
         "core:bone": {
           "cell": [
-            0,
-            8
+            6,
+            14
           ],
           "rect": [
-            0,
+            384,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:bone_arrow_point": {
+          "cell": [
+            7,
+            14
+          ],
+          "rect": [
+            448,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:bone_chips": {
+          "cell": [
+            8,
+            14
+          ],
+          "rect": [
             512,
+            896,
             64,
             64
           ]
         },
         "core:bone_meal": {
           "cell": [
-            1,
-            8
+            9,
+            14
           ],
           "rect": [
-            64,
-            512,
+            576,
+            896,
             64,
             64
           ]
         },
-        "core:braided_line": {
+        "core:botanical_brewing_sachet": {
+          "cell": [
+            10,
+            14
+          ],
+          "rect": [
+            640,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:braided_wool_cord": {
+          "cell": [
+            11,
+            14
+          ],
+          "rect": [
+            704,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:canvas_panel": {
+          "cell": [
+            12,
+            14
+          ],
+          "rect": [
+            768,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:carbon_pigment": {
+          "cell": [
+            13,
+            14
+          ],
+          "rect": [
+            832,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:carved_bone_barb": {
+          "cell": [
+            14,
+            14
+          ],
+          "rect": [
+            896,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_filter_media": {
+          "cell": [
+            15,
+            14
+          ],
+          "rect": [
+            960,
+            896,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_shards": {
+          "cell": [
+            0,
+            15
+          ],
+          "rect": [
+            0,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:clean_dressing_pad": {
+          "cell": [
+            1,
+            15
+          ],
+          "rect": [
+            64,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:clear_crystal": {
           "cell": [
             2,
-            8
+            15
           ],
           "rect": [
             128,
-            512,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:cloth_scraps": {
+          "cell": [
+            3,
+            15
+          ],
+          "rect": [
+            192,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:compost_blend": {
+          "cell": [
+            4,
+            15
+          ],
+          "rect": [
+            256,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:copper_granules": {
+          "cell": [
+            5,
+            15
+          ],
+          "rect": [
+            320,
+            960,
             64,
             64
           ]
         },
         "core:copper_ingot": {
           "cell": [
-            3,
-            8
+            6,
+            15
           ],
           "rect": [
-            192,
+            384,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:copper_sheet": {
+          "cell": [
+            7,
+            15
+          ],
+          "rect": [
+            448,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:copper_spinner_blade": {
+          "cell": [
+            8,
+            15
+          ],
+          "rect": [
             512,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:copper_wire": {
+          "cell": [
+            9,
+            15
+          ],
+          "rect": [
+            576,
+            960,
             64,
             64
           ]
         },
         "core:plant_cordage": {
           "cell": [
-            4,
-            8
+            10,
+            15
           ],
           "rect": [
-            256,
-            512,
+            640,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:cured_leather_panel": {
+          "cell": [
+            11,
+            15
+          ],
+          "rect": [
+            704,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:dressed_stone": {
+          "cell": [
+            12,
+            15
+          ],
+          "rect": [
+            768,
+            960,
             64,
             64
           ]
         },
         "core:feather": {
           "cell": [
-            5,
-            8
+            13,
+            15
           ],
           "rect": [
-            320,
-            512,
+            832,
+            960,
             64,
             64
           ]
         },
-        "core:fiber_line": {
+        "core:feather_fletching": {
           "cell": [
-            6,
-            8
+            14,
+            15
           ],
           "rect": [
-            384,
-            512,
+            896,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:felt_padding": {
+          "cell": [
+            15,
+            15
+          ],
+          "rect": [
+            960,
+            960,
+            64,
+            64
+          ]
+        },
+        "core:filtered_herb_concentrate": {
+          "cell": [
+            0,
+            16
+          ],
+          "rect": [
+            0,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:filtered_malt_culture": {
+          "cell": [
+            1,
+            16
+          ],
+          "rect": [
+            64,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:fine_gear": {
+          "cell": [
+            2,
+            16
+          ],
+          "rect": [
+            128,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:fitted_grip": {
+          "cell": [
+            3,
+            16
+          ],
+          "rect": [
+            192,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:fitted_splint_frame": {
+          "cell": [
+            4,
+            16
+          ],
+          "rect": [
+            256,
+            1024,
             64,
             64
           ]
         },
         "core:fresh_hide": {
           "cell": [
+            5,
+            16
+          ],
+          "rect": [
+            320,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:fur_felt": {
+          "cell": [
+            6,
+            16
+          ],
+          "rect": [
+            384,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:fur_grip_pad": {
+          "cell": [
             7,
-            8
+            16
           ],
           "rect": [
             448,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:glass_shards": {
+          "cell": [
+            8,
+            16
+          ],
+          "rect": [
             512,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:glazed_lure_bead": {
+          "cell": [
+            9,
+            16
+          ],
+          "rect": [
+            576,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:grain_binder_paste": {
+          "cell": [
+            10,
+            16
+          ],
+          "rect": [
+            640,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:hardened_leather": {
+          "cell": [
+            11,
+            16
+          ],
+          "rect": [
+            704,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:hardwood_blank": {
+          "cell": [
+            12,
+            16
+          ],
+          "rect": [
+            768,
+            1024,
             64,
             64
           ]
         },
         "core:hide": {
           "cell": [
-            8,
-            8
+            13,
+            16
           ],
           "rect": [
-            512,
-            512,
+            832,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:hide_glue": {
+          "cell": [
+            14,
+            16
+          ],
+          "rect": [
+            896,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:hinge_pair": {
+          "cell": [
+            15,
+            16
+          ],
+          "rect": [
+            960,
+            1024,
+            64,
+            64
+          ]
+        },
+        "core:horn_button_set": {
+          "cell": [
+            0,
+            17
+          ],
+          "rect": [
+            0,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:horn_laminate": {
+          "cell": [
+            1,
+            17
+          ],
+          "rect": [
+            64,
+            1088,
             64,
             64
           ]
         },
         "core:iron_bloom": {
           "cell": [
-            9,
-            8
+            2,
+            17
           ],
           "rect": [
-            576,
-            512,
+            128,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:iron_tool_blank": {
+          "cell": [
+            3,
+            17
+          ],
+          "rect": [
+            192,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:kiln_grog": {
+          "cell": [
+            4,
+            17
+          ],
+          "rect": [
+            256,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:laminated_bow_limbs": {
+          "cell": [
+            5,
+            17
+          ],
+          "rect": [
+            320,
+            1088,
             64,
             64
           ]
         },
         "core:leather": {
           "cell": [
+            6,
+            17
+          ],
+          "rect": [
+            384,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:leather_grip_wrap": {
+          "cell": [
+            7,
+            17
+          ],
+          "rect": [
+            448,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:leather_lace": {
+          "cell": [
+            8,
+            17
+          ],
+          "rect": [
+            512,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:leather_scraps": {
+          "cell": [
+            9,
+            17
+          ],
+          "rect": [
+            576,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:linen_panel": {
+          "cell": [
             10,
-            8
+            17
           ],
           "rect": [
             640,
-            512,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:marsh_resin_balm": {
+          "cell": [
+            11,
+            17
+          ],
+          "rect": [
+            704,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:metal_scraps": {
+          "cell": [
+            12,
+            17
+          ],
+          "rect": [
+            768,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:mineral_grit": {
+          "cell": [
+            13,
+            17
+          ],
+          "rect": [
+            832,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:mortar_mix": {
+          "cell": [
+            14,
+            17
+          ],
+          "rect": [
+            896,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:nuts_and_bolts": {
+          "cell": [
+            15,
+            17
+          ],
+          "rect": [
+            960,
+            1088,
+            64,
+            64
+          ]
+        },
+        "core:oiled_leather": {
+          "cell": [
+            0,
+            18
+          ],
+          "rect": [
+            0,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:orchid_lotus_essence": {
+          "cell": [
+            1,
+            18
+          ],
+          "rect": [
+            64,
+            1152,
             64,
             64
           ]
         },
         "core:parchment": {
           "cell": [
+            2,
+            18
+          ],
+          "rect": [
+            128,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:pasture_fiber_bundle": {
+          "cell": [
+            3,
+            18
+          ],
+          "rect": [
+            192,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:pitch_binder": {
+          "cell": [
+            4,
+            18
+          ],
+          "rect": [
+            256,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:planed_board": {
+          "cell": [
+            5,
+            18
+          ],
+          "rect": [
+            320,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:plant_fiber_pulp": {
+          "cell": [
+            6,
+            18
+          ],
+          "rect": [
+            384,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:plant_scraps": {
+          "cell": [
+            7,
+            18
+          ],
+          "rect": [
+            448,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:polished_crystal_lens": {
+          "cell": [
+            8,
+            18
+          ],
+          "rect": [
+            512,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:polishing_slurry": {
+          "cell": [
+            9,
+            18
+          ],
+          "rect": [
+            576,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:pressed_plant_binder": {
+          "cell": [
+            10,
+            18
+          ],
+          "rect": [
+            640,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:pressed_pulp_board": {
+          "cell": [
             11,
-            8
+            18
           ],
           "rect": [
             704,
-            512,
+            1152,
             64,
             64
           ]
@@ -991,71 +3031,359 @@
         "core:rawhide": {
           "cell": [
             12,
-            8
+            18
           ],
           "rect": [
             768,
-            512,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:recycled_rag_paper": {
+          "cell": [
+            13,
+            18
+          ],
+          "rect": [
+            832,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:reinforced_cloth": {
+          "cell": [
+            14,
+            18
+          ],
+          "rect": [
+            896,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:resin_lumps": {
+          "cell": [
+            15,
+            18
+          ],
+          "rect": [
+            960,
+            1152,
+            64,
+            64
+          ]
+        },
+        "core:rivet_set": {
+          "cell": [
+            0,
+            19
+          ],
+          "rect": [
+            0,
+            1216,
             64,
             64
           ]
         },
         "core:scraped_hide": {
           "cell": [
-            13,
-            8
+            1,
+            19
           ],
           "rect": [
-            832,
-            512,
+            64,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:sealed_paper_panel": {
+          "cell": [
+            2,
+            19
+          ],
+          "rect": [
+            128,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:segmented_armor_plates": {
+          "cell": [
+            3,
+            19
+          ],
+          "rect": [
+            192,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:shaft_bundle": {
+          "cell": [
+            4,
+            19
+          ],
+          "rect": [
+            256,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:silver_filament": {
+          "cell": [
+            5,
+            19
+          ],
+          "rect": [
+            320,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:silverleaf_powder": {
+          "cell": [
+            6,
+            19
+          ],
+          "rect": [
+            384,
+            1216,
             64,
             64
           ]
         },
         "core:sinew": {
           "cell": [
-            14,
-            8
+            7,
+            19
           ],
           "rect": [
-            896,
-            512,
+            448,
+            1216,
             64,
             64
           ]
         },
         "core:sinew_cord": {
           "cell": [
-            15,
-            8
+            8,
+            19
           ],
           "rect": [
-            960,
             512,
+            1216,
             64,
             64
           ]
         },
-        "core:sinew_line": {
+        "core:sorted_crystal_faces": {
           "cell": [
-            0,
-            9
+            9,
+            19
           ],
           "rect": [
-            0,
             576,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:spun_yarn": {
+          "cell": [
+            10,
+            19
+          ],
+          "rect": [
+            640,
+            1216,
             64,
             64
           ]
         },
         "core:steel_billet": {
           "cell": [
+            11,
+            19
+          ],
+          "rect": [
+            704,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:stone_blade_blank": {
+          "cell": [
+            12,
+            19
+          ],
+          "rect": [
+            768,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:stonecrop_cleansing_paste": {
+          "cell": [
+            13,
+            19
+          ],
+          "rect": [
+            832,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:tallow_dressing": {
+          "cell": [
+            14,
+            19
+          ],
+          "rect": [
+            896,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:tempered_clay": {
+          "cell": [
+            15,
+            19
+          ],
+          "rect": [
+            960,
+            1216,
+            64,
+            64
+          ]
+        },
+        "core:tempered_spring": {
+          "cell": [
+            0,
+            20
+          ],
+          "rect": [
+            0,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:timber_wedge": {
+          "cell": [
             1,
-            9
+            20
           ],
           "rect": [
             64,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:tool_handles": {
+          "cell": [
+            2,
+            20
+          ],
+          "rect": [
+            128,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:tough_fiber": {
+          "cell": [
+            3,
+            20
+          ],
+          "rect": [
+            192,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:washed_ore_fragments": {
+          "cell": [
+            4,
+            20
+          ],
+          "rect": [
+            256,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:waxed_thread": {
+          "cell": [
+            5,
+            20
+          ],
+          "rect": [
+            320,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:wood_pieces": {
+          "cell": [
+            6,
+            20
+          ],
+          "rect": [
+            384,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:wooden_dowels": {
+          "cell": [
+            7,
+            20
+          ],
+          "rect": [
+            448,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:wool_roving": {
+          "cell": [
+            8,
+            20
+          ],
+          "rect": [
+            512,
+            1280,
+            64,
+            64
+          ]
+        },
+        "core:woven_cloth": {
+          "cell": [
+            9,
+            20
+          ],
+          "rect": [
             576,
+            1280,
             64,
             64
           ]
@@ -1063,11 +3391,11 @@
         "core:bandage": {
           "cell": [
             0,
-            10
+            21
           ],
           "rect": [
             0,
-            640,
+            1344,
             64,
             64
           ]
@@ -1075,11 +3403,11 @@
         "core:soap": {
           "cell": [
             1,
-            10
+            21
           ],
           "rect": [
             64,
-            640,
+            1344,
             64,
             64
           ]
@@ -1087,11 +3415,11 @@
         "core:splint": {
           "cell": [
             2,
-            10
+            21
           ],
           "rect": [
             128,
-            640,
+            1344,
             64,
             64
           ]
@@ -1099,59 +3427,251 @@
         "core:herbal_tonic": {
           "cell": [
             3,
-            10
+            21
           ],
           "rect": [
             192,
-            640,
+            1344,
+            64,
+            64
+          ]
+        },
+        "core:antler_skinning_knife": {
+          "cell": [
+            0,
+            22
+          ],
+          "rect": [
+            0,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:articulated_bone_awl": {
+          "cell": [
+            1,
+            22
+          ],
+          "rect": [
+            64,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:barbed_fishing_trident": {
+          "cell": [
+            2,
+            22
+          ],
+          "rect": [
+            128,
+            1408,
             64,
             64
           ]
         },
         "core:bone_awl": {
           "cell": [
-            0,
-            11
+            3,
+            22
           ],
           "rect": [
-            0,
-            704,
+            192,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:bone_hand_shears": {
+          "cell": [
+            4,
+            22
+          ],
+          "rect": [
+            256,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:bone_hunting_knife": {
+          "cell": [
+            5,
+            22
+          ],
+          "rect": [
+            320,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:bone_marrow_scoop": {
+          "cell": [
+            6,
+            22
+          ],
+          "rect": [
+            384,
+            1408,
             64,
             64
           ]
         },
         "core:bone_needle": {
           "cell": [
-            1,
-            11
+            7,
+            22
           ],
           "rect": [
+            448,
+            1408,
             64,
+            64
+          ]
+        },
+        "core:bookbinders_needle": {
+          "cell": [
+            8,
+            22
+          ],
+          "rect": [
+            512,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:braided_line": {
+          "cell": [
+            9,
+            22
+          ],
+          "rect": [
+            576,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:bristle_brush": {
+          "cell": [
+            10,
+            22
+          ],
+          "rect": [
+            640,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:butcher_cleaver": {
+          "cell": [
+            11,
+            22
+          ],
+          "rect": [
             704,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:carpenter_brace": {
+          "cell": [
+            12,
+            22
+          ],
+          "rect": [
+            768,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_pestle": {
+          "cell": [
+            13,
+            22
+          ],
+          "rect": [
+            832,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_thimble": {
+          "cell": [
+            14,
+            22
+          ],
+          "rect": [
+            896,
+            1408,
+            64,
+            64
+          ]
+        },
+        "core:claw_hammer": {
+          "cell": [
+            15,
+            22
+          ],
+          "rect": [
+            960,
+            1408,
             64,
             64
           ]
         },
         "core:crafted_pick": {
           "cell": [
-            2,
-            11
+            0,
+            23
           ],
           "rect": [
-            128,
-            704,
+            0,
+            1472,
             64,
             64
           ]
         },
         "core:crude_knife": {
           "cell": [
+            1,
+            23
+          ],
+          "rect": [
+            64,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:crystal_burnisher": {
+          "cell": [
+            2,
+            23
+          ],
+          "rect": [
+            128,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:crystal_edge_scalpel": {
+          "cell": [
             3,
-            11
+            23
           ],
           "rect": [
             192,
-            704,
+            1472,
             64,
             64
           ]
@@ -1159,35 +3679,227 @@
         "core:digging_stick": {
           "cell": [
             4,
-            11
+            23
           ],
           "rect": [
             256,
-            704,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:felling_axe": {
+          "cell": [
+            5,
+            23
+          ],
+          "rect": [
+            320,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:fiber_line": {
+          "cell": [
+            6,
+            23
+          ],
+          "rect": [
+            384,
+            1472,
             64,
             64
           ]
         },
         "core:fishing_net": {
           "cell": [
-            5,
-            11
+            7,
+            23
           ],
           "rect": [
-            320,
-            704,
+            448,
+            1472,
             64,
             64
           ]
         },
         "core:fishing_spear": {
           "cell": [
+            8,
+            23
+          ],
+          "rect": [
+            512,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:flint_hide_scraper": {
+          "cell": [
+            9,
+            23
+          ],
+          "rect": [
+            576,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:garden_dibber": {
+          "cell": [
+            10,
+            23
+          ],
+          "rect": [
+            640,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:geologists_hammer": {
+          "cell": [
+            11,
+            23
+          ],
+          "rect": [
+            704,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:granite_pestle": {
+          "cell": [
+            12,
+            23
+          ],
+          "rect": [
+            768,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:grinding_slab": {
+          "cell": [
+            13,
+            23
+          ],
+          "rect": [
+            832,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:grooved_mill_pestle": {
+          "cell": [
+            14,
+            23
+          ],
+          "rect": [
+            896,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:hardened_ceramic_edge": {
+          "cell": [
+            15,
+            23
+          ],
+          "rect": [
+            960,
+            1472,
+            64,
+            64
+          ]
+        },
+        "core:hardened_ore_auger": {
+          "cell": [
+            0,
+            24
+          ],
+          "rect": [
+            0,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:harvest_sickle": {
+          "cell": [
+            1,
+            24
+          ],
+          "rect": [
+            64,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:heavy_quarry_pick": {
+          "cell": [
+            2,
+            24
+          ],
+          "rect": [
+            128,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:hide_fleshing_beam": {
+          "cell": [
+            3,
+            24
+          ],
+          "rect": [
+            192,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:horn_seam_needle": {
+          "cell": [
+            4,
+            24
+          ],
+          "rect": [
+            256,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:iron_adze": {
+          "cell": [
+            5,
+            24
+          ],
+          "rect": [
+            320,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:iron_chisel": {
+          "cell": [
             6,
-            11
+            24
           ],
           "rect": [
             384,
-            704,
+            1536,
             64,
             64
           ]
@@ -1195,215 +3907,707 @@
         "core:iron_pick": {
           "cell": [
             7,
-            11
+            24
           ],
           "rect": [
             448,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:iron_splitting_wedges": {
+          "cell": [
+            8,
+            24
+          ],
+          "rect": [
+            512,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:jointed_fishing_rod": {
+          "cell": [
+            9,
+            24
+          ],
+          "rect": [
+            576,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:kiln_piercing_spike": {
+          "cell": [
+            10,
+            24
+          ],
+          "rect": [
+            640,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:knotted_cast_net": {
+          "cell": [
+            11,
+            24
+          ],
+          "rect": [
             704,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:leatherworker_awl": {
+          "cell": [
+            12,
+            24
+          ],
+          "rect": [
+            768,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:lens_mounted_needle": {
+          "cell": [
+            13,
+            24
+          ],
+          "rect": [
+            832,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:levered_nutcracker": {
+          "cell": [
+            14,
+            24
+          ],
+          "rect": [
+            896,
+            1536,
             64,
             64
           ]
         },
         "core:lockpick": {
           "cell": [
-            8,
-            11
+            15,
+            24
           ],
           "rect": [
-            512,
-            704,
+            960,
+            1536,
+            64,
+            64
+          ]
+        },
+        "core:loggers_mattock": {
+          "cell": [
+            0,
+            25
+          ],
+          "rect": [
+            0,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:long_handled_field_hoe": {
+          "cell": [
+            1,
+            25
+          ],
+          "rect": [
+            64,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:mason_hand_hammer": {
+          "cell": [
+            2,
+            25
+          ],
+          "rect": [
+            128,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:metal_frame_saw": {
+          "cell": [
+            3,
+            25
+          ],
+          "rect": [
+            192,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:notched_stone_knife": {
+          "cell": [
+            4,
+            25
+          ],
+          "rect": [
+            256,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:ore_sifting_screen": {
+          "cell": [
+            5,
+            25
+          ],
+          "rect": [
+            320,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:quarry_sledge": {
+          "cell": [
+            6,
+            25
+          ],
+          "rect": [
+            384,
+            1600,
             64,
             64
           ]
         },
         "core:reed_rod": {
           "cell": [
+            7,
+            25
+          ],
+          "rect": [
+            448,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:root_lifting_spade": {
+          "cell": [
+            8,
+            25
+          ],
+          "rect": [
+            512,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:salvage_driver": {
+          "cell": [
             9,
-            11
+            25
           ],
           "rect": [
             576,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:seed_cleaning_screen": {
+          "cell": [
+            10,
+            25
+          ],
+          "rect": [
+            640,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:sinew_line": {
+          "cell": [
+            11,
+            25
+          ],
+          "rect": [
             704,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:sinew_stripper": {
+          "cell": [
+            12,
+            25
+          ],
+          "rect": [
+            768,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:socketed_iron_hoe": {
+          "cell": [
+            13,
+            25
+          ],
+          "rect": [
+            832,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:soil_turning_fork": {
+          "cell": [
+            14,
+            25
+          ],
+          "rect": [
+            896,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:splitting_maul": {
+          "cell": [
+            15,
+            25
+          ],
+          "rect": [
+            960,
+            1600,
+            64,
+            64
+          ]
+        },
+        "core:spring_tension_fishing_rod": {
+          "cell": [
+            0,
+            26
+          ],
+          "rect": [
+            0,
+            1664,
             64,
             64
           ]
         },
         "core:steel_pick": {
           "cell": [
-            10,
-            11
+            1,
+            26
           ],
           "rect": [
-            640,
-            704,
+            64,
+            1664,
             64,
             64
           ]
         },
         "core:stone_axe": {
           "cell": [
-            11,
-            11
+            2,
+            26
           ],
           "rect": [
-            704,
-            704,
+            128,
+            1664,
             64,
             64
           ]
         },
         "core:stone_flake": {
           "cell": [
-            12,
-            11
+            3,
+            26
           ],
           "rect": [
-            768,
-            704,
+            192,
+            1664,
             64,
             64
           ]
         },
         "core:stone_hammer": {
           "cell": [
-            13,
-            11
+            4,
+            26
           ],
           "rect": [
-            832,
-            704,
+            256,
+            1664,
             64,
             64
           ]
         },
         "core:crude_hoe": {
           "cell": [
-            14,
-            11
+            5,
+            26
           ],
           "rect": [
-            896,
-            704,
+            320,
+            1664,
             64,
             64
           ]
         },
         "core:stone_knife": {
           "cell": [
-            15,
-            11
+            6,
+            26
           ],
           "rect": [
-            960,
-            704,
+            384,
+            1664,
             64,
             64
           ]
         },
         "core:stone_pick": {
           "cell": [
-            0,
-            12
+            7,
+            26
           ],
           "rect": [
-            0,
+            448,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:tensioned_timber_saw": {
+          "cell": [
+            8,
+            26
+          ],
+          "rect": [
+            512,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:timber_hook": {
+          "cell": [
+            9,
+            26
+          ],
+          "rect": [
+            576,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:tracker_skinning_set": {
+          "cell": [
+            10,
+            26
+          ],
+          "rect": [
+            640,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:twisted_reed_line": {
+          "cell": [
+            11,
+            26
+          ],
+          "rect": [
+            704,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:waxed_casting_line": {
+          "cell": [
+            12,
+            26
+          ],
+          "rect": [
             768,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:weighted_river_net": {
+          "cell": [
+            13,
+            26
+          ],
+          "rect": [
+            832,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:winnowing_sickle": {
+          "cell": [
+            14,
+            26
+          ],
+          "rect": [
+            896,
+            1664,
+            64,
+            64
+          ]
+        },
+        "core:wood_boring_auger": {
+          "cell": [
+            15,
+            26
+          ],
+          "rect": [
+            960,
+            1664,
             64,
             64
           ]
         },
         "core:wood_rod": {
           "cell": [
+            0,
+            27
+          ],
+          "rect": [
+            0,
+            1728,
+            64,
+            64
+          ]
+        },
+        "core:wood_plane": {
+          "cell": [
             1,
-            12
+            27
           ],
           "rect": [
             64,
-            768,
+            1728,
+            64,
+            64
+          ]
+        },
+        "core:woodworking_mallet": {
+          "cell": [
+            2,
+            27
+          ],
+          "rect": [
+            128,
+            1728,
+            64,
+            64
+          ]
+        },
+        "core:antler_throwing_dart": {
+          "cell": [
+            0,
+            28
+          ],
+          "rect": [
+            0,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:barbed_hunting_spear": {
+          "cell": [
+            1,
+            28
+          ],
+          "rect": [
+            64,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:basalt_head_mace": {
+          "cell": [
+            2,
+            28
+          ],
+          "rect": [
+            128,
+            1792,
             64,
             64
           ]
         },
         "core:club": {
           "cell": [
-            0,
-            13
+            3,
+            28
           ],
           "rect": [
-            0,
-            832,
+            192,
+            1792,
             64,
             64
           ]
         },
         "core:crafted_sword": {
           "cell": [
-            1,
-            13
+            4,
+            28
           ],
           "rect": [
-            64,
-            832,
+            256,
+            1792,
             64,
             64
           ]
         },
         "core:wooden_spear": {
           "cell": [
-            2,
-            13
+            5,
+            28
           ],
           "rect": [
-            128,
-            832,
+            320,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:folding_pole_spear": {
+          "cell": [
+            6,
+            28
+          ],
+          "rect": [
+            384,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:horn_shod_staff": {
+          "cell": [
+            7,
+            28
+          ],
+          "rect": [
+            448,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:hunting_reflex_bow": {
+          "cell": [
+            8,
+            28
+          ],
+          "rect": [
+            512,
+            1792,
             64,
             64
           ]
         },
         "core:iron_sword": {
           "cell": [
-            3,
-            13
+            9,
+            28
           ],
           "rect": [
-            192,
-            832,
+            576,
+            1792,
             64,
             64
           ]
         },
         "core:short_bow": {
           "cell": [
-            4,
-            13
+            10,
+            28
           ],
           "rect": [
-            256,
-            832,
+            640,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:recurve_hunting_bow": {
+          "cell": [
+            11,
+            28
+          ],
+          "rect": [
+            704,
+            1792,
             64,
             64
           ]
         },
         "core:sling": {
           "cell": [
-            5,
-            13
+            12,
+            28
           ],
           "rect": [
-            320,
-            832,
+            768,
+            1792,
             64,
             64
           ]
         },
         "core:steel_sword": {
           "cell": [
-            6,
-            13
+            13,
+            28
           ],
           "rect": [
-            384,
             832,
+            1792,
+            64,
+            64
+          ]
+        },
+        "core:weighted_hide_sling": {
+          "cell": [
+            14,
+            28
+          ],
+          "rect": [
+            896,
+            1792,
             64,
             64
           ]
@@ -1411,11 +4615,11 @@
         "core:sling_stone": {
           "cell": [
             0,
-            14
+            29
           ],
           "rect": [
             0,
-            896,
+            1856,
             64,
             64
           ]
@@ -1423,107 +4627,299 @@
         "core:wood_arrow": {
           "cell": [
             1,
-            14
+            29
           ],
           "rect": [
             64,
-            896,
+            1856,
+            64,
+            64
+          ]
+        },
+        "core:bark_lined_forester_hood": {
+          "cell": [
+            0,
+            30
+          ],
+          "rect": [
+            0,
+            1920,
             64,
             64
           ]
         },
         "core:crafted_helmet": {
           "cell": [
-            0,
-            15
+            1,
+            30
           ],
           "rect": [
-            0,
-            960,
+            64,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:fur_lined_hood": {
+          "cell": [
+            2,
+            30
+          ],
+          "rect": [
+            128,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:hardened_leather_cuirass": {
+          "cell": [
+            3,
+            30
+          ],
+          "rect": [
+            192,
+            1920,
             64,
             64
           ]
         },
         "core:hide_kite_shield": {
           "cell": [
-            1,
-            15
+            4,
+            30
           ],
           "rect": [
+            256,
+            1920,
             64,
-            960,
+            64
+          ]
+        },
+        "core:horn_faced_buckler": {
+          "cell": [
+            5,
+            30
+          ],
+          "rect": [
+            320,
+            1920,
             64,
             64
           ]
         },
         "core:iron_heater_shield": {
           "cell": [
-            2,
-            15
+            6,
+            30
           ],
           "rect": [
-            128,
-            960,
+            384,
+            1920,
             64,
             64
           ]
         },
         "core:iron_helmet": {
           "cell": [
-            3,
-            15
+            7,
+            30
           ],
           "rect": [
-            192,
-            960,
+            448,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:iron_lamellar_vest": {
+          "cell": [
+            8,
+            30
+          ],
+          "rect": [
+            512,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:laminated_paper_shield": {
+          "cell": [
+            9,
+            30
+          ],
+          "rect": [
+            576,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:layered_hunter_bracers": {
+          "cell": [
+            10,
+            30
+          ],
+          "rect": [
+            640,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:layered_paper_cap": {
+          "cell": [
+            11,
+            30
+          ],
+          "rect": [
+            704,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:layered_paper_coat": {
+          "cell": [
+            12,
+            30
+          ],
+          "rect": [
+            768,
+            1920,
+            64,
+            64
+          ]
+        },
+        "core:layered_winter_trousers": {
+          "cell": [
+            13,
+            30
+          ],
+          "rect": [
+            832,
+            1920,
             64,
             64
           ]
         },
         "core:leather_bracers": {
           "cell": [
-            4,
-            15
+            14,
+            30
           ],
           "rect": [
-            256,
-            960,
+            896,
+            1920,
             64,
             64
           ]
         },
         "core:leather_hood": {
           "cell": [
-            5,
-            15
+            15,
+            30
           ],
           "rect": [
-            320,
             960,
+            1920,
             64,
             64
           ]
         },
         "core:leather_leggings": {
           "cell": [
-            6,
-            15
+            0,
+            31
           ],
           "rect": [
-            384,
-            960,
+            0,
+            1984,
             64,
             64
           ]
         },
         "core:leather_vest": {
           "cell": [
+            1,
+            31
+          ],
+          "rect": [
+            64,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:padded_coif": {
+          "cell": [
+            2,
+            31
+          ],
+          "rect": [
+            128,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:padded_mining_cap": {
+          "cell": [
+            3,
+            31
+          ],
+          "rect": [
+            192,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:pasture_winter_coat": {
+          "cell": [
+            4,
+            31
+          ],
+          "rect": [
+            256,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:pitch_laminated_shield": {
+          "cell": [
+            5,
+            31
+          ],
+          "rect": [
+            320,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:plated_mining_gauntlets": {
+          "cell": [
+            6,
+            31
+          ],
+          "rect": [
+            384,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:quilted_jerkin": {
+          "cell": [
             7,
-            15
+            31
           ],
           "rect": [
             448,
-            960,
+            1984,
             64,
             64
           ]
@@ -1531,155 +4927,2747 @@
         "core:rawhide_buckler": {
           "cell": [
             8,
-            15
+            31
           ],
           "rect": [
             512,
-            960,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:reinforced_gaiters": {
+          "cell": [
+            9,
+            31
+          ],
+          "rect": [
+            576,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:ribbed_wood_shield": {
+          "cell": [
+            10,
+            31
+          ],
+          "rect": [
+            640,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:riveted_work_gloves": {
+          "cell": [
+            11,
+            31
+          ],
+          "rect": [
+            704,
+            1984,
+            64,
+            64
+          ]
+        },
+        "core:sailcloth_travel_coat": {
+          "cell": [
+            12,
+            31
+          ],
+          "rect": [
+            768,
+            1984,
             64,
             64
           ]
         },
         "core:steel_helmet": {
           "cell": [
-            9,
-            15
+            13,
+            31
           ],
           "rect": [
-            576,
-            960,
+            832,
+            1984,
             64,
             64
           ]
         },
         "core:steel_tower_shield": {
           "cell": [
-            10,
-            15
+            14,
+            31
           ],
           "rect": [
-            640,
-            960,
+            896,
+            1984,
             64,
             64
           ]
         },
         "core:wicker_shield": {
           "cell": [
-            11,
-            15
+            15,
+            31
           ],
           "rect": [
-            704,
             960,
+            1984,
             64,
             64
           ]
         },
         "core:wood_round_shield": {
           "cell": [
-            12,
-            15
+            0,
+            32
           ],
           "rect": [
-            768,
-            960,
+            0,
+            2048,
+            64,
+            64
+          ]
+        },
+        "core:wool_lined_mitts": {
+          "cell": [
+            1,
+            32
+          ],
+          "rect": [
+            64,
+            2048,
+            64,
+            64
+          ]
+        },
+        "core:articulated_spinner_lure": {
+          "cell": [
+            0,
+            33
+          ],
+          "rect": [
+            0,
+            2112,
             64,
             64
           ]
         },
         "core:wicker_basket": {
           "cell": [
-            0,
-            16
+            1,
+            33
           ],
           "rect": [
-            0,
-            1024,
+            64,
+            2112,
             64,
             64
           ]
         },
         "core:wooden_bowl": {
           "cell": [
-            1,
-            16
+            2,
+            33
           ],
           "rect": [
+            128,
+            2112,
             64,
-            1024,
+            64
+          ]
+        },
+        "core:carved_bone_hook": {
+          "cell": [
+            3,
+            33
+          ],
+          "rect": [
+            192,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_distillation_coil": {
+          "cell": [
+            4,
+            33
+          ],
+          "rect": [
+            256,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:ceramic_mould": {
+          "cell": [
+            5,
+            33
+          ],
+          "rect": [
+            320,
+            2112,
             64,
             64
           ]
         },
         "core:clay_pot": {
           "cell": [
-            2,
-            16
+            6,
+            33
           ],
           "rect": [
-            128,
-            1024,
+            384,
+            2112,
             64,
             64
           ]
         },
         "core:spoon_lure": {
           "cell": [
-            3,
-            16
+            7,
+            33
           ],
           "rect": [
-            192,
-            1024,
+            448,
+            2112,
             64,
             64
           ]
         },
         "core:earthworms": {
           "cell": [
-            4,
-            16
+            8,
+            33
           ],
           "rect": [
-            256,
-            1024,
+            512,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:float_rig": {
+          "cell": [
+            9,
+            33
+          ],
+          "rect": [
+            576,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:porous_filter_candle": {
+          "cell": [
+            10,
+            33
+          ],
+          "rect": [
+            640,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:stoneware_crucible": {
+          "cell": [
+            11,
+            33
+          ],
+          "rect": [
+            704,
+            2112,
             64,
             64
           ]
         },
         "core:wood_storage_box": {
           "cell": [
-            5,
-            16
+            12,
+            33
           ],
           "rect": [
-            320,
-            1024,
+            768,
+            2112,
             64,
             64
           ]
         },
         "core:clean_water": {
           "cell": [
-            6,
-            16
+            13,
+            33
           ],
           "rect": [
-            384,
-            1024,
+            832,
+            2112,
             64,
             64
           ]
         },
         "core:waterskin": {
           "cell": [
+            14,
+            33
+          ],
+          "rect": [
+            896,
+            2112,
+            64,
+            64
+          ]
+        },
+        "core:bent_door_hinge": {
+          "cell": [
+            0,
+            34
+          ],
+          "rect": [
+            0,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:bent_fire_poker": {
+          "cell": [
+            1,
+            34
+          ],
+          "rect": [
+            64,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:bent_wagon_bracket": {
+          "cell": [
+            2,
+            34
+          ],
+          "rect": [
+            128,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:broken_buckle": {
+          "cell": [
+            3,
+            34
+          ],
+          "rect": [
+            192,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:broken_chain_link": {
+          "cell": [
+            4,
+            34
+          ],
+          "rect": [
+            256,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:cracked_pan_handle": {
+          "cell": [
+            5,
+            34
+          ],
+          "rect": [
+            320,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:cracked_sickle_head": {
+          "cell": [
+            6,
+            34
+          ],
+          "rect": [
+            384,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:dented_candle_snuffer": {
+          "cell": [
             7,
-            16
+            34
           ],
           "rect": [
             448,
-            1024,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:discarded_harness_bell": {
+          "cell": [
+            8,
+            34
+          ],
+          "rect": [
+            512,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:discarded_spur": {
+          "cell": [
+            9,
+            34
+          ],
+          "rect": [
+            576,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:jammed_clockwork_catch": {
+          "cell": [
+            10,
+            34
+          ],
+          "rect": [
+            640,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:loose_gate_latch": {
+          "cell": [
+            11,
+            34
+          ],
+          "rect": [
+            704,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:rusted_padlock": {
+          "cell": [
+            12,
+            34
+          ],
+          "rect": [
+            768,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:rusted_stove_grate": {
+          "cell": [
+            13,
+            34
+          ],
+          "rect": [
+            832,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:seized_hand_drill": {
+          "cell": [
+            14,
+            34
+          ],
+          "rect": [
+            896,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:snapped_shears": {
+          "cell": [
+            15,
+            34
+          ],
+          "rect": [
+            960,
+            2176,
+            64,
+            64
+          ]
+        },
+        "core:split_iron_ring": {
+          "cell": [
+            0,
+            35
+          ],
+          "rect": [
+            0,
+            2240,
+            64,
+            64
+          ]
+        },
+        "core:worn_horseshoe": {
+          "cell": [
+            1,
+            35
+          ],
+          "rect": [
+            64,
+            2240,
+            64,
+            64
+          ]
+        },
+        "core:broken_cart_axle": {
+          "cell": [
+            0,
+            36
+          ],
+          "rect": [
+            0,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:broken_chair_rung": {
+          "cell": [
+            1,
+            36
+          ],
+          "rect": [
+            64,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:broken_ladder_step": {
+          "cell": [
+            2,
+            36
+          ],
+          "rect": [
+            128,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:broken_loom_shuttle": {
+          "cell": [
+            3,
+            36
+          ],
+          "rect": [
+            192,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:chipped_wooden_ladle": {
+          "cell": [
+            4,
+            36
+          ],
+          "rect": [
+            256,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:cracked_barrel_stave": {
+          "cell": [
+            5,
+            36
+          ],
+          "rect": [
+            320,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:cracked_spinning_distaff": {
+          "cell": [
+            6,
+            36
+          ],
+          "rect": [
+            384,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:discarded_paddle": {
+          "cell": [
+            7,
+            36
+          ],
+          "rect": [
+            448,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:discarded_yoke": {
+          "cell": [
+            8,
+            36
+          ],
+          "rect": [
+            512,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:loose_window_shutter": {
+          "cell": [
+            9,
+            36
+          ],
+          "rect": [
+            576,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:snapped_broom_shaft": {
+          "cell": [
+            10,
+            36
+          ],
+          "rect": [
+            640,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:splintered_rake": {
+          "cell": [
+            11,
+            36
+          ],
+          "rect": [
+            704,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:split_crate_lid": {
+          "cell": [
+            12,
+            36
+          ],
+          "rect": [
+            768,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:split_tool_rack": {
+          "cell": [
+            13,
+            36
+          ],
+          "rect": [
+            832,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:split_wagon_spoke": {
+          "cell": [
+            14,
+            36
+          ],
+          "rect": [
+            896,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:warped_cupboard_door": {
+          "cell": [
+            15,
+            36
+          ],
+          "rect": [
+            960,
+            2304,
+            64,
+            64
+          ]
+        },
+        "core:worn_rolling_pin": {
+          "cell": [
+            0,
+            37
+          ],
+          "rect": [
+            0,
+            2368,
+            64,
+            64
+          ]
+        },
+        "core:worn_tent_peg": {
+          "cell": [
+            1,
+            37
+          ],
+          "rect": [
+            64,
+            2368,
+            64,
+            64
+          ]
+        },
+        "core:broken_felt_slipper": {
+          "cell": [
+            0,
+            38
+          ],
+          "rect": [
+            0,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:discarded_bandolier_lining": {
+          "cell": [
+            1,
+            38
+          ],
+          "rect": [
+            64,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:discarded_cap_lining": {
+          "cell": [
+            2,
+            38
+          ],
+          "rect": [
+            128,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:frayed_bedroll": {
+          "cell": [
+            3,
+            38
+          ],
+          "rect": [
+            192,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:frayed_fishing_smock": {
+          "cell": [
+            4,
+            38
+          ],
+          "rect": [
+            256,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:old_saddle_blanket": {
+          "cell": [
+            5,
+            38
+          ],
+          "rect": [
+            320,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:ragged_quilt": {
+          "cell": [
+            6,
+            38
+          ],
+          "rect": [
+            384,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:split_grain_sack": {
+          "cell": [
+            7,
+            38
+          ],
+          "rect": [
+            448,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:split_pillowcase": {
+          "cell": [
+            8,
+            38
+          ],
+          "rect": [
+            512,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:stained_table_runner": {
+          "cell": [
+            9,
+            38
+          ],
+          "rect": [
+            576,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:tangled_embroidery": {
+          "cell": [
+            10,
+            38
+          ],
+          "rect": [
+            640,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:threadbare_curtain": {
+          "cell": [
+            11,
+            38
+          ],
+          "rect": [
+            704,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:torn_apron": {
+          "cell": [
+            12,
+            38
+          ],
+          "rect": [
+            768,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:torn_banner": {
+          "cell": [
+            13,
+            38
+          ],
+          "rect": [
+            832,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:torn_mosquito_veil": {
+          "cell": [
+            14,
+            38
+          ],
+          "rect": [
+            896,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:unraveled_scarf": {
+          "cell": [
+            15,
+            38
+          ],
+          "rect": [
+            960,
+            2432,
+            64,
+            64
+          ]
+        },
+        "core:worn_laundry_strap": {
+          "cell": [
+            0,
+            39
+          ],
+          "rect": [
+            0,
+            2496,
+            64,
+            64
+          ]
+        },
+        "core:worn_sail_patch": {
+          "cell": [
+            1,
+            39
+          ],
+          "rect": [
+            64,
+            2496,
+            64,
+            64
+          ]
+        },
+        "core:broken_glove": {
+          "cell": [
+            0,
+            40
+          ],
+          "rect": [
+            0,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:broken_satchel_flap": {
+          "cell": [
+            1,
+            40
+          ],
+          "rect": [
+            64,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:broken_scabbard": {
+          "cell": [
+            2,
+            40
+          ],
+          "rect": [
+            128,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:cracked_belt": {
+          "cell": [
+            3,
+            40
+          ],
+          "rect": [
+            192,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:cracked_saddle_flap": {
+          "cell": [
+            4,
+            40
+          ],
+          "rect": [
+            256,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:cracked_sling_strap": {
+          "cell": [
+            5,
+            40
+          ],
+          "rect": [
+            320,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:discarded_bridle": {
+          "cell": [
+            6,
+            40
+          ],
+          "rect": [
+            384,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:discarded_muzzle": {
+          "cell": [
+            7,
+            40
+          ],
+          "rect": [
+            448,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:loose_shield_grip": {
+          "cell": [
+            8,
+            40
+          ],
+          "rect": [
+            512,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:old_bellows_skin": {
+          "cell": [
+            9,
+            40
+          ],
+          "rect": [
+            576,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:split_harness_strap": {
+          "cell": [
+            10,
+            40
+          ],
+          "rect": [
+            640,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:split_quiver_seam": {
+          "cell": [
+            11,
+            40
+          ],
+          "rect": [
+            704,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:split_water_bag": {
+          "cell": [
+            12,
+            40
+          ],
+          "rect": [
+            768,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:torn_hunting_gaiter": {
+          "cell": [
+            13,
+            40
+          ],
+          "rect": [
+            832,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:torn_leather_pouch": {
+          "cell": [
+            14,
+            40
+          ],
+          "rect": [
+            896,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:worn_boot_sole": {
+          "cell": [
+            15,
+            40
+          ],
+          "rect": [
+            960,
+            2560,
+            64,
+            64
+          ]
+        },
+        "core:worn_drum_head": {
+          "cell": [
+            0,
+            41
+          ],
+          "rect": [
+            0,
+            2624,
+            64,
+            64
+          ]
+        },
+        "core:worn_knee_guard": {
+          "cell": [
+            1,
+            41
+          ],
+          "rect": [
+            64,
+            2624,
+            64,
+            64
+          ]
+        },
+        "core:broken_drain_pipe": {
+          "cell": [
+            0,
+            42
+          ],
+          "rect": [
+            0,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:broken_flower_pot": {
+          "cell": [
+            1,
+            42
+          ],
+          "rect": [
+            64,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:broken_kiln_spacer": {
+          "cell": [
+            2,
+            42
+          ],
+          "rect": [
+            128,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:broken_oil_lamp": {
+          "cell": [
+            3,
+            42
+          ],
+          "rect": [
+            192,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:broken_roof_tile": {
+          "cell": [
+            4,
+            42
+          ],
+          "rect": [
+            256,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:chipped_chamber_pot": {
+          "cell": [
+            5,
+            42
+          ],
+          "rect": [
+            320,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:chipped_crock": {
+          "cell": [
+            6,
+            42
+          ],
+          "rect": [
+            384,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:chipped_mortar_bowl": {
+          "cell": [
+            7,
+            42
+          ],
+          "rect": [
+            448,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:chipped_salt_cellar": {
+          "cell": [
+            8,
+            42
+          ],
+          "rect": [
+            512,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:cracked_fermentation_weight": {
+          "cell": [
+            9,
+            42
+          ],
+          "rect": [
+            576,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:cracked_honey_jar": {
+          "cell": [
+            10,
+            42
+          ],
+          "rect": [
+            640,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:cracked_jug": {
+          "cell": [
+            11,
+            42
+          ],
+          "rect": [
+            704,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:cracked_soap_dish": {
+          "cell": [
+            12,
+            42
+          ],
+          "rect": [
+            768,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:discarded_crucible": {
+          "cell": [
+            13,
+            42
+          ],
+          "rect": [
+            832,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:shattered_inkpot": {
+          "cell": [
+            14,
+            42
+          ],
+          "rect": [
+            896,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:split_baking_stone": {
+          "cell": [
+            15,
+            42
+          ],
+          "rect": [
+            960,
+            2688,
+            64,
+            64
+          ]
+        },
+        "core:split_butter_dish": {
+          "cell": [
+            0,
+            43
+          ],
+          "rect": [
+            0,
+            2752,
+            64,
+            64
+          ]
+        },
+        "core:split_tea_bowl": {
+          "cell": [
+            1,
+            43
+          ],
+          "rect": [
+            64,
+            2752,
+            64,
+            64
+          ]
+        },
+        "core:broken_glass_pendant": {
+          "cell": [
+            0,
+            44
+          ],
+          "rect": [
+            0,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:broken_hourglass_bulb": {
+          "cell": [
+            1,
+            44
+          ],
+          "rect": [
+            64,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:broken_lantern_globe": {
+          "cell": [
+            2,
+            44
+          ],
+          "rect": [
+            128,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:broken_seal_stamp": {
+          "cell": [
+            3,
+            44
+          ],
+          "rect": [
+            192,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:broken_spectacle_lens": {
+          "cell": [
+            4,
+            44
+          ],
+          "rect": [
+            256,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:chipped_drinking_glass": {
+          "cell": [
+            5,
+            44
+          ],
+          "rect": [
+            320,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:chipped_glass_bead": {
+          "cell": [
+            6,
+            44
+          ],
+          "rect": [
+            384,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:chipped_glass_stopper": {
+          "cell": [
+            7,
+            44
+          ],
+          "rect": [
+            448,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:clouded_prism": {
+          "cell": [
+            8,
+            44
+          ],
+          "rect": [
+            512,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:clouded_window_pane": {
+          "cell": [
+            9,
+            44
+          ],
+          "rect": [
+            576,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:cracked_apothecary_jar": {
+          "cell": [
+            10,
+            44
+          ],
+          "rect": [
+            640,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:cracked_bottle_neck": {
+          "cell": [
+            11,
+            44
+          ],
+          "rect": [
+            704,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:cracked_fishing_float": {
+          "cell": [
+            12,
+            44
+          ],
+          "rect": [
+            768,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:cracked_mirror_edge": {
+          "cell": [
+            13,
+            44
+          ],
+          "rect": [
+            832,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:shattered_measuring_tube": {
+          "cell": [
+            14,
+            44
+          ],
+          "rect": [
+            896,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:shattered_perfume_vial": {
+          "cell": [
+            15,
+            44
+          ],
+          "rect": [
+            960,
+            2816,
+            64,
+            64
+          ]
+        },
+        "core:split_glass_funnel": {
+          "cell": [
+            0,
+            45
+          ],
+          "rect": [
+            0,
+            2880,
+            64,
+            64
+          ]
+        },
+        "core:split_lamp_chimney": {
+          "cell": [
+            1,
+            45
+          ],
+          "rect": [
+            64,
+            2880,
+            64,
+            64
+          ]
+        },
+        "core:broken_seal_envelope": {
+          "cell": [
+            0,
+            46
+          ],
+          "rect": [
+            0,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:broken_writing_board": {
+          "cell": [
+            1,
+            46
+          ],
+          "rect": [
+            64,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:discarded_account_slip": {
+          "cell": [
+            2,
+            46
+          ],
+          "rect": [
+            128,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:discarded_letter_bundle": {
+          "cell": [
+            3,
+            46
+          ],
+          "rect": [
+            192,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:discarded_shipping_label": {
+          "cell": [
+            4,
+            46
+          ],
+          "rect": [
+            256,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:faded_market_notice": {
+          "cell": [
+            5,
+            46
+          ],
+          "rect": [
+            320,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:frayed_document_roll": {
+          "cell": [
+            6,
+            46
+          ],
+          "rect": [
+            384,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:loose_book_binding": {
+          "cell": [
+            7,
+            46
+          ],
+          "rect": [
+            448,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:molded_scroll_tube": {
+          "cell": [
+            8,
+            46
+          ],
+          "rect": [
+            512,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:old_tax_register": {
+          "cell": [
+            9,
+            46
+          ],
+          "rect": [
+            576,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:ruined_recipe_leaf": {
+          "cell": [
+            10,
+            46
+          ],
+          "rect": [
+            640,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:split_notebook_cover": {
+          "cell": [
+            11,
+            46
+          ],
+          "rect": [
+            704,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:split_wax_tablet": {
+          "cell": [
+            12,
+            46
+          ],
+          "rect": [
+            768,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:tattered_charter_copy": {
+          "cell": [
+            13,
+            46
+          ],
+          "rect": [
+            832,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:torn_map_case": {
+          "cell": [
+            14,
+            46
+          ],
+          "rect": [
+            896,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:torn_song_folio": {
+          "cell": [
+            15,
+            46
+          ],
+          "rect": [
+            960,
+            2944,
+            64,
+            64
+          ]
+        },
+        "core:waterlogged_ledger": {
+          "cell": [
+            0,
+            47
+          ],
+          "rect": [
+            0,
+            3008,
+            64,
+            64
+          ]
+        },
+        "core:waterstained_almanac": {
+          "cell": [
+            1,
+            47
+          ],
+          "rect": [
+            64,
+            3008,
+            64,
+            64
+          ]
+        },
+        "core:broken_grindstone_rim": {
+          "cell": [
+            0,
+            48
+          ],
+          "rect": [
+            0,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:broken_mosaic_piece": {
+          "cell": [
+            1,
+            48
+          ],
+          "rect": [
+            64,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:broken_soapstone_cup": {
+          "cell": [
+            2,
+            48
+          ],
+          "rect": [
+            128,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:broken_stone_spindle": {
+          "cell": [
+            3,
+            48
+          ],
+          "rect": [
+            192,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:chipped_mill_fragment": {
+          "cell": [
+            4,
+            48
+          ],
+          "rect": [
+            256,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:chipped_plumb_bob": {
+          "cell": [
+            5,
+            48
+          ],
+          "rect": [
+            320,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:chipped_sandstone_disc": {
+          "cell": [
+            6,
+            48
+          ],
+          "rect": [
+            384,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:chipped_stone_pestle": {
+          "cell": [
+            7,
+            48
+          ],
+          "rect": [
+            448,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:cracked_door_sill": {
+          "cell": [
+            8,
+            48
+          ],
+          "rect": [
+            512,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:cracked_hearth_brick": {
+          "cell": [
+            9,
+            48
+          ],
+          "rect": [
+            576,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:cracked_slate_shingle": {
+          "cell": [
+            10,
+            48
+          ],
+          "rect": [
+            640,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:fractured_mortar_block": {
+          "cell": [
+            11,
+            48
+          ],
+          "rect": [
+            704,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:loose_gravel_paver": {
+          "cell": [
+            12,
+            48
+          ],
+          "rect": [
+            768,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:split_chalk_marker": {
+          "cell": [
+            13,
+            48
+          ],
+          "rect": [
+            832,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:split_quarry_wedge": {
+          "cell": [
+            14,
+            48
+          ],
+          "rect": [
+            896,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:split_stone_weight": {
+          "cell": [
+            15,
+            48
+          ],
+          "rect": [
+            960,
+            3072,
+            64,
+            64
+          ]
+        },
+        "core:worn_grinding_pebble": {
+          "cell": [
+            0,
+            49
+          ],
+          "rect": [
+            0,
+            3136,
+            64,
+            64
+          ]
+        },
+        "core:worn_whetstone": {
+          "cell": [
+            1,
+            49
+          ],
+          "rect": [
+            64,
+            3136,
+            64,
+            64
+          ]
+        },
+        "core:bent_loom_ratchet": {
+          "cell": [
+            0,
+            50
+          ],
+          "rect": [
+            0,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_bellows_valve": {
+          "cell": [
+            1,
+            50
+          ],
+          "rect": [
+            64,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_crossbow_trigger": {
+          "cell": [
+            2,
+            50
+          ],
+          "rect": [
+            128,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_hand_lantern": {
+          "cell": [
+            3,
+            50
+          ],
+          "rect": [
+            192,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_spinning_reel": {
+          "cell": [
+            4,
+            50
+          ],
+          "rect": [
+            256,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_wagon_brake": {
+          "cell": [
+            5,
+            50
+          ],
+          "rect": [
+            320,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:broken_winding_key": {
+          "cell": [
+            6,
+            50
+          ],
+          "rect": [
+            384,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:cracked_balance_scale": {
+          "cell": [
+            7,
+            50
+          ],
+          "rect": [
+            448,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:cracked_orrery_arm": {
+          "cell": [
+            8,
+            50
+          ],
+          "rect": [
+            512,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:damaged_grinding_crank": {
+          "cell": [
+            9,
+            50
+          ],
+          "rect": [
+            576,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:damaged_sighting_tube": {
+          "cell": [
+            10,
+            50
+          ],
+          "rect": [
+            640,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:damaged_spring_trap": {
+          "cell": [
+            11,
+            50
+          ],
+          "rect": [
+            704,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:damaged_survey_compass": {
+          "cell": [
+            12,
+            50
+          ],
+          "rect": [
+            768,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:jammed_door_closer": {
+          "cell": [
+            13,
+            50
+          ],
+          "rect": [
+            832,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:jammed_ratchet_wheel": {
+          "cell": [
+            14,
+            50
+          ],
+          "rect": [
+            896,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:seized_clock_pendulum": {
+          "cell": [
+            15,
+            50
+          ],
+          "rect": [
+            960,
+            3200,
+            64,
+            64
+          ]
+        },
+        "core:seized_music_box": {
+          "cell": [
+            0,
+            51
+          ],
+          "rect": [
+            0,
+            3264,
+            64,
+            64
+          ]
+        },
+        "core:split_pump_piston": {
+          "cell": [
+            1,
+            51
+          ],
+          "rect": [
+            64,
+            3264,
+            64,
+            64
+          ]
+        },
+        "core:broken_beeswax_comb": {
+          "cell": [
+            0,
+            52
+          ],
+          "rect": [
+            0,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:cracked_nut_shells": {
+          "cell": [
+            1,
+            52
+          ],
+          "rect": [
+            64,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:crumbled_herb_wreath": {
+          "cell": [
+            2,
+            52
+          ],
+          "rect": [
+            128,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:discarded_reed_mat_offcuts": {
+          "cell": [
+            3,
+            52
+          ],
+          "rect": [
+            192,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:discarded_tea_stems": {
+          "cell": [
+            4,
+            52
+          ],
+          "rect": [
+            256,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:dried_citrus_peel": {
+          "cell": [
+            5,
+            52
+          ],
+          "rect": [
+            320,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:dried_gourd_rind": {
+          "cell": [
+            6,
+            52
+          ],
+          "rect": [
+            384,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:dried_onion_skins": {
+          "cell": [
+            7,
+            52
+          ],
+          "rect": [
+            448,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:empty_seed_husk_bundle": {
+          "cell": [
+            8,
+            52
+          ],
+          "rect": [
+            512,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:mildewed_grain_chaff": {
+          "cell": [
+            9,
+            52
+          ],
+          "rect": [
+            576,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:molded_hop_sack": {
+          "cell": [
+            10,
+            52
+          ],
+          "rect": [
+            640,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:old_apple_pressings": {
+          "cell": [
+            11,
+            52
+          ],
+          "rect": [
+            704,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:old_spice_sweepings": {
+          "cell": [
+            12,
+            52
+          ],
+          "rect": [
+            768,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:spent_dye_leaves": {
+          "cell": [
+            13,
+            52
+          ],
+          "rect": [
+            832,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:spent_malt_heap": {
+          "cell": [
+            14,
+            52
+          ],
+          "rect": [
+            896,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:split_pine_pitch_pot": {
+          "cell": [
+            15,
+            52
+          ],
+          "rect": [
+            960,
+            3328,
+            64,
+            64
+          ]
+        },
+        "core:spoiled_flax_bundle": {
+          "cell": [
+            0,
+            53
+          ],
+          "rect": [
+            0,
+            3392,
+            64,
+            64
+          ]
+        },
+        "core:spoiled_herb_sachet": {
+          "cell": [
+            1,
+            53
+          ],
+          "rect": [
+            64,
+            3392,
+            64,
+            64
+          ]
+        },
+        "core:badger_guard_hairs": {
+          "cell": [
+            0,
+            54
+          ],
+          "rect": [
+            0,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:bear_claw_sheath": {
+          "cell": [
+            1,
+            54
+          ],
+          "rect": [
+            64,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:beaver_incisor_pair": {
+          "cell": [
+            2,
+            54
+          ],
+          "rect": [
+            128,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:boar_bristle_patch": {
+          "cell": [
+            3,
+            54
+          ],
+          "rect": [
+            192,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:chicken_quill_bundle": {
+          "cell": [
+            4,
+            54
+          ],
+          "rect": [
+            256,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:cow_horn_ring": {
+          "cell": [
+            5,
+            54
+          ],
+          "rect": [
+            320,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:crawler_carapace_plate": {
+          "cell": [
+            6,
+            54
+          ],
+          "rect": [
+            384,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:deer_antler_tip": {
+          "cell": [
+            7,
+            54
+          ],
+          "rect": [
+            448,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:elk_tooth_row": {
+          "cell": [
+            8,
+            54
+          ],
+          "rect": [
+            512,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:fox_tail_tuft": {
+          "cell": [
+            9,
+            54
+          ],
+          "rect": [
+            576,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:goat_horn_sheath": {
+          "cell": [
+            10,
+            54
+          ],
+          "rect": [
+            640,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:grazer_horn_chip": {
+          "cell": [
+            11,
+            54
+          ],
+          "rect": [
+            704,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:grouse_down_tuft": {
+          "cell": [
+            12,
+            54
+          ],
+          "rect": [
+            768,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:gull_wing_down": {
+          "cell": [
+            13,
+            54
+          ],
+          "rect": [
+            832,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:heron_pinion_quills": {
+          "cell": [
+            14,
+            54
+          ],
+          "rect": [
+            896,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:moose_hoof_plate": {
+          "cell": [
+            15,
+            54
+          ],
+          "rect": [
+            960,
+            3456,
+            64,
+            64
+          ]
+        },
+        "core:muskrat_fur_clump": {
+          "cell": [
+            0,
+            55
+          ],
+          "rect": [
+            0,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:otter_whisker_bundle": {
+          "cell": [
+            1,
+            55
+          ],
+          "rect": [
+            64,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:rabbit_foot_tuft": {
+          "cell": [
+            2,
+            55
+          ],
+          "rect": [
+            128,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:seal_whisker_pad": {
+          "cell": [
+            3,
+            55
+          ],
+          "rect": [
+            192,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:sheep_wool_locks": {
+          "cell": [
+            4,
+            55
+          ],
+          "rect": [
+            256,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:stalker_tendon_knot": {
+          "cell": [
+            5,
+            55
+          ],
+          "rect": [
+            320,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:turkey_quill_fan": {
+          "cell": [
+            6,
+            55
+          ],
+          "rect": [
+            384,
+            3520,
+            64,
+            64
+          ]
+        },
+        "core:wolf_fang_pair": {
+          "cell": [
+            7,
+            55
+          ],
+          "rect": [
+            448,
+            3520,
             64,
             64
           ]
@@ -1687,11 +7675,11 @@
         "core:book": {
           "cell": [
             0,
-            17
+            56
           ],
           "rect": [
             0,
-            1088,
+            3584,
             64,
             64
           ]
@@ -1699,11 +7687,11 @@
         "core:copper_coin": {
           "cell": [
             1,
-            17
+            56
           ],
           "rect": [
             64,
-            1088,
+            3584,
             64,
             64
           ]
@@ -1711,11 +7699,11 @@
         "core:ancient_key": {
           "cell": [
             2,
-            17
+            56
           ],
           "rect": [
             128,
-            1088,
+            3584,
             64,
             64
           ]
@@ -1723,11 +7711,11 @@
         "core:relic": {
           "cell": [
             3,
-            17
+            56
           ],
           "rect": [
             192,
-            1088,
+            3584,
             64,
             64
           ]
@@ -1748,6 +7736,17 @@
         "ammo",
         "armor",
         "utility",
+        "misc:hardware",
+        "misc:woodwork",
+        "misc:textiles",
+        "misc:leatherwork",
+        "misc:ceramics",
+        "misc:glassware",
+        "misc:paperwork",
+        "misc:stonework",
+        "misc:mechanisms",
+        "misc:provisions",
+        "misc:animal_parts",
         "special"
       ],
       "groups": [
@@ -1766,16 +7765,16 @@
           "subcategory": "wild",
           "label": "Wild Plants",
           "start_row": 1,
-          "count": 16,
-          "rows": 1
+          "count": 55,
+          "rows": 4
         },
         {
           "id": "plant:farmed",
           "category": "plant",
           "subcategory": "farmed",
           "label": "Farmed Plants",
-          "start_row": 2,
-          "count": 8,
+          "start_row": 5,
+          "count": 10,
           "rows": 1
         },
         {
@@ -1783,8 +7782,8 @@
           "category": "herb",
           "subcategory": "cooking",
           "label": "Cooking Herbs",
-          "start_row": 3,
-          "count": 1,
+          "start_row": 6,
+          "count": 5,
           "rows": 1
         },
         {
@@ -1792,8 +7791,8 @@
           "category": "herb",
           "subcategory": "medical",
           "label": "Medical Herbs",
-          "start_row": 4,
-          "count": 3,
+          "start_row": 7,
+          "count": 8,
           "rows": 1
         },
         {
@@ -1801,17 +7800,17 @@
           "category": "food",
           "subcategory": "",
           "label": "Food",
-          "start_row": 5,
-          "count": 23,
-          "rows": 2
+          "start_row": 8,
+          "count": 77,
+          "rows": 5
         },
         {
           "id": "seed",
           "category": "seed",
           "subcategory": "",
           "label": "Seeds & Farming",
-          "start_row": 7,
-          "count": 8,
+          "start_row": 13,
+          "count": 10,
           "rows": 1
         },
         {
@@ -1819,16 +7818,16 @@
           "category": "material",
           "subcategory": "",
           "label": "Materials",
-          "start_row": 8,
-          "count": 18,
-          "rows": 2
+          "start_row": 14,
+          "count": 106,
+          "rows": 7
         },
         {
           "id": "medicine",
           "category": "medicine",
           "subcategory": "",
           "label": "Medicine",
-          "start_row": 10,
+          "start_row": 21,
           "count": 4,
           "rows": 1
         },
@@ -1837,17 +7836,17 @@
           "category": "tool",
           "subcategory": "",
           "label": "Tools",
-          "start_row": 11,
-          "count": 18,
-          "rows": 2
+          "start_row": 22,
+          "count": 83,
+          "rows": 6
         },
         {
           "id": "weapon",
           "category": "weapon",
           "subcategory": "",
           "label": "Weapons",
-          "start_row": 13,
-          "count": 7,
+          "start_row": 28,
+          "count": 15,
           "rows": 1
         },
         {
@@ -1855,7 +7854,7 @@
           "category": "ammo",
           "subcategory": "",
           "label": "Ammo",
-          "start_row": 14,
+          "start_row": 29,
           "count": 2,
           "rows": 1
         },
@@ -1864,25 +7863,124 @@
           "category": "armor",
           "subcategory": "",
           "label": "Armor",
-          "start_row": 15,
-          "count": 13,
-          "rows": 1
+          "start_row": 30,
+          "count": 34,
+          "rows": 3
         },
         {
           "id": "utility",
           "category": "utility",
           "subcategory": "",
           "label": "Utility & Containers",
-          "start_row": 16,
-          "count": 8,
+          "start_row": 33,
+          "count": 15,
           "rows": 1
+        },
+        {
+          "id": "misc:hardware",
+          "category": "misc",
+          "subcategory": "hardware",
+          "label": "Damaged Hardware",
+          "start_row": 34,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:woodwork",
+          "category": "misc",
+          "subcategory": "woodwork",
+          "label": "Broken Woodwork",
+          "start_row": 36,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:textiles",
+          "category": "misc",
+          "subcategory": "textiles",
+          "label": "Worn Textiles",
+          "start_row": 38,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:leatherwork",
+          "category": "misc",
+          "subcategory": "leatherwork",
+          "label": "Worn Leatherwork",
+          "start_row": 40,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:ceramics",
+          "category": "misc",
+          "subcategory": "ceramics",
+          "label": "Broken Ceramics",
+          "start_row": 42,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:glassware",
+          "category": "misc",
+          "subcategory": "glassware",
+          "label": "Broken Glassware",
+          "start_row": 44,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:paperwork",
+          "category": "misc",
+          "subcategory": "paperwork",
+          "label": "Discarded Paperwork",
+          "start_row": 46,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:stonework",
+          "category": "misc",
+          "subcategory": "stonework",
+          "label": "Broken Stonework",
+          "start_row": 48,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:mechanisms",
+          "category": "misc",
+          "subcategory": "mechanisms",
+          "label": "Damaged Mechanisms",
+          "start_row": 50,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:provisions",
+          "category": "misc",
+          "subcategory": "provisions",
+          "label": "Spent Provisions",
+          "start_row": 52,
+          "count": 18,
+          "rows": 2
+        },
+        {
+          "id": "misc:animal_parts",
+          "category": "misc",
+          "subcategory": "animal_parts",
+          "label": "Animal Parts",
+          "start_row": 54,
+          "count": 24,
+          "rows": 2
         },
         {
           "id": "special",
           "category": "special",
           "subcategory": "",
           "label": "Special",
-          "start_row": 17,
+          "start_row": 56,
           "count": 4,
           "rows": 1
         }

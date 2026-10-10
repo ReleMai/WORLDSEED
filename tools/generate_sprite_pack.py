@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json, math, random, re
+import argparse, json, math, random, re, sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -345,14 +345,27 @@ def make_preview(paths, out):
     save(sheet,out)
 
 def main():
+    parser=argparse.ArgumentParser(description="Generate legacy sprites while preserving published generated item artwork")
+    parser.add_argument('--replace-generated-art',action='store_true',help='explicitly allow replacing published image-generated item artwork')
+    args=parser.parse_args()
+    sys.path.insert(0,str(ROOT))
+    from tools.import_generated_item_icons import generated_item_ids
+    protected=set() if args.replace_generated_art else generated_item_ids()
     OUT.mkdir(parents=True,exist_ok=True)
-    items=json.load(open(DATA/'items.json',encoding='utf-8')); terrain=json.load(open(DATA/'terrain.json',encoding='utf-8')); resources=json.load(open(DATA/'resources.json',encoding='utf-8')); structures=json.load(open(DATA/'structures.json',encoding='utf-8')); species=json.load(open(DATA/'species.json',encoding='utf-8')); crops=json.load(open(DATA/'crops.json',encoding='utf-8'))
+    items=json.loads((DATA/'items.json').read_text(encoding='utf-8'))
+    terrain=json.loads((DATA/'terrain.json').read_text(encoding='utf-8'))
+    resources=json.loads((DATA/'resources.json').read_text(encoding='utf-8'))
+    structures=json.loads((DATA/'structures.json').read_text(encoding='utf-8'))
+    species=json.loads((DATA/'species.json').read_text(encoding='utf-8'))
+    crops=json.loads((DATA/'crops.json').read_text(encoding='utf-8'))
     manifest={'version':2,'tile_px':32,'item_assets_source':'data/items.json','items':{},'terrain':{},'resources':{},'structures':{},'species':{},'crops':{},'npc_variants':[],'procedural_species':[],'special':{}}
     preview=[]
     for it in items:
         asset = str(it.get('asset') or sid(it['id']))
         p=OUT/'items'/f'{asset}.png'
-        save(item_sprite(it),p)
+        if it['id'] in protected:
+            if not p.is_file():raise ValueError('Missing protected generated artwork: '+it['id'])
+        else:save(item_sprite(it),p)
         preview.append(p)
     for t in terrain:
         p=OUT/'terrain'/f'{sid(t["id"])}.png'; save(terrain_sprite(t),p); manifest['terrain'][t['id']]=str(p.relative_to(ROOT/'worldseed')).replace('\\','/'); preview.append(p)
@@ -382,6 +395,6 @@ def main():
     fog=Image.new('RGBA',(32,32),(9,12,14,255)); noise(ImageDraw.Draw(fog),random.Random(9),(0,0,31,31),[(14,18,20,255),(6,8,10,255)],28); p3=OUT/'special'/'unknown.png'; save(fog,p3); manifest['special']['unknown']=str(p3.relative_to(ROOT/'worldseed')).replace('\\','/')
     MANIFEST.parent.mkdir(parents=True,exist_ok=True); MANIFEST.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     make_preview(preview[:96], ROOT/'worldseed'/'assets'/'sprite_preview.png')
-    print(f"generated items={len(items)} terrain={len(terrain)} resources={len(resources)} structures={len(structures)} species={len(species)*4} crops={len(crops)*3} procedural=8 npc=32")
+    print(f"generated items={len(items)-len(protected)} preserved_generated_items={len(protected)} terrain={len(terrain)} resources={len(resources)} structures={len(structures)} species={len(species)*4} crops={len(crops)*3} procedural=8 npc=32")
 
 if __name__=='__main__': main()

@@ -8,8 +8,12 @@ from tools.build_sprite_atlases import (
     ITEM_SUBCATEGORY_ORDER,
     ITEM_TYPE_ORDER,
     item_sort_key,
+    item_sections,
     ordered_items,
 )
+from worldseed.config import DATA_DIR
+from worldseed.content.item_catalog import canonical_item_catalog, classified_item
+from worldseed.content.registry import ContentRegistry, ItemDef
 
 ROOT = Path(__file__).resolve().parents[1]
 ITEMS = ROOT / "worldseed" / "data" / "items.json"
@@ -88,6 +92,65 @@ class ItemAssetCatalogTests(unittest.TestCase):
             [x["id"] for x in ordered_items(self.items)],
             [x["id"] for x in sorted(self.items, key=item_sort_key)],
         )
+
+    def test_persisted_database_runtime_registry_and_catalog_share_order(self):
+        expected = [row['id'] for row in ordered_items(self.items)]
+        self.assertEqual([row['id'] for row in self.items], expected)
+        registry = ContentRegistry.load(DATA_DIR)
+        self.assertEqual(list(registry.items), expected)
+        grouped = [row['id'] for _, _, _, rows in item_sections(self.items) for row in rows]
+        self.assertEqual(grouped, expected)
+        self.assertEqual(self.items, canonical_item_catalog(self.items))
+
+    def test_miscellaneous_finds_are_grouped_by_physical_object(self):
+        expected = {
+            'core:bent_door_hinge': 'hardware', 'core:split_wagon_spoke': 'woodwork',
+            'core:torn_apron': 'textiles', 'core:split_harness_strap': 'leatherwork',
+            'core:chipped_crock': 'ceramics', 'core:clouded_window_pane': 'glassware',
+            'core:waterlogged_ledger': 'paperwork', 'core:worn_whetstone': 'stonework',
+            'core:jammed_ratchet_wheel': 'mechanisms', 'core:spoiled_herb_sachet': 'provisions',
+            'core:cow_horn_ring': 'animal_parts',
+        }
+        for iid, group in expected.items():
+            self.assertEqual((self.by_id[iid]['category'], self.by_id[iid]['subcategory']), ('misc', group))
+        for row in self.items:
+            tags = set(row.get('tags', ()))
+            if tags & {'animal_part', 'village_salvage'}:
+                self.assertEqual(row['category'], 'misc', row['id'])
+        self.assertEqual(sum(row['category'] == 'misc' for row in self.items), 204)
+
+    def test_finished_tackle_vessels_crops_and_herbs_have_meaningful_types(self):
+        for iid in ('core:corn', 'core:pumpkin'):
+            self.assertEqual((self.by_id[iid]['category'], self.by_id[iid]['subcategory']), ('plant', 'farmed'))
+        for iid in ('core:fiber_line', 'core:sinew_line', 'core:braided_line',
+                    'core:waxed_casting_line', 'core:twisted_reed_line'):
+            self.assertEqual(self.by_id[iid]['category'], 'tool', iid)
+        for iid in ('core:ceramic_mould', 'core:stoneware_crucible', 'core:ceramic_distillation_coil', 'core:porous_filter_candle'):
+            self.assertEqual(self.by_id[iid]['category'], 'utility', iid)
+        for iid in ('core:moonmint_sprig', 'core:saffron_crocus_tuft', 'core:frost_sage_branch'):
+            self.assertEqual((self.by_id[iid]['category'], self.by_id[iid]['subcategory']), ('herb', 'cooking'))
+        for iid in ('core:silverleaf_sprig', 'core:ghost_orchid_stem', 'core:blue_lotus_stalk'):
+            self.assertEqual((self.by_id[iid]['category'], self.by_id[iid]['subcategory']), ('herb', 'medical'))
+        self.assertEqual(self.by_id['core:clean_dressing_pad']['category'], 'material')
+        self.assertEqual(self.by_id['core:bandage']['category'], 'medicine')
+        self.assertEqual(self.by_id['core:spoiled_herb_sachet'].get('nutrition', 0), 0)
+
+    def test_classification_changes_only_metadata_and_is_idempotent(self):
+        for row in self.items:
+            classified = classified_item(row)
+            strip = lambda item: {key: value for key, value in item.items() if key not in {'category', 'subcategory'}}
+            self.assertEqual(strip(classified), strip(row), row['id'])
+            self.assertEqual(classified_item(classified), classified, row['id'])
+        self.assertEqual(canonical_item_catalog(list(reversed(self.items))), self.items)
+
+    def test_runtime_sort_has_stable_fallback_for_mod_groups(self):
+        rows = [ItemDef('mod:z', 'Zinc Wisp', category='modded', subcategory='spirits'),
+                ItemDef('mod:a', 'Amber Wisp', category='modded', subcategory='spirits'),
+                ItemDef('core:stone', 'Stone', category='resource')]
+        self.assertEqual([row.id for row in ordered_items(rows)], ['core:stone', 'mod:a', 'mod:z'])
+        self.assertEqual(ordered_items(rows), ordered_items(reversed(rows)))
+        with self.assertRaises(ValueError):
+            item_sections([{'id': 'mod:x', 'name': 'X', 'category': 'modded'}])
 
     def test_names_are_clean_and_unique(self):
         names = [row["name"] for row in self.items]

@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from worldseed.core.coords import WorldPos
+from worldseed.content.item_catalog import ITEM_TYPE_LABELS
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.presentation.visuals import VisualRegistry
 from worldseed.presentation.weather_fx import WeatherFxRenderer
@@ -1391,17 +1392,24 @@ class PygameTerminal(PointerUI):
         filter_y=cy+summary_h+7
         active_filter=str(data.get('active_filter','all'))
         filters=['all']+list(data.get('filter_categories') or [])
+        per_page=6;page=max(0,min(int(data.get('filter_page',0)),(len(filters)-1)//per_page))
+        paged=len(filters)>per_page
+        visible_filters=filters[page*per_page:(page+1)*per_page]
         fx=cx
-        for cat in filters:
-            label='ALL' if cat=='all' else str(cat).replace('_',' ').upper()
-            fw=min(128,max(54,self.small_font.size(label)[0]+20))
-            if fx+fw>cx+cw:break
+        space=cw-(84 if paged else 0)
+        max_width=max(30,(space-6*(len(visible_filters)-1))//max(1,len(visible_filters)))
+        for cat in visible_filters:
+            label='ALL' if cat=='all' else ITEM_TYPE_LABELS.get(cat,str(cat).replace('_',' ')).upper()
+            fw=min(max_width,min(160,max(54,self.small_font.size(label)[0]+20)))
             rect=pg.Rect(fx,filter_y,fw,26);active=(cat==active_filter)
             pg.draw.rect(screen,(42,46,43) if active else self._theme['panel2'],rect,border_radius=13)
             pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=13)
-            txt=self.small_font.render(label,True,self._theme['text'] if active else self._theme['muted']);screen.blit(txt,txt.get_rect(center=rect.center))
+            txt=self.small_font.render(self._fit_ui_text(label,self.small_font,fw-12),True,self._theme['text'] if active else self._theme['muted']);screen.blit(txt,txt.get_rect(center=rect.center))
             self._ui_target(rect,f'UI_ACTION:filter:{cat}')
             fx+=fw+6
+        if paged:
+            self._button((cx+cw-78,filter_y,34,26),'‹','UI_ACTION:filter_page:prev')
+            self._button((cx+cw-38,filter_y,34,26),'›','UI_ACTION:filter_page:next')
         body_y=filter_y+33
         body_bottom=y+h-48
         panel_h=max(120,body_bottom-body_y)

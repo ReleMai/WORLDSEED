@@ -29,7 +29,8 @@ class FishAndContainerSpriteTests(unittest.TestCase):
                 path = self.visuals.resolve(self.visuals.ref("items", f"core:{name}"))
                 self.assertEqual(f"{name}.png", path.name)
                 with Image.open(path) as sprite:
-                    self.assertEqual((192, 128), sprite.size)
+                    # Generated inventory art uses the common native 64px cell.
+                    self.assertEqual((64, 64), sprite.size)
                     alpha = sprite.convert("RGBA").getchannel("A")
                     self.assertEqual(0, alpha.getpixel((0, 0)))
                     self.assertIsNotNone(alpha.getbbox())

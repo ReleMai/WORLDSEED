@@ -189,7 +189,10 @@ class ContentRegistry:
     def load(cls, data_dir: Path, extra_data_dirs: list[Path] | None = None) -> "ContentRegistry":
         reg=cls(); reg._load_data_dir(data_dir, required=True)
         for extra in extra_data_dirs or []: reg._load_data_dir(extra, required=False)
-        reg._validate(); return reg
+        reg._validate()
+        from worldseed.content.item_catalog import item_sort_key
+        reg.items=dict(sorted(reg.items.items(),key=lambda row:item_sort_key(row[1])))
+        return reg
 
     def _load_data_dir(self, data_dir: Path, required: bool=False) -> None:
         loaders=[

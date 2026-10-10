@@ -4,6 +4,7 @@ from worldseed.ui.npc_activity import activity_label, possessions_rows, schedule
 from collections import Counter, defaultdict
 
 from worldseed.content.registry import ContentRegistry
+from worldseed.content.item_catalog import ordered_items
 from worldseed.entities.components import Inventory, Vitals
 from worldseed.sim.engine import Simulation
 from worldseed.ui.widgets import panel as _panel
@@ -62,9 +63,8 @@ def box(title:str,body:list[str],width:int=88,footer:str='Press Esc to return.')
 
 def inventory_screen(reg:ContentRegistry,inv:Inventory,width:int=96,sim:Simulation|None=None)->str:
     body=[];tm=tv=0
-    for iid,n in sorted(inv.items.items()):
-        if iid not in reg.items:continue
-        item=reg.items[iid];body.append(f"{item.name:<30} x{n:<5} {item.mass_g*n/1000:7.1f} kg  {item.volume_ml*n/1000:7.1f} L")
+    for item in ordered_items(reg.items[iid] for iid,n in inv.items.items() if iid in reg.items and n>0):
+        n=inv.count(item.id);body.append(f"{item.name:<30} x{n:<5} {item.mass_g*n/1000:7.1f} kg  {item.volume_ml*n/1000:7.1f} L")
         tm+=item.mass_g*n;tv+=item.volume_ml*n
     body += ['',f'Total mass: {tm/1000:.1f} kg',f'Estimated volume: {tv/1000:.1f} L']
     if sim is not None:

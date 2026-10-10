@@ -14,6 +14,7 @@ import hashlib
 import json
 import math
 import random
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -1574,21 +1575,33 @@ def main() -> int:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--contact-sheet",type=Path,default=Path("/workspace/scratch/salvage_expansion_contact.png"))
     parser.add_argument("--register-resources",action="store_true")
+    parser.add_argument("--replace-generated-art",action="store_true",help="explicitly allow replacing published image-generated item artwork")
     args=parser.parse_args()
     manifest=json.loads((DATA/"crafting_expansion.json").read_text())
     by_id={r["id"]:r for r in json.loads((DATA/"items.json").read_text())}
     specs=expansion_specs(manifest,by_id)
+    sys.path.insert(0,str(ROOT))
+    from tools.import_generated_item_icons import generated_item_ids
+    protected=set() if args.replace_generated_art else generated_item_ids()
     OUT.mkdir(parents=True,exist_ok=True)
     hashes=set()
+    authored_count=0
+    preserved_count=0
     for row,family,motif in specs:
-        image=render(row,family,motif)
         path=OUT/(row["asset"]+".png")
-        image.save(path,optimize=True)
+        if row["id"] in protected:
+            if not path.is_file():raise ValueError("Missing protected generated artwork: "+row["id"])
+            image=Image.open(path).convert("RGBA")
+            preserved_count+=1
+        else:
+            image=render(row,family,motif)
+            image.save(path,optimize=True)
+            authored_count+=1
         digest=hashlib.sha256(image.tobytes()).digest()
         if digest in hashes:raise ValueError("Duplicate icon: "+row["id"])
         hashes.add(digest)
     contact_sheet(specs,args.contact_sheet)
-    print(f"Authored {len(specs)} unique 64px RGBA item sprites; contact sheet: {args.contact_sheet}")
+    print(f"Authored {authored_count} item sprites; preserved {preserved_count} published generated sprites; contact sheet: {args.contact_sheet}")
     if args.register_resources:print(f"Registered {register_resource_visuals(manifest,by_id)} harvestable plant visuals")
     return 0
 

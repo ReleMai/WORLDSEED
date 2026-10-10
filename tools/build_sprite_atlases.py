@@ -4,48 +4,22 @@ import argparse
 import json
 import math
 from pathlib import Path
+import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from worldseed.content.item_catalog import (
+    ITEM_TYPE_ORDER, ITEM_TYPE_LABELS, ITEM_SUBCATEGORY_ORDER,
+    ITEM_SUBCATEGORY_LABELS, item_sort_key, ordered_items, validate_item_group,
+)
 AS = ROOT / "worldseed" / "assets"
 SP = AS / "sprites"
 OUT = AS / "atlases"
 DATA = ROOT / "worldseed" / "data"
 CELL = 64
 COLS = 16
-
-ITEM_TYPE_ORDER = (
-    "resource", "plant", "herb", "food", "seed", "material", "medicine",
-    "tool", "weapon", "ammo", "armor", "utility", "special",
-)
-ITEM_TYPE_LABELS = {
-    "resource": "Resources",
-    "plant": "Plants",
-    "herb": "Herbs",
-    "food": "Food",
-    "seed": "Seeds & Farming",
-    "material": "Materials",
-    "medicine": "Medicine",
-    "tool": "Tools",
-    "weapon": "Weapons",
-    "ammo": "Ammo",
-    "armor": "Armor",
-    "utility": "Utility & Containers",
-    "special": "Special",
-}
-ITEM_SUBCATEGORY_ORDER = {
-    "plant": ("wild", "farmed"),
-    "herb": ("cooking", "medical", "poisonous"),
-}
-ITEM_SUBCATEGORY_LABELS = {
-    ("plant", "wild"): "Wild Plants",
-    ("plant", "farmed"): "Farmed Plants",
-    ("herb", "cooking"): "Cooking Herbs",
-    ("herb", "medical"): "Medical Herbs",
-    ("herb", "poisonous"): "Poisonous Herbs",
-}
-
 
 def load_items() -> list[dict]:
     return json.loads((DATA / "items.json").read_text(encoding="utf-8"))
@@ -58,31 +32,9 @@ def item_asset_path(raw: dict) -> Path:
     return SP / "items" / f"{asset}.png"
 
 
-def _subcategory_rank(category: str, subcategory: str) -> int:
-    known = ITEM_SUBCATEGORY_ORDER.get(category)
-    if not known:
-        return 0
-    if subcategory not in known:
-        raise ValueError(f"unknown {category} subcategory: {subcategory or '<missing>'}")
-    return known.index(subcategory)
-
-
-def item_sort_key(raw: dict):
-    category = str(raw.get("category", ""))
-    try:
-        category_rank = ITEM_TYPE_ORDER.index(category)
-    except ValueError as exc:
-        raise ValueError(f"unknown item atlas category: {category or '<missing>'}") from exc
-    subcategory = str(raw.get("subcategory", ""))
-    subcategory_rank = _subcategory_rank(category, subcategory)
-    return category_rank, subcategory_rank, str(raw["name"]).casefold(), str(raw["id"])
-
-
-def ordered_items(items: list[dict]) -> list[dict]:
-    return sorted(items, key=item_sort_key)
-
-
 def item_sections(items: list[dict]) -> list[tuple[str, str, str, list[dict]]]:
+    for raw in items:
+        validate_item_group(raw)
     ordered = ordered_items(items)
     sections: list[tuple[str, str, str, list[dict]]] = []
     for category in ITEM_TYPE_ORDER:
@@ -151,10 +103,14 @@ def build_grouped_items(items: list[dict]):
     idx = {}
     for slot_index, raw, path in placements:
         im = Image.open(path).convert("RGBA")
-        im.thumbnail((60, 60), Image.Resampling.LANCZOS)
+        # Generated icons already contain transparent padding. Preserve their
+        # native pixels in the 64px runtime cell instead of shrinking twice.
+        im.thumbnail((CELL, CELL), Image.Resampling.LANCZOS)
         col, row = slot_index % COLS, slot_index // COLS
         cx, cy = col * CELL, row * CELL
-        sheet.alpha_composite(im, (cx + (CELL - im.width) // 2, cy + (CELL - im.height) // 2))
+        # Atlas storage copies RGBA bytes, including transparent edge pixels;
+        # compositing belongs to the renderer, not the packing step.
+        sheet.paste(im, (cx + (CELL - im.width) // 2, cy + (CELL - im.height) // 2))
         idx[raw["id"]] = {"cell": [col, row], "rect": [cx, cy, CELL, CELL]}
     OUT.mkdir(parents=True, exist_ok=True)
     sheet.save(OUT / "items.png", optimize=True)
@@ -169,7 +125,16 @@ def _font(size: int):
 
 
 def build_readable_item_catalog(items: list[dict]) -> None:
-    card_w, card_h, cols = 250, 92, 4
+    title_font = _font(24)
+    header_font = _font(18)
+    name_font = _font(15)
+    meta_font = _font(11)
+    # Keep every authored name, stable ID and filename readable in full.
+    # Width follows actual font measurements, so future longer IDs also fit.
+    longest_text = max((max(name_font.getlength(str(raw["name"])),
+                            meta_font.getlength(str(raw["id"])),
+                            meta_font.getlength(f"{raw['asset']}.png")) for raw in items), default=0)
+    card_w, card_h, cols = max(250, math.ceil(longest_text) + 94), 92, 4
     margin, gap, header_h = 18, 8, 34
     title_h = 54
     sections = []
@@ -181,10 +146,6 @@ def build_readable_item_catalog(items: list[dict]) -> None:
     width = margin * 2 + cols * card_w + (cols - 1) * gap
     canvas = Image.new("RGBA", (width, total_h), (15, 18, 20, 255))
     draw = ImageDraw.Draw(canvas)
-    title_font = _font(24)
-    header_font = _font(18)
-    name_font = _font(15)
-    meta_font = _font(11)
     draw.text((margin, margin), "WORLDSEED Item Atlas", fill=(235, 231, 219, 255), font=title_font)
     draw.text((margin, margin + 30), "Broad resources • split plants/herbs • stable content IDs", fill=(155, 164, 160, 255), font=meta_font)
     y = margin + title_h
@@ -198,8 +159,8 @@ def build_readable_item_catalog(items: list[dict]) -> None:
             cy = y + row * (card_h + gap)
             draw.rounded_rectangle((x, cy, x + card_w, cy + card_h), radius=7, fill=(26, 30, 32, 255), outline=(66, 75, 77, 255))
             icon = Image.open(item_asset_path(raw)).convert("RGBA")
-            icon.thumbnail((58, 58), Image.Resampling.LANCZOS)
-            canvas.alpha_composite(icon, (x + 12 + (58 - icon.width) // 2, cy + 10 + (58 - icon.height) // 2))
+            icon.thumbnail((64, 64), Image.Resampling.LANCZOS)
+            canvas.alpha_composite(icon, (x + 8 + (64 - icon.width) // 2, cy + 8 + (64 - icon.height) // 2))
             tx = x + 82
             draw.text((tx, cy + 13), str(raw["name"]), fill=(230, 232, 226, 255), font=name_font)
             draw.text((tx, cy + 38), str(raw["id"]), fill=(147, 157, 154, 255), font=meta_font)

@@ -4,6 +4,30 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev64 — Generated item art and a sorted item database
+
+The full 643-item database now uses one shared category, subcategory, name and ID
+order in its JSON definitions, runtime registry, browsing screens and item atlas.
+Miscellaneous village finds and animal parts have 11 clear groups instead of
+being mixed into crafting materials. Crops, culinary and medical herbs, finished
+fishing tackle and reusable vessels have corrected types. Inventory category
+filters are paged so every group remains reachable in a narrow panel.
+
+All 643 icons now have new AI-generated, hand-painted-style inventory art.
+Nineteen generated source sheets retain their prompts, item assignments and
+hashes; an offline importer isolates reviewed objects, trims transparency and
+resamples the existing pixels into individual 64px icons. Item IDs, asset
+basenames, gameplay tags, physical statistics, recipes and save contracts stay
+the same. Original generated sheets and reproducible per-item provenance are
+kept with the project.
+
+The rebuilt atlas and labeled catalog cover every item. All 643 icons have
+unique pixels, and full source-pixel reproduction, 76 targeted regressions and
+content/visual audits passed. Browse the [item catalog](worldseed/assets/ITEM_ATLAS.md)
+or [native-size art gallery](artifacts/dev64-item-review/README.md).
+See the [Dev64 handoff](docs/handoffs/DEV64_ITEM_ART_DATABASE_HANDOFF.md) for the
+source-art pipeline and final validation record.
+
 ## RC14 Dev63 — Salvaging and profession crafting
 
 Open **Enter → Work → Craft → Salvaging** to inspect carried finds, preview

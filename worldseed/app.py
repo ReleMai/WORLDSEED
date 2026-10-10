@@ -6,6 +6,7 @@ import json,secrets,sys,time,traceback
 from worldseed.debug import debug_log_path
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
+from worldseed.content.item_catalog import ITEM_TYPE_ORDER, item_sort_key, ordered_items
 from worldseed.content.mods import ModManager, ModError
 from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
@@ -1279,7 +1280,7 @@ def _combat_arena_menu(ctx:GameContext,term:Terminal)->str:
             sim.execute(ArenaPresetCommand(pid,pick));status=sim.log[-1].message if sim.log else '';nav.back();continue
         if route.route_id=='arena:items':
             rows=[]
-            for item in sorted(reg.items.values(),key=lambda q:(q.category,q.name)):
+            for item in ordered_items(reg.items.values()):
                 if item.weapon_damage>0 or 'shield' in item.tags or 'ammo' in item.tags:
                     amount=20 if 'ammo' in item.tags else 1
                     role='shield' if 'shield' in item.tags else item.weapon_class or item.damage_type
@@ -1857,9 +1858,9 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         container_data=_inventory_ui_data(reg,Inventory(dict(container.items)),sim,False)
         entries={};rows=[]
         pack_rows=[];container_rows=[]
-        for iid,meta in sorted(pack_data['items'].items(),key=lambda kv:kv[1]['name']):
+        for iid,meta in pack_data['items'].items():
             key=f'pack|{iid}';entries[key]={**meta,'side':'pack','iid':iid};pack_rows.append((key,f"{meta['name']} x{meta['count']}"))
-        for iid,meta in sorted(container_data['items'].items(),key=lambda kv:kv[1]['name']):
+        for iid,meta in container_data['items'].items():
             key=f'container|{iid}';entries[key]={**meta,'side':'container','iid':iid};container_rows.append((key,f"{meta['name']} x{meta['count']}"))
         for i in range(max(len(pack_rows),len(container_rows))):
             if i<len(pack_rows):rows.append(pack_rows[i])
@@ -2400,9 +2401,8 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         for artifact in sim.state.artifacts.values():
             if artifact.owner=='player':
                 artifacts_by_item.setdefault(artifact.base_item,[]).append(artifact)
-    for iid,n in inv.items.items():
-        item=reg.items.get(iid)
-        if not item or n<=0:continue
+    for item in ordered_items(reg.items[iid] for iid,n in inv.items.items() if iid in reg.items and n>0):
+        iid=item.id;n=inv.count(iid)
         cat=item.category or 'misc';categories[cat]=categories.get(cat,0)+n
         material=reg.materials.get(item.material) if item.material else None
         material_name=material.name if material else ''
@@ -2519,9 +2519,8 @@ def _crafting_home_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,know
 
 def _crafting_material_ui_data(reg:ContentRegistry,sim:Simulation)->dict:
     items={}
-    for iid in sorted(set(sim.state.player_discovered_items)):
-        item=reg.items.get(iid)
-        if not item:continue
+    for item in ordered_items(reg.items[iid] for iid in set(sim.state.player_discovered_items) if iid in reg.items):
+        iid=item.id
         items[iid]={'name':item.name,'category':item.category or 'misc','material':reg.materials[item.material].name if item.material and item.material in reg.materials else '', 'description':item.description or item.flavor or ''}
     return {'items':items,'count':len(items)}
 
@@ -2714,7 +2713,8 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
                 continue
             if choice=='read':sim.execute(ReadBookCommand(pid));return sim.log[-1].message if sim.log else ''
         elif route.route_id=='inventory-browse':
-            rows=[(iid,f'{reg.items[iid].name} x{n} | {reg.items[iid].mass_g*n/1000:.1f} kg') for iid,n in sorted(inv.items.items(),key=lambda kv:(reg.items[kv[0]].name if kv[0] in reg.items else kv[0])) if n>0 and iid in reg.items]
+            rows=[(iid,f"{meta['name']} x{meta['count']} | {meta['mass_kg']:.1f} kg")
+                  for iid,meta in _inventory_ui_data(reg,inv,sim)['items'].items()]
             iid=_stack_menu(term,nav,rows,presentation='inventory_items',presentation_data=_inventory_ui_data(reg,inv,sim))
             if iid is None:return UI_BACK
             if iid=='__BACK__':continue
@@ -2775,12 +2775,12 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     parent_panel=getattr(term,'_floating_panel_id',None)
     nav=NavigationStack(RouteState('inventory','INVENTORY'))
-    action_amount=1;last_selected=None;status='';active_filter='all'
+    action_amount=1;last_selected=None;status='';active_filter='all';filter_page=0
     while True:
         inv=ctx.entities.get(pid,Inventory);route=nav.current
         data=_inventory_ui_data(reg,inv,sim)
         visible_items=[(iid,meta) for iid,meta in data['items'].items() if active_filter=='all' or meta.get('category')==active_filter]
-        rows=[(iid,f"{meta['name']} x{meta['count']}") for iid,meta in sorted(visible_items,key=lambda kv:kv[1]['name'])]
+        rows=[(iid,f"{meta['name']} x{meta['count']}") for iid,meta in visible_items]
         if rows:
             route.selected=max(0,min(route.selected,len(rows)-1))
             selected_iid=rows[route.selected][0]
@@ -2791,7 +2791,10 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
             action_amount=1;last_selected=selected_iid
         count=inv.count(selected_iid) if selected_iid!='__empty__' else 0
         action_amount=max(1,min(action_amount,max(1,count)))
-        data.update({'selected_item_id':selected_iid,'action_amount':action_amount,'active_filter':active_filter,'filter_categories':sorted(data.get('categories',{}))})
+        filters=sorted(data.get('categories',{}),key=lambda cat:(ITEM_TYPE_ORDER.index(cat) if cat in ITEM_TYPE_ORDER else len(ITEM_TYPE_ORDER),cat))
+        filter_page=min(filter_page,len(filters)//6)
+        data.update({'selected_item_id':selected_iid,'action_amount':action_amount,'active_filter':active_filter,
+                     'filter_categories':filters,'filter_page':filter_page})
         subtitle=status or 'Click to inspect • right-click for actions • Shift-click stores the full stack when a container is nearby.'
         status=''
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='inventory_unified',presentation_data=data)
@@ -2813,6 +2816,8 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
                 action_amount=1;last_selected=choice
             continue
         action=choice.split(':',1)[1]
+        if action.startswith('filter_page:'):
+            filter_page=max(0,min(filter_page+(1 if action.endswith(':next') else -1),len(filters)//6));continue
         if action.startswith('filter:'):
             active_filter=action.split(':',1)[1] or 'all';route.selected=0;last_selected=None;action_amount=1;continue
         # Hover can change select_menu's retained row immediately before an
@@ -2995,7 +3000,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             continue
         if tab=='index':
             carried=[iid for iid,n in inv.items.items() if n>0 and iid in reg.items]
-            carried.sort(key=lambda iid:reg.items[iid].name)
+            carried.sort(key=lambda iid:item_sort_key(reg.items[iid]))
             if not carried:tab='discovery';status='Gather a material to see its possible recipes.';continue
             pot_state.selected=min(pot_state.selected,len(carried)-1)
             iid=carried[pot_state.selected]
@@ -3024,8 +3029,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             elif choice=='UI_ACTION:tab:discovery':tab='discovery'
             continue
         entries={}
-        for iid,n in sorted(inv.items.items(),key=lambda pair:reg.items[pair[0]].name if pair[0] in reg.items else pair[0]):
-            if iid not in reg.items or n<=0:continue
+        for item in ordered_items(reg.items[iid] for iid,n in inv.items.items() if iid in reg.items and n>0):
+            iid=item.id;n=inv.count(iid)
             pool=sim.crafting.recipe_pool_for_item(iid)
             if not pool:continue
             entries[iid]={'name':reg.items[iid].name,'count':n,'pool_count':len(pool),
@@ -3161,15 +3166,13 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
 
         if pick=='materials':
             by_cat={}
-            for iid in sorted(discovered_items,key=lambda x:(reg.items[x].category if x in reg.items else '',reg.items[x].name if x in reg.items else x)):
-                item=reg.items.get(iid)
-                if not item:continue
+            for item in ordered_items(reg.items[iid] for iid in discovered_items if iid in reg.items):
                 by_cat.setdefault(item.category or 'misc',[]).append(item)
             body=['Handled materials give clues. Combine carried materials in the experiment grid to uncover a matching recipe.','']
             if not by_cat:body.append('You have not examined any craft materials yet. Gather or pick up something useful.')
-            for cat,items in sorted(by_cat.items()):
+            for cat,items in by_cat.items():
                 body.append(cat.replace('_',' ').upper())
-                body.extend('  '+it.name for it in items[:24])
+                body.extend('  '+it.name for it in items)
                 body.append('')
             _view_text(term,box('CRAFTING // MATERIAL DISCOVERIES',body,screen_width(term.size()[0],104)),presentation='crafting_materials',presentation_data=_crafting_material_ui_data(reg,sim))
             continue

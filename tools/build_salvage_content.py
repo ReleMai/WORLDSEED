@@ -10,8 +10,11 @@ import json
 from collections import Counter
 from pathlib import Path
 import re
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from worldseed.content.item_catalog import canonical_item_catalog
 DATA = ROOT / 'worldseed' / 'data'
 
 def slug(name):
@@ -321,6 +324,7 @@ def save():
         else:
             original=[x for x in original if not x['id'].startswith('core:craft_')]
         original.extend(additions)
+        if filename=='items.json':original=canonical_item_catalog(original)
         (DATA/filename).write_text(json.dumps(original,indent=2)+'\n')
     (DATA/'salvage.json').write_text(json.dumps(salvage,indent=2)+'\n')
     (DATA/'crafting_expansion.json').write_text(json.dumps(manifest,indent=2)+'\n')

@@ -1,10 +1,15 @@
 import json
 from pathlib import Path
+import sys
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from worldseed.content.item_catalog import canonical_item_catalog
 DATA=ROOT/'worldseed'/'data'
 
 def load(name): return json.loads((DATA/name).read_text())
-def save(name,data): (DATA/name).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding='utf-8')
+def save(name,data):
+    if name=='items.json':data=canonical_item_catalog(data)
+    (DATA/name).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding='utf-8')
 
 def upsert(rows,row):
     for i,x in enumerate(rows):
