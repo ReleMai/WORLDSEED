@@ -206,6 +206,9 @@ class BuildingSystem:
         return bool(self.settlement_overlay and self.settlement_overlay.blocks_sight(pos))
     def place(self,structure_id:str,pos:WorldPos,inv:Inventory,owner:str="player")->tuple[bool,str]:
         if structure_id not in self.registry.structures:return False,"Unknown structure."
+        homestead=getattr(self,"homestead",None)
+        if homestead is not None and homestead.at(pos) is not None:
+            return False,"A homestead blueprint reserves that ground."
         key=pos_key(pos.x,pos.y,pos.z);sdef=self.registry.structures[structure_id]
         if "roof" in sdef.tags:
             if key in self.state.roofs:return False,"That tile is already roofed."
