@@ -1,0 +1,589 @@
+{
+  "version": 1,
+  "status": "prototype_source_data",
+  "home_types": [
+    {
+      "id": "log_cabin",
+      "name": "Primitive Log Cabin",
+      "width": 3,
+      "depth": 3,
+      "materials": {
+        "core:wood": 28,
+        "core:reed_bundle": 12,
+        "core:clay_lump": 9,
+        "core:stone": 4,
+        "core:plant_cordage": 4
+      },
+      "roof": "thatch",
+      "wall": "logs"
+    },
+    {
+      "id": "timber_cottage",
+      "name": "Timber-Framed Cottage",
+      "width": 4,
+      "depth": 3,
+      "materials": {
+        "core:wood": 40,
+        "core:hardwood_blank": 12,
+        "core:clay_lump": 14,
+        "core:stone": 10,
+        "core:wooden_dowels": 8
+      },
+      "roof": "shingle",
+      "wall": "wattle"
+    },
+    {
+      "id": "stone_cottage",
+      "name": "Stone Cottage",
+      "width": 4,
+      "depth": 4,
+      "materials": {
+        "core:stone": 55,
+        "core:mortar_mix": 24,
+        "core:wood": 24,
+        "core:hardwood_blank": 8,
+        "core:bent_door_hinge": 2
+      },
+      "roof": "slate",
+      "wall": "stone"
+    },
+    {
+      "id": "longhouse",
+      "name": "Frontier Longhouse",
+      "width": 5,
+      "depth": 4,
+      "materials": {
+        "core:wood": 65,
+        "core:hardwood_blank": 18,
+        "core:stone": 24,
+        "core:clay_lump": 14,
+        "core:wooden_dowels": 14
+      },
+      "roof": "shingle",
+      "wall": "timber"
+    },
+    {
+      "id": "fortified_homestead",
+      "name": "Fortified Homestead",
+      "width": 6,
+      "depth": 5,
+      "materials": {
+        "core:dressed_stone": 60,
+        "core:mortar_mix": 36,
+        "core:wood": 50,
+        "core:hardwood_blank": 24,
+        "core:bent_door_hinge": 4
+      },
+      "roof": "slate",
+      "wall": "masonry"
+    }
+  ],
+  "styles": [
+    {
+      "id": "log_cabin_01",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Plain",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_01.png",
+      "roof_detail": "simple",
+      "trim": "plank",
+      "door_position": "left",
+      "accent": "straight"
+    },
+    {
+      "id": "log_cabin_02",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Woodland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_02.png",
+      "roof_detail": "overhang",
+      "trim": "beam",
+      "door_position": "right",
+      "accent": "ivy"
+    },
+    {
+      "id": "log_cabin_03",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Hearthside",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_03.png",
+      "roof_detail": "chimney",
+      "trim": "clay",
+      "door_position": "center",
+      "accent": "hearth"
+    },
+    {
+      "id": "log_cabin_04",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Riverbank",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_04.png",
+      "roof_detail": "porch",
+      "trim": "reed",
+      "door_position": "left",
+      "accent": "raised_sill"
+    },
+    {
+      "id": "log_cabin_05",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Highland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_05.png",
+      "roof_detail": "steep",
+      "trim": "stone",
+      "door_position": "right",
+      "accent": "braces"
+    },
+    {
+      "id": "log_cabin_06",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Mossroof",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_06.png",
+      "roof_detail": "moss",
+      "trim": "carved",
+      "door_position": "center",
+      "accent": "moss"
+    },
+    {
+      "id": "log_cabin_07",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Weathered",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_07.png",
+      "roof_detail": "patched",
+      "trim": "dark",
+      "door_position": "left",
+      "accent": "weathered"
+    },
+    {
+      "id": "log_cabin_08",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Craftsman",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_08.png",
+      "roof_detail": "dormer",
+      "trim": "polished",
+      "door_position": "right",
+      "accent": "carved"
+    },
+    {
+      "id": "log_cabin_09",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Front Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_09.png",
+      "roof_detail": "front_gable",
+      "trim": "crossbeam",
+      "door_position": "center",
+      "accent": "shutters"
+    },
+    {
+      "id": "log_cabin_10",
+      "home_id": "log_cabin",
+      "name": "Primitive Log Cabin — Side Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/log_cabin_10.png",
+      "roof_detail": "side_gable",
+      "trim": "crossbeam",
+      "door_position": "right",
+      "accent": "shutters"
+    },
+    {
+      "id": "timber_cottage_01",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Plain",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_01.png",
+      "roof_detail": "simple",
+      "trim": "plank",
+      "door_position": "left",
+      "accent": "straight"
+    },
+    {
+      "id": "timber_cottage_02",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Woodland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_02.png",
+      "roof_detail": "overhang",
+      "trim": "beam",
+      "door_position": "right",
+      "accent": "ivy"
+    },
+    {
+      "id": "timber_cottage_03",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Hearthside",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_03.png",
+      "roof_detail": "chimney",
+      "trim": "clay",
+      "door_position": "center",
+      "accent": "hearth"
+    },
+    {
+      "id": "timber_cottage_04",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Riverbank",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_04.png",
+      "roof_detail": "porch",
+      "trim": "reed",
+      "door_position": "left",
+      "accent": "raised_sill"
+    },
+    {
+      "id": "timber_cottage_05",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Highland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_05.png",
+      "roof_detail": "steep",
+      "trim": "stone",
+      "door_position": "right",
+      "accent": "braces"
+    },
+    {
+      "id": "timber_cottage_06",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Mossroof",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_06.png",
+      "roof_detail": "moss",
+      "trim": "carved",
+      "door_position": "center",
+      "accent": "moss"
+    },
+    {
+      "id": "timber_cottage_07",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Weathered",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_07.png",
+      "roof_detail": "patched",
+      "trim": "dark",
+      "door_position": "left",
+      "accent": "weathered"
+    },
+    {
+      "id": "timber_cottage_08",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Craftsman",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_08.png",
+      "roof_detail": "dormer",
+      "trim": "polished",
+      "door_position": "right",
+      "accent": "carved"
+    },
+    {
+      "id": "timber_cottage_09",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Front Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_09.png",
+      "roof_detail": "front_gable",
+      "trim": "crossbeam",
+      "door_position": "center",
+      "accent": "shutters"
+    },
+    {
+      "id": "timber_cottage_10",
+      "home_id": "timber_cottage",
+      "name": "Timber-Framed Cottage — Side Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/timber_cottage_10.png",
+      "roof_detail": "side_gable",
+      "trim": "crossbeam",
+      "door_position": "right",
+      "accent": "shutters"
+    },
+    {
+      "id": "stone_cottage_01",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Plain",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_01.png",
+      "roof_detail": "simple",
+      "trim": "plank",
+      "door_position": "left",
+      "accent": "straight"
+    },
+    {
+      "id": "stone_cottage_02",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Woodland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_02.png",
+      "roof_detail": "overhang",
+      "trim": "beam",
+      "door_position": "right",
+      "accent": "ivy"
+    },
+    {
+      "id": "stone_cottage_03",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Hearthside",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_03.png",
+      "roof_detail": "chimney",
+      "trim": "clay",
+      "door_position": "center",
+      "accent": "hearth"
+    },
+    {
+      "id": "stone_cottage_04",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Riverbank",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_04.png",
+      "roof_detail": "porch",
+      "trim": "reed",
+      "door_position": "left",
+      "accent": "raised_sill"
+    },
+    {
+      "id": "stone_cottage_05",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Highland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_05.png",
+      "roof_detail": "steep",
+      "trim": "stone",
+      "door_position": "right",
+      "accent": "braces"
+    },
+    {
+      "id": "stone_cottage_06",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Mossroof",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_06.png",
+      "roof_detail": "moss",
+      "trim": "carved",
+      "door_position": "center",
+      "accent": "moss"
+    },
+    {
+      "id": "stone_cottage_07",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Weathered",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_07.png",
+      "roof_detail": "patched",
+      "trim": "dark",
+      "door_position": "left",
+      "accent": "weathered"
+    },
+    {
+      "id": "stone_cottage_08",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Craftsman",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_08.png",
+      "roof_detail": "dormer",
+      "trim": "polished",
+      "door_position": "right",
+      "accent": "carved"
+    },
+    {
+      "id": "stone_cottage_09",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Front Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_09.png",
+      "roof_detail": "front_gable",
+      "trim": "crossbeam",
+      "door_position": "center",
+      "accent": "shutters"
+    },
+    {
+      "id": "stone_cottage_10",
+      "home_id": "stone_cottage",
+      "name": "Stone Cottage — Side Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/stone_cottage_10.png",
+      "roof_detail": "side_gable",
+      "trim": "crossbeam",
+      "door_position": "right",
+      "accent": "shutters"
+    },
+    {
+      "id": "longhouse_01",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Plain",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_01.png",
+      "roof_detail": "simple",
+      "trim": "plank",
+      "door_position": "left",
+      "accent": "straight"
+    },
+    {
+      "id": "longhouse_02",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Woodland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_02.png",
+      "roof_detail": "overhang",
+      "trim": "beam",
+      "door_position": "right",
+      "accent": "ivy"
+    },
+    {
+      "id": "longhouse_03",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Hearthside",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_03.png",
+      "roof_detail": "chimney",
+      "trim": "clay",
+      "door_position": "center",
+      "accent": "hearth"
+    },
+    {
+      "id": "longhouse_04",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Riverbank",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_04.png",
+      "roof_detail": "porch",
+      "trim": "reed",
+      "door_position": "left",
+      "accent": "raised_sill"
+    },
+    {
+      "id": "longhouse_05",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Highland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_05.png",
+      "roof_detail": "steep",
+      "trim": "stone",
+      "door_position": "right",
+      "accent": "braces"
+    },
+    {
+      "id": "longhouse_06",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Mossroof",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_06.png",
+      "roof_detail": "moss",
+      "trim": "carved",
+      "door_position": "center",
+      "accent": "moss"
+    },
+    {
+      "id": "longhouse_07",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Weathered",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_07.png",
+      "roof_detail": "patched",
+      "trim": "dark",
+      "door_position": "left",
+      "accent": "weathered"
+    },
+    {
+      "id": "longhouse_08",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Craftsman",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_08.png",
+      "roof_detail": "dormer",
+      "trim": "polished",
+      "door_position": "right",
+      "accent": "carved"
+    },
+    {
+      "id": "longhouse_09",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Front Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_09.png",
+      "roof_detail": "front_gable",
+      "trim": "crossbeam",
+      "door_position": "center",
+      "accent": "shutters"
+    },
+    {
+      "id": "longhouse_10",
+      "home_id": "longhouse",
+      "name": "Frontier Longhouse — Side Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/longhouse_10.png",
+      "roof_detail": "side_gable",
+      "trim": "crossbeam",
+      "door_position": "right",
+      "accent": "shutters"
+    },
+    {
+      "id": "fortified_homestead_01",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Plain",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_01.png",
+      "roof_detail": "simple",
+      "trim": "plank",
+      "door_position": "left",
+      "accent": "straight"
+    },
+    {
+      "id": "fortified_homestead_02",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Woodland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_02.png",
+      "roof_detail": "overhang",
+      "trim": "beam",
+      "door_position": "right",
+      "accent": "ivy"
+    },
+    {
+      "id": "fortified_homestead_03",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Hearthside",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_03.png",
+      "roof_detail": "chimney",
+      "trim": "clay",
+      "door_position": "center",
+      "accent": "hearth"
+    },
+    {
+      "id": "fortified_homestead_04",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Riverbank",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_04.png",
+      "roof_detail": "porch",
+      "trim": "reed",
+      "door_position": "left",
+      "accent": "raised_sill"
+    },
+    {
+      "id": "fortified_homestead_05",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Highland",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_05.png",
+      "roof_detail": "steep",
+      "trim": "stone",
+      "door_position": "right",
+      "accent": "braces"
+    },
+    {
+      "id": "fortified_homestead_06",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Mossroof",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_06.png",
+      "roof_detail": "moss",
+      "trim": "carved",
+      "door_position": "center",
+      "accent": "moss"
+    },
+    {
+      "id": "fortified_homestead_07",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Weathered",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_07.png",
+      "roof_detail": "patched",
+      "trim": "dark",
+      "door_position": "left",
+      "accent": "weathered"
+    },
+    {
+      "id": "fortified_homestead_08",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Craftsman",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_08.png",
+      "roof_detail": "dormer",
+      "trim": "polished",
+      "door_position": "right",
+      "accent": "carved"
+    },
+    {
+      "id": "fortified_homestead_09",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Front Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_09.png",
+      "roof_detail": "front_gable",
+      "trim": "crossbeam",
+      "door_position": "center",
+      "accent": "shutters"
+    },
+    {
+      "id": "fortified_homestead_10",
+      "home_id": "fortified_homestead",
+      "name": "Fortified Homestead — Side Gable",
+      "asset": "worldseed/assets/sprites/buildings/homestead/fortified_homestead_10.png",
+      "roof_detail": "side_gable",
+      "trim": "crossbeam",
+      "door_position": "right",
+      "accent": "shutters"
+    }
+  ],
+  "stage_fractions": [
+    20,
+    40,
+    30,
+    10
+  ]
+}
