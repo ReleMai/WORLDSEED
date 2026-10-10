@@ -1302,7 +1302,7 @@ class Simulation:
         self._message(f"You pay {collected}c at the border post.")
         return MINUTES_PER_ACTION
 
-    def _move(self,cmd:MoveCommand,result:TickResult)->None:
+    def _move(self,cmd:MoveCommand,result:TickResult,*,preserve_fraction:bool=False)->None:
         pc=self.entities.get(cmd.actor,Position);old=pc.value;new=old.moved(cmd.dx,cmd.dy)
         if self.dungeons.is_locked(new):
             ok,msg=self.dungeons.try_unlock(new,self.entities.get(cmd.actor,Inventory),self.clock.minute)
@@ -1350,6 +1350,8 @@ class Simulation:
             practice(self)
         elif water.mode=='wading':v.stamina=max(0,v.stamina-2)
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
+        if not preserve_fraction:
+            self.state.player_fx=0.5;self.state.player_fy=0.5
         self.state.player_facing_dx=0 if cmd.dx==0 else (1 if cmd.dx>0 else -1);self.state.player_facing_dy=0 if cmd.dy==0 else (1 if cmd.dy>0 else -1)
         self.combat.clear_aim()
         movement_noise=self.hunting.movement_noise(new,self.clock.minute)
@@ -1382,6 +1384,39 @@ class Simulation:
             # meaningful discoveries, hazards, security and combat events.
             else:
                 pass
+    def set_free_movement_enabled(self,enabled:bool=True)->None:
+        """Enable sub-tile outdoor locomotion for graphical realtime play."""
+        self.npcs.continuous_motion_enabled=bool(enabled)
+        if not enabled:
+            self._free_move_blocked=None
+
+    def try_free_movement_step(self,dx:int,dy:int)->bool:
+        """Cross one outdoor tile through the normal authoritative movement rules."""
+        dx=int(dx);dy=int(dy)
+        if (dx==0 and dy==0) or abs(dx)>1 or abs(dy)>1:
+            return False
+        if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
+            return False
+        old=self.player_pos
+        result=TickResult()
+        self._move(MoveCommand(self.player_id,dx,dy),result,preserve_fraction=True)
+        moved=self.player_pos!=old
+        if moved:
+            self._discover(self.player_pos)
+            self._refresh_combat_candidates()
+        return moved
+
+    def update_free_movement(self,dt:float,dx:float=0.0,dy:float=0.0,sprint:bool=False)->bool:
+        """Advance graphical outdoor player/NPC interpolation by wall-clock delta time."""
+        if dt<=0.0 or self.combat_active():
+            return False
+        if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
+            return False
+        from worldseed.systems.free_movement import update_npcs_free, update_player_free
+        player_changed=update_player_free(self,dt,dx,dy,sprint)
+        npc_changed=update_npcs_free(self,dt)
+        return bool(player_changed or npc_changed)
+
     def _vertical(self,cmd:VerticalMoveCommand,result:TickResult)->None:
         pc=self.entities.get(cmd.actor,Position);here=self.world.tile_at(pc.value)
         if "shaft" not in here.terrain.tags:

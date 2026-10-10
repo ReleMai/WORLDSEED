@@ -144,9 +144,9 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "WU7 village stability and debugger regressions" --timeout 90 -- python -u -m unittest -v tests.test_wu7_village_stability_debug
 
-      - name: Dev41 real-time social world regressions
+      - name: Dev41 realtime and free-movement regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev41 real-time social world regressions" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase
+        run: python -u tools/run_ci_check.py --name "Dev41 realtime and free movement" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_free_movement
 
       - name: Dev31 world-startup playtest regressions
         shell: pwsh

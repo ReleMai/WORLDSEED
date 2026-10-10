@@ -124,6 +124,8 @@ class PygameTerminal(PointerUI):
         self._ui_window_pointer_last = (0, 0)
         self._current_presentation = ''
         self._realtime_callback = None
+        self._free_movement_callback = None
+        self._free_movement_last_ms = 0
         self._combat_active_callback = None
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
@@ -164,6 +166,7 @@ class PygameTerminal(PointerUI):
         self._held_movement.clear()
         self._active_movement_key = None
         self._movement_next_repeat_ms = 0
+        self._free_movement_last_ms = pg.time.get_ticks()
         self._rebuild_fonts()
         pg.mouse.set_visible(True)
         # Reuse a generated asset as a recognizable app icon.
@@ -182,6 +185,10 @@ class PygameTerminal(PointerUI):
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
+    def set_free_movement_callback(self, callback) -> None:
+        self._free_movement_callback = callback
+        self._free_movement_last_ms = self.pg.time.get_ticks() if callback else 0
+
     def pause_realtime(self):
         return pause_realtime_callback(self)
 
@@ -193,6 +200,34 @@ class PygameTerminal(PointerUI):
             return False
         callback=self._realtime_callback
         return bool(callback and callback())
+
+    def _pump_free_movement(self, now_ms: int | None = None) -> bool:
+        callback=self._free_movement_callback
+        if callback is None:
+            return False
+        now=int(self.pg.time.get_ticks() if now_ms is None else now_ms)
+        if (getattr(self,'_realtime_pause_depth',0) or self._input_mode!='world'
+                or self._interior_context is not None
+                or (self._combat_active_callback and self._combat_active_callback())):
+            self._free_movement_last_ms=now
+            return False
+        if not self._free_movement_last_ms:
+            self._free_movement_last_ms=now
+            return False
+        elapsed=max(0,now-self._free_movement_last_ms)
+        if elapsed<16:
+            return False
+        self._free_movement_last_ms=now
+        dt=min(0.10,elapsed/1000.0)
+        held=self._held_movement if self._active_movement_key is not None else {}
+        pg=self.pg
+        dx=int(any(k in held for k in (pg.K_d,pg.K_RIGHT)))-int(any(k in held for k in (pg.K_a,pg.K_LEFT)))
+        dy=int(any(k in held for k in (pg.K_s,pg.K_DOWN)))-int(any(k in held for k in (pg.K_w,pg.K_UP)))
+        sprint=bool(pg.key.get_mods() & pg.KMOD_SHIFT)
+        changed=bool(callback(dt,dx,dy,sprint))
+        if changed:
+            self._entity_spatial_cache_key=None
+        return changed
 
     def _rebuild_fonts(self) -> None:
         pg = self.pg
@@ -287,13 +322,19 @@ class PygameTerminal(PointerUI):
             self._animate_idle_effects(now)
             if self._pump_realtime():
                 return 'UI_REDRAW'
+            if self._pump_free_movement(now):
+                return 'UI_REDRAW'
             if self._combat_active_callback and self._combat_active_callback():
                 # Retain pressed keys until KEYUP so queued duplicates cannot
                 # turn the walk into a fight into several unchosen exchanges.
                 self._active_movement_key = None
                 self._movement_next_repeat_ms = 0
+                self._free_movement_last_ms=now
             wait_ms = 50
-            if self._active_movement_key is not None:
+            if self._free_movement_callback is not None and self._input_mode=='world' and self._interior_context is None:
+                elapsed=max(0,now-self._free_movement_last_ms)
+                wait_ms=max(1,min(50,16-elapsed))
+            elif self._active_movement_key is not None:
                 wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
             try:
                 event = pg.event.wait(wait_ms)
@@ -307,6 +348,8 @@ class PygameTerminal(PointerUI):
             if event.type == pg.NOEVENT:
                 now = pg.time.get_ticks()
                 if self._active_movement_key is not None and now >= self._movement_next_repeat_ms:
+                    if self._free_movement_callback is not None and self._interior_context is None:
+                        continue
                     # Never catch up missed repeats. A slow frame produces one
                     # fresh step, then schedules the next from *now*.
                     self._movement_next_repeat_ms = now + (35 if self._interior_context else self._movement_repeat_ms)
@@ -504,6 +547,7 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == getattr(pg,'WINDOWFOCUSLOST',-1):
                 self._held_movement.clear();self._active_movement_key=None
+                self._free_movement_last_ms=pg.time.get_ticks()
                 continue
             if event.type == pg.KEYDOWN:
                 if self._input_mode!='world':
@@ -530,7 +574,11 @@ class PygameTerminal(PointerUI):
                     # movement is paced solely by the timer above.
                     if event.key in self._held_movement or getattr(event,'repeat',False):
                         continue
-                    return _activate_movement(event.key, pg.time.get_ticks())
+                    token=_activate_movement(event.key,pg.time.get_ticks())
+                    if self._free_movement_callback is not None and self._interior_context is None:
+                        self._free_movement_last_ms=pg.time.get_ticks()
+                        continue
+                    return token
                 if event.key in key_map:
                     return key_map[event.key]
                 if event.key in (pg.K_EQUALS, pg.K_PLUS, pg.K_KP_PLUS):
@@ -4316,6 +4364,14 @@ class PygameTerminal(PointerUI):
                                      for shell in building_shells if shell.door_uid})
         # Actors remain exact visible foreground objects, never inferred from
         # a building's newly complete silhouette or remembered exterior.
+        def _fractional_actor_rect(rect,fx,fy):
+            try:
+                ox=round((max(0.0,min(0.999,float(fx)))-0.5)*tile_px)
+                oy=round((max(0.0,min(0.999,float(fy)))-0.5)*tile_px)
+            except (TypeError,ValueError):
+                ox=oy=0
+            return rect.move(ox,oy)
+
         actor_keys=set(creature_by)|set(npc_by)|{(pos.x,pos.y,pos.z)}
         for wx,wy,wz in sorted(actor_keys,key=lambda key:(key[1],key[0])):
             k=(wx,wy,wz)
@@ -4326,14 +4382,19 @@ class PygameTerminal(PointerUI):
                 ap=self._visuals.resolve(ref,self._stable_variant(c.uid,len(ref.paths))) if ref.paths else (proc_species[self._stable_variant(c.species_id+c.uid,len(proc_species))] if proc_species else None)
                 self._draw_sprite_bottom(ap,rect,1.25)
             if k in npc_by:
-                self._draw_sprite_bottom(self._npc_sprite_path(npc_by[k]),rect,1.45)
+                npc=npc_by[k]
+                npc_rect=_fractional_actor_rect(rect,getattr(npc,'fx',0.5),getattr(npc,'fy',0.5))
+                self._draw_sprite_bottom(self._npc_sprite_path(npc),npc_rect,1.45)
             if k==(pos.x,pos.y,pos.z):
                 from worldseed.systems.swimming import exposure
+                player_rect=_fractional_actor_rect(
+                    rect,getattr(sim.state,'player_fx',0.5),getattr(sim.state,'player_fy',0.5)
+                )
                 if exposure(sim,pos).mode=='swimming':
-                    saved=screen.get_clip();screen.set_clip(rect.move(0,-tile_px//2).inflate(0,-tile_px//3))
-                    self._draw_sprite_bottom(player_sprite,rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
-                    pg.draw.ellipse(screen,(165,207,205),rect.inflate(-tile_px//4,-tile_px*2//3),1)
-                else:self._draw_sprite_bottom(player_sprite,rect,1.45)
+                    saved=screen.get_clip();screen.set_clip(player_rect.move(0,-tile_px//2).inflate(0,-tile_px//3))
+                    self._draw_sprite_bottom(player_sprite,player_rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
+                    pg.draw.ellipse(screen,(165,207,205),player_rect.inflate(-tile_px//4,-tile_px*2//3),1)
+                else:self._draw_sprite_bottom(player_sprite,player_rect,1.45)
         if cursor is not None and _onscreen(cursor.x,cursor.y,cursor.z) and pos_key(cursor.x,cursor.y,cursor.z) in known:
             cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
             if cp:screen.blit(cp,(map_rect.x+(cursor.x-left)*tile_px,map_rect.y+(cursor.y-top)*tile_px))

@@ -354,6 +354,10 @@ class NPCState:
     religion_id: str = ""
     literacy: int = 0
     language_fluency: dict[str, int] = field(default_factory=dict)
+    # Outdoor graphical locomotion keeps the authoritative tile coordinate in
+    # x/y while these fractions identify the actor within that tile.
+    fx: float = 0.5
+    fy: float = 0.5
     alive: bool = True
     infections: list[str] = field(default_factory=list)
     immunities: dict[str, int] = field(default_factory=dict)
@@ -1118,6 +1122,8 @@ class LegacyCharacter:
 @dataclass(slots=True)
 class LivingWorldState:
     clock_minute: int = 480
+    player_fx: float = 0.5
+    player_fy: float = 0.5
     # WorldPos remains the exterior portal anchor; these records own local space.
     interiors: dict[str, Any] = field(default_factory=dict)
     interior_actors: dict[str, Any] = field(default_factory=dict)
@@ -1291,6 +1297,7 @@ class LivingWorldState:
             return {k: asdict(v) for k, v in table.items()}
         return {
             "clock_minute": self.clock_minute,
+            "player_fx": float(self.player_fx), "player_fy": float(self.player_fy),
             "interiors": rows(self.interiors), "interior_actors": rows(self.interior_actors),
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_homes": rows(self.animal_homes), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "households": rows(self.households), "household_deliveries": rows(self.household_deliveries), "workplace_logistics": rows(self.workplace_logistics), "workplace_shipments": rows(self.workplace_shipments), "settlements": rows(self.settlements),
@@ -1325,7 +1332,7 @@ class LivingWorldState:
         from worldseed.systems.interior_state import InteriorPlan, InteriorActor
         s.interiors = {k: InteriorPlan.from_dict(v) for k, v in raw.get("interiors", {}).items()}
         s.interior_actors = {k: InteriorActor.from_dict(v) for k, v in raw.get("interior_actors", {}).items()}
-        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_unseen_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_hunting_stance","player_hunting_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","player_toll_passes","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","learned_regions","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
+        scalar = ["player_swimming_xp","player_fishing_xp","fishing_attempts","fishing_pressure","player_fishing_log","clock_minute","player_fx","player_fy","player_name","player_origin","player_sex","player_sprite_index","player_attributes","player_skills","player_talents","player_knowledge","player_crafting_discovery_enabled","player_discovered_items","player_discovered_recipes","player_unseen_recipes","player_crafting_experiments","player_literacy","player_languages","player_equipment","player_equipped_artifacts","player_readied_weapon","player_aim_target","player_aim_zone","player_aim_quality","player_facing_dx","player_facing_dy","player_guarding","player_defense_mode","player_defense_quality","player_disengage_turn","player_hunting_stance","player_hunting_xp","player_body_parts","player_wounds","player_infections","player_immunities","player_nutrition","player_diet_history","player_food_effects","player_bounties","player_crime_heat","player_stealth_mode","player_casing_property_id","player_trespass_property_id","player_toll_passes","discovered_tiles","discovered_settlements","visited_settlements","discovered_npcs","discovered_factions","discovered_sites","discovered_species","discovered_events","discovered_routes","learned_regions","population_reports","player_rumors","resource_depletion","realized_regions","next_uid","last_daily_minute","last_hourly_minute","last_monthly_minute","last_offline_wall_time","offline_policy","last_offline_minutes","last_offline_summary","ui_color","ui_unicode","ui_density","history_archive"]
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])

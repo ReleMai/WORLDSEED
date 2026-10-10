@@ -27,6 +27,10 @@ class NPCSystem:
         self.state=state;self.seed=seed;self.history=history;self.world=world;self.building=building;self.lod=lod
         self.settlement_physicalization=None;self.settlement_population=None;self.economy=None;self.property_security=None;self.households=None;self.workplace_logistics=None;self.route_planner=None;self.territory=None;self.activities=None;self.mining=None;self.professions=None;self.interiors=None
         self.storage_access=None;self.commerce=None
+        # Graphical outdoor play may interpolate cached local paths between
+        # deterministic simulation ticks. Text/terminal play keeps the legacy
+        # fixed-tick stepping path by leaving this disabled.
+        self.continuous_motion_enabled=False
         self._schedule_blocks={}
         self._npc_spatial_buckets={};self._npc_spatial_positions={}
         self.rebuild_spatial_index()
@@ -105,6 +109,19 @@ class NPCSystem:
         dx=int(npc.x)-int(old_x);dy=int(npc.y)-int(old_y)
         npc.facing_dx=0 if dx==0 else (1 if dx>0 else -1)
         npc.facing_dy=0 if dy==0 else (1 if dy>0 else -1)
+
+    def movement_passable(self,npc:NPCState,p:WorldPos,minute:int)->bool:
+        """Shared local locomotion authority used by pathfinding and interpolation."""
+        if self.world is None:
+            return False
+        world_pass=self.world.is_passable(p)
+        if not world_pass and self.settlement_physicalization is not None:
+            crossing=self.settlement_physicalization.crossing_at(p)
+            world_pass=bool(crossing and str(crossing.kind) in {"bridge","ford"} and not bool(crossing.blocked))
+        if not world_pass:return False
+        if self.building and not self.building.passable(p,world_pass):return False
+        if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
+        return True
 
     def _is_active_local(self,npc:NPCState,player_pos:WorldPos)->bool:
         if self.lod is not None:
@@ -475,7 +492,16 @@ class NPCSystem:
                 return
             exact=bool(task.get('exact',False))
             distance=abs(npc.x-goal.x)+abs(npc.y-goal.y)
-            reached=(npc.x,npc.y)==(goal.x,goal.y) if exact else distance<=1
+            continuous_outdoor=bool(
+                self.continuous_motion_enabled
+                and not (self.interiors is not None and self.interiors.player_presence() is not None)
+            )
+            if exact:
+                reached=(npc.x,npc.y)==(goal.x,goal.y)
+                if reached and continuous_outdoor:
+                    reached=abs(float(getattr(npc,'fx',0.5))-0.5)<0.08 and abs(float(getattr(npc,'fy',0.5))-0.5)<0.08
+            else:
+                reached=distance<=1
             if reached:
                 if task.get('interior_storage_door_uid') and self.interiors is not None:
                     if self.interiors.enter_storage_npc(npc,task['interior_storage_door_uid']):npc.tasks.pop(0)
@@ -497,14 +523,7 @@ class NPCSystem:
                 or (abs(npc.x-player_pos.x)<80 and abs(npc.y-player_pos.y)<60 and npc.z==player_pos.z)
             ):
                 def passable(p):
-                    world_pass=self.world.is_passable(p)
-                    if not world_pass and self.settlement_physicalization is not None:
-                        crossing=self.settlement_physicalization.crossing_at(p)
-                        world_pass=bool(crossing and str(crossing.kind) in {"bridge","ford"} and not bool(crossing.blocked))
-                    if not world_pass:return False
-                    if self.building and not self.building.passable(p,world_pass):return False
-                    if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
-                    return True
+                    return self.movement_passable(npc,p,minute)
                 # Long exact trips (notably settlement -> cave) are advanced
                 # through a nearby physical waypoint so local A* stays bounded.
                 path_goal=goal
@@ -530,6 +549,11 @@ class NPCSystem:
                     cached=[[int(step.x),int(step.y)] for step in path[1:]]
                     task["_local_path"]=cached
                     task["_local_path_goal"]=cache_goal
+                if cached and continuous_outdoor:
+                    # The simulation tick owns path choice; the graphical
+                    # realtime phase owns only traversal of this cached path.
+                    task["_local_path"]=cached
+                    return
                 if cached:
                     old_x,old_y=npc.x,npc.y
                     moved=0
@@ -551,6 +575,7 @@ class NPCSystem:
             # aggregate/remote travel is straight-line at coarse fidelity
             old_x,old_y=npc.x,npc.y
             npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
+            npc.fx=0.5;npc.fy=0.5
             self._face_step(npc,old_x,old_y)
             if (npc.x,npc.y)==(goal.x,goal.y) and not any(task.get(key) for key in ('interior_home_door_uid','interior_work_door_uid','interior_storage_door_uid')):npc.tasks.pop(0)
         elif task['kind']=='wait':

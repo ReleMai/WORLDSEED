@@ -3681,6 +3681,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
     install=getattr(term,'set_realtime_callback',None)
     if callable(install):install(realtime.pump)
+    install_free=getattr(term,'set_free_movement_callback',None)
+    if callable(install_free):
+        ctx.sim.set_free_movement_enabled(True)
+        install_free(ctx.sim.update_free_movement)
     install_combat=getattr(term,'set_combat_callback',None)
     if callable(install_combat):install_combat(ctx.sim.combat_active)
     try:
@@ -3769,6 +3773,9 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
     finally:
         if callable(install):install(None)
+        if callable(install_free):
+            install_free(None)
+            ctx.sim.set_free_movement_enabled(False)
 def _make_display_backend():
     force_terminal='--terminal' in sys.argv
     force_window='--window' in sys.argv
