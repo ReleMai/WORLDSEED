@@ -226,3 +226,13 @@ class PayRoadTollCommand:
 
 @dataclass(frozen=True,slots=True)
 class TreatDiseaseCommand: actor:int
+
+
+@dataclass(frozen=True,slots=True)
+class PlaceBlueprintCommand: actor:int; style_id:str; x:int; y:int; orientation:int=0
+@dataclass(frozen=True,slots=True)
+class DepositBlueprintCommand: actor:int; uid:str; item_id:str; amount:int=1
+@dataclass(frozen=True,slots=True)
+class AdvanceBlueprintCommand: actor:int; uid:str
+@dataclass(frozen=True,slots=True)
+class CancelBlueprintCommand: actor:int; uid:str

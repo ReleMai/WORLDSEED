@@ -1,0 +1,122 @@
+"""Persistent, player-owned log cabin blueprint material depot.
+Only simulation commands may change stored materials or construction stages.
+"""
+from __future__ import annotations
+import json
+from functools import lru_cache
+from worldseed.config import DATA_DIR
+from worldseed.core.coords import WorldPos
+from worldseed.systems.state import pos_key
+
+STAGES = ("Foundation", "Frame", "Roof", "Finishing")
+MILESTONES = (0, 20, 60, 90, 100)
+
+@lru_cache(maxsize=1)
+def catalog():
+    raw = json.loads((DATA_DIR / "homestead_catalog_v1.json").read_text(encoding="utf-8"))
+    if raw.get("version") != 1: raise ValueError("Unknown homestead catalog")
+    return ({r["id"]: r for r in raw["home_types"]}, {r["id"]: r for r in raw["styles"]})
+
+def rotate(x, y, w, h, turns):
+    for _ in range(turns % 4):
+        x, y, w, h = h-1-y, x, h, w
+    return x,y
+
+def footprint(site):
+    home = catalog()[0][site["home_id"]]
+    return tuple((site["x"] + rotate(x,y,home["width"],home["depth"],site["orientation"])[0],
+                  site["y"] + rotate(x,y,home["width"],home["depth"],site["orientation"])[1],site["z"])
+                 for y in range(home["depth"]) for x in range(home["width"]))
+
+def doorway(site):
+    home, style = catalog()[0][site["home_id"]],catalog()[1][site["style_id"]]
+    dx={"left":0,"center":home["width"]//2,"right":home["width"]-1}[style["door_position"]]
+    a,b=rotate(dx,home["depth"]-1,home["width"],home["depth"],site["orientation"])
+    inside=(site["x"]+a,site["y"]+b,site["z"])
+    ox,oy=((0,1),(-1,0),(0,-1),(1,0))[site["orientation"]]
+    return inside,(inside[0]+ox,inside[1]+oy,inside[2])
+
+def progress(site):
+    materials=catalog()[0][site["home_id"]]["materials"]
+    return {iid: (site["stored"].get(iid,0),n) for iid,n in materials.items()}
+
+class HomesteadBlueprintService:
+    def __init__(self,sim):
+        self.sim=sim
+        self.sites=sim.state.homesteads
+
+    def at(self,pos):
+        key=(pos.x,pos.y,pos.z)
+        return next((site for site in self.sites.values() if key in footprint(site)),None)
+
+    def _clear(self,cell):
+        sim=self.sim;pos=WorldPos(*cell)
+        tile=sim.world.tile_at(pos).terrain
+        if not tile.passable or "water" in tile.tags:return False
+        if sim.resources.blocks_movement(pos) or not sim.building.passable(pos,True):return False
+        if sim.building.container_at(pos) or pos_key(*cell) in sim.state.crops:return False
+        overlay=getattr(sim,"settlement_physicalization",None)
+        projected=overlay.cell_at(pos) if overlay else None
+        if projected and projected.occupied:return False
+        if any((c.x,c.y,c.z)==cell and c.hp>0 for c in sim.state.creatures.values()):return False
+        if any((n.x,n.y,n.z)==cell and n.alive for n in sim.state.npcs.values()):return False
+        if (sim.player_pos.x,sim.player_pos.y,sim.player_pos.z)==cell:return False
+        return True
+
+    def place(self,style_id,x,y,orientation=0):
+        style=catalog()[1].get(style_id)
+        if not style or style["home_id"]!="log_cabin" or orientation not in range(4):
+            return False,"Unknown log cabin style or rotation."
+        p=self.sim.player_pos
+        if p.z!=0 or abs(p.x-x)+abs(p.y-y)>8:
+            return False,"Choose nearby surface ground."
+        site={"uid":"","home_id":"log_cabin","style_id":style_id,"x":int(x),"y":int(y),"z":0,
+              "orientation":int(orientation),"owner_uid":"player","stage":0,"stored":{},"revision":0}
+        cells=footprint(site);entrance,outside=doorway(site)
+        if any(not self._clear(c) for c in cells) or not self._clear(outside):
+            return False,"Clear the cabin footprint and exterior doorway first."
+        for other in self.sites.values():
+            if set(cells)&set(footprint(other)) or outside in footprint(other):
+                return False,"This blueprint overlaps another site."
+        # Placement is free; no inventory is consumed until the player deposits.
+        site["uid"]=self.sim.state.uid("homestead")
+        self.sites[site["uid"]]=site
+        return True,"Blueprint marker placed. Right-click the site to deposit materials."
+
+    def _reachable(self,uid):
+        site=self.sites.get(uid)
+        if not site or site.get("owner_uid")!="player":return None
+        p=self.sim.player_pos
+        if p.z!=site["z"] or min(abs(p.x-x)+abs(p.y-y) for x,y,z in footprint(site))>2:return None
+        return site
+
+    def deposit(self,uid,item_id,count,inv):
+        site=self._reachable(uid)
+        if not site or site["stage"]==4:return False,"Move within reach of your unfinished marker."
+        required=catalog()[0][site["home_id"]]["materials"]
+        if item_id not in required or count<1:return False,"Not a required material."
+        n=min(int(count),inv.count(item_id),required[item_id]-site["stored"].get(item_id,0))
+        if n<1:return False,"Nothing more of that item can be deposited."
+        if not inv.remove(item_id,n):return False,"Those materials are no longer carried."
+        site["stored"][item_id]=site["stored"].get(item_id,0)+n
+        site["revision"]+=1
+        return True,f"Deposited {n} {item_id.split(':')[-1].replace('_',' ')}."
+
+    def advance(self,uid):
+        site=self._reachable(uid)
+        if not site:return False,"Move closer to the blueprint."
+        if site["stage"]==4:return False,"The log cabin is complete."
+        materials=catalog()[0][site["home_id"]]["materials"]
+        threshold=MILESTONES[site["stage"]+1]
+        missing=[name for name,n in materials.items()
+                 if site["stored"].get(name,0)<n*threshold//100]
+        if missing:return False,"Still needed for this stage: "+", ".join(missing)
+        stage=site["stage"];site["stage"]+=1;site["revision"]+=1
+        return True,"Log cabin complete." if site["stage"]==4 else STAGES[stage]+" constructed."
+
+    def cancel(self,uid,inv):
+        site=self._reachable(uid)
+        if not site or site["stage"]==4:return False,"Only your unfinished blueprint may be cancelled."
+        for iid,n in site["stored"].items():inv.add(iid,n)
+        del self.sites[uid]
+        return True,"Blueprint removed; all deposited goods refunded."

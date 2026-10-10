@@ -1127,6 +1127,7 @@ class LivingWorldState:
     # WorldPos remains the exterior portal anchor; these records own local space.
     interiors: dict[str, Any] = field(default_factory=dict)
     interior_actors: dict[str, Any] = field(default_factory=dict)
+    homesteads: dict[str, dict] = field(default_factory=dict)
     structures: dict[str, StructureInstance] = field(default_factory=dict)
     roofs: dict[str, RoofState] = field(default_factory=dict)
     containers: dict[str, ContainerState] = field(default_factory=dict)
@@ -1299,6 +1300,7 @@ class LivingWorldState:
             "clock_minute": self.clock_minute,
             "player_fx": float(self.player_fx), "player_fy": float(self.player_fy),
             "interiors": rows(self.interiors), "interior_actors": rows(self.interior_actors),
+            "homesteads": {uid: dict(site, stored=dict(site.get("stored", {}))) for uid,site in self.homesteads.items()},
             "structures": rows(self.structures), "roofs": rows(self.roofs), "containers": rows(self.containers), "soils": rows(self.soils), "ground_piles": rows(self.ground_piles), "carcasses": rows(self.carcasses), "processing_jobs": rows(self.processing_jobs), "prepared_meals": rows(self.prepared_meals), "crops": rows(self.crops),
             "creatures": rows(self.creatures), "animal_signs": rows(self.animal_signs), "animal_homes": rows(self.animal_homes), "cohorts": rows(self.cohorts), "npcs": rows(self.npcs), "households": rows(self.households), "household_deliveries": rows(self.household_deliveries), "workplace_logistics": rows(self.workplace_logistics), "workplace_shipments": rows(self.workplace_shipments), "settlements": rows(self.settlements),
             "factions": rows(self.factions), "claim_monuments": rows(self.claim_monuments), "territory_control": rows(self.territory_control), "caravans": rows(self.caravans), "labor_reservations": rows(self.labor_reservations), "activity_reservations": rows(self.activity_reservations), "physical_goods_transfers": rows(self.physical_goods_transfers), "mining_trips": rows(self.mining_trips), "trade_routes": rows(self.trade_routes), "route_infrastructure": rows(self.route_infrastructure), "border_posts": rows(self.border_posts), "theft_records": rows(self.theft_records), "market_transactions": rows(self.market_transactions), "properties": rows(self.properties), "casing_intel": rows(self.casing_intel), "door_security": rows(self.door_security), "physical_keys": rows(self.physical_keys), "trespass_states": rows(self.trespass_states), "security_incidents": rows(self.security_incidents), "migration_cohorts": rows(self.migration_cohorts), "history": [asdict(x) for x in self.history[-6000:]], "history_archive": dict(self.history_archive), "dungeon_sites": rows(self.dungeon_sites), "offices": rows(self.offices), "dynasties": rows(self.dynasties), "claims": rows(self.claims), "graves": rows(self.graves),
@@ -1329,6 +1331,8 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
+        # All blueprint inventory is explicit authoritative stock, not a cache.
+        s.homesteads = {uid: dict(site, stored=dict(site.get("stored", {}))) for uid,site in raw.get("homesteads", {}).items()}
         from worldseed.systems.interior_state import InteriorPlan, InteriorActor
         s.interiors = {k: InteriorPlan.from_dict(v) for k, v in raw.get("interiors", {}).items()}
         s.interior_actors = {k: InteriorActor.from_dict(v) for k, v in raw.get("interior_actors", {}).items()}

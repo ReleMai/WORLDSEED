@@ -32,6 +32,7 @@ from worldseed.systems.test_arena import TestArenaSystem
 from worldseed.systems.crafting import CraftingSystem
 from worldseed.systems.salvaging import SalvagingSystem
 from worldseed.systems.building import BuildingSystem
+from worldseed.systems.homestead_blueprints import HomesteadBlueprintService
 from worldseed.systems.generation import ProceduralSocietyGenerator, MagicGenerator
 from worldseed.systems.lod import LODSystem
 from worldseed.systems.speciesgen import install_procedural_species
@@ -115,6 +116,8 @@ class Simulation:
         self.resources=resources_system or ResourceSystem(self.state,registry,self.seed,self.world)
         self.fishing=FishingSystem(self.state,registry,self.seed,self.world)
         self.building.attach_resources(self.resources,self.seed)
+        self.homestead=HomesteadBlueprintService(self)
+        self.building.homestead=self.homestead
         self.nutrition=NutritionSystem(self.state,registry)
         self.food=CookingSystem(self.state,registry,self.nutrition)
         self.processing=ProcessingSystem(self.state,registry,self.building,self.seed)
@@ -461,6 +464,16 @@ class Simulation:
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
         elif isinstance(command,ExperimentRecipeCommand):minutes=self._experiment_recipe(command)
         elif isinstance(command,DiscoveryPotCommand):minutes=self._discovery_pot(command)
+        elif isinstance(command,PlaceBlueprintCommand):
+            ok,msg=self.homestead.place(command.style_id,command.x,command.y,command.orientation)
+            self._message(msg)
+        elif isinstance(command,DepositBlueprintCommand):
+            ok,msg=self.homestead.deposit(command.uid,command.item_id,command.amount,self.entities.get(command.actor,Inventory))
+            self._message(msg)
+        elif isinstance(command,AdvanceBlueprintCommand):
+            ok,msg=self.homestead.advance(command.uid);self._message(msg)
+        elif isinstance(command,CancelBlueprintCommand):
+            ok,msg=self.homestead.cancel(command.uid,self.entities.get(command.actor,Inventory));self._message(msg)
         elif isinstance(command,BuildCommand):self._build(command)
         elif isinstance(command,DismantleCommand):self._dismantle(command)
         elif isinstance(command,PickupCommand):self._pickup(command)
