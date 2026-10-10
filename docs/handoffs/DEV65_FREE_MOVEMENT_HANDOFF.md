@@ -28,3 +28,7 @@ The local camera remains centered on the player's authoritative integer tile. Ac
 
 ## Next dependency
 If sprint later consumes stamina or terrain changes locomotion speed, keep those costs in simulation authority and expose only read state to presentation.
+
+## Dev65 follow-up: smooth outdoor camera (2026-10-10)
+
+The Pygame outdoor camera now projects terrain, actors, and overlays from the same authoritative player tile plus persistent fractional offsets. One extra tile is drawn around each edge, clipped to the unchanged viewport to prevent panel bleed and blank strips. Hover picking now accounts for the shifted pixel origin, while weather snapshots and UI panels continue using the fixed viewport. No simulation, save-schema, or generation contract changes.

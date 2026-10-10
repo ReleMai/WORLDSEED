@@ -3810,7 +3810,9 @@ class PygameTerminal(PointerUI):
         if self.screen is None or not self._hover_context or self._hover_map_snapshot is None:return
         ctx=self._hover_context;used=ctx['used'];mx,my=self._last_mouse;tile_px=ctx['tile_px']
         if used.collidepoint(mx,my):
-            sx=(mx-used.x)//tile_px;sy=(my-used.y)//tile_px
+            grid_x=int(ctx.get('grid_x',used.x))
+            grid_y=int(ctx.get('grid_y',used.y))
+            sx=(mx-grid_x)//tile_px;sy=(my-grid_y)//tile_px
             cell=(sx,sy)
         else:cell=None
         hover_object=None
@@ -3823,7 +3825,8 @@ class PygameTerminal(PointerUI):
         damage=self._restore_hover_damage();self._hover_cell=cell
         if cell is not None:
             sx,sy=cell;wx=ctx['left']+sx;wy=ctx['top']+sy
-            tile_rect=self.pg.Rect(used.x+sx*tile_px,used.y+sy*tile_px,tile_px,tile_px)
+            tile_rect=self.pg.Rect(ctx.get('grid_x',used.x)+sx*tile_px,
+                                   ctx.get('grid_y',used.y)+sy*tile_px,tile_px,tile_px).clip(used)
             self.pg.draw.rect(self.screen,self._theme['accent'],tile_rect,1)
             self._hover_tile_rect=tile_rect
             anchor=(tile_rect.right,tile_rect.top)
@@ -4050,12 +4053,22 @@ class PygameTerminal(PointerUI):
         tile_px=self._tile_px
         cols, rows, inset_x, inset_y = centered_tile_grid(map_rect.width, map_rect.height, tile_px)
         map_rect = pg.Rect(map_rect.x + inset_x, map_rect.y + inset_y, cols * tile_px, rows * tile_px)
-        # Gameplay camera is player-centered. Keeping the avatar anchored near
-        # the middle makes movement direction and spatial scale immediately
-        # readable, especially at different zoom levels.
+        # Keep a fixed viewport but render one extra tile on each side.
+        # World coordinates and the sprite share the same continuous camera:
+        # when fx wraps at a tile boundary, the projection remains continuous.
+        viewport=map_rect.copy()
+        view_cols,view_rows=cols,rows
+        fx=max(0.0,min(0.999,float(getattr(sim.state,'player_fx',0.5))))
+        fy=max(0.0,min(0.999,float(getattr(sim.state,'player_fy',0.5))))
         cx,cy,cz=pos.x,pos.y,pos.z
         self._camera=(cx,cy,cz)
-        left=cx-cols//2; top=cy-rows//2
+        left=cx-view_cols//2-1; top=cy-view_rows//2-1
+        cols=view_cols+2; rows=view_rows+2
+        map_rect=pg.Rect(
+            viewport.x-tile_px-round((fx-0.5)*tile_px),
+            viewport.y-tile_px-round((fy-0.5)*tile_px),
+            cols*tile_px,rows*tile_px,
+        )
         known=sim.discovered_tiles_set
         visible=getattr(sim,'visible_tiles_set',known)
         right = left + cols - 1
@@ -4137,6 +4150,10 @@ class PygameTerminal(PointerUI):
                 self._water_current_cache[key]=value
             return value
 
+        # Clip all world layers (terrain, structures, sprites, weather) to the
+        # original map panel; margins may extend over the HUD or window edges.
+        prior_world_clip=screen.get_clip()
+        screen.set_clip(viewport)
         terrain_base=self._build_base_layer(world, known, pos.z, left, top, cols, rows, tile_px)
         screen.blit(terrain_base, map_rect.topleft)
         water_phase=(pg.time.get_ticks()//160)%8
@@ -4401,7 +4418,7 @@ class PygameTerminal(PointerUI):
 
         # Weather/light presentation is observational and applies only to the
         # local world viewport. UI chrome remains fully readable at night.
-        used=pg.Rect(map_rect.x,map_rect.y,cols*tile_px,rows*tile_px)
+        used=viewport.copy()
         if pos.z==0 and lighting is not None:
             now_ms=pg.time.get_ticks()
             previous=getattr(self,'_weather_animation_context',None)
@@ -4451,7 +4468,9 @@ class PygameTerminal(PointerUI):
                 rect=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
                 rgb=cell['rgb'];width=3 if (wx,wy,wz)==selected else 2
                 pg.draw.rect(screen,rgb,rect.inflate(-2,-2),width,border_radius=max(1,tile_px//8))
-        # frame map exactly to drawn cells
+        # Restore the screen clip before rendering the sidebar / footer.
+        screen.set_clip(prior_world_clip)
+        # frame map exactly to the fixed visible viewport.
         pg.draw.rect(screen,(78,91,91),used,1)
 
         # Hover inspection data is retained for the read_key() fast path.
@@ -4543,7 +4562,8 @@ class PygameTerminal(PointerUI):
         self._draw_scanlines((ox,oy,ow,oh))
         self._play_combat_effects(sim,used,left,top,tile_px,pos.z)
         self._hover_context={
-            'used':used.copy(),'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
+            'used':used.copy(),'grid_x':map_rect.x,'grid_y':map_rect.y,
+            'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
             'known':known,'visible':visible,'registry':registry,'world':world,'sim':sim,
             'creature_by':creature_by,'npc_by':npc_by,'structure_by':structure_by,
             'property_container_by':property_container_by,'settlement_by':settlement_by,'shell_by':shell_by,
