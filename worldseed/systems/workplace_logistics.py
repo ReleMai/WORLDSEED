@@ -15,6 +15,7 @@ class WorkplaceLogisticsSystem:
     def __init__(self,state,registry,seed:bytes,physicalization=None):
         self.state=state;self.registry=registry;self.seed=seed;self.physicalization=physicalization
         self.storage_access=None
+        self.physical_labor_authorities=[]
 
     def attach_physicalization(self,physicalization)->None:self.physicalization=physicalization
 
@@ -37,6 +38,14 @@ class WorkplaceLogisticsSystem:
         for uid in sorted(reservation.representative_uids):
             npc=self.state.npcs.get(uid)
             if npc is None or not npc.alive or not npc.workplace_id:continue
+            # Exact activity workers already replaced their anonymous batch in
+            # EconomySystem. Remaining anonymous labor must not materialize a
+            # second batch through that same named representative's store.
+            if npc.assigned_process_id==proc.id and any(
+                callable(getattr(authority,"supports_physical_work",None))
+                and authority.supports_physical_work(npc,town)
+                for authority in self.physical_labor_authorities
+            ):continue
             storage=self._storage_for_property(npc.workplace_id)
             if storage is None or storage.uid in seen:continue
             seen.add(storage.uid);out.append((npc,storage))

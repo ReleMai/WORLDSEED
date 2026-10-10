@@ -22,8 +22,8 @@ def wrap_line(text: str, width: int) -> list[str]:
 
 def panel(title: str, body: list[str], width: int, footer: str = '') -> str:
     """Responsive ASCII panel. Width is an upper bound, never a minimum."""
-    width = max(24, int(width))
-    inner = max(20, width - 4)
+    width = max(8, int(width))
+    inner = max(4, width - 4)
     title_text = f' {title} '
     if len(title_text) > width - 2:
         title_text = title_text[:width - 5] + '...'
@@ -103,16 +103,31 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
     focused_topic=''
     while True:
         cols, lines = term.size()
-        width = max(34, min(96, cols - 2))
+        width = max(8, min(96, cols - 2))
         available = max(5, lines - 8)
         feature_graphical = getattr(term, 'present_feature_menu', None)
         graphical = getattr(term, 'present_menu', None)
+        shown_breadcrumb=breadcrumb
+        if breadcrumb and not callable(feature_graphical) and not callable(graphical):
+            inner=width-4
+            shown_breadcrumb=breadcrumb if len('‹ '+breadcrumb)<=inner else '…'+breadcrumb[-max(1,inner-3):]
         terminal_dialogue=presentation=='npc_dialogue' and not callable(feature_graphical) and not callable(graphical)
         if terminal_dialogue:
             width=max(24,min(96,cols-2))
             available=max(1,(lines-10)//3)
         capacity=getattr(term,'menu_page_size',None)
         if callable(capacity):available=max(1,capacity(presentation))
+        if not callable(feature_graphical) and not callable(graphical) and not terminal_dialogue:
+            # Reflowed labels consume real lines; paging by row count alone
+            # made the large crafting catalogue overflow narrow terminals.
+            inner=width-4
+            footer_text='Click • ↑↓ Enter • Esc back' if presentation=='salvaging' else 'Click to select • Wheel to page • ↑/↓ and Enter optional'+(' • Esc back' if allow_escape else '')
+            chrome=3+len(wrap_line(footer_text,inner))
+            if shown_breadcrumb:chrome+=len(wrap_line('‹ '+shown_breadcrumb,inner))+1
+            if subtitle:chrome+=len(wrap_line(subtitle,inner))+1
+            if len(items)>1:chrome+=2
+            row_cost=max(len(wrap_line(f'> 9. {row.label}',inner))+ (len(wrap_line('     '+row.hint,inner)) if row.hint else 0) for row in items)
+            available=max(1,(lines-chrome)//max(1,row_cost))
         page_start = (selected // available) * available
         page_items = items[page_start:page_start + available]
         if presentation=='npc_dialogue' and presentation_data is not None:
@@ -120,8 +135,8 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         body = []
         if terminal_dialogue:
             body=_dialogue_terminal_page(presentation_data or {},width,lines,len(page_items))
-        elif breadcrumb:
-            body += [f'‹ {breadcrumb}', '']
+        elif shown_breadcrumb:
+            body += [f'‹ {shown_breadcrumb}', '']
         if subtitle and not terminal_dialogue:
             body += [subtitle, '']
         for idx, row in enumerate(page_items, start=page_start):
@@ -136,6 +151,7 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             status=f'{selected+1}/{len(items)}  Page {page_start//available + 1}/{(len(items)+available-1)//available}'
             body += [status] if terminal_dialogue else ['',status]
         footer = 'Click to select • Wheel to page • ↑/↓ and Enter optional' + (' • Esc back' if allow_escape else '')
+        if presentation=='salvaging' and not callable(feature_graphical):footer='Click • ↑↓ Enter • Esc back'
         if presentation=='npc_dialogue':
             if terminal_dialogue:footer='Tab/↑↓ Enter Esc'
         if presentation and callable(feature_graphical):
@@ -185,7 +201,7 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         # forwarded to the gameplay owner while arrows/Enter remain UI navigation.
         if presentation in {
             'inventory_unified','container_inventory','crafting_unified',
-            'workshop_station','discovery_pot','crafting_index'
+            'workshop_station','discovery_pot','crafting_index','salvaging'
         } and k in {'w','a','s','d'}:
             return f'UI_WORLD_MOVE:{k}'
         if k.startswith('UI_ACTION:'):
@@ -306,7 +322,7 @@ def prompt_text(term, title: str, label: str, *, default: str = "", max_len: int
     """
     value=list(default)
     while True:
-        cols,_=term.size(); width=max(40,min(84,cols-2))
+        cols,_=term.size(); width=max(8,min(84,cols-2))
         shown=''.join(value)
         field=getattr(term,'present_text_field',None)
         if callable(field):

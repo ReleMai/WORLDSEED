@@ -1441,5 +1441,1897 @@
     "seasons": [],
     "density": 70,
     "patch_scale": 5
+  },
+  {
+    "id": "core:salvage_patch_resinous_pine_cone",
+    "name": "Resinous Pine Cone Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:resinous_pine_cone": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields resinous pine cone. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_birch_catkin_cluster",
+    "name": "Birch Catkin Cluster Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:birch_catkin_cluster": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields birch catkin cluster. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_oak_gall_cluster",
+    "name": "Oak Gall Cluster Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:oak_gall_cluster": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields oak gall cluster. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_juniper_bough",
+    "name": "Juniper Bough Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:juniper_bough": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields juniper bough. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_hazel_catkin_spray",
+    "name": "Hazel Catkin Spray Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:hazel_catkin_spray": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields hazel catkin spray. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_spruce_pitch_knot",
+    "name": "Spruce Pitch Knot Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:spruce_pitch_knot": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields spruce pitch knot. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_willow_bark_curl",
+    "name": "Willow Bark Curl Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:willow_bark_curl": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields willow bark curl. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_beech_nut_cup",
+    "name": "Beech Nut Cup Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:beech_nut_cup": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields beech nut cup. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_dogwood_stem_bundle",
+    "name": "Dogwood Stem Bundle Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:dogwood_stem_bundle": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields dogwood stem bundle. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_silverleaf_sprig",
+    "name": "Silverleaf Sprig Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:silverleaf_sprig": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields silverleaf sprig. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_ghost_orchid_stem",
+    "name": "Ghost Orchid Stem Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:ghost_orchid_stem": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields ghost orchid stem. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_amberroot_crown",
+    "name": "Amberroot Crown Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:amberroot_crown": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields amberroot crown. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:forest",
+      "core:scrub"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_dried_teasel_head",
+    "name": "Dried Teasel Head Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:dried_teasel_head": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields dried teasel head. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_burdock_burr_cluster",
+    "name": "Burdock Burr Cluster Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:burdock_burr_cluster": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields burdock burr cluster. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_milkweed_pod",
+    "name": "Milkweed Pod Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:milkweed_pod": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields milkweed pod. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_flax_seed_capsule",
+    "name": "Flax Seed Capsule Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:flax_seed_capsule": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields flax seed capsule. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_chicory_root_crown",
+    "name": "Chicory Root Crown Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:chicory_root_crown": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields chicory root crown. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_mullein_flower_spike",
+    "name": "Mullein Flower Spike Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:mullein_flower_spike": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields mullein flower spike. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_goldenrod_spray",
+    "name": "Goldenrod Spray Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:goldenrod_spray": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields goldenrod spray. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_sweet_clover_tops",
+    "name": "Sweet Clover Tops Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:sweet_clover_tops": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields sweet clover tops. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_rose_hip_branch",
+    "name": "Rose Hip Branch Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:rose_hip_branch": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields rose hip branch. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_moonmint_sprig",
+    "name": "Moonmint Sprig Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:moonmint_sprig": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields moonmint sprig. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_saffron_crocus_tuft",
+    "name": "Saffron Crocus Tuft Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:saffron_crocus_tuft": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields saffron crocus tuft. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_sunspice_rhizome",
+    "name": "Sunspice Rhizome Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:sunspice_rhizome": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields sunspice rhizome. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:grass",
+      "core:floodplain"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 12000,
+    "max_moisture": 60000,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_cattail_seed_head",
+    "name": "Cattail Seed Head Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:cattail_seed_head": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields cattail seed head. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_alder_cone_cluster",
+    "name": "Alder Cone Cluster Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:alder_cone_cluster": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields alder cone cluster. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_rush_pith_bundle",
+    "name": "Rush Pith Bundle Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:rush_pith_bundle": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields rush pith bundle. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_bog_myrtle_branch",
+    "name": "Bog Myrtle Branch Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:bog_myrtle_branch": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields bog myrtle branch. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_sedge_root_mat",
+    "name": "Sedge Root Mat Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:sedge_root_mat": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields sedge root mat. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_marsh_mallow_stems",
+    "name": "Marsh Mallow Stems Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:marsh_mallow_stems": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields marsh mallow stems. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_water_iris_rhizome",
+    "name": "Water Iris Rhizome Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:water_iris_rhizome": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields water iris rhizome. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_sweet_flag_root",
+    "name": "Sweet Flag Root Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:sweet_flag_root": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields sweet flag root. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_peat_moss_clump",
+    "name": "Peat Moss Clump Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:peat_moss_clump": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields peat moss clump. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_blue_lotus_stalk",
+    "name": "Blue Lotus Stalk Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:blue_lotus_stalk": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields blue lotus stalk. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_marsh_amber_bulb",
+    "name": "Marsh Amber Bulb Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:marsh_amber_bulb": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields marsh amber bulb. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank",
+      "core:salt_marsh"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_star_reed_tuft",
+    "name": "Star Reed Tuft Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:star_reed_tuft": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields star reed tuft. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:wetland",
+      "core:riverbank"
+    ],
+    "min_temp": 10000,
+    "max_temp": 59000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_reindeer_lichen_mat",
+    "name": "Reindeer Lichen Mat Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:reindeer_lichen_mat": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields reindeer lichen mat. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_rock_samphire_stems",
+    "name": "Rock Samphire Stems Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:rock_samphire_stems": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields rock samphire stems. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:rocky_shore",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 6000,
+    "max_temp": 56000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_sea_lavender_spray",
+    "name": "Sea Lavender Spray Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:sea_lavender_spray": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields sea lavender spray. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:rocky_shore",
+      "core:salt_marsh"
+    ],
+    "min_temp": 6000,
+    "max_temp": 56000,
+    "min_moisture": 30000,
+    "max_moisture": 65535,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_dwarf_willow_twigs",
+    "name": "Dwarf Willow Twigs Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:dwarf_willow_twigs": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields dwarf willow twigs. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_mountain_avens_seedhead",
+    "name": "Mountain Avens Seedhead Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:mountain_avens_seedhead": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields mountain avens seedhead. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_crowberry_stem_mat",
+    "name": "Crowberry Stem Mat Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:crowberry_stem_mat": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields crowberry stem mat. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 60,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_alpine_sorrel_root",
+    "name": "Alpine Sorrel Root Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:alpine_sorrel_root": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields alpine sorrel root. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_cotton_grass_tuft",
+    "name": "Cotton Grass Tuft Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:cotton_grass_tuft": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields cotton grass tuft. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_bladderwrack_holdfast",
+    "name": "Bladderwrack Holdfast Patch",
+    "glyph": "\"",
+    "ascii_glyph": "\"",
+    "ansi_color": 92,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "uncommon_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 7,
+    "regrow_days": 18,
+    "yields": {
+      "core:bladderwrack_holdfast": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields bladderwrack holdfast. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:rocky_shore",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 6000,
+    "max_temp": 56000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 30,
+    "patch_scale": 6
+  },
+  {
+    "id": "core:salvage_patch_frost_sage_branch",
+    "name": "Frost Sage Branch Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:frost_sage_branch": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields frost sage branch. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_crimson_stonecrop_crown",
+    "name": "Crimson Stonecrop Crown Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:crimson_stonecrop_crown": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields crimson stonecrop crown. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:tundra",
+      "core:rock",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 0,
+    "max_temp": 43000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 8,
+    "patch_scale": 9
+  },
+  {
+    "id": "core:salvage_patch_pearl_kelp_knot",
+    "name": "Pearl Kelp Knot Patch",
+    "glyph": "*",
+    "ascii_glyph": "*",
+    "ansi_color": 95,
+    "tags": [
+      "salvage_expansion",
+      "forage",
+      "plant",
+      "living",
+      "rare_flora"
+    ],
+    "required_tool_tag": null,
+    "required_tool_power": 0,
+    "minutes": 12,
+    "regrow_days": 35,
+    "yields": {
+      "core:pearl_kelp_knot": [
+        1,
+        1
+      ]
+    },
+    "blocks_movement": false,
+    "blocks_sight": false,
+    "description": "A small habitat-rooted growth that yields pearl kelp knot. Keep its harvest for direct recipes or salvage it into reusable crafting parts.",
+    "flavor": "Every stem stores a different craft.",
+    "terrains": [
+      "core:rocky_shore",
+      "core:coastal_cliff"
+    ],
+    "min_temp": 6000,
+    "max_temp": 56000,
+    "min_moisture": 5000,
+    "max_moisture": 60000,
+    "seasons": [],
+    "density": 8,
+    "patch_scale": 9
   }
 ]

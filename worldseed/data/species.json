@@ -45,7 +45,8 @@
     "carcass": {
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:rabbit_foot_tuft": 2
     },
     "vision": 7,
     "hearing": 11,
@@ -195,7 +196,8 @@
     "carcass": {
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:rabbit_foot_tuft": 2
     },
     "organs": {
       "heart": {
@@ -344,7 +346,8 @@
       "core:fresh_hide": 2,
       "core:bone": 3,
       "core:animal_fat": 1,
-      "core:sinew": 2
+      "core:sinew": 2,
+      "core:deer_antler_tip": 2
     },
     "vision": 13,
     "hearing": 12,
@@ -511,7 +514,9 @@
       "core:fresh_hide": 4,
       "core:bone": 6,
       "core:animal_fat": 3,
-      "core:sinew": 4
+      "core:sinew": 4,
+      "core:deer_antler_tip": 2,
+      "core:elk_tooth_row": 2
     },
     "combat_style": "herd_prey",
     "vision": 11,
@@ -681,7 +686,8 @@
       "core:fresh_hide": 5,
       "core:bone": 8,
       "core:animal_fat": 4,
-      "core:sinew": 5
+      "core:sinew": 5,
+      "core:moose_hoof_plate": 2
     },
     "combat_style": "territorial_charger",
     "vision": 10,
@@ -852,7 +858,8 @@
       "core:fresh_hide": 2,
       "core:bone": 3,
       "core:animal_fat": 2,
-      "core:sinew": 1
+      "core:sinew": 1,
+      "core:boar_bristle_patch": 2
     },
     "vision": 7,
     "hearing": 10,
@@ -1013,7 +1020,8 @@
     "carcass": {
       "core:raw_poultry": 2,
       "core:feather": 4,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:turkey_quill_fan": 2
     },
     "organs": {
       "heart": {
@@ -1160,7 +1168,8 @@
     ],
     "carcass": {
       "core:raw_poultry": 1,
-      "core:feather": 2
+      "core:feather": 2,
+      "core:grouse_down_tuft": 2
     },
     "organs": {
       "heart": {
@@ -1316,7 +1325,8 @@
       "core:raw_game_meat": 5,
       "core:fresh_hide": 2,
       "core:bone": 2,
-      "core:sinew": 2
+      "core:sinew": 2,
+      "core:goat_horn_sheath": 2
     },
     "organs": {
       "heart": {
@@ -1457,7 +1467,8 @@
     "carcass": {
       "core:raw_small_game": 1,
       "core:fresh_hide": 1,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:fox_tail_tuft": 2
     },
     "organs": {
       "heart": {
@@ -1606,7 +1617,8 @@
       "core:raw_game_meat": 3,
       "core:fresh_hide": 2,
       "core:bone": 2,
-      "core:sinew": 1
+      "core:sinew": 1,
+      "core:wolf_fang_pair": 2
     },
     "vision": 12,
     "hearing": 15,
@@ -1769,7 +1781,8 @@
       "core:fresh_hide": 5,
       "core:bone": 7,
       "core:animal_fat": 5,
-      "core:sinew": 3
+      "core:sinew": 3,
+      "core:bear_claw_sheath": 2
     },
     "combat_style": "solitary_predator",
     "vision": 9,
@@ -1931,7 +1944,8 @@
       "core:raw_small_game": 2,
       "core:fresh_hide": 1,
       "core:bone": 1,
-      "core:animal_fat": 1
+      "core:animal_fat": 1,
+      "core:badger_guard_hairs": 2
     },
     "organs": {
       "heart": {
@@ -2076,7 +2090,8 @@
     ],
     "carcass": {
       "core:raw_small_game": 2,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:crawler_carapace_plate": 2
     },
     "organs": {
       "heart": {
@@ -2215,7 +2230,8 @@
     "carcass": {
       "core:raw_game_meat": 4,
       "core:fresh_hide": 1,
-      "core:bone": 2
+      "core:bone": 2,
+      "core:grazer_horn_chip": 2
     },
     "organs": {
       "heart": {
@@ -2362,7 +2378,8 @@
       "core:raw_game_meat": 2,
       "core:fresh_hide": 2,
       "core:bone": 2,
-      "core:sinew": 1
+      "core:sinew": 1,
+      "core:stalker_tendon_knot": 2
     },
     "organs": {
       "heart": {
@@ -2510,7 +2527,8 @@
       "core:raw_game_meat": 8,
       "core:fresh_hide": 2,
       "core:bone": 3,
-      "core:animal_fat": 3
+      "core:animal_fat": 3,
+      "core:boar_bristle_patch": 2
     },
     "combat_style": "charger",
     "vision": 7,
@@ -2671,7 +2689,8 @@
     ],
     "carcass": {
       "core:raw_small_game": 1,
-      "core:fresh_hide": 1
+      "core:fresh_hide": 1,
+      "core:muskrat_fur_clump": 2
     },
     "organs": {
       "heart": {
@@ -2814,7 +2833,8 @@
       "core:raw_game_meat": 2,
       "core:fresh_hide": 2,
       "core:bone": 1,
-      "core:animal_fat": 1
+      "core:animal_fat": 1,
+      "core:beaver_incisor_pair": 2
     },
     "organs": {
       "heart": {
@@ -2957,7 +2977,8 @@
     "carcass": {
       "core:raw_small_game": 2,
       "core:fresh_hide": 1,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:otter_whisker_bundle": 2
     },
     "organs": {
       "heart": {
@@ -3100,7 +3121,8 @@
     "carcass": {
       "core:raw_poultry": 1,
       "core:feather": 3,
-      "core:bone": 1
+      "core:bone": 1,
+      "core:heron_pinion_quills": 2
     },
     "organs": {
       "heart": {
@@ -3249,7 +3271,8 @@
     ],
     "carcass": {
       "core:raw_poultry": 1,
-      "core:feather": 2
+      "core:feather": 2,
+      "core:gull_wing_down": 2
     },
     "organs": {
       "heart": {
@@ -3399,7 +3422,8 @@
       "core:raw_game_meat": 6,
       "core:fresh_hide": 2,
       "core:animal_fat": 3,
-      "core:bone": 2
+      "core:bone": 2,
+      "core:seal_whisker_pad": 2
     },
     "organs": {
       "heart": {
@@ -3494,8 +3518,217 @@
       "rest": 58
     }
   },
-  {"id":"core:pig","name":"Domestic Pig","glyph":"p","diet":"omnivore","mass_kg":110,"max_hp":42,"damage":4,"aggression":8,"speed":2,"reproduction":30,"mortality":7,"carrying_capacity":0,"habitats":["domestic_pen"],"drops":{},"body":{"torso":58,"head":14,"neck":4,"forelegs":12,"hindlegs":12},"description":"A sturdy domestic pig kept in fenced settlement pens.","min_temp":9000,"max_temp":59000,"group_min":2,"group_max":8,"carcass":{"core:raw_game_meat":9,"core:fresh_hide":1,"core:bone":3,"core:animal_fat":4},"vision":6,"hearing":8,"scent":11,"flee_threshold":62,"defensive_aggression":25,"stamina":75,"trackability":75,"herd_response":55,"combat_style":"generic","home_kind":"bed","home_radius":8,"activity_bias":{"drink":55,"forage":70,"rest":60}},
-  {"id":"core:cow","name":"Domestic Cow","glyph":"C","diet":"herbivore","mass_kg":520,"max_hp":78,"damage":6,"aggression":4,"speed":2,"reproduction":13,"mortality":5,"carrying_capacity":0,"habitats":["domestic_pen"],"drops":{},"body":{"torso":60,"head":10,"neck":8,"forelegs":11,"hindlegs":11},"description":"A large domestic cow raised on open grass and stored fodder.","min_temp":7000,"max_temp":57000,"group_min":2,"group_max":6,"carcass":{"core:raw_game_meat":24,"core:fresh_hide":5,"core:bone":8,"core:animal_fat":7},"vision":8,"hearing":8,"scent":7,"flee_threshold":70,"defensive_aggression":18,"stamina":85,"trackability":88,"herd_response":88,"combat_style":"charger","charge_range":3,"charge_power":35,"home_kind":"bed","home_radius":10,"activity_bias":{"drink":68,"forage":82,"rest":52}},
-  {"id":"core:chicken","name":"Domestic Chicken","glyph":"c","diet":"omnivore","mass_kg":3,"max_hp":9,"damage":1,"aggression":2,"speed":2,"reproduction":45,"mortality":12,"carrying_capacity":0,"habitats":["domestic_pen"],"drops":{},"body":{"torso":55,"head":15,"neck":10,"forelegs":0,"hindlegs":20},"description":"A small domestic chicken that scratches around secure farmyards.","min_temp":13000,"max_temp":60000,"group_min":3,"group_max":12,"carcass":{"core:raw_game_meat":2,"core:bone":1,"core:animal_fat":1},"vision":9,"hearing":7,"scent":3,"flee_threshold":82,"defensive_aggression":4,"stamina":55,"trackability":38,"herd_response":78,"combat_style":"prey","home_kind":"nest","home_radius":6,"activity_bias":{"drink":45,"forage":90,"rest":55}},
-  {"id":"core:sheep","name":"Domestic Sheep","glyph":"s","diet":"herbivore","mass_kg":78,"max_hp":36,"damage":3,"aggression":3,"speed":2,"reproduction":24,"mortality":7,"carrying_capacity":0,"habitats":["domestic_pen"],"drops":{},"body":{"torso":58,"head":12,"neck":6,"forelegs":12,"hindlegs":12},"description":"A woolly domestic sheep suited to cool slopes and open pasture.","min_temp":3000,"max_temp":51000,"group_min":3,"group_max":10,"carcass":{"core:raw_game_meat":6,"core:fresh_hide":2,"core:bone":2,"core:animal_fat":2},"vision":8,"hearing":9,"scent":6,"flee_threshold":78,"defensive_aggression":8,"stamina":72,"trackability":70,"herd_response":92,"combat_style":"generic","home_kind":"bed","home_radius":9,"activity_bias":{"drink":55,"forage":86,"rest":58}}
+  {
+    "id": "core:pig",
+    "name": "Domestic Pig",
+    "glyph": "p",
+    "diet": "omnivore",
+    "mass_kg": 110,
+    "max_hp": 42,
+    "damage": 4,
+    "aggression": 8,
+    "speed": 2,
+    "reproduction": 30,
+    "mortality": 7,
+    "carrying_capacity": 0,
+    "habitats": [
+      "domestic_pen"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 14,
+      "neck": 4,
+      "forelegs": 12,
+      "hindlegs": 12
+    },
+    "description": "A sturdy domestic pig kept in fenced settlement pens.",
+    "min_temp": 9000,
+    "max_temp": 59000,
+    "group_min": 2,
+    "group_max": 8,
+    "carcass": {
+      "core:raw_game_meat": 9,
+      "core:fresh_hide": 1,
+      "core:bone": 3,
+      "core:animal_fat": 4,
+      "core:boar_bristle_patch": 2
+    },
+    "vision": 6,
+    "hearing": 8,
+    "scent": 11,
+    "flee_threshold": 62,
+    "defensive_aggression": 25,
+    "stamina": 75,
+    "trackability": 75,
+    "herd_response": 55,
+    "combat_style": "generic",
+    "home_kind": "bed",
+    "home_radius": 8,
+    "activity_bias": {
+      "drink": 55,
+      "forage": 70,
+      "rest": 60
+    }
+  },
+  {
+    "id": "core:cow",
+    "name": "Domestic Cow",
+    "glyph": "C",
+    "diet": "herbivore",
+    "mass_kg": 520,
+    "max_hp": 78,
+    "damage": 6,
+    "aggression": 4,
+    "speed": 2,
+    "reproduction": 13,
+    "mortality": 5,
+    "carrying_capacity": 0,
+    "habitats": [
+      "domestic_pen"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 60,
+      "head": 10,
+      "neck": 8,
+      "forelegs": 11,
+      "hindlegs": 11
+    },
+    "description": "A large domestic cow raised on open grass and stored fodder.",
+    "min_temp": 7000,
+    "max_temp": 57000,
+    "group_min": 2,
+    "group_max": 6,
+    "carcass": {
+      "core:raw_game_meat": 24,
+      "core:fresh_hide": 5,
+      "core:bone": 8,
+      "core:animal_fat": 7,
+      "core:cow_horn_ring": 2
+    },
+    "vision": 8,
+    "hearing": 8,
+    "scent": 7,
+    "flee_threshold": 70,
+    "defensive_aggression": 18,
+    "stamina": 85,
+    "trackability": 88,
+    "herd_response": 88,
+    "combat_style": "charger",
+    "charge_range": 3,
+    "charge_power": 35,
+    "home_kind": "bed",
+    "home_radius": 10,
+    "activity_bias": {
+      "drink": 68,
+      "forage": 82,
+      "rest": 52
+    }
+  },
+  {
+    "id": "core:chicken",
+    "name": "Domestic Chicken",
+    "glyph": "c",
+    "diet": "omnivore",
+    "mass_kg": 3,
+    "max_hp": 9,
+    "damage": 1,
+    "aggression": 2,
+    "speed": 2,
+    "reproduction": 45,
+    "mortality": 12,
+    "carrying_capacity": 0,
+    "habitats": [
+      "domestic_pen"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 55,
+      "head": 15,
+      "neck": 10,
+      "forelegs": 0,
+      "hindlegs": 20
+    },
+    "description": "A small domestic chicken that scratches around secure farmyards.",
+    "min_temp": 13000,
+    "max_temp": 60000,
+    "group_min": 3,
+    "group_max": 12,
+    "carcass": {
+      "core:raw_game_meat": 2,
+      "core:bone": 1,
+      "core:animal_fat": 1,
+      "core:chicken_quill_bundle": 2
+    },
+    "vision": 9,
+    "hearing": 7,
+    "scent": 3,
+    "flee_threshold": 82,
+    "defensive_aggression": 4,
+    "stamina": 55,
+    "trackability": 38,
+    "herd_response": 78,
+    "combat_style": "prey",
+    "home_kind": "nest",
+    "home_radius": 6,
+    "activity_bias": {
+      "drink": 45,
+      "forage": 90,
+      "rest": 55
+    }
+  },
+  {
+    "id": "core:sheep",
+    "name": "Domestic Sheep",
+    "glyph": "s",
+    "diet": "herbivore",
+    "mass_kg": 78,
+    "max_hp": 36,
+    "damage": 3,
+    "aggression": 3,
+    "speed": 2,
+    "reproduction": 24,
+    "mortality": 7,
+    "carrying_capacity": 0,
+    "habitats": [
+      "domestic_pen"
+    ],
+    "drops": {},
+    "body": {
+      "torso": 58,
+      "head": 12,
+      "neck": 6,
+      "forelegs": 12,
+      "hindlegs": 12
+    },
+    "description": "A woolly domestic sheep suited to cool slopes and open pasture.",
+    "min_temp": 3000,
+    "max_temp": 51000,
+    "group_min": 3,
+    "group_max": 10,
+    "carcass": {
+      "core:raw_game_meat": 6,
+      "core:fresh_hide": 2,
+      "core:bone": 2,
+      "core:animal_fat": 2,
+      "core:sheep_wool_locks": 2
+    },
+    "vision": 8,
+    "hearing": 9,
+    "scent": 6,
+    "flee_threshold": 78,
+    "defensive_aggression": 8,
+    "stamina": 72,
+    "trackability": 70,
+    "herd_response": 92,
+    "combat_style": "generic",
+    "home_kind": "bed",
+    "home_radius": 9,
+    "activity_bias": {
+      "drink": 55,
+      "forage": 86,
+      "rest": 58
+    }
+  }
 ]

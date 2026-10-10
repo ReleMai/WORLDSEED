@@ -7,6 +7,7 @@ from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.entities.components import Inventory, Vitals
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.state import CreatureState, DungeonSiteState, GroundPile, LivingWorldState, pos_key
+from worldseed.systems.salvage_loot import candidates, select_misc
 
 
 class DungeonSystem:
@@ -139,6 +140,9 @@ class DungeonSystem:
                 pile.items["core:relic"] = pile.items.get("core:relic", 0) + 1
                 if hash_u64(self.seed, "site-book", site.uid) % 3 == 0:
                     pile.items["core:book"] = pile.items.get("core:book", 0) + 1
+            rows=candidates(self.registry,('dungeon',))
+            for iid,amount in select_misc(self.seed,'salvage-dungeon-cache',f'{site.uid}:{i}',rows,3).items():
+                pile.items[iid]=pile.items.get(iid,0)+amount
         site.loot_seeded = True
 
     def _spawn_occupants(self, site: DungeonSiteState, danger: int, local_positions: list[tuple[int, int]], ox: int, oy: int) -> None:

@@ -75,6 +75,20 @@ class RecipeDef:
 
 
 @dataclass(frozen=True, slots=True)
+class SalvageRareYield:
+    item_id: str; min: int; max: int; chance_percent: int
+
+
+@dataclass(frozen=True, slots=True)
+class SalvageDef:
+    id: str; item_id: str; minutes: int; difficulty: int
+    yields: dict[str, tuple[int, int]]
+    rare_yields: tuple[SalvageRareYield, ...] = ()
+    tool_qualities: dict[str, int] = field(default_factory=dict)
+    method: str = "sort"; description: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class StructureDef:
     id: str; name: str; glyph: str; passable: bool; blocks_sight: bool; cost: dict[str, int]
     tags: tuple[str, ...] = (); capacity_mass_g: int = 0; capacity_volume_ml: int = 0
@@ -138,6 +152,9 @@ class DiseaseDef:
 class SettlementProcessDef:
     id: str; name: str; occupation: str; workers: int; inputs: dict[str, int]; outputs: dict[str, int]
     priority_good: str; knowledge: str | None = None
+    recipe_id: str = ""; station: str | None = None; minutes: int = 0
+    skill: str = ""; difficulty: int = 0; market_target: int = 0
+    consumption_days: int = 0; required_specialization: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,6 +181,8 @@ class ContentRegistry:
         self.species: dict[str, SpeciesDef] = {}; self.fish: dict[str, FishDef] = {}; self.crops: dict[str, CropDef] = {}
         self.settlement_processes: dict[str, SettlementProcessDef] = {}; self.diseases: dict[str, DiseaseDef] = {}
         self.cooking_methods: dict[str, CookingMethodDef] = {}
+        # One salvage definition per input item; mods may add new definitions.
+        self.salvage: dict[str, SalvageDef] = {}
         self.terrain_ids: list[str] = []; self._terrain_index: dict[str, int] = {}
 
     @classmethod
@@ -178,11 +197,11 @@ class ContentRegistry:
             ("resources.json",self._load_resources),("recipes.json",self._load_recipes),("structures.json",self._load_structures),
             ("settlement_pieces.json",self._load_settlement_pieces),("designs.json",self._load_designs),("species.json",self._load_species),("fish.json",self._load_fish),("crops.json",self._load_crops),
             ("settlement_processes.json",self._load_settlement_processes),("diseases.json",self._load_diseases),
-            ("cooking_methods.json",self._load_cooking_methods),]
+            ("cooking_methods.json",self._load_cooking_methods),("salvage.json",self._load_salvage),]
         for filename,loader in loaders:
             path=data_dir/filename
             if path.exists(): loader(path)
-            elif required and filename != "cooking_methods.json": raise FileNotFoundError(path)
+            elif required and filename not in ("cooking_methods.json","salvage.json"): raise FileNotFoundError(path)
 
     @staticmethod
     def _json(path:Path): return json.loads(path.read_text(encoding="utf-8"))
@@ -287,9 +306,16 @@ class ContentRegistry:
 
     def _load_settlement_processes(self,path):
         for raw in self._json(path):
-            obj=SettlementProcessDef(id=raw["id"],name=raw["name"],occupation=raw["occupation"],workers=int(raw["workers"]),inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),priority_good=raw["priority_good"],knowledge=raw.get("knowledge"))
+            obj=SettlementProcessDef(id=raw["id"],name=raw["name"],occupation=raw["occupation"],workers=int(raw["workers"]),inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),priority_good=raw["priority_good"],knowledge=raw.get("knowledge"),recipe_id=str(raw.get("recipe_id","")),station=raw.get("station"),minutes=int(raw.get("minutes",0)),skill=str(raw.get("skill","")),difficulty=int(raw.get("difficulty",0)),market_target=int(raw.get("market_target",0)),consumption_days=int(raw.get("consumption_days",0)),required_specialization=str(raw.get("required_specialization","")))
             if obj.id in self.settlement_processes: raise ValueError(f"Duplicate settlement process id: {obj.id}")
             self.settlement_processes[obj.id]=obj
+
+    def _load_salvage(self,path):
+        for raw in self._json(path):
+            obj=SalvageDef(id=raw["id"],item_id=raw["item_id"],minutes=int(raw.get("minutes",8)),difficulty=int(raw.get("difficulty",1)),yields={str(iid):(int(v[0]),int(v[1])) for iid,v in raw.get("yields",{}).items()},rare_yields=tuple(SalvageRareYield(item_id=str(v["item_id"]),min=int(v.get("min",1)),max=int(v.get("max",1)),chance_percent=int(v["chance_percent"])) for v in raw.get("rare_yields",[])),tool_qualities={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()},method=str(raw.get("method","sort")),description=str(raw.get("description","")))
+            if obj.item_id in self.salvage: raise ValueError(f"Duplicate salvage input: {obj.item_id}")
+            if any(row.id==obj.id for row in self.salvage.values()): raise ValueError(f"Duplicate salvage id: {obj.id}")
+            self.salvage[obj.item_id]=obj
 
     def _load_cooking_methods(self,path):
         for raw in self._json(path):
@@ -337,6 +363,23 @@ class ContentRegistry:
                 for iid,n in sorted(recipe.inputs.items()): signature.extend([iid]*max(0,int(n)))
             if not 1<=len(signature)<=5:
                 raise ValueError(f"Recipe {recipe.id} needs a 1-5 item discovery signature; author discovery_items for large recipes")
+        for definition in self.salvage.values():
+            if ":" not in definition.id or definition.item_id not in self.items:
+                raise ValueError(f"Invalid salvage input or identity: {definition.id}")
+            if definition.method not in {"unfasten","strip","sort","crush","carve","clean"}:
+                raise ValueError(f"Unknown salvage method on {definition.id}")
+            if definition.minutes<5 or not 0<=definition.difficulty<=10 or not definition.yields:
+                raise ValueError(f"Salvage requires guaranteed useful parts: {definition.id}")
+            for iid,(low,high) in definition.yields.items():
+                if iid not in self.items or iid==definition.item_id or not 1<=low<=high<=1000:
+                    raise ValueError(f"Invalid salvage yield {iid} on {definition.id}")
+            seen=set(definition.yields)
+            for drop in definition.rare_yields:
+                if drop.item_id not in self.items or drop.item_id==definition.item_id or drop.item_id in seen or not 1<=drop.min<=drop.max<=1000 or not 1<=drop.chance_percent<=100:
+                    raise ValueError(f"Invalid rare salvage yield on {definition.id}")
+                seen.add(drop.item_id)
+            if any(not key or not 1<=value<=100 for key,value in definition.tool_qualities.items()):
+                raise ValueError(f"Invalid salvage tool requirements on {definition.id}")
         for struct in self.structures.values():
             for iid in struct.cost:
                 if iid not in self.items: raise ValueError(f"Unknown construction item {iid} in {struct.id}")
@@ -384,6 +427,15 @@ class ContentRegistry:
         for proc in self.settlement_processes.values():
             for iid in (*proc.inputs.keys(),*proc.outputs.keys()):
                 if iid not in self.items: raise ValueError(f"Unknown settlement-process item {iid} in {proc.id}")
+            if proc.recipe_id and proc.recipe_id not in self.recipes: raise ValueError(f"Unknown settlement-process recipe in {proc.id}")
+            if proc.recipe_id:
+                recipe=self.recipes[proc.recipe_id]
+                if not proc.inputs or proc.inputs!=recipe.inputs or proc.outputs!=recipe.outputs:
+                    raise ValueError(f"Settlement process {proc.id} must consume its recipe's exact inputs and outputs")
+                if proc.station!=recipe.station:
+                    raise ValueError(f"Settlement process {proc.id} must use its recipe's station")
+            if proc.station and proc.station not in self.structures: raise ValueError(f"Unknown settlement-process station in {proc.id}")
+            if proc.workers<1 or min(proc.minutes,proc.difficulty,proc.market_target,proc.consumption_days)<0: raise ValueError(f"Invalid settlement-process metadata in {proc.id}")
         for disease in self.diseases.values():
             if disease.incubation_hours<0 or disease.illness_hours<=0: raise ValueError(f"Invalid disease duration in {disease.id}")
 

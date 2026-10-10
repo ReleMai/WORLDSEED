@@ -16,6 +16,16 @@ from worldseed.config import DATA_DIR
 def audit(reg: ContentRegistry) -> list[str]:
     errors: list[str] = []
     sinks: set[str] = set()
+    for definition in getattr(reg, 'salvage', {}).values():
+        sinks.add(definition.item_id)
+        if definition.item_id not in reg.items:
+            errors.append(f"salvage {definition.id} references undefined input {definition.item_id}")
+        for iid in definition.yields:
+            if iid not in reg.items:
+                errors.append(f"salvage {definition.id} yields undefined item {iid}")
+        for drop in definition.rare_yields:
+            if drop.item_id not in reg.items:
+                errors.append(f"salvage {definition.id} yields undefined rare item {drop.item_id}")
     for r in reg.recipes.values():
         sinks.update(r.inputs); sinks.update(r.catalysts)
         for iid in (*r.inputs, *r.outputs, *r.catalysts):
@@ -73,7 +83,7 @@ def audit(reg: ContentRegistry) -> list[str]:
 def main() -> int:
     reg = ContentRegistry.load(DATA_DIR)
     errors = audit(reg)
-    print(f"items={len(reg.items)} recipes={len(reg.recipes)} structures={len(reg.structures)} crops={len(reg.crops)} resources={len(reg.resources)} species={len(reg.species)} cooking_methods={len(reg.cooking_methods)}")
+    print(f"items={len(reg.items)} recipes={len(reg.recipes)} salvage={len(reg.salvage)} structures={len(reg.structures)} crops={len(reg.crops)} resources={len(reg.resources)} species={len(reg.species)} cooking_methods={len(reg.cooking_methods)}")
     if errors:
         print("CONTENT AUDIT FAILED")
         for e in errors: print(" -", e)

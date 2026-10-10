@@ -3202,6 +3202,7 @@
     "layer": "structure",
     "glyph": "a",
     "tags": [
+      "well",
       "water",
       "utility",
       "worldgen_piece"

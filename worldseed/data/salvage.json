@@ -1,0 +1,5817 @@
+[
+  {
+    "id": "core:salvage_bent_door_hinge",
+    "item_id": "core:bent_door_hinge",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the bent door hinge while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rusted_padlock",
+    "item_id": "core:rusted_padlock",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, nuts and bolts from the rusted padlock while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_buckle",
+    "item_id": "core:broken_buckle",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the broken buckle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_sickle_head",
+    "item_id": "core:cracked_sickle_head",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the cracked sickle head while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_horseshoe",
+    "item_id": "core:worn_horseshoe",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the worn horseshoe while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_spur",
+    "item_id": "core:discarded_spur",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the discarded spur while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bent_wagon_bracket",
+    "item_id": "core:bent_wagon_bracket",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the bent wagon bracket while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_iron_ring",
+    "item_id": "core:split_iron_ring",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the split iron ring while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dented_candle_snuffer",
+    "item_id": "core:dented_candle_snuffer",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the dented candle snuffer while protecting sound material."
+  },
+  {
+    "id": "core:salvage_seized_hand_drill",
+    "item_id": "core:seized_hand_drill",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, nuts and bolts from the seized hand drill while protecting sound material."
+  },
+  {
+    "id": "core:salvage_snapped_shears",
+    "item_id": "core:snapped_shears",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, nuts and bolts from the snapped shears while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_chain_link",
+    "item_id": "core:broken_chain_link",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the broken chain link while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rusted_stove_grate",
+    "item_id": "core:rusted_stove_grate",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the rusted stove grate while protecting sound material."
+  },
+  {
+    "id": "core:salvage_loose_gate_latch",
+    "item_id": "core:loose_gate_latch",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, nuts and bolts from the loose gate latch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bent_fire_poker",
+    "item_id": "core:bent_fire_poker",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the bent fire poker while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_pan_handle",
+    "item_id": "core:cracked_pan_handle",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the cracked pan handle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_harness_bell",
+    "item_id": "core:discarded_harness_bell",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, nuts and bolts from the discarded harness bell while protecting sound material."
+  },
+  {
+    "id": "core:salvage_jammed_clockwork_catch",
+    "item_id": "core:jammed_clockwork_catch",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        2,
+        3
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable metal scraps, nuts and bolts from the jammed clockwork catch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_wagon_spoke",
+    "item_id": "core:split_wagon_spoke",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the split wagon spoke while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_chair_rung",
+    "item_id": "core:broken_chair_rung",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the broken chair rung while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_barrel_stave",
+    "item_id": "core:cracked_barrel_stave",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the cracked barrel stave while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_rolling_pin",
+    "item_id": "core:worn_rolling_pin",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the worn rolling pin while protecting sound material."
+  },
+  {
+    "id": "core:salvage_splintered_rake",
+    "item_id": "core:splintered_rake",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the splintered rake while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_loom_shuttle",
+    "item_id": "core:broken_loom_shuttle",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the broken loom shuttle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_paddle",
+    "item_id": "core:discarded_paddle",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the discarded paddle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_warped_cupboard_door",
+    "item_id": "core:warped_cupboard_door",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the warped cupboard door while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_crate_lid",
+    "item_id": "core:split_crate_lid",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the split crate lid while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_spinning_distaff",
+    "item_id": "core:cracked_spinning_distaff",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the cracked spinning distaff while protecting sound material."
+  },
+  {
+    "id": "core:salvage_snapped_broom_shaft",
+    "item_id": "core:snapped_broom_shaft",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the snapped broom shaft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_ladder_step",
+    "item_id": "core:broken_ladder_step",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the broken ladder step while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_tent_peg",
+    "item_id": "core:worn_tent_peg",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the worn tent peg while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_wooden_ladle",
+    "item_id": "core:chipped_wooden_ladle",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the chipped wooden ladle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_yoke",
+    "item_id": "core:discarded_yoke",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the discarded yoke while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_cart_axle",
+    "item_id": "core:broken_cart_axle",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the broken cart axle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_loose_window_shutter",
+    "item_id": "core:loose_window_shutter",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the loose window shutter while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_tool_rack",
+    "item_id": "core:split_tool_rack",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "carve",
+    "tool_qualities": {},
+    "yields": {
+      "core:wood_pieces": [
+        2,
+        4
+      ],
+      "core:tool_handles": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable wood pieces, tool handles from the split tool rack while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_apron",
+    "item_id": "core:torn_apron",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the torn apron while protecting sound material."
+  },
+  {
+    "id": "core:salvage_threadbare_curtain",
+    "item_id": "core:threadbare_curtain",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the threadbare curtain while protecting sound material."
+  },
+  {
+    "id": "core:salvage_frayed_bedroll",
+    "item_id": "core:frayed_bedroll",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the frayed bedroll while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_grain_sack",
+    "item_id": "core:split_grain_sack",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the split grain sack while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_sail_patch",
+    "item_id": "core:worn_sail_patch",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the worn sail patch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_tangled_embroidery",
+    "item_id": "core:tangled_embroidery",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:silver_filament",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the tangled embroidery while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_cap_lining",
+    "item_id": "core:discarded_cap_lining",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the discarded cap lining while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_banner",
+    "item_id": "core:torn_banner",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the torn banner while protecting sound material."
+  },
+  {
+    "id": "core:salvage_ragged_quilt",
+    "item_id": "core:ragged_quilt",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the ragged quilt while protecting sound material."
+  },
+  {
+    "id": "core:salvage_unraveled_scarf",
+    "item_id": "core:unraveled_scarf",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the unraveled scarf while protecting sound material."
+  },
+  {
+    "id": "core:salvage_stained_table_runner",
+    "item_id": "core:stained_table_runner",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the stained table runner while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_felt_slipper",
+    "item_id": "core:broken_felt_slipper",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the broken felt slipper while protecting sound material."
+  },
+  {
+    "id": "core:salvage_frayed_fishing_smock",
+    "item_id": "core:frayed_fishing_smock",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the frayed fishing smock while protecting sound material."
+  },
+  {
+    "id": "core:salvage_old_saddle_blanket",
+    "item_id": "core:old_saddle_blanket",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the old saddle blanket while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_pillowcase",
+    "item_id": "core:split_pillowcase",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the split pillowcase while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_bandolier_lining",
+    "item_id": "core:discarded_bandolier_lining",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the discarded bandolier lining while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_laundry_strap",
+    "item_id": "core:worn_laundry_strap",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the worn laundry strap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_mosquito_veil",
+    "item_id": "core:torn_mosquito_veil",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        3,
+        5
+      ],
+      "core:plant_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable cloth scraps, plant scraps from the torn mosquito veil while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_harness_strap",
+    "item_id": "core:split_harness_strap",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the split harness strap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_boot_sole",
+    "item_id": "core:worn_boot_sole",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the worn boot sole while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_scabbard",
+    "item_id": "core:broken_scabbard",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the broken scabbard while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_saddle_flap",
+    "item_id": "core:cracked_saddle_flap",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the cracked saddle flap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_leather_pouch",
+    "item_id": "core:torn_leather_pouch",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the torn leather pouch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_bridle",
+    "item_id": "core:discarded_bridle",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the discarded bridle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_old_bellows_skin",
+    "item_id": "core:old_bellows_skin",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the old bellows skin while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_glove",
+    "item_id": "core:broken_glove",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the broken glove while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_quiver_seam",
+    "item_id": "core:split_quiver_seam",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the split quiver seam while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_belt",
+    "item_id": "core:cracked_belt",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the cracked belt while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_knee_guard",
+    "item_id": "core:worn_knee_guard",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the worn knee guard while protecting sound material."
+  },
+  {
+    "id": "core:salvage_loose_shield_grip",
+    "item_id": "core:loose_shield_grip",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the loose shield grip while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_muzzle",
+    "item_id": "core:discarded_muzzle",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the discarded muzzle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_satchel_flap",
+    "item_id": "core:broken_satchel_flap",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the broken satchel flap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_hunting_gaiter",
+    "item_id": "core:torn_hunting_gaiter",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the torn hunting gaiter while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_drum_head",
+    "item_id": "core:worn_drum_head",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the worn drum head while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_sling_strap",
+    "item_id": "core:cracked_sling_strap",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the cracked sling strap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_water_bag",
+    "item_id": "core:split_water_bag",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ],
+      "core:nuts_and_bolts": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable leather scraps, nuts and bolts from the split water bag while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_crock",
+    "item_id": "core:chipped_crock",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the chipped crock while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_roof_tile",
+    "item_id": "core:broken_roof_tile",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the broken roof tile while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_jug",
+    "item_id": "core:cracked_jug",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the cracked jug while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_butter_dish",
+    "item_id": "core:split_butter_dish",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the split butter dish while protecting sound material."
+  },
+  {
+    "id": "core:salvage_shattered_inkpot",
+    "item_id": "core:shattered_inkpot",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the shattered inkpot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_oil_lamp",
+    "item_id": "core:broken_oil_lamp",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the broken oil lamp while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_chamber_pot",
+    "item_id": "core:chipped_chamber_pot",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the chipped chamber pot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_honey_jar",
+    "item_id": "core:cracked_honey_jar",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the cracked honey jar while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_kiln_spacer",
+    "item_id": "core:broken_kiln_spacer",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the broken kiln spacer while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_tea_bowl",
+    "item_id": "core:split_tea_bowl",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the split tea bowl while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_fermentation_weight",
+    "item_id": "core:cracked_fermentation_weight",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the cracked fermentation weight while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_drain_pipe",
+    "item_id": "core:broken_drain_pipe",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the broken drain pipe while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_mortar_bowl",
+    "item_id": "core:chipped_mortar_bowl",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the chipped mortar bowl while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_soap_dish",
+    "item_id": "core:cracked_soap_dish",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the cracked soap dish while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_flower_pot",
+    "item_id": "core:broken_flower_pot",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the broken flower pot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_baking_stone",
+    "item_id": "core:split_baking_stone",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the split baking stone while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_salt_cellar",
+    "item_id": "core:chipped_salt_cellar",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the chipped salt cellar while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_crucible",
+    "item_id": "core:discarded_crucible",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:ceramic_shards": [
+        2,
+        4
+      ],
+      "core:mineral_grit": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable ceramic shards, mineral grit from the discarded crucible while protecting sound material."
+  },
+  {
+    "id": "core:salvage_clouded_window_pane",
+    "item_id": "core:clouded_window_pane",
+    "minutes": 6,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the clouded window pane while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_bottle_neck",
+    "item_id": "core:cracked_bottle_neck",
+    "minutes": 8,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the cracked bottle neck while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_spectacle_lens",
+    "item_id": "core:broken_spectacle_lens",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards, copper wire from the broken spectacle lens while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_glass_bead",
+    "item_id": "core:chipped_glass_bead",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the chipped glass bead while protecting sound material."
+  },
+  {
+    "id": "core:salvage_shattered_perfume_vial",
+    "item_id": "core:shattered_perfume_vial",
+    "minutes": 6,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the shattered perfume vial while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_lamp_chimney",
+    "item_id": "core:split_lamp_chimney",
+    "minutes": 8,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards, copper wire from the split lamp chimney while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_hourglass_bulb",
+    "item_id": "core:broken_hourglass_bulb",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the broken hourglass bulb while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_mirror_edge",
+    "item_id": "core:cracked_mirror_edge",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards, copper wire from the cracked mirror edge while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_glass_stopper",
+    "item_id": "core:chipped_glass_stopper",
+    "minutes": 6,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the chipped glass stopper while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_lantern_globe",
+    "item_id": "core:broken_lantern_globe",
+    "minutes": 8,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards, copper wire from the broken lantern globe while protecting sound material."
+  },
+  {
+    "id": "core:salvage_clouded_prism",
+    "item_id": "core:clouded_prism",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the clouded prism while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_apothecary_jar",
+    "item_id": "core:cracked_apothecary_jar",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the cracked apothecary jar while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_glass_funnel",
+    "item_id": "core:split_glass_funnel",
+    "minutes": 6,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the split glass funnel while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_seal_stamp",
+    "item_id": "core:broken_seal_stamp",
+    "minutes": 8,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable glass shards from the broken seal stamp while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_drinking_glass",
+    "item_id": "core:chipped_drinking_glass",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable glass shards from the chipped drinking glass while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_fishing_float",
+    "item_id": "core:cracked_fishing_float",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable glass shards from the cracked fishing float while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_glass_pendant",
+    "item_id": "core:broken_glass_pendant",
+    "minutes": 6,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable glass shards, copper wire from the broken glass pendant while protecting sound material."
+  },
+  {
+    "id": "core:salvage_shattered_measuring_tube",
+    "item_id": "core:shattered_measuring_tube",
+    "minutes": 8,
+    "difficulty": 2,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:glass_shards": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable glass shards from the shattered measuring tube while protecting sound material."
+  },
+  {
+    "id": "core:salvage_waterlogged_ledger",
+    "item_id": "core:waterlogged_ledger",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the waterlogged ledger while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_map_case",
+    "item_id": "core:torn_map_case",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the torn map case while protecting sound material."
+  },
+  {
+    "id": "core:salvage_loose_book_binding",
+    "item_id": "core:loose_book_binding",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the loose book binding while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_letter_bundle",
+    "item_id": "core:discarded_letter_bundle",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the discarded letter bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_molded_scroll_tube",
+    "item_id": "core:molded_scroll_tube",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the molded scroll tube while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_writing_board",
+    "item_id": "core:broken_writing_board",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the broken writing board while protecting sound material."
+  },
+  {
+    "id": "core:salvage_faded_market_notice",
+    "item_id": "core:faded_market_notice",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the faded market notice while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_wax_tablet",
+    "item_id": "core:split_wax_tablet",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the split wax tablet while protecting sound material."
+  },
+  {
+    "id": "core:salvage_frayed_document_roll",
+    "item_id": "core:frayed_document_roll",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the frayed document roll while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_account_slip",
+    "item_id": "core:discarded_account_slip",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the discarded account slip while protecting sound material."
+  },
+  {
+    "id": "core:salvage_torn_song_folio",
+    "item_id": "core:torn_song_folio",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the torn song folio while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_seal_envelope",
+    "item_id": "core:broken_seal_envelope",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the broken seal envelope while protecting sound material."
+  },
+  {
+    "id": "core:salvage_ruined_recipe_leaf",
+    "item_id": "core:ruined_recipe_leaf",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the ruined recipe leaf while protecting sound material."
+  },
+  {
+    "id": "core:salvage_old_tax_register",
+    "item_id": "core:old_tax_register",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the old tax register while protecting sound material."
+  },
+  {
+    "id": "core:salvage_tattered_charter_copy",
+    "item_id": "core:tattered_charter_copy",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the tattered charter copy while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_shipping_label",
+    "item_id": "core:discarded_shipping_label",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the discarded shipping label while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_notebook_cover",
+    "item_id": "core:split_notebook_cover",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the split notebook cover while protecting sound material."
+  },
+  {
+    "id": "core:salvage_waterstained_almanac",
+    "item_id": "core:waterstained_almanac",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps, cloth scraps from the waterstained almanac while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_whetstone",
+    "item_id": "core:worn_whetstone",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the worn whetstone while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_mill_fragment",
+    "item_id": "core:chipped_mill_fragment",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the chipped mill fragment while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_hearth_brick",
+    "item_id": "core:cracked_hearth_brick",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the cracked hearth brick while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_grindstone_rim",
+    "item_id": "core:broken_grindstone_rim",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the broken grindstone rim while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_stone_weight",
+    "item_id": "core:split_stone_weight",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the split stone weight while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_plumb_bob",
+    "item_id": "core:chipped_plumb_bob",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the chipped plumb bob while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_slate_shingle",
+    "item_id": "core:cracked_slate_shingle",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the cracked slate shingle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_mosaic_piece",
+    "item_id": "core:broken_mosaic_piece",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the broken mosaic piece while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_stone_pestle",
+    "item_id": "core:chipped_stone_pestle",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the chipped stone pestle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_fractured_mortar_block",
+    "item_id": "core:fractured_mortar_block",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the fractured mortar block while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_quarry_wedge",
+    "item_id": "core:split_quarry_wedge",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the split quarry wedge while protecting sound material."
+  },
+  {
+    "id": "core:salvage_worn_grinding_pebble",
+    "item_id": "core:worn_grinding_pebble",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the worn grinding pebble while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_soapstone_cup",
+    "item_id": "core:broken_soapstone_cup",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the broken soapstone cup while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chipped_sandstone_disc",
+    "item_id": "core:chipped_sandstone_disc",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the chipped sandstone disc while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_door_sill",
+    "item_id": "core:cracked_door_sill",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the cracked door sill while protecting sound material."
+  },
+  {
+    "id": "core:salvage_loose_gravel_paver",
+    "item_id": "core:loose_gravel_paver",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the loose gravel paver while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_stone_spindle",
+    "item_id": "core:broken_stone_spindle",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the broken stone spindle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_chalk_marker",
+    "item_id": "core:split_chalk_marker",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "crush",
+    "tool_qualities": {},
+    "yields": {
+      "core:mineral_grit": [
+        2,
+        3
+      ],
+      "core:ceramic_shards": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable mineral grit, ceramic shards from the split chalk marker while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_hand_lantern",
+    "item_id": "core:broken_hand_lantern",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken hand lantern while protecting sound material."
+  },
+  {
+    "id": "core:salvage_jammed_ratchet_wheel",
+    "item_id": "core:jammed_ratchet_wheel",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the jammed ratchet wheel while protecting sound material."
+  },
+  {
+    "id": "core:salvage_damaged_survey_compass",
+    "item_id": "core:damaged_survey_compass",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the damaged survey compass while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_spinning_reel",
+    "item_id": "core:broken_spinning_reel",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken spinning reel while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_balance_scale",
+    "item_id": "core:cracked_balance_scale",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the cracked balance scale while protecting sound material."
+  },
+  {
+    "id": "core:salvage_seized_music_box",
+    "item_id": "core:seized_music_box",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the seized music box while protecting sound material."
+  },
+  {
+    "id": "core:salvage_damaged_spring_trap",
+    "item_id": "core:damaged_spring_trap",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the damaged spring trap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_bellows_valve",
+    "item_id": "core:broken_bellows_valve",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken bellows valve while protecting sound material."
+  },
+  {
+    "id": "core:salvage_jammed_door_closer",
+    "item_id": "core:jammed_door_closer",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the jammed door closer while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bent_loom_ratchet",
+    "item_id": "core:bent_loom_ratchet",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the bent loom ratchet while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_crossbow_trigger",
+    "item_id": "core:broken_crossbow_trigger",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tempered_spring",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken crossbow trigger while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_orrery_arm",
+    "item_id": "core:cracked_orrery_arm",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the cracked orrery arm while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_pump_piston",
+    "item_id": "core:split_pump_piston",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the split pump piston while protecting sound material."
+  },
+  {
+    "id": "core:salvage_damaged_grinding_crank",
+    "item_id": "core:damaged_grinding_crank",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the damaged grinding crank while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_wagon_brake",
+    "item_id": "core:broken_wagon_brake",
+    "minutes": 14,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken wagon brake while protecting sound material."
+  },
+  {
+    "id": "core:salvage_seized_clock_pendulum",
+    "item_id": "core:seized_clock_pendulum",
+    "minutes": 16,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:fine_gear",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the seized clock pendulum while protecting sound material."
+  },
+  {
+    "id": "core:salvage_damaged_sighting_tube",
+    "item_id": "core:damaged_sighting_tube",
+    "minutes": 10,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:clear_crystal",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the damaged sighting tube while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_winding_key",
+    "item_id": "core:broken_winding_key",
+    "minutes": 12,
+    "difficulty": 2,
+    "method": "unfasten",
+    "tool_qualities": {},
+    "yields": {
+      "core:metal_scraps": [
+        1,
+        2
+      ],
+      "core:wood_pieces": [
+        1,
+        2
+      ],
+      "core:copper_wire": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable metal scraps, wood pieces, copper wire from the broken winding key while protecting sound material."
+  },
+  {
+    "id": "core:salvage_empty_seed_husk_bundle",
+    "item_id": "core:empty_seed_husk_bundle",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the empty seed husk bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_spoiled_herb_sachet",
+    "item_id": "core:spoiled_herb_sachet",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the spoiled herb sachet while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dried_onion_skins",
+    "item_id": "core:dried_onion_skins",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the dried onion skins while protecting sound material."
+  },
+  {
+    "id": "core:salvage_mildewed_grain_chaff",
+    "item_id": "core:mildewed_grain_chaff",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the mildewed grain chaff while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cracked_nut_shells",
+    "item_id": "core:cracked_nut_shells",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the cracked nut shells while protecting sound material."
+  },
+  {
+    "id": "core:salvage_old_apple_pressings",
+    "item_id": "core:old_apple_pressings",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the old apple pressings while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_tea_stems",
+    "item_id": "core:discarded_tea_stems",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the discarded tea stems while protecting sound material."
+  },
+  {
+    "id": "core:salvage_molded_hop_sack",
+    "item_id": "core:molded_hop_sack",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the molded hop sack while protecting sound material."
+  },
+  {
+    "id": "core:salvage_spent_malt_heap",
+    "item_id": "core:spent_malt_heap",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the spent malt heap while protecting sound material."
+  },
+  {
+    "id": "core:salvage_broken_beeswax_comb",
+    "item_id": "core:broken_beeswax_comb",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the broken beeswax comb while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dried_gourd_rind",
+    "item_id": "core:dried_gourd_rind",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the dried gourd rind while protecting sound material."
+  },
+  {
+    "id": "core:salvage_old_spice_sweepings",
+    "item_id": "core:old_spice_sweepings",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the old spice sweepings while protecting sound material."
+  },
+  {
+    "id": "core:salvage_split_pine_pitch_pot",
+    "item_id": "core:split_pine_pitch_pot",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ],
+      "core:resin_lumps": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps, resin lumps from the split pine pitch pot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_spoiled_flax_bundle",
+    "item_id": "core:spoiled_flax_bundle",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the spoiled flax bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_crumbled_herb_wreath",
+    "item_id": "core:crumbled_herb_wreath",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the crumbled herb wreath while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dried_citrus_peel",
+    "item_id": "core:dried_citrus_peel",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the dried citrus peel while protecting sound material."
+  },
+  {
+    "id": "core:salvage_spent_dye_leaves",
+    "item_id": "core:spent_dye_leaves",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the spent dye leaves while protecting sound material."
+  },
+  {
+    "id": "core:salvage_discarded_reed_mat_offcuts",
+    "item_id": "core:discarded_reed_mat_offcuts",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "sort",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        3,
+        5
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the discarded reed mat offcuts while protecting sound material."
+  },
+  {
+    "id": "core:salvage_resinous_pine_cone",
+    "item_id": "core:resinous_pine_cone",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:resin_lumps": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, resin lumps from the resinous pine cone while protecting sound material."
+  },
+  {
+    "id": "core:salvage_birch_catkin_cluster",
+    "item_id": "core:birch_catkin_cluster",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the birch catkin cluster while protecting sound material."
+  },
+  {
+    "id": "core:salvage_oak_gall_cluster",
+    "item_id": "core:oak_gall_cluster",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the oak gall cluster while protecting sound material."
+  },
+  {
+    "id": "core:salvage_juniper_bough",
+    "item_id": "core:juniper_bough",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the juniper bough while protecting sound material."
+  },
+  {
+    "id": "core:salvage_hazel_catkin_spray",
+    "item_id": "core:hazel_catkin_spray",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the hazel catkin spray while protecting sound material."
+  },
+  {
+    "id": "core:salvage_spruce_pitch_knot",
+    "item_id": "core:spruce_pitch_knot",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:resin_lumps": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps, resin lumps from the spruce pitch knot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_willow_bark_curl",
+    "item_id": "core:willow_bark_curl",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the willow bark curl while protecting sound material."
+  },
+  {
+    "id": "core:salvage_beech_nut_cup",
+    "item_id": "core:beech_nut_cup",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the beech nut cup while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dogwood_stem_bundle",
+    "item_id": "core:dogwood_stem_bundle",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the dogwood stem bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_silverleaf_sprig",
+    "item_id": "core:silverleaf_sprig",
+    "minutes": 8,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the silverleaf sprig while protecting sound material."
+  },
+  {
+    "id": "core:salvage_ghost_orchid_stem",
+    "item_id": "core:ghost_orchid_stem",
+    "minutes": 10,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the ghost orchid stem while protecting sound material."
+  },
+  {
+    "id": "core:salvage_amberroot_crown",
+    "item_id": "core:amberroot_crown",
+    "minutes": 12,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ],
+      "core:resin_lumps": [
+        1,
+        1
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps, resin lumps from the amberroot crown while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dried_teasel_head",
+    "item_id": "core:dried_teasel_head",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the dried teasel head while protecting sound material."
+  },
+  {
+    "id": "core:salvage_burdock_burr_cluster",
+    "item_id": "core:burdock_burr_cluster",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the burdock burr cluster while protecting sound material."
+  },
+  {
+    "id": "core:salvage_milkweed_pod",
+    "item_id": "core:milkweed_pod",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the milkweed pod while protecting sound material."
+  },
+  {
+    "id": "core:salvage_flax_seed_capsule",
+    "item_id": "core:flax_seed_capsule",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the flax seed capsule while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chicory_root_crown",
+    "item_id": "core:chicory_root_crown",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the chicory root crown while protecting sound material."
+  },
+  {
+    "id": "core:salvage_mullein_flower_spike",
+    "item_id": "core:mullein_flower_spike",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the mullein flower spike while protecting sound material."
+  },
+  {
+    "id": "core:salvage_goldenrod_spray",
+    "item_id": "core:goldenrod_spray",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the goldenrod spray while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sweet_clover_tops",
+    "item_id": "core:sweet_clover_tops",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the sweet clover tops while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rose_hip_branch",
+    "item_id": "core:rose_hip_branch",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the rose hip branch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_moonmint_sprig",
+    "item_id": "core:moonmint_sprig",
+    "minutes": 8,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the moonmint sprig while protecting sound material."
+  },
+  {
+    "id": "core:salvage_saffron_crocus_tuft",
+    "item_id": "core:saffron_crocus_tuft",
+    "minutes": 10,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the saffron crocus tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sunspice_rhizome",
+    "item_id": "core:sunspice_rhizome",
+    "minutes": 12,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the sunspice rhizome while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cattail_seed_head",
+    "item_id": "core:cattail_seed_head",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the cattail seed head while protecting sound material."
+  },
+  {
+    "id": "core:salvage_alder_cone_cluster",
+    "item_id": "core:alder_cone_cluster",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the alder cone cluster while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rush_pith_bundle",
+    "item_id": "core:rush_pith_bundle",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the rush pith bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bog_myrtle_branch",
+    "item_id": "core:bog_myrtle_branch",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the bog myrtle branch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sedge_root_mat",
+    "item_id": "core:sedge_root_mat",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the sedge root mat while protecting sound material."
+  },
+  {
+    "id": "core:salvage_marsh_mallow_stems",
+    "item_id": "core:marsh_mallow_stems",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the marsh mallow stems while protecting sound material."
+  },
+  {
+    "id": "core:salvage_water_iris_rhizome",
+    "item_id": "core:water_iris_rhizome",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the water iris rhizome while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sweet_flag_root",
+    "item_id": "core:sweet_flag_root",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the sweet flag root while protecting sound material."
+  },
+  {
+    "id": "core:salvage_peat_moss_clump",
+    "item_id": "core:peat_moss_clump",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the peat moss clump while protecting sound material."
+  },
+  {
+    "id": "core:salvage_blue_lotus_stalk",
+    "item_id": "core:blue_lotus_stalk",
+    "minutes": 8,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the blue lotus stalk while protecting sound material."
+  },
+  {
+    "id": "core:salvage_marsh_amber_bulb",
+    "item_id": "core:marsh_amber_bulb",
+    "minutes": 10,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the marsh amber bulb while protecting sound material."
+  },
+  {
+    "id": "core:salvage_star_reed_tuft",
+    "item_id": "core:star_reed_tuft",
+    "minutes": 12,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the star reed tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_reindeer_lichen_mat",
+    "item_id": "core:reindeer_lichen_mat",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the reindeer lichen mat while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rock_samphire_stems",
+    "item_id": "core:rock_samphire_stems",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the rock samphire stems while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sea_lavender_spray",
+    "item_id": "core:sea_lavender_spray",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the sea lavender spray while protecting sound material."
+  },
+  {
+    "id": "core:salvage_dwarf_willow_twigs",
+    "item_id": "core:dwarf_willow_twigs",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the dwarf willow twigs while protecting sound material."
+  },
+  {
+    "id": "core:salvage_mountain_avens_seedhead",
+    "item_id": "core:mountain_avens_seedhead",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable plant scraps from the mountain avens seedhead while protecting sound material."
+  },
+  {
+    "id": "core:salvage_crowberry_stem_mat",
+    "item_id": "core:crowberry_stem_mat",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the crowberry stem mat while protecting sound material."
+  },
+  {
+    "id": "core:salvage_alpine_sorrel_root",
+    "item_id": "core:alpine_sorrel_root",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the alpine sorrel root while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cotton_grass_tuft",
+    "item_id": "core:cotton_grass_tuft",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the cotton grass tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bladderwrack_holdfast",
+    "item_id": "core:bladderwrack_holdfast",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 4
+      }
+    ],
+    "description": "Recover reusable plant scraps from the bladderwrack holdfast while protecting sound material."
+  },
+  {
+    "id": "core:salvage_frost_sage_branch",
+    "item_id": "core:frost_sage_branch",
+    "minutes": 8,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:aromatic_oil",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the frost sage branch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_crimson_stonecrop_crown",
+    "item_id": "core:crimson_stonecrop_crown",
+    "minutes": 10,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 12
+      }
+    ],
+    "description": "Recover reusable plant scraps from the crimson stonecrop crown while protecting sound material."
+  },
+  {
+    "id": "core:salvage_pearl_kelp_knot",
+    "item_id": "core:pearl_kelp_knot",
+    "minutes": 12,
+    "difficulty": 3,
+    "method": "strip",
+    "tool_qualities": {},
+    "yields": {
+      "core:plant_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable plant scraps from the pearl kelp knot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_rabbit_foot_tuft",
+    "item_id": "core:rabbit_foot_tuft",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the rabbit foot tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_deer_antler_tip",
+    "item_id": "core:deer_antler_tip",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the deer antler tip while protecting sound material."
+  },
+  {
+    "id": "core:salvage_elk_tooth_row",
+    "item_id": "core:elk_tooth_row",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the elk tooth row while protecting sound material."
+  },
+  {
+    "id": "core:salvage_moose_hoof_plate",
+    "item_id": "core:moose_hoof_plate",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the moose hoof plate while protecting sound material."
+  },
+  {
+    "id": "core:salvage_boar_bristle_patch",
+    "item_id": "core:boar_bristle_patch",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the boar bristle patch while protecting sound material."
+  },
+  {
+    "id": "core:salvage_turkey_quill_fan",
+    "item_id": "core:turkey_quill_fan",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the turkey quill fan while protecting sound material."
+  },
+  {
+    "id": "core:salvage_grouse_down_tuft",
+    "item_id": "core:grouse_down_tuft",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the grouse down tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_goat_horn_sheath",
+    "item_id": "core:goat_horn_sheath",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the goat horn sheath while protecting sound material."
+  },
+  {
+    "id": "core:salvage_fox_tail_tuft",
+    "item_id": "core:fox_tail_tuft",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the fox tail tuft while protecting sound material."
+  },
+  {
+    "id": "core:salvage_wolf_fang_pair",
+    "item_id": "core:wolf_fang_pair",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the wolf fang pair while protecting sound material."
+  },
+  {
+    "id": "core:salvage_bear_claw_sheath",
+    "item_id": "core:bear_claw_sheath",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the bear claw sheath while protecting sound material."
+  },
+  {
+    "id": "core:salvage_badger_guard_hairs",
+    "item_id": "core:badger_guard_hairs",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the badger guard hairs while protecting sound material."
+  },
+  {
+    "id": "core:salvage_crawler_carapace_plate",
+    "item_id": "core:crawler_carapace_plate",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the crawler carapace plate while protecting sound material."
+  },
+  {
+    "id": "core:salvage_grazer_horn_chip",
+    "item_id": "core:grazer_horn_chip",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the grazer horn chip while protecting sound material."
+  },
+  {
+    "id": "core:salvage_stalker_tendon_knot",
+    "item_id": "core:stalker_tendon_knot",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps from the stalker tendon knot while protecting sound material."
+  },
+  {
+    "id": "core:salvage_muskrat_fur_clump",
+    "item_id": "core:muskrat_fur_clump",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the muskrat fur clump while protecting sound material."
+  },
+  {
+    "id": "core:salvage_beaver_incisor_pair",
+    "item_id": "core:beaver_incisor_pair",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the beaver incisor pair while protecting sound material."
+  },
+  {
+    "id": "core:salvage_otter_whisker_bundle",
+    "item_id": "core:otter_whisker_bundle",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the otter whisker bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_heron_pinion_quills",
+    "item_id": "core:heron_pinion_quills",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the heron pinion quills while protecting sound material."
+  },
+  {
+    "id": "core:salvage_gull_wing_down",
+    "item_id": "core:gull_wing_down",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the gull wing down while protecting sound material."
+  },
+  {
+    "id": "core:salvage_seal_whisker_pad",
+    "item_id": "core:seal_whisker_pad",
+    "minutes": 6,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:leather_scraps": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable leather scraps from the seal whisker pad while protecting sound material."
+  },
+  {
+    "id": "core:salvage_cow_horn_ring",
+    "item_id": "core:cow_horn_ring",
+    "minutes": 8,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:bone_chips": [
+        2,
+        4
+      ]
+    },
+    "rare_yields": [],
+    "description": "Recover reusable bone chips from the cow horn ring while protecting sound material."
+  },
+  {
+    "id": "core:salvage_chicken_quill_bundle",
+    "item_id": "core:chicken_quill_bundle",
+    "minutes": 10,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the chicken quill bundle while protecting sound material."
+  },
+  {
+    "id": "core:salvage_sheep_wool_locks",
+    "item_id": "core:sheep_wool_locks",
+    "minutes": 12,
+    "difficulty": 1,
+    "method": "clean",
+    "tool_qualities": {},
+    "yields": {
+      "core:cloth_scraps": [
+        1,
+        2
+      ]
+    },
+    "rare_yields": [
+      {
+        "item_id": "core:tough_fiber",
+        "min": 1,
+        "max": 1,
+        "chance_percent": 2
+      }
+    ],
+    "description": "Recover reusable cloth scraps from the sheep wool locks while protecting sound material."
+  }
+]

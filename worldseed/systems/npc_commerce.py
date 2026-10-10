@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 
 from worldseed.core.coords import WorldPos
-from worldseed.systems.household_economy import FOODS
+from worldseed.systems.household_economy import food_items
 
 
 class NPCCommerceSystem:
@@ -63,7 +63,7 @@ class NPCCommerceSystem:
 
     def _reserve(self, npc, item_id):
         # Preserve household food/fuel, replanting seed and one process batch.
-        reserve = 2 if item_id in FOODS or item_id == 'core:wood' else 0
+        reserve = 2 if item_id in food_items(self.registry) or item_id == 'core:wood' else 0
         if any(c.seed_item == item_id for c in self.registry.crops.values()):
             reserve = max(reserve, 4)
         proc = self.registry.settlement_processes.get(npc.assigned_process_id)

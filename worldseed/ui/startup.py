@@ -116,6 +116,7 @@ SKILL_DEFS = [
     ('melee','Melee','Close combat with weapons or fists.'),
     ('shield','Shield','Active blocking, coverage control and stamina-efficient guarding.'),
     ('crafting','Crafting','General fabrication and material work.'),
+    ('salvaging','Salvaging','Recover crafting parts through careful dismantling.'),
     ('medicine','Medicine','Treating wounds and illness.'),
     ('scholarship','Scholarship','Reading, research and historical study.'),
     ('persuasion','Persuasion','Conversation, trust and gathering information.'),

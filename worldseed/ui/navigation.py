@@ -81,7 +81,8 @@ ACTION_SURVIVAL = [
 ]
 
 ACTION_WORK = [
-    ('c', 'Craft / component design'),
+    ('c', 'Craft / salvage / component design'),
+    ('collect_water', 'Collect clean water — vessel, well or boiling pot'),
     ('cook', 'Cook a meal'),
     ('process', 'Process a carcass'),
     ('preserve', 'Dry, tan & preserve'),

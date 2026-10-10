@@ -99,10 +99,17 @@ class FishingSystem:
         defined = set()
         for fish in self.registry.fish.values():
             defined.update(fish.bait_affinity)
+        defined.update(iid for iid,n in inv.items.items() if n>0 and iid in self.registry.items
+                       and 'fishing_lure' in self.registry.items[iid].tags)
         return sorted(iid for iid in defined if inv.count(iid) > 0 and iid in self.registry.items)
 
     def _bait_bonus(self, fish, bait_id: str) -> int:
-        return int(fish.bait_affinity.get(bait_id, 0)) if bait_id else 0
+        if not bait_id:return 0
+        item=self.registry.items.get(bait_id)
+        affinity=int(fish.bait_affinity.get(bait_id,0))
+        if item is not None and 'fishing_lure' in item.tags:
+            return max(affinity,min(30,max(1,item.quality('lure_quality'))*5))
+        return affinity
 
     def _stock_weight(self, fish, region) -> int:
         if region.habitat not in fish.habitats or not (fish.min_temp <= region.temperature <= fish.max_temp):

@@ -513,7 +513,7 @@ class PygameTerminal(PointerUI):
                     if self._input_mode!='text' and event.key in (pg.K_w,pg.K_a,pg.K_s,pg.K_d):
                         if self._current_presentation in {
                             'inventory_unified','container_inventory','crafting_unified',
-                            'workshop_station','discovery_pot','crafting_index'
+                            'workshop_station','discovery_pot','crafting_index','salvaging'
                         }:
                             return movement_keys[event.key]
                         continue
@@ -1044,6 +1044,7 @@ class PygameTerminal(PointerUI):
             'inventory_unified':self._present_inventory_unified,
             'container_inventory':self._present_container_inventory,
             'crafting_unified':self._present_crafting_unified,
+            'salvaging':self._present_salvaging,
             'workshop_station':self._present_workshop_station,
             'discovery_pot':self._present_discovery_pot,
             'crafting_index':self._present_crafting_index,
@@ -1700,7 +1701,7 @@ class PygameTerminal(PointerUI):
     def _crafting_tabs(self,x,y,w,active):
         pg=self.pg
         self._crafting_tab_tooltip=None
-        tabs=(('Recipes','recipes'),('Workshops','workshops'),('Experiment Grid','discovery'),('Item Index','index'))
+        tabs=(('Recipes','recipes'),('Workshops','workshops'),('Experiment Grid','discovery'),('Item Index','index'),('Salvaging','salvaging'))
         hovered=None
         for i,(name,token) in enumerate(tabs):
             rect=pg.Rect(x+i*42,y,34,30);chosen=active==token;hover=rect.collidepoint(self._last_mouse)
@@ -1724,6 +1725,11 @@ class PygameTerminal(PointerUI):
                 for dx,dy in ((0,-7),(-7,-1),(7,-1),(-4,7),(4,7)):
                     pg.draw.circle(self.screen,fg,(cx+dx,cy+dy),2)
                 pg.draw.circle(self.screen,fg,(cx,cy),11,1)
+            elif token=='salvaging':
+                # Separated wood, metal and fastener parts.
+                pg.draw.line(self.screen,fg,(cx-9,cy+8),(cx+7,cy-8),3)
+                pg.draw.circle(self.screen,fg,(cx-7,cy-6),4,2)
+                pg.draw.rect(self.screen,fg,(cx+4,cy+4,7,7),1)
             else:
                 # index card + magnifier
                 pg.draw.rect(self.screen,fg,(cx-10,cy-9,13,17),1,border_radius=2)
@@ -1754,6 +1760,7 @@ class PygameTerminal(PointerUI):
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','CRAFTING',subtitle)
         self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
         self._crafting_tabs(cx,cy,cw,'recipes');cy+=38
+        self._button((cx+cw-110,cy-38,110,30),'SEARCH','UI_ACTION:search')
         cats=list(data.get('categories',[]));cat=str(data.get('category',''));newcats=set(data.get('new_categories',[]));per=6
         cat_page=max(0,min(int(data.get('category_page',0)),max(0,(len(cats)-1)//per)));visible=cats[cat_page*per:(cat_page+1)*per]
         gap=6;tw=max(88,(cw-gap*max(0,len(visible)-1))//max(1,len(visible)))
@@ -1767,7 +1774,9 @@ class PygameTerminal(PointerUI):
         else:cy+=39
         ph=y+h-48-cy;dw=max(260,min(340,cw//3));g=10;middle=pg.Rect(cx,cy,cw-dw-g,ph);detail=pg.Rect(middle.right+g,cy,dw,ph)
         for r in (middle,detail):pg.draw.rect(screen,self._theme['panel'],r,border_radius=6);pg.draw.rect(screen,self._theme['edge'],r,1,border_radius=6)
-        screen.blit(self.small_font.render(f'{cat.replace("_"," ").upper()}  /  {total or len(rows)} RECIPES',True,self._theme['accent']),(middle.x+12,middle.y+12))
+        heading=f'SEARCH: {data["query"]}' if data.get('query') else cat.replace('_',' ').upper()
+        heading+=f'  /  {total or len(rows)} RECIPES'
+        screen.blit(self.small_font.render(self._fit_ui_text(heading,self.small_font,middle.width-24),True,self._theme['accent']),(middle.x+12,middle.y+12))
         rh=67;sy=middle.y+38
         for i,row in enumerate(rows):
             r=pg.Rect(middle.x+9,sy+i*(rh+5),middle.width-18,rh)
@@ -1792,6 +1801,118 @@ class PygameTerminal(PointerUI):
             for line in (f"{m.get('minutes',0)} min  •  {m.get('skill','crafting')}",str(m.get('description',''))):screen.blit(self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['muted']),(detail.x+13,iy));iy+=19
             if m.get('ready'):self._button((detail.x+12,detail.bottom-40,detail.width-24,30),'CRAFT RECIPE','UI_ACTION:craft')
         self._draw_floating_footer(x,y,w,h,'Category tabs • Select a recipe • Drag title • Resize corner • Esc closes');self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
+
+    def menu_page_size(self,presentation:str)->int:
+        """Expose actual rendered row capacity to the shared paging widget."""
+        if presentation not in {'crafting_unified','workshop_station','salvaging'}:
+            return super().menu_page_size(presentation)
+        panel=self._floating_panel_state('crafting');height=panel['h']
+        heading=self.title_font.get_height()+5
+        if presentation=='crafting_unified':
+            # Reserve the taller paged category strip even on its final page.
+            return max(1,(height-48-52-heading-19-38-66-38-12)//72)
+        if presentation=='salvaging':return max(1,(height-52-38-30-48-26)//55)
+        if presentation=='workshop_station':return max(1,(height-48-52-heading-19-38-44-65)//67)
+        return 1
+
+    def _present_salvaging(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
+        """The workbench's salvage tab; every action is a UI token only."""
+        data=data or {};mode=data.get('mode','catalogue');pg=self.pg;screen=self.screen
+        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH',title,show_heading=False)
+        if mode=='catalogue':
+            self._crafting_tabs(cx,cy,cw,'salvaging')
+            self._button((cx+cw-100,cy,100,30),'SEARCH','UI_ACTION:search')
+            cy+=38
+        else:
+            self._button((cx,cy,88,28),'‹ BACK','ESC')
+            path=self._fit_ui_text(breadcrumb,self.small_font,cw-106)
+            screen.blit(self.small_font.render(path,True,self._theme['muted']),(cx+100,cy+6));cy+=38
+        status=(f"SALVAGING  Lv {data.get('skill_level',0)}  ·  XP {data.get('skill_xp',0)}"+(f"/{data['skill_threshold']}" if data.get('skill_threshold') else '') if mode!='session'
+                else ('INSPECT ASSEMBLY' if data.get('phase')=='inspection' else f"DISASSEMBLY  {int(data.get('step',0))+1}/{data.get('stage_count',3)}  ·  Score {data.get('score',0)}"))
+        screen.blit(self.small_font.render(status,True,self._theme['accent']),(cx,cy));cy+=30
+        gap=12;left_w=int(cw*.47);bottom=y+h-48
+        left=pg.Rect(cx,cy,left_w,max(1,bottom-cy));right=pg.Rect(left.right+gap,cy,cw-left_w-gap,left.height)
+        for rect in (left,right):
+            pg.draw.rect(screen,self._theme['panel'],rect,border_radius=6)
+            pg.draw.rect(screen,self._theme['edge'],rect,1,border_radius=6)
+        items=data.get('items',{});choices={row['id']:row for row in data.get('choices',())}
+        row_y=left.y+12;row_h=49 if mode=='catalogue' else min(72,max(43,(left.height-24)//max(1,len(rows))-6))
+        for index,row in enumerate(rows):
+            rect=pg.Rect(left.x+10,row_y,left.width-20,row_h)
+            if rect.bottom>left.bottom-10:break
+            key=getattr(row,'key','');label=getattr(row,'label',str(row));active=index==selected
+            pg.draw.rect(screen,(44,49,43) if active else self._theme['panel2'],rect,border_radius=5)
+            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=5)
+            text_x=rect.x+10
+            if key in items:
+                self._draw_item_icon(key,pg.Rect(rect.x+5,rect.y+5,39,39),scale=.9);text_x=rect.x+49
+            screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,rect.right-text_x-8),True,self._theme['text']),(text_x,rect.y+10))
+            if mode=='session' and row_h>=62:
+                detail=choices.get(key,{}).get('description','')
+                screen.blit(self.small_font.render(self._fit_ui_text(detail,self.small_font,rect.width-20),True,self._theme['muted']),(rect.x+10,rect.y+35))
+            self._ui_target(rect,f'UI_SELECT:{index}');row_y+=row_h+6
+        if (total or len(rows))>len(rows):
+            label=f'{page_start+1}–{page_start+len(rows)} / {total}  ·  Wheel / PgUp PgDn'
+            screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,left.width-20),True,self._theme['muted']),(left.x+10,left.bottom-22))
+        text_y=right.y+14
+        def write(value,color=None):
+            nonlocal text_y
+            for line in self._wrap_pixel_text(str(value),self.small_font,right.width-28):
+                if text_y+18>right.bottom-12:return
+                screen.blit(self.small_font.render(line,True,color or self._theme['text']),(right.x+14,text_y));text_y+=18
+        def part(component,label,color):
+            nonlocal text_y
+            if text_y+30>right.bottom-12:return
+            self._draw_item_icon(component['item_id'],pg.Rect(right.x+12,text_y,28,28))
+            lines=self._wrap_pixel_text(label,self.small_font,right.width-58)
+            for index,line in enumerate(lines):
+                if text_y+index*18+18>right.bottom-12:break
+                screen.blit(self.small_font.render(line,True,color),(right.x+48,text_y+index*18+4))
+            text_y+=max(32,18*len(lines)+6)
+        if mode=='catalogue':
+            key=getattr(rows[max(0,min(selected,len(rows)-1))],'key','') if rows else ''
+            item=items.get(key,{})
+            if item:
+                self._draw_item_icon(key,pg.Rect(right.x+14,text_y,58,58));text_y+=66
+                write(item.get('name',''),self._theme['accent'])
+                write(f"Carried: {item.get('count',0)}")
+                write(item.get('reason') or 'Select to preview guaranteed parts, rare odds and learned crafting uses.',self._theme['muted'])
+            else:write('Recover usable crafting parts from world finds, workshop offcuts, wild plants and butchered remains.')
+            text_y+=12;write('Begin dismantles ONE item. Inspect its material cues, then choose a method at each of three stages.',self._theme['muted'])
+            write('Escape keeps unfinished work. Use Resume to continue.',self._theme['muted'])
+            if data.get('query'):write('Search: '+data['query'],self._theme['accent'])
+        elif mode=='preview':
+            write(data.get('name',''),self._theme['accent'])
+            write(f"{str(data.get('method','')).replace('_',' ').title()} · {data.get('minutes',0)} min · Held {data.get('count',0)}",self._theme['muted'])
+            text_y+=6
+            for group in ('guaranteed','rare'):
+                for component in data.get(group,()):
+                    lo,hi=component.get('min',1),component.get('max',1);quantity=str(lo) if lo==hi else f'{lo}–{hi}'
+                    chance=f" {component.get('chance_percent',0)}% base rare" if group=='rare' else ' guaranteed'
+                    part(component,f"{component['name']} x{quantity} ·{chance}",self._theme['accent'] if group=='rare' else self._theme['good'])
+                    uses=component.get('uses',())
+                    if uses:write('Uses: '+', '.join(uses[:2]),self._theme['muted'])
+            text_y+=6;write('Inspect shows the full component list and crafting uses.',self._theme['muted'])
+            if data.get('reason'):write(data['reason'],self._theme['danger'])
+        elif mode=='session':
+            write(data.get('name',''),self._theme['accent']);text_y+=12
+            if data.get('phase')!='inspection':
+                for index in range(3):
+                    bar=pg.Rect(right.x+14+index*(right.width-28)//3,text_y,(right.width-34)//3,9)
+                    pg.draw.rect(screen,self._theme['good'] if index<int(data.get('step',0)) else (self._theme['accent'] if index==int(data.get('step',0)) else self._theme['edge']),bar,border_radius=3)
+                text_y+=25
+            write('MATERIAL CUE',self._theme['muted']);write(data.get('cue',''),self._theme['accent']);text_y+=12
+            write(data.get('prompt',''));text_y+=12
+            write('Choose a method using the cue. Careful recovery improves yield and rare-part odds.',self._theme['muted'])
+        else:
+            write('RECOVERED COMPONENTS',self._theme['accent'])
+            for component in data.get('recovered',()):
+                part(component,f"{component['name']} x{component['count']}"+(' · RARE' if component['rare'] else ''),self._theme['accent'] if component['rare'] else self._theme['good'])
+            text_y+=12;write(f"Recovery {data.get('score',0)}/{data.get('max_score',6)}")
+            write(f"Salvaging XP +{data.get('xp_gained',0)}")
+            write('Parts enter your pack and can reveal further crafting techniques.',self._theme['muted'])
+        self._draw_floating_footer(x,y,w,h,'Select with arrows / Enter or click • Wheel pages • Esc returns one level')
+        self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
 
     def _present_workshop_station(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Station-specific workshop surface driven by authoritative workshop profiles."""
@@ -2010,9 +2131,13 @@ class PygameTerminal(PointerUI):
             self._ui_target(rect,f'UI_SELECT:{i}')
             active=i==selected;key=getattr(row,'key','');count=(data.get('counts') or {}).get(key,0)
             pg.draw.rect(screen,(42,40,35) if active else self._theme['panel2'],rect,border_radius=7);pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=7)
-            label=self.font.render(self._fit_ui_text(key.replace('_',' ').title(),self.font,rect.width-24),True,self._theme['text']);screen.blit(label,(rect.x+12,rect.y+15))
-            num=self.title_font.render(str(count),True,self._theme['accent']);screen.blit(num,(rect.x+12,rect.bottom-num.get_height()-13))
-            word=self.small_font.render('discovered',True,self._theme['muted']);screen.blit(word,(rect.x+50,rect.bottom-word.get_height()-16))
+            label_text='Search recipes' if key=='__search__' else key.replace('_',' ').title()
+            label=self.font.render(self._fit_ui_text(label_text,self.font,rect.width-24),True,self._theme['text']);screen.blit(label,(rect.x+12,rect.y+15))
+            if key=='__search__':
+                word=self.small_font.render('Technique, profession or output',True,self._theme['muted']);screen.blit(word,(rect.x+12,rect.bottom-word.get_height()-16))
+            else:
+                num=self.title_font.render(str(count),True,self._theme['accent']);screen.blit(num,(rect.x+12,rect.bottom-num.get_height()-13))
+                word=self.small_font.render('discovered',True,self._theme['muted']);screen.blit(word,(rect.x+50,rect.bottom-word.get_height()-16))
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
 
     def _present_crafting_recipes(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):

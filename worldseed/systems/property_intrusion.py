@@ -12,9 +12,12 @@ from dataclasses import dataclass
 from worldseed.core.coords import WorldPos, split_world
 from worldseed.core.rng import hash_u64
 from worldseed.systems.container_profiles import building_storage_profile, container_profile, validate_catalog
+from worldseed.systems.salvage_loot import (
+    BUILDING_CONTEXTS, candidates, misc_catalog, provision_village, select_misc, withdraw_misc,
+)
 from worldseed.systems.state import (
     ContainerState, DoorSecurityState, PhysicalKeyState, SecurityIncidentState,
-    TrespassState, pos_key,
+    TrespassState, GroundPile, pos_key,
 )
 
 
@@ -29,8 +32,9 @@ class PropertyStorageSync:
 class PropertyStorageSystem:
     """Materialize one stable, owned storage point for eligible structures.
 
-    Initial contents are transferred out of the settlement stock ledger. No
-    goods are invented; once a container exists it is never reseeded.
+    Initial contents are transferred out of the settlement stock ledger. A
+    bounded, once-only household refuse origin batch enters that ledger before
+    placement; storage never copies it or refills collected contents.
     """
 
     def __init__(self, state, registry, seed: bytes, physicalization, civics, keys=None):
@@ -40,6 +44,7 @@ class PropertyStorageSystem:
         self.physicalization=physicalization
         self.civics=civics
         self.keys=keys or PhysicalKeySystem(state,seed)
+        self._misc_ids={row['item_id'] for row in misc_catalog()}
         if all(hasattr(registry,key) for key in ('items','structures','settlement_pieces')):
             validate_catalog(registry)
 
@@ -138,6 +143,10 @@ class PropertyStorageSystem:
     def _reserve_contents(self, town, structure_uid: str, preferred, stack_cap: int):
         items={}
         for iid in preferred:
+            # Expansion finds have a separate bounded weighted allocation,
+            # rather than turning a long preference table into a huge batch.
+            if iid in self._misc_ids:
+                continue
             if iid not in getattr(self.registry,"items",{}):
                 continue
             available=max(0,int(town.stocks.get(iid,0)))
@@ -153,12 +162,66 @@ class PropertyStorageSystem:
                 break
         return items
 
+    def _scatter_refuse(self, town, structure) -> int:
+        """Place discarded real village stock in a stable, accessible work court."""
+        marker='salvage-village-ground:'+structure.uid
+        if marker in self.state.resource_depletion:
+            return 0
+        # Only a minority of inhabited parcels contain an outdoor discard. A
+        # frontage remains authoritative; no guessed settlement geography.
+        if int(hash_u64(self.seed,'salvage-village-scatter-gate',structure.uid)%100)>=38:
+            return 0
+        lookup=getattr(self.physicalization,'frontage_for',None)
+        frontage=lookup(structure.uid) if callable(lookup) else None
+        if frontage is None:
+            return 0
+        world=getattr(self.physicalization,'world',None)
+        positions=[]
+        for dx,dy in ((-1,0),(1,0),(0,-1),(0,1),(-1,1),(1,1)):
+            pos=frontage.moved(dx,dy);key=pos_key(pos.x,pos.y,pos.z)
+            if key in self.state.containers or key in self.state.structures:
+                continue
+            if not self.physicalization.passable(pos,True):
+                continue
+            cell=self.physicalization.cell_at(pos)
+            if cell is not None and (cell.road_ids or cell.structure_id):
+                continue
+            if world is not None:
+                cache=getattr(world,'cache',None)
+                if cache is not None:
+                    ck,lx,ly=split_world(pos);chunk=cache.peek(ck)
+                    if chunk is None:continue
+                    terrain=self.registry.terrain(self.registry.terrain_id(chunk.get(lx,ly)))
+                else:
+                    terrain=world.tile_at(pos).terrain
+                if not getattr(terrain,'passable',True) or 'water' in getattr(terrain,'tags',()):
+                    continue
+            positions.append(pos)
+        if not positions:
+            return 0
+        pos=min(positions,key=lambda p:(hash_u64(self.seed,'salvage-village-ground-position',structure.uid,p.x,p.y),p.y,p.x))
+        contexts=BUILDING_CONTEXTS.get(str(structure.function),('household','workyard'))
+        rows=tuple(row for row in candidates(self.registry,contexts,source='village')
+                   if int(town.stocks.get(row['item_id'],0))>0)
+        wanted=select_misc(self.seed,'salvage-village-ground-item',structure.uid,rows,1)
+        made=0
+        for iid,qty in wanted.items():
+            qty=min(qty,max(0,int(town.stocks.get(iid,0))))
+            if qty<=0:continue
+            town.stocks[iid]-=qty
+            key=pos_key(pos.x,pos.y,pos.z)
+            pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
+            pile.items[iid]=pile.items.get(iid,0)+qty;made+=qty
+        self.state.resource_depletion[marker]=self.state.clock_minute
+        return made
+
     def sync_settlement(self, settlement_id: str) -> PropertyStorageSync:
         town=self.state.settlements.get(str(settlement_id))
         skeleton=self.physicalization.skeleton_for(str(settlement_id))
         if town is None or skeleton is None:
             return PropertyStorageSync(str(settlement_id))
         self.civics.ensure_settlement(town.uid)
+        provision_village(self.state,self.registry,self.seed,town,skeleton.structures)
         space_ids={"interior:"+structure.uid for structure in skeleton.structures}
         occupants={}
         for actor in self.state.interior_actors.values():
@@ -186,6 +249,7 @@ class PropertyStorageSystem:
             if getattr(structure,"enclosed",False):
                 slots += [(f"property-storage:{structure.uid}:inside:{uid.split(':',1)[-1]}",uid,True,())
                           for uid in profile.inside]
+                slots += [(f"property-storage:{structure.uid}:tabletop",'core:tabletop',True,())]
             for uid,profile_id,indoors,stock in slots:
                 style=container_profile(profile_id)
                 if style is None:continue
@@ -225,8 +289,10 @@ class PropertyStorageSystem:
                         existing.interior_furniture_uid="storage-furniture:"+uid if indoors else ""
                     existing.interior_space_id=space_id
                     existing.access="private";self.keys.ensure_lock(existing)
+                    reserved+=withdraw_misc(self.state,self.registry,self.seed,town,existing,
+                                            count=1 if profile_id=='core:tabletop' else 2)
                     continue
-                items=self._reserve_contents(town,uid,stock or style.loot,5)
+                items=self._reserve_contents(town,uid,stock or style.loot,2 if profile_id=='core:tabletop' else 5)
                 reserved+=sum(items.values())
                 self.state.containers[key]=ContainerState(
                     uid=uid,x=position.x,y=position.y,z=position.z,owner=owner,
@@ -238,7 +304,10 @@ class PropertyStorageSystem:
                     interior_space_id="interior:"+structure.uid if indoors else "",
                     interior_furniture_uid="storage-furniture:"+uid if indoors else "",
                 )
+                reserved+=withdraw_misc(self.state,self.registry,self.seed,town,self.state.containers[key],
+                                        count=1 if profile_id=='core:tabletop' else 2)
                 created+=1
+            reserved+=self._scatter_refuse(town,structure)
             # Older miner/workplace bins also keep their stable identity and
             # contents, but no longer occupy a road or frontage tile.
             from worldseed.systems.building_storage import move_storage_indoors

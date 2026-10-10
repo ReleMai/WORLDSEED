@@ -42,7 +42,7 @@ def _present_game_frame(term, ctx, renderer, message: str = '', cursor=None, com
             cursor=cursor, combat_overlay=combat_overlay, stealth_overlay=stealth_overlay,
         ))
 
-from worldseed.ui.widgets import select_menu, view_text
+from worldseed.ui.widgets import select_menu, view_text, prompt_text
 from worldseed.ui.pointer import WindowCloseRequested
 from worldseed.ui.session import NavigationStack, RouteState
 from worldseed.ui.layout import screen_width
@@ -1418,6 +1418,7 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
             if action=='shaft':
                 ctx.sim.execute(ExcavateShaftCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='drink':ctx.sim.execute(DrinkCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
+            if action=='collect_water':ctx.sim.execute(CollectWaterCommand(ctx.player_id));return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='fish':
                 result=_fishing_action(ctx,term)
                 if result==UI_BACK:continue
@@ -2538,6 +2539,152 @@ def _crafting_tree_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory)->di
     return {'nodes':nodes,'known':sum(1 for n in nodes if n['status']=='known'),'total':len(nodes)}
 
 
+def _salvage_preview_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,item_id:str)->dict:
+    """Enrich the salvage read model with only learned downstream techniques."""
+    preview=sim.salvaging.preview(item_id,inv)
+    if not preview:return {}
+    data=dict(preview)
+    known=sim.crafting.discovered_recipes(inv)
+    for group in ('guaranteed','rare'):
+        data[group]=[]
+        for component in preview.get(group,()):
+            row=dict(component);iid=row['item_id']
+            uses=[r.name for r in known if iid in r.inputs or iid in r.catalysts]
+            row['uses']=uses
+            item=reg.items.get(iid)
+            row['description']=item.description if item else ''
+            data[group].append(row)
+    data['count']=inv.count(item_id)
+    return data
+
+
+def _salvage_preview_lines(data:dict)->list[str]:
+    lines=[data.get('description',''),f"Method: {str(data.get('method','')).replace('_',' ')}",
+           f"Time: {data.get('minutes',0)} minutes | Difficulty: {data.get('difficulty',0)}",
+           f"Salvaging level {data.get('skill_level',0)} | XP {data.get('skill_xp',0)}/{data.get('skill_threshold',0)}",'',
+           'Beginning dismantles ONE item. Escape preserves work so you can resume later.','',
+           'RECOVERABLE COMPONENTS']
+    for group in ('guaranteed','rare'):
+        for row in data.get(group,()):
+            low,high=row.get('min',1),row.get('max',1)
+            quantity=str(low) if low==high else f'{low}–{high}'
+            chance=f" | rare base {row.get('chance_percent',0)}%" if group=='rare' else ' | guaranteed'
+            lines.append(f"{row['name']} x{quantity}{chance}")
+            if row.get('description'):lines.append('  '+row['description'])
+            uses=row.get('uses',())
+            lines.append('  Learned uses: '+(', '.join(uses) if uses else 'Handle the component and experiment to learn techniques.'))
+    if data.get('rare'):lines+=['','Careful recovery, tools and skill improve rare-component odds.']
+    if data.get('tools'):
+        lines+=['','TOOL QUALITIES']+[f'{str(key).replace("_"," ").title()} {value}+' for key,value in data['tools'].items()]
+    if data.get('reason'):lines+=['',data['reason']]
+    return lines
+
+
+def _salvaging_menu(ctx:GameContext,term:Terminal)->str:
+    """Retained catalogue, preview, resumable minigame and completion routes."""
+    sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
+    nav=NavigationStack(RouteState('salvaging','SALVAGING // CARRIED ITEMS',payload={'query':''}))
+    status=''
+    while True:
+        inv=ctx.entities.get(pid,Inventory);route=nav.current
+        if route.route_id=='salvaging':
+            query=route.payload.get('query','')
+            available=sim.salvaging.available_items(inv)
+            entries={row['item_id']:dict(row) for row in available if not query or query.casefold() in row['name'].casefold()}
+            rows=[(iid,f"{row['name']} x{row['count']}") for iid,row in entries.items()]
+            if sim.salvaging.session_view():rows.insert(0,('__resume__','Resume unfinished salvage'))
+            if not rows:rows.append(('__none__','No salvageable items in your pack'))
+            rows+=[('__search__',f'Search carried items'+(f' — {query}' if query else ''))]
+            selected_item=route.payload.get('selected_item')
+            if selected_item in {key for key,_ in rows}:
+                route.selected=next(index for index,(key,_) in enumerate(rows) if key==selected_item)
+            data={'mode':'catalogue','items':entries,'query':query,
+                  'skill_level':sim.player_skill('salvaging'),'skill_xp':int(getattr(sim.state,'player_salvaging_xp',0)),
+                  'skill_threshold':sim.salvaging.skill_threshold(sim.player_skill('salvaging')),
+                  'active_session':sim.salvaging.session_view()}
+            choice=_stack_menu(term,nav,rows,subtitle=status or 'Inspect an item to preview components and rare recovery odds.',
+                               presentation='salvaging',presentation_data=data)
+            if 0<=route.selected<len(rows):route.payload['selected_item']=rows[route.selected][0]
+            status=''
+            if choice is None:return UI_BACK
+            if choice=='__BACK__':continue
+            if choice.startswith('UI_ACTION:tab:'):
+                if choice=='UI_ACTION:tab:salvaging':continue
+                return choice
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice in {'__search__','UI_ACTION:search'}:
+                nav.push(RouteState('salvaging-search','SALVAGING // SEARCH'))
+                value=prompt_text(term,nav.current.title,'Item name (blank shows all):',default=query,max_len=48)
+                nav.pop()
+                if value is not None:
+                    route.payload['query']=value;route.payload.pop('selected_item',None);route.selected=0
+                continue
+            if choice=='__resume__':
+                route.payload['selected_item']=choice
+                nav.push(RouteState('salvaging-session','SALVAGING // DISASSEMBLY'));continue
+            if choice in entries:
+                route.payload['selected_item']=choice
+                nav.push(RouteState('salvaging-item',entries[choice]['name'],payload={'item_id':choice}));continue
+            continue
+        if route.route_id=='salvaging-item':
+            data=_salvage_preview_ui_data(reg,sim,inv,route.payload['item_id'])
+            if not data:nav.pop();continue
+            rows=[('inspect','Inspect components & crafting uses')]
+            if data.get('can_start'):rows.append(('begin','Begin salvage — dismantle one item'))
+            if sim.salvaging.session_view():rows.append(('resume','Resume unfinished salvage'))
+            choice=_stack_menu(term,nav,rows,subtitle=status or data.get('reason') or 'Preview is free. Begin dismantles one carried item.',
+                               presentation='salvaging',presentation_data={'mode':'preview',**data})
+            status=''
+            if choice=='__BACK__':continue
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice=='inspect':
+                nav.push(RouteState('salvaging-inspect','SALVAGING // COMPONENT PREVIEW'))
+                _stack_view(term,nav,'\n'.join(_salvage_preview_lines(data)));continue
+            if choice=='begin':
+                sim.execute(StartSalvageCommand(pid,route.payload['item_id']))
+                status=sim.log[-1].message if sim.log else ''
+                if sim.salvaging.session_view():nav.push(RouteState('salvaging-session','SALVAGING // DISASSEMBLY'))
+                continue
+            if choice=='resume':nav.push(RouteState('salvaging-session','SALVAGING // DISASSEMBLY'))
+            continue
+        if route.route_id=='salvaging-session':
+            session=sim.salvaging.session_view()
+            if not session:
+                result=dict(sim.state.player_salvage_log[-1]) if sim.state.player_salvage_log else {}
+                nav.replace(RouteState('salvaging-result','SALVAGING // RECOVERED PARTS',payload={'result':result}));continue
+            rows=[(row['id'],row['label']) for row in session['choices']]
+            cue=' '.join(str(session.get(key,'')) for key in ('cue','prompt')).strip()
+            choice=_stack_menu(term,nav,rows,subtitle=cue,presentation='salvaging',presentation_data={'mode':'session',**session})
+            if choice=='__BACK__':continue
+            moved=_live_panel_world_move(ctx,term,choice)
+            if moved is not None:status=moved;continue
+            if choice in {row['id'] for row in session['choices']}:
+                sim.execute(SalvageActionCommand(pid,choice))
+                status=sim.log[-1].message if sim.log else ''
+                route.selected=0
+            continue
+        result=route.payload.get('result',{})
+        outputs=[{'item_id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'count':quantity,
+                  'rare':iid in result.get('rare_outputs',{})} for iid,quantity in result.get('outputs',{}).items()]
+        data={'mode':'result',**result,'recovered':outputs,
+              'skill_threshold':sim.salvaging.skill_threshold(int(result.get('skill_level',0)))}
+        choice=_stack_menu(term,nav,[('done','Return to previous screen'),('inspect','Inspect recovered components')],
+                           subtitle=f"Recovered {len(outputs)} component kinds. Salvaging practice +{result.get('xp_gained',0)}.",
+                           presentation='salvaging',presentation_data=data)
+        if choice=='__BACK__':continue
+        moved=_live_panel_world_move(ctx,term,choice)
+        if moved is not None:status=moved;continue
+        if choice=='done':nav.pop();continue
+        if choice=='inspect':
+            lines=[f"Recovery score: {result.get('score',0)}/{result.get('max_score',6)}",
+                   f"Salvaging XP +{result.get('xp_gained',0)} | Level {result.get('skill_level',0)}",'']
+            lines += [f"{row['name']} x{row['count']}"+(' (rare)' if row['rare'] else '') for row in outputs]
+            nav.push(RouteState('salvaging-result-inspect','SALVAGING // RESULT DETAIL'))
+            _stack_view(term,nav,'\n'.join(lines))
+
+
 def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     nav=NavigationStack(RouteState('inventory','INVENTORY // PACK'))
@@ -2718,17 +2865,21 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         finally:
             if callable(pop):pop()
         return True
-    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index','salvaging'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
-    category_page=categories.index(category)//12 if category in categories else 0
+    category_page=categories.index(category)//6 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
     workshop_state=RouteState('crafting-workshop','WORKSHOP')
     pot_state=RouteState('crafting-pot','DISCOVERY')
     workshop_station=str(initial_station or '')
-    placed=[];status=''
+    placed=[];status='';recipe_query='';salvage_return_tab='recipes'
     while True:
         inv=ctx.entities.get(pid,Inventory)
+        if tab=='salvaging':
+            result=_salvaging_menu(ctx,term)
+            tab=result.split(':',2)[2] if result.startswith('UI_ACTION:tab:') else salvage_return_tab
+            continue
         if tab=='workshops':
             nearby=sorted(
                 sid for sid in _player_station_ids(sim)
@@ -2767,6 +2918,12 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice is None:return UI_BACK
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
+            if choice.startswith('UI_ACTION:tab:'):
+                destination=choice.split(':',2)[2]
+                if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                    if destination=='salvaging':salvage_return_tab=tab
+                    tab=destination
+                continue
             if choice=='UI_ACTION:open_inventory':
                 if not open_inventory_panel():return UI_BACK
                 continue
@@ -2789,31 +2946,43 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 continue
             continue
         if tab=='recipes':
-            known=[r for r in sim.crafting.discovered_recipes(inv) if (r.category or 'general')==category]
+            known=[r for r in sim.crafting.discovered_recipes(inv)
+                   if (not recipe_query and (r.category or 'general')==category)
+                   or (recipe_query and recipe_query.casefold() in ' '.join((r.name,r.category,*(reg.items[iid].name for iid in r.outputs if iid in reg.items))).casefold())]
             known.sort(key=lambda r:r.name)
             rows=[(r.id,r.name) for r in known] or [('__none__','No recipes in this category')]
             recipe_state.selected=max(0,min(recipe_state.selected,len(rows)-1))
             data=_recipe_ui_data(reg,sim,inv,known)
             unseen=set(getattr(sim.state,'player_unseen_recipes',[]));new_categories=sorted({reg.recipes[rid].category or 'general' for rid in unseen if rid in reg.recipes})
-            data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories})
+            data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories,'query':recipe_query})
             choice=_select(term,'CRAFTING',rows,state=recipe_state,presentation='crafting_unified',
                            subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
             status=''
             if choice is None:return UI_BACK
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
+            if choice.startswith('UI_ACTION:tab:'):
+                destination=choice.split(':',2)[2]
+                if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                    if destination=='salvaging':salvage_return_tab=tab
+                    tab=destination
+                continue
             if choice=='UI_ACTION:open_inventory':
                 if not open_inventory_panel():return UI_BACK
                 continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
             if choice=='UI_ACTION:tab:index':tab='index';continue
+            if choice=='UI_ACTION:search':
+                value=prompt_text(term,'CRAFTING // SEARCH','Technique, profession or output (blank clears):',default=recipe_query,max_len=48)
+                if value is not None:recipe_query=value;recipe_state.selected=0
+                continue
             if choice.startswith('UI_ACTION:category_page:'):
                 page_size=6
                 delta=1 if choice.endswith(':next') else -1
                 category_page=max(0,min(category_page+delta,max(0,(len(categories)-1)//page_size)))
                 continue
             if choice.startswith('UI_ACTION:category:'):
-                category=choice.split(':',2)[2];recipe_state.selected=0;continue
+                category=choice.split(':',2)[2];recipe_query='';recipe_state.selected=0;continue
             if choice in reg.recipes:
                 sim.state.player_unseen_recipes=[rid for rid in sim.state.player_unseen_recipes if rid!=choice]
                 continue
@@ -2841,6 +3010,12 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice is None:return UI_BACK
             moved=_live_panel_world_move(ctx,term,choice)
             if moved is not None:status=moved;continue
+            if choice.startswith('UI_ACTION:tab:'):
+                destination=choice.split(':',2)[2]
+                if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                    if destination=='salvaging':salvage_return_tab=tab
+                    tab=destination
+                continue
             if choice=='UI_ACTION:open_inventory':
                 if not open_inventory_panel():return UI_BACK
                 continue
@@ -2877,6 +3052,12 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         if choice is None:return UI_BACK
         moved=_live_panel_world_move(ctx,term,choice)
         if moved is not None:status=moved;continue
+        if choice.startswith('UI_ACTION:tab:'):
+            destination=choice.split(':',2)[2]
+            if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                if destination=='salvaging':salvage_return_tab=tab
+                tab=destination
+            continue
         if choice=='UI_ACTION:open_inventory':
             if not open_inventory_panel():return UI_BACK
             continue
@@ -2918,7 +3099,9 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
     if getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None)):
         return _crafting_menu_graphical(ctx,term,initial_tab,initial_station)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
+    home_state=RouteState('crafting-home','CRAFTING MODE // WORKBENCH')
     while True:
+        inv=ctx.entities.get(pid,Inventory)
         known=sorted(sim.crafting.discovered_recipes(inv),key=lambda r:(r.category or 'general',r.name))
         ideas=sim.crafting.researchable_recipes(inv)
         discovered_items=set(sim.state.player_discovered_items)
@@ -2929,13 +3112,18 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
         rows=[
             ('recipes',f'Discovered Recipes — {len(known)} known'),
             ('workshops',f'Nearby Workshops — {len(nearby_workshops)} usable station(s)'),
+            ('salvaging','Salvaging — recover components from carried finds'),
             ('ideas','Experiment Grid — combine 1–5 carried items'),
             ('materials',f'Materials — {len(discovered_items)} item types examined'),
             ('tree','Tech Tree — trace discovered recipes and future branches'),
         ]
         if reg.designs:rows.append(('design','Component Designs — choose materials part by part'))
-        pick=_select(term,'CRAFTING MODE // WORKBENCH',rows,presentation='crafting_home',presentation_data=_crafting_home_ui_data(reg,sim,inv,known,ideas))
+        pick=_select(term,'CRAFTING MODE // WORKBENCH',rows,state=home_state,presentation='crafting_home',presentation_data=_crafting_home_ui_data(reg,sim,inv,known,ideas))
         if not pick:return UI_BACK
+
+        if pick=='salvaging':
+            _salvaging_menu(ctx,term)
+            continue
 
         if pick=='workshops':
             if not nearby_workshops:
@@ -3035,9 +3223,16 @@ def _crafting_menu(ctx:GameContext,term:Terminal,initial_tab:str='recipes',initi
             _view_text(term,box('CRAFTING // DISCOVERED RECIPES',['No recipes discovered yet.','Gather materials and combine them in the experiment grid to uncover techniques.'],screen_width(term.size()[0],96)))
             continue
         categories=sorted(set(r.category or 'general' for r in known))
-        category=_select(term,'CRAFTING // RECIPES',[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})
+        category=_select(term,'CRAFTING // RECIPES',[('__search__','Search learned techniques, professions or outputs')]+[(c,f'{c.replace("_"," ").title()} — {sum(1 for r in known if (r.category or "general")==c)} discovered') for c in categories],presentation='crafting_categories',presentation_data={'counts':{c:sum(1 for r in known if (r.category or 'general')==c) for c in categories},'known':len(known)})
         if not category:continue
-        recipes=[r for r in known if (r.category or 'general')==category]
+        if category=='__search__':
+            query=prompt_text(term,'CRAFTING // SEARCH','Technique, profession or output:',max_len=48)
+            if query is None:continue
+            recipes=[r for r in known if query.casefold() in ' '.join((r.name,r.category,*(reg.items[iid].name for iid in r.outputs if iid in reg.items))).casefold()]
+            category='search results'
+            if not recipes:
+                _view_text(term,'No learned technique matches that search.');continue
+        else:recipes=[r for r in known if (r.category or 'general')==category]
         stations=_player_station_ids(sim);recipe_rows=[]
         for r in recipes:
             missing=sim.crafting.missing_requirements(r.id,inv,stations);ready=not missing
@@ -3098,6 +3293,7 @@ def _building_menu(ctx:GameContext,term:Terminal)->str:
 def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;lower=key.lower() if len(key)==1 else key
     if lower=='drink':sim.execute(DrinkCommand(pid));return sim.log[-1].message if sim.log else ''
+    if lower=='collect_water':sim.execute(CollectWaterCommand(pid));return sim.log[-1].message if sim.log else ''
     if lower=='rest':return _rest_menu(ctx,term)
     if lower=='cook':return _cooking_menu(ctx,term)
     if lower=='process':return _process_carcass_menu(ctx,term)

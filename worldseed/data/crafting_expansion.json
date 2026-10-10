@@ -1,0 +1,5069 @@
+{
+  "version": 1,
+  "components": [
+    "core:wood_pieces",
+    "core:metal_scraps",
+    "core:nuts_and_bolts",
+    "core:tool_handles",
+    "core:plant_scraps",
+    "core:cloth_scraps",
+    "core:leather_scraps",
+    "core:bone_chips",
+    "core:ceramic_shards",
+    "core:glass_shards",
+    "core:copper_wire",
+    "core:resin_lumps",
+    "core:mineral_grit"
+  ],
+  "rare_components": [
+    "core:tempered_spring",
+    "core:fine_gear",
+    "core:clear_crystal",
+    "core:aromatic_oil",
+    "core:tough_fiber",
+    "core:silver_filament"
+  ],
+  "misc": [
+    {
+      "item_id": "core:bent_door_hinge",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:rusted_padlock",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_buckle",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_sickle_head",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_horseshoe",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_spur",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:bent_wagon_bracket",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_iron_ring",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:dented_candle_snuffer",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:seized_hand_drill",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:snapped_shears",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_chain_link",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:rusted_stove_grate",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:loose_gate_latch",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:bent_fire_poker",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_pan_handle",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_harness_bell",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:jammed_clockwork_catch",
+      "art_family": "metal",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "armory",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_wagon_spoke",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_chair_rung",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_barrel_stave",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_rolling_pin",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:splintered_rake",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_loom_shuttle",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_paddle",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:warped_cupboard_door",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_crate_lid",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_spinning_distaff",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:snapped_broom_shaft",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_ladder_step",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_tent_peg",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_wooden_ladle",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_yoke",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_cart_axle",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:loose_window_shutter",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_tool_rack",
+      "art_family": "wood",
+      "loot_contexts": [
+        "household",
+        "workshop",
+        "workyard",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_apron",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:threadbare_curtain",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:frayed_bedroll",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_grain_sack",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_sail_patch",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:tangled_embroidery",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_cap_lining",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_banner",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:ragged_quilt",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:unraveled_scarf",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:stained_table_runner",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_felt_slipper",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:frayed_fishing_smock",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:old_saddle_blanket",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_pillowcase",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_bandolier_lining",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_laundry_strap",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_mosquito_veil",
+      "art_family": "cloth",
+      "loot_contexts": [
+        "household",
+        "wardrobe",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_harness_strap",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_boot_sole",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_scabbard",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_saddle_flap",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_leather_pouch",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_bridle",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:old_bellows_skin",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_glove",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_quiver_seam",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_belt",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_knee_guard",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:loose_shield_grip",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_muzzle",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_satchel_flap",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_hunting_gaiter",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_drum_head",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_sling_strap",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_water_bag",
+      "art_family": "leather",
+      "loot_contexts": [
+        "wardrobe",
+        "armory",
+        "workshop",
+        "workyard"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_crock",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_roof_tile",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_jug",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_butter_dish",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:shattered_inkpot",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_oil_lamp",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_chamber_pot",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_honey_jar",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_kiln_spacer",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_tea_bowl",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_fermentation_weight",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_drain_pipe",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_mortar_bowl",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_soap_dish",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_flower_pot",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_baking_stone",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_salt_cellar",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_crucible",
+      "art_family": "ceramic",
+      "loot_contexts": [
+        "household",
+        "pantry",
+        "inn",
+        "medicine"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:clouded_window_pane",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_bottle_neck",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_spectacle_lens",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_glass_bead",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:shattered_perfume_vial",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_lamp_chimney",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_hourglass_bulb",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_mirror_edge",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_glass_stopper",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_lantern_globe",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:clouded_prism",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_apothecary_jar",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_glass_funnel",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_seal_stamp",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_drinking_glass",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_fishing_float",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_glass_pendant",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:shattered_measuring_tube",
+      "art_family": "glass",
+      "loot_contexts": [
+        "archive",
+        "medicine",
+        "pantry",
+        "inn"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:waterlogged_ledger",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_map_case",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:loose_book_binding",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_letter_bundle",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:molded_scroll_tube",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_writing_board",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:faded_market_notice",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_wax_tablet",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:frayed_document_roll",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_account_slip",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:torn_song_folio",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_seal_envelope",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:ruined_recipe_leaf",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:old_tax_register",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:tattered_charter_copy",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_shipping_label",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_notebook_cover",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:waterstained_almanac",
+      "art_family": "paper",
+      "loot_contexts": [
+        "archive",
+        "household",
+        "inn",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_whetstone",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_mill_fragment",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_hearth_brick",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_grindstone_rim",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_stone_weight",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_plumb_bob",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_slate_shingle",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_mosaic_piece",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_stone_pestle",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:fractured_mortar_block",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_quarry_wedge",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:worn_grinding_pebble",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_soapstone_cup",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:chipped_sandstone_disc",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_door_sill",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:loose_gravel_paver",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_stone_spindle",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_chalk_marker",
+      "art_family": "stone",
+      "loot_contexts": [
+        "workshop",
+        "workyard",
+        "dungeon",
+        "household"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_hand_lantern",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:jammed_ratchet_wheel",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:damaged_survey_compass",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_spinning_reel",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_balance_scale",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:seized_music_box",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:damaged_spring_trap",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_bellows_valve",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:jammed_door_closer",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:bent_loom_ratchet",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_crossbow_trigger",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_orrery_arm",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_pump_piston",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:damaged_grinding_crank",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_wagon_brake",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:seized_clock_pendulum",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:damaged_sighting_tube",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_winding_key",
+      "art_family": "mixed",
+      "loot_contexts": [
+        "workshop",
+        "armory",
+        "archive",
+        "dungeon"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:empty_seed_husk_bundle",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:spoiled_herb_sachet",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:dried_onion_skins",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:mildewed_grain_chaff",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:cracked_nut_shells",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:old_apple_pressings",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_tea_stems",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:molded_hop_sack",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:spent_malt_heap",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:broken_beeswax_comb",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:dried_gourd_rind",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:old_spice_sweepings",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:split_pine_pitch_pot",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:spoiled_flax_bundle",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "common",
+      "source": "village"
+    },
+    {
+      "item_id": "core:crumbled_herb_wreath",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:dried_citrus_peel",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:spent_dye_leaves",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:discarded_reed_mat_offcuts",
+      "art_family": "provisions",
+      "loot_contexts": [
+        "pantry",
+        "grain",
+        "workyard",
+        "natural_stump"
+      ],
+      "habitats": [],
+      "rarity": "uncommon",
+      "source": "village"
+    },
+    {
+      "item_id": "core:resinous_pine_cone",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:birch_catkin_cluster",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:oak_gall_cluster",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:juniper_bough",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:hazel_catkin_spray",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:spruce_pitch_knot",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:willow_bark_curl",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:beech_nut_cup",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:dogwood_stem_bundle",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:silverleaf_sprig",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:ghost_orchid_stem",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:amberroot_crown",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:forest",
+        "core:scrub"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:dried_teasel_head",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:burdock_burr_cluster",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:milkweed_pod",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:flax_seed_capsule",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:chicory_root_crown",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:mullein_flower_spike",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:goldenrod_spray",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:sweet_clover_tops",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:rose_hip_branch",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:moonmint_sprig",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:saffron_crocus_tuft",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:sunspice_rhizome",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:grass",
+        "core:floodplain"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:cattail_seed_head",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:alder_cone_cluster",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:rush_pith_bundle",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:bog_myrtle_branch",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:sedge_root_mat",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:marsh_mallow_stems",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:water_iris_rhizome",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:sweet_flag_root",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:peat_moss_clump",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:blue_lotus_stalk",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:marsh_amber_bulb",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank",
+        "core:salt_marsh"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:star_reed_tuft",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:wetland",
+        "core:riverbank"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:reindeer_lichen_mat",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:rock_samphire_stems",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:rocky_shore",
+        "core:coastal_cliff"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:sea_lavender_spray",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:rocky_shore",
+        "core:salt_marsh"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:dwarf_willow_twigs",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:mountain_avens_seedhead",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:crowberry_stem_mat",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "common",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:alpine_sorrel_root",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:cotton_grass_tuft",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:bladderwrack_holdfast",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:rocky_shore",
+        "core:coastal_cliff"
+      ],
+      "rarity": "uncommon",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:frost_sage_branch",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:crimson_stonecrop_crown",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:tundra",
+        "core:rock",
+        "core:coastal_cliff"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:pearl_kelp_knot",
+      "art_family": "plant",
+      "loot_contexts": [
+        "wild_ground",
+        "natural_log",
+        "natural_stump"
+      ],
+      "habitats": [
+        "core:rocky_shore",
+        "core:coastal_cliff"
+      ],
+      "rarity": "rare",
+      "source": "wild"
+    },
+    {
+      "item_id": "core:rabbit_foot_tuft",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:rabbit",
+        "core:snowshoe_hare"
+      ]
+    },
+    {
+      "item_id": "core:deer_antler_tip",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:deer",
+        "core:elk"
+      ]
+    },
+    {
+      "item_id": "core:elk_tooth_row",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:elk"
+      ]
+    },
+    {
+      "item_id": "core:moose_hoof_plate",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:moose"
+      ]
+    },
+    {
+      "item_id": "core:boar_bristle_patch",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:boar",
+        "core:marsh_boar",
+        "core:pig"
+      ]
+    },
+    {
+      "item_id": "core:turkey_quill_fan",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:turkey"
+      ]
+    },
+    {
+      "item_id": "core:grouse_down_tuft",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:grouse"
+      ]
+    },
+    {
+      "item_id": "core:goat_horn_sheath",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:mountain_goat"
+      ]
+    },
+    {
+      "item_id": "core:fox_tail_tuft",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:red_fox"
+      ]
+    },
+    {
+      "item_id": "core:wolf_fang_pair",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:wolf"
+      ]
+    },
+    {
+      "item_id": "core:bear_claw_sheath",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:brown_bear"
+      ]
+    },
+    {
+      "item_id": "core:badger_guard_hairs",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:badger"
+      ]
+    },
+    {
+      "item_id": "core:crawler_carapace_plate",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:cave_crawler"
+      ]
+    },
+    {
+      "item_id": "core:grazer_horn_chip",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:cave_grazer"
+      ]
+    },
+    {
+      "item_id": "core:stalker_tendon_knot",
+      "art_family": "leather",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:cave_stalker"
+      ]
+    },
+    {
+      "item_id": "core:muskrat_fur_clump",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:muskrat"
+      ]
+    },
+    {
+      "item_id": "core:beaver_incisor_pair",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:beaver"
+      ]
+    },
+    {
+      "item_id": "core:otter_whisker_bundle",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:river_otter"
+      ]
+    },
+    {
+      "item_id": "core:heron_pinion_quills",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:great_blue_heron"
+      ]
+    },
+    {
+      "item_id": "core:gull_wing_down",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:herring_gull"
+      ]
+    },
+    {
+      "item_id": "core:seal_whisker_pad",
+      "art_family": "leather",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:harbor_seal"
+      ]
+    },
+    {
+      "item_id": "core:cow_horn_ring",
+      "art_family": "bone",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:cow"
+      ]
+    },
+    {
+      "item_id": "core:chicken_quill_bundle",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:chicken"
+      ]
+    },
+    {
+      "item_id": "core:sheep_wool_locks",
+      "art_family": "cloth",
+      "loot_contexts": [],
+      "habitats": [],
+      "rarity": "common",
+      "source": "animal",
+      "species": [
+        "core:sheep"
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "recipe_id": "core:craft_split_sound_wood",
+      "output_item": "core:wood_pieces",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_shear_iron_offcuts",
+      "output_item": "core:metal_scraps",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_forge_fasteners",
+      "output_item": "core:nuts_and_bolts",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_carve_replacement_handles",
+      "output_item": "core:tool_handles",
+      "profession": "carpenter",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_sort_brush_offcuts",
+      "output_item": "core:plant_scraps",
+      "profession": "farmer",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_cut_cloth_offcuts",
+      "output_item": "core:cloth_scraps",
+      "profession": "weaver",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_trim_leather_offcuts",
+      "output_item": "core:leather_scraps",
+      "profession": "tanner",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_crush_clean_bone",
+      "output_item": "core:bone_chips",
+      "profession": "butcher",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_break_defective_pottery",
+      "output_item": "core:ceramic_shards",
+      "profession": "potter",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_sift_crushed_stone",
+      "output_item": "core:mineral_grit",
+      "profession": "miner",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_draw_copper_wire",
+      "output_item": "core:copper_wire",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_collect_bark_pitch",
+      "output_item": "core:resin_lumps",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_smelt_sorted_iron_fragments",
+      "output_item": "core:iron_bloom",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_smelt_selected_copper_granules",
+      "output_item": "core:copper_ingot",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_rivet_set",
+      "output_item": "core:rivet_set",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_hinge_pair",
+      "output_item": "core:hinge_pair",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_iron_tool_blank",
+      "output_item": "core:iron_tool_blank",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_copper_sheet",
+      "output_item": "core:copper_sheet",
+      "profession": "smith",
+      "tier": 1,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_claw_hammer",
+      "output_item": "core:claw_hammer",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_iron_chisel",
+      "output_item": "core:iron_chisel",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_iron_adze",
+      "output_item": "core:iron_adze",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_salvage_driver",
+      "output_item": "core:salvage_driver",
+      "profession": "smith",
+      "tier": 2,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_segmented_armor_plates",
+      "output_item": "core:segmented_armor_plates",
+      "profession": "smith",
+      "tier": 3,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_iron_lamellar_vest",
+      "output_item": "core:iron_lamellar_vest",
+      "profession": "smith",
+      "tier": 3,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_metal_frame_saw",
+      "output_item": "core:metal_frame_saw",
+      "profession": "smith",
+      "tier": 3,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_socketed_iron_hoe",
+      "output_item": "core:socketed_iron_hoe",
+      "profession": "smith",
+      "tier": 3,
+      "art_family": "metal"
+    },
+    {
+      "recipe_id": "core:craft_wooden_dowels",
+      "output_item": "core:wooden_dowels",
+      "profession": "carpenter",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_planed_board",
+      "output_item": "core:planed_board",
+      "profession": "carpenter",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_bentwood_frame",
+      "output_item": "core:bentwood_frame",
+      "profession": "carpenter",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_fitted_grip",
+      "output_item": "core:fitted_grip",
+      "profession": "carpenter",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_woodworking_mallet",
+      "output_item": "core:woodworking_mallet",
+      "profession": "carpenter",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_carpenter_brace",
+      "output_item": "core:carpenter_brace",
+      "profession": "carpenter",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_wood_plane",
+      "output_item": "core:wood_plane",
+      "profession": "carpenter",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_laminated_bow_limbs",
+      "output_item": "core:laminated_bow_limbs",
+      "profession": "carpenter",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_recurve_hunting_bow",
+      "output_item": "core:recurve_hunting_bow",
+      "profession": "carpenter",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_folding_pole_spear",
+      "output_item": "core:folding_pole_spear",
+      "profession": "carpenter",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_ribbed_wood_shield",
+      "output_item": "core:ribbed_wood_shield",
+      "profession": "carpenter",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_levered_nutcracker",
+      "output_item": "core:levered_nutcracker",
+      "profession": "carpenter",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_spun_yarn",
+      "output_item": "core:spun_yarn",
+      "profession": "weaver",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_felt_padding",
+      "output_item": "core:felt_padding",
+      "profession": "weaver",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_linen_panel",
+      "output_item": "core:linen_panel",
+      "profession": "weaver",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_canvas_panel",
+      "output_item": "core:canvas_panel",
+      "profession": "weaver",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_waxed_thread",
+      "output_item": "core:waxed_thread",
+      "profession": "weaver",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_reinforced_cloth",
+      "output_item": "core:reinforced_cloth",
+      "profession": "weaver",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_padded_coif",
+      "output_item": "core:padded_coif",
+      "profession": "weaver",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_quilted_jerkin",
+      "output_item": "core:quilted_jerkin",
+      "profession": "weaver",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_layered_winter_trousers",
+      "output_item": "core:layered_winter_trousers",
+      "profession": "weaver",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_sailcloth_travel_coat",
+      "output_item": "core:sailcloth_travel_coat",
+      "profession": "weaver",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_waxed_casting_line",
+      "output_item": "core:waxed_casting_line",
+      "profession": "weaver",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_knotted_cast_net",
+      "output_item": "core:knotted_cast_net",
+      "profession": "weaver",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_leather_lace",
+      "output_item": "core:leather_lace",
+      "profession": "tanner",
+      "tier": 1,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_cured_leather_panel",
+      "output_item": "core:cured_leather_panel",
+      "profession": "tanner",
+      "tier": 1,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_hide_glue",
+      "output_item": "core:hide_glue",
+      "profession": "tanner",
+      "tier": 1,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_leather_grip_wrap",
+      "output_item": "core:leather_grip_wrap",
+      "profession": "tanner",
+      "tier": 1,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_hardened_leather",
+      "output_item": "core:hardened_leather",
+      "profession": "tanner",
+      "tier": 2,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_oiled_leather",
+      "output_item": "core:oiled_leather",
+      "profession": "tanner",
+      "tier": 2,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_leatherworker_awl",
+      "output_item": "core:leatherworker_awl",
+      "profession": "tanner",
+      "tier": 2,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_riveted_work_gloves",
+      "output_item": "core:riveted_work_gloves",
+      "profession": "tanner",
+      "tier": 2,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_hardened_leather_cuirass",
+      "output_item": "core:hardened_leather_cuirass",
+      "profession": "tanner",
+      "tier": 3,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_fur_lined_hood",
+      "output_item": "core:fur_lined_hood",
+      "profession": "tanner",
+      "tier": 3,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_reinforced_gaiters",
+      "output_item": "core:reinforced_gaiters",
+      "profession": "tanner",
+      "tier": 3,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_horn_faced_buckler",
+      "output_item": "core:horn_faced_buckler",
+      "profession": "tanner",
+      "tier": 3,
+      "art_family": "leather"
+    },
+    {
+      "recipe_id": "core:craft_mortar_mix",
+      "output_item": "core:mortar_mix",
+      "profession": "mason",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_abrasive_powder",
+      "output_item": "core:abrasive_powder",
+      "profession": "mason",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_stone_blade_blank",
+      "output_item": "core:stone_blade_blank",
+      "profession": "mason",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_grinding_slab",
+      "output_item": "core:grinding_slab",
+      "profession": "mason",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_granite_pestle",
+      "output_item": "core:granite_pestle",
+      "profession": "mason",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_flint_hide_scraper",
+      "output_item": "core:flint_hide_scraper",
+      "profession": "mason",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_mason_hand_hammer",
+      "output_item": "core:mason_hand_hammer",
+      "profession": "mason",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_notched_stone_knife",
+      "output_item": "core:notched_stone_knife",
+      "profession": "mason",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_quarry_sledge",
+      "output_item": "core:quarry_sledge",
+      "profession": "mason",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_basalt_head_mace",
+      "output_item": "core:basalt_head_mace",
+      "profession": "mason",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_crystal_edge_scalpel",
+      "output_item": "core:crystal_edge_scalpel",
+      "profession": "mason",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_bind_dressed_blocks",
+      "output_item": "core:dressed_stone",
+      "profession": "mason",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_kiln_grog",
+      "output_item": "core:kiln_grog",
+      "profession": "potter",
+      "tier": 1,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_tempered_clay",
+      "output_item": "core:tempered_clay",
+      "profession": "potter",
+      "tier": 1,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_ceramic_mould",
+      "output_item": "core:ceramic_mould",
+      "profession": "potter",
+      "tier": 1,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_ceramic_filter_media",
+      "output_item": "core:ceramic_filter_media",
+      "profession": "potter",
+      "tier": 1,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_ceramic_thimble",
+      "output_item": "core:ceramic_thimble",
+      "profession": "potter",
+      "tier": 2,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_hardened_ceramic_edge",
+      "output_item": "core:hardened_ceramic_edge",
+      "profession": "potter",
+      "tier": 2,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_ceramic_pestle",
+      "output_item": "core:ceramic_pestle",
+      "profession": "potter",
+      "tier": 2,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_kiln_piercing_spike",
+      "output_item": "core:kiln_piercing_spike",
+      "profession": "potter",
+      "tier": 2,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_stoneware_crucible",
+      "output_item": "core:stoneware_crucible",
+      "profession": "potter",
+      "tier": 3,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_glazed_lure_bead",
+      "output_item": "core:glazed_lure_bead",
+      "profession": "potter",
+      "tier": 3,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_ceramic_distillation_coil",
+      "output_item": "core:ceramic_distillation_coil",
+      "profession": "potter",
+      "tier": 3,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_porous_filter_candle",
+      "output_item": "core:porous_filter_candle",
+      "profession": "potter",
+      "tier": 3,
+      "art_family": "ceramic"
+    },
+    {
+      "recipe_id": "core:craft_barley_meal",
+      "output_item": "core:barley_meal",
+      "profession": "miller",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_cornmeal",
+      "output_item": "core:cornmeal",
+      "profession": "miller",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_bean_flour",
+      "output_item": "core:bean_flour",
+      "profession": "miller",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_cattail_starch",
+      "output_item": "core:cattail_starch",
+      "profession": "miller",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_wholegrain_flour",
+      "output_item": "core:wholegrain_flour",
+      "profession": "miller",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_flax_meal",
+      "output_item": "core:flax_meal",
+      "profession": "miller",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_roasted_grain_crumble",
+      "output_item": "core:roasted_grain_crumble",
+      "profession": "miller",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_root_flour",
+      "output_item": "core:root_flour",
+      "profession": "miller",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_fine_sifted_flour",
+      "output_item": "core:fine_sifted_flour",
+      "profession": "miller",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_mushroom_powder",
+      "output_item": "core:mushroom_powder",
+      "profession": "miller",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_grain_binder_paste",
+      "output_item": "core:grain_binder_paste",
+      "profession": "miller",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_grooved_mill_pestle",
+      "output_item": "core:grooved_mill_pestle",
+      "profession": "miller",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_bread_dough",
+      "output_item": "core:bread_dough",
+      "profession": "baker",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_sourdough_starter",
+      "output_item": "core:sourdough_starter",
+      "profession": "baker",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_unleavened_flatbread",
+      "output_item": "core:unleavened_flatbread",
+      "profession": "baker",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_twice_baked_rusk",
+      "output_item": "core:twice_baked_rusk",
+      "profession": "baker",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_sourdough_loaf",
+      "output_item": "core:sourdough_loaf",
+      "profession": "baker",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_bean_crispbread",
+      "output_item": "core:bean_crispbread",
+      "profession": "baker",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_corn_griddle_cake",
+      "output_item": "core:corn_griddle_cake",
+      "profession": "baker",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_root_dumplings",
+      "output_item": "core:root_dumplings",
+      "profession": "baker",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_trail_hardtack",
+      "output_item": "core:trail_hardtack",
+      "profession": "baker",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_savory_hand_pie",
+      "output_item": "core:savory_hand_pie",
+      "profession": "baker",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_flax_travel_cake",
+      "output_item": "core:flax_travel_cake",
+      "profession": "baker",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_steam_raised_grain_bun",
+      "output_item": "core:steam_raised_grain_bun",
+      "profession": "baker",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_root_broth",
+      "output_item": "core:root_broth",
+      "profession": "cook",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_bone_stock",
+      "output_item": "core:bone_stock",
+      "profession": "cook",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_wilted_greens",
+      "output_item": "core:wilted_greens",
+      "profession": "cook",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_berry_reduction",
+      "output_item": "core:berry_reduction",
+      "profession": "cook",
+      "tier": 1,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_grain_porridge",
+      "output_item": "core:grain_porridge",
+      "profession": "cook",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_seared_game_portions",
+      "output_item": "core:seared_game_portions",
+      "profession": "cook",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_braised_meat",
+      "output_item": "core:braised_meat",
+      "profession": "cook",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_thickened_mushroom_soup",
+      "output_item": "core:thickened_mushroom_soup",
+      "profession": "cook",
+      "tier": 2,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_potted_meat",
+      "output_item": "core:potted_meat",
+      "profession": "cook",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_fruit_preserve",
+      "output_item": "core:fruit_preserve",
+      "profession": "cook",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_cabbage_ferment",
+      "output_item": "core:cabbage_ferment",
+      "profession": "cook",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_travel_stew_concentrate",
+      "output_item": "core:travel_stew_concentrate",
+      "profession": "cook",
+      "tier": 3,
+      "art_family": "food"
+    },
+    {
+      "recipe_id": "core:craft_malted_grain",
+      "output_item": "core:malted_grain",
+      "profession": "brewer",
+      "tier": 1,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_brewing_wort",
+      "output_item": "core:brewing_wort",
+      "profession": "brewer",
+      "tier": 1,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_grain_vinegar",
+      "output_item": "core:grain_vinegar",
+      "profession": "brewer",
+      "tier": 1,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_botanical_brewing_sachet",
+      "output_item": "core:botanical_brewing_sachet",
+      "profession": "brewer",
+      "tier": 1,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_malt_tonic_drink",
+      "output_item": "core:malt_tonic_drink",
+      "profession": "brewer",
+      "tier": 2,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_grain_table_beer",
+      "output_item": "core:grain_table_beer",
+      "profession": "brewer",
+      "tier": 2,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_soured_root_pickle",
+      "output_item": "core:soured_root_pickle",
+      "profession": "brewer",
+      "tier": 2,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_moonmint_infusion",
+      "output_item": "core:moonmint_infusion",
+      "profession": "brewer",
+      "tier": 2,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_spiced_grain_cordial",
+      "output_item": "core:spiced_grain_cordial",
+      "profession": "brewer",
+      "tier": 3,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_frost_sage_brew",
+      "output_item": "core:frost_sage_brew",
+      "profession": "brewer",
+      "tier": 3,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_coastal_kelp_vinegar",
+      "output_item": "core:coastal_kelp_vinegar",
+      "profession": "brewer",
+      "tier": 3,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_filtered_malt_culture",
+      "output_item": "core:filtered_malt_culture",
+      "profession": "brewer",
+      "tier": 3,
+      "art_family": "glass"
+    },
+    {
+      "recipe_id": "core:craft_minced_game",
+      "output_item": "core:minced_game",
+      "profession": "butcher",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_rendered_tallow",
+      "output_item": "core:rendered_tallow",
+      "profession": "butcher",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_horn_laminate",
+      "output_item": "core:horn_laminate",
+      "profession": "butcher",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_carved_bone_barb",
+      "output_item": "core:carved_bone_barb",
+      "profession": "butcher",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_butcher_cleaver",
+      "output_item": "core:butcher_cleaver",
+      "profession": "butcher",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_bone_marrow_scoop",
+      "output_item": "core:bone_marrow_scoop",
+      "profession": "butcher",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_hide_fleshing_beam",
+      "output_item": "core:hide_fleshing_beam",
+      "profession": "butcher",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_sinew_stripper",
+      "output_item": "core:sinew_stripper",
+      "profession": "butcher",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_smoked_offal_sausage",
+      "output_item": "core:smoked_offal_sausage",
+      "profession": "butcher",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_articulated_bone_awl",
+      "output_item": "core:articulated_bone_awl",
+      "profession": "butcher",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_antler_skinning_knife",
+      "output_item": "core:antler_skinning_knife",
+      "profession": "butcher",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_bone_hand_shears",
+      "output_item": "core:bone_hand_shears",
+      "profession": "butcher",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_twisted_reed_line",
+      "output_item": "core:twisted_reed_line",
+      "profession": "fisher",
+      "tier": 1,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_carved_bone_hook",
+      "output_item": "core:carved_bone_hook",
+      "profession": "fisher",
+      "tier": 1,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_copper_spinner_blade",
+      "output_item": "core:copper_spinner_blade",
+      "profession": "fisher",
+      "tier": 1,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_float_rig",
+      "output_item": "core:float_rig",
+      "profession": "fisher",
+      "tier": 1,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_weighted_river_net",
+      "output_item": "core:weighted_river_net",
+      "profession": "fisher",
+      "tier": 2,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_jointed_fishing_rod",
+      "output_item": "core:jointed_fishing_rod",
+      "profession": "fisher",
+      "tier": 2,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_split_fish_fillets",
+      "output_item": "core:split_fish_fillets",
+      "profession": "fisher",
+      "tier": 2,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_rack_dried_fish",
+      "output_item": "core:rack_dried_fish",
+      "profession": "fisher",
+      "tier": 2,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_articulated_spinner_lure",
+      "output_item": "core:articulated_spinner_lure",
+      "profession": "fisher",
+      "tier": 3,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_spring_tension_fishing_rod",
+      "output_item": "core:spring_tension_fishing_rod",
+      "profession": "fisher",
+      "tier": 3,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_barbed_fishing_trident",
+      "output_item": "core:barbed_fishing_trident",
+      "profession": "fisher",
+      "tier": 3,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_vinegar_preserved_fish",
+      "output_item": "core:vinegar_preserved_fish",
+      "profession": "fisher",
+      "tier": 3,
+      "art_family": "fish"
+    },
+    {
+      "recipe_id": "core:craft_compost_blend",
+      "output_item": "core:compost_blend",
+      "profession": "farmer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_seed_cleaning_screen",
+      "output_item": "core:seed_cleaning_screen",
+      "profession": "farmer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_plant_fiber_pulp",
+      "output_item": "core:plant_fiber_pulp",
+      "profession": "farmer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_garden_dibber",
+      "output_item": "core:garden_dibber",
+      "profession": "farmer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_harvest_sickle",
+      "output_item": "core:harvest_sickle",
+      "profession": "farmer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_soil_turning_fork",
+      "output_item": "core:soil_turning_fork",
+      "profession": "farmer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_root_lifting_spade",
+      "output_item": "core:root_lifting_spade",
+      "profession": "farmer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_save_fiber_from_pulp",
+      "output_item": "core:fiber",
+      "profession": "farmer",
+      "tier": 2,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_mineralized_compost_meal",
+      "output_item": "core:bone_meal",
+      "profession": "farmer",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_long_handled_field_hoe",
+      "output_item": "core:long_handled_field_hoe",
+      "profession": "farmer",
+      "tier": 3,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_winnowing_sickle",
+      "output_item": "core:winnowing_sickle",
+      "profession": "farmer",
+      "tier": 3,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_pressed_plant_binder",
+      "output_item": "core:pressed_plant_binder",
+      "profession": "farmer",
+      "tier": 3,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_wool_roving",
+      "output_item": "core:wool_roving",
+      "profession": "herder",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_horn_button_set",
+      "output_item": "core:horn_button_set",
+      "profession": "herder",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_bristle_brush",
+      "output_item": "core:bristle_brush",
+      "profession": "herder",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_pasture_fiber_bundle",
+      "output_item": "core:pasture_fiber_bundle",
+      "profession": "herder",
+      "tier": 1,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_fur_felt",
+      "output_item": "core:fur_felt",
+      "profession": "herder",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_horn_seam_needle",
+      "output_item": "core:horn_seam_needle",
+      "profession": "herder",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_braided_wool_cord",
+      "output_item": "core:braided_wool_cord",
+      "profession": "herder",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_tallow_dressing",
+      "output_item": "core:tallow_dressing",
+      "profession": "herder",
+      "tier": 2,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_wool_lined_mitts",
+      "output_item": "core:wool_lined_mitts",
+      "profession": "herder",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_pasture_winter_coat",
+      "output_item": "core:pasture_winter_coat",
+      "profession": "herder",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_horn_shod_staff",
+      "output_item": "core:horn_shod_staff",
+      "profession": "herder",
+      "tier": 3,
+      "art_family": "cloth"
+    },
+    {
+      "recipe_id": "core:craft_condition_leather_with_tallow",
+      "output_item": "core:leather",
+      "profession": "herder",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_feather_fletching",
+      "output_item": "core:feather_fletching",
+      "profession": "hunter",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_bone_arrow_point",
+      "output_item": "core:bone_arrow_point",
+      "profession": "hunter",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_shaft_bundle",
+      "output_item": "core:shaft_bundle",
+      "profession": "hunter",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_fur_grip_pad",
+      "output_item": "core:fur_grip_pad",
+      "profession": "hunter",
+      "tier": 1,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_make_fletched_arrows",
+      "output_item": "core:wood_arrow",
+      "profession": "hunter",
+      "tier": 2,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_bone_hunting_knife",
+      "output_item": "core:bone_hunting_knife",
+      "profession": "hunter",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_weighted_hide_sling",
+      "output_item": "core:weighted_hide_sling",
+      "profession": "hunter",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_antler_throwing_dart",
+      "output_item": "core:antler_throwing_dart",
+      "profession": "hunter",
+      "tier": 2,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_barbed_hunting_spear",
+      "output_item": "core:barbed_hunting_spear",
+      "profession": "hunter",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_hunting_reflex_bow",
+      "output_item": "core:hunting_reflex_bow",
+      "profession": "hunter",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_tracker_skinning_set",
+      "output_item": "core:tracker_skinning_set",
+      "profession": "hunter",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_layered_hunter_bracers",
+      "output_item": "core:layered_hunter_bracers",
+      "profession": "hunter",
+      "tier": 3,
+      "art_family": "bone"
+    },
+    {
+      "recipe_id": "core:craft_timber_wedge",
+      "output_item": "core:timber_wedge",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_pitch_binder",
+      "output_item": "core:pitch_binder",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_hardwood_blank",
+      "output_item": "core:hardwood_blank",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_bark_felt",
+      "output_item": "core:bark_felt",
+      "profession": "lumberjack",
+      "tier": 1,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_timber_hook",
+      "output_item": "core:timber_hook",
+      "profession": "lumberjack",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_splitting_maul",
+      "output_item": "core:splitting_maul",
+      "profession": "lumberjack",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_felling_axe",
+      "output_item": "core:felling_axe",
+      "profession": "lumberjack",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_wood_boring_auger",
+      "output_item": "core:wood_boring_auger",
+      "profession": "lumberjack",
+      "tier": 2,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_bark_lined_forester_hood",
+      "output_item": "core:bark_lined_forester_hood",
+      "profession": "lumberjack",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_pitch_laminated_shield",
+      "output_item": "core:pitch_laminated_shield",
+      "profession": "lumberjack",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_loggers_mattock",
+      "output_item": "core:loggers_mattock",
+      "profession": "lumberjack",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_tensioned_timber_saw",
+      "output_item": "core:tensioned_timber_saw",
+      "profession": "lumberjack",
+      "tier": 3,
+      "art_family": "wood"
+    },
+    {
+      "recipe_id": "core:craft_washed_ore_fragments",
+      "output_item": "core:washed_ore_fragments",
+      "profession": "miner",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_polishing_slurry",
+      "output_item": "core:polishing_slurry",
+      "profession": "miner",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_sorted_crystal_faces",
+      "output_item": "core:sorted_crystal_faces",
+      "profession": "miner",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_copper_granules",
+      "output_item": "core:copper_granules",
+      "profession": "miner",
+      "tier": 1,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_ore_sifting_screen",
+      "output_item": "core:ore_sifting_screen",
+      "profession": "miner",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_geologists_hammer",
+      "output_item": "core:geologists_hammer",
+      "profession": "miner",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_iron_splitting_wedges",
+      "output_item": "core:iron_splitting_wedges",
+      "profession": "miner",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_padded_mining_cap",
+      "output_item": "core:padded_mining_cap",
+      "profession": "miner",
+      "tier": 2,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_hardened_ore_auger",
+      "output_item": "core:hardened_ore_auger",
+      "profession": "miner",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_plated_mining_gauntlets",
+      "output_item": "core:plated_mining_gauntlets",
+      "profession": "miner",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_heavy_quarry_pick",
+      "output_item": "core:heavy_quarry_pick",
+      "profession": "miner",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_crystal_burnisher",
+      "output_item": "core:crystal_burnisher",
+      "profession": "miner",
+      "tier": 3,
+      "art_family": "stone"
+    },
+    {
+      "recipe_id": "core:craft_clean_dressing_pad",
+      "output_item": "core:clean_dressing_pad",
+      "profession": "healer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_bitter_herbal_extract",
+      "output_item": "core:bitter_herbal_extract",
+      "profession": "healer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_silverleaf_powder",
+      "output_item": "core:silverleaf_powder",
+      "profession": "healer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_marsh_resin_balm",
+      "output_item": "core:marsh_resin_balm",
+      "profession": "healer",
+      "tier": 1,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_filtered_herb_concentrate",
+      "output_item": "core:filtered_herb_concentrate",
+      "profession": "healer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_orchid_lotus_essence",
+      "output_item": "core:orchid_lotus_essence",
+      "profession": "healer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_fitted_splint_frame",
+      "output_item": "core:fitted_splint_frame",
+      "profession": "healer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_stonecrop_cleansing_paste",
+      "output_item": "core:stonecrop_cleansing_paste",
+      "profession": "healer",
+      "tier": 2,
+      "art_family": "plant"
+    },
+    {
+      "recipe_id": "core:craft_finish_clean_bandages",
+      "output_item": "core:bandage",
+      "profession": "healer",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_brace_fitted_splints",
+      "output_item": "core:splint",
+      "profession": "healer",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_compound_botanical_tonic",
+      "output_item": "core:herbal_tonic",
+      "profession": "healer",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_cure_botanical_soap",
+      "output_item": "core:soap",
+      "profession": "healer",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_recycled_rag_paper",
+      "output_item": "core:recycled_rag_paper",
+      "profession": "scholar",
+      "tier": 1,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_pressed_pulp_board",
+      "output_item": "core:pressed_pulp_board",
+      "profession": "scholar",
+      "tier": 1,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_carbon_pigment",
+      "output_item": "core:carbon_pigment",
+      "profession": "scholar",
+      "tier": 1,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_binding_cord",
+      "output_item": "core:binding_cord",
+      "profession": "scholar",
+      "tier": 1,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_sealed_paper_panel",
+      "output_item": "core:sealed_paper_panel",
+      "profession": "scholar",
+      "tier": 2,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_layered_paper_cap",
+      "output_item": "core:layered_paper_cap",
+      "profession": "scholar",
+      "tier": 2,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_bookbinders_needle",
+      "output_item": "core:bookbinders_needle",
+      "profession": "scholar",
+      "tier": 2,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_polished_crystal_lens",
+      "output_item": "core:polished_crystal_lens",
+      "profession": "scholar",
+      "tier": 2,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_prepare_writing_stock",
+      "output_item": "core:parchment",
+      "profession": "scholar",
+      "tier": 3,
+      "art_family": "existing"
+    },
+    {
+      "recipe_id": "core:craft_laminated_paper_shield",
+      "output_item": "core:laminated_paper_shield",
+      "profession": "scholar",
+      "tier": 3,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_lens_mounted_needle",
+      "output_item": "core:lens_mounted_needle",
+      "profession": "scholar",
+      "tier": 3,
+      "art_family": "paper"
+    },
+    {
+      "recipe_id": "core:craft_layered_paper_coat",
+      "output_item": "core:layered_paper_coat",
+      "profession": "scholar",
+      "tier": 3,
+      "art_family": "paper"
+    }
+  ]
+}

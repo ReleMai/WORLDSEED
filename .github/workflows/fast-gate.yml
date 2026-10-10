@@ -196,6 +196,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests
 
+      - name: Dev63 salvaging and profession expansion
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Dev63 salvaging and profession expansion" --timeout 180 -- python -u -m unittest -v tests.test_salvaging tests.test_salvaging_ui tests.test_salvage_tabletop_art tests.test_crafting_water tests.test_crafting_expansion tests.test_crafting_expansion_economy tests.test_dev63_salvage_loot
+
       - name: Dev38 natural container art regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev38 natural container art regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_art

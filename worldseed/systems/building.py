@@ -6,6 +6,7 @@ from worldseed.entities.components import Inventory
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, StructureInstance, RoofState, ContainerState, GroundPile, pos_key
 from worldseed.systems.workshops import STATION_PIECE_ALIASES
+from worldseed.systems.salvage_loot import candidates, select_misc
 
 class BuildingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry):
@@ -28,6 +29,9 @@ class BuildingSystem:
         existing=self.state.containers.get(key)
         if existing:return existing
         if pos.z!=0 or self.resources is None:return None
+        # Moving or destroying a generated cache cannot re-create its goods at
+        # its old coordinate, even after prepared base caches are rebuilt.
+        if key in self.state.resource_depletion:return None
         if self.settlement_overlay is not None and self.settlement_overlay.clears_natural_feature(pos):
             return None
         fv=self.resources.feature_at(pos)
@@ -42,6 +46,15 @@ class BuildingSystem:
             span=max(1,int(hi)-int(lo)+1)
             amount=int(lo)+(hash_u64(self.seed,"natural-container-loot",fv.feature_id,pos.x,pos.y,pos.z,iid)%span)
             if amount>0:items[iid]=amount
+        context={"core:hollow_log_cache":"natural_log","core:rotten_stump_cache":"natural_stump",
+                 "core:rock_crevice_cache":"natural_rock"}.get(fv.feature_id,"wild_ground")
+        world=getattr(self.resources,'world',None)
+        habitats={world.tile_at(pos).terrain_id} if world is not None else set(rdef.terrains)
+        rows=tuple(row for row in candidates(self.registry,(context,'wild_ground'))
+                   if row.get('source')!='wild' or habitats.intersection(row.get('habitats',())))
+        for iid,amount in select_misc(self.seed,'salvage-natural-container',
+                                     f'{fv.feature_id}:{key}',rows,2).items():
+            items[iid]=items.get(iid,0)+amount
         self.state.resource_depletion[key]=self.state.clock_minute
         self.resources.revision+=1
         self.state.structures[key]=StructureInstance(rdef.container_structure_id,pos.x,pos.y,pos.z,"world",100)
@@ -60,7 +73,54 @@ class BuildingSystem:
         for pos in positions:
             key=pos_key(pos.x,pos.y,pos.z);existed=key in self.state.containers
             if self.materialize_natural_container_at(pos) and not existed:made+=1
+            self.materialize_salvage_ground_at(pos)
         return made
+
+    def materialize_salvage_ground_at(self,pos:WorldPos)->GroundPile|None:
+        """Realize sparse loose finds on the authoritative discovery path.
+
+        Named depletion markers retain collection history when an empty pile is
+        removed, and old resource-generation versions retain their exact world.
+        """
+        if pos.z!=0 or self.resources is None or int(getattr(self.resources,'version',0))<5:
+            return None
+        key=pos_key(pos.x,pos.y,pos.z);marker='salvage-scatter:'+key
+        if marker in self.state.resource_depletion:
+            return None
+        if int(hash_u64(self.seed,'salvage-wild-ground-gate',pos.x,pos.y,pos.z)%1000)>=22:
+            return None
+        if key in self.state.structures or key in self.state.containers or key in self.state.crops or key in self.state.soils:
+            return None
+        if self.settlement_overlay is not None and self.settlement_overlay.clears_natural_feature(pos):
+            return None
+        world=getattr(self.resources,'world',None)
+        if world is None:return None
+        tile=world.tile_at(pos)
+        if not tile.terrain.passable or 'water' in tile.terrain.tags:
+            return None
+        if self.resources.blocks_movement(pos):return None
+        rows=candidates(self.registry,source='wild',terrain_id=tile.terrain_id)
+        generator=getattr(world,'generator',None)
+        sampler=getattr(generator,'sample_fields',None)
+        if callable(sampler):
+            fields=sampler(pos)
+            season_fn=getattr(self.resources,'_season',None)
+            season=season_fn() if callable(season_fn) else None
+            suited=[]
+            for row in rows:
+                feature=self.registry.resources.get('core:salvage_patch_'+row['item_id'].split(':',1)[-1])
+                if feature is None or tile.terrain_id not in feature.terrains:continue
+                if not (feature.min_temp<=fields.temperature<=feature.max_temp
+                        and feature.min_moisture<=fields.moisture<=feature.max_moisture):continue
+                if season is not None and feature.seasons and season not in feature.seasons:continue
+                suited.append(row)
+            rows=tuple(suited)
+        wanted=select_misc(self.seed,'salvage-wild-ground-item',key,rows,1)
+        if not wanted:return None
+        pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
+        for iid,amount in wanted.items():pile.items[iid]=pile.items.get(iid,0)+amount
+        self.state.resource_depletion[marker]=self.state.clock_minute
+        return pile
 
     def clear_conflicting_generated_natural_containers(self)->int:
         """Remove un-moved generated caches that conflict with settlement plans.

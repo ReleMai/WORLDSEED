@@ -188,6 +188,27 @@ def _draw_furniture_shadow(term, base):
     term.screen.blit(cache[size], (base.centerx - size[0] // 2, base.bottom - size[1] // 2))
 
 
+def _draw_tabletop_items(term, furniture, container, canvas):
+    """Show real exposed goods on tables; enclosed storage stays enclosed."""
+    from worldseed.systems.interior_furnishing import furniture_base_piece
+    exposed = {'core:small_table_piece', 'core:large_table_piece',
+               'core:writing_desk_piece', 'core:scribe_desk_piece',
+               'core:carpenter_bench_piece'}
+    if container is None or furniture_base_piece(furniture.piece_id) not in exposed:
+        return
+    items = sorted(iid for iid, amount in container.items.items() if amount > 0)[:3]
+    if not items:
+        return
+    size = max(4, min(term._tile_px, canvas.width // (len(items) + 1), canvas.height // 3))
+    for index, item_id in enumerate(items):
+        path = term._visuals.resolve(term._visuals.ref('items', item_id))
+        sprite = term._load_sprite(path, size, size, smooth=True)
+        if sprite is not None:
+            center = (canvas.x + round(canvas.width * (index + 1) / (len(items) + 1)),
+                      canvas.y + round(canvas.height * .36))
+            term.screen.blit(sprite, sprite.get_rect(center=center))
+
+
 def _draw_actor(term, sim, camera, uid, actor):
     x, y = camera.to_screen(actor.x, actor.y)
     npc = sim.state.npcs.get(uid) if uid != 'player' else None
@@ -434,6 +455,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 screen.blit(glyph, glyph.get_rect(center=rect.center))
             _register_object(term, object_regions, furniture, 'furniture', rect, sprite,
                              position if sprite else rect.topleft)
+            _draw_tabletop_items(term, furniture, container, canvas)
         for pile in getattr(plan, 'piles', ()):
             if not pile.items:
                 continue

@@ -4,6 +4,36 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev63 — Salvaging and profession crafting
+
+Open **Enter → Work → Craft → Salvaging** to inspect carried finds, preview
+guaranteed components and base rare-drop odds, then dismantle one object. Inspect
+its seams and make three choices using the material cues. Careful work, spare
+tools and the Salvaging skill improve recovery; mistakes still produce common
+parts. Escape preserves unfinished work, including across saves. Salvaging is
+also available as a crafting tab in the graphical interface.
+
+The expansion adds 252 distinct salvageable finds: 180 village objects, 48 wild
+plants and finds, and 24 animal byproducts recovered through carcass processing.
+Villages, workshops, natural caches, dungeons, ground piles and populated tables
+use contextual loot. Wood pieces, metal scraps, fasteners, handles, plant scraps
+and other shared parts feed new profession recipes; intact springs, gears,
+crystals, oils, fibers and filaments are rarer recoveries. Rare plants can also
+be used directly in crafting. Every new item has its own authored sprite.
+
+Nineteen crafting trades receive 242 new learnable recipes and NPC production,
+with at least twelve techniques per profession. The catalog adds 489 items in
+total, including 19 shared components and 218 crafted outputs.
+Recipe discovery uses the existing experiment grid. NPCs consume real inputs,
+use physical workstations where materialized, and place goods in real storage;
+households and trade consume those goods. Crafting and salvaging lists support
+search, paging and retained navigation in both graphical and terminal modes.
+Existing saves retain their recorded terrain and resource placement contracts.
+Use **Enter → Work → Collect clean water** with a vessel beside a village well,
+or a cooking pot and nearby fire beside freshwater. Crafted fishing lures appear
+in the bait selector and their quality improves fishing; lures are reusable.
+See the [Dev63 handoff](docs/handoffs/DEV63_SALVAGING_CRAFTING_HANDOFF.md).
+
 ## RC14 Dev62 — Expanded portrait features
 
 The portrait composer adds more eye shapes, hairstyles, facial proportions,

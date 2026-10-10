@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import gc
 import tempfile
 import sys
@@ -10,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from worldseed.app import _load_context
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Inventory, Position
-from worldseed.sim.commands import BuildCommand, CookMealCommand, CraftCommand, EatMealCommand, ExperimentRecipeCommand
+from worldseed.sim.commands import BuildCommand, CookMealCommand, CraftCommand, DiscoveryPotCommand, EatMealCommand
 from worldseed.systems.state import CarcassState, pos_key
 from worldseed.ui.startup import StartSelection
 
@@ -54,10 +55,62 @@ def _collect(sim, inv: Inventory, item_id: str, quantity: int, radius: int = 20)
         raise AssertionError(f"bootstrap landscape could not supply {quantity} {item_id}; got {inv.count(item_id)}")
 
 
+_PRIMITIVE_PRODUCERS = {
+    "core:stone_flake": "core:stone_flake",
+    "core:plant_cordage": "core:plant_cordage",
+}
+
+
+def _supply(sim, actor: int, costs: dict[str, int]) -> None:
+    """Replace consumed experiments through harvest and primitive production.
+
+    Discovery spends its experiment ingredients. The bootstrap must pay that
+    cost from the same landscape as the final equipment, without granting
+    supplies or silently unlocking the desired recipe.
+    """
+    inv = sim.entities.get(actor, Inventory)
+    for item_id, quantity in sorted(costs.items()):
+        if inv.count(item_id) >= quantity:
+            continue
+        producer_id = _PRIMITIVE_PRODUCERS.get(item_id)
+        if producer_id:
+            producer = sim.registry.recipes[producer_id]
+            batch_size = producer.outputs[item_id]
+            batches = (quantity - inv.count(item_id) + batch_size - 1) // batch_size
+            _craft(sim, actor, producer_id, batches)
+        else:
+            _collect(sim, inv, item_id, quantity)
+
+
+def _learn(sim, actor: int, recipe_id: str) -> None:
+    if sim.crafting.recipe_is_discovered(recipe_id):
+        return
+    recipe = sim.registry.recipes[recipe_id]
+    signature = tuple(sim.crafting.discovery_signature(recipe))
+    costs = dict(Counter(signature))
+    inv = sim.entities.get(actor, Inventory)
+    _supply(sim, actor, costs)
+    candidates = sim.crafting.pot_candidates(signature, inv)
+    if recipe_id not in {row.id for row in candidates}:
+        raise AssertionError(f"bootstrap recipe {recipe_id} has no legal experiment")
+    # Every successful mix learns exactly one previously unknown candidate.
+    # Therefore the original candidate count bounds the work, even when the
+    # named target is not the first deterministic discovery.
+    for _ in range(len(candidates)):
+        _supply(sim, actor, costs)
+        before = set(sim.state.player_discovered_recipes)
+        sim.execute(DiscoveryPotCommand(actor, signature))
+        if not set(sim.state.player_discovered_recipes) - before:
+            raise AssertionError(f"bootstrap experiment for {recipe_id} failed: {sim.log[-1].message if sim.log else 'no message'}")
+        if sim.crafting.recipe_is_discovered(recipe_id):
+            return
+    raise AssertionError(f"bootstrap recipe {recipe_id} was not learned within its candidate bound")
+
+
 def _craft(sim, actor: int, recipe_id: str, times: int = 1) -> None:
+    _learn(sim, actor, recipe_id)
     for _ in range(times):
-        if not sim.crafting.recipe_is_discovered(recipe_id):
-            sim.execute(ExperimentRecipeCommand(actor,recipe_id))
+        _supply(sim, actor, sim.registry.recipes[recipe_id].inputs)
         before = len(sim.log)
         sim.execute(CraftCommand(actor, recipe_id))
         if len(sim.log) == before or "complete" not in sim.log[-1].message.lower():
@@ -95,9 +148,10 @@ def run_bootstrap(seed_text: str = "rc7-bootstrap") -> dict:
             if camp is None:
                 raise AssertionError("no adjacent tile available for primitive campfire")
             dx, dy = camp.x - p.x, camp.y - p.y
+            _supply(sim, ctx.player_id, sim.registry.structures["core:campfire"].cost)
             sim.execute(BuildCommand(ctx.player_id, "core:campfire", dx, dy))
             if sim.building.structure_at(camp) is None:
-                raise AssertionError("campfire construction failed")
+                raise AssertionError(f"campfire construction failed: {sim.log[-1].message if sim.log else 'no message'}")
 
             # An axe must make the next tier (timber/bark) available from the landscape.
             tree = None

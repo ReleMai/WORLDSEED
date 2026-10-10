@@ -345,6 +345,15 @@ class UIRC3FlowTests(unittest.TestCase):
         self.assertGreaterEqual(joined.count('inventory'),2)
 
 class UIRC4InputTests(unittest.TestCase):
+    def test_large_crafting_catalogue_pages_wrapped_rows_within_narrow_terminal(self):
+        term=_fake_term(['END','\r'],size=(42,16))
+        rows=[(str(index),f'Workshop technique {index}: recover, shape and finish assorted components') for index in range(240)]
+        self.assertEqual(select_menu(term,'CRAFTING // RECIPES',rows,subtitle='Learned techniques grouped by profession.'),'239')
+        for frame in term.frames:
+            self.assertLessEqual(len(frame.splitlines()),16,frame)
+            self.assertTrue(all(visible_len(line)<=42 for line in frame.splitlines()),frame)
+        self.assertIn('239',term.frames[-1])
+
     def test_windows_escape_character_normalizes_to_esc(self):
         from worldseed.ui.terminal import normalize_raw_key
         self.assertEqual(normalize_raw_key('\x1b'), 'ESC')

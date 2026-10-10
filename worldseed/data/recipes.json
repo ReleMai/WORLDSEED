@@ -1594,5 +1594,5845 @@
     "tool_qualities": {
       "cut": 1
     }
+  },
+  {
+    "id": "core:craft_split_sound_wood",
+    "name": "Split Sound Wood",
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:wood_pieces": 20
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wood"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Split Sound Wood: split stock into measured wood pieces."
+  },
+  {
+    "id": "core:craft_shear_iron_offcuts",
+    "name": "Shear Iron Offcuts",
+    "inputs": {
+      "core:iron_bloom": 1
+    },
+    "outputs": {
+      "core:metal_scraps": 20
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_bloom"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Shear Iron Offcuts: cut reusable metal scraps from a sound bloom.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_forge_fasteners",
+    "name": "Forge Fasteners",
+    "inputs": {
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:nuts_and_bolts": 4
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:metal_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Forge Fasteners: forge matching nuts and bolts.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_carve_replacement_handles",
+    "name": "Carve Replacement Handles",
+    "inputs": {
+      "core:wood_pieces": 2
+    },
+    "outputs": {
+      "core:tool_handles": 1
+    },
+    "minutes": 12,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Carve Replacement Handles: fit a replacement tool handle.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_sort_brush_offcuts",
+    "name": "Sort Brush Offcuts",
+    "inputs": {
+      "core:brush": 1
+    },
+    "outputs": {
+      "core:plant_scraps": 8
+    },
+    "minutes": 12,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brush"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sort Brush Offcuts: sort plant offcuts for paper and compost."
+  },
+  {
+    "id": "core:craft_cut_cloth_offcuts",
+    "name": "Cut Cloth Offcuts",
+    "inputs": {
+      "core:woven_cloth": 1
+    },
+    "outputs": {
+      "core:cloth_scraps": 10
+    },
+    "minutes": 12,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:woven_cloth"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cut Cloth Offcuts: cut damaged cloth into usable scraps.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_trim_leather_offcuts",
+    "name": "Trim Leather Offcuts",
+    "inputs": {
+      "core:leather": 1
+    },
+    "outputs": {
+      "core:leather_scraps": 10
+    },
+    "minutes": 12,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:leather"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Trim Leather Offcuts: trim leather scraps for laces and grips.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_crush_clean_bone",
+    "name": "Crush Clean Bone",
+    "inputs": {
+      "core:bone": 1
+    },
+    "outputs": {
+      "core:bone_chips": 12
+    },
+    "minutes": 12,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:bone"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Crush Clean Bone: crush clean bones for glue and carving.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_break_defective_pottery",
+    "name": "Break Defective Pottery",
+    "inputs": {
+      "core:clay_pot": 1
+    },
+    "outputs": {
+      "core:ceramic_shards": 8
+    },
+    "minutes": 12,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:clay_pot"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Break Defective Pottery: recover fired ceramic for grog and masonry.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_sift_crushed_stone",
+    "name": "Sift Crushed Stone",
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:mineral_grit": 20
+    },
+    "minutes": 12,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:stone"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sift Crushed Stone: sift mineral grit for mortar and polishing."
+  },
+  {
+    "id": "core:craft_draw_copper_wire",
+    "name": "Draw Copper Wire",
+    "inputs": {
+      "core:copper_ingot": 1
+    },
+    "outputs": {
+      "core:copper_wire": 30
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:copper_ingot"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Draw Copper Wire: draw fine copper wire for mechanisms.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_collect_bark_pitch",
+    "name": "Collect Bark Pitch",
+    "inputs": {
+      "core:bark": 3
+    },
+    "outputs": {
+      "core:resin_lumps": 2
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bark"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Collect Bark Pitch: collect resin for adhesives and weatherproofing."
+  },
+  {
+    "id": "core:craft_smelt_sorted_iron_fragments",
+    "name": "Smelt Sorted Iron Fragments",
+    "inputs": {
+      "core:washed_ore_fragments": 1,
+      "core:coal": 2
+    },
+    "outputs": {
+      "core:iron_bloom": 1
+    },
+    "minutes": 180,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:washed_ore_fragments",
+      "core:coal"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Smelt Sorted Iron Fragments: smelt iron-bearing sorted fragments with controlled furnace fuel.",
+    "station": "core:forge",
+    "process": "smelt_iron"
+  },
+  {
+    "id": "core:craft_smelt_selected_copper_granules",
+    "name": "Smelt Selected Copper Granules",
+    "inputs": {
+      "core:copper_granules": 2,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:copper_ingot": 1
+    },
+    "minutes": 80,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:copper_granules",
+      "core:coal"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Smelt Selected Copper Granules: smelt selected copper-bearing granules into conventional copper stock.",
+    "station": "core:forge",
+    "process": "smelt_copper"
+  },
+  {
+    "id": "core:craft_rivet_set",
+    "name": "Rivet Set",
+    "inputs": {
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:rivet_set": 3
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:metal_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Rivet Set: small rivets for lamellar armor and saw frames.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_hinge_pair",
+    "name": "Hinge Pair",
+    "inputs": {
+      "core:metal_scraps": 3,
+      "core:nuts_and_bolts": 1
+    },
+    "outputs": {
+      "core:hinge_pair": 1
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:metal_scraps",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hinge Pair: matched hinges for folding tools and shields.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_iron_tool_blank",
+    "name": "Iron Tool Blank",
+    "inputs": {
+      "core:metal_scraps": 6,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:iron_tool_blank": 1
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:metal_scraps",
+      "core:coal"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Iron Tool Blank: a consolidated blank for edged iron tools.",
+    "station": "core:forge",
+    "catalysts": {
+      "core:ceramic_mould": 1
+    }
+  },
+  {
+    "id": "core:craft_copper_sheet",
+    "name": "Copper Sheet",
+    "inputs": {
+      "core:copper_ingot": 1
+    },
+    "outputs": {
+      "core:copper_sheet": 3
+    },
+    "minutes": 12,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:copper_ingot"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Copper Sheet: thin copper sheet for kettles and lure blades.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_claw_hammer",
+    "name": "Claw Hammer",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:claw_hammer": 1
+    },
+    "minutes": 30,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Claw Hammer: drive fasteners and crush rock with a balanced claw hammer.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_iron_chisel",
+    "name": "Iron Chisel",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:leather_scraps": 1
+    },
+    "outputs": {
+      "core:iron_chisel": 1
+    },
+    "minutes": 30,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:leather_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Iron Chisel: cut joints, dress stone and scrape hides.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_iron_adze",
+    "name": "Iron Adze",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:iron_adze": 1
+    },
+    "minutes": 30,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles",
+      "core:rivet_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Iron Adze: hew timber and carve plank stock.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_salvage_driver",
+    "name": "Salvage Driver",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:salvage_driver": 1
+    },
+    "minutes": 30,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 3,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Salvage Driver: release seized fastenings and work precise riveted joints.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_segmented_armor_plates",
+    "name": "Segmented Armor Plates",
+    "inputs": {
+      "core:metal_scraps": 12,
+      "core:rivet_set": 2
+    },
+    "outputs": {
+      "core:segmented_armor_plates": 2
+    },
+    "minutes": 65,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 3
+    },
+    "discovery_items": [
+      "core:metal_scraps",
+      "core:rivet_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Segmented Armor Plates: overlapping plates for an iron lamellar vest.",
+    "station": "core:forge",
+    "catalysts": {
+      "core:stoneware_crucible": 1
+    }
+  },
+  {
+    "id": "core:craft_iron_lamellar_vest",
+    "name": "Iron Lamellar Vest",
+    "inputs": {
+      "core:segmented_armor_plates": 2,
+      "core:leather_lace": 2,
+      "core:felt_padding": 1
+    },
+    "outputs": {
+      "core:iron_lamellar_vest": 1
+    },
+    "minutes": 65,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:segmented_armor_plates",
+      "core:leather_lace",
+      "core:felt_padding"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Iron Lamellar Vest: protect the torso while a padded backing reduces cold metal contact.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_metal_frame_saw",
+    "name": "Metal Frame Saw",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hinge_pair": 1,
+      "core:tempered_spring": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:metal_frame_saw": 1
+    },
+    "minutes": 65,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 3
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hinge_pair",
+      "core:tempered_spring",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Metal Frame Saw: saw dense stock for advanced joinery and mechanism frames.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_socketed_iron_hoe",
+    "name": "Socketed Iron Hoe",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tool_handles": 2,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:socketed_iron_hoe": 1
+    },
+    "minutes": 65,
+    "category": "metalworking",
+    "skill": "smithing",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 3
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles",
+      "core:rivet_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Socketed Iron Hoe: till farm plots and dig tough soil.",
+    "station": "core:forge"
+  },
+  {
+    "id": "core:craft_wooden_dowels",
+    "name": "Wooden Dowels",
+    "inputs": {
+      "core:wood_pieces": 2
+    },
+    "outputs": {
+      "core:wooden_dowels": 4
+    },
+    "minutes": 12,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wooden Dowels: wooden pins joining dry-fit assemblies.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_planed_board",
+    "name": "Planed Board",
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:planed_board": 1
+    },
+    "minutes": 12,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Planed Board: straight timber for presses and instrument frames.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_bentwood_frame",
+    "name": "Bentwood Frame",
+    "inputs": {
+      "core:wood_pieces": 4,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:bentwood_frame": 1
+    },
+    "minutes": 12,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bentwood Frame: a curved frame for shield and fishing gear.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_fitted_grip",
+    "name": "Fitted Grip",
+    "inputs": {
+      "core:tool_handles": 1,
+      "core:leather_scraps": 1
+    },
+    "outputs": {
+      "core:fitted_grip": 1
+    },
+    "minutes": 12,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:tool_handles",
+      "core:leather_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fitted Grip: a wrapped grip for high-force bows and precision tools.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_woodworking_mallet",
+    "name": "Woodworking Mallet",
+    "inputs": {
+      "core:wood_pieces": 5,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:woodworking_mallet": 1
+    },
+    "minutes": 30,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Woodworking Mallet: seat joints without shattering wooden pegs.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_carpenter_brace",
+    "name": "Carpenter Brace",
+    "inputs": {
+      "core:planed_board": 1,
+      "core:iron_tool_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:carpenter_brace": 1
+    },
+    "minutes": 30,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:planed_board",
+      "core:iron_tool_blank",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Carpenter Brace: bore accurately aligned holes for shield grips and pumps.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_wood_plane",
+    "name": "Wood Plane",
+    "inputs": {
+      "core:planed_board": 1,
+      "core:iron_chisel": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:wood_plane": 1
+    },
+    "minutes": 30,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:planed_board",
+      "core:iron_chisel",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wood Plane: smooth stock for laminated bow limbs and fitted handles.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_laminated_bow_limbs",
+    "name": "Laminated Bow Limbs",
+    "inputs": {
+      "core:planed_board": 3,
+      "core:hide_glue": 1,
+      "core:wooden_dowels": 2
+    },
+    "outputs": {
+      "core:laminated_bow_limbs": 1
+    },
+    "minutes": 30,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:planed_board",
+      "core:hide_glue",
+      "core:wooden_dowels"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Laminated Bow Limbs: glued wooden laminations for a durable hunting bow.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_recurve_hunting_bow",
+    "name": "Recurve Hunting Bow",
+    "inputs": {
+      "core:laminated_bow_limbs": 2,
+      "core:fitted_grip": 1,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:recurve_hunting_bow": 1
+    },
+    "minutes": 65,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "cut": 3
+    },
+    "discovery_items": [
+      "core:laminated_bow_limbs",
+      "core:fitted_grip",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recurve Hunting Bow: shoot standard wood arrows with greater reach.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_folding_pole_spear",
+    "name": "Folding Pole Spear",
+    "inputs": {
+      "core:planed_board": 2,
+      "core:hinge_pair": 1,
+      "core:iron_tool_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:folding_pole_spear": 1
+    },
+    "minutes": 65,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "pierce": 2,
+      "cut": 3
+    },
+    "discovery_items": [
+      "core:planed_board",
+      "core:hinge_pair",
+      "core:iron_tool_blank",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Folding Pole Spear: keep large animals at reach while remaining portable.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_ribbed_wood_shield",
+    "name": "Ribbed Wood Shield",
+    "inputs": {
+      "core:bentwood_frame": 2,
+      "core:planed_board": 3,
+      "core:wooden_dowels": 3,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:ribbed_wood_shield": 1
+    },
+    "minutes": 65,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "cut": 3,
+      "pierce": 2
+    },
+    "discovery_items": [
+      "core:bentwood_frame",
+      "core:planed_board",
+      "core:wooden_dowels",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ribbed Wood Shield: block melee blows and incoming missiles with a ribbed wooden shield.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_levered_nutcracker",
+    "name": "Levered Nutcracker",
+    "inputs": {
+      "core:planed_board": 1,
+      "core:hinge_pair": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:levered_nutcracker": 1
+    },
+    "minutes": 65,
+    "category": "woodcraft",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "cut": 3
+    },
+    "discovery_items": [
+      "core:planed_board",
+      "core:hinge_pair",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Levered Nutcracker: crush seeds, grain, shells and mineral samples without a forge.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_spun_yarn",
+    "name": "Spun Yarn",
+    "inputs": {
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:spun_yarn": 2
+    },
+    "minutes": 12,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:fiber"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Spun Yarn: twisted yarn for felt, cloth and fine thread.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_felt_padding",
+    "name": "Felt Padding",
+    "inputs": {
+      "core:cloth_scraps": 6,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:felt_padding": 1
+    },
+    "minutes": 12,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cloth_scraps",
+      "core:spun_yarn"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Felt Padding: dense padding beneath armor and quilted coats.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_linen_panel",
+    "name": "Linen Panel",
+    "inputs": {
+      "core:flax": 3,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:linen_panel": 1
+    },
+    "minutes": 12,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:flax",
+      "core:spun_yarn"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Linen Panel: a strong linen panel for dressings and summer clothes.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_canvas_panel",
+    "name": "Canvas Panel",
+    "inputs": {
+      "core:plant_cordage": 2,
+      "core:cloth_scraps": 8
+    },
+    "outputs": {
+      "core:canvas_panel": 1
+    },
+    "minutes": 12,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_cordage",
+      "core:cloth_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Canvas Panel: heavy canvas for protective clothing and nets.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_waxed_thread",
+    "name": "Waxed Thread",
+    "inputs": {
+      "core:spun_yarn": 2,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:waxed_thread": 2
+    },
+    "minutes": 30,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:spun_yarn",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Waxed Thread: sealed thread for bowstrings, line and leather seams.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_reinforced_cloth",
+    "name": "Reinforced Cloth",
+    "inputs": {
+      "core:canvas_panel": 1,
+      "core:tough_fiber": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:reinforced_cloth": 1
+    },
+    "minutes": 30,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 1
+    },
+    "discovery_items": [
+      "core:canvas_panel",
+      "core:tough_fiber",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Reinforced Cloth: cloth reinforced with recovered tough fiber for travel coats.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_padded_coif",
+    "name": "Padded Coif",
+    "inputs": {
+      "core:felt_padding": 1,
+      "core:linen_panel": 1,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:padded_coif": 1
+    },
+    "minutes": 30,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 1
+    },
+    "discovery_items": [
+      "core:felt_padding",
+      "core:linen_panel",
+      "core:spun_yarn"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Padded Coif: insulate the head and soften minor blows.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_quilted_jerkin",
+    "name": "Quilted Jerkin",
+    "inputs": {
+      "core:felt_padding": 2,
+      "core:canvas_panel": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:quilted_jerkin": 1
+    },
+    "minutes": 30,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:felt_padding",
+      "core:canvas_panel",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Quilted Jerkin: protect and warm the torso while traveling.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_layered_winter_trousers",
+    "name": "Layered Winter Trousers",
+    "inputs": {
+      "core:felt_padding": 2,
+      "core:reinforced_cloth": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:layered_winter_trousers": 1
+    },
+    "minutes": 65,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:felt_padding",
+      "core:reinforced_cloth",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Layered Winter Trousers: retain warmth in the legs during cold travel.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_sailcloth_travel_coat",
+    "name": "Sailcloth Travel Coat",
+    "inputs": {
+      "core:reinforced_cloth": 2,
+      "core:oiled_leather": 1,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:sailcloth_travel_coat": 1
+    },
+    "minutes": 65,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:reinforced_cloth",
+      "core:oiled_leather",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sailcloth Travel Coat: provide modest armor and insulation in a durable coat.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_waxed_casting_line",
+    "name": "Waxed Casting Line",
+    "inputs": {
+      "core:waxed_thread": 3,
+      "core:tough_fiber": 1
+    },
+    "outputs": {
+      "core:waxed_casting_line": 1
+    },
+    "minutes": 65,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:waxed_thread",
+      "core:tough_fiber"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Waxed Casting Line: resist larger fish during line fishing.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_knotted_cast_net",
+    "name": "Knotted Cast Net",
+    "inputs": {
+      "core:reinforced_cloth": 1,
+      "core:plant_cordage": 8,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:knotted_cast_net": 1
+    },
+    "minutes": 65,
+    "category": "textiles",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:reinforced_cloth",
+      "core:plant_cordage",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Knotted Cast Net: fish open shallow water with a sturdy cast net.",
+    "station": "core:loom"
+  },
+  {
+    "id": "core:craft_leather_lace",
+    "name": "Leather Lace",
+    "inputs": {
+      "core:leather_scraps": 3
+    },
+    "outputs": {
+      "core:leather_lace": 2
+    },
+    "minutes": 12,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:leather_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Leather Lace: tough lacing for armor, shields and leather seams.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_cured_leather_panel",
+    "name": "Cured Leather Panel",
+    "inputs": {
+      "core:leather_scraps": 8,
+      "core:bark": 1
+    },
+    "outputs": {
+      "core:cured_leather_panel": 1
+    },
+    "minutes": 12,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "scrape": 1
+    },
+    "discovery_items": [
+      "core:leather_scraps",
+      "core:bark"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cured Leather Panel: a stitched panel for new leather garments.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_hide_glue",
+    "name": "Hide Glue",
+    "inputs": {
+      "core:fresh_hide": 1,
+      "core:bone_chips": 3
+    },
+    "outputs": {
+      "core:hide_glue": 1
+    },
+    "minutes": 12,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:fresh_hide",
+      "core:bone_chips"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hide Glue: animal glue binding timber laminations and paper boards.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_leather_grip_wrap",
+    "name": "Leather Grip Wrap",
+    "inputs": {
+      "core:leather_lace": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:leather_grip_wrap": 2
+    },
+    "minutes": 12,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:leather_lace",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Leather Grip Wrap: grip wrapping for axes, cutting tools and pole weapons.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_hardened_leather",
+    "name": "Hardened Leather",
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:resin_lumps": 2
+    },
+    "outputs": {
+      "core:hardened_leather": 1
+    },
+    "minutes": 30,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cured_leather_panel",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hardened Leather: stiffened leather for breastpieces and reinforced gloves.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_oiled_leather",
+    "name": "Oiled Leather",
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:oiled_leather": 1
+    },
+    "minutes": 30,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cured_leather_panel",
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Oiled Leather: flexible conditioned leather for coats and fitted boots.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_leatherworker_awl",
+    "name": "Leatherworker Awl",
+    "inputs": {
+      "core:bone_chips": 5,
+      "core:leather_grip_wrap": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:leatherworker_awl": 1
+    },
+    "minutes": 30,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:bone_chips",
+      "core:leather_grip_wrap",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Leatherworker Awl: pierce tough seams and stitch reinforced clothing.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_riveted_work_gloves",
+    "name": "Riveted Work Gloves",
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:rivet_set": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:riveted_work_gloves": 1
+    },
+    "minutes": 30,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:hardened_leather",
+      "core:rivet_set",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Riveted Work Gloves: protect the forearms and hands when working or fighting.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_hardened_leather_cuirass",
+    "name": "Hardened Leather Cuirass",
+    "inputs": {
+      "core:hardened_leather": 3,
+      "core:leather_lace": 2,
+      "core:felt_padding": 1
+    },
+    "outputs": {
+      "core:hardened_leather_cuirass": 1
+    },
+    "minutes": 65,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:hardened_leather",
+      "core:leather_lace",
+      "core:felt_padding"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hardened Leather Cuirass: cover the torso with stiff leather backed by felt.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_fur_lined_hood",
+    "name": "Fur Lined Hood",
+    "inputs": {
+      "core:oiled_leather": 1,
+      "core:fur_felt": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:fur_lined_hood": 1
+    },
+    "minutes": 65,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:oiled_leather",
+      "core:fur_felt",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fur Lined Hood: keep the head warm without heavy iron headgear.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_reinforced_gaiters",
+    "name": "Reinforced Gaiters",
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:oiled_leather": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:reinforced_gaiters": 1
+    },
+    "minutes": 65,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:hardened_leather",
+      "core:oiled_leather",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Reinforced Gaiters: protect the lower body during rough travel.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_horn_faced_buckler",
+    "name": "Horn Faced Buckler",
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:horn_laminate": 2,
+      "core:bentwood_frame": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:horn_faced_buckler": 1
+    },
+    "minutes": 65,
+    "category": "leatherwork",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:hardened_leather",
+      "core:horn_laminate",
+      "core:bentwood_frame",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Horn Faced Buckler: turn close blows with a light horn-faced hand shield.",
+    "station": "core:tanning_frame"
+  },
+  {
+    "id": "core:craft_mortar_mix",
+    "name": "Mortar Mix",
+    "inputs": {
+      "core:mineral_grit": 4,
+      "core:clay_lump": 1
+    },
+    "outputs": {
+      "core:mortar_mix": 1
+    },
+    "minutes": 12,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:mineral_grit",
+      "core:clay_lump"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Mortar Mix: a mineral binder for dressed construction blocks.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_abrasive_powder",
+    "name": "Abrasive Powder",
+    "inputs": {
+      "core:mineral_grit": 3,
+      "core:glass_shards": 2
+    },
+    "outputs": {
+      "core:abrasive_powder": 2
+    },
+    "minutes": 12,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:mineral_grit",
+      "core:glass_shards"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Abrasive Powder: hard grinding grains for polished optics and fine steel.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_stone_blade_blank",
+    "name": "Stone Blade Blank",
+    "inputs": {
+      "core:stone": 1,
+      "core:ceramic_shards": 1
+    },
+    "outputs": {
+      "core:stone_blade_blank": 2
+    },
+    "minutes": 12,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:ceramic_shards"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Stone Blade Blank: selected hard flakes for cutting and scraping implements.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_grinding_slab",
+    "name": "Grinding Slab",
+    "inputs": {
+      "core:stone": 1,
+      "core:mineral_grit": 2
+    },
+    "outputs": {
+      "core:grinding_slab": 1
+    },
+    "minutes": 12,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:mineral_grit"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grinding Slab: grind seeds and medicines into finer powders.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_granite_pestle",
+    "name": "Granite Pestle",
+    "inputs": {
+      "core:stone": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:granite_pestle": 1
+    },
+    "minutes": 30,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Granite Pestle: crush tough seeds, bone and dried herbs.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_flint_hide_scraper",
+    "name": "Flint Hide Scraper",
+    "inputs": {
+      "core:stone_blade_blank": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:flint_hide_scraper": 1
+    },
+    "minutes": 30,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:stone_blade_blank",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Flint Hide Scraper: dress fresh hides and strip bark without iron.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_mason_hand_hammer",
+    "name": "Mason Hand Hammer",
+    "inputs": {
+      "core:stone": 1,
+      "core:tool_handles": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:mason_hand_hammer": 1
+    },
+    "minutes": 30,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:stone",
+      "core:tool_handles",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Mason Hand Hammer: dress blocks and crack mineral specimens.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_notched_stone_knife",
+    "name": "Notched Stone Knife",
+    "inputs": {
+      "core:stone_blade_blank": 1,
+      "core:tool_handles": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:notched_stone_knife": 1
+    },
+    "minutes": 30,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:stone_blade_blank",
+      "core:tool_handles",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Notched Stone Knife: cut plant stock and butcher small carcasses.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_quarry_sledge",
+    "name": "Quarry Sledge",
+    "inputs": {
+      "core:stone": 3,
+      "core:fitted_grip": 1,
+      "core:wooden_dowels": 2
+    },
+    "outputs": {
+      "core:quarry_sledge": 1
+    },
+    "minutes": 65,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:fitted_grip",
+      "core:wooden_dowels"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Quarry Sledge: break rock, crush ore and perform heavy masonry.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_basalt_head_mace",
+    "name": "Basalt Head Mace",
+    "inputs": {
+      "core:stone": 2,
+      "core:tool_handles": 2,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:basalt_head_mace": 1
+    },
+    "minutes": 65,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:tool_handles",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Basalt Head Mace: deliver heavy blunt attacks with a securely hafted stone head.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_crystal_edge_scalpel",
+    "name": "Crystal Edge Scalpel",
+    "inputs": {
+      "core:clear_crystal": 2,
+      "core:abrasive_powder": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:crystal_edge_scalpel": 1
+    },
+    "minutes": 65,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "crush": 2
+    },
+    "discovery_items": [
+      "core:clear_crystal",
+      "core:abrasive_powder",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Crystal Edge Scalpel: make fine skinning and cutting work possible with a ground crystal edge.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_bind_dressed_blocks",
+    "name": "Bind Dressed Blocks",
+    "inputs": {
+      "core:stone": 2,
+      "core:mortar_mix": 1
+    },
+    "outputs": {
+      "core:dressed_stone": 2
+    },
+    "minutes": 65,
+    "category": "masonry",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:stone",
+      "core:mortar_mix"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bind Dressed Blocks: bind dressed stone for practical construction.",
+    "station": "core:masonry_bench"
+  },
+  {
+    "id": "core:craft_kiln_grog",
+    "name": "Kiln Grog",
+    "inputs": {
+      "core:ceramic_shards": 3
+    },
+    "outputs": {
+      "core:kiln_grog": 2
+    },
+    "minutes": 12,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:ceramic_shards"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Kiln Grog: crushed fired ceramic temper for heat-resistant clay.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_tempered_clay",
+    "name": "Tempered Clay",
+    "inputs": {
+      "core:clay_lump": 2,
+      "core:kiln_grog": 1
+    },
+    "outputs": {
+      "core:tempered_clay": 2
+    },
+    "minutes": 12,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:clay_lump",
+      "core:kiln_grog"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Tempered Clay: grog-tempered clay that tolerates hot workshop processes.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_ceramic_mould",
+    "name": "Ceramic Mould",
+    "inputs": {
+      "core:tempered_clay": 2
+    },
+    "outputs": {
+      "core:ceramic_mould": 1
+    },
+    "minutes": 12,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ceramic Mould: a reusable casting mould for iron tool blanks.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_ceramic_filter_media",
+    "name": "Ceramic Filter Media",
+    "inputs": {
+      "core:kiln_grog": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:ceramic_filter_media": 2
+    },
+    "minutes": 12,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:kiln_grog",
+      "core:mineral_grit"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ceramic Filter Media: porous mineral media used while filtering herbal extracts.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_ceramic_thimble",
+    "name": "Ceramic Thimble",
+    "inputs": {
+      "core:tempered_clay": 1
+    },
+    "outputs": {
+      "core:ceramic_thimble": 1
+    },
+    "minutes": 30,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ceramic Thimble: control a sewing needle when stitching tough fabric.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_hardened_ceramic_edge",
+    "name": "Hardened Ceramic Edge",
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:abrasive_powder": 1
+    },
+    "outputs": {
+      "core:hardened_ceramic_edge": 1
+    },
+    "minutes": 30,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:abrasive_powder"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hardened Ceramic Edge: cut soft stock and scrape hide with a hardened ceramic blade.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_ceramic_pestle",
+    "name": "Ceramic Pestle",
+    "inputs": {
+      "core:tempered_clay": 2,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:ceramic_pestle": 1
+    },
+    "minutes": 30,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ceramic Pestle: grind grain, herbs and pigments in workshop recipes.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_kiln_piercing_spike",
+    "name": "Kiln Piercing Spike",
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:kiln_piercing_spike": 1
+    },
+    "minutes": 30,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Kiln Piercing Spike: pierce leather seams and bore small workshop joints.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_stoneware_crucible",
+    "name": "Stoneware Crucible",
+    "inputs": {
+      "core:tempered_clay": 3,
+      "core:kiln_grog": 2
+    },
+    "outputs": {
+      "core:stoneware_crucible": 1
+    },
+    "minutes": 65,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:kiln_grog"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Stoneware Crucible: a reusable heat-resistant vessel for refined metalwork and boiling gathered freshwater.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_glazed_lure_bead",
+    "name": "Glazed Lure Bead",
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:glass_shards": 3,
+      "core:copper_wire": 1
+    },
+    "outputs": {
+      "core:glazed_lure_bead": 4
+    },
+    "minutes": 65,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:glass_shards",
+      "core:copper_wire"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Glazed Lure Bead: a bright bead used to weight and finish fishing lures.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_ceramic_distillation_coil",
+    "name": "Ceramic Distillation Coil",
+    "inputs": {
+      "core:tempered_clay": 3,
+      "core:copper_wire": 3
+    },
+    "outputs": {
+      "core:ceramic_distillation_coil": 1
+    },
+    "minutes": 65,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:tempered_clay",
+      "core:copper_wire"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ceramic Distillation Coil: a reusable coil for condensing concentrated botanical preparations.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_porous_filter_candle",
+    "name": "Porous Filter Candle",
+    "inputs": {
+      "core:ceramic_filter_media": 3,
+      "core:tempered_clay": 1
+    },
+    "outputs": {
+      "core:porous_filter_candle": 1
+    },
+    "minutes": 65,
+    "category": "pottery",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:ceramic_filter_media",
+      "core:tempered_clay"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Porous Filter Candle: a reusable filter for clean botanical preparations.",
+    "station": "core:pottery_wheel"
+  },
+  {
+    "id": "core:craft_barley_meal",
+    "name": "Barley Meal",
+    "inputs": {
+      "core:barley": 3
+    },
+    "outputs": {
+      "core:barley_meal": 2
+    },
+    "minutes": 12,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:barley"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Barley Meal: coarse meal for porridge and fermented grain drinks.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_cornmeal",
+    "name": "Cornmeal",
+    "inputs": {
+      "core:corn": 3
+    },
+    "outputs": {
+      "core:cornmeal": 2
+    },
+    "minutes": 12,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:corn"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cornmeal: dry meal for griddle cakes and grain porridges.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_bean_flour",
+    "name": "Bean Flour",
+    "inputs": {
+      "core:beans": 3
+    },
+    "outputs": {
+      "core:bean_flour": 2
+    },
+    "minutes": 12,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:beans"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bean Flour: milled bean flour for protein-rich crackers.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_cattail_starch",
+    "name": "Cattail Starch",
+    "inputs": {
+      "core:cattail_root": 3
+    },
+    "outputs": {
+      "core:cattail_starch": 2
+    },
+    "minutes": 12,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cattail_root"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cattail Starch: strained starch for thickening broth and baking.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_wholegrain_flour",
+    "name": "Wholegrain Flour",
+    "inputs": {
+      "core:wheat": 3
+    },
+    "outputs": {
+      "core:wholegrain_flour": 2
+    },
+    "minutes": 30,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wheat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wholegrain Flour: unsifted flour for hearty bread and hardtack.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_flax_meal",
+    "name": "Flax Meal",
+    "inputs": {
+      "core:flax": 3
+    },
+    "outputs": {
+      "core:flax_meal": 2
+    },
+    "minutes": 30,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:flax"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Flax Meal: crushed flax used to enrich travel cakes.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_roasted_grain_crumble",
+    "name": "Roasted Grain Crumble",
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:wheat": 1
+    },
+    "outputs": {
+      "core:roasted_grain_crumble": 1
+    },
+    "minutes": 30,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:barley_meal",
+      "core:wheat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Roasted Grain Crumble: toasted grain crumble for durable trail food.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_root_flour",
+    "name": "Root Flour",
+    "inputs": {
+      "core:wild_carrot": 2,
+      "core:cattail_starch": 1
+    },
+    "outputs": {
+      "core:root_flour": 1
+    },
+    "minutes": 30,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wild_carrot",
+      "core:cattail_starch"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Root Flour: dried root flour for cakes and thickened stews.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_fine_sifted_flour",
+    "name": "Fine Sifted Flour",
+    "inputs": {
+      "core:wholegrain_flour": 2
+    },
+    "outputs": {
+      "core:fine_sifted_flour": 1
+    },
+    "minutes": 65,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "crush": 2
+    },
+    "discovery_items": [
+      "core:wholegrain_flour"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fine Sifted Flour: fine flour sifted through a reusable cloth sieve.",
+    "station": "core:millstone",
+    "catalysts": {
+      "core:linen_panel": 1
+    }
+  },
+  {
+    "id": "core:craft_mushroom_powder",
+    "name": "Mushroom Powder",
+    "inputs": {
+      "core:morel": 2,
+      "core:bolete": 2
+    },
+    "outputs": {
+      "core:mushroom_powder": 2
+    },
+    "minutes": 65,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:morel",
+      "core:bolete"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Mushroom Powder: dry mushroom powder for concentrated savory broths.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_grain_binder_paste",
+    "name": "Grain Binder Paste",
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:cattail_starch": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:grain_binder_paste": 1
+    },
+    "minutes": 65,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:barley_meal",
+      "core:cattail_starch",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grain Binder Paste: starch binder used in pulp boards and paper shields.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_grooved_mill_pestle",
+    "name": "Grooved Mill Pestle",
+    "inputs": {
+      "core:dressed_stone": 1,
+      "core:wooden_dowels": 2,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:grooved_mill_pestle": 1
+    },
+    "minutes": 65,
+    "category": "milling",
+    "skill": "crafting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:dressed_stone",
+      "core:wooden_dowels",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grooved Mill Pestle: crush hard grain, bone and ore efficiently.",
+    "station": "core:millstone"
+  },
+  {
+    "id": "core:craft_bread_dough",
+    "name": "Bread Dough",
+    "inputs": {
+      "core:wholegrain_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bread_dough": 1
+    },
+    "minutes": 12,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wholegrain_flour",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bread Dough: hydrated wholegrain dough for loaves, dumplings and wrapped meals.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_sourdough_starter",
+    "name": "Sourdough Starter",
+    "inputs": {
+      "core:wholegrain_flour": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:sourdough_starter": 1
+    },
+    "minutes": 12,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wholegrain_flour",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sourdough Starter: an active grain starter for sourdough and malt culture.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_unleavened_flatbread",
+    "name": "Unleavened Flatbread",
+    "inputs": {
+      "core:bread_dough": 1
+    },
+    "outputs": {
+      "core:unleavened_flatbread": 2
+    },
+    "minutes": 12,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bread_dough"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Unleavened Flatbread: thin bread cooked rapidly with modest fuel.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_twice_baked_rusk",
+    "name": "Twice Baked Rusk",
+    "inputs": {
+      "core:bread": 2
+    },
+    "outputs": {
+      "core:twice_baked_rusk": 3
+    },
+    "minutes": 12,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Twice Baked Rusk: twice-bake bread into dry, crisp portions for travel meals.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_sourdough_loaf",
+    "name": "Sourdough Loaf",
+    "inputs": {
+      "core:bread_dough": 2,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:sourdough_loaf": 2
+    },
+    "minutes": 30,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bread_dough",
+      "core:sourdough_starter"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sourdough Loaf: fermented bread with a moist crumb.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_bean_crispbread",
+    "name": "Bean Crispbread",
+    "inputs": {
+      "core:bean_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bean_crispbread": 2
+    },
+    "minutes": 30,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bean_flour",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bean Crispbread: dry protein-rich crackers for travel meals.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_corn_griddle_cake",
+    "name": "Corn Griddle Cake",
+    "inputs": {
+      "core:cornmeal": 2,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:corn_griddle_cake": 2
+    },
+    "minutes": 30,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cornmeal",
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Corn Griddle Cake: fat-bound corn cakes cooked on the oven hearth.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_root_dumplings",
+    "name": "Root Dumplings",
+    "inputs": {
+      "core:root_flour": 1,
+      "core:bread_dough": 1
+    },
+    "outputs": {
+      "core:root_dumplings": 2
+    },
+    "minutes": 30,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:root_flour",
+      "core:bread_dough"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Root Dumplings: dense dumplings eaten directly or in broth.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_trail_hardtack",
+    "name": "Trail Hardtack",
+    "inputs": {
+      "core:wholegrain_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:trail_hardtack": 3
+    },
+    "minutes": 65,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wholegrain_flour",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Trail Hardtack: bake dense, dry grain biscuits for travel meals.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_savory_hand_pie",
+    "name": "Savory Hand Pie",
+    "inputs": {
+      "core:bread_dough": 1,
+      "core:minced_game": 1,
+      "core:onion": 1
+    },
+    "outputs": {
+      "core:savory_hand_pie": 2
+    },
+    "minutes": 65,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bread_dough",
+      "core:minced_game",
+      "core:onion"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Savory Hand Pie: seal cooked meat and vegetables into portable baked meals.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_flax_travel_cake",
+    "name": "Flax Travel Cake",
+    "inputs": {
+      "core:flax_meal": 1,
+      "core:roasted_grain_crumble": 1,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:flax_travel_cake": 2
+    },
+    "minutes": 65,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:flax_meal",
+      "core:roasted_grain_crumble",
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Flax Travel Cake: bake dense fat-and-grain cakes for long journeys.",
+    "station": "core:bakery_oven"
+  },
+  {
+    "id": "core:craft_steam_raised_grain_bun",
+    "name": "Steam Raised Grain Bun",
+    "inputs": {
+      "core:fine_sifted_flour": 1,
+      "core:sourdough_starter": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:steam_raised_grain_bun": 2
+    },
+    "minutes": 65,
+    "category": "baking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:fine_sifted_flour",
+      "core:sourdough_starter",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Steam Raised Grain Bun: steam fermented dough into soft buns.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_root_broth",
+    "name": "Root Broth",
+    "inputs": {
+      "core:wild_carrot": 1,
+      "core:wild_onion": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:root_broth": 1
+    },
+    "minutes": 12,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wild_carrot",
+      "core:wild_onion",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Root Broth: simmer roots into a hydrating edible broth.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_bone_stock",
+    "name": "Bone Stock",
+    "inputs": {
+      "core:bone": 1,
+      "core:clean_water": 2,
+      "core:wild_onion": 1
+    },
+    "outputs": {
+      "core:bone_stock": 1
+    },
+    "minutes": 12,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bone",
+      "core:clean_water",
+      "core:wild_onion"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bone Stock: extract stock for thickened soup and braised meat.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_wilted_greens",
+    "name": "Wilted Greens",
+    "inputs": {
+      "core:dandelion_greens": 2,
+      "core:nettles": 1
+    },
+    "outputs": {
+      "core:wilted_greens": 1
+    },
+    "minutes": 12,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:dandelion_greens",
+      "core:nettles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wilted Greens: cook gathered greens to make an edible vegetable meal.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_berry_reduction",
+    "name": "Berry Reduction",
+    "inputs": {
+      "core:blueberries": 3
+    },
+    "outputs": {
+      "core:berry_reduction": 2
+    },
+    "minutes": 12,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:blueberries"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Berry Reduction: reduce gathered blueberries into a concentrated ingredient for preserves.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_grain_porridge",
+    "name": "Grain Porridge",
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:grain_porridge": 2
+    },
+    "minutes": 30,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:barley_meal",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grain Porridge: hydrate milled grain into a filling porridge.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_seared_game_portions",
+    "name": "Seared Game Portions",
+    "inputs": {
+      "core:raw_game_meat": 2
+    },
+    "outputs": {
+      "core:seared_game_portions": 2
+    },
+    "minutes": 30,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {
+      "butcher": 1
+    },
+    "discovery_items": [
+      "core:raw_game_meat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Seared Game Portions: cook game at high heat into safe immediate meals.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_braised_meat",
+    "name": "Braised Meat",
+    "inputs": {
+      "core:seared_game_portions": 1,
+      "core:bone_stock": 1,
+      "core:carrot": 1
+    },
+    "outputs": {
+      "core:braised_meat": 2
+    },
+    "minutes": 30,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:seared_game_portions",
+      "core:bone_stock",
+      "core:carrot"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Braised Meat: slow-cook seared meat with stock and roots.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_thickened_mushroom_soup",
+    "name": "Thickened Mushroom Soup",
+    "inputs": {
+      "core:mushroom_powder": 1,
+      "core:cattail_starch": 1,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:thickened_mushroom_soup": 2
+    },
+    "minutes": 30,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:mushroom_powder",
+      "core:cattail_starch",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Thickened Mushroom Soup: thicken a mushroom infusion with extracted root starch.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_potted_meat",
+    "name": "Potted Meat",
+    "inputs": {
+      "core:minced_game": 2,
+      "core:animal_fat": 2
+    },
+    "outputs": {
+      "core:potted_meat": 2
+    },
+    "minutes": 65,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:minced_game",
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Potted Meat: cook and seal minced meat under rendered fat into dense protein portions.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_fruit_preserve",
+    "name": "Fruit Preserve",
+    "inputs": {
+      "core:berry_reduction": 2,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:fruit_preserve": 2
+    },
+    "minutes": 65,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:berry_reduction",
+      "core:aromatic_oil"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fruit Preserve: finish reduced berries into an aromatic fruit preserve.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_cabbage_ferment",
+    "name": "Cabbage Ferment",
+    "inputs": {
+      "core:cabbage": 3,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:cabbage_ferment": 2
+    },
+    "minutes": 65,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cabbage",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cabbage Ferment: prepare a preserved vegetable ferment.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_travel_stew_concentrate",
+    "name": "Travel Stew Concentrate",
+    "inputs": {
+      "core:braised_meat": 1,
+      "core:root_dumplings": 1,
+      "core:roasted_grain_crumble": 1
+    },
+    "outputs": {
+      "core:travel_stew_concentrate": 2
+    },
+    "minutes": 65,
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:braised_meat",
+      "core:root_dumplings",
+      "core:roasted_grain_crumble"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Travel Stew Concentrate: reduce a complete stew into portable dense portions.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_malted_grain",
+    "name": "Malted Grain",
+    "inputs": {
+      "core:barley": 3
+    },
+    "outputs": {
+      "core:malted_grain": 2
+    },
+    "minutes": 12,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:barley"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Malted Grain: germinate and dry grain for brewing wort.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_brewing_wort",
+    "name": "Brewing Wort",
+    "inputs": {
+      "core:malted_grain": 2,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:brewing_wort": 2
+    },
+    "minutes": 12,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:malted_grain",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Brewing Wort: extract fermentable grain into a brewing base.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_grain_vinegar",
+    "name": "Grain Vinegar",
+    "inputs": {
+      "core:small_ale": 2
+    },
+    "outputs": {
+      "core:grain_vinegar": 1
+    },
+    "minutes": 12,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:small_ale"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grain Vinegar: ferment weak ale into preserving vinegar.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_botanical_brewing_sachet",
+    "name": "Botanical Brewing Sachet",
+    "inputs": {
+      "core:moonmint_sprig": 1,
+      "core:cloth_scraps": 2
+    },
+    "outputs": {
+      "core:botanical_brewing_sachet": 1
+    },
+    "minutes": 12,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:moonmint_sprig",
+      "core:cloth_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Botanical Brewing Sachet: a wrapped rare aromatic plant for clean steeping.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_malt_tonic_drink",
+    "name": "Malt Tonic Drink",
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:malt_tonic_drink": 2
+    },
+    "minutes": 30,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brewing_wort",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Malt Tonic Drink: make a diluted non-fermented malt drink.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_grain_table_beer",
+    "name": "Grain Table Beer",
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:grain_table_beer": 2
+    },
+    "minutes": 30,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brewing_wort",
+      "core:sourdough_starter"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Grain Table Beer: ferment grain wort into a mild drink.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_soured_root_pickle",
+    "name": "Soured Root Pickle",
+    "inputs": {
+      "core:grain_vinegar": 1,
+      "core:turnip": 2
+    },
+    "outputs": {
+      "core:soured_root_pickle": 2
+    },
+    "minutes": 30,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:grain_vinegar",
+      "core:turnip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Soured Root Pickle: preserve cut roots in grain vinegar.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_moonmint_infusion",
+    "name": "Moonmint Infusion",
+    "inputs": {
+      "core:botanical_brewing_sachet": 1,
+      "core:clean_water": 2,
+      "core:brewing_wort": 1
+    },
+    "outputs": {
+      "core:moonmint_infusion": 2
+    },
+    "minutes": 30,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:botanical_brewing_sachet",
+      "core:clean_water",
+      "core:brewing_wort"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Moonmint Infusion: steep rare moonmint into a mild aromatic drink.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_spiced_grain_cordial",
+    "name": "Spiced Grain Cordial",
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:sunspice_rhizome": 1,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:spiced_grain_cordial": 2
+    },
+    "minutes": 65,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brewing_wort",
+      "core:sunspice_rhizome",
+      "core:aromatic_oil"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Spiced Grain Cordial: condense a rare aromatic grain cordial.",
+    "station": "core:brewery_vat",
+    "catalysts": {
+      "core:ceramic_distillation_coil": 1
+    }
+  },
+  {
+    "id": "core:craft_frost_sage_brew",
+    "name": "Frost Sage Brew",
+    "inputs": {
+      "core:frost_sage_branch": 1,
+      "core:brewing_wort": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:frost_sage_brew": 2
+    },
+    "minutes": 65,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:frost_sage_branch",
+      "core:brewing_wort",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Frost Sage Brew: brew cold-habitat sage with malted grain.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_coastal_kelp_vinegar",
+    "name": "Coastal Kelp Vinegar",
+    "inputs": {
+      "core:pearl_kelp_knot": 1,
+      "core:grain_vinegar": 2
+    },
+    "outputs": {
+      "core:coastal_kelp_vinegar": 1
+    },
+    "minutes": 65,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:pearl_kelp_knot",
+      "core:grain_vinegar"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Coastal Kelp Vinegar: steep coastal kelp into preserving vinegar.",
+    "station": "core:brewery_vat"
+  },
+  {
+    "id": "core:craft_filtered_malt_culture",
+    "name": "Filtered Malt Culture",
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:malted_grain": 1,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:filtered_malt_culture": 1
+    },
+    "minutes": 65,
+    "category": "brewing",
+    "skill": "cooking",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:brewing_wort",
+      "core:malted_grain",
+      "core:sourdough_starter"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Filtered Malt Culture: a concentrated malt culture for sizing writing stock.",
+    "station": "core:brewery_vat",
+    "catalysts": {
+      "core:porous_filter_candle": 1
+    }
+  },
+  {
+    "id": "core:craft_minced_game",
+    "name": "Minced Game",
+    "inputs": {
+      "core:meat": 2
+    },
+    "outputs": {
+      "core:minced_game": 2
+    },
+    "minutes": 12,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "butcher": 1
+    },
+    "discovery_items": [
+      "core:meat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Minced Game: finely cut raw game for hand pies and potted meat.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_rendered_tallow",
+    "name": "Rendered Tallow",
+    "inputs": {
+      "core:animal_fat": 2
+    },
+    "outputs": {
+      "core:rendered_tallow": 1
+    },
+    "minutes": 12,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Rendered Tallow: rendered edible fat for food preservation and leather care.",
+    "station": "core:campfire"
+  },
+  {
+    "id": "core:craft_horn_laminate",
+    "name": "Horn Laminate",
+    "inputs": {
+      "core:bone_chips": 8,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:horn_laminate": 1
+    },
+    "minutes": 12,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bone_chips",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Horn Laminate: pressed bone-and-keratin scales for shield and armor reinforcement.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_carved_bone_barb",
+    "name": "Carved Bone Barb",
+    "inputs": {
+      "core:bone_chips": 4
+    },
+    "outputs": {
+      "core:carved_bone_barb": 3
+    },
+    "minutes": 12,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:bone_chips"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Carved Bone Barb: small piercing barbs for hunting arrows and fishing hooks.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_butcher_cleaver",
+    "name": "Butcher Cleaver",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:butcher_cleaver": 1
+    },
+    "minutes": 30,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Butcher Cleaver: portion large carcasses with a broad, heavy blade.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_bone_marrow_scoop",
+    "name": "Bone Marrow Scoop",
+    "inputs": {
+      "core:bone_chips": 6,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:bone_marrow_scoop": 1
+    },
+    "minutes": 30,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:bone_chips",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bone Marrow Scoop: work carcass interiors and scrape fresh hides.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_hide_fleshing_beam",
+    "name": "Hide Fleshing Beam",
+    "inputs": {
+      "core:wood_pieces": 8,
+      "core:stone_blade_blank": 2
+    },
+    "outputs": {
+      "core:hide_fleshing_beam": 1
+    },
+    "minutes": 30,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:stone_blade_blank"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hide Fleshing Beam: scrape hides clean before tanning.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_sinew_stripper",
+    "name": "Sinew Stripper",
+    "inputs": {
+      "core:bone_chips": 6,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:sinew_stripper": 1
+    },
+    "minutes": 30,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:bone_chips",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sinew Stripper: separate sinew and skin with a shaped keratin edge.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_smoked_offal_sausage",
+    "name": "Smoked Offal Sausage",
+    "inputs": {
+      "core:offal": 2,
+      "core:minced_game": 1,
+      "core:rendered_tallow": 1
+    },
+    "outputs": {
+      "core:smoked_offal_sausage": 2
+    },
+    "minutes": 65,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:offal",
+      "core:minced_game",
+      "core:rendered_tallow"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Smoked Offal Sausage: smoke seasoned offal and meat into portable sausage.",
+    "station": "core:smoke_rack"
+  },
+  {
+    "id": "core:craft_articulated_bone_awl",
+    "name": "Articulated Bone Awl",
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:carved_bone_barb": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:articulated_bone_awl": 1
+    },
+    "minutes": 65,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:horn_laminate",
+      "core:carved_bone_barb",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Articulated Bone Awl: stitch tough leather and pierce reinforced cloth.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_antler_skinning_knife",
+    "name": "Antler Skinning Knife",
+    "inputs": {
+      "core:deer_antler_tip": 2,
+      "core:abrasive_powder": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:antler_skinning_knife": 1
+    },
+    "minutes": 65,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:deer_antler_tip",
+      "core:abrasive_powder",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Antler Skinning Knife: shape intact antler directly into a specialized skinning blade.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_bone_hand_shears",
+    "name": "Bone Hand Shears",
+    "inputs": {
+      "core:horn_laminate": 2,
+      "core:hinge_pair": 1,
+      "core:nuts_and_bolts": 1
+    },
+    "outputs": {
+      "core:bone_hand_shears": 1
+    },
+    "minutes": 65,
+    "category": "butchery",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "pierce": 2
+    },
+    "discovery_items": [
+      "core:horn_laminate",
+      "core:hinge_pair",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bone Hand Shears: trim heavy seams and cut cloth with a hinged bone-and-metal tool.",
+    "station": "core:butcher_table"
+  },
+  {
+    "id": "core:craft_twisted_reed_line",
+    "name": "Twisted Reed Line",
+    "inputs": {
+      "core:star_reed_tuft": 1,
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:twisted_reed_line": 1
+    },
+    "minutes": 12,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:star_reed_tuft",
+      "core:plant_cordage"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Twisted Reed Line: braid rare star reed directly into a fishing line.",
+    "station": "core:smoke_rack"
+  },
+  {
+    "id": "core:craft_carved_bone_hook",
+    "name": "Carved Bone Hook",
+    "inputs": {
+      "core:carved_bone_barb": 2,
+      "core:sinew": 1
+    },
+    "outputs": {
+      "core:carved_bone_hook": 1
+    },
+    "minutes": 12,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:carved_bone_barb",
+      "core:sinew"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Carved Bone Hook: a barbed bone lure for line fishing."
+  },
+  {
+    "id": "core:craft_copper_spinner_blade",
+    "name": "Copper Spinner Blade",
+    "inputs": {
+      "core:copper_sheet": 1,
+      "core:copper_wire": 2
+    },
+    "outputs": {
+      "core:copper_spinner_blade": 1
+    },
+    "minutes": 12,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:copper_sheet",
+      "core:copper_wire"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Copper Spinner Blade: a hammered blade for an articulated spinner lure.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_float_rig",
+    "name": "Float Rig",
+    "inputs": {
+      "core:wood_pieces": 1,
+      "core:copper_wire": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:float_rig": 1
+    },
+    "minutes": 12,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:copper_wire",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Float Rig: a buoyant lure rig for line fishing."
+  },
+  {
+    "id": "core:craft_weighted_river_net",
+    "name": "Weighted River Net",
+    "inputs": {
+      "core:plant_cordage": 6,
+      "core:mineral_grit": 2,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:weighted_river_net": 1
+    },
+    "minutes": 30,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_cordage",
+      "core:mineral_grit",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Weighted River Net: keep a net spread in shallow moving water."
+  },
+  {
+    "id": "core:craft_jointed_fishing_rod",
+    "name": "Jointed Fishing Rod",
+    "inputs": {
+      "core:bentwood_frame": 1,
+      "core:fitted_grip": 1,
+      "core:copper_wire": 3
+    },
+    "outputs": {
+      "core:jointed_fishing_rod": 1
+    },
+    "minutes": 30,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bentwood_frame",
+      "core:fitted_grip",
+      "core:copper_wire"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Jointed Fishing Rod: fight larger fish with a strong jointed rod.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_split_fish_fillets",
+    "name": "Split Fish Fillets",
+    "inputs": {
+      "core:common_carp": 1
+    },
+    "outputs": {
+      "core:split_fish_fillets": 2
+    },
+    "minutes": 30,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 2
+    },
+    "discovery_items": [
+      "core:common_carp"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Split Fish Fillets: cut fresh carp into boneless cooking portions.",
+    "station": "core:smoke_rack"
+  },
+  {
+    "id": "core:craft_rack_dried_fish",
+    "name": "Rack Dried Fish",
+    "inputs": {
+      "core:split_fish_fillets": 2
+    },
+    "outputs": {
+      "core:rack_dried_fish": 2
+    },
+    "minutes": 30,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:split_fish_fillets"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Rack Dried Fish: dry cut fish into portable protein rations.",
+    "station": "core:smoke_rack"
+  },
+  {
+    "id": "core:craft_articulated_spinner_lure",
+    "name": "Articulated Spinner Lure",
+    "inputs": {
+      "core:copper_spinner_blade": 1,
+      "core:glazed_lure_bead": 2,
+      "core:copper_wire": 2,
+      "core:fine_gear": 1
+    },
+    "outputs": {
+      "core:articulated_spinner_lure": 1
+    },
+    "minutes": 65,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:copper_spinner_blade",
+      "core:glazed_lure_bead",
+      "core:copper_wire",
+      "core:fine_gear"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Articulated Spinner Lure: attract fish with a moving metal spinner and bright bead.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_spring_tension_fishing_rod",
+    "name": "Spring Tension Fishing Rod",
+    "inputs": {
+      "core:jointed_fishing_rod": 1,
+      "core:tempered_spring": 1,
+      "core:waxed_casting_line": 1
+    },
+    "outputs": {
+      "core:spring_tension_fishing_rod": 1
+    },
+    "minutes": 65,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:jointed_fishing_rod",
+      "core:tempered_spring",
+      "core:waxed_casting_line"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Spring Tension Fishing Rod: absorb surges from difficult fish.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_barbed_fishing_trident",
+    "name": "Barbed Fishing Trident",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:planed_board": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:barbed_fishing_trident": 1
+    },
+    "minutes": 65,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 6,
+    "tool_qualities": {
+      "hammer": 2
+    },
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:planed_board",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Barbed Fishing Trident: spear fish in shallows and defend at pole reach.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_vinegar_preserved_fish",
+    "name": "Vinegar Preserved Fish",
+    "inputs": {
+      "core:split_fish_fillets": 2,
+      "core:coastal_kelp_vinegar": 1
+    },
+    "outputs": {
+      "core:vinegar_preserved_fish": 2
+    },
+    "minutes": 65,
+    "category": "fishery",
+    "skill": "fishing",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:split_fish_fillets",
+      "core:coastal_kelp_vinegar"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Vinegar Preserved Fish: preserve cut fish using coastal aromatic vinegar.",
+    "station": "core:smoke_rack"
+  },
+  {
+    "id": "core:craft_compost_blend",
+    "name": "Compost Blend",
+    "inputs": {
+      "core:plant_scraps": 8,
+      "core:bone_chips": 2
+    },
+    "outputs": {
+      "core:compost_blend": 1
+    },
+    "minutes": 12,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_scraps",
+      "core:bone_chips"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Compost Blend: a matured organic-mineral blend processed into bone meal."
+  },
+  {
+    "id": "core:craft_seed_cleaning_screen",
+    "name": "Seed Cleaning Screen",
+    "inputs": {
+      "core:wood_pieces": 3,
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:seed_cleaning_screen": 1
+    },
+    "minutes": 12,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:plant_cordage"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Seed Cleaning Screen: clean and separate harvested plant stock."
+  },
+  {
+    "id": "core:craft_plant_fiber_pulp",
+    "name": "Plant Fiber Pulp",
+    "inputs": {
+      "core:plant_scraps": 6,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "minutes": 12,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_scraps",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Plant Fiber Pulp: washed fiber pulp for cords and paper boards."
+  },
+  {
+    "id": "core:craft_garden_dibber",
+    "name": "Garden Dibber",
+    "inputs": {
+      "core:tool_handles": 1,
+      "core:bone_chips": 3
+    },
+    "outputs": {
+      "core:garden_dibber": 1
+    },
+    "minutes": 12,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:tool_handles",
+      "core:bone_chips"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Garden Dibber: plant and cultivate small plots."
+  },
+  {
+    "id": "core:craft_harvest_sickle",
+    "name": "Harvest Sickle",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:harvest_sickle": 1
+    },
+    "minutes": 30,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Harvest Sickle: cut harvested plants and gather fiber stock."
+  },
+  {
+    "id": "core:craft_soil_turning_fork",
+    "name": "Soil Turning Fork",
+    "inputs": {
+      "core:wood_pieces": 6,
+      "core:iron_tool_blank": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:soil_turning_fork": 1
+    },
+    "minutes": 30,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wood_pieces",
+      "core:iron_tool_blank",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Soil Turning Fork: turn soil and prepare cultivated plots."
+  },
+  {
+    "id": "core:craft_root_lifting_spade",
+    "name": "Root Lifting Spade",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:root_lifting_spade": 1
+    },
+    "minutes": 30,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Root Lifting Spade: dig roots and cultivate compact ground."
+  },
+  {
+    "id": "core:craft_save_fiber_from_pulp",
+    "name": "Save Fiber From Pulp",
+    "inputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "outputs": {
+      "core:fiber": 3
+    },
+    "minutes": 30,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_fiber_pulp"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Save Fiber From Pulp: recover clean conventional fiber from sorted plant scraps."
+  },
+  {
+    "id": "core:craft_mineralized_compost_meal",
+    "name": "Mineralized Compost Meal",
+    "inputs": {
+      "core:compost_blend": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:bone_meal": 2
+    },
+    "minutes": 65,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 6,
+    "tool_qualities": {
+      "crush": 2
+    },
+    "discovery_items": [
+      "core:compost_blend",
+      "core:mineral_grit"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Mineralized Compost Meal: make existing supported fertilizer from compost and crushed bone."
+  },
+  {
+    "id": "core:craft_long_handled_field_hoe",
+    "name": "Long Handled Field Hoe",
+    "inputs": {
+      "core:socketed_iron_hoe": 1,
+      "core:planed_board": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:long_handled_field_hoe": 1
+    },
+    "minutes": 65,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:socketed_iron_hoe",
+      "core:planed_board",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Long Handled Field Hoe: prepare larger cultivated plots efficiently."
+  },
+  {
+    "id": "core:craft_winnowing_sickle",
+    "name": "Winnowing Sickle",
+    "inputs": {
+      "core:harvest_sickle": 1,
+      "core:hardened_leather": 1,
+      "core:tempered_spring": 1
+    },
+    "outputs": {
+      "core:winnowing_sickle": 1
+    },
+    "minutes": 65,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:harvest_sickle",
+      "core:hardened_leather",
+      "core:tempered_spring"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Winnowing Sickle: cut tough stalks and prepare advanced fiberwork."
+  },
+  {
+    "id": "core:craft_pressed_plant_binder",
+    "name": "Pressed Plant Binder",
+    "inputs": {
+      "core:plant_fiber_pulp": 2,
+      "core:resin_lumps": 2,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:pressed_plant_binder": 1
+    },
+    "minutes": 65,
+    "category": "farming",
+    "skill": "farming",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_fiber_pulp",
+      "core:resin_lumps",
+      "core:grain_binder_paste"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pressed Plant Binder: fiber-rich binder for pressed shields and durable paper boards."
+  },
+  {
+    "id": "core:craft_wool_roving",
+    "name": "Wool Roving",
+    "inputs": {
+      "core:sheep_wool_locks": 2
+    },
+    "outputs": {
+      "core:wool_roving": 1
+    },
+    "minutes": 12,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:sheep_wool_locks"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wool Roving: cleaned sheep wool for warm felt and yarn."
+  },
+  {
+    "id": "core:craft_horn_button_set",
+    "name": "Horn Button Set",
+    "inputs": {
+      "core:cow_horn_ring": 2
+    },
+    "outputs": {
+      "core:horn_button_set": 3
+    },
+    "minutes": 12,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:cow_horn_ring"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Horn Button Set: carved horn buttons for reinforced garments."
+  },
+  {
+    "id": "core:craft_bristle_brush",
+    "name": "Bristle Brush",
+    "inputs": {
+      "core:boar_bristle_patch": 2,
+      "core:tool_handles": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:bristle_brush": 1
+    },
+    "minutes": 12,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:boar_bristle_patch",
+      "core:tool_handles",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bristle Brush: scrape and clean hide and plant stock."
+  },
+  {
+    "id": "core:craft_pasture_fiber_bundle",
+    "name": "Pasture Fiber Bundle",
+    "inputs": {
+      "core:sweet_clover_tops": 1,
+      "core:plant_scraps": 3
+    },
+    "outputs": {
+      "core:pasture_fiber_bundle": 1
+    },
+    "minutes": 12,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:sweet_clover_tops",
+      "core:plant_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pasture Fiber Bundle: sorted pasture fiber for warm cord and felt."
+  },
+  {
+    "id": "core:craft_fur_felt",
+    "name": "Fur Felt",
+    "inputs": {
+      "core:wool_roving": 1,
+      "core:fox_tail_tuft": 1,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:fur_felt": 1
+    },
+    "minutes": 30,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wool_roving",
+      "core:fox_tail_tuft",
+      "core:spun_yarn"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fur Felt: warm layered felt for winter hood and clothing."
+  },
+  {
+    "id": "core:craft_horn_seam_needle",
+    "name": "Horn Seam Needle",
+    "inputs": {
+      "core:goat_horn_sheath": 2,
+      "core:horn_button_set": 1
+    },
+    "outputs": {
+      "core:horn_seam_needle": 1
+    },
+    "minutes": 30,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:goat_horn_sheath",
+      "core:horn_button_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Horn Seam Needle: sew wool and hide garments with a durable horn needle."
+  },
+  {
+    "id": "core:craft_braided_wool_cord",
+    "name": "Braided Wool Cord",
+    "inputs": {
+      "core:wool_roving": 1,
+      "core:pasture_fiber_bundle": 1
+    },
+    "outputs": {
+      "core:braided_wool_cord": 2
+    },
+    "minutes": 30,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:wool_roving",
+      "core:pasture_fiber_bundle"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Braided Wool Cord: warm strong cord for padded garments and sling straps."
+  },
+  {
+    "id": "core:craft_tallow_dressing",
+    "name": "Tallow Dressing",
+    "inputs": {
+      "core:rendered_tallow": 1,
+      "core:amberroot_crown": 1
+    },
+    "outputs": {
+      "core:tallow_dressing": 1
+    },
+    "minutes": 30,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:rendered_tallow",
+      "core:amberroot_crown"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Tallow Dressing: condition leather with rendered fat and rare resin-bearing root."
+  },
+  {
+    "id": "core:craft_wool_lined_mitts",
+    "name": "Wool Lined Mitts",
+    "inputs": {
+      "core:fur_felt": 1,
+      "core:oiled_leather": 1,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:wool_lined_mitts": 1
+    },
+    "minutes": 65,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:fur_felt",
+      "core:oiled_leather",
+      "core:braided_wool_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wool Lined Mitts: keep hands and forearms warm on cold journeys."
+  },
+  {
+    "id": "core:craft_pasture_winter_coat",
+    "name": "Pasture Winter Coat",
+    "inputs": {
+      "core:fur_felt": 3,
+      "core:reinforced_cloth": 1,
+      "core:horn_button_set": 2
+    },
+    "outputs": {
+      "core:pasture_winter_coat": 1
+    },
+    "minutes": 65,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:fur_felt",
+      "core:reinforced_cloth",
+      "core:horn_button_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pasture Winter Coat: insulate the torso heavily using wool recovered from carcasses."
+  },
+  {
+    "id": "core:craft_horn_shod_staff",
+    "name": "Horn Shod Staff",
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:planed_board": 2,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:horn_shod_staff": 1
+    },
+    "minutes": 65,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:horn_laminate",
+      "core:planed_board",
+      "core:braided_wool_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Horn Shod Staff: strike at reach with a horn-capped walking staff."
+  },
+  {
+    "id": "core:craft_condition_leather_with_tallow",
+    "name": "Condition Leather With Tallow",
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:tallow_dressing": 1
+    },
+    "outputs": {
+      "core:leather": 1
+    },
+    "minutes": 65,
+    "category": "husbandry",
+    "skill": "survival",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cured_leather_panel",
+      "core:tallow_dressing"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Condition Leather With Tallow: recover flexible conventional leather for equipment and trade."
+  },
+  {
+    "id": "core:craft_feather_fletching",
+    "name": "Feather Fletching",
+    "inputs": {
+      "core:turkey_quill_fan": 1,
+      "core:chicken_quill_bundle": 1
+    },
+    "outputs": {
+      "core:feather_fletching": 4
+    },
+    "minutes": 12,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:turkey_quill_fan",
+      "core:chicken_quill_bundle"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Feather Fletching: trim intact bird quills into arrow fletching."
+  },
+  {
+    "id": "core:craft_bone_arrow_point",
+    "name": "Bone Arrow Point",
+    "inputs": {
+      "core:wolf_fang_pair": 1,
+      "core:bone_chips": 2
+    },
+    "outputs": {
+      "core:bone_arrow_point": 3
+    },
+    "minutes": 12,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wolf_fang_pair",
+      "core:bone_chips"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bone Arrow Point: sharp bone points for finished wood arrows."
+  },
+  {
+    "id": "core:craft_shaft_bundle",
+    "name": "Shaft Bundle",
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:shaft_bundle": 3
+    },
+    "minutes": 12,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Shaft Bundle: straightened shafts for standard arrows and hunting spears."
+  },
+  {
+    "id": "core:craft_fur_grip_pad",
+    "name": "Fur Grip Pad",
+    "inputs": {
+      "core:rabbit_foot_tuft": 1,
+      "core:leather_scraps": 2
+    },
+    "outputs": {
+      "core:fur_grip_pad": 1
+    },
+    "minutes": 12,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:rabbit_foot_tuft",
+      "core:leather_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fur Grip Pad: a soft grip pad for hunting knives and sling cradles."
+  },
+  {
+    "id": "core:craft_make_fletched_arrows",
+    "name": "Make Fletched Arrows",
+    "inputs": {
+      "core:shaft_bundle": 1,
+      "core:feather_fletching": 1,
+      "core:bone_arrow_point": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:wood_arrow": 3
+    },
+    "minutes": 30,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:shaft_bundle",
+      "core:feather_fletching",
+      "core:bone_arrow_point",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Make Fletched Arrows: make the existing supported arrows used by hunting bows."
+  },
+  {
+    "id": "core:craft_bone_hunting_knife",
+    "name": "Bone Hunting Knife",
+    "inputs": {
+      "core:bone_arrow_point": 2,
+      "core:fitted_grip": 1,
+      "core:fur_grip_pad": 1
+    },
+    "outputs": {
+      "core:bone_hunting_knife": 1
+    },
+    "minutes": 30,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bone_arrow_point",
+      "core:fitted_grip",
+      "core:fur_grip_pad"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bone Hunting Knife: skin and portion medium game without iron."
+  },
+  {
+    "id": "core:craft_weighted_hide_sling",
+    "name": "Weighted Hide Sling",
+    "inputs": {
+      "core:leather_lace": 3,
+      "core:fur_grip_pad": 1,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:weighted_hide_sling": 1
+    },
+    "minutes": 30,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:leather_lace",
+      "core:fur_grip_pad",
+      "core:braided_wool_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Weighted Hide Sling: throw standard sling stones at game."
+  },
+  {
+    "id": "core:craft_antler_throwing_dart",
+    "name": "Antler Throwing Dart",
+    "inputs": {
+      "core:deer_antler_tip": 1,
+      "core:shaft_bundle": 1,
+      "core:feather_fletching": 1
+    },
+    "outputs": {
+      "core:antler_throwing_dart": 1
+    },
+    "minutes": 30,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:deer_antler_tip",
+      "core:shaft_bundle",
+      "core:feather_fletching"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Antler Throwing Dart: throw a recoverable antler-tipped hunting projectile."
+  },
+  {
+    "id": "core:craft_barbed_hunting_spear",
+    "name": "Barbed Hunting Spear",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:shaft_bundle": 2,
+      "core:carved_bone_barb": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:barbed_hunting_spear": 1
+    },
+    "minutes": 65,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:shaft_bundle",
+      "core:carved_bone_barb",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Barbed Hunting Spear: deliver piercing attacks from pole reach."
+  },
+  {
+    "id": "core:craft_hunting_reflex_bow",
+    "name": "Hunting Reflex Bow",
+    "inputs": {
+      "core:laminated_bow_limbs": 2,
+      "core:waxed_casting_line": 1,
+      "core:fur_grip_pad": 1
+    },
+    "outputs": {
+      "core:hunting_reflex_bow": 1
+    },
+    "minutes": 65,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:laminated_bow_limbs",
+      "core:waxed_casting_line",
+      "core:fur_grip_pad"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hunting Reflex Bow: shoot standard arrows accurately over longer distances."
+  },
+  {
+    "id": "core:craft_tracker_skinning_set",
+    "name": "Tracker Skinning Set",
+    "inputs": {
+      "core:antler_skinning_knife": 1,
+      "core:bear_claw_sheath": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:tracker_skinning_set": 1
+    },
+    "minutes": 65,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:antler_skinning_knife",
+      "core:bear_claw_sheath",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Tracker Skinning Set: process high-value carcasses with strong skinning tools."
+  },
+  {
+    "id": "core:craft_layered_hunter_bracers",
+    "name": "Layered Hunter Bracers",
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:fur_felt": 1,
+      "core:hardened_leather": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:layered_hunter_bracers": 1
+    },
+    "minutes": 65,
+    "category": "hunting",
+    "skill": "hunting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:horn_laminate",
+      "core:fur_felt",
+      "core:hardened_leather",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Layered Hunter Bracers: protect forearms while stalking and fighting game."
+  },
+  {
+    "id": "core:craft_timber_wedge",
+    "name": "Timber Wedge",
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:timber_wedge": 2
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood_pieces"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Timber Wedge: hard wooden wedges for splitting mauls and log tools."
+  },
+  {
+    "id": "core:craft_pitch_binder",
+    "name": "Pitch Binder",
+    "inputs": {
+      "core:resin_lumps": 3,
+      "core:bark": 1
+    },
+    "outputs": {
+      "core:pitch_binder": 1
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:resin_lumps",
+      "core:bark"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pitch Binder: thick pitch adhesive for laminated timber shields."
+  },
+  {
+    "id": "core:craft_hardwood_blank",
+    "name": "Hardwood Blank",
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:hardwood_blank": 2
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:wood"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hardwood Blank: selected straight-grained timber for axes and log hooks."
+  },
+  {
+    "id": "core:craft_bark_felt",
+    "name": "Bark Felt",
+    "inputs": {
+      "core:bark": 3,
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:bark_felt": 1
+    },
+    "minutes": 12,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bark",
+      "core:fiber"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bark Felt: layered bark-and-fiber insulation for forestry clothing."
+  },
+  {
+    "id": "core:craft_timber_hook",
+    "name": "Timber Hook",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:hardwood_blank": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:timber_hook": 1
+    },
+    "minutes": 30,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hardwood_blank",
+      "core:leather_grip_wrap"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Timber Hook: work and pierce timber with a hooked edged head."
+  },
+  {
+    "id": "core:craft_splitting_maul",
+    "name": "Splitting Maul",
+    "inputs": {
+      "core:hardwood_blank": 1,
+      "core:timber_wedge": 2,
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:splitting_maul": 1
+    },
+    "minutes": 30,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:hardwood_blank",
+      "core:timber_wedge",
+      "core:stone"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Splitting Maul: split logs and drive timber wedges."
+  },
+  {
+    "id": "core:craft_felling_axe",
+    "name": "Felling Axe",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hardwood_blank": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:felling_axe": 1
+    },
+    "minutes": 30,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hardwood_blank",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Felling Axe: harvest substantial trees with a long hafted axe."
+  },
+  {
+    "id": "core:craft_wood_boring_auger",
+    "name": "Wood Boring Auger",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:hardwood_blank": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:wood_boring_auger": 1
+    },
+    "minutes": 30,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hardwood_blank",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Wood Boring Auger: bore joinery holes and cut fitted timber."
+  },
+  {
+    "id": "core:craft_bark_lined_forester_hood",
+    "name": "Bark Lined Forester Hood",
+    "inputs": {
+      "core:bark_felt": 2,
+      "core:oiled_leather": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:bark_lined_forester_hood": 1
+    },
+    "minutes": 65,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:bark_felt",
+      "core:oiled_leather",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bark Lined Forester Hood: protect and insulate the head during cold forestry work."
+  },
+  {
+    "id": "core:craft_pitch_laminated_shield",
+    "name": "Pitch Laminated Shield",
+    "inputs": {
+      "core:planed_board": 3,
+      "core:pitch_binder": 2,
+      "core:bentwood_frame": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:pitch_laminated_shield": 1
+    },
+    "minutes": 65,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:planed_board",
+      "core:pitch_binder",
+      "core:bentwood_frame",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pitch Laminated Shield: block attacks behind pitch-bonded layers of timber."
+  },
+  {
+    "id": "core:craft_loggers_mattock",
+    "name": "Loggers Mattock",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hardwood_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:loggers_mattock": 1
+    },
+    "minutes": 65,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hardwood_blank",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Loggers Mattock: clear timber roots, dig soil and break softer stone."
+  },
+  {
+    "id": "core:craft_tensioned_timber_saw",
+    "name": "Tensioned Timber Saw",
+    "inputs": {
+      "core:metal_frame_saw": 1,
+      "core:tempered_spring": 2,
+      "core:fitted_grip": 2,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:tensioned_timber_saw": 1
+    },
+    "minutes": 65,
+    "category": "forestry",
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:metal_frame_saw",
+      "core:tempered_spring",
+      "core:fitted_grip",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Tensioned Timber Saw: saw and harvest dense timber using a tensioned blade."
+  },
+  {
+    "id": "core:craft_washed_ore_fragments",
+    "name": "Washed Ore Fragments",
+    "inputs": {
+      "core:iron_ore": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:washed_ore_fragments": 1
+    },
+    "minutes": 12,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_ore",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Washed Ore Fragments: sorted iron-bearing fragments for consolidation in the forge."
+  },
+  {
+    "id": "core:craft_polishing_slurry",
+    "name": "Polishing Slurry",
+    "inputs": {
+      "core:abrasive_powder": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:polishing_slurry": 1
+    },
+    "minutes": 12,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:abrasive_powder",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Polishing Slurry: wet abrasive for grinding optics and crystal cutting edges."
+  },
+  {
+    "id": "core:craft_sorted_crystal_faces",
+    "name": "Sorted Crystal Faces",
+    "inputs": {
+      "core:clear_crystal": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:sorted_crystal_faces": 2
+    },
+    "minutes": 12,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:clear_crystal",
+      "core:mineral_grit"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sorted Crystal Faces: selected clear faces for polished lenses and fine blades."
+  },
+  {
+    "id": "core:craft_copper_granules",
+    "name": "Copper Granules",
+    "inputs": {
+      "core:copper_ore": 1
+    },
+    "outputs": {
+      "core:copper_granules": 2
+    },
+    "minutes": 12,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 1,
+    "tool_qualities": {
+      "hammer": 1
+    },
+    "discovery_items": [
+      "core:copper_ore"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Copper Granules: sorted copper-bearing granules for specialist copper sheet work."
+  },
+  {
+    "id": "core:craft_ore_sifting_screen",
+    "name": "Ore Sifting Screen",
+    "inputs": {
+      "core:canvas_panel": 1,
+      "core:wooden_dowels": 4,
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:ore_sifting_screen": 1
+    },
+    "minutes": 30,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:canvas_panel",
+      "core:wooden_dowels",
+      "core:metal_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Ore Sifting Screen: scrape and work mineral stock in ore-preparation recipes."
+  },
+  {
+    "id": "core:craft_geologists_hammer",
+    "name": "Geologists Hammer",
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:geologists_hammer": 1
+    },
+    "minutes": 30,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tool_handles"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Geologists Hammer: break small veins and dress mineral specimens."
+  },
+  {
+    "id": "core:craft_iron_splitting_wedges",
+    "name": "Iron Splitting Wedges",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:iron_splitting_wedges": 1
+    },
+    "minutes": 30,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Iron Splitting Wedges: split exposed rock while mining veins."
+  },
+  {
+    "id": "core:craft_padded_mining_cap",
+    "name": "Padded Mining Cap",
+    "inputs": {
+      "core:felt_padding": 1,
+      "core:hardened_leather": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:padded_mining_cap": 1
+    },
+    "minutes": 30,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 1
+    },
+    "discovery_items": [
+      "core:felt_padding",
+      "core:hardened_leather",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Padded Mining Cap: protect the head during travel and underground combat."
+  },
+  {
+    "id": "core:craft_hardened_ore_auger",
+    "name": "Hardened Ore Auger",
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tempered_spring": 1,
+      "core:fitted_grip": 1,
+      "core:nuts_and_bolts": 3
+    },
+    "outputs": {
+      "core:hardened_ore_auger": 1
+    },
+    "minutes": 65,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:tempered_spring",
+      "core:fitted_grip",
+      "core:nuts_and_bolts"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Hardened Ore Auger: mine dense exposed mineral seams with a hardened auger."
+  },
+  {
+    "id": "core:craft_plated_mining_gauntlets",
+    "name": "Plated Mining Gauntlets",
+    "inputs": {
+      "core:segmented_armor_plates": 1,
+      "core:hardened_leather": 1,
+      "core:felt_padding": 1,
+      "core:rivet_set": 2
+    },
+    "outputs": {
+      "core:plated_mining_gauntlets": 1
+    },
+    "minutes": 65,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:segmented_armor_plates",
+      "core:hardened_leather",
+      "core:felt_padding",
+      "core:rivet_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Plated Mining Gauntlets: protect forearms with padded metal plates."
+  },
+  {
+    "id": "core:craft_heavy_quarry_pick",
+    "name": "Heavy Quarry Pick",
+    "inputs": {
+      "core:iron_tool_blank": 3,
+      "core:hardwood_blank": 1,
+      "core:leather_grip_wrap": 2,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:heavy_quarry_pick": 1
+    },
+    "minutes": 65,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:iron_tool_blank",
+      "core:hardwood_blank",
+      "core:leather_grip_wrap",
+      "core:rivet_set"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Heavy Quarry Pick: mine the toughest supported veins with a heavy reinforced pick."
+  },
+  {
+    "id": "core:craft_crystal_burnisher",
+    "name": "Crystal Burnisher",
+    "inputs": {
+      "core:sorted_crystal_faces": 2,
+      "core:polishing_slurry": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:crystal_burnisher": 1
+    },
+    "minutes": 65,
+    "category": "mining",
+    "skill": "mining",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:sorted_crystal_faces",
+      "core:polishing_slurry",
+      "core:fitted_grip"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Crystal Burnisher: cut and crush hard stock while preparing fine crafted surfaces."
+  },
+  {
+    "id": "core:craft_clean_dressing_pad",
+    "name": "Clean Dressing Pad",
+    "inputs": {
+      "core:cloth_scraps": 4,
+      "core:linen_panel": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:clean_dressing_pad": 1
+    },
+    "minutes": 12,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:cloth_scraps",
+      "core:linen_panel",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Clean Dressing Pad: washed folded dressing pads finished into supported bandages.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_bitter_herbal_extract",
+    "name": "Bitter Herbal Extract",
+    "inputs": {
+      "core:medicinal_herb": 1,
+      "core:yarrow": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bitter_herbal_extract": 1
+    },
+    "minutes": 12,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:medicinal_herb",
+      "core:yarrow",
+      "core:clean_water"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bitter Herbal Extract: a strained medicinal-herb preparation for tonic.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_silverleaf_powder",
+    "name": "Silverleaf Powder",
+    "inputs": {
+      "core:silverleaf_sprig": 1,
+      "core:medicinal_herb": 1
+    },
+    "outputs": {
+      "core:silverleaf_powder": 1
+    },
+    "minutes": 12,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:silverleaf_sprig",
+      "core:medicinal_herb"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Silverleaf Powder: rare silverleaf ground for apothecary tonic preparation.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_marsh_resin_balm",
+    "name": "Marsh Resin Balm",
+    "inputs": {
+      "core:marsh_amber_bulb": 1,
+      "core:resin_lumps": 2,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:marsh_resin_balm": 1
+    },
+    "minutes": 12,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:marsh_amber_bulb",
+      "core:resin_lumps",
+      "core:animal_fat"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Marsh Resin Balm: a botanical resin-and-fat base finished into sanitation soap.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_filtered_herb_concentrate",
+    "name": "Filtered Herb Concentrate",
+    "inputs": {
+      "core:bitter_herbal_extract": 2,
+      "core:ceramic_filter_media": 1,
+      "core:saffron_crocus_tuft": 1
+    },
+    "outputs": {
+      "core:filtered_herb_concentrate": 1
+    },
+    "minutes": 30,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:bitter_herbal_extract",
+      "core:ceramic_filter_media",
+      "core:saffron_crocus_tuft"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Filtered Herb Concentrate: filtered rare-botanical concentrate for infection-supportive tonic.",
+    "station": "core:herbalist_table",
+    "catalysts": {
+      "core:porous_filter_candle": 1
+    }
+  },
+  {
+    "id": "core:craft_orchid_lotus_essence",
+    "name": "Orchid Lotus Essence",
+    "inputs": {
+      "core:ghost_orchid_stem": 1,
+      "core:blue_lotus_stalk": 1,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:orchid_lotus_essence": 1
+    },
+    "minutes": 30,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:ghost_orchid_stem",
+      "core:blue_lotus_stalk",
+      "core:aromatic_oil"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Orchid Lotus Essence: an aromatic rare-plant essence used in the apothecary tonic process.",
+    "station": "core:herbalist_table",
+    "catalysts": {
+      "core:ceramic_distillation_coil": 1
+    }
+  },
+  {
+    "id": "core:craft_fitted_splint_frame",
+    "name": "Fitted Splint Frame",
+    "inputs": {
+      "core:tool_handles": 2,
+      "core:cloth_scraps": 3,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:fitted_splint_frame": 1
+    },
+    "minutes": 30,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:tool_handles",
+      "core:cloth_scraps",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Fitted Splint Frame: a fitted frame braced into existing supported fracture splints.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_stonecrop_cleansing_paste",
+    "name": "Stonecrop Cleansing Paste",
+    "inputs": {
+      "core:crimson_stonecrop_crown": 1,
+      "core:grain_vinegar": 1
+    },
+    "outputs": {
+      "core:stonecrop_cleansing_paste": 1
+    },
+    "minutes": 30,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:crimson_stonecrop_crown",
+      "core:grain_vinegar"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Stonecrop Cleansing Paste: a botanical acidic preparation used in sanitation soap.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_finish_clean_bandages",
+    "name": "Finish Clean Bandages",
+    "inputs": {
+      "core:clean_dressing_pad": 2,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:bandage": 3
+    },
+    "minutes": 65,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 1
+    },
+    "discovery_items": [
+      "core:clean_dressing_pad",
+      "core:waxed_thread"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Finish Clean Bandages: finish supported wound bandages from washed cloth pads.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_brace_fitted_splints",
+    "name": "Brace Fitted Splints",
+    "inputs": {
+      "core:fitted_splint_frame": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:splint": 2
+    },
+    "minutes": 65,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:fitted_splint_frame",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Brace Fitted Splints: finish supported fracture braces from fitted splint frames.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_compound_botanical_tonic",
+    "name": "Compound Botanical Tonic",
+    "inputs": {
+      "core:filtered_herb_concentrate": 1,
+      "core:silverleaf_powder": 1,
+      "core:orchid_lotus_essence": 1
+    },
+    "outputs": {
+      "core:herbal_tonic": 3
+    },
+    "minutes": 65,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:filtered_herb_concentrate",
+      "core:silverleaf_powder",
+      "core:orchid_lotus_essence"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Compound Botanical Tonic: compound the existing supported infection-care tonic.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_cure_botanical_soap",
+    "name": "Cure Botanical Soap",
+    "inputs": {
+      "core:marsh_resin_balm": 1,
+      "core:stonecrop_cleansing_paste": 1
+    },
+    "outputs": {
+      "core:soap": 4
+    },
+    "minutes": 65,
+    "category": "medicine",
+    "skill": "medicine",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:marsh_resin_balm",
+      "core:stonecrop_cleansing_paste"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Cure Botanical Soap: finish existing sanitation soap for player trade and household use.",
+    "station": "core:herbalist_table"
+  },
+  {
+    "id": "core:craft_recycled_rag_paper",
+    "name": "Recycled Rag Paper",
+    "inputs": {
+      "core:plant_fiber_pulp": 1,
+      "core:cloth_scraps": 4
+    },
+    "outputs": {
+      "core:recycled_rag_paper": 2
+    },
+    "minutes": 12,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:plant_fiber_pulp",
+      "core:cloth_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recycled Rag Paper: clean rag paper for parchment stock and layered paper armor.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_pressed_pulp_board",
+    "name": "Pressed Pulp Board",
+    "inputs": {
+      "core:recycled_rag_paper": 2,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:pressed_pulp_board": 1
+    },
+    "minutes": 12,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:recycled_rag_paper",
+      "core:grain_binder_paste"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Pressed Pulp Board: dense paper board for reinforced shields and garments.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_carbon_pigment",
+    "name": "Carbon Pigment",
+    "inputs": {
+      "core:coal": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:carbon_pigment": 2
+    },
+    "minutes": 12,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 1,
+    "tool_qualities": {
+      "crush": 1
+    },
+    "discovery_items": [
+      "core:coal",
+      "core:resin_lumps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Carbon Pigment: resin-bound carbon used to seal paper laminations.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_binding_cord",
+    "name": "Binding Cord",
+    "inputs": {
+      "core:spun_yarn": 2,
+      "core:silver_filament": 1
+    },
+    "outputs": {
+      "core:binding_cord": 2
+    },
+    "minutes": 12,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 1,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:spun_yarn",
+      "core:silver_filament"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Binding Cord: fine reinforced cord for precision needles and layered paper gear.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_sealed_paper_panel",
+    "name": "Sealed Paper Panel",
+    "inputs": {
+      "core:pressed_pulp_board": 1,
+      "core:carbon_pigment": 1,
+      "core:pressed_plant_binder": 1
+    },
+    "outputs": {
+      "core:sealed_paper_panel": 1
+    },
+    "minutes": 30,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 3,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:pressed_pulp_board",
+      "core:carbon_pigment",
+      "core:pressed_plant_binder"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sealed Paper Panel: resin-sealed paper composite for protective clothing and shields.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_layered_paper_cap",
+    "name": "Layered Paper Cap",
+    "inputs": {
+      "core:recycled_rag_paper": 3,
+      "core:pressed_plant_binder": 1,
+      "core:binding_cord": 1
+    },
+    "outputs": {
+      "core:layered_paper_cap": 1
+    },
+    "minutes": 30,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 3,
+    "tool_qualities": {
+      "sew": 1
+    },
+    "discovery_items": [
+      "core:recycled_rag_paper",
+      "core:pressed_plant_binder",
+      "core:binding_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Layered Paper Cap: light layered head protection made from recovered fiber.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_bookbinders_needle",
+    "name": "Bookbinders Needle",
+    "inputs": {
+      "core:bone_chips": 4,
+      "core:copper_wire": 2,
+      "core:binding_cord": 1
+    },
+    "outputs": {
+      "core:bookbinders_needle": 1
+    },
+    "minutes": 30,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 3,
+    "tool_qualities": {
+      "cut": 1
+    },
+    "discovery_items": [
+      "core:bone_chips",
+      "core:copper_wire",
+      "core:binding_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Bookbinders Needle: stitch heavy bound paper, leather and textile seams.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_polished_crystal_lens",
+    "name": "Polished Crystal Lens",
+    "inputs": {
+      "core:sorted_crystal_faces": 1,
+      "core:abrasive_powder": 1,
+      "core:polishing_slurry": 1
+    },
+    "outputs": {
+      "core:polished_crystal_lens": 1
+    },
+    "minutes": 30,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 3,
+    "tool_qualities": {
+      "crush": 2
+    },
+    "discovery_items": [
+      "core:sorted_crystal_faces",
+      "core:abrasive_powder",
+      "core:polishing_slurry"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Polished Crystal Lens: a clear magnifying lens for precision sewing tools.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_prepare_writing_stock",
+    "name": "Prepare Writing Stock",
+    "inputs": {
+      "core:recycled_rag_paper": 3,
+      "core:filtered_malt_culture": 1,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:parchment": 3
+    },
+    "minutes": 65,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:recycled_rag_paper",
+      "core:filtered_malt_culture",
+      "core:grain_binder_paste"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Prepare Writing Stock: prepare supported writing stock consumed by the knowledge-copying economy.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_laminated_paper_shield",
+    "name": "Laminated Paper Shield",
+    "inputs": {
+      "core:sealed_paper_panel": 3,
+      "core:bentwood_frame": 1,
+      "core:binding_cord": 2,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:laminated_paper_shield": 1
+    },
+    "minutes": 65,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:sealed_paper_panel",
+      "core:bentwood_frame",
+      "core:binding_cord",
+      "core:leather_lace"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Laminated Paper Shield: block attacks with a lightweight frame and layered sealed fiber.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_lens_mounted_needle",
+    "name": "Lens Mounted Needle",
+    "inputs": {
+      "core:polished_crystal_lens": 1,
+      "core:bookbinders_needle": 1,
+      "core:silver_filament": 1,
+      "core:fine_gear": 1
+    },
+    "outputs": {
+      "core:lens_mounted_needle": 1
+    },
+    "minutes": 65,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 6,
+    "tool_qualities": {},
+    "discovery_items": [
+      "core:polished_crystal_lens",
+      "core:bookbinders_needle",
+      "core:silver_filament",
+      "core:fine_gear"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Lens Mounted Needle: control fine sewing under a built-in magnifying lens.",
+    "station": "core:workbench"
+  },
+  {
+    "id": "core:craft_layered_paper_coat",
+    "name": "Layered Paper Coat",
+    "inputs": {
+      "core:sealed_paper_panel": 2,
+      "core:reinforced_cloth": 1,
+      "core:binding_cord": 2
+    },
+    "outputs": {
+      "core:layered_paper_coat": 1
+    },
+    "minutes": 65,
+    "category": "scholarship",
+    "skill": "scholarship",
+    "difficulty": 6,
+    "tool_qualities": {
+      "sew": 2
+    },
+    "discovery_items": [
+      "core:sealed_paper_panel",
+      "core:reinforced_cloth",
+      "core:binding_cord"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Layered Paper Coat: protect and insulate the torso with sealed paper laminations.",
+    "station": "core:workbench"
   }
 ]

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev62"
+ENGINE_VERSION = "1.0.0-rc14-dev63"
 SAVE_SCHEMA_VERSION = 3
 
 # Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
@@ -42,7 +42,9 @@ ROUTEGEN_VERSION = 4
 # political geography when the scoring or spacing contract changes.
 TERRITORY_VERSION = 1
 RNG_PROTOCOL_VERSION = 1
-RESOURCEGEN_VERSION = 4
+# Salvage forage expands only new resource overlays. Existing saves retain
+# their recorded resourcegen_version and therefore their original flora.
+RESOURCEGEN_VERSION = 5
 CHUNK_SIZE = 32
 REGION_CHUNKS = 16
 DEFAULT_CACHE_CHUNKS = 384

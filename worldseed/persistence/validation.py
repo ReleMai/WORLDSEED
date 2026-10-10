@@ -198,11 +198,102 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
     return issues
 
 
+def validate_salvage_session(session: Any, attempts: int) -> list[str]:
+    """Check the already-consumed project without looking up world content."""
+    if not isinstance(session, dict):
+        return ['invalid salvage session']
+    if not session:
+        return []
+    issues = []
+    def identity(value):
+        return isinstance(value, str) and ':' in value and not any(c.isspace() for c in value)
+    if type(session.get('version')) is not int or session.get('version') != 1:
+        issues.append('unsupported salvage session version')
+    if not identity(session.get('item_id')) or not identity(session.get('definition_id')):
+        issues.append('invalid salvage session item identity')
+    attempt = session.get('attempt')
+    if type(attempt) is not int or type(attempts) is not int or not 0 <= attempt < attempts:
+        issues.append('salvage session attempt is not reserved')
+    if type(session.get('started_minute')) is not int or session['started_minute'] < 0:
+        issues.append('invalid salvage session start time')
+    step, score = session.get('step'), session.get('score')
+    valid_progress = type(step) is int and 0 <= step <= 2 and type(score) is int and 0 <= score <= 2 * step and score % 2 == 0
+    choices = session.get('choices')
+    if (not valid_progress or not isinstance(choices, list)
+            or any(not isinstance(choice, str) or not choice for choice in choices)
+            or (type(step) is int and len(choices) != step)):
+        issues.append('invalid salvage decision progress')
+    if isinstance(choices, list):
+        legal_choices = ({'brace', 'pad', 'brush'}, {'unfasten', 'strip', 'sort', 'crush', 'carve', 'clean'})
+        if any(index >= len(legal_choices) or not isinstance(choice, str) or choice not in legal_choices[index]
+               for index, choice in enumerate(choices)):
+            issues.append('invalid persisted salvage action')
+    phase = session.get('phase')
+    if phase not in ('inspection', 'disassembly') or (phase == 'inspection' and (step != 0 or score != 0)):
+        issues.append('invalid salvage session phase')
+    challenges = session.get('challenges')
+    if not isinstance(challenges, list) or len(challenges) != 3 or any(type(v) is not int or not 0 <= v <= 2 for v in challenges):
+        issues.append('invalid salvage inspection challenges')
+    for key, maximum in (('skill_level', 10), ('tool_bonus', 12)):
+        if type(session.get(key)) is not int or not 0 <= session[key] <= maximum:
+            issues.append(f'invalid salvage session {key}')
+    return issues
+
+
+def _validate_salvaging(raw: dict[str, Any]) -> list[str]:
+    issues = []
+    skills = raw.get('player_skills', {})
+    level = skills.get('salvaging', 0) if isinstance(skills, dict) else 0
+    if type(level) is not int or not 0 <= level <= 10:
+        issues.append('salvaging skill out of bounds')
+        level = 0
+    xp = raw.get('player_salvaging_xp', 0)
+    if type(xp) is not int or not 0 <= xp < 24 + level * 14:
+        issues.append('salvaging practice out of bounds')
+    attempts = raw.get('salvaging_attempts', 0)
+    if type(attempts) is not int or not 0 <= attempts <= 1_000_000_000:
+        issues.append('salvaging attempt count out of bounds')
+    issues.extend(validate_salvage_session(raw.get('player_salvage_session', {}), attempts))
+    rows = raw.get('player_salvage_log', [])
+    if not isinstance(rows, list) or len(rows) > 80:
+        issues.append('invalid salvage result log')
+        return issues
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            issues.append('invalid salvage result record')
+            continue
+        attempt = row.get('attempt')
+        if type(attempt) is not int or type(attempts) is not int or not 0 <= attempt < attempts or attempt in seen:
+            issues.append('invalid or duplicate completed salvage attempt')
+        if type(attempt) is int:
+            seen.add(attempt)
+        score = row.get('score')
+        if type(score) is not int or not 0 <= score <= 6 or score % 2 or row.get('max_score') != 6:
+            issues.append('invalid salvage result score')
+        for key in ('outputs', 'rare_outputs'):
+            drops = row.get(key)
+            if (not isinstance(drops, dict) or (key == 'outputs' and not drops)
+                    or any(not isinstance(iid, str) or ':' not in iid or type(amount) is not int or not 1 <= amount <= 1000
+                           for iid, amount in (drops.items() if isinstance(drops, dict) else []))):
+                issues.append(f'invalid salvage result {key}')
+        if isinstance(row.get('outputs'), dict) and isinstance(row.get('rare_outputs'), dict):
+            if any(row['outputs'].get(iid) != amount for iid, amount in row['rare_outputs'].items()):
+                issues.append('rare salvage drops disagree with total outputs')
+        if type(row.get('completed_minute')) is not int or row['completed_minute'] < 0:
+            issues.append('invalid salvage completion time')
+    session = raw.get('player_salvage_session', {})
+    if isinstance(session, dict) and session and type(session.get('attempt')) is int and session['attempt'] in seen:
+        issues.append('salvage attempt is both active and completed')
+    return issues
+
+
 def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     if not raw:
         return []
     issues: list[str] = []
     issues.extend(_validate_interiors(raw))
+    issues.extend(_validate_salvaging(raw))
     xp=raw.get('player_swimming_xp',0)
     skill=(raw.get('player_skills',{}) or {}).get('swimming',0)
     if not isinstance(xp,int) or not 0<=xp<120:issues.append('swimming practice out of bounds')

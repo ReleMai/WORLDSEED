@@ -1,10 +1,11 @@
 from __future__ import annotations
-from worldseed.systems.household_economy import FOODS
+from worldseed.systems.household_economy import food_items
 
 from collections import defaultdict
 
 from worldseed.content.registry import ContentRegistry, SettlementProcessDef
 from worldseed.core.rng import hash_u64
+from worldseed.core.coords import WorldPos
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.state import CaravanState, LaborReservationState, LivingWorldState, MarketTransactionState, TradeRouteState, TheftRecordState
 from worldseed.systems.pathfinding import HierarchicalPathfinder
@@ -53,8 +54,20 @@ class EconomySystem:
         self.workplace_logistics=None
         self.route_planner=None
         self.physical_labor_authorities=[]
+        self.world=None
+        self._supplied_labor_workers={}
+        self.foods=food_items(registry)
+        self.targets=dict(TARGET)
+        for proc in registry.settlement_processes.values():
+            target=max(0,int(getattr(proc,"market_target",0)))
+            if target:
+                self.targets[proc.priority_good]=max(target,self.targets.get(proc.priority_good,0))
 
-    def attach_workplace_logistics(self,system)->None:self.workplace_logistics=system
+    def attach_workplace_logistics(self,system)->None:
+        self.workplace_logistics=system
+        if system is not None:
+            system.physical_labor_authorities=self.physical_labor_authorities
+            self.world=getattr(getattr(system,"physicalization",None),"world",None) or self.world
     def attach_route_planner(self,system)->None:self.route_planner=system
     def attach_physical_labor_authority(self,system)->None:
         if system is not None and system not in self.physical_labor_authorities:
@@ -74,7 +87,7 @@ class EconomySystem:
 
     def _price(self, item: str, stock: int) -> int:
         base = BASE_PRICE.get(item, self.registry.items.get(item).base_value if item in self.registry.items else 5)
-        target = TARGET.get(item, 30)
+        target = self.targets.get(item, 30)
         scarcity = max(25, min(400, (target * 100) // max(1, stock)))
         return max(1, (base * scarcity) // 100)
 
@@ -92,7 +105,7 @@ class EconomySystem:
     def update_prices(self) -> None:
         for s in self.state.settlements.values():
             self.ensure_currency(s)
-            goods = set(BASE_PRICE) | set(s.stocks)
+            goods = set(self.targets) | set(s.stocks)
             s.prices = {g: self._price(g, s.stocks.get(g, 0)) for g in goods}
 
     def _build_labor_pool(self, town) -> None:
@@ -124,20 +137,85 @@ class EconomySystem:
         town.labor_pool = pool
         town.unemployment = pool.get("general", 0)
 
-    def _shortage_score(self, town, proc: SettlementProcessDef) -> int:
+    def _labor_supply_context(self,town):
+        """Index real worker inventories once for this reservation pass."""
+        workers=defaultdict(list);containers=defaultdict(list)
+        for npc in self.state.npcs.values():
+            if npc.alive and npc.age>=16 and npc.settlement_id==town.uid:
+                workers[npc.occupation].append(npc)
+        for container in self.state.containers.values():
+            if container.settlement_id==town.uid and container.property_id:
+                containers[container.property_id].append(container)
+        return workers,containers
+
+    def _shortage_score(self, town, proc: SettlementProcessDef, supply_context=None) -> int:
         good = proc.priority_good
-        target = TARGET.get(good, 30)
+        target = self.targets.get(good, 30)
         stock = town.stocks.get(good, 0)
-        score = max(1, target - stock)
-        # Inputs that cannot be supplied strongly suppress the process.
-        for iid, qty in proc.inputs.items():
-            if town.stocks.get(iid, 0) < qty:
-                score //= 4
-        if proc.knowledge and proc.knowledge not in town.knowledge:
+        score = max(0, target - stock)
+        if score<=0:
             return 0
+        if proc.knowledge and proc.knowledge not in town.knowledge:return 0
+        missing=any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items())
+        if getattr(proc,"recipe_id",""):
+            # An absent tool/catalyst blocks anonymous production just as an
+            # absent ingredient does. Only a supplied named worker may reserve
+            # that job; a catalog of unavailable crafts cannot absorb town labor.
+            if not missing and self._recipe_prerequisites(town,proc):return score
+            workers,containers=supply_context or self._labor_supply_context(town)
+            supplied=[]
+            for npc in workers.get(proc.occupation,()):
+                owned=[container for property_id in {npc.home_id,npc.workplace_id}-{''}
+                       for container in containers.get(property_id,())]
+                if any(callable(getattr(authority,"can_supply_process",None))
+                       and authority.can_supply_process(npc,town,proc,owned_containers=owned)
+                       for authority in self.physical_labor_authorities):supplied.append(npc.uid)
+            self._supplied_labor_workers[proc.id]=set(supplied)
+            if not supplied:return 0
+        else:
+            for iid,qty in proc.inputs.items():
+                if town.stocks.get(iid,0)<qty:score//=4
         return score
 
+    def _recipe_prerequisites(self,town,proc)->bool:
+        recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
+        if recipe is None:return True
+        if recipe.knowledge and recipe.knowledge not in town.knowledge:return False
+        inventory=town.stocks
+        if any(inventory.get(iid,0)<qty for iid,qty in recipe.catalysts.items()):return False
+        for quality,minimum in recipe.tool_qualities.items():
+            if not any(qty>0 and iid in self.registry.items
+                       and self.registry.items[iid].quality(quality)>=int(minimum)
+                       for iid,qty in inventory.items()):return False
+        physical=getattr(self.workplace_logistics,"physicalization",None)
+        skeleton=physical.skeleton_for(town.uid) if physical else None
+        if recipe.station and skeleton is not None:
+            from worldseed.systems.workshops import STATION_PIECE_ALIASES
+            structures=getattr(skeleton,"structures",None)
+            live={s.uid for s in structures if not s.destroyed} if structures is not None else None
+            if not any((live is None or p.structure_plan_id in live) and STATION_PIECE_ALIASES.get(p.piece_id)==recipe.station
+                       for p in skeleton.pieces):return False
+        return True
+
+    def freshwater_available(self,town)->bool:
+        physical=getattr(self.workplace_logistics,"physicalization",None)
+        skeleton=physical.skeleton_for(town.uid) if physical else None
+        if skeleton is not None:
+            lookup=getattr(physical,"structure_by_id",None)
+            for piece in skeleton.pieces:
+                definition=self.registry.settlement_pieces.get(piece.piece_id)
+                if definition is None or "well" not in definition.tags:continue
+                structure=lookup(piece.structure_plan_id) if callable(lookup) else None
+                if structure is None or not structure.destroyed:return True
+        world=self.world or getattr(physical,"world",None)
+        environment=getattr(world,"environment_at",None)
+        if not callable(environment):return False
+        resources=getattr(environment(WorldPos(town.x,town.y,0)),"resources",None)
+        return int(getattr(resources,"freshwater",0))>=45
+
     def _reserve_labor(self, town, day: int) -> list[tuple[SettlementProcessDef, int]]:
+        self._supplied_labor_workers={}
+        supply_context=self._labor_supply_context(town)
         self._build_labor_pool(town)
         by_occ: dict[str, list[SettlementProcessDef]] = defaultdict(list)
         for proc in self.registry.settlement_processes.values():
@@ -147,9 +225,10 @@ class EconomySystem:
                 "core:logging":"logging","core:quarrying":"mining",
                 "core:iron_mining":"mining","core:coal_mining":"mining",
                 "core:clay_gathering":"mining","core:livestock_husbandry":"livestock",
-            }.get(proc.id)
+            }.get(proc.id) or getattr(proc,"required_specialization","")
             specializations=set(getattr(town,"resource_specializations",()) or ())
-            if required and specializations and required not in specializations:
+            if required=="freshwater" and not self.freshwater_available(town):continue
+            if required and required!="freshwater" and specializations and required not in specializations:
                 continue
             crops=set(getattr(town,"crop_ids",()) or ())
             if proc.id.startswith("core:field_") and crops and proc.priority_good not in crops:
@@ -160,13 +239,14 @@ class EconomySystem:
             available = town.labor_pool.get(occ, 0)
             if available <= 0:
                 continue
-            scores = [(self._shortage_score(town, p), p) for p in processes]
+            scores = [(self._shortage_score(town, p,supply_context), p) for p in processes]
             scores = [(score, p) for score, p in scores if score > 0]
             if not scores:
                 continue
             scores.sort(key=lambda pair: (-pair[0], pair[1].id))
             total = sum(score for score, _ in scores)
             left = available
+            reserved_suppliers=set()
             for idx, (score, proc) in enumerate(scores):
                 if idx == len(scores) - 1:
                     workers = left
@@ -176,6 +256,12 @@ class EconomySystem:
                 if workers <= 0 and left >= proc.workers:
                     workers = proc.workers
                 workers = min(workers, left)
+                if proc.id in self._supplied_labor_workers:
+                    eligible=sorted(self._supplied_labor_workers[proc.id]-reserved_suppliers)
+                    workers=min(workers,len(eligible)*max(1,int(proc.workers)))
+                    chosen=set(eligible[:workers//max(1,int(proc.workers))])
+                    self._supplied_labor_workers[proc.id]=chosen
+                    reserved_suppliers.update(chosen)
                 left -= workers
                 uid = f"labor:{town.uid}:{proc.id}"
                 self.state.labor_reservations[uid] = LaborReservationState(uid, town.uid, proc.id, occ, workers, day, workers > 0, [])
@@ -183,15 +269,24 @@ class EconomySystem:
                     assignments.append((proc, workers))
                 if left < min((p.workers for _, p in scores), default=1):
                     break
-        self._bind_representative_labor(town, day)
+        self._bind_representative_labor(town, day,self._supplied_labor_workers)
         return assignments
 
-    def _bind_representative_labor(self, town, day: int) -> None:
+    def _bind_representative_labor(self, town, day: int, supplied_workers=None) -> None:
         """Bind named representatives to aggregate labor slots without duplicating output."""
         reservations=[
             row for row in self.state.labor_reservations.values()
             if row.settlement_id==town.uid and row.assigned_day==day and row.active and row.workers>0
         ]
+        if supplied_workers is None:
+            # Existing bound representatives persist through reload and later
+            # same-day arrivals, even when their goods have left market stocks.
+            supplied_workers={}
+            for row in reservations:
+                proc=self.registry.settlement_processes[row.process_id]
+                if getattr(proc,"recipe_id","") and (not self._recipe_prerequisites(town,proc)
+                        or any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items())):
+                    supplied_workers[row.process_id]=set(row.representative_uids)
         by_occ=defaultdict(list)
         for row in reservations:
             row.representative_uids=[]
@@ -200,18 +295,21 @@ class EconomySystem:
             rows.sort(key=lambda row:(row.process_id,row.uid))
         representatives=sorted(
             (npc for npc in self.state.npcs.values() if npc.alive and npc.settlement_id==town.uid and npc.age>=16),
-            key=lambda npc:npc.uid,
+            key=lambda npc:(not any(npc.uid in uids for uids in supplied_workers.values()),npc.uid),
         )
         for npc in representatives:
             if npc.work_assignment_day!=day:npc.work_hours_today=0
             npc.work_assignment_day=day
             npc.assigned_process_id=""
-            rows=by_occ.get(npc.occupation,())
+            rows=[r for r in by_occ.get(npc.occupation,())
+                  if len(r.representative_uids)<max(1,r.workers//max(1,self.registry.settlement_processes[r.process_id].workers))
+                  and (r.process_id not in supplied_workers or npc.uid in supplied_workers[r.process_id])]
             if not rows:
                 continue
             row=min(
                 rows,
                 key=lambda r:(
+                    r.process_id not in supplied_workers,
                     len(r.representative_uids)*1000//max(1,r.workers),
                     -r.workers,
                     r.process_id,
@@ -258,6 +356,8 @@ class EconomySystem:
         return bonus
 
     def _run_process(self, town, proc: SettlementProcessDef, workers: int, day:int|None=None, minute:int=0) -> int:
+        if getattr(proc,"required_specialization","")=="freshwater" and not self.freshwater_available(town):return 0
+        if not self._recipe_prerequisites(town,proc):return 0
         bonus=self._production_bonus(town,proc)
         if day is not None and self.physical_labor_authorities:
             workers=max(0,int(workers)-self._physical_worker_claim(town,proc,int(workers),int(day)))
@@ -290,11 +390,12 @@ class EconomySystem:
             aggregate_population=max(0,town.population-represented)
             food_need = self._food_need_for_population(aggregate_population)
             shortage = food_need
-            for item_id in FOODS:
+            for item_id in self.foods:
                 eaten = min(shortage, max(0, town.stocks.get(item_id, 0)))
                 town.stocks[item_id] = town.stocks.get(item_id, 0) - eaten
                 shortage -= eaten
                 if shortage <= 0:break
+            self._consume_crafted_goods(town,minute,aggregate_population)
             old_stress = town.food_stress
             town.food_stress = max(0, min(100, town.food_stress + shortage * 3 - (2 if shortage == 0 else 0)))
             if old_stress < 60 <= town.food_stress:
@@ -303,6 +404,33 @@ class EconomySystem:
         self._record_market_history(minute)
         self._ensure_routes(minute)
         self._create_caravans(minute)
+
+    def _consume_crafted_goods(self,town,minute:int,population:int)->dict[str,int]:
+        """Aggregate residents use real market goods on authored replacement cycles.
+
+        Exact household inventories are excluded. Components continue to flow
+        into recipes; foods use the ordinary hunger basket above. These cycles
+        represent wearing out implements, clothing and household supplies,
+        preserving demand without deleting a named worker's carried goods.
+        """
+        if population<=0:return {}
+        day=int(minute)//1440;used={};seen=set()
+        for proc in sorted(self.registry.settlement_processes.values(),key=lambda p:p.id):
+            interval=max(0,int(getattr(proc,"consumption_days",0)))
+            if not interval:continue
+            for iid in sorted(proc.outputs):
+                if iid in seen or iid in self.foods:continue
+                seen.add(iid)
+                # Stable staggering prevents every supply from expiring on the
+                # same calendar day and depends only on authoritative town ID.
+                if day%interval!=int(hash_u64(self.seed,"goods-use",town.uid,iid)%interval):continue
+                count=min(max(0,int(town.stocks.get(iid,0))),max(1,int(population)//80))
+                if count:
+                    town.stocks[iid]-=count;used[iid]=count
+        if used:
+            self.record_transaction(town.uid,"settlement_goods_use",town.uid,town.uid,
+                                    copper_value=0,minute=int(minute),requested=used)
+        return used
 
     def _record_market_history(self, minute: int) -> None:
         # Daily samples are intentionally bounded to roughly one in-game year.
@@ -341,9 +469,9 @@ class EconomySystem:
         into the bounded partner set.
         """
         opportunity=0
-        goods=set(a.stocks)|set(b.stocks)|set(TARGET)
+        goods=set(a.stocks)|set(b.stocks)|set(self.targets)
         for good in goods:
-            surplus=max(0,a.stocks.get(good,0)-TARGET.get(good,30))
+            surplus=max(0,a.stocks.get(good,0)-self.targets.get(good,30))
             if surplus<=0:continue
             pa=a.prices.get(good,self._price(good,a.stocks.get(good,0)))
             pb=b.prices.get(good,self._price(good,b.stocks.get(good,0)))
@@ -437,7 +565,7 @@ class EconomySystem:
             best: tuple[str, int, int] | None = None
             best_score = 0
             for good, stock in sorted(a.stocks.items()):
-                surplus = stock - TARGET.get(good, 30)
+                surplus = stock - self.targets.get(good, 30)
                 diff = b.prices.get(good, self._price(good, b.stocks.get(good, 0))) - a.prices.get(good, self._price(good, stock))
                 score = surplus * diff
                 if surplus > 10 and diff > 0 and score > best_score:

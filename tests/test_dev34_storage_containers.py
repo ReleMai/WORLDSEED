@@ -36,8 +36,8 @@ class Dev34StorageContentTests(unittest.TestCase):
     def setUpClass(cls):
         cls.reg=ContentRegistry.load(DATA_DIR)
 
-    def test_resourcegen_v4_and_storage_content_load(self):
-        self.assertEqual(RESOURCEGEN_VERSION,4)
+    def test_resourcegen_v5_and_storage_content_load(self):
+        self.assertEqual(RESOURCEGEN_VERSION,5)
         self.assertIn("core:wicker_basket",self.reg.items)
         self.assertIn("core:wood_storage_box",self.reg.items)
         self.assertIn("core:wicker_basket",self.reg.recipes)

@@ -89,7 +89,8 @@
     "inputs": {},
     "outputs": {
       "core:meat": 2,
-      "core:hide": 1
+      "core:hide": 1,
+      "core:bone": 1
     },
     "priority_good": "core:meat"
   },
@@ -336,8 +337,5319 @@
     },
     "priority_good": "core:dressed_stone"
   },
-  {"id":"core:field_corn","name":"Corn Field","occupation":"farmer","workers":2,"inputs":{"core:corn_seed":1},"outputs":{"core:corn":5},"priority_good":"core:corn"},
-  {"id":"core:field_beans","name":"Bean Field","occupation":"farmer","workers":1,"inputs":{"core:beans_seed":1},"outputs":{"core:beans":4},"priority_good":"core:beans"},
-  {"id":"core:field_pumpkin","name":"Pumpkin Field","occupation":"farmer","workers":2,"inputs":{"core:pumpkin_seed":1},"outputs":{"core:pumpkin":4},"priority_good":"core:pumpkin"},
-  {"id":"core:livestock_husbandry","name":"Livestock Husbandry","occupation":"herder","workers":2,"inputs":{"core:wheat":1},"outputs":{"core:meat":2,"core:animal_fat":1},"priority_good":"core:meat"}
+  {
+    "id": "core:field_corn",
+    "name": "Corn Field",
+    "occupation": "farmer",
+    "workers": 2,
+    "inputs": {
+      "core:corn_seed": 1
+    },
+    "outputs": {
+      "core:corn": 5
+    },
+    "priority_good": "core:corn"
+  },
+  {
+    "id": "core:field_beans",
+    "name": "Bean Field",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:beans_seed": 1
+    },
+    "outputs": {
+      "core:beans": 4
+    },
+    "priority_good": "core:beans"
+  },
+  {
+    "id": "core:field_pumpkin",
+    "name": "Pumpkin Field",
+    "occupation": "farmer",
+    "workers": 2,
+    "inputs": {
+      "core:pumpkin_seed": 1
+    },
+    "outputs": {
+      "core:pumpkin": 4
+    },
+    "priority_good": "core:pumpkin"
+  },
+  {
+    "id": "core:livestock_husbandry",
+    "name": "Livestock Husbandry",
+    "occupation": "herder",
+    "workers": 2,
+    "inputs": {
+      "core:wheat": 1
+    },
+    "outputs": {
+      "core:meat": 2,
+      "core:animal_fat": 1
+    },
+    "priority_good": "core:meat"
+  },
+  {
+    "id": "core:field_barley",
+    "name": "Barley field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:barley_seed": 1
+    },
+    "outputs": {
+      "core:barley": 3,
+      "core:barley_seed": 2
+    },
+    "priority_good": "core:barley",
+    "required_specialization": "farming"
+  },
+  {
+    "id": "core:field_cabbage",
+    "name": "Cabbage field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:cabbage_seed": 1
+    },
+    "outputs": {
+      "core:cabbage": 2,
+      "core:cabbage_seed": 2
+    },
+    "priority_good": "core:cabbage",
+    "required_specialization": "farming"
+  },
+  {
+    "id": "core:field_carrot",
+    "name": "Carrot field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:carrot_seed": 1
+    },
+    "outputs": {
+      "core:carrot": 3,
+      "core:carrot_seed": 2
+    },
+    "priority_good": "core:carrot",
+    "required_specialization": "farming"
+  },
+  {
+    "id": "core:field_flax",
+    "name": "Flax field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:flax_seed": 1
+    },
+    "outputs": {
+      "core:flax": 3,
+      "core:flax_seed": 2
+    },
+    "priority_good": "core:flax",
+    "required_specialization": "farming"
+  },
+  {
+    "id": "core:field_onion",
+    "name": "Onion field work",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:onion_seed": 1
+    },
+    "outputs": {
+      "core:onion": 3,
+      "core:onion_seed": 2
+    },
+    "priority_good": "core:onion",
+    "required_specialization": "farming"
+  },
+  {
+    "id": "core:draw_settlement_water",
+    "name": "Draw settlement fresh water",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:clean_water": 4
+    },
+    "priority_good": "core:clean_water",
+    "minutes": 12,
+    "market_target": 24,
+    "required_specialization": "freshwater"
+  },
+  {
+    "id": "core:npc_strike_stone_flakes",
+    "name": "Strike Stone Flake",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:stone_flake": 2
+    },
+    "priority_good": "core:stone_flake",
+    "recipe_id": "core:stone_flake",
+    "station": null,
+    "minutes": 8,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_bread_dough",
+    "name": "Bread Dough",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:wholegrain_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bread_dough": 1
+    },
+    "priority_good": "core:bread_dough",
+    "recipe_id": "core:craft_bread_dough",
+    "station": "core:bakery_oven",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_sourdough_starter",
+    "name": "Sourdough Starter",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:wholegrain_flour": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:sourdough_starter": 1
+    },
+    "priority_good": "core:sourdough_starter",
+    "recipe_id": "core:craft_sourdough_starter",
+    "station": "core:bakery_oven",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_twice_baked_rusk",
+    "name": "Twice Baked Rusk",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:bread": 2
+    },
+    "outputs": {
+      "core:twice_baked_rusk": 3
+    },
+    "priority_good": "core:twice_baked_rusk",
+    "recipe_id": "core:craft_twice_baked_rusk",
+    "station": "core:bakery_oven",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_unleavened_flatbread",
+    "name": "Unleavened Flatbread",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:bread_dough": 1
+    },
+    "outputs": {
+      "core:unleavened_flatbread": 2
+    },
+    "priority_good": "core:unleavened_flatbread",
+    "recipe_id": "core:craft_unleavened_flatbread",
+    "station": "core:bakery_oven",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bean_crispbread",
+    "name": "Bean Crispbread",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:bean_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bean_crispbread": 2
+    },
+    "priority_good": "core:bean_crispbread",
+    "recipe_id": "core:craft_bean_crispbread",
+    "station": "core:bakery_oven",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_corn_griddle_cake",
+    "name": "Corn Griddle Cake",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:cornmeal": 2,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:corn_griddle_cake": 2
+    },
+    "priority_good": "core:corn_griddle_cake",
+    "recipe_id": "core:craft_corn_griddle_cake",
+    "station": "core:bakery_oven",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_root_dumplings",
+    "name": "Root Dumplings",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:root_flour": 1,
+      "core:bread_dough": 1
+    },
+    "outputs": {
+      "core:root_dumplings": 2
+    },
+    "priority_good": "core:root_dumplings",
+    "recipe_id": "core:craft_root_dumplings",
+    "station": "core:bakery_oven",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_sourdough_loaf",
+    "name": "Sourdough Loaf",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:bread_dough": 2,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:sourdough_loaf": 2
+    },
+    "priority_good": "core:sourdough_loaf",
+    "recipe_id": "core:craft_sourdough_loaf",
+    "station": "core:bakery_oven",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_flax_travel_cake",
+    "name": "Flax Travel Cake",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:flax_meal": 1,
+      "core:roasted_grain_crumble": 1,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:flax_travel_cake": 2
+    },
+    "priority_good": "core:flax_travel_cake",
+    "recipe_id": "core:craft_flax_travel_cake",
+    "station": "core:bakery_oven",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_savory_hand_pie",
+    "name": "Savory Hand Pie",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:bread_dough": 1,
+      "core:minced_game": 1,
+      "core:onion": 1
+    },
+    "outputs": {
+      "core:savory_hand_pie": 2
+    },
+    "priority_good": "core:savory_hand_pie",
+    "recipe_id": "core:craft_savory_hand_pie",
+    "station": "core:bakery_oven",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_steam_raised_grain_bun",
+    "name": "Steam Raised Grain Bun",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:fine_sifted_flour": 1,
+      "core:sourdough_starter": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:steam_raised_grain_bun": 2
+    },
+    "priority_good": "core:steam_raised_grain_bun",
+    "recipe_id": "core:craft_steam_raised_grain_bun",
+    "station": "core:campfire",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_trail_hardtack",
+    "name": "Trail Hardtack",
+    "occupation": "baker",
+    "workers": 1,
+    "inputs": {
+      "core:wholegrain_flour": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:trail_hardtack": 3
+    },
+    "priority_good": "core:trail_hardtack",
+    "recipe_id": "core:craft_trail_hardtack",
+    "station": "core:bakery_oven",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_botanical_brewing_sachet",
+    "name": "Botanical Brewing Sachet",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:moonmint_sprig": 1,
+      "core:cloth_scraps": 2
+    },
+    "outputs": {
+      "core:botanical_brewing_sachet": 1
+    },
+    "priority_good": "core:botanical_brewing_sachet",
+    "recipe_id": "core:craft_botanical_brewing_sachet",
+    "station": "core:brewery_vat",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_brewing_wort",
+    "name": "Brewing Wort",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:malted_grain": 2,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:brewing_wort": 2
+    },
+    "priority_good": "core:brewing_wort",
+    "recipe_id": "core:craft_brewing_wort",
+    "station": "core:brewery_vat",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grain_vinegar",
+    "name": "Grain Vinegar",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:small_ale": 2
+    },
+    "outputs": {
+      "core:grain_vinegar": 1
+    },
+    "priority_good": "core:grain_vinegar",
+    "recipe_id": "core:craft_grain_vinegar",
+    "station": "core:brewery_vat",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_malted_grain",
+    "name": "Malted Grain",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:barley": 3
+    },
+    "outputs": {
+      "core:malted_grain": 2
+    },
+    "priority_good": "core:malted_grain",
+    "recipe_id": "core:craft_malted_grain",
+    "station": "core:brewery_vat",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grain_table_beer",
+    "name": "Grain Table Beer",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:grain_table_beer": 2
+    },
+    "priority_good": "core:grain_table_beer",
+    "recipe_id": "core:craft_grain_table_beer",
+    "station": "core:brewery_vat",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_malt_tonic_drink",
+    "name": "Malt Tonic Drink",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:malt_tonic_drink": 2
+    },
+    "priority_good": "core:malt_tonic_drink",
+    "recipe_id": "core:craft_malt_tonic_drink",
+    "station": "core:brewery_vat",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_moonmint_infusion",
+    "name": "Moonmint Infusion",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:botanical_brewing_sachet": 1,
+      "core:clean_water": 2,
+      "core:brewing_wort": 1
+    },
+    "outputs": {
+      "core:moonmint_infusion": 2
+    },
+    "priority_good": "core:moonmint_infusion",
+    "recipe_id": "core:craft_moonmint_infusion",
+    "station": "core:brewery_vat",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_soured_root_pickle",
+    "name": "Soured Root Pickle",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:grain_vinegar": 1,
+      "core:turnip": 2
+    },
+    "outputs": {
+      "core:soured_root_pickle": 2
+    },
+    "priority_good": "core:soured_root_pickle",
+    "recipe_id": "core:craft_soured_root_pickle",
+    "station": "core:brewery_vat",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_coastal_kelp_vinegar",
+    "name": "Coastal Kelp Vinegar",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:pearl_kelp_knot": 1,
+      "core:grain_vinegar": 2
+    },
+    "outputs": {
+      "core:coastal_kelp_vinegar": 1
+    },
+    "priority_good": "core:coastal_kelp_vinegar",
+    "recipe_id": "core:craft_coastal_kelp_vinegar",
+    "station": "core:brewery_vat",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_filtered_malt_culture",
+    "name": "Filtered Malt Culture",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:malted_grain": 1,
+      "core:sourdough_starter": 1
+    },
+    "outputs": {
+      "core:filtered_malt_culture": 1
+    },
+    "priority_good": "core:filtered_malt_culture",
+    "recipe_id": "core:craft_filtered_malt_culture",
+    "station": "core:brewery_vat",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_frost_sage_brew",
+    "name": "Frost Sage Brew",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:frost_sage_branch": 1,
+      "core:brewing_wort": 2,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:frost_sage_brew": 2
+    },
+    "priority_good": "core:frost_sage_brew",
+    "recipe_id": "core:craft_frost_sage_brew",
+    "station": "core:brewery_vat",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_spiced_grain_cordial",
+    "name": "Spiced Grain Cordial",
+    "occupation": "brewer",
+    "workers": 1,
+    "inputs": {
+      "core:brewing_wort": 2,
+      "core:sunspice_rhizome": 1,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:spiced_grain_cordial": 2
+    },
+    "priority_good": "core:spiced_grain_cordial",
+    "recipe_id": "core:craft_spiced_grain_cordial",
+    "station": "core:brewery_vat",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_carved_bone_barb",
+    "name": "Carved Bone Barb",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 4
+    },
+    "outputs": {
+      "core:carved_bone_barb": 3
+    },
+    "priority_good": "core:carved_bone_barb",
+    "recipe_id": "core:craft_carved_bone_barb",
+    "station": "core:butcher_table",
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_crush_clean_bone",
+    "name": "Crush Clean Bone",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:bone": 1
+    },
+    "outputs": {
+      "core:bone_chips": 12
+    },
+    "priority_good": "core:bone_chips",
+    "recipe_id": "core:craft_crush_clean_bone",
+    "station": "core:butcher_table",
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_horn_laminate",
+    "name": "Horn Laminate",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 8,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:horn_laminate": 1
+    },
+    "priority_good": "core:horn_laminate",
+    "recipe_id": "core:craft_horn_laminate",
+    "station": "core:butcher_table",
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_minced_game",
+    "name": "Minced Game",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:meat": 2
+    },
+    "outputs": {
+      "core:minced_game": 2
+    },
+    "priority_good": "core:minced_game",
+    "recipe_id": "core:craft_minced_game",
+    "station": "core:butcher_table",
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_rendered_tallow",
+    "name": "Rendered Tallow",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:animal_fat": 2
+    },
+    "outputs": {
+      "core:rendered_tallow": 1
+    },
+    "priority_good": "core:rendered_tallow",
+    "recipe_id": "core:craft_rendered_tallow",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bone_marrow_scoop",
+    "name": "Bone Marrow Scoop",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 6,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:bone_marrow_scoop": 1
+    },
+    "priority_good": "core:bone_marrow_scoop",
+    "recipe_id": "core:craft_bone_marrow_scoop",
+    "station": "core:butcher_table",
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_butcher_cleaver",
+    "name": "Butcher Cleaver",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:butcher_cleaver": 1
+    },
+    "priority_good": "core:butcher_cleaver",
+    "recipe_id": "core:craft_butcher_cleaver",
+    "station": "core:butcher_table",
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_hide_fleshing_beam",
+    "name": "Hide Fleshing Beam",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 8,
+      "core:stone_blade_blank": 2
+    },
+    "outputs": {
+      "core:hide_fleshing_beam": 1
+    },
+    "priority_good": "core:hide_fleshing_beam",
+    "recipe_id": "core:craft_hide_fleshing_beam",
+    "station": "core:butcher_table",
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_sinew_stripper",
+    "name": "Sinew Stripper",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 6,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:sinew_stripper": 1
+    },
+    "priority_good": "core:sinew_stripper",
+    "recipe_id": "core:craft_sinew_stripper",
+    "station": "core:butcher_table",
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_antler_skinning_knife",
+    "name": "Antler Skinning Knife",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:deer_antler_tip": 2,
+      "core:abrasive_powder": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:antler_skinning_knife": 1
+    },
+    "priority_good": "core:antler_skinning_knife",
+    "recipe_id": "core:craft_antler_skinning_knife",
+    "station": "core:butcher_table",
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_articulated_bone_awl",
+    "name": "Articulated Bone Awl",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:carved_bone_barb": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:articulated_bone_awl": 1
+    },
+    "priority_good": "core:articulated_bone_awl",
+    "recipe_id": "core:craft_articulated_bone_awl",
+    "station": "core:butcher_table",
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_bone_hand_shears",
+    "name": "Bone Hand Shears",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:horn_laminate": 2,
+      "core:hinge_pair": 1,
+      "core:nuts_and_bolts": 1
+    },
+    "outputs": {
+      "core:bone_hand_shears": 1
+    },
+    "priority_good": "core:bone_hand_shears",
+    "recipe_id": "core:craft_bone_hand_shears",
+    "station": "core:butcher_table",
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_smoked_offal_sausage",
+    "name": "Smoked Offal Sausage",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {
+      "core:offal": 2,
+      "core:minced_game": 1,
+      "core:rendered_tallow": 1
+    },
+    "outputs": {
+      "core:smoked_offal_sausage": 2
+    },
+    "priority_good": "core:smoked_offal_sausage",
+    "recipe_id": "core:craft_smoked_offal_sausage",
+    "station": "core:smoke_rack",
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bentwood_frame",
+    "name": "Bentwood Frame",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 4,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:bentwood_frame": 1
+    },
+    "priority_good": "core:bentwood_frame",
+    "recipe_id": "core:craft_bentwood_frame",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_carve_replacement_handles",
+    "name": "Carve Replacement Handles",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 2
+    },
+    "outputs": {
+      "core:tool_handles": 1
+    },
+    "priority_good": "core:tool_handles",
+    "recipe_id": "core:craft_carve_replacement_handles",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fitted_grip",
+    "name": "Fitted Grip",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:tool_handles": 1,
+      "core:leather_scraps": 1
+    },
+    "outputs": {
+      "core:fitted_grip": 1
+    },
+    "priority_good": "core:fitted_grip",
+    "recipe_id": "core:craft_fitted_grip",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_planed_board",
+    "name": "Planed Board",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:planed_board": 1
+    },
+    "priority_good": "core:planed_board",
+    "recipe_id": "core:craft_planed_board",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_wooden_dowels",
+    "name": "Wooden Dowels",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 2
+    },
+    "outputs": {
+      "core:wooden_dowels": 4
+    },
+    "priority_good": "core:wooden_dowels",
+    "recipe_id": "core:craft_wooden_dowels",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_carpenter_brace",
+    "name": "Carpenter Brace",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 1,
+      "core:iron_tool_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:carpenter_brace": 1
+    },
+    "priority_good": "core:carpenter_brace",
+    "recipe_id": "core:craft_carpenter_brace",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_laminated_bow_limbs",
+    "name": "Laminated Bow Limbs",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 3,
+      "core:hide_glue": 1,
+      "core:wooden_dowels": 2
+    },
+    "outputs": {
+      "core:laminated_bow_limbs": 1
+    },
+    "priority_good": "core:laminated_bow_limbs",
+    "recipe_id": "core:craft_laminated_bow_limbs",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_wood_plane",
+    "name": "Wood Plane",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 1,
+      "core:iron_chisel": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:wood_plane": 1
+    },
+    "priority_good": "core:wood_plane",
+    "recipe_id": "core:craft_wood_plane",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_woodworking_mallet",
+    "name": "Woodworking Mallet",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 5,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:woodworking_mallet": 1
+    },
+    "priority_good": "core:woodworking_mallet",
+    "recipe_id": "core:craft_woodworking_mallet",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_folding_pole_spear",
+    "name": "Folding Pole Spear",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 2,
+      "core:hinge_pair": 1,
+      "core:iron_tool_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:folding_pole_spear": 1
+    },
+    "priority_good": "core:folding_pole_spear",
+    "recipe_id": "core:craft_folding_pole_spear",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_levered_nutcracker",
+    "name": "Levered Nutcracker",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 1,
+      "core:hinge_pair": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:levered_nutcracker": 1
+    },
+    "priority_good": "core:levered_nutcracker",
+    "recipe_id": "core:craft_levered_nutcracker",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_recurve_hunting_bow",
+    "name": "Recurve Hunting Bow",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:laminated_bow_limbs": 2,
+      "core:fitted_grip": 1,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:recurve_hunting_bow": 1
+    },
+    "priority_good": "core:recurve_hunting_bow",
+    "recipe_id": "core:craft_recurve_hunting_bow",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_ribbed_wood_shield",
+    "name": "Ribbed Wood Shield",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {
+      "core:bentwood_frame": 2,
+      "core:planed_board": 3,
+      "core:wooden_dowels": 3,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:ribbed_wood_shield": 1
+    },
+    "priority_good": "core:ribbed_wood_shield",
+    "recipe_id": "core:craft_ribbed_wood_shield",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_berry_reduction",
+    "name": "Berry Reduction",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:blueberries": 3
+    },
+    "outputs": {
+      "core:berry_reduction": 2
+    },
+    "priority_good": "core:berry_reduction",
+    "recipe_id": "core:craft_berry_reduction",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bone_stock",
+    "name": "Bone Stock",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:bone": 1,
+      "core:clean_water": 2,
+      "core:wild_onion": 1
+    },
+    "outputs": {
+      "core:bone_stock": 1
+    },
+    "priority_good": "core:bone_stock",
+    "recipe_id": "core:craft_bone_stock",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_root_broth",
+    "name": "Root Broth",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:wild_carrot": 1,
+      "core:wild_onion": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:root_broth": 1
+    },
+    "priority_good": "core:root_broth",
+    "recipe_id": "core:craft_root_broth",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_wilted_greens",
+    "name": "Wilted Greens",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:dandelion_greens": 2,
+      "core:nettles": 1
+    },
+    "outputs": {
+      "core:wilted_greens": 1
+    },
+    "priority_good": "core:wilted_greens",
+    "recipe_id": "core:craft_wilted_greens",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "cooking",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_braised_meat",
+    "name": "Braised Meat",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:seared_game_portions": 1,
+      "core:bone_stock": 1,
+      "core:carrot": 1
+    },
+    "outputs": {
+      "core:braised_meat": 2
+    },
+    "priority_good": "core:braised_meat",
+    "recipe_id": "core:craft_braised_meat",
+    "station": "core:campfire",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grain_porridge",
+    "name": "Grain Porridge",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:grain_porridge": 2
+    },
+    "priority_good": "core:grain_porridge",
+    "recipe_id": "core:craft_grain_porridge",
+    "station": "core:campfire",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_seared_game_portions",
+    "name": "Seared Game Portions",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:raw_game_meat": 2
+    },
+    "outputs": {
+      "core:seared_game_portions": 2
+    },
+    "priority_good": "core:seared_game_portions",
+    "recipe_id": "core:craft_seared_game_portions",
+    "station": "core:campfire",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_thickened_mushroom_soup",
+    "name": "Thickened Mushroom Soup",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:mushroom_powder": 1,
+      "core:cattail_starch": 1,
+      "core:clean_water": 2
+    },
+    "outputs": {
+      "core:thickened_mushroom_soup": 2
+    },
+    "priority_good": "core:thickened_mushroom_soup",
+    "recipe_id": "core:craft_thickened_mushroom_soup",
+    "station": "core:campfire",
+    "minutes": 30,
+    "skill": "cooking",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_cabbage_ferment",
+    "name": "Cabbage Ferment",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:cabbage": 3,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:cabbage_ferment": 2
+    },
+    "priority_good": "core:cabbage_ferment",
+    "recipe_id": "core:craft_cabbage_ferment",
+    "station": "core:campfire",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fruit_preserve",
+    "name": "Fruit Preserve",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:berry_reduction": 2,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:fruit_preserve": 2
+    },
+    "priority_good": "core:fruit_preserve",
+    "recipe_id": "core:craft_fruit_preserve",
+    "station": "core:campfire",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_potted_meat",
+    "name": "Potted Meat",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:minced_game": 2,
+      "core:animal_fat": 2
+    },
+    "outputs": {
+      "core:potted_meat": 2
+    },
+    "priority_good": "core:potted_meat",
+    "recipe_id": "core:craft_potted_meat",
+    "station": "core:campfire",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_travel_stew_concentrate",
+    "name": "Travel Stew Concentrate",
+    "occupation": "cook",
+    "workers": 1,
+    "inputs": {
+      "core:braised_meat": 1,
+      "core:root_dumplings": 1,
+      "core:roasted_grain_crumble": 1
+    },
+    "outputs": {
+      "core:travel_stew_concentrate": 2
+    },
+    "priority_good": "core:travel_stew_concentrate",
+    "recipe_id": "core:craft_travel_stew_concentrate",
+    "station": "core:campfire",
+    "minutes": 65,
+    "skill": "cooking",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_compost_blend",
+    "name": "Compost Blend",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:plant_scraps": 8,
+      "core:bone_chips": 2
+    },
+    "outputs": {
+      "core:compost_blend": 1
+    },
+    "priority_good": "core:compost_blend",
+    "recipe_id": "core:craft_compost_blend",
+    "station": null,
+    "minutes": 12,
+    "skill": "farming",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_garden_dibber",
+    "name": "Garden Dibber",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:tool_handles": 1,
+      "core:bone_chips": 3
+    },
+    "outputs": {
+      "core:garden_dibber": 1
+    },
+    "priority_good": "core:garden_dibber",
+    "recipe_id": "core:craft_garden_dibber",
+    "station": null,
+    "minutes": 12,
+    "skill": "farming",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_plant_fiber_pulp",
+    "name": "Plant Fiber Pulp",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:plant_scraps": 6,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "priority_good": "core:plant_fiber_pulp",
+    "recipe_id": "core:craft_plant_fiber_pulp",
+    "station": null,
+    "minutes": 12,
+    "skill": "farming",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_seed_cleaning_screen",
+    "name": "Seed Cleaning Screen",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 3,
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:seed_cleaning_screen": 1
+    },
+    "priority_good": "core:seed_cleaning_screen",
+    "recipe_id": "core:craft_seed_cleaning_screen",
+    "station": null,
+    "minutes": 12,
+    "skill": "farming",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_sort_brush_offcuts",
+    "name": "Sort Brush Offcuts",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:brush": 1
+    },
+    "outputs": {
+      "core:plant_scraps": 8
+    },
+    "priority_good": "core:plant_scraps",
+    "recipe_id": "core:craft_sort_brush_offcuts",
+    "station": null,
+    "minutes": 12,
+    "skill": "farming",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_harvest_sickle",
+    "name": "Harvest Sickle",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:harvest_sickle": 1
+    },
+    "priority_good": "core:harvest_sickle",
+    "recipe_id": "core:craft_harvest_sickle",
+    "station": null,
+    "minutes": 30,
+    "skill": "farming",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_root_lifting_spade",
+    "name": "Root Lifting Spade",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:root_lifting_spade": 1
+    },
+    "priority_good": "core:root_lifting_spade",
+    "recipe_id": "core:craft_root_lifting_spade",
+    "station": null,
+    "minutes": 30,
+    "skill": "farming",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_save_fiber_from_pulp",
+    "name": "Save Fiber From Pulp",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "outputs": {
+      "core:fiber": 3
+    },
+    "priority_good": "core:fiber",
+    "recipe_id": "core:craft_save_fiber_from_pulp",
+    "station": null,
+    "minutes": 30,
+    "skill": "farming",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_soil_turning_fork",
+    "name": "Soil Turning Fork",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 6,
+      "core:iron_tool_blank": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:soil_turning_fork": 1
+    },
+    "priority_good": "core:soil_turning_fork",
+    "recipe_id": "core:craft_soil_turning_fork",
+    "station": null,
+    "minutes": 30,
+    "skill": "farming",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_long_handled_field_hoe",
+    "name": "Long Handled Field Hoe",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:socketed_iron_hoe": 1,
+      "core:planed_board": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:long_handled_field_hoe": 1
+    },
+    "priority_good": "core:long_handled_field_hoe",
+    "recipe_id": "core:craft_long_handled_field_hoe",
+    "station": null,
+    "minutes": 65,
+    "skill": "farming",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_mineralized_compost_meal",
+    "name": "Mineralized Compost Meal",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:compost_blend": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:bone_meal": 2
+    },
+    "priority_good": "core:bone_meal",
+    "recipe_id": "core:craft_mineralized_compost_meal",
+    "station": null,
+    "minutes": 65,
+    "skill": "farming",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_pressed_plant_binder",
+    "name": "Pressed Plant Binder",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:plant_fiber_pulp": 2,
+      "core:resin_lumps": 2,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:pressed_plant_binder": 1
+    },
+    "priority_good": "core:pressed_plant_binder",
+    "recipe_id": "core:craft_pressed_plant_binder",
+    "station": null,
+    "minutes": 65,
+    "skill": "farming",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_winnowing_sickle",
+    "name": "Winnowing Sickle",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {
+      "core:harvest_sickle": 1,
+      "core:hardened_leather": 1,
+      "core:tempered_spring": 1
+    },
+    "outputs": {
+      "core:winnowing_sickle": 1
+    },
+    "priority_good": "core:winnowing_sickle",
+    "recipe_id": "core:craft_winnowing_sickle",
+    "station": null,
+    "minutes": 65,
+    "skill": "farming",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_carved_bone_hook",
+    "name": "Carved Bone Hook",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:carved_bone_barb": 2,
+      "core:sinew": 1
+    },
+    "outputs": {
+      "core:carved_bone_hook": 1
+    },
+    "priority_good": "core:carved_bone_hook",
+    "recipe_id": "core:craft_carved_bone_hook",
+    "station": null,
+    "minutes": 12,
+    "skill": "fishing",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_copper_spinner_blade",
+    "name": "Copper Spinner Blade",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:copper_sheet": 1,
+      "core:copper_wire": 2
+    },
+    "outputs": {
+      "core:copper_spinner_blade": 1
+    },
+    "priority_good": "core:copper_spinner_blade",
+    "recipe_id": "core:craft_copper_spinner_blade",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "fishing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_float_rig",
+    "name": "Float Rig",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 1,
+      "core:copper_wire": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:float_rig": 1
+    },
+    "priority_good": "core:float_rig",
+    "recipe_id": "core:craft_float_rig",
+    "station": null,
+    "minutes": 12,
+    "skill": "fishing",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_twisted_reed_line",
+    "name": "Twisted Reed Line",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:star_reed_tuft": 1,
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:twisted_reed_line": 1
+    },
+    "priority_good": "core:twisted_reed_line",
+    "recipe_id": "core:craft_twisted_reed_line",
+    "station": "core:smoke_rack",
+    "minutes": 12,
+    "skill": "fishing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_jointed_fishing_rod",
+    "name": "Jointed Fishing Rod",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:bentwood_frame": 1,
+      "core:fitted_grip": 1,
+      "core:copper_wire": 3
+    },
+    "outputs": {
+      "core:jointed_fishing_rod": 1
+    },
+    "priority_good": "core:jointed_fishing_rod",
+    "recipe_id": "core:craft_jointed_fishing_rod",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "fishing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_rack_dried_fish",
+    "name": "Rack Dried Fish",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:split_fish_fillets": 2
+    },
+    "outputs": {
+      "core:rack_dried_fish": 2
+    },
+    "priority_good": "core:rack_dried_fish",
+    "recipe_id": "core:craft_rack_dried_fish",
+    "station": "core:smoke_rack",
+    "minutes": 30,
+    "skill": "fishing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_split_fish_fillets",
+    "name": "Split Fish Fillets",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:common_carp": 1
+    },
+    "outputs": {
+      "core:split_fish_fillets": 2
+    },
+    "priority_good": "core:split_fish_fillets",
+    "recipe_id": "core:craft_split_fish_fillets",
+    "station": "core:smoke_rack",
+    "minutes": 30,
+    "skill": "fishing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_weighted_river_net",
+    "name": "Weighted River Net",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:plant_cordage": 6,
+      "core:mineral_grit": 2,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:weighted_river_net": 1
+    },
+    "priority_good": "core:weighted_river_net",
+    "recipe_id": "core:craft_weighted_river_net",
+    "station": null,
+    "minutes": 30,
+    "skill": "fishing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_articulated_spinner_lure",
+    "name": "Articulated Spinner Lure",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:copper_spinner_blade": 1,
+      "core:glazed_lure_bead": 2,
+      "core:copper_wire": 2,
+      "core:fine_gear": 1
+    },
+    "outputs": {
+      "core:articulated_spinner_lure": 1
+    },
+    "priority_good": "core:articulated_spinner_lure",
+    "recipe_id": "core:craft_articulated_spinner_lure",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "fishing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_barbed_fishing_trident",
+    "name": "Barbed Fishing Trident",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:planed_board": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:barbed_fishing_trident": 1
+    },
+    "priority_good": "core:barbed_fishing_trident",
+    "recipe_id": "core:craft_barbed_fishing_trident",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "fishing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_spring_tension_fishing_rod",
+    "name": "Spring Tension Fishing Rod",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:jointed_fishing_rod": 1,
+      "core:tempered_spring": 1,
+      "core:waxed_casting_line": 1
+    },
+    "outputs": {
+      "core:spring_tension_fishing_rod": 1
+    },
+    "priority_good": "core:spring_tension_fishing_rod",
+    "recipe_id": "core:craft_spring_tension_fishing_rod",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "fishing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_vinegar_preserved_fish",
+    "name": "Vinegar Preserved Fish",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {
+      "core:split_fish_fillets": 2,
+      "core:coastal_kelp_vinegar": 1
+    },
+    "outputs": {
+      "core:vinegar_preserved_fish": 2
+    },
+    "priority_good": "core:vinegar_preserved_fish",
+    "recipe_id": "core:craft_vinegar_preserved_fish",
+    "station": "core:smoke_rack",
+    "minutes": 65,
+    "skill": "fishing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bitter_herbal_extract",
+    "name": "Bitter Herbal Extract",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:medicinal_herb": 1,
+      "core:yarrow": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:bitter_herbal_extract": 1
+    },
+    "priority_good": "core:bitter_herbal_extract",
+    "recipe_id": "core:craft_bitter_herbal_extract",
+    "station": "core:herbalist_table",
+    "minutes": 12,
+    "skill": "medicine",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_clean_dressing_pad",
+    "name": "Clean Dressing Pad",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:cloth_scraps": 4,
+      "core:linen_panel": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:clean_dressing_pad": 1
+    },
+    "priority_good": "core:clean_dressing_pad",
+    "recipe_id": "core:craft_clean_dressing_pad",
+    "station": "core:herbalist_table",
+    "minutes": 12,
+    "skill": "medicine",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_marsh_resin_balm",
+    "name": "Marsh Resin Balm",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:marsh_amber_bulb": 1,
+      "core:resin_lumps": 2,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:marsh_resin_balm": 1
+    },
+    "priority_good": "core:marsh_resin_balm",
+    "recipe_id": "core:craft_marsh_resin_balm",
+    "station": "core:herbalist_table",
+    "minutes": 12,
+    "skill": "medicine",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_silverleaf_powder",
+    "name": "Silverleaf Powder",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:silverleaf_sprig": 1,
+      "core:medicinal_herb": 1
+    },
+    "outputs": {
+      "core:silverleaf_powder": 1
+    },
+    "priority_good": "core:silverleaf_powder",
+    "recipe_id": "core:craft_silverleaf_powder",
+    "station": "core:herbalist_table",
+    "minutes": 12,
+    "skill": "medicine",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_filtered_herb_concentrate",
+    "name": "Filtered Herb Concentrate",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:bitter_herbal_extract": 2,
+      "core:ceramic_filter_media": 1,
+      "core:saffron_crocus_tuft": 1
+    },
+    "outputs": {
+      "core:filtered_herb_concentrate": 1
+    },
+    "priority_good": "core:filtered_herb_concentrate",
+    "recipe_id": "core:craft_filtered_herb_concentrate",
+    "station": "core:herbalist_table",
+    "minutes": 30,
+    "skill": "medicine",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fitted_splint_frame",
+    "name": "Fitted Splint Frame",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:tool_handles": 2,
+      "core:cloth_scraps": 3,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:fitted_splint_frame": 1
+    },
+    "priority_good": "core:fitted_splint_frame",
+    "recipe_id": "core:craft_fitted_splint_frame",
+    "station": "core:herbalist_table",
+    "minutes": 30,
+    "skill": "medicine",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_orchid_lotus_essence",
+    "name": "Orchid Lotus Essence",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:ghost_orchid_stem": 1,
+      "core:blue_lotus_stalk": 1,
+      "core:aromatic_oil": 1
+    },
+    "outputs": {
+      "core:orchid_lotus_essence": 1
+    },
+    "priority_good": "core:orchid_lotus_essence",
+    "recipe_id": "core:craft_orchid_lotus_essence",
+    "station": "core:herbalist_table",
+    "minutes": 30,
+    "skill": "medicine",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_stonecrop_cleansing_paste",
+    "name": "Stonecrop Cleansing Paste",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:crimson_stonecrop_crown": 1,
+      "core:grain_vinegar": 1
+    },
+    "outputs": {
+      "core:stonecrop_cleansing_paste": 1
+    },
+    "priority_good": "core:stonecrop_cleansing_paste",
+    "recipe_id": "core:craft_stonecrop_cleansing_paste",
+    "station": "core:herbalist_table",
+    "minutes": 30,
+    "skill": "medicine",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_brace_fitted_splints",
+    "name": "Brace Fitted Splints",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:fitted_splint_frame": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:splint": 2
+    },
+    "priority_good": "core:splint",
+    "recipe_id": "core:craft_brace_fitted_splints",
+    "station": "core:herbalist_table",
+    "minutes": 65,
+    "skill": "medicine",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_compound_botanical_tonic",
+    "name": "Compound Botanical Tonic",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:filtered_herb_concentrate": 1,
+      "core:silverleaf_powder": 1,
+      "core:orchid_lotus_essence": 1
+    },
+    "outputs": {
+      "core:herbal_tonic": 3
+    },
+    "priority_good": "core:herbal_tonic",
+    "recipe_id": "core:craft_compound_botanical_tonic",
+    "station": "core:herbalist_table",
+    "minutes": 65,
+    "skill": "medicine",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_cure_botanical_soap",
+    "name": "Cure Botanical Soap",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:marsh_resin_balm": 1,
+      "core:stonecrop_cleansing_paste": 1
+    },
+    "outputs": {
+      "core:soap": 4
+    },
+    "priority_good": "core:soap",
+    "recipe_id": "core:craft_cure_botanical_soap",
+    "station": "core:herbalist_table",
+    "minutes": 65,
+    "skill": "medicine",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_finish_clean_bandages",
+    "name": "Finish Clean Bandages",
+    "occupation": "healer",
+    "workers": 1,
+    "inputs": {
+      "core:clean_dressing_pad": 2,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:bandage": 3
+    },
+    "priority_good": "core:bandage",
+    "recipe_id": "core:craft_finish_clean_bandages",
+    "station": "core:herbalist_table",
+    "minutes": 65,
+    "skill": "medicine",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_bristle_brush",
+    "name": "Bristle Brush",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:boar_bristle_patch": 2,
+      "core:tool_handles": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:bristle_brush": 1
+    },
+    "priority_good": "core:bristle_brush",
+    "recipe_id": "core:craft_bristle_brush",
+    "station": null,
+    "minutes": 12,
+    "skill": "survival",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_horn_button_set",
+    "name": "Horn Button Set",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:cow_horn_ring": 2
+    },
+    "outputs": {
+      "core:horn_button_set": 3
+    },
+    "priority_good": "core:horn_button_set",
+    "recipe_id": "core:craft_horn_button_set",
+    "station": null,
+    "minutes": 12,
+    "skill": "survival",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_pasture_fiber_bundle",
+    "name": "Pasture Fiber Bundle",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:sweet_clover_tops": 1,
+      "core:plant_scraps": 3
+    },
+    "outputs": {
+      "core:pasture_fiber_bundle": 1
+    },
+    "priority_good": "core:pasture_fiber_bundle",
+    "recipe_id": "core:craft_pasture_fiber_bundle",
+    "station": null,
+    "minutes": 12,
+    "skill": "survival",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_wool_roving",
+    "name": "Wool Roving",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:sheep_wool_locks": 2
+    },
+    "outputs": {
+      "core:wool_roving": 1
+    },
+    "priority_good": "core:wool_roving",
+    "recipe_id": "core:craft_wool_roving",
+    "station": null,
+    "minutes": 12,
+    "skill": "survival",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_braided_wool_cord",
+    "name": "Braided Wool Cord",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:wool_roving": 1,
+      "core:pasture_fiber_bundle": 1
+    },
+    "outputs": {
+      "core:braided_wool_cord": 2
+    },
+    "priority_good": "core:braided_wool_cord",
+    "recipe_id": "core:craft_braided_wool_cord",
+    "station": null,
+    "minutes": 30,
+    "skill": "survival",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fur_felt",
+    "name": "Fur Felt",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:wool_roving": 1,
+      "core:fox_tail_tuft": 1,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:fur_felt": 1
+    },
+    "priority_good": "core:fur_felt",
+    "recipe_id": "core:craft_fur_felt",
+    "station": null,
+    "minutes": 30,
+    "skill": "survival",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_horn_seam_needle",
+    "name": "Horn Seam Needle",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:goat_horn_sheath": 2,
+      "core:horn_button_set": 1
+    },
+    "outputs": {
+      "core:horn_seam_needle": 1
+    },
+    "priority_good": "core:horn_seam_needle",
+    "recipe_id": "core:craft_horn_seam_needle",
+    "station": null,
+    "minutes": 30,
+    "skill": "survival",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_tallow_dressing",
+    "name": "Tallow Dressing",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:rendered_tallow": 1,
+      "core:amberroot_crown": 1
+    },
+    "outputs": {
+      "core:tallow_dressing": 1
+    },
+    "priority_good": "core:tallow_dressing",
+    "recipe_id": "core:craft_tallow_dressing",
+    "station": null,
+    "minutes": 30,
+    "skill": "survival",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_condition_leather_with_tallow",
+    "name": "Condition Leather With Tallow",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:tallow_dressing": 1
+    },
+    "outputs": {
+      "core:leather": 1
+    },
+    "priority_good": "core:leather",
+    "recipe_id": "core:craft_condition_leather_with_tallow",
+    "station": null,
+    "minutes": 65,
+    "skill": "survival",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_horn_shod_staff",
+    "name": "Horn Shod Staff",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:planed_board": 2,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:horn_shod_staff": 1
+    },
+    "priority_good": "core:horn_shod_staff",
+    "recipe_id": "core:craft_horn_shod_staff",
+    "station": null,
+    "minutes": 65,
+    "skill": "survival",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_pasture_winter_coat",
+    "name": "Pasture Winter Coat",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:fur_felt": 3,
+      "core:reinforced_cloth": 1,
+      "core:horn_button_set": 2
+    },
+    "outputs": {
+      "core:pasture_winter_coat": 1
+    },
+    "priority_good": "core:pasture_winter_coat",
+    "recipe_id": "core:craft_pasture_winter_coat",
+    "station": null,
+    "minutes": 65,
+    "skill": "survival",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_wool_lined_mitts",
+    "name": "Wool Lined Mitts",
+    "occupation": "herder",
+    "workers": 1,
+    "inputs": {
+      "core:fur_felt": 1,
+      "core:oiled_leather": 1,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:wool_lined_mitts": 1
+    },
+    "priority_good": "core:wool_lined_mitts",
+    "recipe_id": "core:craft_wool_lined_mitts",
+    "station": null,
+    "minutes": 65,
+    "skill": "survival",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_bone_arrow_point",
+    "name": "Bone Arrow Point",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:wolf_fang_pair": 1,
+      "core:bone_chips": 2
+    },
+    "outputs": {
+      "core:bone_arrow_point": 3
+    },
+    "priority_good": "core:bone_arrow_point",
+    "recipe_id": "core:craft_bone_arrow_point",
+    "station": null,
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_feather_fletching",
+    "name": "Feather Fletching",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:turkey_quill_fan": 1,
+      "core:chicken_quill_bundle": 1
+    },
+    "outputs": {
+      "core:feather_fletching": 4
+    },
+    "priority_good": "core:feather_fletching",
+    "recipe_id": "core:craft_feather_fletching",
+    "station": null,
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fur_grip_pad",
+    "name": "Fur Grip Pad",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:rabbit_foot_tuft": 1,
+      "core:leather_scraps": 2
+    },
+    "outputs": {
+      "core:fur_grip_pad": 1
+    },
+    "priority_good": "core:fur_grip_pad",
+    "recipe_id": "core:craft_fur_grip_pad",
+    "station": null,
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_shaft_bundle",
+    "name": "Shaft Bundle",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:shaft_bundle": 3
+    },
+    "priority_good": "core:shaft_bundle",
+    "recipe_id": "core:craft_shaft_bundle",
+    "station": null,
+    "minutes": 12,
+    "skill": "hunting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_antler_throwing_dart",
+    "name": "Antler Throwing Dart",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:deer_antler_tip": 1,
+      "core:shaft_bundle": 1,
+      "core:feather_fletching": 1
+    },
+    "outputs": {
+      "core:antler_throwing_dart": 1
+    },
+    "priority_good": "core:antler_throwing_dart",
+    "recipe_id": "core:craft_antler_throwing_dart",
+    "station": null,
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_bone_hunting_knife",
+    "name": "Bone Hunting Knife",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:bone_arrow_point": 2,
+      "core:fitted_grip": 1,
+      "core:fur_grip_pad": 1
+    },
+    "outputs": {
+      "core:bone_hunting_knife": 1
+    },
+    "priority_good": "core:bone_hunting_knife",
+    "recipe_id": "core:craft_bone_hunting_knife",
+    "station": null,
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_make_fletched_arrows",
+    "name": "Make Fletched Arrows",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:shaft_bundle": 1,
+      "core:feather_fletching": 1,
+      "core:bone_arrow_point": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:wood_arrow": 3
+    },
+    "priority_good": "core:wood_arrow",
+    "recipe_id": "core:craft_make_fletched_arrows",
+    "station": null,
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_weighted_hide_sling",
+    "name": "Weighted Hide Sling",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:leather_lace": 3,
+      "core:fur_grip_pad": 1,
+      "core:braided_wool_cord": 1
+    },
+    "outputs": {
+      "core:weighted_hide_sling": 1
+    },
+    "priority_good": "core:weighted_hide_sling",
+    "recipe_id": "core:craft_weighted_hide_sling",
+    "station": null,
+    "minutes": 30,
+    "skill": "hunting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_barbed_hunting_spear",
+    "name": "Barbed Hunting Spear",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:shaft_bundle": 2,
+      "core:carved_bone_barb": 2,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:barbed_hunting_spear": 1
+    },
+    "priority_good": "core:barbed_hunting_spear",
+    "recipe_id": "core:craft_barbed_hunting_spear",
+    "station": null,
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_hunting_reflex_bow",
+    "name": "Hunting Reflex Bow",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:laminated_bow_limbs": 2,
+      "core:waxed_casting_line": 1,
+      "core:fur_grip_pad": 1
+    },
+    "outputs": {
+      "core:hunting_reflex_bow": 1
+    },
+    "priority_good": "core:hunting_reflex_bow",
+    "recipe_id": "core:craft_hunting_reflex_bow",
+    "station": null,
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_layered_hunter_bracers",
+    "name": "Layered Hunter Bracers",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:horn_laminate": 1,
+      "core:fur_felt": 1,
+      "core:hardened_leather": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:layered_hunter_bracers": 1
+    },
+    "priority_good": "core:layered_hunter_bracers",
+    "recipe_id": "core:craft_layered_hunter_bracers",
+    "station": null,
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_tracker_skinning_set",
+    "name": "Tracker Skinning Set",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:antler_skinning_knife": 1,
+      "core:bear_claw_sheath": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:tracker_skinning_set": 1
+    },
+    "priority_good": "core:tracker_skinning_set",
+    "recipe_id": "core:craft_tracker_skinning_set",
+    "station": null,
+    "minutes": 65,
+    "skill": "hunting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_bark_felt",
+    "name": "Bark Felt",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:bark": 3,
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:bark_felt": 1
+    },
+    "priority_good": "core:bark_felt",
+    "recipe_id": "core:craft_bark_felt",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_collect_bark_pitch",
+    "name": "Collect Bark Pitch",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:bark": 3
+    },
+    "outputs": {
+      "core:resin_lumps": 2
+    },
+    "priority_good": "core:resin_lumps",
+    "recipe_id": "core:craft_collect_bark_pitch",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_hardwood_blank",
+    "name": "Hardwood Blank",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:hardwood_blank": 2
+    },
+    "priority_good": "core:hardwood_blank",
+    "recipe_id": "core:craft_hardwood_blank",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_pitch_binder",
+    "name": "Pitch Binder",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:resin_lumps": 3,
+      "core:bark": 1
+    },
+    "outputs": {
+      "core:pitch_binder": 1
+    },
+    "priority_good": "core:pitch_binder",
+    "recipe_id": "core:craft_pitch_binder",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_split_sound_wood",
+    "name": "Split Sound Wood",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:wood": 1
+    },
+    "outputs": {
+      "core:wood_pieces": 20
+    },
+    "priority_good": "core:wood_pieces",
+    "recipe_id": "core:craft_split_sound_wood",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_timber_wedge",
+    "name": "Timber Wedge",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:wood_pieces": 4
+    },
+    "outputs": {
+      "core:timber_wedge": 2
+    },
+    "priority_good": "core:timber_wedge",
+    "recipe_id": "core:craft_timber_wedge",
+    "station": null,
+    "minutes": 12,
+    "skill": "woodcutting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_felling_axe",
+    "name": "Felling Axe",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hardwood_blank": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:felling_axe": 1
+    },
+    "priority_good": "core:felling_axe",
+    "recipe_id": "core:craft_felling_axe",
+    "station": null,
+    "minutes": 30,
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_splitting_maul",
+    "name": "Splitting Maul",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:hardwood_blank": 1,
+      "core:timber_wedge": 2,
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:splitting_maul": 1
+    },
+    "priority_good": "core:splitting_maul",
+    "recipe_id": "core:craft_splitting_maul",
+    "station": null,
+    "minutes": 30,
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_timber_hook",
+    "name": "Timber Hook",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:hardwood_blank": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:timber_hook": 1
+    },
+    "priority_good": "core:timber_hook",
+    "recipe_id": "core:craft_timber_hook",
+    "station": null,
+    "minutes": 30,
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_wood_boring_auger",
+    "name": "Wood Boring Auger",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:hardwood_blank": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:wood_boring_auger": 1
+    },
+    "priority_good": "core:wood_boring_auger",
+    "recipe_id": "core:craft_wood_boring_auger",
+    "station": null,
+    "minutes": 30,
+    "skill": "woodcutting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_bark_lined_forester_hood",
+    "name": "Bark Lined Forester Hood",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:bark_felt": 2,
+      "core:oiled_leather": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:bark_lined_forester_hood": 1
+    },
+    "priority_good": "core:bark_lined_forester_hood",
+    "recipe_id": "core:craft_bark_lined_forester_hood",
+    "station": null,
+    "minutes": 65,
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_loggers_mattock",
+    "name": "Loggers Mattock",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hardwood_blank": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:loggers_mattock": 1
+    },
+    "priority_good": "core:loggers_mattock",
+    "recipe_id": "core:craft_loggers_mattock",
+    "station": null,
+    "minutes": 65,
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_pitch_laminated_shield",
+    "name": "Pitch Laminated Shield",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:planed_board": 3,
+      "core:pitch_binder": 2,
+      "core:bentwood_frame": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:pitch_laminated_shield": 1
+    },
+    "priority_good": "core:pitch_laminated_shield",
+    "recipe_id": "core:craft_pitch_laminated_shield",
+    "station": null,
+    "minutes": 65,
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_tensioned_timber_saw",
+    "name": "Tensioned Timber Saw",
+    "occupation": "lumberjack",
+    "workers": 1,
+    "inputs": {
+      "core:metal_frame_saw": 1,
+      "core:tempered_spring": 2,
+      "core:fitted_grip": 2,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:tensioned_timber_saw": 1
+    },
+    "priority_good": "core:tensioned_timber_saw",
+    "recipe_id": "core:craft_tensioned_timber_saw",
+    "station": null,
+    "minutes": 65,
+    "skill": "woodcutting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_abrasive_powder",
+    "name": "Abrasive Powder",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:mineral_grit": 3,
+      "core:glass_shards": 2
+    },
+    "outputs": {
+      "core:abrasive_powder": 2
+    },
+    "priority_good": "core:abrasive_powder",
+    "recipe_id": "core:craft_abrasive_powder",
+    "station": "core:masonry_bench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grinding_slab",
+    "name": "Grinding Slab",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1,
+      "core:mineral_grit": 2
+    },
+    "outputs": {
+      "core:grinding_slab": 1
+    },
+    "priority_good": "core:grinding_slab",
+    "recipe_id": "core:craft_grinding_slab",
+    "station": "core:masonry_bench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 14
+  },
+  {
+    "id": "core:npc_expansion_craft_mortar_mix",
+    "name": "Mortar Mix",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:mineral_grit": 4,
+      "core:clay_lump": 1
+    },
+    "outputs": {
+      "core:mortar_mix": 1
+    },
+    "priority_good": "core:mortar_mix",
+    "recipe_id": "core:craft_mortar_mix",
+    "station": "core:masonry_bench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_stone_blade_blank",
+    "name": "Stone Blade Blank",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1,
+      "core:ceramic_shards": 1
+    },
+    "outputs": {
+      "core:stone_blade_blank": 2
+    },
+    "priority_good": "core:stone_blade_blank",
+    "recipe_id": "core:craft_stone_blade_blank",
+    "station": "core:masonry_bench",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_flint_hide_scraper",
+    "name": "Flint Hide Scraper",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone_blade_blank": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:flint_hide_scraper": 1
+    },
+    "priority_good": "core:flint_hide_scraper",
+    "recipe_id": "core:craft_flint_hide_scraper",
+    "station": "core:masonry_bench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_granite_pestle",
+    "name": "Granite Pestle",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:granite_pestle": 1
+    },
+    "priority_good": "core:granite_pestle",
+    "recipe_id": "core:craft_granite_pestle",
+    "station": "core:masonry_bench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_mason_hand_hammer",
+    "name": "Mason Hand Hammer",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1,
+      "core:tool_handles": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:mason_hand_hammer": 1
+    },
+    "priority_good": "core:mason_hand_hammer",
+    "recipe_id": "core:craft_mason_hand_hammer",
+    "station": "core:masonry_bench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_notched_stone_knife",
+    "name": "Notched Stone Knife",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone_blade_blank": 1,
+      "core:tool_handles": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:notched_stone_knife": 1
+    },
+    "priority_good": "core:notched_stone_knife",
+    "recipe_id": "core:craft_notched_stone_knife",
+    "station": "core:masonry_bench",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_basalt_head_mace",
+    "name": "Basalt Head Mace",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 2,
+      "core:tool_handles": 2,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:basalt_head_mace": 1
+    },
+    "priority_good": "core:basalt_head_mace",
+    "recipe_id": "core:craft_basalt_head_mace",
+    "station": "core:masonry_bench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_bind_dressed_blocks",
+    "name": "Bind Dressed Blocks",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 2,
+      "core:mortar_mix": 1
+    },
+    "outputs": {
+      "core:dressed_stone": 2
+    },
+    "priority_good": "core:dressed_stone",
+    "recipe_id": "core:craft_bind_dressed_blocks",
+    "station": "core:masonry_bench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_crystal_edge_scalpel",
+    "name": "Crystal Edge Scalpel",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:clear_crystal": 2,
+      "core:abrasive_powder": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:crystal_edge_scalpel": 1
+    },
+    "priority_good": "core:crystal_edge_scalpel",
+    "recipe_id": "core:craft_crystal_edge_scalpel",
+    "station": "core:masonry_bench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_quarry_sledge",
+    "name": "Quarry Sledge",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 3,
+      "core:fitted_grip": 1,
+      "core:wooden_dowels": 2
+    },
+    "outputs": {
+      "core:quarry_sledge": 1
+    },
+    "priority_good": "core:quarry_sledge",
+    "recipe_id": "core:craft_quarry_sledge",
+    "station": "core:masonry_bench",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_barley_meal",
+    "name": "Barley Meal",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:barley": 3
+    },
+    "outputs": {
+      "core:barley_meal": 2
+    },
+    "priority_good": "core:barley_meal",
+    "recipe_id": "core:craft_barley_meal",
+    "station": "core:millstone",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bean_flour",
+    "name": "Bean Flour",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:beans": 3
+    },
+    "outputs": {
+      "core:bean_flour": 2
+    },
+    "priority_good": "core:bean_flour",
+    "recipe_id": "core:craft_bean_flour",
+    "station": "core:millstone",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_cattail_starch",
+    "name": "Cattail Starch",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:cattail_root": 3
+    },
+    "outputs": {
+      "core:cattail_starch": 2
+    },
+    "priority_good": "core:cattail_starch",
+    "recipe_id": "core:craft_cattail_starch",
+    "station": "core:millstone",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_cornmeal",
+    "name": "Cornmeal",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:corn": 3
+    },
+    "outputs": {
+      "core:cornmeal": 2
+    },
+    "priority_good": "core:cornmeal",
+    "recipe_id": "core:craft_cornmeal",
+    "station": "core:millstone",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_flax_meal",
+    "name": "Flax Meal",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:flax": 3
+    },
+    "outputs": {
+      "core:flax_meal": 2
+    },
+    "priority_good": "core:flax_meal",
+    "recipe_id": "core:craft_flax_meal",
+    "station": "core:millstone",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_roasted_grain_crumble",
+    "name": "Roasted Grain Crumble",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:wheat": 1
+    },
+    "outputs": {
+      "core:roasted_grain_crumble": 1
+    },
+    "priority_good": "core:roasted_grain_crumble",
+    "recipe_id": "core:craft_roasted_grain_crumble",
+    "station": "core:campfire",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_root_flour",
+    "name": "Root Flour",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:wild_carrot": 2,
+      "core:cattail_starch": 1
+    },
+    "outputs": {
+      "core:root_flour": 1
+    },
+    "priority_good": "core:root_flour",
+    "recipe_id": "core:craft_root_flour",
+    "station": "core:millstone",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_wholegrain_flour",
+    "name": "Wholegrain Flour",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:wheat": 3
+    },
+    "outputs": {
+      "core:wholegrain_flour": 2
+    },
+    "priority_good": "core:wholegrain_flour",
+    "recipe_id": "core:craft_wholegrain_flour",
+    "station": "core:millstone",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_fine_sifted_flour",
+    "name": "Fine Sifted Flour",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:wholegrain_flour": 2
+    },
+    "outputs": {
+      "core:fine_sifted_flour": 1
+    },
+    "priority_good": "core:fine_sifted_flour",
+    "recipe_id": "core:craft_fine_sifted_flour",
+    "station": "core:millstone",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grain_binder_paste",
+    "name": "Grain Binder Paste",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:barley_meal": 1,
+      "core:cattail_starch": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:grain_binder_paste": 1
+    },
+    "priority_good": "core:grain_binder_paste",
+    "recipe_id": "core:craft_grain_binder_paste",
+    "station": "core:millstone",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_grooved_mill_pestle",
+    "name": "Grooved Mill Pestle",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:dressed_stone": 1,
+      "core:wooden_dowels": 2,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:grooved_mill_pestle": 1
+    },
+    "priority_good": "core:grooved_mill_pestle",
+    "recipe_id": "core:craft_grooved_mill_pestle",
+    "station": "core:millstone",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_mushroom_powder",
+    "name": "Mushroom Powder",
+    "occupation": "miller",
+    "workers": 1,
+    "inputs": {
+      "core:morel": 2,
+      "core:bolete": 2
+    },
+    "outputs": {
+      "core:mushroom_powder": 2
+    },
+    "priority_good": "core:mushroom_powder",
+    "recipe_id": "core:craft_mushroom_powder",
+    "station": "core:millstone",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_copper_granules",
+    "name": "Copper Granules",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:copper_ore": 1
+    },
+    "outputs": {
+      "core:copper_granules": 2
+    },
+    "priority_good": "core:copper_granules",
+    "recipe_id": "core:craft_copper_granules",
+    "station": null,
+    "minutes": 12,
+    "skill": "mining",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_polishing_slurry",
+    "name": "Polishing Slurry",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:abrasive_powder": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:polishing_slurry": 1
+    },
+    "priority_good": "core:polishing_slurry",
+    "recipe_id": "core:craft_polishing_slurry",
+    "station": null,
+    "minutes": 12,
+    "skill": "mining",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_sift_crushed_stone",
+    "name": "Sift Crushed Stone",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:mineral_grit": 20
+    },
+    "priority_good": "core:mineral_grit",
+    "recipe_id": "core:craft_sift_crushed_stone",
+    "station": null,
+    "minutes": 12,
+    "skill": "mining",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_sorted_crystal_faces",
+    "name": "Sorted Crystal Faces",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:clear_crystal": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:sorted_crystal_faces": 2
+    },
+    "priority_good": "core:sorted_crystal_faces",
+    "recipe_id": "core:craft_sorted_crystal_faces",
+    "station": null,
+    "minutes": 12,
+    "skill": "mining",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_washed_ore_fragments",
+    "name": "Washed Ore Fragments",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:iron_ore": 1,
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:washed_ore_fragments": 1
+    },
+    "priority_good": "core:washed_ore_fragments",
+    "recipe_id": "core:craft_washed_ore_fragments",
+    "station": null,
+    "minutes": 12,
+    "skill": "mining",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_geologists_hammer",
+    "name": "Geologists Hammer",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:geologists_hammer": 1
+    },
+    "priority_good": "core:geologists_hammer",
+    "recipe_id": "core:craft_geologists_hammer",
+    "station": null,
+    "minutes": 30,
+    "skill": "mining",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_iron_splitting_wedges",
+    "name": "Iron Splitting Wedges",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:iron_splitting_wedges": 1
+    },
+    "priority_good": "core:iron_splitting_wedges",
+    "recipe_id": "core:craft_iron_splitting_wedges",
+    "station": null,
+    "minutes": 30,
+    "skill": "mining",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_ore_sifting_screen",
+    "name": "Ore Sifting Screen",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:canvas_panel": 1,
+      "core:wooden_dowels": 4,
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:ore_sifting_screen": 1
+    },
+    "priority_good": "core:ore_sifting_screen",
+    "recipe_id": "core:craft_ore_sifting_screen",
+    "station": null,
+    "minutes": 30,
+    "skill": "mining",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_padded_mining_cap",
+    "name": "Padded Mining Cap",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:felt_padding": 1,
+      "core:hardened_leather": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:padded_mining_cap": 1
+    },
+    "priority_good": "core:padded_mining_cap",
+    "recipe_id": "core:craft_padded_mining_cap",
+    "station": null,
+    "minutes": 30,
+    "skill": "mining",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_crystal_burnisher",
+    "name": "Crystal Burnisher",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:sorted_crystal_faces": 2,
+      "core:polishing_slurry": 1,
+      "core:fitted_grip": 1
+    },
+    "outputs": {
+      "core:crystal_burnisher": 1
+    },
+    "priority_good": "core:crystal_burnisher",
+    "recipe_id": "core:craft_crystal_burnisher",
+    "station": null,
+    "minutes": 65,
+    "skill": "mining",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_hardened_ore_auger",
+    "name": "Hardened Ore Auger",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tempered_spring": 1,
+      "core:fitted_grip": 1,
+      "core:nuts_and_bolts": 3
+    },
+    "outputs": {
+      "core:hardened_ore_auger": 1
+    },
+    "priority_good": "core:hardened_ore_auger",
+    "recipe_id": "core:craft_hardened_ore_auger",
+    "station": null,
+    "minutes": 65,
+    "skill": "mining",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_heavy_quarry_pick",
+    "name": "Heavy Quarry Pick",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 3,
+      "core:hardwood_blank": 1,
+      "core:leather_grip_wrap": 2,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:heavy_quarry_pick": 1
+    },
+    "priority_good": "core:heavy_quarry_pick",
+    "recipe_id": "core:craft_heavy_quarry_pick",
+    "station": null,
+    "minutes": 65,
+    "skill": "mining",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_plated_mining_gauntlets",
+    "name": "Plated Mining Gauntlets",
+    "occupation": "miner",
+    "workers": 1,
+    "inputs": {
+      "core:segmented_armor_plates": 1,
+      "core:hardened_leather": 1,
+      "core:felt_padding": 1,
+      "core:rivet_set": 2
+    },
+    "outputs": {
+      "core:plated_mining_gauntlets": 1
+    },
+    "priority_good": "core:plated_mining_gauntlets",
+    "recipe_id": "core:craft_plated_mining_gauntlets",
+    "station": null,
+    "minutes": 65,
+    "skill": "mining",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_break_defective_pottery",
+    "name": "Break Defective Pottery",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:clay_pot": 1
+    },
+    "outputs": {
+      "core:ceramic_shards": 8
+    },
+    "priority_good": "core:ceramic_shards",
+    "recipe_id": "core:craft_break_defective_pottery",
+    "station": "core:pottery_wheel",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_ceramic_filter_media",
+    "name": "Ceramic Filter Media",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:kiln_grog": 2,
+      "core:mineral_grit": 1
+    },
+    "outputs": {
+      "core:ceramic_filter_media": 2
+    },
+    "priority_good": "core:ceramic_filter_media",
+    "recipe_id": "core:craft_ceramic_filter_media",
+    "station": "core:pottery_wheel",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_ceramic_mould",
+    "name": "Ceramic Mould",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 2
+    },
+    "outputs": {
+      "core:ceramic_mould": 1
+    },
+    "priority_good": "core:ceramic_mould",
+    "recipe_id": "core:craft_ceramic_mould",
+    "station": "core:pottery_wheel",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_kiln_grog",
+    "name": "Kiln Grog",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:ceramic_shards": 3
+    },
+    "outputs": {
+      "core:kiln_grog": 2
+    },
+    "priority_good": "core:kiln_grog",
+    "recipe_id": "core:craft_kiln_grog",
+    "station": "core:pottery_wheel",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_tempered_clay",
+    "name": "Tempered Clay",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:clay_lump": 2,
+      "core:kiln_grog": 1
+    },
+    "outputs": {
+      "core:tempered_clay": 2
+    },
+    "priority_good": "core:tempered_clay",
+    "recipe_id": "core:craft_tempered_clay",
+    "station": "core:pottery_wheel",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_ceramic_pestle",
+    "name": "Ceramic Pestle",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 2,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:ceramic_pestle": 1
+    },
+    "priority_good": "core:ceramic_pestle",
+    "recipe_id": "core:craft_ceramic_pestle",
+    "station": "core:pottery_wheel",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_ceramic_thimble",
+    "name": "Ceramic Thimble",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 1
+    },
+    "outputs": {
+      "core:ceramic_thimble": 1
+    },
+    "priority_good": "core:ceramic_thimble",
+    "recipe_id": "core:craft_ceramic_thimble",
+    "station": "core:pottery_wheel",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_hardened_ceramic_edge",
+    "name": "Hardened Ceramic Edge",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:abrasive_powder": 1
+    },
+    "outputs": {
+      "core:hardened_ceramic_edge": 1
+    },
+    "priority_good": "core:hardened_ceramic_edge",
+    "recipe_id": "core:craft_hardened_ceramic_edge",
+    "station": "core:pottery_wheel",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_kiln_piercing_spike",
+    "name": "Kiln Piercing Spike",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:leather_grip_wrap": 1
+    },
+    "outputs": {
+      "core:kiln_piercing_spike": 1
+    },
+    "priority_good": "core:kiln_piercing_spike",
+    "recipe_id": "core:craft_kiln_piercing_spike",
+    "station": "core:pottery_wheel",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_ceramic_distillation_coil",
+    "name": "Ceramic Distillation Coil",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 3,
+      "core:copper_wire": 3
+    },
+    "outputs": {
+      "core:ceramic_distillation_coil": 1
+    },
+    "priority_good": "core:ceramic_distillation_coil",
+    "recipe_id": "core:craft_ceramic_distillation_coil",
+    "station": "core:pottery_wheel",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_glazed_lure_bead",
+    "name": "Glazed Lure Bead",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 1,
+      "core:glass_shards": 3,
+      "core:copper_wire": 1
+    },
+    "outputs": {
+      "core:glazed_lure_bead": 4
+    },
+    "priority_good": "core:glazed_lure_bead",
+    "recipe_id": "core:craft_glazed_lure_bead",
+    "station": "core:pottery_wheel",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_porous_filter_candle",
+    "name": "Porous Filter Candle",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:ceramic_filter_media": 3,
+      "core:tempered_clay": 1
+    },
+    "outputs": {
+      "core:porous_filter_candle": 1
+    },
+    "priority_good": "core:porous_filter_candle",
+    "recipe_id": "core:craft_porous_filter_candle",
+    "station": "core:pottery_wheel",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_stoneware_crucible",
+    "name": "Stoneware Crucible",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {
+      "core:tempered_clay": 3,
+      "core:kiln_grog": 2
+    },
+    "outputs": {
+      "core:stoneware_crucible": 1
+    },
+    "priority_good": "core:stoneware_crucible",
+    "recipe_id": "core:craft_stoneware_crucible",
+    "station": "core:pottery_wheel",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_binding_cord",
+    "name": "Binding Cord",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:spun_yarn": 2,
+      "core:silver_filament": 1
+    },
+    "outputs": {
+      "core:binding_cord": 2
+    },
+    "priority_good": "core:binding_cord",
+    "recipe_id": "core:craft_binding_cord",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "scholarship",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_carbon_pigment",
+    "name": "Carbon Pigment",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:coal": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:carbon_pigment": 2
+    },
+    "priority_good": "core:carbon_pigment",
+    "recipe_id": "core:craft_carbon_pigment",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "scholarship",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_pressed_pulp_board",
+    "name": "Pressed Pulp Board",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:recycled_rag_paper": 2,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:pressed_pulp_board": 1
+    },
+    "priority_good": "core:pressed_pulp_board",
+    "recipe_id": "core:craft_pressed_pulp_board",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "scholarship",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_recycled_rag_paper",
+    "name": "Recycled Rag Paper",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:plant_fiber_pulp": 1,
+      "core:cloth_scraps": 4
+    },
+    "outputs": {
+      "core:recycled_rag_paper": 2
+    },
+    "priority_good": "core:recycled_rag_paper",
+    "recipe_id": "core:craft_recycled_rag_paper",
+    "station": "core:workbench",
+    "minutes": 12,
+    "skill": "scholarship",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_bookbinders_needle",
+    "name": "Bookbinders Needle",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 4,
+      "core:copper_wire": 2,
+      "core:binding_cord": 1
+    },
+    "outputs": {
+      "core:bookbinders_needle": 1
+    },
+    "priority_good": "core:bookbinders_needle",
+    "recipe_id": "core:craft_bookbinders_needle",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "scholarship",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_layered_paper_cap",
+    "name": "Layered Paper Cap",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:recycled_rag_paper": 3,
+      "core:pressed_plant_binder": 1,
+      "core:binding_cord": 1
+    },
+    "outputs": {
+      "core:layered_paper_cap": 1
+    },
+    "priority_good": "core:layered_paper_cap",
+    "recipe_id": "core:craft_layered_paper_cap",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "scholarship",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_polished_crystal_lens",
+    "name": "Polished Crystal Lens",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:sorted_crystal_faces": 1,
+      "core:abrasive_powder": 1,
+      "core:polishing_slurry": 1
+    },
+    "outputs": {
+      "core:polished_crystal_lens": 1
+    },
+    "priority_good": "core:polished_crystal_lens",
+    "recipe_id": "core:craft_polished_crystal_lens",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "scholarship",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_sealed_paper_panel",
+    "name": "Sealed Paper Panel",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:pressed_pulp_board": 1,
+      "core:carbon_pigment": 1,
+      "core:pressed_plant_binder": 1
+    },
+    "outputs": {
+      "core:sealed_paper_panel": 1
+    },
+    "priority_good": "core:sealed_paper_panel",
+    "recipe_id": "core:craft_sealed_paper_panel",
+    "station": "core:workbench",
+    "minutes": 30,
+    "skill": "scholarship",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_laminated_paper_shield",
+    "name": "Laminated Paper Shield",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:sealed_paper_panel": 3,
+      "core:bentwood_frame": 1,
+      "core:binding_cord": 2,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:laminated_paper_shield": 1
+    },
+    "priority_good": "core:laminated_paper_shield",
+    "recipe_id": "core:craft_laminated_paper_shield",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "scholarship",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_layered_paper_coat",
+    "name": "Layered Paper Coat",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:sealed_paper_panel": 2,
+      "core:reinforced_cloth": 1,
+      "core:binding_cord": 2
+    },
+    "outputs": {
+      "core:layered_paper_coat": 1
+    },
+    "priority_good": "core:layered_paper_coat",
+    "recipe_id": "core:craft_layered_paper_coat",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "scholarship",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_lens_mounted_needle",
+    "name": "Lens Mounted Needle",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:polished_crystal_lens": 1,
+      "core:bookbinders_needle": 1,
+      "core:silver_filament": 1,
+      "core:fine_gear": 1
+    },
+    "outputs": {
+      "core:lens_mounted_needle": 1
+    },
+    "priority_good": "core:lens_mounted_needle",
+    "recipe_id": "core:craft_lens_mounted_needle",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "scholarship",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_prepare_writing_stock",
+    "name": "Prepare Writing Stock",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {
+      "core:recycled_rag_paper": 3,
+      "core:filtered_malt_culture": 1,
+      "core:grain_binder_paste": 1
+    },
+    "outputs": {
+      "core:parchment": 3
+    },
+    "priority_good": "core:parchment",
+    "recipe_id": "core:craft_prepare_writing_stock",
+    "station": "core:workbench",
+    "minutes": 65,
+    "skill": "scholarship",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_copper_sheet",
+    "name": "Copper Sheet",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:copper_ingot": 1
+    },
+    "outputs": {
+      "core:copper_sheet": 3
+    },
+    "priority_good": "core:copper_sheet",
+    "recipe_id": "core:craft_copper_sheet",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_draw_copper_wire",
+    "name": "Draw Copper Wire",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:copper_ingot": 1
+    },
+    "outputs": {
+      "core:copper_wire": 30
+    },
+    "priority_good": "core:copper_wire",
+    "recipe_id": "core:craft_draw_copper_wire",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_forge_fasteners",
+    "name": "Forge Fasteners",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:nuts_and_bolts": 4
+    },
+    "priority_good": "core:nuts_and_bolts",
+    "recipe_id": "core:craft_forge_fasteners",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_hinge_pair",
+    "name": "Hinge Pair",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:metal_scraps": 3,
+      "core:nuts_and_bolts": 1
+    },
+    "outputs": {
+      "core:hinge_pair": 1
+    },
+    "priority_good": "core:hinge_pair",
+    "recipe_id": "core:craft_hinge_pair",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_iron_tool_blank",
+    "name": "Iron Tool Blank",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:metal_scraps": 6,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:iron_tool_blank": 1
+    },
+    "priority_good": "core:iron_tool_blank",
+    "recipe_id": "core:craft_iron_tool_blank",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_rivet_set",
+    "name": "Rivet Set",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:metal_scraps": 2
+    },
+    "outputs": {
+      "core:rivet_set": 3
+    },
+    "priority_good": "core:rivet_set",
+    "recipe_id": "core:craft_rivet_set",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_shear_iron_offcuts",
+    "name": "Shear Iron Offcuts",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_bloom": 1
+    },
+    "outputs": {
+      "core:metal_scraps": 20
+    },
+    "priority_good": "core:metal_scraps",
+    "recipe_id": "core:craft_shear_iron_offcuts",
+    "station": "core:forge",
+    "minutes": 12,
+    "skill": "smithing",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_claw_hammer",
+    "name": "Claw Hammer",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:claw_hammer": 1
+    },
+    "priority_good": "core:claw_hammer",
+    "recipe_id": "core:craft_claw_hammer",
+    "station": "core:forge",
+    "minutes": 30,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_iron_adze",
+    "name": "Iron Adze",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:iron_adze": 1
+    },
+    "priority_good": "core:iron_adze",
+    "recipe_id": "core:craft_iron_adze",
+    "station": "core:forge",
+    "minutes": 30,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_iron_chisel",
+    "name": "Iron Chisel",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:leather_scraps": 1
+    },
+    "outputs": {
+      "core:iron_chisel": 1
+    },
+    "priority_good": "core:iron_chisel",
+    "recipe_id": "core:craft_iron_chisel",
+    "station": "core:forge",
+    "minutes": 30,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_salvage_driver",
+    "name": "Salvage Driver",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 1,
+      "core:tool_handles": 1,
+      "core:nuts_and_bolts": 2
+    },
+    "outputs": {
+      "core:salvage_driver": 1
+    },
+    "priority_good": "core:salvage_driver",
+    "recipe_id": "core:craft_salvage_driver",
+    "station": "core:forge",
+    "minutes": 30,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_smelt_selected_copper_granules",
+    "name": "Smelt Selected Copper Granules",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:copper_granules": 2,
+      "core:coal": 1
+    },
+    "outputs": {
+      "core:copper_ingot": 1
+    },
+    "priority_good": "core:copper_ingot",
+    "recipe_id": "core:craft_smelt_selected_copper_granules",
+    "station": "core:forge",
+    "minutes": 80,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_smelt_sorted_iron_fragments",
+    "name": "Smelt Sorted Iron Fragments",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:washed_ore_fragments": 1,
+      "core:coal": 2
+    },
+    "outputs": {
+      "core:iron_bloom": 1
+    },
+    "priority_good": "core:iron_bloom",
+    "recipe_id": "core:craft_smelt_sorted_iron_fragments",
+    "station": "core:forge",
+    "minutes": 180,
+    "skill": "smithing",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_iron_lamellar_vest",
+    "name": "Iron Lamellar Vest",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:segmented_armor_plates": 2,
+      "core:leather_lace": 2,
+      "core:felt_padding": 1
+    },
+    "outputs": {
+      "core:iron_lamellar_vest": 1
+    },
+    "priority_good": "core:iron_lamellar_vest",
+    "recipe_id": "core:craft_iron_lamellar_vest",
+    "station": "core:forge",
+    "minutes": 65,
+    "skill": "smithing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_metal_frame_saw",
+    "name": "Metal Frame Saw",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:hinge_pair": 1,
+      "core:tempered_spring": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:metal_frame_saw": 1
+    },
+    "priority_good": "core:metal_frame_saw",
+    "recipe_id": "core:craft_metal_frame_saw",
+    "station": "core:forge",
+    "minutes": 65,
+    "skill": "smithing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_segmented_armor_plates",
+    "name": "Segmented Armor Plates",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:metal_scraps": 12,
+      "core:rivet_set": 2
+    },
+    "outputs": {
+      "core:segmented_armor_plates": 2
+    },
+    "priority_good": "core:segmented_armor_plates",
+    "recipe_id": "core:craft_segmented_armor_plates",
+    "station": "core:forge",
+    "minutes": 65,
+    "skill": "smithing",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_socketed_iron_hoe",
+    "name": "Socketed Iron Hoe",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:iron_tool_blank": 2,
+      "core:tool_handles": 2,
+      "core:rivet_set": 1
+    },
+    "outputs": {
+      "core:socketed_iron_hoe": 1
+    },
+    "priority_good": "core:socketed_iron_hoe",
+    "recipe_id": "core:craft_socketed_iron_hoe",
+    "station": "core:forge",
+    "minutes": 65,
+    "skill": "smithing",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_cured_leather_panel",
+    "name": "Cured Leather Panel",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:leather_scraps": 8,
+      "core:bark": 1
+    },
+    "outputs": {
+      "core:cured_leather_panel": 1
+    },
+    "priority_good": "core:cured_leather_panel",
+    "recipe_id": "core:craft_cured_leather_panel",
+    "station": "core:tanning_frame",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_hide_glue",
+    "name": "Hide Glue",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:fresh_hide": 1,
+      "core:bone_chips": 3
+    },
+    "outputs": {
+      "core:hide_glue": 1
+    },
+    "priority_good": "core:hide_glue",
+    "recipe_id": "core:craft_hide_glue",
+    "station": "core:campfire",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_leather_grip_wrap",
+    "name": "Leather Grip Wrap",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:leather_lace": 1,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:leather_grip_wrap": 2
+    },
+    "priority_good": "core:leather_grip_wrap",
+    "recipe_id": "core:craft_leather_grip_wrap",
+    "station": "core:tanning_frame",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_leather_lace",
+    "name": "Leather Lace",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:leather_scraps": 3
+    },
+    "outputs": {
+      "core:leather_lace": 2
+    },
+    "priority_good": "core:leather_lace",
+    "recipe_id": "core:craft_leather_lace",
+    "station": "core:tanning_frame",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_trim_leather_offcuts",
+    "name": "Trim Leather Offcuts",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:leather": 1
+    },
+    "outputs": {
+      "core:leather_scraps": 10
+    },
+    "priority_good": "core:leather_scraps",
+    "recipe_id": "core:craft_trim_leather_offcuts",
+    "station": "core:tanning_frame",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_hardened_leather",
+    "name": "Hardened Leather",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:resin_lumps": 2
+    },
+    "outputs": {
+      "core:hardened_leather": 1
+    },
+    "priority_good": "core:hardened_leather",
+    "recipe_id": "core:craft_hardened_leather",
+    "station": "core:tanning_frame",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_leatherworker_awl",
+    "name": "Leatherworker Awl",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:bone_chips": 5,
+      "core:leather_grip_wrap": 1,
+      "core:tool_handles": 1
+    },
+    "outputs": {
+      "core:leatherworker_awl": 1
+    },
+    "priority_good": "core:leatherworker_awl",
+    "recipe_id": "core:craft_leatherworker_awl",
+    "station": "core:tanning_frame",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_oiled_leather",
+    "name": "Oiled Leather",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:cured_leather_panel": 1,
+      "core:animal_fat": 1
+    },
+    "outputs": {
+      "core:oiled_leather": 1
+    },
+    "priority_good": "core:oiled_leather",
+    "recipe_id": "core:craft_oiled_leather",
+    "station": "core:tanning_frame",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_riveted_work_gloves",
+    "name": "Riveted Work Gloves",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:rivet_set": 1,
+      "core:leather_lace": 1
+    },
+    "outputs": {
+      "core:riveted_work_gloves": 1
+    },
+    "priority_good": "core:riveted_work_gloves",
+    "recipe_id": "core:craft_riveted_work_gloves",
+    "station": "core:tanning_frame",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_fur_lined_hood",
+    "name": "Fur Lined Hood",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:oiled_leather": 1,
+      "core:fur_felt": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:fur_lined_hood": 1
+    },
+    "priority_good": "core:fur_lined_hood",
+    "recipe_id": "core:craft_fur_lined_hood",
+    "station": "core:tanning_frame",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_hardened_leather_cuirass",
+    "name": "Hardened Leather Cuirass",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:hardened_leather": 3,
+      "core:leather_lace": 2,
+      "core:felt_padding": 1
+    },
+    "outputs": {
+      "core:hardened_leather_cuirass": 1
+    },
+    "priority_good": "core:hardened_leather_cuirass",
+    "recipe_id": "core:craft_hardened_leather_cuirass",
+    "station": "core:tanning_frame",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_horn_faced_buckler",
+    "name": "Horn Faced Buckler",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:horn_laminate": 2,
+      "core:bentwood_frame": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:horn_faced_buckler": 1
+    },
+    "priority_good": "core:horn_faced_buckler",
+    "recipe_id": "core:craft_horn_faced_buckler",
+    "station": "core:tanning_frame",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_reinforced_gaiters",
+    "name": "Reinforced Gaiters",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {
+      "core:hardened_leather": 1,
+      "core:oiled_leather": 1,
+      "core:leather_lace": 2
+    },
+    "outputs": {
+      "core:reinforced_gaiters": 1
+    },
+    "priority_good": "core:reinforced_gaiters",
+    "recipe_id": "core:craft_reinforced_gaiters",
+    "station": "core:tanning_frame",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_canvas_panel",
+    "name": "Canvas Panel",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:plant_cordage": 2,
+      "core:cloth_scraps": 8
+    },
+    "outputs": {
+      "core:canvas_panel": 1
+    },
+    "priority_good": "core:canvas_panel",
+    "recipe_id": "core:craft_canvas_panel",
+    "station": "core:loom",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_cut_cloth_offcuts",
+    "name": "Cut Cloth Offcuts",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:woven_cloth": 1
+    },
+    "outputs": {
+      "core:cloth_scraps": 10
+    },
+    "priority_good": "core:cloth_scraps",
+    "recipe_id": "core:craft_cut_cloth_offcuts",
+    "station": "core:loom",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 32,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_felt_padding",
+    "name": "Felt Padding",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:cloth_scraps": 6,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:felt_padding": 1
+    },
+    "priority_good": "core:felt_padding",
+    "recipe_id": "core:craft_felt_padding",
+    "station": "core:loom",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_linen_panel",
+    "name": "Linen Panel",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:flax": 3,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:linen_panel": 1
+    },
+    "priority_good": "core:linen_panel",
+    "recipe_id": "core:craft_linen_panel",
+    "station": "core:loom",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_spun_yarn",
+    "name": "Spun Yarn",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:fiber": 2
+    },
+    "outputs": {
+      "core:spun_yarn": 2
+    },
+    "priority_good": "core:spun_yarn",
+    "recipe_id": "core:craft_spun_yarn",
+    "station": "core:loom",
+    "minutes": 12,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_padded_coif",
+    "name": "Padded Coif",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:felt_padding": 1,
+      "core:linen_panel": 1,
+      "core:spun_yarn": 1
+    },
+    "outputs": {
+      "core:padded_coif": 1
+    },
+    "priority_good": "core:padded_coif",
+    "recipe_id": "core:craft_padded_coif",
+    "station": "core:loom",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_quilted_jerkin",
+    "name": "Quilted Jerkin",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:felt_padding": 2,
+      "core:canvas_panel": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:quilted_jerkin": 1
+    },
+    "priority_good": "core:quilted_jerkin",
+    "recipe_id": "core:craft_quilted_jerkin",
+    "station": "core:loom",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 30
+  },
+  {
+    "id": "core:npc_expansion_craft_reinforced_cloth",
+    "name": "Reinforced Cloth",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:canvas_panel": 1,
+      "core:tough_fiber": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:reinforced_cloth": 1
+    },
+    "priority_good": "core:reinforced_cloth",
+    "recipe_id": "core:craft_reinforced_cloth",
+    "station": "core:loom",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_waxed_thread",
+    "name": "Waxed Thread",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:spun_yarn": 2,
+      "core:resin_lumps": 1
+    },
+    "outputs": {
+      "core:waxed_thread": 2
+    },
+    "priority_good": "core:waxed_thread",
+    "recipe_id": "core:craft_waxed_thread",
+    "station": "core:loom",
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 20,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_expansion_craft_knotted_cast_net",
+    "name": "Knotted Cast Net",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:reinforced_cloth": 1,
+      "core:plant_cordage": 8,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:knotted_cast_net": 1
+    },
+    "priority_good": "core:knotted_cast_net",
+    "recipe_id": "core:craft_knotted_cast_net",
+    "station": "core:loom",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_layered_winter_trousers",
+    "name": "Layered Winter Trousers",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:felt_padding": 2,
+      "core:reinforced_cloth": 1,
+      "core:waxed_thread": 1
+    },
+    "outputs": {
+      "core:layered_winter_trousers": 1
+    },
+    "priority_good": "core:layered_winter_trousers",
+    "recipe_id": "core:craft_layered_winter_trousers",
+    "station": "core:loom",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_sailcloth_travel_coat",
+    "name": "Sailcloth Travel Coat",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:reinforced_cloth": 2,
+      "core:oiled_leather": 1,
+      "core:waxed_thread": 2
+    },
+    "outputs": {
+      "core:sailcloth_travel_coat": 1
+    },
+    "priority_good": "core:sailcloth_travel_coat",
+    "recipe_id": "core:craft_sailcloth_travel_coat",
+    "station": "core:loom",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 4,
+    "consumption_days": 60
+  },
+  {
+    "id": "core:npc_expansion_craft_waxed_casting_line",
+    "name": "Waxed Casting Line",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:waxed_thread": 3,
+      "core:tough_fiber": 1
+    },
+    "outputs": {
+      "core:waxed_casting_line": 1
+    },
+    "priority_good": "core:waxed_casting_line",
+    "recipe_id": "core:craft_waxed_casting_line",
+    "station": "core:loom",
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 6,
+    "market_target": 20,
+    "consumption_days": 0
+  }
 ]

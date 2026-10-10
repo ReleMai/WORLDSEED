@@ -33,10 +33,11 @@ class InteriorStorageTests(unittest.TestCase):
         sim.interiors=InteriorSystem(sim)
         return sim,town,storage
 
-    def test_ten_profiles_are_distinct_and_reference_real_content(self):
+    def test_storage_profiles_and_tabletop_reference_distinct_real_content(self):
         profiles,buildings=catalog()
-        self.assertEqual(len(profiles),10)
-        self.assertEqual(len({p.name for p in profiles.values()}),10)
+        self.assertEqual(len(profiles),11)
+        self.assertIn('core:tabletop',profiles)
+        self.assertEqual(len({p.name for p in profiles.values()}),len(profiles))
         for profile in profiles.values():
             self.assertIn(profile.piece_id,self.registry.settlement_pieces)
             self.assertIn(profile.source_id,self.registry.structures)
@@ -86,9 +87,9 @@ class InteriorStorageTests(unittest.TestCase):
                     for uid,p in profiles.items()]
         before={c.uid:dict(c.items) for c in containers}
         bound=bind_storage(plan,containers)
-        self.assertEqual(len(bound),10)
-        self.assertEqual(len(plan.furniture),10)
-        self.assertEqual(len({c.interior_furniture_uid for c in containers}),10)
+        self.assertEqual(len(bound),len(profiles))
+        self.assertEqual(len(plan.furniture),len(profiles))
+        self.assertEqual(len({c.interior_furniture_uid for c in containers}),len(profiles))
         self.assertTrue(position_clear(plan,plan.entry_x,plan.entry_y))
         self.assertTrue(exit_reachable(plan,plan.entry_x,plan.entry_y))
         saved=plan.to_dict();bind_storage(plan,list(reversed(containers)))

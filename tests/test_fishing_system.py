@@ -128,6 +128,20 @@ class FishingSystemTests(unittest.TestCase):
         self.system.daily_update()
         self.assertEqual(self.state.fishing_pressure, {"fishzone:test:core:bluegill": 3})
 
+    def test_expansion_lures_are_selectable_reusable_and_quality_affects_fishing(self):
+        low='core:carved_bone_hook';high='core:articulated_spinner_lure'
+        inv=Inventory({'core:spring_tension_fishing_rod':1,'core:waxed_casting_line':1,low:1,high:1})
+        before=self.state.to_dict(),dict(inv.items)
+        self.assertIn(high,self.system.bait_options(inv))
+        self.assertIn(low,self.system.bait_options(inv))
+        fish=next(iter(self.registry.fish.values()))
+        self.assertGreater(self.system._bait_bonus(fish,high),self.system._bait_bonus(fish,low))
+        self.assertGreater(self.system._bait_bonus(fish,low),0)
+        self.assertEqual((self.state.to_dict(),inv.items),before)
+        self.system.attempt(WorldPos(1,0,0),inv,'rod',high,500,10,10,8)
+        self.assertEqual(inv.count(high),1)
+        self.assertEqual(inv.count('core:spring_tension_fishing_rod'),1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -32,6 +32,9 @@ class ResourceSystem:
         self._feature_chunk_limit=max(16,int(RESOURCE_CHUNK_CACHE_LIMIT))
         self.by_terrain={}
         for f in registry.resources.values():
+            # Expansion flora begins with resourcegen v5. Excluding these rows
+            # before any weighted choice preserves every legacy v1-v4 cell.
+            if self.version<5 and 'salvage_expansion' in f.tags:continue
             for t in (f.terrains or tuple(registry.terrains)):
                 self.by_terrain.setdefault(t,[]).append(f)
         for rows in self.by_terrain.values(): rows.sort(key=lambda f:f.id)
@@ -128,6 +131,9 @@ class ResourceSystem:
         fields=self.world.generator.sample_fields(WorldPos(x,y,0))
         eligible=[]
         for f in rows:
+            if 'salvage_expansion' in f.tags:
+                rarity=5 if 'rare_flora' in f.tags else 28 if 'uncommon_flora' in f.tags else 120
+                if hash_u64(self.seed,'salvage-flora-rarity',self.version,f.id,x,y)%1000>=rarity:continue
             if f.seasons and season not in f.seasons:continue
             if not (f.min_temp <= fields.temperature <= f.max_temp):continue
             if not (f.min_moisture <= fields.moisture <= f.max_moisture):continue

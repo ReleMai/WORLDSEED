@@ -8,6 +8,15 @@ FOODS=("core:bread","core:cooked_meat","core:smoked_fish","core:wheat","core:tur
 DAILY_WAGE={"farmer":6,"herder":6,"miner":9,"carpenter":8,"hunter":7,"smith":10,"merchant":8,"guard":7,"healer":9,"scholar":8,"priest":6}
 ESSENTIALS=("core:wood","core:soap","core:herbal_tonic")
 
+
+def food_items(registry=None) -> tuple[str, ...]:
+    """Include authored nutritious foods in the existing household food basket."""
+    if registry is None:
+        return FOODS
+    extra=sorted(iid for iid,item in registry.items.items()
+                 if iid not in FOODS and item.nutrition>0 and "food" in item.tags)
+    return FOODS+tuple(extra)
+
 class HouseholdEconomySystem:
     """Material household economy over physical homes, cash, markets and hauling.
 
@@ -114,10 +123,11 @@ class HouseholdEconomySystem:
     def _consume_food(self,h,minute:int)->None:
         members=self._members(h);need=self._daily_food_need(h);remaining=need;mix={}
         containers=self._containers(h)
-        available={iid:sum(max(0,int(c.items.get(iid,0))) for c in containers) for iid in FOODS}
+        foods=food_items(self.registry)
+        available={iid:sum(max(0,int(c.items.get(iid,0))) for c in containers) for iid in foods}
         # Prefer a varied basket before consuming duplicates. Scarcity still wins:
         # if only one food exists the household eats it rather than starving.
-        ordered=sorted((iid for iid in FOODS if available[iid]>0),key=lambda iid:(h.diet_mix.get(self._food_group(iid),0),-available[iid],iid))
+        ordered=sorted((iid for iid in foods if available[iid]>0),key=lambda iid:(h.diet_mix.get(self._food_group(iid),0),-available[iid],iid))
         while remaining>0 and ordered:
             progressed=False
             for iid in ordered:
@@ -237,10 +247,11 @@ class HouseholdEconomySystem:
 
     def plan_procurement(self,h,minute:int)->None:
         self._set_targets(h);stock=self._inventory(h);inbound=self._inbound(h);unmet={}
-        food_have=sum(stock.get(i,0)+inbound.get(i,0) for i in FOODS);food_need=max(0,h.target_stock["food"]-food_have)
+        foods=food_items(self.registry)
+        food_have=sum(stock.get(i,0)+inbound.get(i,0) for i in foods);food_need=max(0,h.target_stock["food"]-food_have)
         if food_need:
             town=self.state.settlements.get(h.settlement_id)
-            choices=[] if town is None else [i for i in FOODS if town.stocks.get(i,0)>0]
+            choices=[] if town is None else [i for i in foods if town.stocks.get(i,0)>0]
             choices.sort(key=lambda i:(self.economy.trade_price(town.uid,i,buy=True) if self.economy else 9999,int(hash_u64(self.seed,"food-preference",h.uid,i)%17),i))
             left=food_need
             for iid in choices:

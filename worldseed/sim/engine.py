@@ -30,6 +30,7 @@ from worldseed.systems.combat import CombatSystem
 from worldseed.systems.projectiles import ProjectileSystem
 from worldseed.systems.test_arena import TestArenaSystem
 from worldseed.systems.crafting import CraftingSystem
+from worldseed.systems.salvaging import SalvagingSystem
 from worldseed.systems.building import BuildingSystem
 from worldseed.systems.generation import ProceduralSocietyGenerator, MagicGenerator
 from worldseed.systems.lod import LODSystem
@@ -106,6 +107,7 @@ class Simulation:
         self.dungeons=DungeonSystem(self.state,registry,self.seed,self.world,self.history)
         self.building=BuildingSystem(self.state,registry)
         self.crafting=CraftingSystem(self.state,registry,self.artifacts,self.metallurgy)
+        self.salvaging=SalvagingSystem(self.state,registry)
         # Discovery is simulation state, never a renderer side effect. Material
         # types already carried on load are reconciled here once.
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
@@ -170,6 +172,7 @@ class Simulation:
             self.state,registry,self.seed,self.world,self.settlement_physicalization,
             self.activities,self.physical_goods,self.resources,
         )
+        self.professions.salvaging=self.salvaging
         self.npcs.attach_activity_system(self.activities)
         self.npcs.attach_mining_profession(self.mining_profession)
         self.npcs.attach_profession_system(self.professions)
@@ -365,6 +368,9 @@ class Simulation:
             minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         result=TickResult()
+        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,CollectWaterCommand)):
+            if type(command.actor) is not int or command.actor != self.player_id:
+                self._message('Only the player may use these crafting work commands.');return result
         # Interior coordinates never fall through to commands at the outdoor anchor.
         indoor=getattr(self,'interiors',None) is not None and self.interiors.player_presence() is not None
         if isinstance(command,EnterInteriorCommand):
@@ -408,7 +414,7 @@ class Simulation:
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
                                        UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
                                        SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand,
-                                       CraftCommand,ComponentCraftCommand,StoreCommand,TakeFromContainerCommand,
+                                       CraftCommand,ComponentCraftCommand,StartSalvageCommand,SalvageActionCommand,StoreCommand,TakeFromContainerCommand,
                                        StealContainerCommand,LockpickContainerCommand,SetContainerLockCommand,
                                        IntroduceNPCCommand)):
                 self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
@@ -450,6 +456,8 @@ class Simulation:
             minutes=1 if combat_before else max(MINUTES_PER_ACTION,command.minutes)
             self._message("You wait one combat tick." if combat_before else f"You wait {minutes} minutes.")
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
+        elif isinstance(command,StartSalvageCommand):minutes=self._start_salvage(command)
+        elif isinstance(command,SalvageActionCommand):minutes=self._salvage_action(command)
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
         elif isinstance(command,ExperimentRecipeCommand):minutes=self._experiment_recipe(command)
         elif isinstance(command,DiscoveryPotCommand):minutes=self._discovery_pot(command)
@@ -460,6 +468,7 @@ class Simulation:
         elif isinstance(command,EatCommand):self._eat(command)
         elif isinstance(command,EatMealCommand):self._eat_meal(command)
         elif isinstance(command,DrinkCommand):self._drink(command)
+        elif isinstance(command,CollectWaterCommand):minutes=self._collect_water(command)
         elif isinstance(command,CookMealCommand):minutes=self._cook(command)
         elif isinstance(command,ProcessCarcassCommand):minutes=self._process_carcass(command)
         elif isinstance(command,StartProcessingCommand):minutes=self._start_processing(command)
@@ -522,6 +531,8 @@ class Simulation:
         elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
         elif isinstance(command,TreatDiseaseCommand):self._message(self.disease.treat_player(self.entities.get(command.actor,Inventory),self.clock.minute,self.player_skill('medicine'),self.has_talent('field_medic')))
         else:raise TypeError(f"Unknown command: {type(command).__name__}")
+        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,CollectWaterCommand)) and minutes == 0:
+            return result
         # Inventory-changing commands can reveal material families and simple
         # recipes. This runs on the authoritative command path only.
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
@@ -1477,6 +1488,12 @@ class Simulation:
     def _component_craft(self,cmd:ComponentCraftCommand)->int:
         ok,msg,minutes=self.crafting.craft_design(cmd.design_id,cmd.choices,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player")
         self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+    def _start_salvage(self,cmd:StartSalvageCommand)->int:
+        ok,msg,minutes=self.salvaging.begin(cmd.item_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
+        self._message(msg);return minutes if ok else 0
+    def _salvage_action(self,cmd:SalvageActionCommand)->int:
+        ok,msg,minutes=self.salvaging.act(cmd.choice_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
+        self._message(msg);return minutes if ok else 0
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
@@ -1576,6 +1593,36 @@ class Simulation:
             if did:
                 try:self.disease.expose_player(did,self.clock.minute,'untreated water')
                 except Exception:pass
+
+    def _collect_water(self,cmd:CollectWaterCommand)->int:
+        """Draw from a live well, or boil adjacent fresh water in real cookware."""
+        inv=self.entities.get(cmd.actor,Inventory)
+        carried=[self.registry.items[iid] for iid,n in inv.items.items() if n>0 and iid in self.registry.items]
+        vessel=any(item.id=='core:waterskin' or set(item.tags)&{'water_container','pot','bowl'} for item in carried)
+        if not vessel:
+            self._message('Carry a bowl, pot or water vessel to collect clean water.');return 0
+        pos=self.player_pos;fresh=False;well=False
+        overlay=getattr(self,'settlement_physicalization',None)
+        for dx,dy in ((0,0),(1,0),(-1,0),(0,1),(0,-1)):
+            q=pos.moved(dx,dy)
+            piece=overlay.piece_def_at(q) if overlay is not None else None
+            structure_at=getattr(overlay,'structure_at',None)
+            structure=structure_at(q) if callable(structure_at) else None
+            if piece is not None and 'well' in piece.tags and not (structure is not None and structure.destroyed):well=True
+            tags=set(self.world.tile_at(q).terrain.tags)
+            if 'saltwater' not in tags and 'brackish' not in tags and ('water_source' in tags or 'freshwater' in tags):fresh=True
+        if well:
+            inv.add('core:clean_water',1)
+            self._message('You draw clean water from the well into your vessel.');return 5
+        if not fresh:
+            self._message('Stand beside a freshwater source or a village well to collect water.');return 0
+        if not any('pot' in item.tags for item in carried):
+            self._message('Fresh surface water must be boiled in a cooking pot.');return 0
+        stations=self._player_station_ids()
+        if not any('fire' in self.registry.structures[sid].tags for sid in stations if sid in self.registry.structures):
+            self._message('Bring the pot to a nearby campfire or hearth beside the water.');return 0
+        inv.add('core:clean_water',1)
+        self._message('You collect and boil freshwater in your pot. Clean water is ready for drinking or crafting.');return 20
 
     def _cook(self,cmd:CookMealCommand)->int:
         pos=self.player_pos;inv=self.entities.get(cmd.actor,Inventory);stations=self.building.nearby_station_ids(pos);water=self._water_available(pos) or inv.count('core:clean_water')>0

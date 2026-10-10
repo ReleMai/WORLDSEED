@@ -273,7 +273,7 @@ class MiningProfessionSystem:
         A representative miner physically extracting ore replaces, rather than
         supplements, the aggregate batch represented by that labor reservation.
         """
-        if str(getattr(proc,"occupation",""))!="miner" or available_workers<=0:
+        if str(getattr(proc,"occupation",""))!="miner" or getattr(proc,"recipe_id","") or available_workers<=0:
             return 0
         reservation=self.state.labor_reservations.get(f"labor:{town.uid}:{proc.id}")
         if reservation is None or not reservation.active or reservation.assigned_day!=int(day):
@@ -297,6 +297,11 @@ class MiningProfessionSystem:
         )
 
     def supports_physical_work(self, npc, town) -> bool:
+        proc=self.registry.settlement_processes.get(str(npc.assigned_process_id or ""))
+        if proc is not None and getattr(proc,"recipe_id","") and not self.has_active_trip(npc):
+            # Mineral preparation recipes use the shared workshop authority;
+            # an unfinished extraction trip still returns its real cargo first.
+            return False
         caves = getattr(self.world.generator, "caves", None)
         skeleton = self.physicalization.skeleton_for(town.uid) if self.physicalization is not None else None
         return bool(
