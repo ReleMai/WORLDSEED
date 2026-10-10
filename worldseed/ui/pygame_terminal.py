@@ -409,8 +409,8 @@ class PygameTerminal(PointerUI):
                 if self._input_mode=='target' and getattr(self,'_combat_targeting',False) and self._hover_context:
                     ctx=self._hover_context;rect=ctx['used']
                     if rect.collidepoint(self._last_mouse):
-                        x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
-                        y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                        x=ctx['left']+(self._last_mouse[0]-ctx.get('grid_x',rect.x))//ctx['tile_px']
+                        y=ctx['top']+(self._last_mouse[1]-)//ctx['tile_px']ctx.get('grid_y',rect.y)19780
                         return f'UI_TARGET_HOVER:{x}:{y}'
                 token=self._hit_token(self._last_mouse)
                 pointer=pg.SYSTEM_CURSOR_HAND if token else pg.SYSTEM_CURSOR_ARROW
@@ -486,8 +486,8 @@ class PygameTerminal(PointerUI):
                     if self._input_mode=='target' and self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
                         if rect.collidepoint(self._last_mouse):
-                            x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
-                            y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                            x=ctx['left']+(self._last_mouse[0]-ctx.get('grid_x',rect.x))//ctx['tile_px']
+                            y=ctx['top']+(self._last_mouse[1]-)//ctx['tile_px']ctx.get('grid_y',rect.y)24795
                             return f'UI_WORLD:{x}:{y}'
                 if event.button==3:
                     token=self._hit_token(self._last_mouse)
@@ -520,8 +520,8 @@ class PygameTerminal(PointerUI):
                     elif self._hover_context:
                         ctx=self._hover_context;rect=ctx['used']
                         if rect.collidepoint(self._last_mouse):
-                            x=ctx['left']+(self._last_mouse[0]-rect.x)//ctx['tile_px']
-                            y=ctx['top']+(self._last_mouse[1]-rect.y)//ctx['tile_px']
+                            x=ctx['left']+(self._last_mouse[0]-ctx.get('grid_x',rect.x))//ctx['tile_px']
+                            y=ctx['top']+(self._last_mouse[1]-)//ctx['tile_px']ctx.get('grid_y',rect.y)27129
                             self._context_menu_origin=self._last_mouse
                             self._context_backdrop=None
                             self._context_overlay_rect=None
