@@ -2231,6 +2231,11 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
     if distance<=1 and container and not private_storage:
         rows.append(('open',f'Open {container.name or "container"}'))
+    homestead=sim.homestead.at(target)
+    if homestead is not None and distance<=8:
+        rows.append(('manage_blueprint','Open cabin blueprint & materials'))
+    elif not building_part and distance<=8 and target.z==0:
+        rows.append(('place_cabin_blueprint','Place log cabin blueprint marker'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
     if building_part and shell is not None:
@@ -2240,6 +2245,10 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     choice=_select(term,f'WORLD ACTIONS {target.x},{target.y}',rows,subtitle=subtitle,
                    presentation='world_context',presentation_data={'target':(target.x,target.y,target.z)})
     if not choice:return UI_BACK
+    if choice=='manage_blueprint' and homestead is not None:
+        return _homestead_blueprint_panel(ctx,term,homestead['uid'])
+    if choice=='place_cabin_blueprint':
+        return _choose_log_cabin_style(ctx,term,target)
     if choice=='enter_interior':
         sim.execute(EnterInteriorCommand(ctx.player_id,door.uid))
         return sim.log[-1].message if sim.log else ''
@@ -3264,6 +3273,74 @@ def _structure_group(st)->str:
     if 'bridge' in tags:return 'travel & access'
     return 'other'
 
+
+def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
+    """Clickable modal for player blueprint stock, stages, and cancellation."""
+    from worldseed.systems.homestead_blueprints import STAGES, progress, catalog
+    sim=ctx.sim
+    inv=ctx.entities.get(ctx.player_id,Inventory)
+    while uid in sim.state.homesteads:
+        site=sim.state.homesteads[uid]
+        rows=progress(site)
+        stage=int(site['stage'])
+        label='Complete' if stage>=4 else STAGES[stage]
+        deposited=sum(h for h,n in rows.values())
+        total=sum(n for h,n in rows.values())
+        status=[f'{label} | Supplied: {deposited}/{total} items',
+                f"Cabin: {catalog()[1][site['style_id']]['name']}",
+                f"Location: {site['x']}, {site['y']} | Rotation: {site['orientation']*90} degrees",
+                '']
+        status += [f"{ctx.registry.items[iid].name if iid in ctx.registry.items else iid}: {have}/{need} (carry {inv.count(iid)})"
+                   for iid,(have,need) in rows.items()]
+        options=[('inspect','Material ledger and building details')]
+        if stage<4:
+            options += [('deposit_all','Deposit all carried materials needed'),
+                        ('build','Build the next stage (from deposited materials)')]
+            options += [(f'deposit:{iid}',f"Deposit {ctx.registry.items[iid].name if iid in ctx.registry.items else iid} — {have}/{need}")
+                        for iid,(have,need) in rows.items() if need>have]
+            options += [('cancel','Cancel blueprint and recover deposits')]
+        choice=_select(term,f'LOG CABIN • {label.upper()}',options,subtitle=f'Site stock {deposited}/{total} | Materials remain deposited until you build.')
+        if not choice:return UI_BACK
+        if choice=='inspect':
+            _view_text(term,box('LOG CABIN BLUEPRINT',status,screen_width(term.size()[0],94),'Esc back'))
+            continue
+        if choice=='deposit_all':
+            for iid,(have,need) in rows.items():
+                n=min(need-have,inv.count(iid))
+                if n>0:sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,n))
+            continue
+        if choice.startswith('deposit:'):
+            iid=choice.split(':',1)[1]
+            have,need=rows[iid]
+            qty=_select(term,'DEPOSIT MATERIAL',[
+                ('1','Deposit 1'),('5','Deposit up to 5'),('all','Deposit everything needed that you carry')])
+            if qty:
+                amount=(need-have) if qty=='all' else int(qty)
+                sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,amount))
+            continue
+        if choice=='build':
+            sim.execute(AdvanceBlueprintCommand(ctx.player_id,uid))
+            continue
+        if choice=='cancel':
+            confirm=_select(term,'REMOVE BLUEPRINT',[('no','Keep blueprint'),('yes','Return deposits and remove unfinished site')])
+            if confirm=='yes':
+                sim.execute(CancelBlueprintCommand(ctx.player_id,uid))
+                return sim.log[-1].message if sim.log else ''
+    return UI_BACK
+
+def _choose_log_cabin_style(ctx:GameContext,term:Terminal,target:WorldPos)->str:
+    from worldseed.systems.homestead_blueprints import catalog
+    choices=sorted((style for style in catalog()[1].values() if style['home_id']=='log_cabin'),key=lambda r:r['id'])
+    style=_select(term,'LOG CABIN STYLE',[(r['id'],r['name']) for r in choices],
+                  subtitle='Blueprint costs nothing. Bring materials later and deposit them into its marker.')
+    if not style:return UI_BACK
+    facing=_select(term,'DOOR ORIENTATION',[
+        ('0','South-facing door'),('1','West-facing door'),
+        ('2','North-facing door'),('3','East-facing door')])
+    if facing is None:return UI_BACK
+    ctx.sim.execute(PlaceBlueprintCommand(ctx.player_id,style,target.x,target.y,int(facing)))
+    return ctx.sim.log[-1].message if ctx.sim.log else ''
+
 def _building_menu(ctx:GameContext,term:Terminal)->str:
     interiors=getattr(ctx.sim,'interiors',None)
     if interiors is not None and interiors.player_presence() is not None:
@@ -3271,9 +3348,14 @@ def _building_menu(ctx:GameContext,term:Terminal)->str:
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
     while True:
         buildable=[st for st in reg.structures.values() if 'natural_only' not in st.tags]
-        groups=sorted(set(_structure_group(st) for st in buildable))
+        groups=['homesteads']+sorted(set(_structure_group(st) for st in buildable))
         group=_select(term,'CONSTRUCTION',[(g,f'{g.title()} — {sum(1 for st in buildable if _structure_group(st)==g)} plans') for g in groups])
         if not group:return UI_BACK
+        if group=='homesteads':
+            d=_direction(term)
+            if not d:continue
+            target=sim.player_pos.moved(*d)
+            return _choose_log_cabin_style(ctx,term,target)
         rows=[]
         structs=sorted((st for st in buildable if _structure_group(st)==group),key=lambda s:s.name)
         for st in structs:

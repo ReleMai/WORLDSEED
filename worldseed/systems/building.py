@@ -178,6 +178,11 @@ class BuildingSystem:
         else:c.items.pop(item_id,None)
         inv.add(item_id,amount);return True,f"You take {amount} {self.registry.items[item_id].name.lower()}."
     def passable(self,pos:WorldPos,world_passable:bool=True)->bool:
+        # A completed or framed player home blocks exterior motion, unlike
+        # its unfinished floor-level blueprint which the builder may traverse.
+        homestead=getattr(self,"homestead",None)
+        site=homestead.at(pos) if homestead is not None else None
+        if site is not None and site["stage"]>=2:return False
         shell_blocks=getattr(self.settlement_overlay,"shell_blocks",None)
         if callable(shell_blocks) and shell_blocks(pos):return False
         s=self.structure_at(pos)

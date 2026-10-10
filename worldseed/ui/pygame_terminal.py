@@ -3728,6 +3728,13 @@ class PygameTerminal(PointerUI):
         registry=ctx['registry']; world=ctx['world']; sim=ctx['sim']
         hpos=WorldPos(wx,wy,z); htile=world.tile_at(hpos)
         lines=[htile.terrain.name,f'{wx}, {wy}, z{z}']
+        site=sim.homestead.at(hpos) if hasattr(sim,'homestead') else None
+        if site is not None:
+            from worldseed.systems.homestead_blueprints import progress as blueprint_progress, STAGES
+            amount=sum(h for h,n in blueprint_progress(site).values())
+            total=sum(n for h,n in blueprint_progress(site).values())
+            status='Complete' if site['stage']==4 else STAGES[site['stage']]
+            return [f'Log cabin • {status}',f'Deposited {amount}/{total} materials','Right-click to open blueprint panel']
         current_getter=getattr(world,'current_at',None)
         if callable(current_getter):
             current=current_getter(hpos,prepared_only=True)
@@ -4379,6 +4386,34 @@ class PygameTerminal(PointerUI):
                         interior_plans=sim.state.interiors,
                         door_states={shell.door_uid:sim.property_security.door_by_id(shell.door_uid)
                                      for shell in building_shells if shell.door_uid})
+
+        # Compact visible blueprint markers. These are authoritative saved
+        # player projects, never freshly generated settlement scenery.
+        if pos.z==0 and getattr(sim.state,'homesteads',None):
+            from worldseed.systems.homestead_blueprints import footprint as home_cells, doorway as home_door
+            for project in sim.state.homesteads.values():
+                if project['z']!=pos.z or not (left-5<=project['x']<=left+cols+3 and top-5<=project['y']<=top+rows+3):
+                    continue
+                completed=project['stage']==4
+                tone=(166,125,74) if completed else (104,177,196)
+                for wx,wy,wz in home_cells(project):
+                    pk=pos_key(wx,wy,wz)
+                    if pk not in known or not _onscreen(wx,wy,wz):continue
+                    cell=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                    tint=tone if pk in visible else (76,83,83)
+                    pg.draw.rect(screen,tint,cell.inflate(-4,-4),max(1,tile_px//13))
+                    if completed:
+                        pg.draw.rect(screen,(74,57,44) if pk in visible else (39,41,40),cell.inflate(-9,-9))
+                    if (wx,wy)==(project['x'],project['y']):
+                        pg.draw.rect(screen,(237,224,174) if pk in visible else (116,111,92),
+                                     pg.Rect(cell.centerx-3,cell.centery-10,6,19))
+                        pg.draw.circle(screen,(230,221,178), (cell.centerx,cell.centery-10),max(2,tile_px//8))
+                entrance,_=home_door(project)
+                if _onscreen(*entrance) and pos_key(*entrance) in known:
+                    ex,ey,ez=entrance
+                    door_cell=pg.Rect(map_rect.x+(ex-left)*tile_px,map_rect.y+(ey-top)*tile_px,tile_px,tile_px)
+                    pg.draw.rect(screen,(202,161,84),door_cell.inflate(-tile_px//3,-tile_px//3),2)
+
         # Actors remain exact visible foreground objects, never inferred from
         # a building's newly complete silhouette or remembered exterior.
         def _fractional_actor_rect(rect,fx,fy):
