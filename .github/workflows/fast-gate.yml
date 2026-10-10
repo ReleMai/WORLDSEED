@@ -112,9 +112,9 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev64 item art and database regressions" --timeout 90 -- python -u -m unittest -v tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons
 
-      - name: Functional home furniture and storage
+      - name: Functional home furniture, storage and homestead blueprints
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_indoor_building_storage tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui
+        run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_indoor_building_storage tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui tests.test_homestead_blueprints
 
       - name: Audit every building facade
         shell: pwsh
