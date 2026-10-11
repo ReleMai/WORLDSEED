@@ -320,30 +320,39 @@ class PygameTerminal(PointerUI):
         while True:
             now = pg.time.get_ticks()
             self._animate_idle_effects(now)
-            if self._pump_realtime():
-                return 'UI_REDRAW'
-            if self._pump_free_movement(now):
-                return 'UI_REDRAW'
-            if self._combat_active_callback and self._combat_active_callback():
-                # Retain pressed keys until KEYUP so queued duplicates cannot
-                # turn the walk into a fight into several unchosen exchanges.
-                self._active_movement_key = None
-                self._movement_next_repeat_ms = 0
-                self._free_movement_last_ms=now
-            wait_ms = 50
-            if self._free_movement_callback is not None and self._input_mode=='world' and self._interior_context is None:
-                elapsed=max(0,now-self._free_movement_last_ms)
-                wait_ms=max(1,min(50,16-elapsed))
-            elif self._active_movement_key is not None:
-                wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
-            try:
-                event = pg.event.wait(wait_ms)
-            except TypeError:
-                # Older pygame builds have no timeout overload. Poll with a
-                # short delay so releases still preempt synthetic repeat.
-                event = pg.event.poll()
-                if event.type == pg.NOEVENT:
-                    pg.time.wait(wait_ms)
+
+            # Service already-queued input/window events before advancing
+            # realtime or continuous movement. On a maximized/high-cost frame,
+            # rendering can take longer than the 16 ms movement cadence. If the
+            # movement pump runs first and returns UI_REDRAW every pass, KEYUP
+            # can remain queued indefinitely and the player keeps walking until
+            # collision makes the movement callback return False.
+            event = pg.event.poll()
+            if event.type == pg.NOEVENT:
+                if self._pump_realtime():
+                    return 'UI_REDRAW'
+                if self._pump_free_movement(now):
+                    return 'UI_REDRAW'
+                if self._combat_active_callback and self._combat_active_callback():
+                    # Retain pressed keys until KEYUP so queued duplicates cannot
+                    # turn the walk into a fight into several unchosen exchanges.
+                    self._active_movement_key = None
+                    self._movement_next_repeat_ms = 0
+                    self._free_movement_last_ms=now
+                wait_ms = 50
+                if self._free_movement_callback is not None and self._input_mode=='world' and self._interior_context is None:
+                    elapsed=max(0,now-self._free_movement_last_ms)
+                    wait_ms=max(1,min(50,16-elapsed))
+                elif self._active_movement_key is not None:
+                    wait_ms = max(1, min(50, self._movement_next_repeat_ms - now))
+                try:
+                    event = pg.event.wait(wait_ms)
+                except TypeError:
+                    # Older pygame builds have no timeout overload. Poll with a
+                    # short delay so releases still preempt synthetic repeat.
+                    event = pg.event.poll()
+                    if event.type == pg.NOEVENT:
+                        pg.time.wait(wait_ms)
 
             if event.type == pg.NOEVENT:
                 now = pg.time.get_ticks()

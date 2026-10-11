@@ -45,6 +45,25 @@ class PygameBehaviorTests(unittest.TestCase):
         self.assertEqual(self.term.read_key(),'ESC')
         self.assertIsNone(self.term._active_movement_key)
 
+    def test_free_movement_services_queued_release_before_next_step(self):
+        pg=self.pg;moves=[]
+        self.term.set_free_movement_callback(
+            lambda dt,dx,dy,sprint: moves.append((dx,dy,sprint)) or bool(dx or dy)
+        )
+        # Reproduce the maximized-window failure: a movement key is logically
+        # held, enough wall time elapsed for another continuous step, but KEYUP
+        # is already waiting in SDL's queue. The release must win before another
+        # realtime movement callback can run.
+        self.term._held_movement[pg.K_d]=1
+        self.term._active_movement_key=pg.K_d
+        self.term._free_movement_last_ms=-1000
+        pg.event.post(pg.event.Event(pg.KEYUP,key=pg.K_d,unicode=''))
+        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE,unicode='\\x1b'))
+        self.assertEqual(self.term.read_key(),'ESC')
+        self.assertEqual(moves,[])
+        self.assertNotIn(pg.K_d,self.term._held_movement)
+        self.assertIsNone(self.term._active_movement_key)
+
     def test_startup_flush_preserves_window_close(self):
         self.pg.event.post(self.pg.event.Event(self.pg.QUIT))
         self.term.discard_pending_input()
