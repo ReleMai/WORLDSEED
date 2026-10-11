@@ -42,3 +42,7 @@ movement state is cleared.
 
 No save schema, world generation, simulation authority, movement speed or input
 bindings changed. This is an event-priority/input-latency correction only.
+
+The normal fast gate now runs this exact pygame regression in the existing
+Dev41 realtime/free-movement step, so future movement-input changes exercise the
+release-starvation case on the Windows dummy-display runner before later suites.

@@ -90,7 +90,7 @@ jobs:
 
       - name: Dev41 realtime and free-movement regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev41 realtime and free movement" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_free_movement
+        run: python -u tools/run_ci_check.py --name "Dev41 realtime and free movement" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_free_movement tests.test_rc14_pygame_behavior.PygameBehaviorTests.test_free_movement_services_queued_release_before_next_step
 
       - name: Dev60 deterministic dialogue trees and nested text UI
         shell: pwsh
