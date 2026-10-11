@@ -3897,46 +3897,27 @@ class PygameTerminal(PointerUI):
         for cx,cy,cz in cells:
             r=pg.Rect((cx-x0)*size,(cy-y0)*size,size,size)
             pg.draw.rect(ghost,(*valid,105),r,1)
-        # Cabin walls, visible log courses and a gabled roof.
-        wall=frame.inflate(-max(4,size//4),-max(4,size//4))
-        if wall.w>4 and wall.h>4:
-            pg.draw.rect(ghost,(121,88,57,162),wall)
-            logstep=max(4,size//5)
-            for ly in range(wall.y+logstep,wall.bottom,logstep):
-                pg.draw.line(ghost,(54,40,28,188),(wall.left+2,ly),(wall.right-3,ly),max(1,size//25))
-            ridge_horizontal=orientation%2==0
-            if ridge_horizontal:
-                roof=[(frame.left+3,frame.top+size//3),(rect.w//2,frame.top+1),
-                      (frame.right-3,frame.top+size//3),(frame.right-3,frame.bottom-size//4),
-                      (rect.w//2,frame.bottom-2),(frame.left+3,frame.bottom-size//4)]
-            else:
-                roof=[(frame.left+size//3,frame.top+3),(frame.right-size//4,frame.top+3),
-                      (frame.right-2,rect.h//2),(frame.right-size//4,frame.bottom-3),
-                      (frame.left+size//3,frame.bottom-3),(frame.left+2,rect.h//2)]
-            pg.draw.polygon(ghost,(123,102,70,135),roof)
-            pg.draw.lines(ghost,(50,36,24,190),True,roof,max(1,size//13))
-            if ridge_horizontal:
-                pg.draw.line(ghost,(216,183,122,176),(rect.w//2,frame.top+3),
-                             (rect.w//2,frame.bottom-3),max(1,size//15))
-            else:
-                pg.draw.line(ghost,(216,183,122,176),(frame.left+3,rect.h//2),
-                             (frame.right-3,rect.h//2),max(1,size//15))
-            # Style marker: trims vary without moving any collision geometry.
-            index=int(style_id.rsplit('_',1)[-1])
-            offset=3+(index%4)*max(3,size//9)
-            pg.draw.circle(ghost,(224,181,107,160),(min(wall.right-3,wall.x+offset),wall.y+3),max(2,size//11))
+        # The preview uses the exact same authored cabin sprite as the world.
         pg.draw.rect(ghost,(*valid,235),frame,max(2,size//13))
         oldclip=self.screen.get_clip()
         self.screen.set_clip(used)
         self.screen.blit(ghost,rect.topleft)
-        for location,rgb in ((entrance,(245,220,123)),(landing,(126,221,243))):
+        from worldseed.ui.homestead_art import draw_cabin_art,doorway_edge_rect
+        art_rect=draw_cabin_art(self,site,grid_x=ctx['grid_x'],grid_y=ctx['grid_y'],
+                                left=ctx['left'],top=ctx['top'],size=size,
+                                clip=used,opacity=155 if ok else 108)
+        edge=doorway_edge_rect(pg,site,ctx['grid_x'],ctx['grid_y'],ctx['left'],ctx['top'],size)
+        pg.draw.rect(self.screen,(250,208,111),edge)
+        for location,rgb in ((landing,(126,221,243)),):
             px,py,pz=location
             draw=pg.Rect(ctx['grid_x']+(px-ctx['left'])*size,
                          ctx['grid_y']+(py-ctx['top'])*size,size,size)
             pg.draw.rect(self.screen,rgb,draw.inflate(-max(4,size//3),-max(4,size//3)),max(2,size//13))
         self.screen.set_clip(oldclip)
         bounds=rect.union(pg.Rect(ctx['grid_x']+(landing[0]-ctx['left'])*size,
-                                  ctx['grid_y']+(landing[1]-ctx['top'])*size,size,size)).clip(used)
+                                  ctx['grid_y']+(landing[1]-ctx['top'])*size,size,size))
+        if art_rect is not None:bounds=bounds.union(art_rect)
+        bounds=bounds.clip(used)
         if bounds.width>0 and bounds.height>0:
             self._hover_tile_rect=bounds
             damage=bounds if damage is None else damage.union(bounds)
@@ -4530,32 +4511,48 @@ class PygameTerminal(PointerUI):
                         door_states={shell.door_uid:sim.property_security.door_by_id(shell.door_uid)
                                      for shell in building_shells if shell.door_uid})
 
-        # Compact visible blueprint markers. These are authoritative saved
-        # player projects, never freshly generated settlement scenery.
+        # Authoritative player cabins: the same ten PNG sprites as the Build
+        # carousel, with precise physical doors and no invented hitboxes.
         if pos.z==0 and getattr(sim.state,'homesteads',None):
             from worldseed.systems.homestead_blueprints import footprint as home_cells, doorway as home_door
+            from worldseed.ui.homestead_art import draw_cabin_art,doorway_edge_rect
             for project in sim.state.homesteads.values():
                 if project['z']!=pos.z or not (left-5<=project['x']<=left+cols+3 and top-5<=project['y']<=top+rows+3):
                     continue
-                completed=project['stage']==4
-                tone=(166,125,74) if completed else (104,177,196)
-                for wx,wy,wz in home_cells(project):
-                    pk=pos_key(wx,wy,wz)
-                    if pk not in known or not _onscreen(wx,wy,wz):continue
-                    cell=pg.Rect(map_rect.x+(wx-left)*tile_px,map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
-                    tint=tone if pk in visible else (76,83,83)
-                    pg.draw.rect(screen,tint,cell.inflate(-4,-4),max(1,tile_px//13))
-                    if completed:
-                        pg.draw.rect(screen,(74,57,44) if pk in visible else (39,41,40),cell.inflate(-9,-9))
-                    if (wx,wy)==(project['x'],project['y']):
-                        pg.draw.rect(screen,(237,224,174) if pk in visible else (116,111,92),
-                                     pg.Rect(cell.centerx-3,cell.centery-10,6,19))
-                        pg.draw.circle(screen,(230,221,178), (cell.centerx,cell.centery-10),max(2,tile_px//8))
-                entrance,_=home_door(project)
-                if _onscreen(*entrance) and pos_key(*entrance) in known:
-                    ex,ey,ez=entrance
-                    door_cell=pg.Rect(map_rect.x+(ex-left)*tile_px,map_rect.y+(ey-top)*tile_px,tile_px,tile_px)
-                    pg.draw.rect(screen,(202,161,84),door_cell.inflate(-tile_px//3,-tile_px//3),2)
+                cells=home_cells(project)
+                discovered=[(wx,wy,wz) for wx,wy,wz in cells
+                            if pos_key(wx,wy,wz) in known and _onscreen(wx,wy,wz)]
+                if not discovered:continue
+                seen=any(pos_key(*cell) in visible for cell in discovered)
+                stage=int(project['stage'])
+                # Foundation and deposit marker remain clearly visible while
+                # the home is not yet far enough along to have a roof.
+                if stage>=2:
+                    opacity=(150,195,226,255)[min(3,stage-2)]
+                    if not seen:opacity=min(opacity,145)
+                    draw_cabin_art(self,project,grid_x=map_rect.x,grid_y=map_rect.y,
+                                   left=left,top=top,size=tile_px,
+                                   clip=used,opacity=opacity)
+                if stage<=1:
+                    for wx,wy,wz in discovered:
+                        cell=pg.Rect(map_rect.x+(wx-left)*tile_px,
+                                     map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                        ink=(104,177,196) if pos_key(wx,wy,wz) in visible else (73,92,94)
+                        pg.draw.rect(screen,ink,cell.inflate(-4,-4),max(1,tile_px//13))
+                    wx,wy,wz=cells[0]
+                    if _onscreen(wx,wy,wz):
+                        anchor=pg.Rect(map_rect.x+(wx-left)*tile_px,
+                                       map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
+                        pg.draw.rect(screen,(237,224,174),pg.Rect(anchor.centerx-3,anchor.centery-9,6,18))
+                        pg.draw.circle(screen,(230,221,178),
+                                       (anchor.centerx,anchor.centery-9),max(2,tile_px//8))
+                # A narrow physical threshold lies on the *actual* facing
+                # edge. For all four orientations it is derived from doorway(),
+                # not guessed from the art sprite's current apparent front.
+                door_cell,_=home_door(project)
+                if _onscreen(*door_cell) and pos_key(*door_cell) in known:
+                    edge=doorway_edge_rect(pg,project,map_rect.x,map_rect.y,left,top,tile_px)
+                    pg.draw.rect(screen,(244,199,105) if seen else (117,105,77),edge)
 
         # Actors remain exact visible foreground objects, never inferred from
         # a building's newly complete silhouette or remembered exterior.

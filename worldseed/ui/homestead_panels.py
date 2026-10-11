@@ -163,12 +163,11 @@ def present_style_selector(term, style, index, count):
     inset=max(38,min(62,cw//8))
     artrect=pg.Rect(panel.left+inset,panel.y+10,panel.w-inset*2,panel.h-20)
     artwork=None
-    # Respect catalog art if actually installed; never point to a missing file.
-    from pathlib import Path
-    asset=str(style.get('asset','')).strip()
-    if asset:
-        resolved=Path(__file__).resolve().parents[2]/asset
-        if resolved.is_file():artwork=term._load_sprite(resolved,max(40,artrect.w),max(40,artrect.h),smooth=True)
+    # Use the SAME packaged PNG in both preview and placed-world exterior.
+    from worldseed.ui.homestead_art import cabin_asset_path
+    resolved=cabin_asset_path(style['id'])
+    if resolved is not None:
+        artwork=term._load_sprite(resolved,max(40,artrect.w),max(40,artrect.h),smooth=True)
     if artwork is None:
         key=('log-cabin-preview-v2',style['id'])
         artwork=term._sprite_cache.get(key)
