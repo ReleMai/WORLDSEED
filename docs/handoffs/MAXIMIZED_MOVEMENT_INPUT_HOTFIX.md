@@ -71,3 +71,9 @@ remains in the Windows fast gate.
 Remaining verification: manual maximize/unmaximize gameplay on an actual
 desktop/GPU; SDL dummy rendering cannot reproduce all native window-manager
 and driver scheduling behavior. No change to save/worldgen/physics semantics.
+
+The final render-priority pass also ensures no idle weather animation is
+composited before a movement frame that is already due. When a movement key
+is actively held, weather is rendered as part of that movement frame rather
+than separately between physics updates. The dedicated Windows regression
+asserts that due movement cannot invoke the expensive idle compositor first.

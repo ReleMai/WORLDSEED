@@ -114,6 +114,16 @@ class PygameBehaviorTests(unittest.TestCase):
         self.assertFalse(self.term._held_movement)
         self.assertFalse(self.term._movement_redraw_pending)
 
+    def test_due_movement_redraw_never_runs_idle_weather_first(self):
+        pg=self.pg
+        self.term.set_free_movement_callback(lambda dt,dx,dy,sprint: True)
+        self.term._held_movement[pg.K_d]=1
+        self.term._active_movement_key=pg.K_d
+        self.term._free_movement_last_ms=pg.time.get_ticks()-100
+        with patch.object(self.term,'_animate_idle_effects',
+                          side_effect=AssertionError('idle weather rendered before player input')):
+            self.assertEqual(self.term.read_key(),'UI_REDRAW')
+
     def test_startup_flush_preserves_window_close(self):
         self.pg.event.post(self.pg.event.Event(self.pg.QUIT))
         self.term.discard_pending_input()

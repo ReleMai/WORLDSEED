@@ -361,14 +361,16 @@ class PygameTerminal(PointerUI):
             # collision makes the movement callback return False.
             event = pg.event.poll()
             if event.type == pg.NOEVENT:
-                # Large weather/cloud composites can be expensive at the
-                # maximized resolution; never build one ahead of a waiting
-                # KEYUP, focus-loss or quit event.
-                self._animate_idle_effects(now)
+                # Prioritize queued input, then game/simulation presentation.
+                # Weather has a separate idle animation loop; running its
+                # full-screen compositor before an already-due movement redraw
+                # makes a maximized frame paint the same scene twice.
                 if self._pump_realtime():
                     return 'UI_REDRAW'
                 if self._pump_free_movement(now):
                     return 'UI_REDRAW'
+                if not (self._held_movement and self._input_mode=='world'):
+                    self._animate_idle_effects(now)
                 if self._combat_active_callback and self._combat_active_callback():
                     # Retain pressed keys until KEYUP so queued duplicates cannot
                     # turn the walk into a fight into several unchosen exchanges.
