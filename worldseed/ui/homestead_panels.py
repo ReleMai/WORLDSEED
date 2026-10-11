@@ -163,9 +163,9 @@ def present_style_selector(term, style, index, count):
     inset=max(38,min(62,cw//8))
     artrect=pg.Rect(panel.left+inset,panel.y+10,panel.w-inset*2,panel.h-20)
     artwork=None
-    # Use the SAME packaged PNG in both preview and placed-world exterior.
-    from worldseed.ui.homestead_art import cabin_asset_path
-    resolved=cabin_asset_path(style['id'])
+    # Match the top-down south-facing art used by the placed-world renderer.
+    from worldseed.ui.homestead_art import cabin_asset_path,topdown_cabin_asset_path
+    resolved=topdown_cabin_asset_path(style['id'],0) or cabin_asset_path(style['id'])
     if resolved is not None:
         artwork=term._load_sprite(resolved,max(40,artrect.w),max(40,artrect.h),smooth=True)
     if artwork is None:

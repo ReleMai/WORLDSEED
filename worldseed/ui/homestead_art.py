@@ -7,8 +7,37 @@ move its collision footprint or invent a different entrance.
 from __future__ import annotations
 
 from pathlib import Path
+from functools import lru_cache
+import json
 
 from worldseed.systems.homestead_blueprints import catalog, doorway, footprint
+
+TOPDOWN_ASSET_ROOT=Path(__file__).resolve().parents[1]/"assets"/"sprites"/"buildings"/"homestead_topdown"
+TOPDOWN_MANIFEST_PATH=Path(__file__).resolve().parents[1]/"data"/"homestead_topdown_v1.json"
+CARDINAL_BY_ORIENTATION=("south","west","north","east")
+# Normalized position of the *painted* doorway in each cropped top-down image.
+# Actual accessible doorway remains authoritative in homestead_blueprints.py.
+TOPDOWN_DOOR_ANCHOR={
+    "south":(.50,.84),"west":(.14,.50),"north":(.50,.16),"east":(.86,.50)
+}
+
+@lru_cache(maxsize=1)
+def topdown_manifest():
+    raw=json.loads(TOPDOWN_MANIFEST_PATH.read_text(encoding="utf-8"))
+    if raw.get("version")!=1 or raw.get("rotation_map")!={str(i):d for i,d in enumerate(CARDINAL_BY_ORIENTATION)}:
+        raise ValueError("Invalid top-down homestead art manifest")
+    return raw
+
+def topdown_cabin_asset_path(style_id:str,orientation:int):
+    """Resolve the authored cardinal PNG without mutating the simulation."""
+    if style_id not in catalog()[1] or orientation not in (0,1,2,3):
+        return None
+    data=topdown_manifest()
+    variant=data["style_family"].get(style_id)
+    if not variant:return None
+    direction=CARDINAL_BY_ORIENTATION[orientation]
+    path=TOPDOWN_ASSET_ROOT/variant/(direction+".png")
+    return path if path.is_file() else None
 
 ASSET_ROOT=Path(__file__).resolve().parents[1]/"assets"/"sprites"/"buildings"/"homestead"
 DOOR_IMAGE_X={
@@ -38,21 +67,31 @@ def doorway_pixel(site,grid_x:int,grid_y:int,left:int,top:int,size:int):
     return (grid_x+(inside[0]-left+.5)*size,
             grid_y+(inside[1]-top+.5)*size)
 
-def cabin_image_rect(site,grid_x:int,grid_y:int,left:int,top:int,size:int,source_size):
-    """Position the upright isometric exterior over the reserved 3x3 cell area.
+def cabin_image_rect(site,grid_x:int,grid_y:int,left:int,top:int,size:int,source_size,*,directional=False):
+    """Place artwork by its painted door relative to the *actual* entrance.
 
-    Only south-facing exteriors place their painted door directly above its
-    doorstep. Other orientations keep an upright (not sideways-rotated) roof;
-    the explicit physical door below is drawn at the actual rotated doorway.
+    All four directional PNGs are overhead views; never flip them to simulate
+    another compass direction. Keep the authored door on the real exterior
+    edge even for legacy styles with an off-center gameplay door.
     """
     cells=footprint(site)
     lo_x=min(x for x,y,z in cells);hi_x=max(x for x,y,z in cells)
     lo_y=min(y for x,y,z in cells);hi_y=max(y for x,y,z in cells)
     bounds_width=(hi_x-lo_x+1)*size
-    iw=max(12,round(bounds_width*1.16))
+    iw=max(12,round(bounds_width*(1.11 if directional else 1.16)))
     ih=max(12,round(iw*source_size[1]/max(1,source_size[0])))
     px=grid_x+(lo_x-left)*size
     py=grid_y+(lo_y-top)*size
+    if directional:
+        ori=int(site["orientation"])
+        direction=CARDINAL_BY_ORIENTATION[ori]
+        anchor_x,anchor_y=TOPDOWN_DOOR_ANCHOR[direction]
+        (wx,wy,_),_=doorway(site)
+        # The threshold sits on the boundary between the entry cell and
+        # its exterior landing, not at an arbitrary centered sprite position.
+        target_x=grid_x+(wx-left+(.0 if ori==1 else 1.0 if ori==3 else .5))*size
+        target_y=grid_y+(wy-top+(.0 if ori==2 else 1.0 if ori==0 else .5))*size
+        return round(target_x-iw*anchor_x),round(target_y-ih*anchor_y),iw,ih
     if site["orientation"]==0:
         door_x,door_y=doorway_pixel(site,grid_x,grid_y,left,top,size)
         ix=round(door_x-iw*DOOR_IMAGE_X[site["style_id"]])
@@ -79,17 +118,21 @@ def draw_cabin_art(term,site,*,grid_x,grid_y,left,top,size,clip,opacity=255):
     Exact door markers are drawn by the owner view, after the art, so they
     remain at the same real tile in the world and placement preview.
     """
-    path=cabin_asset_path(str(site.get("style_id","")))
+    style_id=str(site.get("style_id",""))
+    path=topdown_cabin_asset_path(style_id,int(site["orientation"]))
+    directional=path is not None
+    if path is None:path=cabin_asset_path(style_id)
     if path is None:return None
     pg=term.pg
+    # The same sprite atlas cache services the world view and placement ghost.
     original=term._load_sprite(path,size*5,size*5,smooth=True)
     if original is None:return None
-    x,y,w,h=cabin_image_rect(site,grid_x,grid_y,left,top,size,original.get_size())
+    x,y,w,h=cabin_image_rect(site,grid_x,grid_y,left,top,size,original.get_size(),directional=directional)
     art=term._load_sprite(path,w,h,smooth=True)
     if art is None:return None
-    # East/west door orientation changes perspective, but never rotates an
-    # upright cabin sideways. Physical door is separately painted on its edge.
-    if site["orientation"] in (2,3):
+    # Legacy isometric assets require their old mirror fallback; authored
+    # directional assets never flip, so their doors face their actual side.
+    if not directional and site["orientation"] in (2,3):
         key=("homestead-mirror-v1",str(path),w,h)
         flip=term._sprite_cache.get(key)
         if flip is None:

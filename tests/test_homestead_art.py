@@ -7,7 +7,8 @@ from pathlib import Path
 from worldseed.systems.homestead_blueprints import catalog,doorway,footprint
 from worldseed.ui.homestead_art import (
     cabin_asset_path,cabin_image_rect,doorway_pixel,doorway_edge_rect,
-    draw_cabin_art,DOOR_IMAGE_X,DOOR_IMAGE_Y)
+    draw_cabin_art,DOOR_IMAGE_X,DOOR_IMAGE_Y,
+    topdown_cabin_asset_path,topdown_manifest,CARDINAL_BY_ORIENTATION,TOPDOWN_DOOR_ANCHOR)
 from worldseed.ui.pygame_terminal import PygameTerminal
 
 class AuthoringContracts(unittest.TestCase):
@@ -28,6 +29,39 @@ class AuthoringContracts(unittest.TestCase):
                 self.assertGreater(img.convert('RGBA').getchannel('A').getbbox()[2],180)
             signatures.add(hashlib.sha256(path.read_bytes()).digest())
         self.assertEqual(len(signatures),10)
+
+    def test_topdown_sprites_include_each_family_and_compass_direction(self):
+        from PIL import Image
+        from hashlib import sha256
+        manifest=topdown_manifest()
+        self.assertEqual(set(manifest["style_family"]),{
+            style_id for style_id,style in catalog()[1].items() if style["home_id"]=="log_cabin"})
+        self.assertEqual(CARDINAL_BY_ORIENTATION,("south","west","north","east"))
+        fingerprints=set()
+        for style_id in manifest["style_family"]:
+            for orientation,direction in enumerate(CARDINAL_BY_ORIENTATION):
+                path=topdown_cabin_asset_path(style_id,orientation)
+                self.assertIsNotNone(path,(style_id,direction))
+                with Image.open(path) as im:
+                    self.assertGreaterEqual(im.width,340)
+                    self.assertGreaterEqual(im.height,340)
+                    self.assertIn(im.mode,("P","RGBA"))
+                    self.assertLess(im.convert("RGBA").getpixel((0,0))[3],15)
+                fingerprints.add(sha256(path.read_bytes()).digest())
+        self.assertEqual(len(fingerprints),16)
+
+    def test_painted_door_anchor_is_projected_to_its_actual_entrance(self):
+        for style_id,style in catalog()[1].items():
+            if style["home_id"]!="log_cabin":continue
+            for orientation,direction in enumerate(CARDINAL_BY_ORIENTATION):
+                site={"home_id":"log_cabin","style_id":style_id,"x":10,"y":10,"z":0,"orientation":orientation}
+                x,y,w,h=cabin_image_rect(site,0,0,0,0,32,(440,440),directional=True)
+                (wx,wy,_),_=doorway(site)
+                ax,ay=TOPDOWN_DOOR_ANCHOR[direction]
+                tx=wx*32+(0 if orientation==1 else 32 if orientation==3 else 16)
+                ty=wy*32+(0 if orientation==2 else 32 if orientation==0 else 16)
+                self.assertLessEqual(abs(x+w*ax-tx),1.0,(style_id,direction))
+                self.assertLessEqual(abs(y+h*ay-ty),1.0,(style_id,direction))
 
     def test_door_anchors_and_asset_positions_are_catalog_complete(self):
         styles={key for key,value in catalog()[1].items() if value['home_id']=='log_cabin'}
@@ -87,6 +121,6 @@ class DrawnCabinTests(unittest.TestCase):
             self.term._draw_chrome('WORLDSEED // LOCAL')
             self.term.present_homestead_styles(style,2,10)
         finally:self.term._load_sprite=original
-        self.assertTrue(any(path.endswith('log_cabin_03.png') for path in loads))
+        self.assertTrue(any(path.endswith('rustic/south.png') or path.endswith('rustic\\south.png') for path in loads))
 
 if __name__=='__main__':unittest.main()
