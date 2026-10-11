@@ -84,6 +84,10 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
+      - name: Log cabin blueprint and placement ghost
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Log cabin blueprint and ghost" --timeout 60 -- python -u -m unittest -v tests.test_homestead_blueprints tests.test_homestead_ghost_ui
+
       - name: Dev41 realtime and free-movement regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev41 realtime and free movement" --timeout 90 -- python -u -m unittest -v tests.test_social_realtime_phase tests.test_dialogue_movement_phase tests.test_free_movement

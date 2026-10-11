@@ -568,6 +568,9 @@ class PygameTerminal(PointerUI):
                         self._homestead_placement['orientation']=(self._homestead_placement['orientation']+1)%4
                         self._refresh_hover_only(force=True)
                         continue
+                    if event.key not in movement_keys and event.key not in (
+                            pg.K_EQUALS,pg.K_PLUS,pg.K_KP_PLUS,pg.K_MINUS,pg.K_KP_MINUS,pg.K_0):
+                        continue
                 if self._input_mode!='world':
                     if event.key in key_map:
                         if event.key==pg.K_ESCAPE and self._current_presentation=='world_context':

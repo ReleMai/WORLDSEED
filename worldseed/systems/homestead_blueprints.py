@@ -69,15 +69,22 @@ class HomesteadBlueprintService:
         if not style or style["home_id"]!="log_cabin" or orientation not in range(4):
             return False,"Unknown log cabin style or rotation.",None
         p=self.sim.player_pos
-        if p.z!=0 or abs(p.x-x)+abs(p.y-y)>8:
-            return False,"Too far away: choose ground within 8 tiles.",None
         site={"uid":"","home_id":"log_cabin","style_id":style_id,"x":int(x),"y":int(y),"z":0,
               "orientation":int(orientation),"owner_uid":"player","stage":0,"stored":{},"revision":0}
         cells=footprint(site);inside,outside=doorway(site)
+        if p.z!=0 or abs(p.x-x)+abs(p.y-y)>8:
+            return False,"Too far away: choose ground within 8 tiles.",site
         # Mouse preview must not reveal unexplored construction sites.
         known=getattr(self.sim,"discovered_tiles_set",None)
         if known is not None and any(pos_key(*cell) not in known for cell in (*cells,outside)):
             return False,"Explore the complete footprint and doorway first.",site
+        # Validate only prepared tiles. A cursor preview may not realize world
+        # chunks, generate terrain, or mutate persistent world state.
+        from worldseed.core.coords import split_world
+        tile_cache=getattr(getattr(self.sim.world,"cache",None),"peek",None)
+        if callable(tile_cache) and any(tile_cache(split_world(WorldPos(*cell))[0]) is None
+                                        for cell in (*cells,outside)):
+            return False,"Move closer so this area loads before building.",site
         if any(not self._clear(cell) for cell in (*cells,outside)):
             return False,"Clear terrain, trees, objects and the doorway first.",site
         occupied=set(cells)
