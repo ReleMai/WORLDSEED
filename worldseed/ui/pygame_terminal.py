@@ -410,7 +410,7 @@ class PygameTerminal(PointerUI):
                     ctx=self._hover_context;rect=ctx['used']
                     if rect.collidepoint(self._last_mouse):
                         x=ctx['left']+(self._last_mouse[0]-ctx.get('grid_x',rect.x))//ctx['tile_px']
-                        y=ctx['top']+(self._last_mouse[1]-)//ctx['tile_px']ctx.get('grid_y',rect.y)19780
+                        y=ctx['top']+(self._last_mouse[1]-ctx.get('grid_y',rect.y))//ctx['tile_px']
                         return f'UI_TARGET_HOVER:{x}:{y}'
                 token=self._hit_token(self._last_mouse)
                 pointer=pg.SYSTEM_CURSOR_HAND if token else pg.SYSTEM_CURSOR_ARROW
