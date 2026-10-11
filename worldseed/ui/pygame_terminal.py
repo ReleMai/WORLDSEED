@@ -4528,7 +4528,7 @@ class PygameTerminal(PointerUI):
                 # Foundation and deposit marker remain clearly visible while
                 # the home is not yet far enough along to have a roof.
                 if stage>=2:
-                    opacity=(150,195,226,255)[min(3,stage-2)]
+                    opacity=(150,210,255)[min(2,stage-2)]
                     if not seen:opacity=min(opacity,145)
                     draw_cabin_art(self,project,grid_x=map_rect.x,grid_y=map_rect.y,
                                    left=left,top=top,size=tile_px,
@@ -4540,7 +4540,7 @@ class PygameTerminal(PointerUI):
                         ink=(104,177,196) if pos_key(wx,wy,wz) in visible else (73,92,94)
                         pg.draw.rect(screen,ink,cell.inflate(-4,-4),max(1,tile_px//13))
                     wx,wy,wz=cells[0]
-                    if _onscreen(wx,wy,wz):
+                    if _onscreen(wx,wy,wz) and pos_key(wx,wy,wz) in known:
                         anchor=pg.Rect(map_rect.x+(wx-left)*tile_px,
                                        map_rect.y+(wy-top)*tile_px,tile_px,tile_px)
                         pg.draw.rect(screen,(237,224,174),pg.Rect(anchor.centerx-3,anchor.centery-9,6,18))
