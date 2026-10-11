@@ -3275,6 +3275,56 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
     from worldseed.systems.homestead_blueprints import STAGES, progress, catalog
     sim=ctx.sim
     inv=ctx.entities.get(ctx.player_id,Inventory)
+    show=getattr(term,'present_homestead_depot',None)
+    if callable(show):
+        notice='';confirm_cancel=False
+        while uid in sim.state.homesteads:
+            site=sim.state.homesteads[uid]
+            ledger=progress(site)
+            style=catalog()[1].get(site['style_id'],{})
+            materials=[(iid,ctx.registry.items[iid].name if iid in ctx.registry.items else iid,
+                        have,need,inv.count(iid)) for iid,(have,need) in ledger.items()]
+            show({'site':site,'style_name':style.get('name','Log cabin').split(' — ')[-1],
+                  'stage_name':'Finished' if site['stage']>=4 else STAGES[site['stage']],
+                  'materials':materials,'notice':notice,'confirm_cancel':confirm_cancel})
+            key=term.read_key()
+            if key=='UI_REDRAW':continue
+            if key in ('ESC','UI_ACTION:depot_close'):return UI_BACK
+            if key=='UI_ACTION:depot_cancel':
+                confirm_cancel=True;notice='';continue
+            if key=='UI_ACTION:depot_cancel_back':
+                confirm_cancel=False;continue
+            if key=='UI_ACTION:depot_cancel_confirm' and confirm_cancel:
+                sim.execute(CancelBlueprintCommand(ctx.player_id,uid))
+                return sim.log[-1].message if sim.log else ''
+            if confirm_cancel:continue
+            if key=='UI_ACTION:depot_build':
+                sim.execute(AdvanceBlueprintCommand(ctx.player_id,uid))
+                notice=sim.log[-1].message if sim.log else ''
+                continue
+            if key=='UI_ACTION:depot_all':
+                count=0
+                for iid,(have,need) in ledger.items():
+                    qty=min(max(0,need-have),inv.count(iid))
+                    if qty>0:
+                        before=inv.count(iid)
+                        sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,qty))
+                        count+=before-inv.count(iid)
+                notice=f'Deposited {count} materials.' if count else 'No required materials can be deposited.'
+                continue
+            for prefix,one in (('UI_ACTION:depot_item_one:',True),
+                               ('UI_ACTION:depot_item_all:',False)):
+                if not key.startswith(prefix):continue
+                iid=key[len(prefix):]
+                if iid not in ledger:break
+                have,need=ledger[iid]
+                qty=1 if one else min(max(0,need-have),inv.count(iid))
+                if qty>0:
+                    sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,qty))
+                    notice=sim.log[-1].message if sim.log else ''
+                else:notice='You do not carry more of this material.'
+                break
+        return UI_BACK
     while uid in sim.state.homesteads:
         site=sim.state.homesteads[uid]
         rows=progress(site)
@@ -3329,14 +3379,27 @@ def _choose_log_cabin_style(ctx:GameContext,term:Terminal)->str:
     from worldseed.systems.homestead_blueprints import catalog
     choices=sorted((style for style in catalog()[1].values()
                     if style['home_id']=='log_cabin'),key=lambda row:row['id'])
+    panel=getattr(term,'present_homestead_styles',None)
+    begin=getattr(term,'begin_homestead_placement',None)
+    if callable(panel) and callable(begin):
+        selection=0
+        while True:
+            panel(choices[selection],selection,len(choices))
+            key=term.read_key()
+            if key=='UI_REDRAW':continue
+            if key in ('LEFT','UI_ACTION:cabin_prev'):
+                selection=(selection-1)%len(choices);continue
+            if key in ('RIGHT','UI_ACTION:cabin_next'):
+                selection=(selection+1)%len(choices);continue
+            if key=='UI_ACTION:cabin_other':return '__OTHER_STRUCTURES__'
+            if key in ('\r','\n','UI_ACTION:cabin_place'):
+                begin(choices[selection]['id'])
+                return 'Move the cabin ghost with your mouse. R rotates; left-click places; right-click or Esc cancels.'
+            if key=='ESC':return UI_BACK
     style=_select(term,'HOMESTEADS  /  LOG CABIN',
                   [(row['id'],row['name']) for row in choices],
                   subtitle='Choose a style, then position the cabin on the world map.')
     if not style:return UI_BACK
-    begin=getattr(term,'begin_homestead_placement',None)
-    if callable(begin):
-        begin(style)
-        return 'Move the cabin ghost with your mouse. R rotates; left-click places; right-click or Esc cancels.'
     # Terminal-only backend retains keyboard construction without GUI pointers.
     direction=_direction(term)
     if not direction:return UI_BACK
@@ -3345,14 +3408,19 @@ def _choose_log_cabin_style(ctx:GameContext,term:Terminal)->str:
     return ctx.sim.log[-1].message if ctx.sim.log else ''
 
 
-def _building_menu(ctx:GameContext,term:Terminal)->str:
+def _building_menu(ctx:GameContext,term:Terminal,*,legacy_only:bool=False)->str:
     interiors=getattr(ctx.sim,'interiors',None)
     if interiors is not None and interiors.player_presence() is not None:
         return 'Exterior construction requires stepping outside. Right-click indoor furniture to reposition furnishings you own.'
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id;inv=ctx.entities.get(pid,Inventory)
+    if not legacy_only and callable(getattr(term,'present_homestead_styles',None)):
+        result=_choose_log_cabin_style(ctx,term)
+        if result=='__OTHER_STRUCTURES__':return _building_menu(ctx,term,legacy_only=True)
+        return result
     while True:
         buildable=[st for st in reg.structures.values() if 'natural_only' not in st.tags]
-        groups=['homesteads']+sorted(set(_structure_group(st) for st in buildable))
+        groups=sorted(set(_structure_group(st) for st in buildable))
+        if not legacy_only:groups=['homesteads']+groups
         group=_select(term,'CONSTRUCTION',[(g,'Homesteads — log cabins, 10 visual styles') if g=='homesteads' else (g,f'{g.title()} — {sum(1 for st in buildable if _structure_group(st)==g)} plans') for g in groups])
         if not group:return UI_BACK
         if group=='homesteads':

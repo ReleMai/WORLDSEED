@@ -855,6 +855,7 @@ class PygameTerminal(PointerUI):
         return x,y,w,h,cx,cy,cw
 
     def _floating_panel_minimum(self, panel_id: str) -> tuple[int,int]:
+        if panel_id in ('homestead_styles','homestead_depot'):return (540,440)
         if panel_id=='crafting':return (740,500)
         return (760,500) if panel_id=='container_inventory' else (640,440)
 
@@ -862,8 +863,9 @@ class PygameTerminal(PointerUI):
         sw,sh=self.screen.get_size()
         min_w,min_h=self._floating_panel_minimum(panel_id)
         min_w=min(min_w,max(1,sw-16));min_h=min(min_h,max(1,sh-16))
-        default_w=min(sw-48,1080 if panel_id in ('container_inventory','crafting') else 900)
-        default_h=min(sh-48,680 if panel_id in ('container_inventory','crafting') else 620)
+        home_ui=panel_id in ('homestead_styles','homestead_depot')
+        default_w=min(sw-48,760 if home_ui else 1080 if panel_id in ('container_inventory','crafting') else 900)
+        default_h=min(sh-48,580 if home_ui else 680 if panel_id in ('container_inventory','crafting') else 620)
         state=self._floating_panels.get(panel_id)
         if state is None:
             base_x=max(12,(sw-default_w)//2);base_y=max(12,(sh-default_h)//2)
@@ -3831,6 +3833,14 @@ class PygameTerminal(PointerUI):
             damage=clipped.copy() if damage is None else damage.union(clipped)
         self._hover_rect=None;self._hover_tile_rect=None
         return damage
+
+    def present_homestead_styles(self,style,index:int,count:int)->None:
+        from worldseed.ui.homestead_panels import present_style_selector
+        present_style_selector(self,style,index,count)
+
+    def present_homestead_depot(self,data:dict)->None:
+        from worldseed.ui.homestead_panels import present_blueprint_depot
+        present_blueprint_depot(self,data)
 
     def begin_homestead_placement(self,style_id:str)->None:
         """Temporary UI intent; only confirm emits a simulation command."""
