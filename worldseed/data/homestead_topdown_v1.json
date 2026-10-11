@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "projection": "orthographic_top_down",
+  "rotation_map": {
+    "0": "south",
+    "1": "west",
+    "2": "north",
+    "3": "east"
+  },
+  "style_family": {
+    "log_cabin_01": "cozy",
+    "log_cabin_02": "cozy",
+    "log_cabin_03": "rustic",
+    "log_cabin_04": "rustic",
+    "log_cabin_05": "fortified",
+    "log_cabin_06": "mossy",
+    "log_cabin_07": "rustic",
+    "log_cabin_08": "fortified",
+    "log_cabin_09": "fortified",
+    "log_cabin_10": "rustic"
+  },
+  "asset_root": "worldseed/assets/sprites/buildings/homestead_topdown",
+  "directions": [
+    "north",
+    "east",
+    "south",
+    "west"
+  ],
+  "asset_note": "Each style family currently provides four cardinal sprites; individual catalog styles may share the same family. Keep existing 10 original isometric sprites for backward compatibility."
+}
