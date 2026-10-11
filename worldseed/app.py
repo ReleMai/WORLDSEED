@@ -2234,8 +2234,6 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     homestead=sim.homestead.at(target)
     if homestead is not None and distance<=8:
         rows.append(('manage_blueprint','Open cabin blueprint & materials'))
-    elif not building_part and distance<=8 and target.z==0:
-        rows.append(('place_cabin_blueprint','Place log cabin blueprint marker'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
     if building_part and shell is not None:
@@ -2247,8 +2245,6 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     if not choice:return UI_BACK
     if choice=='manage_blueprint' and homestead is not None:
         return _homestead_blueprint_panel(ctx,term,homestead['uid'])
-    if choice=='place_cabin_blueprint':
-        return _choose_log_cabin_style(ctx,term,target)
     if choice=='enter_interior':
         sim.execute(EnterInteriorCommand(ctx.player_id,door.uid))
         return sim.log[-1].message if sim.log else ''
@@ -3328,18 +3324,26 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
                 return sim.log[-1].message if sim.log else ''
     return UI_BACK
 
-def _choose_log_cabin_style(ctx:GameContext,term:Terminal,target:WorldPos)->str:
+def _choose_log_cabin_style(ctx:GameContext,term:Terminal)->str:
+    """Choose an authored cabin appearance, then preview it under the cursor."""
     from worldseed.systems.homestead_blueprints import catalog
-    choices=sorted((style for style in catalog()[1].values() if style['home_id']=='log_cabin'),key=lambda r:r['id'])
-    style=_select(term,'LOG CABIN STYLE',[(r['id'],r['name']) for r in choices],
-                  subtitle='Blueprint costs nothing. Bring materials later and deposit them into its marker.')
+    choices=sorted((style for style in catalog()[1].values()
+                    if style['home_id']=='log_cabin'),key=lambda row:row['id'])
+    style=_select(term,'HOMESTEADS  /  LOG CABIN',
+                  [(row['id'],row['name']) for row in choices],
+                  subtitle='Choose a style, then position the cabin on the world map.')
     if not style:return UI_BACK
-    facing=_select(term,'DOOR ORIENTATION',[
-        ('0','South-facing door'),('1','West-facing door'),
-        ('2','North-facing door'),('3','East-facing door')])
-    if facing is None:return UI_BACK
-    ctx.sim.execute(PlaceBlueprintCommand(ctx.player_id,style,target.x,target.y,int(facing)))
+    begin=getattr(term,'begin_homestead_placement',None)
+    if callable(begin):
+        begin(style)
+        return 'Move the cabin ghost with your mouse. R rotates; left-click places; right-click or Esc cancels.'
+    # Terminal-only backend retains keyboard construction without GUI pointers.
+    direction=_direction(term)
+    if not direction:return UI_BACK
+    target=ctx.sim.player_pos.moved(*direction)
+    ctx.sim.execute(PlaceBlueprintCommand(ctx.player_id,style,target.x,target.y,0))
     return ctx.sim.log[-1].message if ctx.sim.log else ''
+
 
 def _building_menu(ctx:GameContext,term:Terminal)->str:
     interiors=getattr(ctx.sim,'interiors',None)
@@ -3349,13 +3353,10 @@ def _building_menu(ctx:GameContext,term:Terminal)->str:
     while True:
         buildable=[st for st in reg.structures.values() if 'natural_only' not in st.tags]
         groups=['homesteads']+sorted(set(_structure_group(st) for st in buildable))
-        group=_select(term,'CONSTRUCTION',[(g,f'{g.title()} — {sum(1 for st in buildable if _structure_group(st)==g)} plans') for g in groups])
+        group=_select(term,'CONSTRUCTION',[(g,'Homesteads — log cabins, 10 visual styles') if g=='homesteads' else (g,f'{g.title()} — {sum(1 for st in buildable if _structure_group(st)==g)} plans') for g in groups])
         if not group:return UI_BACK
         if group=='homesteads':
-            d=_direction(term)
-            if not d:continue
-            target=sim.player_pos.moved(*d)
-            return _choose_log_cabin_style(ctx,term,target)
+            return _choose_log_cabin_style(ctx,term)
         rows=[]
         structs=sorted((st for st in buildable if _structure_group(st)==group),key=lambda s:s.name)
         for st in structs:
@@ -3781,6 +3782,21 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
         except Exception:
             pass
+        if key=='UI_BLUEPRINT_CANCEL':
+            last='Cabin blueprint placement cancelled.';continue
+        if key.startswith('UI_BLUEPRINT_PLACE:'):
+            _,x,y,turns=key.split(':')
+            pending=getattr(term,'_homestead_placement',None)
+            if not pending:
+                last='Select a home in the Build menu first.'
+                continue
+            style=str(pending['style_id'])
+            old=set(ctx.sim.state.homesteads)
+            ctx.sim.execute(PlaceBlueprintCommand(ctx.player_id,style,int(x),int(y),int(turns)))
+            placed=bool(set(ctx.sim.state.homesteads)-old)
+            if placed:term._homestead_placement=None
+            last=ctx.sim.log[-1].message if ctx.sim.log else ''
+            continue
         if key.startswith('UI_WORLD_MENU:'):
             _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
         if key.startswith('UI_BUILDING_MENU:'):

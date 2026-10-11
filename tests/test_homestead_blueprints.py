@@ -53,6 +53,37 @@ class HomesteadBlueprintTests(unittest.TestCase):
         self.assertTrue(self.system.cancel("home:1",inv)[0])
         self.assertEqual(inv.count("core:wood"),4)
         self.assertEqual(self.sim.state.homesteads,{})
+    def test_ghost_preview_is_read_only_and_agrees_with_commit(self):
+        self.assertTrue(self.system.preview("log_cabin_01",0,0)[0])
+        before=dict(self.sim.state.homesteads)
+        valid,reason,site=self.system.preview("log_cabin_01",0,0,1)
+        self.assertTrue(valid,reason)
+        self.assertEqual(site["orientation"],1)
+        self.assertEqual(self.sim.state.homesteads,before)
+        self.assertTrue(self.system.place("log_cabin_01",0,0,1)[0])
+        self.assertFalse(self.system.preview("log_cabin_01",0,0)[0])
+
+    def test_each_style_and_rotation_uses_exact_footprint_and_door(self):
+        for style_id in sorted(catalog()[1]):
+            if not style_id.startswith("log_cabin_"):continue
+            for direction in range(4):
+                site={"home_id":"log_cabin","style_id":style_id,
+                      "x":3,"y":4,"z":0,"orientation":direction}
+                cells=footprint(site)
+                inside,outside=doorway(site)
+                self.assertEqual(len(cells),9)
+                self.assertEqual(len(set(cells)),9)
+                self.assertIn(inside,cells)
+                self.assertNotIn(outside,cells)
+
+    def test_unexplored_landing_disallows_preview_and_placement(self):
+        self.sim.discovered_tiles_set={"0,0,0"}
+        allowed,reason,site=self.system.preview("log_cabin_01",0,0)
+        self.assertFalse(allowed)
+        self.assertIn("Explore",reason)
+        self.assertFalse(self.system.place("log_cabin_01",0,0)[0])
+        self.assertEqual(self.sim.state.homesteads,{})
+
     def test_occupied_site_rejected(self):
         self.sim.resources.blocks_movement=lambda p:(p.x,p.y)==(1,1)
         self.assertFalse(self.system.place("log_cabin_01",0,0)[0])

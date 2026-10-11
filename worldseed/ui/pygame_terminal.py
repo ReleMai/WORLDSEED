@@ -443,6 +443,16 @@ class PygameTerminal(PointerUI):
                 return 'RESIZE'
             if event.type == pg.MOUSEBUTTONDOWN:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
+                placing=getattr(self,'_homestead_placement',None)
+                if placing and self._input_mode=='world':
+                    if event.button==3:
+                        self._homestead_placement=None
+                        return 'UI_BLUEPRINT_CANCEL'
+                    if event.button==1:
+                        cell=self._blueprint_cursor_cell(self._last_mouse)
+                        if cell is not None:
+                            return f"UI_BLUEPRINT_PLACE:{cell[0]}:{cell[1]}:{placing['orientation']}"
+                        continue
                 if event.button==1:
                     token=self._hit_token(self._last_mouse)
                     if token and token.startswith('UI_WINDOW_DRAG:'):
@@ -550,6 +560,14 @@ class PygameTerminal(PointerUI):
                 self._free_movement_last_ms=pg.time.get_ticks()
                 continue
             if event.type == pg.KEYDOWN:
+                if self._input_mode=='world' and getattr(self,'_homestead_placement',None):
+                    if event.key==pg.K_ESCAPE:
+                        self._homestead_placement=None
+                        return 'UI_BLUEPRINT_CANCEL'
+                    if event.key==pg.K_r:
+                        self._homestead_placement['orientation']=(self._homestead_placement['orientation']+1)%4
+                        self._refresh_hover_only(force=True)
+                        continue
                 if self._input_mode!='world':
                     if event.key in key_map:
                         if event.key==pg.K_ESCAPE and self._current_presentation=='world_context':
@@ -3811,10 +3829,122 @@ class PygameTerminal(PointerUI):
         self._hover_rect=None;self._hover_tile_rect=None
         return damage
 
+    def begin_homestead_placement(self,style_id:str)->None:
+        """Temporary UI intent; only confirm emits a simulation command."""
+        self._homestead_placement={'style_id':str(style_id),'orientation':0}
+        self._hover_cell=None
+
+    def _blueprint_cursor_cell(self,pos):
+        ctx=self._hover_context
+        if not ctx or not ctx['used'].collidepoint(pos):return None
+        size=ctx['tile_px']
+        return (ctx['left']+(pos[0]-ctx.get('grid_x',ctx['used'].x))//size,
+                ctx['top']+(pos[1]-ctx.get('grid_y',ctx['used'].y))//size)
+
+    def _refresh_homestead_ghost(self,force:bool=False,update_display:bool=True)->None:
+        """Paint an alpha footprint, cabin silhouette and explicit door onto the
+        retained world view. Mouse movement never creates or spends anything.
+        """
+        if self.screen is None or not self._hover_context or self._hover_map_snapshot is None:return
+        pg=self.pg;ctx=self._hover_context;used=ctx['used']
+        cell=self._blueprint_cursor_cell(self._last_mouse)
+        state=getattr(self,'_homestead_placement',None)
+        if not state:return
+        marker=(cell,int(state['orientation']))
+        if not force and marker==self._hover_cell:return
+        damage=self._restore_hover_damage()
+        self._hover_cell=marker
+        if cell is None:
+            if update_display and damage is not None:pg.display.update(damage)
+            return
+        from worldseed.systems.homestead_blueprints import footprint,doorway,catalog
+        wx,wy=cell
+        orientation=int(state['orientation'])
+        style_id=str(state['style_id'])
+        sim=ctx['sim']
+        ok,reason,site=sim.homestead.preview(style_id,wx,wy,orientation)
+        if site is None:
+            if update_display and damage is not None:pg.display.update(damage)
+            return
+        cells=footprint(site)
+        entrance,landing=doorway(site)
+        size=ctx['tile_px']
+        x0=min(x for x,y,z in cells);x1=max(x for x,y,z in cells)
+        y0=min(y for x,y,z in cells);y1=max(y for x,y,z in cells)
+        rect=pg.Rect(ctx['grid_x']+(x0-ctx['left'])*size,
+                     ctx['grid_y']+(y0-ctx['top'])*size,
+                     (x1-x0+1)*size,(y1-y0+1)*size)
+        # All of the body and roof share the actual 3x3 reserved footprint.
+        # This is a model preview, not the completed building art sprite.
+        ghost=pg.Surface(rect.size,pg.SRCALPHA)
+        valid=(92,210,154) if ok else (245,104,98)
+        floor_rgb=(97,73,47) if ok else (111,49,44)
+        frame=pg.Rect(3,3,max(1,rect.w-6),max(1,rect.h-6))
+        pg.draw.rect(ghost,(*floor_rgb,100),frame)
+        for cx,cy,cz in cells:
+            r=pg.Rect((cx-x0)*size,(cy-y0)*size,size,size)
+            pg.draw.rect(ghost,(*valid,105),r,1)
+        # Cabin walls, visible log courses and a gabled roof.
+        wall=frame.inflate(-max(4,size//4),-max(4,size//4))
+        if wall.w>4 and wall.h>4:
+            pg.draw.rect(ghost,(121,88,57,162),wall)
+            logstep=max(4,size//5)
+            for ly in range(wall.y+logstep,wall.bottom,logstep):
+                pg.draw.line(ghost,(54,40,28,188),(wall.left+2,ly),(wall.right-3,ly),max(1,size//25))
+            ridge_horizontal=orientation%2==0
+            if ridge_horizontal:
+                roof=[(frame.left+3,frame.top+size//3),(rect.w//2,frame.top+1),
+                      (frame.right-3,frame.top+size//3),(frame.right-3,frame.bottom-size//4),
+                      (rect.w//2,frame.bottom-2),(frame.left+3,frame.bottom-size//4)]
+            else:
+                roof=[(frame.left+size//3,frame.top+3),(frame.right-size//4,frame.top+3),
+                      (frame.right-2,rect.h//2),(frame.right-size//4,frame.bottom-3),
+                      (frame.left+size//3,frame.bottom-3),(frame.left+2,rect.h//2)]
+            pg.draw.polygon(ghost,(123,102,70,135),roof)
+            pg.draw.lines(ghost,(50,36,24,190),True,roof,max(1,size//13))
+            if ridge_horizontal:
+                pg.draw.line(ghost,(216,183,122,176),(rect.w//2,frame.top+3),
+                             (rect.w//2,frame.bottom-3),max(1,size//15))
+            else:
+                pg.draw.line(ghost,(216,183,122,176),(frame.left+3,rect.h//2),
+                             (frame.right-3,rect.h//2),max(1,size//15))
+            # Style marker: trims vary without moving any collision geometry.
+            index=int(style_id.rsplit('_',1)[-1])
+            offset=3+(index%4)*max(3,size//9)
+            pg.draw.circle(ghost,(224,181,107,160),(min(wall.right-3,wall.x+offset),wall.y+3),max(2,size//11))
+        pg.draw.rect(ghost,(*valid,235),frame,max(2,size//13))
+        oldclip=self.screen.get_clip()
+        self.screen.set_clip(used)
+        self.screen.blit(ghost,rect.topleft)
+        for location,rgb in ((entrance,(245,220,123)),(landing,(126,221,243))):
+            px,py,pz=location
+            draw=pg.Rect(ctx['grid_x']+(px-ctx['left'])*size,
+                         ctx['grid_y']+(py-ctx['top'])*size,size,size)
+            pg.draw.rect(self.screen,rgb,draw.inflate(-max(4,size//3),-max(4,size//3)),max(2,size//13))
+        self.screen.set_clip(oldclip)
+        bounds=rect.union(pg.Rect(ctx['grid_x']+(landing[0]-ctx['left'])*size,
+                                  ctx['grid_y']+(landing[1]-ctx['top'])*size,size,size)).clip(used)
+        if bounds.width>0 and bounds.height>0:
+            self._hover_tile_rect=bounds
+            damage=bounds if damage is None else damage.union(bounds)
+        style=catalog()[1][style_id]
+        direction=('South','West','North','East')[orientation]
+        label=f"{style['name'].split(' — ')[-1]} log cabin | {direction} door"
+        caption='VALID - left-click to place' if ok else 'BLOCKED - '+reason
+        tooltip=self._draw_hover_tooltip(
+            [label,caption,'Gold = door  |  Blue = exterior landing',
+             'R = rotate  |  Right-click / Esc = cancel'],(rect.right,rect.top),used)
+        self._hover_rect=tooltip
+        if tooltip is not None:damage=tooltip if damage is None else damage.union(tooltip)
+        if update_display and damage is not None:pg.display.update(damage)
+
     def _refresh_hover_only(self, force:bool=False, update_display:bool=True)->None:
         # Fast path for mouse movement: update only the tile highlight + tooltip.
         # Crucially this never asks the app to rerender terrain or advance sim.
         if self.screen is None or not self._hover_context or self._hover_map_snapshot is None:return
+        if getattr(self,'_homestead_placement',None):
+            self._refresh_homestead_ghost(force=force,update_display=update_display)
+            return
         ctx=self._hover_context;used=ctx['used'];mx,my=self._last_mouse;tile_px=ctx['tile_px']
         if used.collidepoint(mx,my):
             grid_x=int(ctx.get('grid_x',used.x))

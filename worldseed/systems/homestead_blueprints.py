@@ -63,25 +63,38 @@ class HomesteadBlueprintService:
         if (sim.player_pos.x,sim.player_pos.y,sim.player_pos.z)==cell:return False
         return True
 
-    def place(self,style_id,x,y,orientation=0):
+    def preview(self,style_id,x,y,orientation=0):
+        """Read-only placement check. Both cursor preview and command use this."""
         style=catalog()[1].get(style_id)
         if not style or style["home_id"]!="log_cabin" or orientation not in range(4):
-            return False,"Unknown log cabin style or rotation."
+            return False,"Unknown log cabin style or rotation.",None
         p=self.sim.player_pos
         if p.z!=0 or abs(p.x-x)+abs(p.y-y)>8:
-            return False,"Choose nearby surface ground."
+            return False,"Too far away: choose ground within 8 tiles.",None
         site={"uid":"","home_id":"log_cabin","style_id":style_id,"x":int(x),"y":int(y),"z":0,
               "orientation":int(orientation),"owner_uid":"player","stage":0,"stored":{},"revision":0}
-        cells=footprint(site);entrance,outside=doorway(site)
-        if any(not self._clear(c) for c in cells) or not self._clear(outside):
-            return False,"Clear the cabin footprint and exterior doorway first."
+        cells=footprint(site);inside,outside=doorway(site)
+        # Mouse preview must not reveal unexplored construction sites.
+        known=getattr(self.sim,"discovered_tiles_set",None)
+        if known is not None and any(pos_key(*cell) not in known for cell in (*cells,outside)):
+            return False,"Explore the complete footprint and doorway first.",site
+        if any(not self._clear(cell) for cell in (*cells,outside)):
+            return False,"Clear terrain, trees, objects and the doorway first.",site
+        occupied=set(cells)
         for other in self.sites.values():
-            if set(cells)&set(footprint(other)) or outside in footprint(other):
-                return False,"This blueprint overlaps another site."
-        # Placement is free; no inventory is consumed until the player deposits.
+            other_cells=set(footprint(other))
+            other_exit=doorway(other)[1]
+            if occupied & other_cells or outside in other_cells or other_exit in occupied:
+                return False,"Overlaps an existing home or blocks its doorway.",site
+        return True,"Clear site. Left-click to place the blueprint.",site
+
+    def place(self,style_id,x,y,orientation=0):
+        ok,msg,site=self.preview(style_id,x,y,orientation)
+        if not ok:return False,msg
+        # Placement is free; no inventory or save state is changed on hover.
         site["uid"]=self.sim.state.uid("homestead")
         self.sites[site["uid"]]=site
-        return True,"Blueprint marker placed. Right-click the site to deposit materials."
+        return True,"Blueprint placed. Right-click its marker to deposit materials."
 
     def _reachable(self,uid):
         site=self.sites.get(uid)
