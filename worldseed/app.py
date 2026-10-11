@@ -3866,7 +3866,16 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             last=ctx.sim.log[-1].message if ctx.sim.log else ''
             continue
         if key.startswith('UI_WORLD_MENU:'):
-            _,x,y=key.split(':');result=_world_context_menu(ctx,term,WorldPos(int(x),int(y),ctx.sim.player_pos.z));last='' if result==UI_BACK else result;continue
+            _,x,y=key.split(':')
+            target=WorldPos(int(x),int(y),ctx.sim.player_pos.z)
+            site=ctx.sim.homestead.at(target)
+            player=ctx.sim.player_pos
+            if site is not None and abs(target.x-player.x)+abs(target.y-player.y)<=8:
+                result=_homestead_blueprint_panel(ctx,term,site['uid'])
+            else:
+                result=_world_context_menu(ctx,term,target)
+            last='' if result==UI_BACK else result
+            continue
         if key.startswith('UI_BUILDING_MENU:'):
             _,part,uid=key.split(':',2);result=_building_context_menu(ctx,term,uid,part);last='' if result==UI_BACK else result;continue
         if key.startswith('INTERIOR_MOVE:'):

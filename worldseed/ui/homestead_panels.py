@@ -213,32 +213,38 @@ def present_blueprint_depot(term,data):
     fill=pg.Rect(gauge.x,gauge.y,int(gauge.w*stocked/max(1,total)),gauge.h)
     if fill.w:pg.draw.rect(screen,(153,141,92),fill,border_radius=3)
     row_top=box.bottom+10
-    controls_h=98 if site['stage']<4 else 65
-    space=max(100,y+h-47-controls_h-row_top)
-    row_gap=5;rh=max(28,min(55,(space-4*row_gap)//5))
+    # A two-column material ledger keeps icon, stock and deposit actions
+    # readable even in the minimum supported 800x520 game window.
+    gap=8
+    card_w=(cw-gap)//2
+    rh=max(49,min(64,(y+h-119-row_top-12)//3))
     for index,(iid,label,have,need,carried) in enumerate(data['materials']):
-        r=pg.Rect(cx,row_top+index*(rh+row_gap),cw,rh)
+        col=index%2;row=index//2
+        r=pg.Rect(cx+col*(card_w+gap),row_top+row*(rh+6),card_w,rh)
         pg.draw.rect(screen,(32,39,39),r,border_radius=5)
         pg.draw.rect(screen,(71,81,76),r,1,border_radius=5)
-        icon_size=min(42,max(24,rh-7))
+        icon_size=max(31,min(42,rh-8))
         icon=pg.Rect(r.x+6,r.centery-icon_size//2,icon_size,icon_size)
         pg.draw.rect(screen,(48,56,52),icon,border_radius=4)
         term._draw_item_icon(iid,icon,scale=.90)
-        # Existing crafted/generated icons are the exact registry item art.
-        label_x=icon.right+10
-        _label(term,label,(label_x,r.y+4),width=max(70,cw-315))
-        line_text=f'{have} / {need} supplied   ·   {carried} carried'
-        _label(term,line_text,(label_x,r.bottom-18),color=term._theme['muted'],width=max(70,cw-315))
-        right=r.right-7
+        # Actual inventory icons are preferred over bespoke faux material art.
+        label_x=icon.right+9
+        buttons_w=92
+        label_width=max(60,r.right-label_x-buttons_w-11)
+        _label(term,label,(label_x,r.y+6),width=label_width)
+        line_text=f'{have}/{need} supplied  ·  {carried} carried'
+        _label(term,line_text,(label_x,r.bottom-20),color=term._theme['muted'],
+               width=max(70,r.right-label_x-9))
         if site['stage']<4 and have<need:
-            _button(term,(right-75,r.centery-14,74,28),'Deposit all',
+            right=r.right-6
+            _button(term,(right-55,r.y+5,55,25),'ALL',
                     'UI_ACTION:depot_item_all:'+iid,enabled=carried>0)
-            _button(term,(right-118,r.centery-14,39,28),'+1',
+            _button(term,(right-92,r.y+5,33,25),'+1',
                     'UI_ACTION:depot_item_one:'+iid,enabled=carried>0)
         else:
-            _label(term,'COMPLETE' if have>=need else 'UNFINISHED',
-                   (right-8,r.centery),centered=False,color=term._theme['accent'] if have>=need else term._theme['muted'])
-    controls_top=min(y+h-143,row_top+5*(rh+row_gap)+5)
+            _label(term,'✓' if have>=need else '–',(r.right-19,r.y+9),
+                   color=term._theme['accent'] if have>=need else term._theme['muted'])
+    controls_top=min(y+h-143,row_top+3*(rh+6)+4)
     info=str(data.get('notice','')).strip()
     if info:
         _label(term,info,(cx,controls_top),color=term._theme['accent'],width=cw)
