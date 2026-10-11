@@ -64,6 +64,56 @@ class PygameBehaviorTests(unittest.TestCase):
         self.assertNotIn(pg.K_d,self.term._held_movement)
         self.assertIsNone(self.term._active_movement_key)
 
+    def test_queued_release_skips_expensive_weather_animation(self):
+        pg=self.pg
+        self.term._held_movement[pg.K_w]=pg.time.get_ticks()
+        self.term._active_movement_key=pg.K_w
+        pg.event.post(pg.event.Event(pg.KEYUP,key=pg.K_w,unicode=''))
+        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE,unicode='\\x1b'))
+        with patch.object(self.term,'_animate_idle_effects') as animate:
+            self.assertEqual(self.term.read_key(),'ESC')
+            animate.assert_not_called()
+        self.assertFalse(self.term._held_movement)
+
+    def test_duplicate_maximize_resize_does_not_recreate_display(self):
+        pg=self.pg
+        self.term._resize(1920,1080)
+        existing=pg.display.get_surface()
+        with patch.object(pg.display,'set_mode',wraps=pg.display.set_mode) as set_mode:
+            self.term._resize(1920,1080)
+            set_mode.assert_not_called()
+        self.assertIs(self.term.screen,existing)
+        self.assertEqual(self.term.screen.get_size(),(1920,1080))
+
+    def test_large_window_throttles_redraw_not_motion_or_release(self):
+        pg=self.pg
+        self.term._resize(1920,1080)
+        samples=[]
+        self.term.set_free_movement_callback(
+            lambda dt,dx,dy,sprint: samples.append((dt,dx,dy)) or True
+        )
+        self.term._input_mode='world'
+        self.term._held_movement[pg.K_d]=1
+        self.term._active_movement_key=pg.K_d
+        self.term._free_movement_last_ms=100
+        self.assertTrue(self.term._pump_free_movement(116))
+        self.assertFalse(self.term._pump_free_movement(132))
+        self.assertFalse(self.term._pump_free_movement(148))
+        self.assertTrue(self.term._pump_free_movement(166))
+        self.assertEqual(len(samples),4)
+        self.assertTrue(all(dx==1 and dy==0 for _,dx,dy in samples))
+        self.assertTrue(all(0 < dt <= 0.1 for dt,_,_ in samples))
+
+    def test_keyup_flushes_pending_fractional_frame(self):
+        pg=self.pg
+        self.term._held_movement[pg.K_a]=1
+        self.term._active_movement_key=pg.K_a
+        self.term._movement_redraw_pending=True
+        pg.event.post(pg.event.Event(pg.KEYUP,key=pg.K_a,unicode=''))
+        self.assertEqual(self.term.read_key(),'UI_REDRAW')
+        self.assertFalse(self.term._held_movement)
+        self.assertFalse(self.term._movement_redraw_pending)
+
     def test_startup_flush_preserves_window_close(self):
         self.pg.event.post(self.pg.event.Event(self.pg.QUIT))
         self.term.discard_pending_input()

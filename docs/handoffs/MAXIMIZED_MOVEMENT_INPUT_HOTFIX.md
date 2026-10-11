@@ -46,3 +46,28 @@ bindings changed. This is an event-priority/input-latency correction only.
 The normal fast gate now runs this exact pygame regression in the existing
 Dev41 realtime/free-movement step, so future movement-input changes exercise the
 release-starvation case on the Windows dummy-display runner before later suites.
+
+## Follow-up: maximized-screen lag and remaining stuck input (2026-10-11)
+
+The first fix did not cover two still-unbounded graphical workloads:
+`_animate_idle_effects` always built weather layers *before* looking for a
+queued keyboard event, and the continuous movement path still requested a
+complete world paint for every 16-ms physics update.
+
+This follow-up takes already-queued input before any idle weather composition,
+renders continuous movement at a separate 30-Hz small-window / 20-Hz large-
+window cadence without slowing simulation movement, and flushes final
+fractional position on KEYUP. Window size changes are idempotent; SDL2
+already-resized surfaces are reused rather than calling `set_mode` on an
+unchanged dimension. Full-viewport lighting buffers are reused and skipped
+when transparent. Animated weather is capped by map pixel area to avoid
+eating the entire frame budget at native maximized resolutions.
+
+Four targeted SDL dummy-display tests validate release-before-effects,
+duplicate max-window events, redraw throttling without losing movement
+updates, and final-frame release flushing. The existing queued-KEYUP regression
+remains in the Windows fast gate.
+
+Remaining verification: manual maximize/unmaximize gameplay on an actual
+desktop/GPU; SDL dummy rendering cannot reproduce all native window-manager
+and driver scheduling behavior. No change to save/worldgen/physics semantics.

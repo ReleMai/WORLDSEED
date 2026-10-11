@@ -25,6 +25,7 @@ class WeatherFxRenderer:
         self._lighting_target = None
         self._lighting_from = None
         self._lighting_started = 0
+        self._lighting_overlay = None
         self.effects = EffectStack()
         self.effects.register('fog',10,self._fog_layers,lambda w: False)
         self.effects.register('clouds',20,self._cloud_layers,lambda w: w.cloud_cover >= 12)
@@ -174,12 +175,21 @@ class WeatherFxRenderer:
     def draw_lighting(self, screen, rect, lighting, *, elapsed_ms=None) -> None:
         colors = (self.lighting_colors(lighting) if elapsed_ms is None
                   else self.lighting_sample(elapsed_ms))
-        overlay = self.pg.Surface((rect.width, rect.height), self.pg.SRCALPHA)
-        for offset in (0, 4):
-            color = colors[offset:offset + 4]
+        # Daylight requires no full-viewport alpha surface at all. Reuse
+        # the same buffer during night/fades instead of allocating a large
+        # new one every frame on maximized displays.
+        if not colors[3] and not colors[7]:
+            return
+        size=(rect.width,rect.height)
+        overlay=self._lighting_overlay
+        if overlay is None or overlay.get_size()!=size:
+            overlay=self.pg.Surface(size,self.pg.SRCALPHA)
+            self._lighting_overlay=overlay
+        for offset in (0,4):
+            color=colors[offset:offset+4]
             if color[3]:
                 overlay.fill(color)
-                screen.blit(overlay, rect.topleft)
+                screen.blit(overlay,rect.topleft)
 
     def _glow_surface(self, radius: int, strength: int):
         radius = max(8, int(radius))

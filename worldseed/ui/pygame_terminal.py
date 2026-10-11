@@ -126,6 +126,8 @@ class PygameTerminal(PointerUI):
         self._realtime_callback = None
         self._free_movement_callback = None
         self._free_movement_last_ms = 0
+        self._movement_redraw_last_ms = 0
+        self._movement_redraw_pending = False
         self._combat_active_callback = None
         self._ui_context: dict[str, Any] | None = None
         self._context_menu_origin = (0, 0)
@@ -167,6 +169,8 @@ class PygameTerminal(PointerUI):
         self._active_movement_key = None
         self._movement_next_repeat_ms = 0
         self._free_movement_last_ms = pg.time.get_ticks()
+        self._movement_redraw_last_ms = 0
+        self._movement_redraw_pending = False
         self._rebuild_fonts()
         pg.mouse.set_visible(True)
         # Reuse a generated asset as a recognizable app icon.
@@ -188,6 +192,8 @@ class PygameTerminal(PointerUI):
     def set_free_movement_callback(self, callback) -> None:
         self._free_movement_callback = callback
         self._free_movement_last_ms = self.pg.time.get_ticks() if callback else 0
+        self._movement_redraw_last_ms = 0
+        self._movement_redraw_pending = False
 
     def pause_realtime(self):
         return pause_realtime_callback(self)
@@ -227,7 +233,20 @@ class PygameTerminal(PointerUI):
         changed=bool(callback(dt,dx,dy,sprint))
         if changed:
             self._entity_spatial_cache_key=None
-        return changed
+            self._movement_redraw_pending=True
+        if not self._movement_redraw_pending:
+            return False
+        # Physics keeps its 16-ms cadence; expensive full-scene redraws do
+        # not. On large viewports this keeps the input loop responsive while
+        # fractional motion still advances at the correct wall-clock speed.
+        area=self.screen.get_width()*self.screen.get_height() if self.screen else 0
+        interval=50 if area>1_600_000 else 33
+        last=self._movement_redraw_last_ms
+        if last and now-last<interval:
+            return False
+        self._movement_redraw_pending=False
+        self._movement_redraw_last_ms=now
+        return True
 
     def _rebuild_fonts(self) -> None:
         pg = self.pg
@@ -246,9 +265,21 @@ class PygameTerminal(PointerUI):
         return max(60, (w - 36) // self.char_w), max(18, (h - 46) // self.char_h)
 
     def _resize(self, w: int, h: int) -> None:
+        new_size=(max(800, int(w)), max(520, int(h)))
+        # pygame-ce/SDL2 resizes the surface automatically on Windows.
+        # Re-entering set_mode for an already-applied WINDOWRESIZED event
+        # recreates the display and can generate more resize events.
+        current=self.pg.display.get_surface()
+        if current is not None and current.get_size()==new_size:
+            self.screen=current
+        else:
+            self.screen=self.pg.display.set_mode(new_size,self.pg.RESIZABLE)
+        if (self.width,self.height)==new_size and current is not None and current.get_size()==new_size:
+            return
         self._pointer_targets.clear()
-        self.width, self.height = max(800, w), max(520, h)
-        self.screen = self.pg.display.set_mode((self.width, self.height), self.pg.RESIZABLE)
+        self.width,self.height=new_size
+        self._movement_redraw_last_ms=0
+        self._movement_redraw_pending=False
         self._base_layer_cache.clear(); self._base_scroll_state=None; self._resource_view_cache.clear(); self._terrain_transition_cache.clear(); self._terrain_transition_masks.clear()
         self._hover_context=None; self._hover_map_snapshot=None; self._hover_rect=None; self._hover_tile_rect=None; self._hover_cell=None
         self._interior_context = None
@@ -270,6 +301,8 @@ class PygameTerminal(PointerUI):
             self._held_movement.clear()
             self._active_movement_key = None
             self._movement_next_repeat_ms = 0
+            self._movement_redraw_pending = False
+            self._movement_redraw_last_ms = 0
             self.pg.event.clear(self.pg.KEYDOWN)
             self.pg.event.clear(self.pg.KEYUP)
         except Exception:
@@ -319,7 +352,6 @@ class PygameTerminal(PointerUI):
 
         while True:
             now = pg.time.get_ticks()
-            self._animate_idle_effects(now)
 
             # Service already-queued input/window events before advancing
             # realtime or continuous movement. On a maximized/high-cost frame,
@@ -329,6 +361,10 @@ class PygameTerminal(PointerUI):
             # collision makes the movement callback return False.
             event = pg.event.poll()
             if event.type == pg.NOEVENT:
+                # Large weather/cloud composites can be expensive at the
+                # maximized resolution; never build one ahead of a waiting
+                # KEYUP, focus-loss or quit event.
+                self._animate_idle_effects(now)
                 if self._pump_realtime():
                     return 'UI_REDRAW'
                 if self._pump_free_movement(now):
@@ -378,7 +414,15 @@ class PygameTerminal(PointerUI):
                 return 'RESIZE'
             if event.type == pg.KEYUP:
                 if event.key in movement_keys:
+                    was_held=event.key in self._held_movement
                     _release_movement(event.key)
+                    # A 30/20-Hz display can have a pending fractional
+                    # position update when the key is released. Paint that
+                    # final position once without moving another step.
+                    if was_held and self._movement_redraw_pending:
+                        self._movement_redraw_pending=False
+                        self._movement_redraw_last_ms=pg.time.get_ticks()
+                        return 'UI_REDRAW'
                 continue
             if event.type == pg.MOUSEMOTION:
                 self._last_mouse = event.pos
@@ -566,7 +610,11 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == getattr(pg,'WINDOWFOCUSLOST',-1):
                 self._held_movement.clear();self._active_movement_key=None
+                self._movement_next_repeat_ms=0
                 self._free_movement_last_ms=pg.time.get_ticks()
+                if self._movement_redraw_pending:
+                    self._movement_redraw_pending=False
+                    return 'UI_REDRAW'
                 continue
             if event.type == pg.KEYDOWN:
                 if self._input_mode=='world' and getattr(self,'_homestead_placement',None):
@@ -2683,7 +2731,13 @@ class PygameTerminal(PointerUI):
         active = bool(ctx and static is not None and self._hover_context and
                       (self._weather_fx.has_animated_effects(ctx) or transitioning))
         if active:
-            phase = int(now) // 33
+            # Weather surfaces cover the entire view and can dominate a
+            # maximized software-rendered frame. Keep animation wall-clock
+            # based, but cap refresh frequency by actual drawable pixel area.
+            used=self._hover_context['used']
+            area=used.width*used.height
+            interval=100 if area>1_600_000 else 66 if area>800_000 else 33
+            phase=int(now)//interval
             if phase == getattr(self, '_weather_animation_phase', None):
                 if menu_pointer:self._animate_menu_effects(now,force=True)
                 return
