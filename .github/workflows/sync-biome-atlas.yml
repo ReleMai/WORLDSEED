@@ -1,0 +1,43 @@
+name: Temporary biome atlas synchronization
+
+# Branch-scoped one-time authoring. Remove after generated files pass.
+on:
+  push:
+    branches:
+      - fix/rc14-salvage-fast-gate-assets
+    paths:
+      - .github/workflows/sync-biome-atlas.yml
+
+permissions:
+  contents: write
+
+jobs:
+  author-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install authoring dependencies
+        run: python -m pip install "Pillow>=10,<12"
+      - name: Rebuild biome descriptions and visuals
+        run: python -m tools.build_biome_atlas
+      - name: Verify biome atlas freshness and geometry
+        run: python -m unittest -v tests.test_biome_atlas
+      - name: Commit regenerated biome data and art
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f worldseed/assets/biome_catalog.json worldseed/assets/BIOME_ATLAS.md worldseed/assets/biome_atlas.png worldseed/assets/biome_atlas/
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m "Synchronize biome atlas with new pine-bough resource yields"
+            git fetch origin "${{ github.ref_name }}"
+            git rebase "origin/${{ github.ref_name }}"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
