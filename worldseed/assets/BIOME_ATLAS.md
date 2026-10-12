@@ -692,7 +692,7 @@ Brackish shallow and deep channels where river and marine water meet.
 | Red Drum | 0.7-16.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Bass | 0.8-18.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Mullet | 0.2-2.8 kg | hand/spear/rod/net | Earthworms, Berries |
-| Summer Flounder | 0.3-6.5 kg | spear/rod/net | Offal, Earthworms |
+| Summer Flounder | 0.2-6.5 kg | spear/rod/net | Offal, Earthworms |
 
 ## Ocean
 
@@ -725,7 +725,7 @@ Coastal wading water through shallow, shelf, and deep-ocean classes.
 | Red Drum | 0.7-16.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Bass | 0.8-18.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Mullet | 0.2-2.8 kg | hand/spear/rod/net | Earthworms, Berries |
-| Summer Flounder | 0.3-6.5 kg | spear/rod/net | Offal, Earthworms |
+| Summer Flounder | 0.2-6.5 kg | spear/rod/net | Offal, Earthworms |
 
 ## Caves & Subterranean
 
