@@ -81,6 +81,25 @@ class ActionCombatTests(unittest.TestCase):
         self.sim._refresh_combat_candidates()
         return bear
 
+    def test_structured_damage_ledger_records_hits_and_persists(self):
+        sim=self.sim
+        sim.combat.damage_callback=sim._record_damage
+        vitals=sim.entities.get(1,Vitals)
+        before=vitals.hp
+        sim.combat.resolve_player_hit(vitals,'torso',8,'blunt','melee',sim.turn,'Brown bear')
+        self.assertLess(vitals.hp,before)
+        taken=sim.state.player_combat_log[-1]
+        self.assertEqual((taken['direction'],taken['source']),('taken','Brown bear'))
+        self.assertEqual(taken['amount'],before-vitals.hp)
+        creature=self.bear()
+        sim.combat.melee_hit_chance=lambda *args,**kwargs:100
+        sim.combat.attack_creature(creature,sim.entities.get(1,Inventory),sim.turn,1,100,'standard')
+        dealt=sim.state.player_combat_log[-1]
+        self.assertEqual((dealt['direction'],dealt['target']),('dealt','Brown Bear'))
+        self.assertGreater(dealt['amount'],0)
+        restored=LivingWorldState.from_dict(sim.state.to_dict())
+        self.assertEqual(restored.player_combat_log,sim.state.player_combat_log)
+
     def test_idle_contact_pauses_before_first_bear_strike_and_discards_catchup(self):
         self.bear();sim=self.sim;v=sim.entities.get(1,Vitals)
         driver=RealtimeSimulationDriver(sim,seconds_per_game_minute=1,max_catchup_minutes=5)

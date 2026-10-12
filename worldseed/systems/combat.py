@@ -13,7 +13,7 @@ class CombatSystem:
         self.damage_callback=None
 
     def _damage_event(self,direction,amount,source,target,kind,part=""):
-        callback=self.damage_callback
+        callback=getattr(self,'damage_callback',None)
         if callback is not None and amount>0:
             callback(direction,int(amount),str(source),str(target),str(kind),str(part))
 

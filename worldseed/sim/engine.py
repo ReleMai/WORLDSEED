@@ -101,6 +101,7 @@ class Simulation:
         install_procedural_species(self.registry,self.seed)
 
         self.clock=GameClock(self.state.clock_minute)
+        self._last_player_wound_tick_minute=int(self.clock.minute)
         self.history=HistorySystem(self.state)
         self.lod=LODSystem(self.state)
         self.artifacts=ArtifactSystem(self.state,registry,self.seed)
@@ -867,6 +868,14 @@ class Simulation:
         else:
             self._nearby_dungeon_key=None
 
+    def _tick_player_wounds(self,vitals:Vitals)->None:
+        """Bleeding is simulated once per elapsed game minute, not per input."""
+        now=int(self.clock.minute)
+        last=int(getattr(self,'_last_player_wound_tick_minute',now))
+        if now<=last:return
+        self._last_player_wound_tick_minute=now
+        self.combat.tick_player_wounds(vitals)
+
     def _post_action(self,*,allow_hostile_attacks:bool=True)->None:
         inv=self.entities.try_get(self.player_id,Inventory)
         if inv and self.state.player_readied_weapon and inv.count(self.state.player_readied_weapon)<=0:
@@ -879,7 +888,7 @@ class Simulation:
             for message in self.property_security.update_response(self.player_pos,self.clock.minute,self.stealth):
                 self._message(message)
             if v:
-                self.combat.tick_player_wounds(v)
+                self._tick_player_wounds(v)
                 before_illness=v.hp
                 for message in self.disease.tick_player(self.clock.minute,v):self._message(message)
                 self._record_damage("taken",before_illness-v.hp,"Illness","Player","disease")
@@ -891,7 +900,7 @@ class Simulation:
         self.combat.tick_wounds()
         v=self.entities.try_get(self.player_id,Vitals)
         if v:
-            self.combat.tick_player_wounds(v)
+            self._tick_player_wounds(v)
             for did in self.disease.local_player_exposure(self.player_pos,self.clock.minute):
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
             before_illness=v.hp

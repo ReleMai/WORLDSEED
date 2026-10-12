@@ -118,6 +118,20 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         self.assertIsNone(nearby_land_spawn(WorldPos(2000, 2000), lambda p: calls.append(p) or 'water', terrain, lambda _: True))
         self.assertLess(len(calls), 5000)
 
+    def test_bleeding_updates_once_per_game_minute_not_each_move(self):
+        sim=Simulation.__new__(Simulation)
+        sim.clock=SimpleNamespace(minute=100)
+        sim.combat=SimpleNamespace(tick_player_wounds=Mock())
+        sim._last_player_wound_tick_minute=100
+        v=Vitals()
+        sim._tick_player_wounds(v)
+        sim._tick_player_wounds(v)
+        sim.combat.tick_player_wounds.assert_not_called()
+        sim.clock.minute=101
+        sim._tick_player_wounds(v)
+        sim._tick_player_wounds(v)
+        sim.combat.tick_player_wounds.assert_called_once_with(v)
+
     def test_extreme_temperature_damage_is_hourly_not_per_realtime_tick(self):
         sim=Simulation.__new__(Simulation)
         sim.state=LivingWorldState()

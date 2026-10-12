@@ -44,3 +44,15 @@ Baseline: `bc8b5504a3de72e17ce975b093f6cae682398936` (main).
   unrelated fast-gate step; record the actual failing step separately.
 - Manual Windows desktop playtesting and checking historical save behavior
   remain necessary.
+
+## Follow-up: damage-source regression coverage
+
+The per-action bleeding path has the same real-time sensitivity as the old
+vitals path: a zero-minute movement can trigger `_post_action` without
+advancing game time. Bleeding is now gated to a newly elapsed game minute,
+using a runtime-only counter initialized on load. Existing status healing and
+time-dependent disease progression remain governed by their own systems.
+
+Direct combat log tests cover an actual incoming attack, outgoing melee
+damage, and save-data roundtrip. The bounded Windows fast gate runs these
+alongside attrition, successor, cursor and footer checks.
