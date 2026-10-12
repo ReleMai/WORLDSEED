@@ -11,7 +11,7 @@ from worldseed.entities.components import Inventory, Position
 from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import GatherCommand, PickupCommand
 from worldseed.sim.engine import Simulation
-from worldseed.systems.state import GroundPile, pos_key
+from worldseed.systems.state import GroundPile, LivingWorldState, pos_key
 from worldseed.ui.pygame_terminal import PygameTerminal
 
 
@@ -50,11 +50,14 @@ class AdjacentPickupTests(unittest.TestCase):
     def test_pickup_command_collects_from_adjacent_ground_tile(self):
         entities=EntityStore();pid=entities.spawn(preferred_id=1)
         entities.add(pid,Position(WorldPos(0,0,0)));entities.add(pid,Inventory({"core:wood":1}))
-        target=WorldPos(1,0,0);state=SimpleNamespace(ground_piles={
-            pos_key(target.x,target.y,target.z):GroundPile(target.x,target.y,target.z,{"core:wood":2})
-        })
+        target=WorldPos(1,0,0);state=LivingWorldState()
+        state.ground_piles[pos_key(target.x,target.y,target.z)]=GroundPile(
+            target.x,target.y,target.z,{"core:wood":2})
         messages=[]
-        fake=SimpleNamespace(entities=entities,state=state,_message=messages.append)
+        # Pickup now transfers existing artifact/batch metadata through the
+        # same authority as gameplay, even when this particular pile is generic.
+        fake=SimpleNamespace(entities=entities,state=state,registry=SimpleNamespace(),
+                             clock=SimpleNamespace(minute=5),_message=messages.append)
         Simulation._pickup(fake,PickupCommand(pid,1,0))
         self.assertEqual(entities.get(pid,Inventory).count("core:wood"),3)
         self.assertFalse(state.ground_piles)
