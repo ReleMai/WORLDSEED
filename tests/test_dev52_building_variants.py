@@ -219,7 +219,9 @@ class BuildingVariantTests(unittest.TestCase):
                     # transferred into an accessible, persistent ground pile.
                     containers = sum(c.items.get(iid, 0) for c in storage.state.containers.values())
                     ground = sum(p.items.get(iid, 0) for p in storage.state.ground_piles.values())
-                    self.assertEqual(town.stocks[iid] + containers + ground, total, iid)
+                    self.assertEqual(town.stocks[iid] + containers + ground, total,
+                        f"{iid}: town={town.stocks[iid]} container_stock={containers} ground={ground}; "
+                        f"holdings={[(c.uid,c.items.get(iid,0)) for c in storage.state.containers.values() if c.items.get(iid,0)]}")
                 stocks = dict(town.stocks)
                 containers = {c.uid: asdict(c) for c in storage.state.containers.values()}
                 ground_piles = {key: asdict(p) for key,p in storage.state.ground_piles.items()}
