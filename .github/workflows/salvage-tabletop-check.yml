@@ -6,6 +6,7 @@ on:
       - "worldseed/systems/salvage_games.py"
       - "worldseed/systems/salvage_perks.py"
       - "worldseed/systems/salvaging.py"
+      - "worldseed/systems/property_intrusion.py"
       - "worldseed/systems/state.py"
       - "worldseed/persistence/validation.py"
       - "worldseed/sim/commands.py"

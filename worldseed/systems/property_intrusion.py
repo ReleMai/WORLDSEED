@@ -169,7 +169,10 @@ class PropertyStorageSystem:
 
     def _reserve_contents(self, town, structure_uid: str, preferred, stack_cap: int):
         items={}
-        for iid in preferred:
+        # Household pantry priorities can overlap authored building loot.
+        # Debit a unique item once; overwriting an earlier allocation would
+        # remove goods from the town ledger without recording their location.
+        for iid in dict.fromkeys(preferred):
             # Expansion finds have a separate bounded weighted allocation,
             # rather than turning a long preference table into a huge batch.
             if iid in self._misc_ids:

@@ -230,6 +230,15 @@ class BuildingVariantTests(unittest.TestCase):
                 self.assertEqual({c.uid: asdict(c) for c in storage.state.containers.values()}, containers)
                 self.assertEqual({key: asdict(p) for key,p in storage.state.ground_piles.items()}, ground_piles)
 
+    def test_duplicate_household_preferences_conserve_every_stock_unit(self):
+        storage,town,structure=self.storage_fixture(variant_by_id("core:reed_cottage"))
+        item="core:berry_barley_bun"
+        previous=town.stocks[item]
+        recovered=storage._reserve_contents(town,structure.uid,(item,item,item),8)
+        self.assertEqual(set(recovered),{item})
+        self.assertEqual(town.stocks[item]+recovered[item],previous)
+        self.assertGreater(recovered[item],0)
+
     def test_empty_settlement_does_not_generate_themed_loot(self):
         storage, town, _ = self.storage_fixture(catalog()[0])
         town.stocks.clear()
