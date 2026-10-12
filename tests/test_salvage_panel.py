@@ -231,7 +231,7 @@ class SalvagePanelRenderingTests(unittest.TestCase):
 
     def test_hover_and_material_wheel_keep_action_selection_stable(self):
         _, _, data = self.data()
-        self.term._floating_panels['crafting'] = {'x': 16, 'y': 16, 'w': 740, 'h': 500}
+        self.term._floating_panels['salvaging'] = {'x': 16, 'y': 16, 'w': 740, 'h': 500}
         capacity = self.term.menu_page_size('salvaging_unified')
         rows = [MenuRow(iid, row['name']) for iid, row in data['items'].items()][:capacity]
         data['selected_key'] = rows[0].key
@@ -271,7 +271,7 @@ class SalvagePanelRenderingTests(unittest.TestCase):
         rect = self.term.pg.Rect(call.args[1])
         lines = self.term._wrap_pixel_text(cue, self.term.small_font, rect.width)
         self.assertLessEqual(len(lines) * self.term.small_font.get_linesize(), rect.height)
-        choices = [rect for rect, token in self.term._pointer_targets if token.startswith('UI_ACTION:salvage:act:')]
+        choices = [rect for rect, token in self.term._pointer_targets if token.startswith('UI_ACTION:salvage:act:') and not token.endswith(('tune_left','tune_right'))]
         self.assertEqual(len(choices), 3)
         self.assertLessEqual(rect.bottom, min(button.y for button in choices))
         self.assertEqual(data, before)
