@@ -814,11 +814,13 @@ class InteriorSystem:
             # cadence; once satisfied, a stale rest goal cannot retain them.
             recovering = npc.goal == "rest" and npc.rest > 0
             sleeping = block.activity == "sleep" or npc.rest >= 80 or recovering
-            dining=scheduled_goal=="eat" and not sleeping
+            dining=(scheduled_goal=="eat" or (npc.goal=="eat" and npc.hunger>=20)) and not sleeping
             domestic = sleeping or scheduled_goal == "rest" or dining
-            # Needing food is a reason to sit down, not to run out of the
-            # building during the very meal the daily schedule assigned.
-            leave = bool(npc.tasks) or answering or (urgent and not dining) or not domestic
+            # Food need sends residents toward seating, not straight back
+            # outdoors. True medical distress still overrides the meal.
+            medical_urgent=npc.hp<=50 or npc.needs.get("health",0)>=60
+            leave = (bool(npc.tasks) or answering or medical_urgent
+                     or (urgent and not dining) or not domestic)
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
             if distant:
                 # Tier-C does not replay household locomotion indefinitely.

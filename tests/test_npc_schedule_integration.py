@@ -133,6 +133,44 @@ class NPCScheduleIntegrationTests(unittest.TestCase):
         if npc.uid in sim.state.interior_actors:
             self.assertEqual(sim.state.interior_actors[npc.uid].action, "leaving")
 
+    def test_multiple_residents_enter_home_without_stacking(self):
+        from copy import deepcopy
+        sim,house,door=interior_fixtures.InteriorPortalTests().fixture()
+        npc=sim.state.npcs["npc:owner"]
+        npc.home_id=house.uid
+        npc.x,npc.y,npc.z=door.x,door.y,door.z
+        other=deepcopy(npc);other.uid="npc:second-resident"
+        sim.state.npcs[other.uid]=other
+        self.assertTrue(sim.interiors.enter_npc(npc,door.uid))
+        self.assertTrue(sim.interiors.enter_npc(other,door.uid))
+        first=sim.state.interior_actors[npc.uid]
+        second=sim.state.interior_actors[other.uid]
+        self.assertEqual(first.space_id,second.space_id)
+        self.assertNotEqual((first.x,first.y),(second.x,second.y))
+
+    def test_home_meal_uses_seating_and_reduces_hunger(self):
+        sim,house,door=interior_fixtures.InteriorPortalTests().fixture()
+        npc=sim.state.npcs["npc:owner"]
+        npc.occupation="merchant"
+        npc.goal="eat"
+        npc.home_id, npc.workplace_id=house.uid,"other:workplace"
+        npc.hunger,npc.thirst,npc.rest=85,30,0
+        npc.tasks=[]
+        meal=next(block for block in daily_schedule(npc,sim.seed)
+                  if block.activity=="meal")
+        sim.clock.minute=meal.start_minute
+        npc.x,npc.y,npc.z=door.x,door.y,door.z
+        self.assertTrue(sim.interiors.enter_npc(npc,door.uid))
+        actions=set()
+        for minute in range(meal.start_minute+1,meal.end_minute):
+            sim.interiors.tick_update(minute)
+            actor=sim.state.interior_actors.get(npc.uid)
+            if actor is None:break
+            actions.add(actor.action)
+            if npc.hunger<60:break
+        self.assertIn("eating",actions)
+        self.assertLess(npc.hunger,85)
+
     def test_night_guard_sleeps_in_day_and_wakes_for_own_duty(self):
         sim, house, door = interior_fixtures.InteriorPortalTests().fixture()
         npc = sim.state.npcs["npc:owner"]
