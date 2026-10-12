@@ -77,7 +77,7 @@ class SalvagingSystem:
                 or item_id == self.state.player_readied_weapon
                 or self.state.salvaging_attempts >= 1_000_000_000):
             return False, reason
-        if all(self._best_quality(inv,quality,item_id) >= max(0,need-1)
+        if all(self._best_quality(inv,quality,item_id) >= max(1,need-1)
                for quality,need in definition.tool_qualities.items()):
             return True, ""
         return False, reason
@@ -265,7 +265,23 @@ class SalvagingSystem:
                         messages.append("Workshop hint: " + (station.name if station else matched.station))
                     break
         if "notes_from_ruins" in perks and definition.item_id not in prior_sources:
-            messages.append("Field notes: " + definition.description)
+            # Show an actionable combination clue, never an undiscovered
+            # recipe name. The actual recipe must still be researched.
+            clue = ""
+            for recipe in sorted(self.registry.recipes.values(), key=lambda r:r.id):
+                involved = sorted(iid for iid in outputs if iid in recipe.inputs)
+                if not involved or recipe.id in self.state.player_discovered_recipes:
+                    continue
+                companions = sorted(iid for iid in recipe.inputs if iid not in outputs
+                                    and iid in self.registry.items)
+                if companions:
+                    material = self.registry.items[involved[0]].name
+                    paired = self.registry.items[companions[0]].name
+                    station = self.registry.structures.get(recipe.station) if recipe.station else None
+                    where = f" at a {station.name}" if station else ""
+                    clue = f"Field notes: {material} might combine with {paired}{where}."
+                    break
+            messages.append(clue or "Field notes: " + definition.description)
         if quality == 100 and "lost_arts" in perks:
             for station in sorted({recipe.station for recipe in self.registry.recipes.values()
                                     if recipe.station and any(iid in recipe.inputs for iid in outputs)}):

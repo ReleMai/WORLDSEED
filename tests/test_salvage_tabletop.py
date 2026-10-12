@@ -191,8 +191,11 @@ class TabletopSalvageTests(unittest.TestCase):
         for perk in ("fast_hands","sorted_scrap","sweep_job","makeshift_rig"):
             self.assertTrue(system.buy_perk(perk)[0])
         d=registry.salvage["test:object"]
-        registry.salvage["test:object"]=replace(d,tool_qualities={"cut":1})
+        registry.salvage["test:object"]=replace(d,tool_qualities={"cut":2})
         self.assertFalse(system.can_start("test:object",inv)[0])
+        self.assertFalse(system.can_quick("test:object",inv)[0])
+        registry.items["test:low_knife"] = ItemDef("test:low_knife", "Worn knife", tool_qualities={"cut":1})
+        inv.add("test:low_knife",1)
         self.assertTrue(system.can_quick("test:object",inv)[0])
         self.assertTrue(system.quick_batch("test:object",1,inv,SEED)[0])
         self.assertEqual(inv.count("test:object"),1)
