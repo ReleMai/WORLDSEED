@@ -49,6 +49,15 @@ class ItemAssetCatalogTests(unittest.TestCase):
             self.assertEqual(sprite_tag, asset, f"{row['id']} sprite_tag must identify its custom sprite")
             self.assertTrue((SPRITES / f"{asset}.png").is_file(), f"missing item asset for {row['id']}: {asset}.png")
 
+    def test_pine_bough_has_distinct_published_art(self):
+        """The new conifer resource must never reuse juniper's asset ID."""
+        pine = self.by_id["core:pine_bough"]
+        juniper = self.by_id["core:juniper_bough"]
+        self.assertEqual(pine["asset"], "pine_bough")
+        self.assertEqual(pine["sprite_tag"], "pine_bough")
+        self.assertNotEqual(pine["asset"], juniper["asset"])
+        self.assertTrue((SPRITES / "pine_bough.png").is_file())
+
     def test_item_sprite_directory_has_no_orphans(self):
         expected = {f"{row['asset']}.png" for row in self.items}
         actual = {path.name for path in SPRITES.glob("*.png")}

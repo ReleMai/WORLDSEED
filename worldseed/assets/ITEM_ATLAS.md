@@ -18,6 +18,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/copper_ore.png" width="48" height="48"> | Copper Ore | `core:copper_ore` | `copper_ore.png` |
 | <img src="sprites/items/fiber.png" width="48" height="48"> | Fiber | `core:fiber` | `fiber.png` |
 | <img src="sprites/items/iron_ore.png" width="48" height="48"> | Iron Ore | `core:iron_ore` | `iron_ore.png` |
+| <img src="sprites/items/pine_bough.png" width="48" height="48"> | Pine Boughs | `core:pine_bough` | `pine_bough.png` |
 | <img src="sprites/items/reeds.png" width="48" height="48"> | Reeds | `core:reed_bundle` | `reeds.png` |
 | <img src="sprites/items/stone.png" width="48" height="48"> | Stone | `core:stone` | `stone.png` |
 | <img src="sprites/items/wood.png" width="48" height="48"> | Wood | `core:wood` | `wood.png` |
@@ -130,6 +131,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/craft_barley_meal.png" width="48" height="48"> | Barley Meal | `core:barley_meal` | `craft_barley_meal.png` |
 | <img src="sprites/items/craft_bean_crispbread.png" width="48" height="48"> | Bean Crispbread | `core:bean_crispbread` | `craft_bean_crispbread.png` |
 | <img src="sprites/items/craft_bean_flour.png" width="48" height="48"> | Bean Flour | `core:bean_flour` | `craft_bean_flour.png` |
+| <img src="sprites/items/berry_barley_bun.png" width="48" height="48"> | Berry Barley Bun | `core:berry_barley_bun` | `berry_barley_bun.png` |
 | <img src="sprites/items/craft_berry_reduction.png" width="48" height="48"> | Berry Reduction | `core:berry_reduction` | `craft_berry_reduction.png` |
 | <img src="sprites/items/blue_mussels.png" width="48" height="48"> | Blue Mussels | `core:blue_mussels` | `blue_mussels.png` |
 | <img src="sprites/items/bluegill.png" width="48" height="48"> | Bluegill | `core:bluegill` | `bluegill.png` |
@@ -158,6 +160,7 @@ The runtime atlas is `assets/atlases/items.png`; `assets/item_catalog.png` is th
 | <img src="sprites/items/craft_grain_porridge.png" width="48" height="48"> | Grain Porridge | `core:grain_porridge` | `craft_grain_porridge.png` |
 | <img src="sprites/items/craft_grain_table_beer.png" width="48" height="48"> | Grain Table Beer | `core:grain_table_beer` | `craft_grain_table_beer.png` |
 | <img src="sprites/items/craft_grain_vinegar.png" width="48" height="48"> | Grain Vinegar | `core:grain_vinegar` | `craft_grain_vinegar.png` |
+| <img src="sprites/items/hearth_root_stew.png" width="48" height="48"> | Hearth Root Stew | `core:hearth_root_stew` | `hearth_root_stew.png` |
 | <img src="sprites/items/largemouth_bass.png" width="48" height="48"> | Largemouth Bass | `core:largemouth_bass` | `largemouth_bass.png` |
 | <img src="sprites/items/craft_malt_tonic_drink.png" width="48" height="48"> | Malt Tonic Drink | `core:malt_tonic_drink` | `craft_malt_tonic_drink.png` |
 | <img src="sprites/items/craft_malted_grain.png" width="48" height="48"> | Malted Grain | `core:malted_grain` | `craft_malted_grain.png` |

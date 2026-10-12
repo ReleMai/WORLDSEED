@@ -54,13 +54,12 @@ jobs:
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
 
-  # Long NPC simulations run as independent jobs instead of consuming the
-  # short smoke job's 10-minute budget. No extra 180-second subprocess cutoff:
-  # GitHub's 360-minute hosted-job ceiling is the final safety limit.
+  # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
+  # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
   npc-lab-endurance:
     name: NPC lab — ${{ matrix.label }}
     runs-on: windows-latest
-    timeout-minutes: 360
+    timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
@@ -69,8 +68,6 @@ jobs:
             test: test_all_scenarios_conserve_every_good_and_cash_through_one_day
           - label: workshop 1 worker
             test: test_every_supplied_workshop_job_produces_at_one_worker
-          - label: workshop 8 workers
-            test: test_every_supplied_workshop_job_produces_at_eight_workers
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
@@ -134,9 +131,9 @@ jobs:
         timeout-minutes: 3
         run: python -m pip install -e . "Pillow>=10,<12"
 
-      - name: Verify CI diagnostics and asset decoder
+      - name: Fast diagnostics and item art/database consistency
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name diagnostics-tests --timeout 60 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_craftable_sprite_coverage tests.test_dev20_graphical_regressions.GraphicalAssetTests
+        run: python -u tools/run_ci_check.py --name diagnostics-assets --timeout 90 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_craftable_sprite_coverage tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons tests.test_dev20_graphical_regressions.GraphicalAssetTests
 
       - name: Compile Python
         shell: pwsh
@@ -181,10 +178,6 @@ jobs:
       - name: NPC job lab remaining simulations
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "NPC job lab remaining simulations" --timeout 180 -- python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.test_autonomous_tree_home_market_carpenter_chain_conserves_goods_and_cash tests.test_npc_job_lab.NPCJobLabTests.test_same_seed_and_actions_produce_identical_snapshots_in_every_scenario tests.test_npc_job_lab.NPCJobLabTests.test_snapshot_is_observational_json_serializable_and_detached tests.test_npc_job_lab.NPCJobLabTests.test_snapshot_exposes_the_shared_personal_timeline_without_updating_routines tests.test_npc_job_lab.NPCJobLabTests.test_path_stall_diagnostic_uses_elapsed_game_minutes tests.test_npc_job_lab.NPCJobLabTests.test_scarcity_blocks_crafting_without_inventing_inputs_or_output tests.test_npc_job_lab.NPCJobLabTests.test_every_scenario_spawns_workers_on_passable_cells_at_worker_limits tests.test_npc_job_lab.NPCJobLabTests.test_blocked_work_is_diagnostic_without_failing_invariants tests.test_npc_job_lab.NPCJobLabTests.test_simultaneous_paid_and_unpaid_meals_count_actual_consumption_once tests.test_npc_job_lab.NPCJobLabTests.test_blocked_workplace_never_crosses_wall_or_teleports_to_produce tests.test_npc_job_lab.NPCJobLabTests.test_competing_workers_never_share_a_station_reservation tests.test_npc_job_lab.NPCJobLabTests.test_invalid_configuration_is_rejected tests.test_npc_job_lab.NPCJobLabTests.test_time_validation_rejects_invalid_or_unbounded_advances_atomically
-
-      - name: Dev64 item art and database regressions
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev64 item art and database regressions" --timeout 90 -- python -u -m unittest -v tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons
 
       - name: Functional home furniture, storage and homestead blueprints
         shell: pwsh
