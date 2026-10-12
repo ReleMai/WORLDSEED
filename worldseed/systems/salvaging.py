@@ -111,6 +111,8 @@ class SalvagingSystem:
         # All validation and random keys are resolved before consuming the input.
         if not inv.remove(item_id, 1):
             return False, "You no longer carry that item.", 0
+        from worldseed.systems.crafting_quality import retire_consumed_artifacts
+        retire_consumed_artifacts(self.state,self.registry,{item_id:1},minute=minute,reason='Set aside for salvage')
         self.state.salvaging_attempts = attempt + 1
         self.state.player_salvage_session = {
             "version": SALVAGE_PROTOCOL_VERSION, "item_id": item_id,

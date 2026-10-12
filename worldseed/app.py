@@ -47,6 +47,7 @@ from worldseed.ui.widgets import select_menu, view_text, prompt_text
 from worldseed.ui.pointer import WindowCloseRequested
 from worldseed.ui.session import NavigationStack, RouteState
 from worldseed.ui.layout import screen_width
+from worldseed.ui.trade_quotes import max_affordable_trade, trade_total
 from worldseed.ui.startup import StartSelection, main_menu
 from worldseed.ui.navigation import *
 from worldseed.ui.router import DIRECTIONS as DIRECTION_KEYS, DIRECT_MENUS as MENU_KEYS, classify_key
@@ -2417,6 +2418,8 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         material=reg.materials.get(item.material) if item.material else None
         material_name=material.name if material else ''
         detail=[]
+        if item.crafting_source:
+            detail.append(f'Crafting material: {item.crafting_source.title()} | grade {item.crafting_quality}/100')
         if material:
             detail.append(f'Material: {material.name} | hardness {material.hardness} | toughness {material.toughness}')
         if item.nutrition>0 or item.calories or item.hydration:
@@ -2447,8 +2450,33 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         durable=sorted(artifacts_by_item.get(iid,()),key=lambda a:(a.condition,a.quality),reverse=True)
         if durable:
             detail.append(f'Individual durable items: {len(durable)}')
-            for artifact in durable[:3]:
-                detail.append(f'{artifact.name or item.name}: condition {artifact.condition}% | quality {artifact.quality}%')
+            artifact_system=getattr(sim,'artifacts',None)
+            describe=getattr(artifact_system,'describe_effects',None)
+            for artifact in durable:
+                detail.append(f'{artifact.name or item.name}: condition {artifact.condition}% | quality {artifact.quality}/100')
+                artifact_material=reg.materials.get(artifact.material)
+                if artifact_material:detail.append('Made from: '+artifact_material.name)
+                metadata=artifact.components.get('crafting',{})
+                if not isinstance(metadata,dict):metadata={}
+                if metadata.get('source'):
+                    detail.append('Material source: '+str(metadata['source']).replace('_',' ').title())
+                if callable(describe):
+                    effects=describe(artifact)
+                    benefits=[]
+                    if item.weapon_damage:benefits.append(f"Damage ×{effects['damage_percent']/100:.2f}")
+                    if item.armor:benefits.append(f"Armor ×{effects['armor_percent']/100:.2f}")
+                    benefits.extend([f"Durability ×{effects['durability_percent']/100:.2f}",f"Trade value ×{effects['value_percent']/100:.2f}"])
+                    detail.append(f"Effective quality {effects['quality']}/100 | "+' | '.join(benefits))
+                for slot,component in artifact.components.items():
+                    if not isinstance(component,dict) or 'material' not in component:continue
+                    component_material=reg.materials.get(component['material'])
+                    label=component_material.name if component_material else str(component['material']).replace('core:','').title()
+                    detail.append(f"{slot.replace('_',' ').title()}: {label} | grade {component.get('quality',artifact.quality)}/100 | condition {component.get('condition',artifact.condition)}%")
+                for ingredient in metadata.get('ingredients',()):
+                    ingredient_item=reg.items.get(ingredient.get('id'))
+                    name=ingredient_item.name if ingredient_item else str(ingredient.get('name','Material'))
+                    source=str(ingredient.get('source','')).replace('_',' ').title()
+                    detail.append(f"Input: {name} ×{ingredient.get('qty',1)} | grade {ingredient.get('quality',50)}/100"+(' | '+source if source else ''))
         if item.flavor and item.description:detail.append(item.flavor)
         use_kind=''
         use_label='Use'
@@ -2481,26 +2509,56 @@ def _inventory_ui_data(reg:ContentRegistry,inv:Inventory,sim:Simulation,include_
         'player_name':sim.state.player_name,
     }
 
-def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->dict:
+def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes,*,material_preference:str='auto')->dict:
+    """Project the command's material allocation and quality without changing it."""
     stations=_player_station_ids(sim)
     rows={}
+    skill_query=getattr(sim,'player_skill',None)
+    interiors=getattr(sim,'interiors',None)
+    presence=getattr(interiors,'player_presence',None)
+    indoor=(presence() is not None) if callable(presence) else presence is not None
+    bonus_query=getattr(sim.building,'environmental_bonuses',None)
+    work_bonus=0 if indoor or not callable(bonus_query) else int(bonus_query(sim.player_pos).get('work_bonus',0))
+    known_items=set(getattr(sim.state,'player_discovered_items',()))|{iid for iid,n in inv.items.items() if n>0}
     for r in recipes:
-        missing=sim.crafting.missing_requirements(r.id,inv,stations)
-        outputs=[{'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'qty':n,
-                  'description':reg.items[iid].description if iid in reg.items else '',
-                  'roles':list(reg.items[iid].utility_roles) if iid in reg.items else [],
-                  'unit_mass_kg':reg.items[iid].mass_g/1000 if iid in reg.items else 0}
-                 for iid,n in r.outputs.items()]
-        inputs=sim.crafting.ingredient_rows(r,inv)
-        inputs.extend({'id':iid,'name':(reg.items[iid].name if iid in reg.items else iid)+' (catalyst)','need':n,'have':inv.count(iid)} for iid,n in r.catalysts.items())
+        skill_level=int(skill_query(r.skill)) if callable(skill_query) else 0
+        preview=sim.crafting.preview(r,inv,preference=material_preference,skill_level=skill_level,work_bonus=work_bonus)
+        missing=sim.crafting.missing_requirements(r.id,inv,stations,preference=material_preference)
+        projected={output['id']:output for output in preview.get('outputs',())}
+        outputs=[]
+        for iid,n in r.outputs.items():
+            item=reg.items.get(iid)
+            output={'id':iid,'name':item.name if item else iid,'qty':n,
+                    'description':item.description if item else '',
+                    'roles':list(item.utility_roles) if item else [],
+                    'unit_mass_kg':item.mass_g/1000 if item else 0}
+            output.update(projected.get(iid,{}))
+            material=reg.materials.get(output.get('material'))
+            output['material_name']=material.name if material else ''
+            outputs.append(output)
+        inputs=sim.crafting.ingredient_rows(r,inv,preference=material_preference)
+        if getattr(sim.state,'player_crafting_discovery_enabled',False):
+            inputs=[dict(row,options=[dict(option) for option in row.get('options',()) if option['id'] in known_items])
+                    if row.get('tag') else row for row in inputs]
+        inputs.extend({'id':iid,'name':(reg.items[iid].name if iid in reg.items else iid)+' (catalyst)',
+                       'need':n,'have':inv.count(iid),'retained':True} for iid,n in r.catalysts.items())
+        consumed=preview.get('consumed')
+        consumed_items=[dict(row) for row in preview.get('ingredients',())] or [
+            {'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'qty':qty}
+            for iid,qty in sorted((consumed or {}).items())]
         rows[r.id]={
             'name':r.name,'category':r.category or 'general','description':r.description or '',
             'minutes':r.minutes,'difficulty':r.difficulty,'skill':r.skill,
             'station':reg.structures[r.station].name if r.station and r.station in reg.structures else '',
             'ready':not missing,'missing':list(missing),'outputs':outputs,'inputs':inputs,
             'new':r.id in set(getattr(sim.state,'player_unseen_recipes',[])),
+            'material_preference':preview.get('preference',material_preference),
+            'material_preference_enabled':bool(r.input_tags or getattr(r,'input_units',{})),
+            'material_quality_enabled':bool(preview.get('material_quality_enabled')),
+            'material_quality':preview.get('material_quality'),'material_source':preview.get('source_label',''),
+            'consumed':consumed,'consumed_items':consumed_items,
         }
-    return {'recipes':rows}
+    return {'recipes':rows,'material_preference':material_preference}
 
 
 def _design_ui_data(reg:ContentRegistry,inv:Inventory,designs)->dict:
@@ -2893,6 +2951,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
     from worldseed.ui.crafting_journal import crafting_journal_data
     workshop_station=str(initial_station or '')
     station_page=0
+    material_preference='auto'
     result_dismissed=False
     placed=[];status='';recipe_query='';salvage_return_tab='recipes'
     while True:
@@ -2922,7 +2981,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if not rows:
                 rows=[('__none__','No discovered process at this station' if workshop_station else 'No workshop station within reach')]
             workshop_state.selected=max(0,min(workshop_state.selected,len(rows)-1))
-            data=_recipe_ui_data(reg,sim,inv,station_recipes)
+            data=_recipe_ui_data(reg,sim,inv,station_recipes,material_preference=material_preference)
             data.update({
                 'profile':profile_dict(WORKSHOP_PROFILES[workshop_station]) if workshop_station else {},
                 'stations':station_rows,'station_id':workshop_station,
@@ -2946,6 +3005,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                     if destination=='salvaging':salvage_return_tab=tab
                     tab=destination
                 continue
+            if choice=='UI_ACTION:material_preference':
+                preferences=('auto','refined','recovered')
+                material_preference=preferences[(preferences.index(material_preference)+1)%len(preferences)]
+                continue
             if choice=='UI_ACTION:open_inventory':
                 if not open_inventory_panel():return UI_BACK
                 continue
@@ -2966,7 +3029,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice=='UI_ACTION:workshop_craft' and station_recipes:
                 rid=rows[workshop_state.selected][0]
                 if rid in reg.recipes:
-                    sim.execute(CraftCommand(pid,rid))
+                    sim.execute(CraftCommand(pid,rid,material_preference))
                     status=sim.log[-1].message if sim.log else ''
                 continue
             continue
@@ -2977,7 +3040,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             known.sort(key=lambda r:r.name)
             rows=[(r.id,r.name) for r in known] or [('__none__','No recipes in this category')]
             recipe_state.selected=max(0,min(recipe_state.selected,len(rows)-1))
-            data=_recipe_ui_data(reg,sim,inv,known)
+            data=_recipe_ui_data(reg,sim,inv,known,material_preference=material_preference)
             unseen=set(getattr(sim.state,'player_unseen_recipes',[]));new_categories=sorted({reg.recipes[rid].category or 'general' for rid in unseen if rid in reg.recipes})
             data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories,'query':recipe_query})
             choice=_select(term,'CRAFTING',rows,state=recipe_state,presentation='crafting_unified',
@@ -2991,6 +3054,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 if destination in {'recipes','workshops','discovery','salvaging'}:
                     if destination=='salvaging':salvage_return_tab=tab
                     tab=destination
+                continue
+            if choice=='UI_ACTION:material_preference':
+                preferences=('auto','refined','recovered')
+                material_preference=preferences[(preferences.index(material_preference)+1)%len(preferences)]
                 continue
             if choice=='UI_ACTION:open_inventory':
                 if not open_inventory_panel():return UI_BACK
@@ -3013,7 +3080,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice=='UI_ACTION:craft':
                 rid=rows[recipe_state.selected][0]
                 if rid in reg.recipes:
-                    sim.execute(CraftCommand(pid,rid))
+                    sim.execute(CraftCommand(pid,rid,material_preference))
                     status=sim.log[-1].message if sim.log else ''
                 continue
             continue
@@ -3642,13 +3709,12 @@ def _handle_menu(ctx:GameContext,term:Terminal,key:str)->str:
                     rows.append((iid,f'{reg.items[iid].name} — x{n} — {price}c / {units} {local_name}'))
             iid=_select(term,mode.upper(),rows,subtitle='Select a good. Local currency is shown as a value quote; copper remains the physical coin.')
             if not iid:continue
-            price=sim.player_trade_price(town.uid,iid,mode=='buy')
-            maximum=min(town.stocks.get(iid,0),inv.count('core:copper_coin')//max(1,price)) if mode=='buy' else inv.count(iid)
+            maximum=max_affordable_trade(sim,town.uid,iid,town.stocks.get(iid,0),inv.count('core:copper_coin')) if mode=='buy' else inv.count(iid)
             quantities=[q for q in (1,5,10) if q<=maximum]
             if maximum>0 and maximum not in quantities:quantities.append(maximum)
             qrows=[]
             for q in quantities:
-                total=q*price;local_name,units=sim.economy.currency_quote(town.uid,total)
+                total=trade_total(sim,town.uid,iid,mode=='buy',q);local_name,units=sim.economy.currency_quote(town.uid,total)
                 qrows.append((str(q),f'{q} unit(s) — {total}c / {units} {local_name}'))
             qkey=_select(term,'QUANTITY',qrows) if qrows else None
             if not qkey:continue

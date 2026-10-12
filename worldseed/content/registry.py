@@ -54,6 +54,7 @@ class ItemDef:
     shield_type: str = ""; shield_melee_coverage: int = 0; shield_ranged_coverage: int = 0
     shield_block: int = 0; shield_stability: int = 0; shield_stamina_cost: int = 0
     shield_body_coverage: dict[str, int] = field(default_factory=dict)
+    crafting_quality: int = 50; crafting_source: str = ""
 
     def quality(self, key: str) -> int:
         if key in self.tool_qualities:
@@ -73,6 +74,7 @@ class RecipeDef:
     skill: str = "crafting"; difficulty: int = 0; tool_qualities: dict[str, int] = field(default_factory=dict)
     discovery_items: tuple[str, ...] = (); discovery_mode: str = ""
     input_tags: dict[str, int] = field(default_factory=dict); discovery_tags: tuple[str, ...] = ()
+    input_units: dict[str, int] = field(default_factory=dict); material_quality: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,7 +244,7 @@ class ContentRegistry:
 
     def _load_recipes(self,path):
         for raw in self._json(path):
-            obj=RecipeDef(id=raw["id"],name=raw["name"],inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),minutes=int(raw["minutes"]),station=raw.get("station"),knowledge=raw.get("knowledge"),catalysts=dict(raw.get("catalysts",{})),process=raw.get("process"),description=raw.get("description",""),category=raw.get("category","general"),skill=raw.get("skill","crafting"),difficulty=int(raw.get("difficulty",0)),tool_qualities={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()},discovery_items=_tuple(raw.get("discovery_items")),discovery_mode=str(raw.get("discovery_mode", "")),input_tags=dict(raw.get("input_tags",{})),discovery_tags=_tuple(raw.get("discovery_tags")))
+            obj=RecipeDef(id=raw["id"],name=raw["name"],inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),minutes=int(raw["minutes"]),station=raw.get("station"),knowledge=raw.get("knowledge"),catalysts=dict(raw.get("catalysts",{})),process=raw.get("process"),description=raw.get("description",""),category=raw.get("category","general"),skill=raw.get("skill","crafting"),difficulty=int(raw.get("difficulty",0)),tool_qualities={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()},discovery_items=_tuple(raw.get("discovery_items")),discovery_mode=str(raw.get("discovery_mode", "")),input_tags=dict(raw.get("input_tags",{})),discovery_tags=_tuple(raw.get("discovery_tags")),input_units=dict(raw.get("input_units",{})),material_quality=raw.get("material_quality",False))
             if obj.id in self.recipes: raise ValueError(f"Duplicate recipe id: {obj.id}")
             self.recipes[obj.id]=obj
 
@@ -333,6 +335,10 @@ class ContentRegistry:
             for cid in table:
                 if ":" not in cid: raise ValueError(f"Content id must be namespaced: {cid}")
         for item in self.items.values():
+            if not isinstance(item.crafting_quality,int) or isinstance(item.crafting_quality,bool) or not 0<=item.crafting_quality<=100:
+                raise ValueError(f"Invalid crafting quality on {item.id}")
+            if item.crafting_source not in {"", "raw", "recovered", "refined"}:
+                raise ValueError(f"Invalid crafting source on {item.id}")
             if item.material and item.material not in self.materials: raise ValueError(f"Unknown material {item.material} for {item.id}")
             if item.mass_g<0 or item.volume_ml<0: raise ValueError(f"Negative physical property on {item.id}")
             if item.ammo_item and item.ammo_item not in self.items: raise ValueError(f"Unknown ammo item {item.ammo_item} for {item.id}")
@@ -360,6 +366,13 @@ class ContentRegistry:
                 raise ValueError(f"Invalid container capacity in {feature.id}")
         item_tags={tag for item in self.items.values() for tag in item.tags}
         for recipe in self.recipes.values():
+            if not isinstance(recipe.material_quality,bool):raise ValueError(f"Invalid material quality flag in {recipe.id}")
+            for iid,units in recipe.input_units.items():
+                if (iid not in self.items or not isinstance(units,int) or isinstance(units,bool) or not 1<=units<=100
+                        or not any(tag in self.items[iid].tags for tag in recipe.input_tags)):
+                    raise ValueError(f"Invalid ingredient units {iid} in {recipe.id}")
+            if recipe.input_units and not recipe.material_quality:
+                raise ValueError(f"Ingredient units need material quality in {recipe.id}")
             if len(recipe.input_tags)>16:raise ValueError(f"Too many ingredient tags in {recipe.id}")
             for tag,n in recipe.input_tags.items():
                 if not isinstance(tag,str) or tag not in item_tags or not isinstance(n,int) or isinstance(n,bool) or not 1<=n<=1000:

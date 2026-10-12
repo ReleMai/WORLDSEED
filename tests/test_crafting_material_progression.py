@@ -1,5 +1,6 @@
 """Primitive recipe substitutions, recovered plant uses and discovery stay physical."""
 from collections import Counter
+from fractions import Fraction
 import unittest
 
 from worldseed.config import DATA_DIR
@@ -104,8 +105,8 @@ class CraftingMaterialProgressionTests(unittest.TestCase):
             mass = sum(self.registry.items[iid].mass_g * n
                        for iid, n in recipe.inputs.items())
             for tag, count in recipe.input_tags.items():
-                mass += min(item.mass_g for item in self.registry.items.values()
-                            if tag in item.tags) * count
+                mass += min(Fraction(item.mass_g, recipe.input_units.get(item.id, 1))
+                            for item in self.registry.items.values() if tag in item.tags) * count
             output = sum(self.registry.items[iid].mass_g * n
                          for iid, n in recipe.outputs.items())
             self.assertLessEqual(output, mass, recipe.id)

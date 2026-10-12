@@ -22,7 +22,7 @@ def signature_matches(signature, samples, registry, *, partial=False):
     return assign(0,set())
 
 
-def allocate_tag_inputs(recipe, inv, registry):
+def allocate_tag_inputs(recipe, inv, registry, *, preference="auto"):
     """Reserve exact inputs/catalysts, then solve overlapping tag demands.
 
     The small bipartite flow graph uses carried item types and authored tags;
@@ -37,12 +37,20 @@ def allocate_tag_inputs(recipe, inv, registry):
         edges.setdefault(left,[]).append(right);edges.setdefault(right,[]).append(left)
         capacity[left,right]=int(amount);capacity[right,left]=0
     tags=sorted(recipe.input_tags)
-    for iid in sorted(remaining,key=lambda key:(registry.items[key].base_value,key)):
+    units=getattr(recipe,"input_units",{})
+    def priority(iid):
+        item=registry.items[iid]
+        if preference=="recovered":return (0 if item.crafting_source=="recovered" else 1,item.crafting_quality,item.base_value,iid)
+        if preference=="refined":return (0 if item.crafting_source=="refined" else 1,-item.crafting_quality,item.base_value,iid)
+        if getattr(recipe,"material_quality",False):return (-item.crafting_quality,item.base_value,iid)
+        return (item.base_value,iid)
+    for iid in sorted(remaining,key=priority):
         if remaining[iid]<=0:continue
         matches=[tag for tag in tags if tag in registry.items[iid].tags]
         if not matches:continue
-        node=('item',iid);link(source,node,remaining[iid])
-        for tag in matches:link(node,('tag',tag),remaining[iid])
+        supply=remaining[iid]*int(units.get(iid,1))
+        node=('item',iid);link(source,node,supply)
+        for tag in matches:link(node,('tag',tag),supply)
     for tag in tags:link(('tag',tag),sink,recipe.input_tags[tag])
     while True:
         parent={source:None};pending=deque([source])
@@ -66,7 +74,7 @@ def allocate_tag_inputs(recipe, inv, registry):
                 allocation[tag][node[1]]=capacity[('tag',tag),node]
     return allocation
 
-def resolve_recipe_inputs(recipe, stocks, registry, batches=1):
+def resolve_recipe_inputs(recipe, stocks, registry, batches=1, *, preference="auto"):
     """Shared deterministic exact/tag allocation; reserve catalysts, never consume."""
     from types import SimpleNamespace
     batches=int(batches)
@@ -77,12 +85,18 @@ def resolve_recipe_inputs(recipe, stocks, registry, batches=1):
     if any(available.get(iid,0)<qty+catalysts.get(iid,0) for iid,qty in exact.items()):return None
     if any(available.get(iid,0)<qty for iid,qty in catalysts.items()):return None
     if not recipe.input_tags:return exact
-    scaled=SimpleNamespace(inputs=exact,catalysts=catalysts,input_tags={tag:int(n)*batches for tag,n in recipe.input_tags.items()})
-    assigned=allocate_tag_inputs(scaled,SimpleNamespace(items=available),registry)
+    scaled=SimpleNamespace(inputs=exact,catalysts=catalysts,input_tags={tag:int(n)*batches for tag,n in recipe.input_tags.items()},input_units=getattr(recipe,"input_units",{}),material_quality=getattr(recipe,"material_quality",False))
+    assigned=allocate_tag_inputs(scaled,SimpleNamespace(items=available),registry,preference=preference)
     if any(sum(assigned.get(tag,{}).values())!=qty for tag,qty in scaled.input_tags.items()):return None
-    costs=dict(exact)
+    # One physical piece may supply several compatible roles. Round once after
+    # summing all its assigned material units, so no piece is counted twice.
+    equivalent={}
     for choices in assigned.values():
-        for iid,n in choices.items():costs[iid]=costs.get(iid,0)+n
+        for iid,n in choices.items():equivalent[iid]=equivalent.get(iid,0)+n
+    costs=dict(exact)
+    for iid,n in equivalent.items():
+        units=getattr(recipe,"input_units",{}).get(iid,1)
+        costs[iid]=costs.get(iid,0)+(n+units-1)//units
     return costs
 
 

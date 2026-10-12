@@ -20,7 +20,7 @@ def process_rows(manifest,recipes,items):
     rows=[]
     for entry in sorted(manifest["recipes"],key=lambda row:(row["profession"],row["tier"],row["recipe_id"])):
         recipe=recipes[entry["recipe_id"]]
-        if not recipe.get("inputs"):
+        if not recipe.get("inputs") and not recipe.get("input_tags"):
             raise ValueError(f"NPC craft has no physical inputs: {recipe['id']}")
         output=entry["output_item"];item=items[output];tier=max(1,int(entry["tier"]))
         tags=set(item.get("tags",()))
@@ -48,15 +48,17 @@ FAMILY_JOBS={"metal":"smith","wood":"carpenter","cloth":"weaver","leather":"tann
              "ceramic":"potter","glass":"scholar","paper":"scholar","stone":"mason",
              "mixed":"carpenter","provisions":"farmer","plant":"farmer","bone":"butcher"}
 CATEGORY_JOBS={"fiberwork":"weaver","primitive_tools":"mason","fishing":"fisher",
-               "survival":"farmer","hunting":"hunter","misc_recovery":"carpenter"}
+               "survival":"farmer","hunting":"hunter","misc_recovery":"carpenter",
+               "advanced":"smith","woodcraft":"carpenter","textiles":"weaver"}
 
 
-def tagged_process_rows(recipes,items):
+def tagged_process_rows(recipes,items,covered_recipe_ids=()):
     """Mirror all tag-aware recipes into the authoritative NPC work catalog."""
     rows=[]
+    covered=set(covered_recipe_ids)
     for recipe in sorted(recipes.values(),key=lambda row:row["id"]):
         tags=recipe.get("input_tags") or {}
-        if not tags:continue
+        if not tags or recipe["id"] in covered:continue
         family=next((tag for tag in tags if tag.startswith("material_source_")),"")
         occupation=FAMILY_JOBS.get(family.split("_")[-1],"farmer") if family else CATEGORY_JOBS.get(recipe.get("category"),"carpenter")
         output=next(iter(recipe["outputs"]))
@@ -118,7 +120,7 @@ def main():
     if hunt is not None:hunt["outputs"].setdefault("core:bone",1)
     rows=process_rows(manifest,recipes,items)
     if len(rows)<=200:raise ValueError("Expansion must contain more than 200 authored NPC recipes")
-    updated=base+rows+tagged_process_rows(recipes,items)
+    updated=base+rows+tagged_process_rows(recipes,items,{entry["recipe_id"] for entry in manifest["recipes"]})
     if args.check:
         if original!=updated:raise SystemExit("Crafting economy catalog differs; run tools/build_crafting_economy.py")
     else:path.write_text(json.dumps(updated,indent=2)+"\n")

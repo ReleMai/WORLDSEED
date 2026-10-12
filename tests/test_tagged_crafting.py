@@ -1,6 +1,7 @@
 """Tagged ingredients consume real alternatives without overlapping reservations."""
 from copy import copy
 from dataclasses import replace
+from fractions import Fraction
 import unittest
 
 from worldseed.config import DATA_DIR
@@ -44,7 +45,7 @@ class TaggedCraftingTests(unittest.TestCase):
         for recipe in self.registry.recipes.values():
             if not recipe.input_tags:continue
             exact_mass=sum(self.registry.items[iid].mass_g*n for iid,n in recipe.inputs.items())
-            minimum=exact_mass+sum(min(item.mass_g for item in self.registry.items.values() if tag in item.tags)*n
+            minimum=exact_mass+sum(min(Fraction(item.mass_g, recipe.input_units.get(item.id, 1)) for item in self.registry.items.values() if tag in item.tags)*n
                                    for tag,n in recipe.input_tags.items())
             output=sum(self.registry.items[iid].mass_g*n for iid,n in recipe.outputs.items())
             self.assertLessEqual(output,minimum,recipe.id)

@@ -5463,9 +5463,7 @@
     "name": "Spun Yarn",
     "occupation": "weaver",
     "workers": 1,
-    "inputs": {
-      "core:fiber": 2
-    },
+    "inputs": {},
     "outputs": {
       "core:spun_yarn": 2
     },
@@ -5691,6 +5689,69 @@
     "difficulty": 1,
     "market_target": 8,
     "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_iron_helmet",
+    "name": "Forge Iron Helmet",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:iron_helmet": 1
+    },
+    "priority_good": "core:iron_helmet",
+    "recipe_id": "core:iron_helmet",
+    "station": "core:forge",
+    "minutes": 180,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0,
+    "knowledge": "tech:smelting"
+  },
+  {
+    "id": "core:npc_tagged_iron_pick",
+    "name": "Forge Iron Pick",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:iron_pick": 1
+    },
+    "priority_good": "core:iron_pick",
+    "recipe_id": "core:iron_pick",
+    "station": "core:forge",
+    "minutes": 150,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0,
+    "knowledge": "tech:smelting"
+  },
+  {
+    "id": "core:npc_tagged_iron_sword",
+    "name": "Forge Iron Sword",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:iron_sword": 1
+    },
+    "priority_good": "core:iron_sword",
+    "recipe_id": "core:iron_sword",
+    "station": "core:forge",
+    "minutes": 210,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0,
+    "knowledge": "tech:smelting"
   },
   {
     "id": "core:npc_tagged_reclaim_animal_bone",
@@ -5963,14 +6024,77 @@
     "consumption_days": 0
   },
   {
+    "id": "core:npc_tagged_short_bow",
+    "name": "Shape Primitive Self Bow",
+    "occupation": "hunter",
+    "workers": 1,
+    "inputs": {
+      "core:plant_cordage": 2
+    },
+    "outputs": {
+      "core:short_bow": 1
+    },
+    "priority_good": "core:short_bow",
+    "recipe_id": "core:short_bow",
+    "station": null,
+    "minutes": 65,
+    "skill": "crafting",
+    "difficulty": 2,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_steel_pick",
+    "name": "Forge Steel Pick",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:fiber": 1
+    },
+    "outputs": {
+      "core:steel_pick": 1
+    },
+    "priority_good": "core:steel_pick",
+    "recipe_id": "core:steel_pick",
+    "station": "core:forge",
+    "minutes": 190,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0,
+    "knowledge": "tech:steelmaking"
+  },
+  {
+    "id": "core:npc_tagged_steel_sword",
+    "name": "Forge Steel Sword",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {
+      "core:steel_billet": 1,
+      "core:hide": 1
+    },
+    "outputs": {
+      "core:steel_sword": 1
+    },
+    "priority_good": "core:steel_sword",
+    "recipe_id": "core:steel_sword",
+    "station": "core:forge",
+    "minutes": 240,
+    "skill": "crafting",
+    "difficulty": 3,
+    "market_target": 8,
+    "consumption_days": 0,
+    "knowledge": "tech:steelmaking"
+  },
+  {
     "id": "core:npc_tagged_stone_axe",
     "name": "Make Stone Axe",
     "occupation": "mason",
     "workers": 1,
     "inputs": {
       "core:stone_flake": 1,
-      "core:stone": 1,
-      "core:stout_branch": 1
+      "core:stone": 1
     },
     "outputs": {
       "core:stone_axe": 1
@@ -6111,6 +6235,24 @@
     "minutes": 15,
     "skill": "crafting",
     "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_wooden_bowl",
+    "name": "Carve Wooden Bowl",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:wooden_bowl": 1
+    },
+    "priority_good": "core:wooden_bowl",
+    "recipe_id": "core:wooden_bowl",
+    "station": "core:workbench",
+    "minutes": 45,
+    "skill": "crafting",
+    "difficulty": 2,
     "market_target": 8,
     "consumption_days": 0
   }

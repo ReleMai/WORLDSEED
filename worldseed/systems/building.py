@@ -7,6 +7,7 @@ from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, StructureInstance, RoofState, ContainerState, GroundPile, pos_key
 from worldseed.systems.workshops import STATION_PIECE_ALIASES
 from worldseed.systems.salvage_loot import candidates, select_misc
+from worldseed.systems.artifacts import available_inventory_quantity, transfer_inventory_metadata
 
 class BuildingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry):
@@ -164,19 +165,23 @@ class BuildingSystem:
             if item:mass+=item.mass_g*n;volume+=item.volume_ml*n
         return mass,volume
     def store(self,c:ContainerState,inv:Inventory,item_id:str,amount:int=1)->tuple[bool,str]:
-        if amount<=0 or inv.count(item_id)<amount:return False,"You do not have that quantity."
+        if amount<=0 or available_inventory_quantity(self.state,inv,item_id)<amount:return False,"You do not have that unequipped quantity."
         item=self.registry.items.get(item_id)
         if not item:return False,"Unknown item."
         mass,volume=self.container_load(c)
         if mass+item.mass_g*amount>c.capacity_mass_g or volume+item.volume_ml*amount>c.capacity_volume_ml:return False,"The container has no room for that."
-        inv.remove(item_id,amount);c.items[item_id]=c.items.get(item_id,0)+amount;return True,f"You store {amount} {item.name.lower()}."
+        inv.remove(item_id,amount);c.items[item_id]=c.items.get(item_id,0)+amount
+        transfer_inventory_metadata(self.state,self.registry,{item_id:amount},'player',f'container:{c.uid}',self.state.clock_minute,'Stored')
+        return True,f"You store {amount} {item.name.lower()}."
     def take(self,c:ContainerState,inv:Inventory,item_id:str,amount:int=1)->tuple[bool,str]:
         have=c.items.get(item_id,0)
         if amount<=0 or have<amount:return False,"The container does not hold that quantity."
         left=have-amount
         if left:c.items[item_id]=left
         else:c.items.pop(item_id,None)
-        inv.add(item_id,amount);return True,f"You take {amount} {self.registry.items[item_id].name.lower()}."
+        inv.add(item_id,amount)
+        transfer_inventory_metadata(self.state,self.registry,{item_id:amount},f'container:{c.uid}','player',self.state.clock_minute,'Taken from storage')
+        return True,f"You take {amount} {self.registry.items[item_id].name.lower()}."
     def passable(self,pos:WorldPos,world_passable:bool=True)->bool:
         # A completed or framed player home blocks exterior motion, unlike
         # its unfinished floor-level blueprint which the builder may traverse.
@@ -236,6 +241,7 @@ class BuildingSystem:
         if c and c.items:
             pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}))
             for iid,n in c.items.items():pile.items[iid]=pile.items.get(iid,0)+n
+            transfer_inventory_metadata(self.state,self.registry,c.items,f'container:{c.uid}',f'ground:{pos.x},{pos.y},{pos.z}',self.state.clock_minute,'Spilled from dismantled storage')
         portable_container=("container" in sdef.tags and "movable" in sdef.tags)
         for iid,n in sdef.cost.items():inv.add(iid,n if portable_container else max(0,n//2))
         self.state.structures.pop(key,None)
@@ -261,6 +267,7 @@ class BuildingSystem:
         pile=self.state.ground_piles.setdefault(key,GroundPile(c.x,c.y,c.z,{}))
         for iid,n in c.items.items():
             if n>0:pile.items[iid]=pile.items.get(iid,0)+n
+        transfer_inventory_metadata(self.state,self.registry,c.items,f'container:{c.uid}',f'ground:{c.x},{c.y},{c.z}',self.state.clock_minute,'Spilled from destroyed storage')
         salvage_parts=[]
         for iid,(lo,hi) in sorted(c.salvage.items()):
             if iid not in self.registry.items:continue

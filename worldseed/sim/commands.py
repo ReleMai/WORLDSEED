@@ -28,7 +28,7 @@ class ExcavateShaftCommand: actor:int
 @dataclass(frozen=True,slots=True)
 class WaitCommand: actor:int; minutes:int=10
 @dataclass(frozen=True,slots=True)
-class CraftCommand: actor:int; recipe_id:str
+class CraftCommand: actor:int; recipe_id:str; material_preference:str="auto"
 @dataclass(frozen=True,slots=True)
 class StartSalvageCommand: actor:int; item_id:str
 @dataclass(frozen=True,slots=True)

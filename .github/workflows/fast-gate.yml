@@ -168,7 +168,7 @@ jobs:
 
       - name: Crafting material progression regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Crafting material progression" --timeout 90 -- python -u -m unittest -v tests.test_crafting_material_progression tests.test_tagged_crafting
+        run: python -u tools/run_ci_check.py --name "Crafting material progression" --timeout 90 -- python -u -m unittest -v tests.test_crafting_material_progression tests.test_tagged_crafting tests.test_material_crafting_content tests.test_crafting_quality_progression tests.test_artifact_material_quality tests.test_crafted_item_lifecycle tests.test_material_quality_ui
 
       - name: Dev62 expanded portrait layers and version compatibility
         shell: pwsh

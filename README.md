@@ -2813,6 +2813,13 @@ Presentation must remain observational. Opening, resizing, hovering or rendering
 
 ## Source: `CHANGELOG.md`
 
+## RC14 — Shared material recipes and crafted quality
+
+- Fourteen existing player recipes now accept mass-safe recovered/refined material equivalents; sound wood, metal and fiber use fewer physical pieces than scraps in the same recipes.
+- Crafting previews show exact chosen inputs, source grades and output benefits. Inventory, equipment wear/combat and actual instance trade quotes expose the resulting quality; legacy artifacts retain their previous behavior.
+- NPC crafting shares the same physical input allocator and one production authority. Its current exact/aggregate outputs remain generic; player output grades do not imply an NPC quality pipeline.
+- Save schema, geography, item IDs/assets and RNG namespaces are unchanged. See [the crafting quality handoff](docs/handoffs/CRAFTING_QUALITY_PROGRESSION_HANDOFF.md) for contracts and final validation status.
+
 ## RC14 Dev34 — inventory polish and living storage
 
 - Polished the unified graphical inventory with clickable category filters while preserving the single-screen item grid, rich inspection pane and inline quantity/action controls.

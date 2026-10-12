@@ -41,7 +41,8 @@
       "branch",
       "fuel",
       "shaft_material",
-      "short_haft"
+      "short_haft",
+      "wood_stock"
     ],
     "description": "A straight fallen branch thick enough to become a haft, spear shaft, firewood, or frame member.",
     "flavor": "\"A useful branch is already half a tool.\"",
@@ -50,7 +51,9 @@
       "fuel",
       "construction"
     ],
-    "sprite_tag": "branch"
+    "sprite_tag": "branch",
+    "crafting_quality": 55,
+    "crafting_source": "raw"
   },
   {
     "id": "core:brush",
@@ -153,7 +156,8 @@
       "fiber",
       "textile",
       "prepared_fiber",
-      "spinnable_plant_fiber"
+      "spinnable_plant_fiber",
+      "textile_fiber"
     ],
     "description": "Fiber has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Fiber: ordinary in isolation, important when the right need appears.\"",
@@ -161,7 +165,9 @@
       "cordage",
       "craft_input"
     ],
-    "sprite_tag": "fiber"
+    "sprite_tag": "fiber",
+    "crafting_quality": 75,
+    "crafting_source": "refined"
   },
   {
     "id": "core:iron_ore",
@@ -243,7 +249,10 @@
     "tags": [
       "raw",
       "fuel",
-      "construction"
+      "construction",
+      "wood_stock",
+      "short_haft",
+      "shaft_material"
     ],
     "description": "Wood has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Wood: ordinary in isolation, important when the right need appears.\"",
@@ -252,7 +261,9 @@
       "construction",
       "craft_input"
     ],
-    "sprite_tag": "wood"
+    "sprite_tag": "wood",
+    "crafting_quality": 60,
+    "crafting_source": "raw"
   },
   {
     "id": "core:alder_cone_cluster",
@@ -4701,7 +4712,9 @@
       "binding_material"
     ],
     "description": "fine reinforced cord for precision needles and layered paper gear",
-    "flavor": "\"Good scholarship gives binding cord a job to do.\""
+    "flavor": "\"Good scholarship gives binding cord a job to do.\"",
+    "crafting_quality": 85,
+    "crafting_source": "refined"
   },
   {
     "id": "core:bitter_herbal_extract",
@@ -4961,10 +4974,13 @@
       "recovered",
       "textile",
       "cloth",
-      "textile_scrap"
+      "textile_scrap",
+      "textile_fiber"
     ],
     "description": "Cleaned textile scraps and soft recovered animal fibers for felt, yarn and dressing cloth.",
-    "flavor": "\"A patient craftsperson saves the useful cloth scraps.\""
+    "flavor": "\"A patient craftsperson saves the useful cloth scraps.\"",
+    "crafting_quality": 25,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:compost_blend",
@@ -5089,7 +5105,9 @@
       "construction",
       "toolmaking"
     ],
-    "sprite_tag": "cordage"
+    "sprite_tag": "cordage",
+    "crafting_quality": 75,
+    "crafting_source": "refined"
   },
   {
     "id": "core:cured_leather_panel",
@@ -5394,10 +5412,13 @@
     "tags": [
       "craft_intermediate",
       "shaft_material",
-      "short_haft"
+      "short_haft",
+      "wood_stock"
     ],
     "description": "selected straight-grained timber for axes and log hooks",
-    "flavor": "\"Good forestry gives hardwood blank a job to do.\""
+    "flavor": "\"Good forestry gives hardwood blank a job to do.\"",
+    "crafting_quality": 80,
+    "crafting_source": "refined"
   },
   {
     "id": "core:hide",
@@ -5490,14 +5511,17 @@
     "mass_g": 2000,
     "volume_ml": 300,
     "tags": [
-      "metal"
+      "metal",
+      "metal_stock"
     ],
     "description": "Iron Bloom has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Iron Bloom: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "metalworking"
     ],
-    "sprite_tag": "iron_bloom"
+    "sprite_tag": "iron_bloom",
+    "crafting_quality": 80,
+    "crafting_source": "refined"
   },
   {
     "id": "core:iron_tool_blank",
@@ -5510,10 +5534,13 @@
     "volume_ml": 1230,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "metal_stock"
     ],
     "description": "a consolidated blank for edged iron tools",
-    "flavor": "\"Good metalworking gives iron tool blank a job to do.\""
+    "flavor": "\"Good metalworking gives iron tool blank a job to do.\"",
+    "crafting_quality": 85,
+    "crafting_source": "refined"
   },
   {
     "id": "core:kiln_grog",
@@ -5616,7 +5643,9 @@
       "recovered"
     ],
     "description": "Leather Scraps sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
-    "flavor": "\"A patient craftsperson saves the useful leather scraps.\""
+    "flavor": "\"A patient craftsperson saves the useful leather scraps.\"",
+    "crafting_quality": 30,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:linen_panel",
@@ -5665,10 +5694,13 @@
     "base_value": 2,
     "tags": [
       "craft_component",
-      "recovered"
+      "recovered",
+      "metal_stock"
     ],
     "description": "Metal Scraps sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
-    "flavor": "\"A patient craftsperson saves the useful metal scraps.\""
+    "flavor": "\"A patient craftsperson saves the useful metal scraps.\"",
+    "crafting_quality": 25,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:mineral_grit",
@@ -5786,10 +5818,13 @@
       "fiber",
       "textile",
       "prepared_fiber",
-      "spinnable_plant_fiber"
+      "spinnable_plant_fiber",
+      "textile_fiber"
     ],
     "description": "sorted pasture fiber for warm cord and felt",
-    "flavor": "\"Good husbandry gives pasture fiber bundle a job to do.\""
+    "flavor": "\"Good husbandry gives pasture fiber bundle a job to do.\"",
+    "crafting_quality": 65,
+    "crafting_source": "raw"
   },
   {
     "id": "core:pitch_binder",
@@ -5818,10 +5853,15 @@
     "volume_ml": 540,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "wood_stock",
+      "short_haft",
+      "shaft_material"
     ],
     "description": "straight timber for presses and instrument frames",
-    "flavor": "\"Good woodcraft gives planed board a job to do.\""
+    "flavor": "\"Good woodcraft gives planed board a job to do.\"",
+    "crafting_quality": 85,
+    "crafting_source": "refined"
   },
   {
     "id": "core:plant_fiber_pulp",
@@ -5863,7 +5903,9 @@
       "pulp_feedstock"
     ],
     "description": "Plant Scraps sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
-    "flavor": "\"A patient craftsperson saves the useful plant scraps.\""
+    "flavor": "\"A patient craftsperson saves the useful plant scraps.\"",
+    "crafting_quality": 20,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:polished_crystal_lens",
@@ -6082,10 +6124,15 @@
     "volume_ml": 180,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "wood_stock",
+      "short_haft",
+      "shaft_material"
     ],
     "description": "straightened shafts for standard arrows and hunting spears",
-    "flavor": "\"Good hunting gives shaft bundle a job to do.\""
+    "flavor": "\"Good hunting gives shaft bundle a job to do.\"",
+    "crafting_quality": 75,
+    "crafting_source": "refined"
   },
   {
     "id": "core:silver_filament",
@@ -6164,7 +6211,9 @@
       "binding",
       "bowmaking"
     ],
-    "sprite_tag": "sinew_cord"
+    "sprite_tag": "sinew_cord",
+    "crafting_quality": 70,
+    "crafting_source": "refined"
   },
   {
     "id": "core:sorted_crystal_faces",
@@ -6198,7 +6247,9 @@
       "yarn"
     ],
     "description": "twisted yarn for felt, cloth and fine thread",
-    "flavor": "\"Good textiles gives spun yarn a job to do.\""
+    "flavor": "\"Good textiles gives spun yarn a job to do.\"",
+    "crafting_quality": 80,
+    "crafting_source": "refined"
   },
   {
     "id": "core:steel_billet",
@@ -6209,14 +6260,17 @@
     "mass_g": 1800,
     "volume_ml": 240,
     "tags": [
-      "metal"
+      "metal",
+      "metal_stock"
     ],
     "description": "Steel Billet has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Steel Billet: ordinary in isolation, important when the right need appears.\"",
     "utility_roles": [
       "metalworking"
     ],
-    "sprite_tag": "steel_billet"
+    "sprite_tag": "steel_billet",
+    "crafting_quality": 95,
+    "crafting_source": "refined"
   },
   {
     "id": "core:stone_blade_blank",
@@ -6330,10 +6384,14 @@
     "tags": [
       "craft_component",
       "recovered",
-      "short_haft"
+      "short_haft",
+      "wood_stock",
+      "shaft_material"
     ],
     "description": "Tool Handles sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
-    "flavor": "\"A patient craftsperson saves the useful tool handles.\""
+    "flavor": "\"A patient craftsperson saves the useful tool handles.\"",
+    "crafting_quality": 45,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:tough_fiber",
@@ -6402,10 +6460,15 @@
     "base_value": 1,
     "tags": [
       "craft_component",
-      "recovered"
+      "recovered",
+      "wood_stock",
+      "short_haft",
+      "shaft_material"
     ],
     "description": "Wood Pieces sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
-    "flavor": "\"A patient craftsperson saves the useful wood pieces.\""
+    "flavor": "\"A patient craftsperson saves the useful wood pieces.\"",
+    "crafting_quality": 25,
+    "crafting_source": "recovered"
   },
   {
     "id": "core:wooden_dowels",

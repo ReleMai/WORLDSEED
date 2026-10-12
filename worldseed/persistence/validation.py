@@ -288,12 +288,65 @@ def _validate_salvaging(raw: dict[str, Any]) -> list[str]:
     return issues
 
 
+def _validate_crafted_artifacts(raw: dict[str, Any]) -> list[str]:
+    """Validate the opt-in material-quality payload without changing legacy artifacts."""
+    issues: list[str] = []
+    def identity(value):
+        return isinstance(value, str) and ':' in value and not any(c.isspace() for c in value)
+    def grade(value):
+        return type(value) is int and 0 <= value <= 100
+    sources = {'', 'raw', 'refined', 'recovered', 'mixed'}
+    for uid, artifact in _table(raw, 'artifacts').items():
+        if not isinstance(artifact, dict):
+            continue
+        components = artifact.get('components', {})
+        metadata = components.get('crafting') if isinstance(components, dict) else None
+        if not isinstance(metadata, dict) or 'quality_version' not in metadata:
+            continue
+        if type(metadata['quality_version']) is not int or metadata['quality_version'] != 1:
+            issues.append(f'unsupported artifact crafting quality version: {uid}')
+            continue
+        quality = artifact.get('quality')
+        if not grade(quality):
+            issues.append(f'crafted artifact quality out of bounds: {uid}')
+        if 'material_quality' in metadata and not grade(metadata['material_quality']):
+            issues.append(f'crafted artifact material quality out of bounds: {uid}')
+        if 'source' in metadata and (not isinstance(metadata['source'], str) or metadata['source'] not in sources):
+            issues.append(f'invalid crafted artifact material source: {uid}')
+        if 'recipe_id' in metadata and not identity(metadata['recipe_id']):
+            issues.append(f'invalid crafted artifact recipe identity: {uid}')
+        remainder = metadata.get('wear_remainder', 0)
+        if type(remainder) is not int or not grade(quality) or not 0 <= remainder < 50 + quality:
+            issues.append(f'crafted artifact wear remainder out of bounds: {uid}')
+        for part, row in components.items():
+            if not isinstance(row, dict) or 'material' not in row:
+                continue
+            if (not isinstance(row['material'], str) or not row['material']
+                    or not grade(row.get('quality')) or not grade(row.get('condition'))):
+                issues.append(f'invalid crafted artifact component: {uid}/{part}')
+        if 'ingredients' in metadata:
+            ingredients = metadata['ingredients']
+            if not isinstance(ingredients, list):
+                issues.append(f'invalid crafted artifact ingredient list: {uid}')
+                continue
+            for row in ingredients:
+                if (not isinstance(row, dict) or not identity(row.get('id'))
+                        or not isinstance(row.get('name'), str) or not grade(row.get('quality'))
+                        or type(row.get('qty')) is not int or row['qty'] <= 0
+                        or type(row.get('mass_g')) is not int or row['mass_g'] <= 0
+                        or not isinstance(row.get('source'), str) or row['source'] not in sources
+                        or not isinstance(row.get('material'), str) or not row['material']):
+                    issues.append(f'invalid crafted artifact ingredient: {uid}')
+    return issues
+
+
 def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     if not raw:
         return []
     issues: list[str] = []
     issues.extend(_validate_interiors(raw))
     issues.extend(_validate_salvaging(raw))
+    issues.extend(_validate_crafted_artifacts(raw))
     xp=raw.get('player_swimming_xp',0)
     skill=(raw.get('player_skills',{}) or {}).get('swimming',0)
     if not isinstance(xp,int) or not 0<=xp<120:issues.append('swimming practice out of bounds')

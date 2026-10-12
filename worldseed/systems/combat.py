@@ -173,6 +173,7 @@ class CombatSystem:
             aid=self.state.player_equipped_artifacts.get("offhand","");artifact=self.state.artifacts.get(aid)
             if artifact:
                 wear=max(1,raw_damage//10+(1 if damage_type=="blunt" else 0))
+                wear=self.artifact_system.condition_loss(artifact,wear)
                 artifact.condition=max(0,artifact.condition-wear)
                 artifact.history.append(f"Shield impact at turn {turn}; condition {artifact.condition}%.")
                 if artifact.condition<=0:
@@ -217,7 +218,8 @@ class CombatSystem:
                 if item and group in item.coverage:
                     a=self.state.artifacts.get(self.state.player_equipped_artifacts.get(slot,""))
                     if a:
-                        a.condition=max(0,a.condition-max(1,raw//8));a.history.append(f"Armor impact at turn {turn}; condition {a.condition}%.")
+                        wear=self.artifact_system.condition_loss(a,max(1,raw//8))
+                        a.condition=max(0,a.condition-wear);a.history.append(f"Armor impact at turn {turn}; condition {a.condition}%.")
                         if a.condition<=0:self.state.player_equipment.pop(slot,None);self.state.player_equipped_artifacts.pop(slot,None);a.owner='destroyed'
         if len(self.state.player_wounds)>80:self.state.player_wounds=self.state.player_wounds[-80:]
         details=[]
@@ -353,6 +355,15 @@ class CombatSystem:
         if distance>weapon.range:return f"The target is beyond the useful range of your {weapon.name.lower()}."
         if weapon.ammo_item and inv.count(weapon.ammo_item)<=0:return f"You have no {self.registry.items[weapon.ammo_item].name.lower()}."
         if weapon.ammo_item:inv.remove(weapon.ammo_item,1)
+        base=weapon.weapon_damage
+        artifact=self.artifact_system.best_owned(weapon.id) if self.artifact_system else None
+        if artifact is not None and self.artifact_system.material_quality_enabled(artifact):
+            base=max(1,base*self.artifact_system.effective_quality(artifact)//50)
+            if weapon.ammo_item:
+                worn=self.artifact_system.wear(weapon.id,'player',1,turn,'ranged shot')
+                if worn and worn.condition<=0:
+                    inv.remove(weapon.id,1)
+                    if inv.count(weapon.id)<=0:self.state.player_readied_weapon=''
 
         sp=self.registry.species[creature.species_id];zone=aim_zone if aim_zone in self.AIM_ZONES else "center"
         rng=PCG32(derive_seed(self.seed,"ranged-attack",turn,creature.uid,distance,weapon.id,creature.hp,creature.blood,zone,aim_quality))
@@ -372,7 +383,7 @@ class CombatSystem:
             if roll<weight:part=name;break
             roll-=weight
 
-        variance=75+rng.randbelow(51);damage=max(1,(weapon.weapon_damage+hunting//3)*variance//100);dtype=weapon.damage_type
+        variance=75+rng.randbelow(51);damage=max(1,(base+hunting//3)*variance//100);dtype=weapon.damage_type
         penetration=damage+(9 if dtype=="pierce" else 5 if dtype=="cut" else 1)+(2 if zone in ("vitals","head") else 0)
         tissue="skin"
         if penetration>7:tissue="muscle"

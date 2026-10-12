@@ -39,18 +39,37 @@ class CraftingSystem:
         return item_id in recipe.inputs or item_id in recipe.catalysts or any(
             token_matches("tag:"+tag,item_id,self.registry) for tag in recipe.input_tags)
 
-    def ingredient_rows(self,recipe,inv:Inventory)->list[dict]:
-        allocation=allocate_tag_inputs(recipe,inv,self.registry)
+    def ingredient_rows(self,recipe,inv:Inventory,*,preference="auto")->list[dict]:
+        allocation=allocate_tag_inputs(recipe,inv,self.registry,preference=preference)
         rows=[{"id":iid,"name":self.registry.items[iid].name,"need":n,
                "have":max(0,inv.count(iid)-recipe.catalysts.get(iid,0))} for iid,n in recipe.inputs.items()]
         for tag,need in sorted(recipe.input_tags.items()):
-            options=[{"id":iid,"name":item.name,"have":inv.count(iid)} for iid,item in sorted(self.registry.items.items()) if tag in item.tags]
+            options=[{"id":iid,"name":item.name,"have":inv.count(iid),"quality":item.crafting_quality,"source":item.crafting_source,"units":recipe.input_units.get(iid,1)} for iid,item in sorted(self.registry.items.items()) if tag in item.tags]
             rows.append({"id":"tag:"+tag,"name":"Any "+tag.replace("_"," "),"tag":tag,"need":need,
-                         "have":sum(allocation[tag].values()),"options":options,"allocated":allocation[tag]})
+                         "have":sum(allocation[tag].values()),"options":options,"allocated":allocation[tag],"unit_label":"material units" if recipe.input_units else "items"})
         return rows
 
-    def resolve_inputs(self,recipe,inv:Inventory)->dict[str,int]|None:
-        return resolve_recipe_inputs(recipe,inv.items,self.registry)
+    def resolve_inputs(self,recipe,inv:Inventory,*,preference="auto")->dict[str,int]|None:
+        return resolve_recipe_inputs(recipe,inv.items,self.registry,preference=preference)
+
+    def preview(self,recipe_or_id,inv:Inventory,*,preference="auto",skill_level=0,work_bonus=0)->dict:
+        """The exact materials and deterministic grade used by the command path."""
+        from worldseed.systems.crafting_quality import ingredient_quality,output_preview
+        recipe=self.registry.recipes.get(recipe_or_id) if isinstance(recipe_or_id,str) else recipe_or_id
+        if recipe is None:return {}
+        costs=self.resolve_inputs(recipe,inv,preference=preference)
+        data={"preference":preference,"consumed":costs,"material_quality_enabled":recipe.material_quality,
+              "material_quality":None,"source_label":"", "outputs":[]}
+        if costs is None:return data
+        material=ingredient_quality(self.state,self.registry,costs,preference=preference,metallurgy=self.metallurgy)
+        data['artifact_uids']=material['artifact_uids']
+        if recipe.material_quality:
+            data.update(material)
+            data["outputs"]=output_preview(recipe,self.registry,material,skill_level=skill_level,work_bonus=work_bonus)
+        else:
+            data["outputs"]=[{"id":iid,"name":self.registry.items[iid].name,"qty":qty,"quality":None,"benefits":[],"material":self.registry.items[iid].material}
+                             for iid,qty in recipe.outputs.items()]
+        return data
 
     def _discovery_requirements(self, recipe) -> set[str]:
         return set(self.discovery_signature(recipe))
@@ -118,6 +137,9 @@ class CraftingSystem:
         choice=hash_u64(world_seed,'crafting.discovery_pot.v1',attempt,*sorted(items))%len(candidates)
         recipe=candidates[choice]
         inv.consume(dict(counts))
+        from worldseed.systems.crafting_quality import retire_consumed_artifacts
+        retire_consumed_artifacts(self.state,self.registry,counts,minute=minute,reason='Used in crafting experiment')
+        if self.metallurgy:self.metallurgy.consume_inputs(dict(counts),'player')
         self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe.id})
         self.state.player_unseen_recipes=sorted(set(self.state.player_unseen_recipes)|{recipe.id})
         self.state.player_crafting_experiments=attempt+1
@@ -173,13 +195,13 @@ class CraftingSystem:
         return rows
     def _best_quality(self,inv:Inventory,key:str)->int:
         return max((self.registry.items[i].quality(key) for i,n in inv.items.items() if n>0 and i in self.registry.items),default=0)
-    def missing_requirements(self,recipe_id:str,inv:Inventory,nearby_structures:set[str])->list[str]:
+    def missing_requirements(self,recipe_id:str,inv:Inventory,nearby_structures:set[str],*,preference="auto")->list[str]:
         r=self.registry.recipes.get(recipe_id);out=[]
         if not r:return ["unknown recipe"]
         if not self.recipe_is_discovered(recipe_id):out.append("recipe not yet discovered")
         if r.knowledge and r.knowledge not in self.state.player_knowledge:out.append(f"knowledge: {r.knowledge}")
         if r.station and r.station not in nearby_structures:out.append(f"station: {self.registry.structures[r.station].name}")
-        for row in self.ingredient_rows(r,inv):
+        for row in self.ingredient_rows(r,inv,preference=preference):
             if row["have"]<row["need"]:out.append(f'{row["name"]} {row["have"]}/{row["need"]}')
         for iid,n in r.catalysts.items():
             if inv.count(iid)<n:out.append(f"{self.registry.items[iid].name} catalyst {inv.count(iid)}/{n}")
@@ -191,13 +213,13 @@ class CraftingSystem:
             if not ok:out.append(reason)
         return out
 
-    def can_craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str])->tuple[bool,str]:
+    def can_craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str],*,preference="auto")->tuple[bool,str]:
         r=self.registry.recipes.get(recipe_id)
         if not r:return False,"Unknown recipe."
         if not self.recipe_is_discovered(recipe_id):return False,"You have not discovered that recipe yet."
         if r.knowledge and r.knowledge not in self.state.player_knowledge:return False,f"You lack knowledge: {r.knowledge}."
         if r.station and r.station not in nearby_structures:return False,f"Requires {self.registry.structures[r.station].name}."
-        if self.resolve_inputs(r,inv) is None:return False,"You lack the required materials or reserved catalyst quantities."
+        if self.resolve_inputs(r,inv,preference=preference) is None:return False,"You lack the required materials or reserved catalyst quantities."
         for quality,need in r.tool_qualities.items():
             have=self._best_quality(inv,quality)
             if have<int(need):return False,f"Requires {quality} quality {need}; your best is {have}."
@@ -207,17 +229,31 @@ class CraftingSystem:
             if not ok:return False,why
         return True,""
 
-    def craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str],minute:int=0,creator:str="player",skill_level:int=0,work_bonus:int=0)->tuple[bool,str,int]:
-        ok,why=self.can_craft(recipe_id,inv,nearby_structures)
+    def craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str],minute:int=0,creator:str="player",skill_level:int=0,work_bonus:int=0,*,preference:str="auto")->tuple[bool,str,int]:
+        if preference not in {"auto","refined","recovered"}:return False,"Choose a valid material preference.",0
+        ok,why=self.can_craft(recipe_id,inv,nearby_structures,preference=preference)
         if not ok:return False,why,0
-        r=self.registry.recipes[recipe_id];inv.consume(self.resolve_inputs(r,inv))
-        meta=self.metallurgy.apply(r,creator,minute) if self.metallurgy else None
+        r=self.registry.recipes[recipe_id]
+        preview=self.preview(r,inv,preference=preference,skill_level=skill_level,work_bonus=work_bonus)
+        costs=preview['consumed']
+        if costs is None or not inv.consume(costs):return False,"Materials changed before crafting.",0
+        from worldseed.systems.crafting_quality import retire_consumed_artifacts
+        retire_consumed_artifacts(self.state,self.registry,costs,minute=minute,
+                                  reason=f'Used in {r.name}',artifact_uids=preview.get('artifact_uids',()))
+        meta=self.metallurgy.apply(r,creator,minute,consumed_inputs=costs) if self.metallurgy else None
         made=[]
         for iid,n in r.outputs.items():
             inv.add(iid,n)
-            if self.artifact_system and iid in self.registry.items and any(t in self.registry.items[iid].tags for t in ("weapon","armor","tool")):
+            if self.artifact_system and iid in self.registry.items and (r.material_quality or any(t in self.registry.items[iid].tags for t in ("weapon","armor","tool"))):
                 for _ in range(n):
-                    made.append(self.artifact_system.create(iid,creator,minute,quality_hint=(meta.quality_hint if meta else None),material_override=(meta.material if meta else None),process_notes=(meta.notes if meta else None)).name)
+                    if r.material_quality:
+                        output=next(row for row in preview['outputs'] if row['id']==iid)
+                        components={'body':{'material':output['material'],'quality':output['quality'],'condition':100},
+                                    'crafting':{'quality_version':1,'recipe_id':r.id,'material_quality':preview['material_quality'],
+                                                'source':preview['source'],'ingredients':preview['ingredients']}}
+                        made.append(self.artifact_system.create(iid,creator,minute,quality_hint=output['quality'],material_override=output['material'],components_override=components,process_notes=(meta.notes if meta else None)).name)
+                    else:
+                        made.append(self.artifact_system.create(iid,creator,minute,quality_hint=(meta.quality_hint if meta else None),material_override=(meta.material if meta else None),process_notes=(meta.notes if meta else None)).name)
         suffix=(" Artifact: "+", ".join(made)) if made else ""
         metal=(f" Metal quality {meta.quality_hint}." if meta and meta.quality_hint is not None else "")
         self.sync_discoveries(inv)
@@ -253,7 +289,10 @@ class CraftingSystem:
             else:q=50;material=meta['material'];notes=[]
             mat=self.registry.materials.get(material);property_q=(mat.hardness+mat.toughness+(mat.edge if slot in ('blade','head') else 0))//(3 if slot in ('blade','head') else 2) if mat else 50
             q=max(15,min(100,(q+property_q)//2));components[slot]={'input_item':choice,'material':material,'quality':q,'condition':100,'notes':notes};quality_rows.append((q,2 if slot==d.primary_component else 1))
-        inv.consume(costs);inv.add(d.output_item,1)
+        inv.consume(costs)
+        from worldseed.systems.crafting_quality import retire_consumed_artifacts
+        retire_consumed_artifacts(self.state,self.registry,costs,minute=minute,reason=f'Used in {d.name}')
+        inv.add(d.output_item,1)
         quality=sum(q*w for q,w in quality_rows)//max(1,sum(w for _,w in quality_rows));primary=components[d.primary_component]['material']
         art=self.artifact_system.create(d.output_item,creator,minute,quality_hint=quality,material_override=primary,process_notes=['component-built'],components_override=components) if self.artifact_system else None
         return True,f"You assemble {d.name} from selected components."+(f" {art.name}, quality {quality}." if art else ""),d.minutes

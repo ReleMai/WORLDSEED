@@ -260,3 +260,8 @@ methods=[
 ]
 save('cooking_methods.json',methods)
 print('items',len(items),'recipes',len(recipes),'structures',len(structures),'crops',len(crops),'resources',len(resources),'species',len(species),'cooking',len(methods))
+
+# Shared material profiles are authoritative when this historical layer is rebuilt.
+from tools.build_material_crafting import apply_item_profiles, apply_recipe_profiles
+save("items.json", apply_item_profiles(load("items.json")))
+save("recipes.json", apply_recipe_profiles(load("recipes.json")))

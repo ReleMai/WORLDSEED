@@ -400,12 +400,15 @@ class Simulation:
             if isinstance(command,DropCommand):
                 from worldseed.systems.interior_state import InteriorPile
                 inv=self.entities.get(command.actor,Inventory);amount=max(1,int(command.amount))
-                if inv.remove(command.item_id,amount):
+                from worldseed.systems.artifacts import available_inventory_quantity
+                if amount <= available_inventory_quantity(self.state,inv,command.item_id) and inv.remove(command.item_id,amount):
                     plan=self.interiors.current_plan();a=self.interiors.player_presence()
                     pile=next((p for p in plan.piles if (p.x-a.x)**2+(p.y-a.y)**2<=400**2),None)
                     if pile is None:
                         pile=InteriorPile(self.state.uid('interior-pile'),a.x,a.y);plan.piles.append(pile)
                     pile.items[command.item_id]=pile.items.get(command.item_id,0)+amount
+                    from worldseed.systems.artifacts import transfer_inventory_metadata
+                    transfer_inventory_metadata(self.state,self.registry,{command.item_id:amount},'player',f'{plan.uid}:pile:{pile.uid}',self.clock.minute,'Dropped indoors')
                     self._message('You drop the items on the interior floor.')
                 else:self._message('You do not carry that many items.')
                 return result
@@ -414,6 +417,8 @@ class Simulation:
                 for pile in list(plan.piles):
                     if (pile.x-a.x)**2+(pile.y-a.y)**2<=1400**2:
                         for item,amount in list(pile.items.items()):inv.add(item,amount)
+                        from worldseed.systems.artifacts import transfer_inventory_metadata
+                        transfer_inventory_metadata(self.state,self.registry,pile.items,f'{plan.uid}:pile:{pile.uid}','player',self.clock.minute,'Picked up indoors')
                         plan.piles.remove(pile)
                 self._message('You collect nearby items from the interior floor.');return result
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
@@ -1562,7 +1567,7 @@ class Simulation:
         bonus=0 if indoor else self.building.environmental_bonuses(self.player_pos).get('work_bonus',0)
         recipe=self.registry.recipes.get(cmd.recipe_id)
         skill=self.player_skill(recipe.skill if recipe is not None else 'crafting')
-        ok,msg,minutes=self.crafting.craft(cmd.recipe_id,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player",skill,bonus)
+        ok,msg,minutes=self.crafting.craft(cmd.recipe_id,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player",skill,bonus,preference=cmd.material_preference)
         self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
 
     def _component_craft(self,cmd:ComponentCraftCommand)->int:
@@ -1653,11 +1658,19 @@ class Simulation:
             self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
         inv=self.entities.get(cmd.actor,Inventory)
         for iid,n in pile.items.items():inv.add(iid,n)
+        from worldseed.systems.artifacts import transfer_inventory_metadata
+        transfer_inventory_metadata(self.state,self.registry,pile.items,f'ground:{pos.x},{pos.y},{pos.z}','player',self.clock.minute,'Picked up')
         self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")
     def _drop(self,cmd:DropCommand)->None:
         inv=self.entities.get(cmd.actor,Inventory)
+        from worldseed.systems.artifacts import available_inventory_quantity
+        if type(cmd.amount) is not int or cmd.amount <= 0 or cmd.amount > available_inventory_quantity(self.state,inv,cmd.item_id):
+            self._message("You do not carry that many unequipped items.");return
         if not inv.remove(cmd.item_id,cmd.amount):self._message("You do not have enough of that item.");return
-        pos=self.entities.get(cmd.actor,Position).value;key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}));pile.items[cmd.item_id]=pile.items.get(cmd.item_id,0)+cmd.amount;self._message("You drop the item.")
+        pos=self.entities.get(cmd.actor,Position).value;key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.setdefault(key,GroundPile(pos.x,pos.y,pos.z,{}));pile.items[cmd.item_id]=pile.items.get(cmd.item_id,0)+cmd.amount
+        from worldseed.systems.artifacts import transfer_inventory_metadata
+        transfer_inventory_metadata(self.state,self.registry,{cmd.item_id:cmd.amount},'player',f'ground:{pos.x},{pos.y},{pos.z}',self.clock.minute,'Dropped')
+        self._message("You drop the item.")
     def _eat(self,cmd:EatCommand)->None:
         inv=self.entities.get(cmd.actor,Inventory);item=self.registry.items.get(cmd.item_id);v=self.entities.get(cmd.actor,Vitals)
         if not item or item.nutrition<=0 or inv.count(cmd.item_id)<=0:self._message("You cannot eat that.");return
@@ -2042,15 +2055,24 @@ class Simulation:
         if book.knowledge not in self.state.player_knowledge:self.state.player_knowledge.append(book.knowledge);self._message(f"You read {book.title} by {book.author} and learn {book.knowledge}.")
         else:self._message(f"You reread {book.title}; its knowledge is already familiar.")
 
-    def player_trade_price(self, settlement_id:str, item_id:str, buy:bool)->int:
+    def _player_trade_quote(self,settlement_id:str,item_id:str,buy:bool,amount:int)->tuple[int,tuple[str,...]]:
         base=self.economy.trade_price(settlement_id,item_id,buy)
         bargain=min(22,self.player_skill('trading')*2+(5 if self.has_talent('haggler') else 0)+self.player_skill('persuasion')//2)
         factor=(100-bargain) if buy else (100+bargain)
-        return max(1,(base*factor)//100)
+        unit=max(1,(base*factor)//100)
+        owner=settlement_id if buy else 'player'
+        return self.artifacts.trade_quote(item_id,owner,amount,unit)
+
+    def player_trade_price(self, settlement_id:str, item_id:str, buy:bool)->int:
+        """First actual unit's price; use player_trade_total for mixed stacks."""
+        return self._player_trade_quote(settlement_id,item_id,buy,1)[0]
+
+    def player_trade_total(self,settlement_id:str,item_id:str,buy:bool,amount:int)->int:
+        return self._player_trade_quote(settlement_id,item_id,buy,amount)[0]
 
     def player_barter_value(self, settlement_id:str, goods:dict[str,int], offered:bool)->int:
         return sum(
-            self.player_trade_price(settlement_id,iid,not offered)*max(0,int(qty))
+            self.player_trade_total(settlement_id,iid,not offered,max(0,int(qty)))
             for iid,qty in goods.items()
             if qty>0
         )
@@ -2062,12 +2084,13 @@ class Simulation:
         town=self.state.settlements.get(cmd.settlement_id);inv=self.entities.get(cmd.actor,Inventory)
         if not town or abs(town.x-self.player_pos.x)+abs(town.y-self.player_pos.y)>25:self._message("You are not close enough to that market.");return
         if town.stocks.get(cmd.item_id,0)<cmd.amount:self._message("The market cannot supply that quantity.");return
-        unit=self.player_trade_price(town.uid,cmd.item_id,True);price=unit*cmd.amount
+        if type(cmd.amount) is not int or cmd.amount<=0:self._message("Choose a positive whole quantity.");return
+        price,artifact_uids=self._player_trade_quote(town.uid,cmd.item_id,True,cmd.amount)
         if inv.count("core:copper_coin")<price:self._message(f"You need {price} copper coins.");return
         inv.remove("core:copper_coin",price);inv.add(cmd.item_id,cmd.amount);town.stocks[cmd.item_id]-=cmd.amount;town.wealth+=price
         for _ in range(cmd.amount):
             self.metallurgy.transfer_one(cmd.item_id,town.uid,"player",self.clock.minute)
-            self.artifacts.transfer_one(cmd.item_id,town.uid,"player",self.clock.minute,"purchased")
+        for uid in artifact_uids:self.artifacts.transfer_uid(uid,"player",self.clock.minute,"purchased")
         if cmd.item_id=="core:book":
             library=self.institutions.library_for_settlement(town.uid);owners={town.uid}|({library.uid} if library else set())
             for b in sorted(self.state.books.values(),key=lambda b:b.uid):
@@ -2082,13 +2105,16 @@ class Simulation:
     def _sell(self,cmd:SellCommand)->None:
         town=self.state.settlements.get(cmd.settlement_id);inv=self.entities.get(cmd.actor,Inventory)
         if not town or abs(town.x-self.player_pos.x)+abs(town.y-self.player_pos.y)>25:self._message("You are not close enough to that market.");return
-        if inv.count(cmd.item_id)<cmd.amount:self._message("You do not have that quantity.");return
-        unit=self.player_trade_price(town.uid,cmd.item_id,False);price=unit*cmd.amount
+        if type(cmd.amount) is not int or cmd.amount<=0:self._message("Choose a positive whole quantity.");return
+        from worldseed.systems.artifacts import available_inventory_quantity
+        if available_inventory_quantity(self.state,inv,cmd.item_id)<cmd.amount:
+            self._message("You do not carry that many unequipped items.");return
+        price,artifact_uids=self._player_trade_quote(town.uid,cmd.item_id,False,cmd.amount)
         if town.wealth<price:self._message("The market lacks enough coin to buy that.");return
         inv.remove(cmd.item_id,cmd.amount);inv.add("core:copper_coin",price);town.stocks[cmd.item_id]=town.stocks.get(cmd.item_id,0)+cmd.amount;town.wealth-=price
         for _ in range(cmd.amount):
             self.metallurgy.transfer_one(cmd.item_id,"player",town.uid,self.clock.minute)
-            self.artifacts.transfer_one(cmd.item_id,"player",town.uid,self.clock.minute,"sold")
+        for uid in artifact_uids:self.artifacts.transfer_uid(uid,town.uid,self.clock.minute,"sold")
         if cmd.item_id=="core:book":
             library=self.institutions.library_for_settlement(town.uid)
             for b in sorted(self.state.books.values(),key=lambda b:b.uid):
@@ -2112,7 +2138,8 @@ class Simulation:
         offered=max(1,int(cmd.offered_amount));requested=max(1,int(cmd.requested_amount))
         if cmd.offered_item==cmd.requested_item:
             self._message("A barter needs different offered and requested goods.");return
-        if inv.count(cmd.offered_item)<offered:
+        from worldseed.systems.artifacts import available_inventory_quantity
+        if available_inventory_quantity(self.state,inv,cmd.offered_item)<offered:
             self._message("You do not have the offered quantity.");return
         if town.stocks.get(cmd.requested_item,0)<requested:
             self._message("The market cannot supply the requested quantity.");return
@@ -2120,10 +2147,19 @@ class Simulation:
         balance=self.player_barter_balance(town.uid,offer,request)
         if balance<0:
             self._message(f"The offer is short by {-balance}c of local market value.");return
+        # Preserve the same per-instance ownership used by the value quote.
+        artifact_system=getattr(self,'artifacts',None)
+        offered_uids=tuple(a.uid for a in artifact_system.trade_candidates(cmd.offered_item,'player')[:offered]) if artifact_system else ()
+        requested_uids=tuple(a.uid for a in artifact_system.trade_candidates(cmd.requested_item,town.uid)[:requested]) if artifact_system else ()
         inv.remove(cmd.offered_item,offered);inv.add(cmd.requested_item,requested)
         town.stocks[cmd.offered_item]=town.stocks.get(cmd.offered_item,0)+offered
         town.stocks[cmd.requested_item]-=requested
         value=self.player_barter_value(town.uid,request,False)
+        if artifact_system:
+            for uid in offered_uids:artifact_system.transfer_uid(uid,town.uid,self.clock.minute,'bartered')
+            for uid in requested_uids:artifact_system.transfer_uid(uid,'player',self.clock.minute,'bartered')
+            for _ in range(offered):self.metallurgy.transfer_one(cmd.offered_item,'player',town.uid,self.clock.minute)
+            for _ in range(requested):self.metallurgy.transfer_one(cmd.requested_item,town.uid,'player',self.clock.minute)
         self.economy.record_transaction(
             town.uid,"player_barter","player",town.uid,copper_value=value,
             minute=self.clock.minute,offered=offer,requested=request,
@@ -2254,6 +2290,8 @@ class Simulation:
         if container.items[cmd.item_id]<=0:
             container.items.pop(cmd.item_id,None)
         self.entities.get(cmd.actor,Inventory).add(cmd.item_id,amount)
+        from worldseed.systems.artifacts import transfer_inventory_metadata
+        transfer_inventory_metadata(self.state,self.registry,{cmd.item_id:amount},f'container:{container.uid}','player',self.clock.minute,'Taken from storage')
         owner=container.owner or self.civics.owner_for_structure(town.uid,container.property_id) or town.uid
         theft=self.economy.record_theft(
             town.uid,"player",owner,cmd.item_id,amount,self.clock.minute,

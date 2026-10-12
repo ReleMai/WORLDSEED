@@ -48,9 +48,10 @@ class MetallurgySystem:
                 return False, "The billet must be quenched before tempering."
         return True, ""
 
-    def apply(self, recipe: RecipeDef, owner: str, minute: int) -> MetallurgyResult:
+    def apply(self, recipe: RecipeDef, owner: str, minute: int, *, consumed_inputs: dict[str, int] | None = None) -> MetallurgyResult:
         process = recipe.process
         if not process:
+            self.consume_inputs(consumed_inputs or recipe.inputs, owner)
             return MetallurgyResult()
         if process == "smelt_copper":
             rng = PCG32(derive_seed(self.seed, "smelt-copper", minute, len(self.state.metal_batches)))
@@ -96,10 +97,23 @@ class MetallurgySystem:
             self.state.metal_batches[batch.uid] = batch
             return MetallurgyResult(batch.quality, batch.material, list(batch.treatments))
         if process == "forge_metal_item":
-            metal_id = "core:steel_billet" if recipe.inputs.get("core:steel_billet", 0) else "core:iron_bloom"
-            batch = self._take_batch(metal_id, owner)
-            return MetallurgyResult(batch.quality, batch.material, [*batch.treatments, f"forged at {batch.temperature_c}C"])
+            costs = consumed_inputs if consumed_inputs is not None else recipe.inputs
+            batches = self.consume_inputs(costs, owner)
+            if not batches:
+                return MetallurgyResult(notes=["forged from recovered parts"])
+            mass = sum(batch.mass_g for batch in batches)
+            quality = sum(batch.quality * batch.mass_g for batch in batches) // max(1, mass)
+            dominant = max(batches, key=lambda batch: (batch.mass_g, batch.item_id))
+            notes = list(dict.fromkeys(note for batch in batches for note in batch.treatments))
+            notes.append(f"forged at {min(batch.temperature_c for batch in batches)}C")
+            return MetallurgyResult(quality, dominant.material, notes)
         return MetallurgyResult()
+
+
+    def consume_inputs(self, costs: dict[str, int], owner: str = 'player') -> list[MetalBatchState]:
+        """Retire batch metadata beside already-spent physical metal stock."""
+        return [self._take_batch(iid, owner) for iid, count in sorted(costs.items())
+                if iid in self.METAL_ITEMS for _ in range(count)]
 
 
     def consume_component_input(self, item_id: str, owner: str = "player") -> MetallurgyResult:

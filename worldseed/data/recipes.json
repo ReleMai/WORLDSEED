@@ -97,8 +97,6 @@
     "id": "core:iron_pick",
     "name": "Forge Iron Pick",
     "inputs": {
-      "core:iron_bloom": 1,
-      "core:wood": 1,
       "core:fiber": 1
     },
     "outputs": {
@@ -108,18 +106,41 @@
     "station": "core:forge",
     "knowledge": "tech:smelting",
     "process": "forge_metal_item",
-    "description": "Use available materials and time to produce forge iron pick.",
+    "description": "Forge and haft a mining pick from 25 metal and 25 wood equivalents, bound with fiber. One iron bloom and one timber stock replace many recovered parts; sound material gives a more durable tool.",
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "metal_stock": 25,
+      "wood_stock": 25
+    },
+    "input_units": {
+      "core:metal_scraps": 1,
+      "core:iron_bloom": 25,
+      "core:steel_billet": 22,
+      "core:iron_tool_blank": 16,
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:fiber"
+    ],
+    "discovery_tags": [
+      "metal_stock",
+      "wood_stock"
+    ]
   },
   {
     "id": "core:iron_sword",
     "name": "Forge Iron Sword",
     "inputs": {
-      "core:iron_bloom": 1,
-      "core:wood": 1,
       "core:hide": 1
     },
     "outputs": {
@@ -129,11 +150,36 @@
     "station": "core:forge",
     "knowledge": "tech:smelting",
     "process": "forge_metal_item",
-    "description": "Use available materials and time to produce forge iron sword.",
+    "description": "Forge a sword from 25 metal and 25 wood equivalents with a hide grip. Sorted scraps and recovered timber share the same process as one iron bloom and one timber stock; refined material gives better damage, durability and value.",
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "metal_stock": 25,
+      "wood_stock": 25
+    },
+    "input_units": {
+      "core:metal_scraps": 1,
+      "core:iron_bloom": 25,
+      "core:steel_billet": 22,
+      "core:iron_tool_blank": 16,
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:hide"
+    ],
+    "discovery_tags": [
+      "metal_stock",
+      "wood_stock"
+    ]
   },
   {
     "id": "core:leather_hood",
@@ -211,7 +257,6 @@
     "id": "core:iron_helmet",
     "name": "Forge Iron Helmet",
     "inputs": {
-      "core:iron_bloom": 1,
       "core:hide": 1
     },
     "outputs": {
@@ -221,11 +266,27 @@
     "station": "core:forge",
     "knowledge": "tech:smelting",
     "process": "forge_metal_item",
-    "description": "Use available materials and time to produce forge iron helmet.",
+    "description": "Forge 25 metal equivalents into a helmet and line it with hide. One iron bloom replaces 25 sorted metal scraps, improving durability and value.",
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "metal_stock": 25
+    },
+    "input_units": {
+      "core:metal_scraps": 1,
+      "core:iron_bloom": 25,
+      "core:steel_billet": 22,
+      "core:iron_tool_blank": 16
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:hide"
+    ],
+    "discovery_tags": [
+      "metal_stock"
+    ]
   },
   {
     "id": "core:bandage",
@@ -329,7 +390,6 @@
     "name": "Forge Steel Sword",
     "inputs": {
       "core:steel_billet": 1,
-      "core:wood": 1,
       "core:hide": 1
     },
     "outputs": {
@@ -339,18 +399,37 @@
     "station": "core:forge",
     "knowledge": "tech:steelmaking",
     "process": "forge_metal_item",
-    "description": "Use available materials and time to produce forge steel sword.",
+    "description": "Forge a steel billet and fit a hide-wrapped grip using 25 wood equivalents. Recovered wood and refined timber use the same recipe; the source quality changes the finished sword.",
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "wood_stock": 25
+    },
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:steel_billet",
+      "core:hide"
+    ],
+    "discovery_tags": [
+      "wood_stock"
+    ]
   },
   {
     "id": "core:steel_pick",
     "name": "Forge Steel Pick",
     "inputs": {
       "core:steel_billet": 1,
-      "core:wood": 1,
       "core:fiber": 1
     },
     "outputs": {
@@ -360,11 +439,31 @@
     "station": "core:forge",
     "knowledge": "tech:steelmaking",
     "process": "forge_metal_item",
-    "description": "Use available materials and time to produce forge steel pick.",
+    "description": "Forge a steel billet into a pick and fit 25 wood equivalents with fiber bindings. Better shaft stock improves the tool's durability.",
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "wood_stock": 25
+    },
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:steel_billet",
+      "core:fiber"
+    ],
+    "discovery_tags": [
+      "wood_stock"
+    ]
   },
   {
     "id": "core:steel_helmet",
@@ -384,7 +483,8 @@
     "category": "advanced",
     "skill": "crafting",
     "difficulty": 3,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "material_quality": true
   },
   {
     "id": "core:bone_meal",
@@ -562,29 +662,39 @@
     "minutes": 25,
     "station": null,
     "knowledge": null,
-    "description": "Haft one usable sharp stone edge with a short branch or recovered handle, then secure it using plant, sinew or reinforced cord.",
+    "description": "Haft a sharp stone edge using two wood-piece equivalents and secure it with cord. One branch or fitted handle replaces several recovered pieces; sound stock gives a stronger knife.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {},
     "input_tags": {
       "sharp_edge": 1,
-      "short_haft": 1,
+      "short_haft": 2,
       "binding_material": 1
     },
     "discovery_tags": [
       "sharp_edge",
       "short_haft",
       "binding_material"
-    ]
+    ],
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 2,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 2,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": []
   },
   {
     "id": "core:stone_axe",
     "name": "Make Stone Axe",
     "inputs": {
       "core:stone_flake": 1,
-      "core:stone": 1,
-      "core:stout_branch": 1
+      "core:stone": 1
     },
     "outputs": {
       "core:stone_axe": 1
@@ -592,7 +702,7 @@
     "minutes": 35,
     "station": null,
     "knowledge": null,
-    "description": "Shape a weight-bearing stone head with a struck edge, fit it to a straight branch and lash it with suitable cord.",
+    "description": "Shape a stone axe head, fit six recovered wood-piece equivalents or one sound branch, and lash it with cord. Better stock improves the finished tool.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
@@ -600,16 +710,27 @@
       "hammer": 0
     },
     "input_tags": {
+      "shaft_material": 6,
       "binding_material": 1
     },
     "discovery_items": [
       "core:stone_flake",
-      "core:stone",
-      "core:stout_branch"
+      "core:stone"
     ],
     "discovery_tags": [
+      "shaft_material",
       "binding_material"
-    ]
+    ],
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 6,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true
   },
   {
     "id": "core:stone_pick",
@@ -623,13 +744,13 @@
     "minutes": 45,
     "station": null,
     "knowledge": null,
-    "description": "Set two hard stones around a long branch or hardwood shaft and lash them into a primitive mining pick.",
+    "description": "Fit two hard stones to a lashed shaft: six recovered wood-piece equivalents or one sound branch. Prepared hardwood gives a stronger mining pick.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {},
     "input_tags": {
-      "shaft_material": 1,
+      "shaft_material": 6,
       "binding_material": 1
     },
     "discovery_items": [
@@ -638,7 +759,17 @@
     "discovery_tags": [
       "shaft_material",
       "binding_material"
-    ]
+    ],
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 6,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true
   },
   {
     "id": "core:stone_hammer",
@@ -652,13 +783,13 @@
     "minutes": 30,
     "station": null,
     "knowledge": null,
-    "description": "Secure a rounded hammerstone to a full-length branch or prepared hardwood shaft with cord.",
+    "description": "Secure a hammerstone to a shaft made from six recovered wood-piece equivalents or one sound branch, then bind the head with cord.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {},
     "input_tags": {
-      "shaft_material": 1,
+      "shaft_material": 6,
       "binding_material": 1
     },
     "discovery_items": [
@@ -667,7 +798,17 @@
     "discovery_tags": [
       "shaft_material",
       "binding_material"
-    ]
+    ],
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 6,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true
   },
   {
     "id": "core:digging_stick",
@@ -699,14 +840,14 @@
     "minutes": 30,
     "station": null,
     "knowledge": null,
-    "description": "Cut a crude working edge into stone, seat it on a long shaft and bind the head securely for cultivation.",
+    "description": "Shape a crude stone edge, fit six recovered wood-piece equivalents or one sound branch, and bind the head. Refined hardwood improves the hoe's durability.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {},
     "input_tags": {
       "sharp_edge": 1,
-      "shaft_material": 1,
+      "shaft_material": 6,
       "binding_material": 1
     },
     "discovery_items": [
@@ -716,7 +857,17 @@
       "sharp_edge",
       "shaft_material",
       "binding_material"
-    ]
+    ],
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 6,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true
   },
   {
     "id": "core:wooden_spear",
@@ -794,7 +945,6 @@
     "id": "core:short_bow",
     "name": "Shape Primitive Self Bow",
     "inputs": {
-      "core:wood": 1,
       "core:plant_cordage": 2
     },
     "outputs": {
@@ -803,13 +953,32 @@
     "minutes": 65,
     "station": null,
     "knowledge": null,
-    "description": "Shape a flexible stave, tiller the limbs by hand, and string it with strong plant cordage.",
+    "description": "Tiller and lash eight recovered wood-piece equivalents or sound timber into a self bow, then string it with two cords. Continuous refined stock makes a stronger and more durable bow.",
     "category": "hunting",
     "skill": "crafting",
     "difficulty": 2,
     "tool_qualities": {
       "cut": 1
-    }
+    },
+    "input_tags": {
+      "wood_stock": 8
+    },
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [
+      "core:plant_cordage"
+    ],
+    "discovery_tags": [
+      "wood_stock"
+    ]
   },
   {
     "id": "core:wood_arrow",
@@ -935,22 +1104,37 @@
   {
     "id": "core:wooden_bowl",
     "name": "Carve Wooden Bowl",
-    "inputs": {
-      "core:wood": 1
-    },
+    "inputs": {},
     "outputs": {
       "core:wooden_bowl": 1
     },
     "minutes": 45,
     "station": "core:workbench",
     "knowledge": null,
-    "description": "Hollow a small bowl from seasoned wood.",
+    "description": "Carve and fit three recovered wood-piece equivalents or sound timber into a bowl. Better prepared wood gives a more durable, valuable vessel.",
     "category": "woodcraft",
     "skill": "crafting",
     "difficulty": 2,
     "tool_qualities": {
       "cut": 2
-    }
+    },
+    "input_tags": {
+      "wood_stock": 3
+    },
+    "input_units": {
+      "core:wood_pieces": 1,
+      "core:wood": 25,
+      "core:stout_branch": 5,
+      "core:hardwood_blank": 10,
+      "core:planed_board": 3,
+      "core:tool_handles": 1,
+      "core:shaft_bundle": 1
+    },
+    "material_quality": true,
+    "discovery_items": [],
+    "discovery_tags": [
+      "wood_stock"
+    ]
   },
   {
     "id": "core:scrape_hide",
@@ -2570,9 +2754,7 @@
   {
     "id": "core:craft_spun_yarn",
     "name": "Spun Yarn",
-    "inputs": {
-      "core:fiber": 2
-    },
+    "inputs": {},
     "outputs": {
       "core:spun_yarn": 2
     },
@@ -2581,12 +2763,22 @@
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {},
-    "discovery_items": [
-      "core:fiber"
-    ],
+    "discovery_items": [],
     "discovery_mode": "experiment",
-    "description": "Spun Yarn: twisted yarn for felt, cloth and fine thread.",
-    "station": "core:loom"
+    "description": "Spin two yarn bundles from 30 textile-fiber equivalents: two prepared fiber bundles or 30 cleaned cloth scraps. Refined fiber takes fewer physical pieces and produces stronger yarn.",
+    "station": "core:loom",
+    "input_tags": {
+      "textile_fiber": 30
+    },
+    "input_units": {
+      "core:cloth_scraps": 1,
+      "core:fiber": 15,
+      "core:pasture_fiber_bundle": 20
+    },
+    "material_quality": true,
+    "discovery_tags": [
+      "textile_fiber"
+    ]
   },
   {
     "id": "core:craft_felt_padding",

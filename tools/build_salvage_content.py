@@ -15,6 +15,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from worldseed.content.item_catalog import canonical_item_catalog
+from tools.build_material_crafting import apply_item_profiles, apply_recipe_profiles, audit_profiles
 DATA = ROOT / 'worldseed' / 'data'
 
 def slug(name):
@@ -419,9 +420,84 @@ CRAFTING_MATERIAL_TAGS = {
     ]
 }
 
+# Preserve material semantics already authored in the live catalog, including
+# fiber, cloth and cord sources used by broad downstream ingredient tags.
+CRAFTING_MATERIAL_TAGS.update({
+    "core:binding_cord": [
+        "textile",
+        "cordage",
+        "binding_material"
+    ],
+    "core:braided_wool_cord": [
+        "textile",
+        "cordage",
+        "binding_material",
+        "animal_fiber"
+    ],
+    "core:canvas_panel": [
+        "textile",
+        "cloth",
+        "cloth_panel"
+    ],
+    "core:cloth_scraps": [
+        "textile",
+        "cloth",
+        "textile_scrap"
+    ],
+    "core:linen_panel": [
+        "textile",
+        "cloth",
+        "cloth_panel"
+    ],
+    "core:pasture_fiber_bundle": [
+        "fiber",
+        "textile",
+        "prepared_fiber",
+        "spinnable_plant_fiber"
+    ],
+    "core:plant_fiber_pulp": [
+        "plant",
+        "plant_material",
+        "fiber_pulp"
+    ],
+    "core:plant_scraps": [
+        "plant",
+        "plant_material",
+        "plant_scrap",
+        "fiber_source",
+        "tinder_material",
+        "pulp_feedstock"
+    ],
+    "core:reinforced_cloth": [
+        "textile",
+        "cloth",
+        "cloth_panel"
+    ],
+    "core:spun_yarn": [
+        "textile",
+        "yarn"
+    ],
+    "core:tough_fiber": [
+        "fiber",
+        "textile",
+        "reinforcing_fiber"
+    ],
+    "core:waxed_thread": [
+        "textile",
+        "thread"
+    ],
+    "core:wool_roving": [
+        "fiber",
+        "textile",
+        "prepared_fiber",
+        "animal_fiber"
+    ]
+})
+
 def save():
     for filename, additions in [('items.json',new_items),('recipes.json',new_recipes)]:
         original=json.loads((DATA/filename).read_text())
+        original_order={row['id']:index for index,row in enumerate(original)}
         if filename=='items.json':
             original=[x for x in original if not str(x.get('sprite_tag','')).startswith(('salvage_','craft_','component_'))]
         else:
@@ -443,7 +519,13 @@ def save():
             for item in original:
                 for tag in (*CRAFTING_MATERIAL_TAGS.get(item['id'], ()),*source_tags.get(item['id'], ())):
                     if tag not in item.get('tags', ()): item.setdefault('tags', []).append(tag)
-            original=canonical_item_catalog(original)
+            original=canonical_item_catalog(apply_item_profiles(original))
+        else:
+            # Regenerate definitions in place so repeated builds preserve the
+            # existing recipe order as well as all authored material fields.
+            original.sort(key=lambda row:original_order.get(row['id'],len(original_order)))
+            apply_recipe_profiles(original)
+            audit_profiles(json.loads((DATA/"items.json").read_text(encoding="utf-8")), original)
         (DATA/filename).write_text(json.dumps(original,indent=2)+'\n')
     (DATA/'salvage.json').write_text(json.dumps(salvage,indent=2)+'\n')
     (DATA/'crafting_expansion.json').write_text(json.dumps(manifest,indent=2)+'\n')

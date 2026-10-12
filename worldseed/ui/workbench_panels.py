@@ -260,8 +260,9 @@ class WorkbenchPanelsMixin:
         self._panel_text('PROCESS DETAILS', (detail.x + 12, detail.y + 10, detail.width - 24, 20), color=accent, max_lines=1)
         recipe = recipes.get(selected_key)
         if recipe:
+            preference_height = self._crafting_preference_control(recipe, detail)
             self._panel_detail('workshop:' + str(selected_key),
-                               pg.Rect(detail.x + 12, detail.y + 35, detail.width - 24, max(1, detail.height - 92)),
+                               pg.Rect(detail.x + 12, detail.y + 35, detail.width - 24, max(1, detail.height - 92 - preference_height)),
                                self._crafting_detail_lines(recipe))
             button = pg.Rect(detail.x + 12, detail.bottom - 43, detail.width - 24, 31)
             if recipe.get('ready'):

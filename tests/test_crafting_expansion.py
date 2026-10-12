@@ -1,6 +1,7 @@
 """Authored expansion has physical suppliers and executable gameplay sinks."""
 from collections import Counter
 import json
+from fractions import Fraction
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -53,16 +54,18 @@ class CraftingExpansionTests(unittest.TestCase):
                 crafting = CraftingSystem(state, self.registry)
                 signature = crafting.discovery_signature(recipe)
                 self.assertTrue(1 <= len(signature) <= 5)
-                self.assertLessEqual(set(signature), set(recipe.inputs))
-                inv = Inventory(dict(Counter(signature)))
-                candidates = crafting.pot_candidates(signature, inv)
+                self.assertLessEqual(set(signature), set(recipe.inputs) | {"tag:" + tag for tag in recipe.input_tags})
+                samples = crafting.discovery_examples(recipe)
+                self.assertTrue(crafting.discovery_matches(recipe, samples))
+                inv = Inventory(dict(Counter(samples)))
+                candidates = crafting.pot_candidates(samples, inv)
                 self.assertIn(recipe.id, {candidate.id for candidate in candidates})
                 # Each successful mix consumes physical samples and removes one
                 # unknown candidate, so ambiguous recipes still have a bound.
                 for _ in candidates:
-                    inv.items = dict(Counter(signature))
+                    inv.items = dict(Counter(samples))
                     before = set(state.player_discovered_recipes)
-                    self.assertTrue(crafting.combine_in_pot(signature, inv, b'content-learn')[0])
+                    self.assertTrue(crafting.combine_in_pot(samples, inv, b'content-learn')[0])
                     self.assertEqual(len(set(state.player_discovered_recipes) - before), 1)
                     learned_id=next(iter(set(state.player_discovered_recipes)-before))
                     expected={iid:1 for iid,n in self.registry.recipes[learned_id].outputs.items() if n>0}
@@ -81,6 +84,9 @@ class CraftingExpansionTests(unittest.TestCase):
         for recipe in self.recipes:
             output = sum(self.registry.items[iid].mass_g * n for iid, n in recipe.outputs.items())
             consumed = sum(self.registry.items[iid].mass_g * n for iid, n in recipe.inputs.items())
+            consumed += sum(min(Fraction(item.mass_g, recipe.input_units.get(item.id, 1))
+                                for item in self.registry.items.values() if tag in item.tags) * n
+                            for tag, n in recipe.input_tags.items())
             self.assertLessEqual(output, consumed, recipe.id)
             for iid in recipe.outputs:
                 self.assertGreater(self.registry.items[iid].mass_g, 0, iid)

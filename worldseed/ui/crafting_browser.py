@@ -103,30 +103,58 @@ class CraftingBrowserMixin:
                          color=self._theme['muted'], max_lines=1)
 
     def _crafting_detail_lines(self, recipe):
-        """Retain every output, requirement and explanation for detail scrolling."""
+        """Show the authoritative physical allocation and material-result quality."""
         th = self._theme
         lines = [('text', str(recipe.get('name', 'Recipe')), th['accent']),
                  ('text', f"{recipe.get('minutes', 0)} min  ·  {str(recipe.get('skill', 'crafting')).replace('_', ' ').title()}  ·  Difficulty {recipe.get('difficulty', 0)}", th['muted'])]
         if recipe.get('station'):
             lines.append(('text', 'Station: ' + str(recipe['station']), th['muted']))
+        quality = recipe.get('material_quality')
+        if recipe.get('material_quality_enabled') and quality is not None:
+            source = str(recipe.get('material_source') or 'Selected materials')
+            lines.append(('text', f'Input quality: {quality}/100 · {source}', th['accent']))
         lines.append(('text', 'PRODUCES', th['muted']))
         for output in recipe.get('outputs') or []:
-            lines.append(('item', str(output.get('id', '')), f"{output.get('name', output.get('id', ''))} ×{output.get('qty', 1)}", th['good']))
+            label = f"{output.get('name', output.get('id', ''))} ×{output.get('qty', 1)}"
+            if output.get('quality') is not None:
+                label += f" · Quality {output['quality']}/100"
+            lines.append(('item', str(output.get('id', '')), label, th['good']))
+            if output.get('material_name'):
+                lines.append(('text', 'Material: ' + str(output['material_name']), th['muted']))
+            lines.extend(('text', str(benefit), th['good']) for benefit in output.get('benefits') or [])
         lines.append(('text', 'REQUIRES', th['muted']))
         for ingredient in recipe.get('inputs') or []:
             enough = ingredient.get('have', 0) >= ingredient.get('need', 0)
+            units = ' ' + str(ingredient['unit_label']) if ingredient.get('unit_label') else ''
+            suffix = ' · retained' if ingredient.get('retained') else ''
             lines.append(('item', str(ingredient.get('id', '')),
-                          f"{ingredient.get('name', ingredient.get('id', ''))}  {ingredient.get('have', 0)}/{ingredient.get('need', 0)}",
+                          f"{ingredient.get('name', ingredient.get('id', ''))}  {ingredient.get('have', 0)}/{ingredient.get('need', 0)}{units}{suffix}",
                           th['text'] if enough else th['danger']))
             if ingredient.get('tag'):
-                options=ingredient.get('options') or []
-                labels=[str(option.get('name','')) for option in options]
-                lines.append(('text','Accepts: '+', '.join(labels),th['muted']))
-                allocated=ingredient.get('allocated') or {}
-                used=[f"{option['name']} ×{allocated[option['id']]}" for option in options if allocated.get(option['id'])]
-                if used:lines.append(('text','Will consume: '+', '.join(used),th['accent']))
+                labels=[]
+                for option in ingredient.get('options') or []:
+                    label=str(option.get('name',''))
+                    if option.get('quality') is not None:
+                        label += f" · base q{option['quality']}"
+                    if option.get('source'):
+                        label += ' · ' + str(option['source']).replace('_',' ').title()
+                    if option.get('units'):
+                        label += f" · {option['units']} units each"
+                    labels.append(label)
+                if labels:
+                    lines.append(('text', 'Accepts: ' + '; '.join(labels), th['muted']))
         if not recipe.get('inputs'):
             lines.append(('text', 'No carried materials required.', th['text']))
+        consumed=recipe.get('consumed_items') or []
+        if consumed:
+            lines.append(('text', 'WILL CONSUME · PHYSICAL ITEMS', th['accent']))
+            for item in consumed:
+                label=f"{item['name']} ×{item['qty']}"
+                if item.get('quality') is not None:label+=f" · q{item['quality']}"
+                if item.get('source'):label+=' · '+str(item['source']).replace('_',' ').title()
+                lines.append(('item', str(item['id']), label, th['text']))
+        elif recipe.get('consumed') is None and recipe.get('material_quality_enabled'):
+            lines.append(('text', 'Add the required materials to preview the result.', th['muted']))
         if recipe.get('missing'):
             lines.append(('text', 'STILL NEEDED', th['muted']))
             lines.extend(('text', str(value), th['danger']) for value in recipe['missing'])
@@ -134,6 +162,16 @@ class CraftingBrowserMixin:
             lines.append(('text', 'ABOUT THIS RECIPE', th['muted']))
             lines.append(('text', str(recipe['description']), th['text']))
         return lines
+
+    def _crafting_preference_control(self, recipe, detail):
+        """Pin material selection above the existing action, outside text scrolling."""
+        if not recipe.get('material_preference_enabled'):
+            return 0
+        labels={'auto':'Auto','refined':'Refined first','recovered':'Recovered first'}
+        label=labels.get(recipe.get('material_preference','auto'),'Auto')
+        self._button((detail.x+12,detail.bottom-77,detail.width-24,27),
+                     'Materials: '+label+' · Change','UI_ACTION:material_preference')
+        return 34
 
     def _present_crafting_unified(self, title, rows, selected, *, subtitle='', breadcrumb='',
                                   footer='', page_start=0, total=None, data=None):
@@ -194,7 +232,8 @@ class CraftingBrowserMixin:
         self._panel_text('RECIPE DETAILS', pg.Rect(detail.x + 12, detail.y + 10, detail.width - 24, 22),
                          color=th['muted'], max_lines=1)
         recipe = recipes.get(selected_key, {})
-        content = pg.Rect(detail.x + 12, detail.y + 35, detail.width - 24, max(1, detail.height - 92))
+        preference_height = self._crafting_preference_control(recipe, detail) if recipe else 0
+        content = pg.Rect(detail.x + 12, detail.y + 35, detail.width - 24, max(1, detail.height - 92 - preference_height))
         if recipe:
             self._panel_detail('crafting:' + str(selected_key), content, self._crafting_detail_lines(recipe))
             button = pg.Rect(detail.x + 12, detail.bottom - 43, detail.width - 24, 31)
