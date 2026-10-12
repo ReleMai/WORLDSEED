@@ -54,7 +54,15 @@ class ExpandedPortraitIdentityTests(unittest.TestCase):
     def test_legacy_catalog_keeps_original_fingerprint_for_unsampled_faces(self):
         manifest = json.loads((Path(__file__).parent / "fixtures" / "portrait_v1_fingerprints.json").read_text())
         catalog_path = Path(portraits.__file__).resolve().parents[1] / "data" / "portrait_features_v1.json"
-        self.assertEqual(hashlib.sha256(catalog_path.read_bytes()).hexdigest(), manifest["catalog_sha256"])
+        # Git on Windows may check out this JSON with CRLF even though the
+        # frozen Dev61 compatibility fixture was fingerprinted with LF.
+        # Normalize only line endings; never relax the actual content hash.
+        canonical_bytes = catalog_path.read_bytes().replace(b"\r\n", b"\n")
+        self.assertEqual(hashlib.sha256(canonical_bytes).hexdigest(), manifest["catalog_sha256"])
+        self.assertEqual(
+            hashlib.sha256(canonical_bytes.replace(b"\n", b"\r\n").replace(b"\r\n", b"\n")).hexdigest(),
+            manifest["catalog_sha256"],
+        )
 
     def test_legacy_descriptors_keep_all_recorded_original_fields(self):
         manifest = json.loads((Path(__file__).parent / "fixtures" / "portrait_v1_fingerprints.json").read_text())
