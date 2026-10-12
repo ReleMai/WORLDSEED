@@ -81,6 +81,19 @@ class BalancingStabilityTests(unittest.TestCase):
         restored=LivingWorldState.from_dict(state.to_dict())
         self.assertEqual(set(restored.artifacts),set(state.artifacts))
 
+    def test_construction_duration_uses_crafting_and_strength(self):
+        from worldseed.sim.engine import Simulation
+        sim=Simulation.__new__(Simulation)
+        sim.state=LivingWorldState()
+        novice=sim._construction_duration(40)
+        sim.state.player_skills["crafting"]=8
+        skilled=sim._construction_duration(40)
+        sim.state.player_attributes["strength"]=10
+        stronger=sim._construction_duration(40)
+        self.assertGreater(novice,skilled)
+        self.assertGreaterEqual(skilled,stronger)
+        self.assertGreaterEqual(stronger,5)
+
     def test_npcs_may_not_move_onto_another_exterior_npc(self):
         state=LivingWorldState()
         a=NPCState("npc:a","Ada",32,"farmer",[],0,0,0,"town","faction")

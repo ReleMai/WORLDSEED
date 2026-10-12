@@ -63,3 +63,32 @@ refresh without closing and reopening dialogue.
   migration; do not fake an on-screen stopwatch after results are awarded.
 - Check fixtures in all room types and NPC work arrival through shared doors.
 - Tune reed biome density by multi-seed coverage benchmarks.
+
+## 2026-10-11 final validation addendum
+
+The original meal logic used only 30-minute clock boundaries for completion,
+but each meal block is itself 30 minutes and normally ends at such a boundary.
+Therefore the first attempt set "eating" action without ever reducing hunger.
+
+Reworked meal completion to occur after ten scheduled in-world minutes *at
+the routed seat position*. `InteriorActor.last_meal_minute` persists per-NPC
+completion and prevents repeated meals from save/load or per-tick refreshes.
+The added Windows CI regressions assert separate arrival points for two NPCs
+sharing a house and a full indoor eating routine that actually reduces hunger.
+
+On commit `d6b36d2512aa651ee396618df89ea43ab09f78c2`, targeted
+Windows graphical/system tests passed, including reed generation and tool
+bonus, prototype and save roundtrip, item description scrolling, outdoor NPC
+collision and door routing, identity refresh, multi-NPC indoor entry, and meal
+completion. Overall CI continues to fail only at the unrelated preexisting
+Dev62 portrait fingerprint step; subsequent suites are skipped. This patch
+requires manual real-Windows playtesting before declaring all graphical NPC
+interactions flawless.
+
+**Unfinished intentional scope:** user-requested visible interruptible
+gathering/building countdown and cancellation. The implemented mechanic is
+skill-adjusted *game-minutes charged when the action executes*, reported in
+World Activity messages; it is not an active progress timer. A subsequent
+job scheduler/animation pass is required to make timed, cancellable physical
+work authoritative across saves and UI, rather than pretending to wait
+after items were already awarded.
