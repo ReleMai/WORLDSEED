@@ -244,6 +244,10 @@ def validate_salvage_session(session: Any, attempts: int) -> list[str]:
                 issues.append('invalid tabletop salvage status')
             if type(node.get('grade')) is not int or not 0 <= node['grade'] <= 100:
                 issues.append('invalid tabletop salvage quality')
+            for damage_field in ('damage', 'splash'):
+                amount = node.get(damage_field, 0)
+                if type(amount) is not int or not 0 <= amount <= 50:
+                    issues.append('invalid tabletop salvage '+damage_field)
             if type(node.get('valuable')) is not bool:
                 issues.append('invalid tabletop salvage value')
             if node.get('done') and not node.get('operation'):

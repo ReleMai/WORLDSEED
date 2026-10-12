@@ -87,6 +87,7 @@ def create_project(definition, item_id: str, attempt: int, seed: bytes, minute: 
             "label": label, "clue": clue, "ideal": ideal,
             "condition": condition, "valuable": valuable, "depends": depends,
             "done": False, "grade": 0, "surveyed": False, "operation": "",
+            "damage": 0, "splash": 0,
         })
     return {
         "version": 2, "item_id": item_id, "definition_id": definition.id,
@@ -126,6 +127,7 @@ def view(project: dict, name: str, state, definition=None) -> dict:
          "done": n["done"], "locked": not _selectable(project, index) and not n["done"],
          "selected": index == active, "valuable": n["valuable"],
          "grade": n["grade"] if n["done"] else None,
+         "damage": n["damage"],
          "ideal": n["ideal"] if (n["surveyed"] or index == 0 and project.get("reveal_first")) else ""}
         for index, n in enumerate(nodes)
     ]
@@ -184,6 +186,9 @@ def play(project: dict, choice: str, state) -> tuple[bool, str, int, bool]:
         if not node["done"] or node["grade"] >= 100:
             return False, "Only the last imperfect operation can be corrected.", 0, False
         node["done"], node["grade"], node["operation"] = False, 0, ""
+        if node["splash"] and index + 1 < len(nodes):
+            nodes[index + 1]["damage"] = max(0, nodes[index + 1]["damage"] - node["splash"])
+        node["splash"] = 0
         project["step"] -= 1
         project["stress"] = max(0, project["stress"] - 8)
         project["undone"] = True
@@ -216,8 +221,20 @@ def play(project: dict, choice: str, state) -> tuple[bool, str, int, bool]:
     ideal = operation == node["ideal"]
     # The wrong tool may still work, but damaging brittle or valuable material
     # is deliberately much less productive than reading its visible cues.
-    grade = 100 if ideal else 55 if node["surveyed"] else 35
+    grade = max(15, (100 if ideal else 55 if node["surveyed"] else 35) - node["damage"])
     damage = 0 if ideal else 12 if node["valuable"] else 8
+    # Fracture shocks can spoil nearby mineral sections, while tearing
+    # a recovery layer frays the fibers directly underneath it.
+    # Mechanical disassembly concentrates stress in connections instead.
+    if not ideal and selected + 1 < len(nodes):
+        adjacent = nodes[selected+1]
+        if not adjacent["done"] and project["game"] in ("fracture", "recovery"):
+            spread = 18 if project["game"] == "fracture" and operation == "strike" else (
+                12 if project["game"] == "recovery" and operation == "cut" else 6)
+            adjacent["damage"] = min(50, adjacent["damage"] + spread)
+            node["splash"] = spread
+    if project["game"] == "disassembly" and not ideal and node["valuable"]:
+        damage += 6
     node["done"], node["grade"], node["operation"] = True, grade, operation
     project["stress"] = min(100, project["stress"] + damage)
     project["mistakes"] += int(not ideal)

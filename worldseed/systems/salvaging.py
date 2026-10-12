@@ -66,6 +66,22 @@ class SalvagingSystem:
             return False, "The salvage work ledger is full."
         return True, ""
 
+    def can_quick(self, item_id: str, inv: Inventory) -> tuple[bool, str]:
+        """The Makeshift Rig perk relaxes only tools, never ownership/equipment guards."""
+        ok, reason = self.can_start(item_id, inv)
+        if ok or not salvage_perks.has(self.state, "makeshift_rig"):
+            return ok, reason
+        definition = self.registry.salvage.get(item_id)
+        if (definition is None or self.state.player_salvage_session or inv.count(item_id) <= 0
+                or item_id in self.state.player_equipment.values()
+                or item_id == self.state.player_readied_weapon
+                or self.state.salvaging_attempts >= 1_000_000_000):
+            return False, reason
+        if all(self._best_quality(inv,quality,item_id) >= max(0,need-1)
+               for quality,need in definition.tool_qualities.items()):
+            return True, ""
+        return False, reason
+
     def preview(self, item_id: str, inv: Inventory | None = None) -> dict | None:
         """An observational preview; no dice, discovery or reservation is made."""
         if not isinstance(item_id, str):
@@ -74,12 +90,14 @@ class SalvagingSystem:
         if definition is None:
             return None
         ok, reason = self.can_start(item_id, inv) if inv is not None else (True, "")
+        quick_ok, quick_reason = self.can_quick(item_id, inv) if inv is not None else (True, "")
         level = self._level()
         return {
             "item_id": item_id, "name": self.registry.items[item_id].name,
             "method": definition.method, "description": definition.description,
             "minutes": definition.minutes, "difficulty": definition.difficulty,
             "tools": dict(definition.tool_qualities), "can_start": ok, "reason": reason,
+            "quick_can_start": quick_ok, "quick_reason": quick_reason,
             "guaranteed": [{"item_id": iid, "name": self.registry.items[iid].name,
                             "min": low, "max": high} for iid, (low, high) in sorted(definition.yields.items())],
             "rare": [{"item_id": drop.item_id, "name": self.registry.items[drop.item_id].name,
@@ -153,9 +171,12 @@ class SalvagingSystem:
         limit = 6 if salvage_perks.has(self.state, 'wreckbreaker') else 4 if salvage_perks.has(self.state, 'sweep_job') else 1
         if count < 1 or count > limit or inv.count(item_id) < count:
             return False, f"Select between one and {limit} carried copies.", 0
-        ok, reason = self.can_start(item_id, inv)
-        if not ok:
-            return False, reason, 0
+        shadow=Inventory(dict(inv.items))
+        for _ in range(count):
+            ok, reason = self.can_quick(item_id, shadow)
+            if not ok:
+                return False, reason, 0
+            shadow.remove(item_id, 1)
         total, completed = 0, 0
         for index in range(count):
             ok, reason, duration = self.quick(item_id, inv, world_seed, minute + total)
@@ -384,14 +405,7 @@ class SalvagingSystem:
 
     def quick(self,item_id:str,inv:Inventory,world_seed:bytes,minute:int=0)->tuple[bool,str,int]:
         """Low-yield, no-rare, minimal-XP alternative to careful salvage."""
-        ok,reason=self.can_start(item_id,inv)
-        if not ok and salvage_perks.has(self.state,"makeshift_rig") and item_id in self.registry.salvage:
-            definition=self.registry.salvage[item_id]
-            saved=definition.tool_qualities
-            if inv.count(item_id)>0 and not self.state.player_salvage_session and item_id not in self.state.player_equipment.values() and item_id!=self.state.player_readied_weapon and all(
-                    self._best_quality(inv,quality,item_id) >= max(0,needed-1)
-                    for quality,needed in saved.items()):
-                ok,reason=True,""
+        ok,reason=self.can_quick(item_id,inv)
         if not ok:return False,reason,0
         definition=self.registry.salvage[item_id]
         attempt=self.state.salvaging_attempts

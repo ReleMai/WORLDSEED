@@ -120,7 +120,7 @@ def run_salvage_panel(ctx, term):
             result = deepcopy(ctx.sim.state.player_salvage_log[-1]) if ctx.sim.state.player_salvage_log else {}
             continue
         if choice == 'UI_ACTION:salvage:quick':
-            ok,reason=ctx.sim.salvaging.can_start(selected_item,inv)
+            ok,reason=ctx.sim.salvaging.can_quick(selected_item,inv)
             if not ok:status=reason;continue
             ctx.sim.execute(QuickSalvageCommand(ctx.player_id,selected_item))
             status=ctx.sim.log[-1].message if ctx.sim.log else ''
@@ -186,6 +186,8 @@ class SalvagePanelMixin:
                     count = str(low) if low == high else f'{low}–{high}'
                     chance = f" · Rare base {part.get('chance_percent', 0)}%" if group == 'rare' else ' · Guaranteed'
                     lines.append(('item', part['item_id'], f"{part['name']} ×{count}{chance}", th['good'] if group == 'guaranteed' else th['accent']))
+                    if part.get('relevance', 0):
+                        lines.append(('text', f"Tell-Tale Marks: {part['relevance']} learned design(s) use this material.", th['good']))
                     if part.get('description'):
                         lines.append(('text', part['description'], th['muted']))
                     uses = part.get('uses', ())
@@ -274,10 +276,15 @@ class SalvagePanelMixin:
                        if complete else 'Select a find to preview materials. Begin dismantles one carried item; progress is kept when you close this panel.')
             self._panel_text(summary, (game.x + 12, game.y + 43, game.width - 24, max(40, game.height - 104)), color=th['muted'])
             button = pg.Rect(game.x + 12, game.bottom - 45, game.width - 24, 32)
-            if preview.get('can_start'):
+            if preview.get('can_start') or preview.get('quick_can_start'):
                 half=(game.width-30)//2
-                self._button((button.x,button.y,half,button.height),'CAREFUL [B]','UI_ACTION:salvage:begin')
-                self._button((button.x+half+6,button.y,half,button.height),'QUICK · LESS XP','UI_ACTION:salvage:quick')
+                if preview.get('can_start'):
+                    self._button((button.x,button.y,half,button.height),'CAREFUL [B]','UI_ACTION:salvage:begin')
+                else:
+                    self._panel_text('Careful work needs better tools.',
+                                     (button.x,button.y,half,button.height),color=th['muted'],max_lines=2)
+                if preview.get('quick_can_start'):
+                    self._button((button.x+half+6,button.y,half,button.height),'QUICK · LESS XP','UI_ACTION:salvage:quick')
                 perks = data.get('perk_view', {})
                 paths = perks.get('paths', [])
                 owns_batch = any(node.get('owned') for path in paths for node in path.get('perks', ()) if node.get('id')=='sweep_job')
@@ -355,7 +362,7 @@ class SalvagePanelMixin:
             self._button((x+15,rect.bottom-49,w-30,35),'EXAMINE AND START','UI_ACTION:salvage:act:inspect')
             return
         nodes = session.get('nodes',())
-        ncols = 2 if w < 600 else 3
+        ncols = 2 if w < 400 else 3
         gap = 7
         node_w = max(64,(w - 26-(ncols-1)*gap)//ncols)
         node_h = 40 if h < 385 else 47
@@ -365,7 +372,7 @@ class SalvagePanelMixin:
             py=node_y+(index//ncols)*(node_h+gap)
             cell=pg.Rect(px,py,node_w,node_h)
             selected=node['selected'];blocked=node['locked'];complete=node['done']
-            border=th['accent'] if selected else th['good'] if complete else th['edge']
+            border=th['accent'] if selected else th['good'] if complete else (156,83,65) if node.get('damage') else th['edge']
             bg=(54,48,35) if selected else (31,52,42) if complete else (39,45,46) if not blocked else th['panel']
             pg.draw.rect(self.screen,bg,cell,border_radius=4)
             pg.draw.rect(self.screen,border,cell,2 if selected else 1,border_radius=4)
@@ -382,7 +389,7 @@ class SalvagePanelMixin:
             else:
                 pg.draw.circle(self.screen,th['muted'],mark.center,9,2)
                 pg.draw.line(self.screen,th['accent'],(mark.x+6,mark.y+6),(mark.right-6,mark.bottom-6),2)
-            label=('✓ ' if complete else '○ ' if blocked else '')+node['label']
+            label=('✓ ' if complete else '○ ' if blocked else '!' if node.get('damage') else '')+node['label']
             self._panel_text(label,(cell.x+30,cell.y+4,cell.width-35,node_h-7),color=th['muted'] if blocked else th['text'],max_lines=2)
             self._ui_target(cell,'UI_ACTION:salvage:act:select:'+str(node['id']))
         rows=(len(nodes)+ncols-1)//ncols

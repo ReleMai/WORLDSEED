@@ -154,6 +154,39 @@ class TabletopSalvageTests(unittest.TestCase):
         self.assertIn("test:recipe",state.player_discovered_recipes)
         self.assertEqual(state.player_salvage_dossiers["test:workshop"],[])
 
+    def test_fracture_impacts_damage_adjacent_sections_and_can_be_corrected(self):
+        system,state,inv,_=fixture("crush",1)
+        state.player_skills["salvaging"]=10
+        for perk in ("seam_sense","steady_hands","intact_recovery","gentle_undo"):
+            self.assertTrue(system.buy_perk(perk)[0])
+        system.begin_game("test:object",inv,SEED)
+        system.act("inspect",inv,SEED)
+        adjacent=state.player_salvage_session["nodes"][1]
+        ideal=state.player_salvage_session["nodes"][0]["ideal"]
+        wrong="strike" if ideal!="strike" else "tap"
+        self.assertTrue(system.act("work:"+wrong,inv,SEED)[0])
+        self.assertGreater(adjacent["damage"],0)
+        self.assertTrue(system.session_view()["can_undo"])
+        self.assertTrue(system.act("undo",inv,SEED)[0])
+        self.assertEqual(adjacent["damage"],0)
+        self.assertEqual(state.player_salvage_session["step"],0)
+        self.assertEqual(validate_sim_state(state.to_dict()),[])
+
+    def test_makeshift_quick_action_never_bypasses_equipment_protection(self):
+        from dataclasses import replace
+        system,state,inv,registry=fixture("strip",2)
+        state.player_skills["salvaging"]=10
+        for perk in ("fast_hands","sorted_scrap","sweep_job","makeshift_rig"):
+            self.assertTrue(system.buy_perk(perk)[0])
+        d=registry.salvage["test:object"]
+        registry.salvage["test:object"]=replace(d,tool_qualities={"cut":1})
+        self.assertFalse(system.can_start("test:object",inv)[0])
+        self.assertTrue(system.can_quick("test:object",inv)[0])
+        self.assertTrue(system.quick_batch("test:object",1,inv,SEED)[0])
+        self.assertEqual(inv.count("test:object"),1)
+        state.player_equipment["hands"]="test:object"
+        self.assertFalse(system.can_quick("test:object",inv)[0])
+
 def complete_without_inspection(system,inv):
     while system.session_view():
         project=system.state.player_salvage_session

@@ -219,7 +219,7 @@ class SalvagePanelRenderingTests(unittest.TestCase):
         _, _, data = self.data()
         for size in ((740, 500), (900, 620)):
             with self.subTest(size=size):
-                self.term._floating_panels['crafting'] = {'x': 16, 'y': 16, 'w': size[0], 'h': size[1]}
+                self.term._floating_panels['salvaging'] = {'x': 16, 'y': 16, 'w': size[0], 'h': size[1]}
                 capacity = self.term._salvage_browser_geometry()['capacity']
                 rows = [MenuRow(iid, row['name']) for iid, row in data['items'].items()][:capacity]
                 self.term._present_salvaging_unified('SALVAGING', rows, 0, data=data, total=len(data['items']))
@@ -261,7 +261,7 @@ class SalvagePanelRenderingTests(unittest.TestCase):
         self.assertTrue(ctx.sim.salvaging.begin(iid, inv, b'panel-cue')[0])
         self.assertTrue(ctx.sim.salvaging.act('inspect', inv, b'panel-cue')[0])
         data['active_session'] = ctx.sim.salvaging.session_view()
-        self.term._floating_panels['crafting'] = {'x': 16, 'y': 16, 'w': 740, 'h': 500}
+        self.term._floating_panels['salvaging'] = {'x': 16, 'y': 16, 'w': 740, 'h': 500}
         rows = [MenuRow(iid, data['items'][iid]['name'])]
         before = copy.deepcopy(data)
         with patch.object(self.term, '_panel_text', wraps=self.term._panel_text) as text:
@@ -275,6 +275,38 @@ class SalvagePanelRenderingTests(unittest.TestCase):
         self.assertEqual(len(choices), 3)
         self.assertLessEqual(rect.bottom, min(button.y for button in choices))
         self.assertEqual(data, before)
+
+
+    def test_material_specific_tabletops_and_perk_tree_are_clickable_at_minimum_size(self):
+        for method in ("unfasten", "crush", "strip"):
+            with self.subTest(method=method):
+                reg=copy.copy(self.registry)
+                reg.salvage={"core:wood":SalvageDef("test:wood","core:wood",12,8,
+                    {"core:bark":(1,3)},method=method,description="Inspect a worn material.")}
+                state=LivingWorldState()
+                state.player_skills["salvaging"]=10
+                inv=Inventory({"core:wood":1})
+                system=SalvagingSystem(state,reg)
+                sim=SimpleNamespace(state=state,salvaging=system,crafting=CraftingSystem(state,reg),
+                                    player_skill=lambda key:state.player_skills.get(key,0))
+                ctx=SimpleNamespace(sim=sim,registry=reg)
+                self.assertTrue(system.begin_game("core:wood",inv,b"panel-v2")[0])
+                self.assertTrue(system.act("inspect",inv,b"panel-v2")[0])
+                data=salvage_panel_data(ctx,inv)
+                self.term._floating_panels["salvaging"]={"x":16,"y":16,"w":740,"h":500}
+                rows=[MenuRow("core:wood","Wood")]
+                self.term._present_salvaging_unified("SALVAGING",rows,0,data=data)
+                tokens=self.term._pointer_targets
+                bounds=self.term.pg.Rect(16,16,740,500)
+                self.assertTrue(all(bounds.contains(rect) for rect,_ in tokens),
+                                [(token,str(rect)) for rect,token in tokens if not bounds.contains(rect)])
+                self.assertIn("UI_ACTION:salvage:act:select:0",{token for _,token in tokens})
+                self.assertTrue(any(token.startswith("UI_ACTION:salvage:act:work:") for _,token in tokens))
+                data["perks_open"]=True
+                self.term._present_salvaging_unified("SALVAGING",rows,0,data=data)
+                tokens={token for _,token in self.term._pointer_targets}
+                self.assertIn("UI_ACTION:salvage:perk:seam_sense",tokens)
+                self.assertIn("UI_ACTION:salvage:perks",tokens)
 
 
 if __name__ == '__main__': unittest.main()

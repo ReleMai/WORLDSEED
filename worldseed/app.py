@@ -2646,6 +2646,9 @@ def _salvage_preview_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,it
             row=dict(component);iid=row['item_id']
             uses=[r.name for r in known if sim.crafting.recipe_uses_item(r,iid) or iid in r.catalysts]
             row['uses']=uses
+            from worldseed.systems.salvage_perks import has as has_salvage_perk
+            if has_salvage_perk(sim.state, 'tell_tale_marks'):
+                row['relevance'] = len(uses)
             item=reg.items.get(iid)
             row['description']=item.description if item else ''
             data[group].append(row)
