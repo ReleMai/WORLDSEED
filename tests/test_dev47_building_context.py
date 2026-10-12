@@ -33,7 +33,8 @@ class BuildingContextTests(unittest.TestCase):
             hunting=SimpleNamespace(signs_at=lambda p:[],home_at=lambda p:None),
             casing=SimpleNamespace(intel_for=lambda p:None,can_case=CasingSystem.can_case),
             resources=SimpleNamespace(is_harvestable=lambda p:False),
-            fishing=SimpleNamespace(is_fishable=lambda p:False),known_npc_ids=lambda:set())
+            fishing=SimpleNamespace(is_fishable=lambda p:False),
+            homestead=SimpleNamespace(at=lambda p:None),known_npc_ids=lambda:set())
         return SimpleNamespace(sim=sim,entities=entities,player_id=player),door,physical
 
     def rows(self,ctx,target):

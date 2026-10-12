@@ -77,6 +77,9 @@ class BuildingShellTests(unittest.TestCase):
 
     def test_workshop_storage_moves_inside_without_copying_goods(self):
         physical,structure,_,registry=self.fixture("workshop")
+        # This isolated shell fixture has no item catalog; it tests relocation,
+        # not the separate once-per-village salvage origin system.
+        registry.items={}
         state=LivingWorldState()
         town=SettlementState("settlement:test","Millford",0,0,4,4,20,"culture:test","religion:test","")
         town.stocks={"core:wood":10};state.settlements[town.uid]=town

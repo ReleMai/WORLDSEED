@@ -126,6 +126,11 @@ class InteriorWorkshopTests(unittest.TestCase):
 
     def test_overflow_stays_at_continuous_station_and_cannot_repeat(self):
         sim, town, npc, workshop, activities, professions, storage = self.fixture()
+        # Complete a real reserved work order, not an unreserved anonymous
+        # output dict. This also exercises one-time output authority.
+        tasks = professions.plan_work(npc, town, 600)
+        task = next(t for t in tasks if t.get("on_complete") == "profession_process")
+        self.assertIn(task["reservation_uid"], sim.state.activity_reservations)
         plan = sim.interiors.prepare_workplace(workshop.uid)
         self.assertTrue(sim.interiors.enter_work_npc(npc, plan.door_uid))
         actor = sim.state.interior_actors[npc.uid]
@@ -133,7 +138,6 @@ class InteriorWorkshopTests(unittest.TestCase):
         npc.inventory = {"core:iron_ore": 2, "core:coal": 1}
         before = dict(storage.items)
         professions.goods.add_to_actor = lambda worker, iid, qty: 0
-        task = {"inputs": {"core:iron_ore": 2, "core:coal": 1}, "outputs": {"core:iron_bloom": 1}}
         self.assertTrue(professions.complete_process(npc, town, task, 650))
         self.assertEqual(storage.items, before)
         self.assertEqual([(p.x, p.y, p.items) for p in plan.piles], [(2345, 6789, {"core:iron_bloom": 1})])

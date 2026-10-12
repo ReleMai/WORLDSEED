@@ -81,6 +81,9 @@ class InteriorAITests(unittest.TestCase):
         del state.interior_actors
         system.interiors=None
         npc.tasks=[{"kind":"move","x":4,"y":4,"exact":True}]
+        # Collision-aware legacy movement still needs a physical passability
+        # source, even when the save contains no interior records.
+        system.world=SimpleNamespace(is_passable=lambda pos: True)
         system.execute_tick(npc,town,605,WorldPos(3,4))
         self.assertEqual((npc.x,npc.y),(4,4))
         self.assertFalse(npc.tasks)

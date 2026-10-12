@@ -165,6 +165,7 @@ class ExteriorBuildingMenuTests(unittest.TestCase):
         sim.resources = SimpleNamespace(is_harvestable=hidden('hidden resource'))
         sim.fishing = SimpleNamespace(is_fishable=hidden('hidden fish'))
         sim.casing = SimpleNamespace(can_case=lambda structure: False)
+        sim.homestead = SimpleNamespace(at=lambda target: None)
         physical = sim.settlement_physicalization
         physical.shell_at = Mock(return_value=shell)
         physical.cell_at = Mock(return_value=SimpleNamespace(structure_id=planned.uid))

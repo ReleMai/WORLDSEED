@@ -93,12 +93,17 @@ class Dev16CraftDiscoveryTests(unittest.TestCase):
         self.assertTrue(ok,msg)
         self.assertEqual(inv.count('core:stone'),0)
         self.assertEqual(len(state.player_discovered_recipes),1)
-        inv.add('core:stone_flake',2)
-        inv.add('core:stout_branch',1)
-        inv.add('core:plant_cordage',1)
+        # The stone axe now uses material-tag clues for shafts and bindings,
+        # not two obsolete duplicate stone-flake clues. Use the actual
+        # authored signature, including the physical item alternatives.
+        axe=self.registry.recipes['core:stone_axe']
+        ingredients=craft.discovery_examples(axe)
+        self.assertLessEqual(len(ingredients),5)
+        for iid in ingredients:
+            inv.add(iid,1)
         craft.sync_discoveries(inv)
         self.assertEqual(craft.researchable_recipes(inv),[])
-        ok,msg,minutes=craft.combine_in_pot(('core:stone_flake','core:stone_flake','core:stout_branch','core:plant_cordage'),inv,b'pot-test')
+        ok,msg,minutes=craft.combine_in_pot(ingredients,inv,b'pot-test')
         self.assertTrue(ok,msg)
         self.assertGreaterEqual(minutes,10)
         self.assertIn(state.player_discovered_recipes[-1],self.registry.recipes)
