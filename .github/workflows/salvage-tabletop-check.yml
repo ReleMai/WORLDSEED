@@ -1,0 +1,53 @@
+name: WORLDSEED Salvage Tabletop and Perk Checks
+on:
+  push:
+    branches: [main, validation/salvaging-tabletop]
+    paths:
+      - "worldseed/systems/salvage_games.py"
+      - "worldseed/systems/salvage_perks.py"
+      - "worldseed/systems/salvaging.py"
+      - "worldseed/systems/state.py"
+      - "worldseed/persistence/validation.py"
+      - "worldseed/sim/commands.py"
+      - "worldseed/sim/engine.py"
+      - "worldseed/ui/salvage_panel.py"
+      - "worldseed/ui/pygame_terminal.py"
+      - "tests/test_salvaging.py"
+      - "tests/test_salvage_panel.py"
+      - "tests/test_salvage_tabletop.py"
+      - ".github/workflows/salvage-tabletop-check.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: salvage-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mechanics-and-persistence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Compile modified simulation and UI
+        run: python -m compileall -q worldseed/systems/salvage_games.py worldseed/systems/salvage_perks.py worldseed/systems/salvaging.py worldseed/systems/state.py worldseed/persistence/validation.py worldseed/sim/commands.py worldseed/sim/engine.py worldseed/ui/salvage_panel.py worldseed/ui/pygame_terminal.py
+      - name: Detailed tabletop salvage and perks
+        run: python -m unittest discover -s tests -p "test_salvage_tabletop.py" -v
+      - name: Legacy saves, salvaging and commands
+        run: python -m unittest discover -s tests -p "test_salvaging.py" -v
+      - name: Standalone window controller and rendering
+        run: python -m unittest discover -s tests -p "test_salvage_panel.py" -v
+      - name: Salvaging terminal and legacy routes
+        run: python -m unittest discover -s tests -p "test_salvaging_ui.py" -v
+      - name: Existing crafting discovery and inventory boundaries
+        run: |
+          python -m unittest discover -s tests -p "test_workbench_progression.py" -v
+          python -m unittest discover -s tests -p "test_persistence.py" -v

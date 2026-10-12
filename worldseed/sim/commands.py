@@ -32,9 +32,17 @@ class CraftCommand: actor:int; recipe_id:str; material_preference:str="auto"
 @dataclass(frozen=True,slots=True)
 class StartSalvageCommand: actor:int; item_id:str
 @dataclass(frozen=True,slots=True)
+class StartSalvageGameCommand: actor:int; item_id:str
+@dataclass(frozen=True,slots=True)
+class SalvagePerkCommand: actor:int; perk_id:str
+@dataclass(frozen=True,slots=True)
+class ResetSalvagePerksCommand: actor:int
+@dataclass(frozen=True,slots=True)
+class ResearchSalvageDossierCommand: actor:int; station_id:str
+@dataclass(frozen=True,slots=True)
 class SalvageActionCommand: actor:int; choice_id:str
 @dataclass(frozen=True,slots=True)
-class QuickSalvageCommand: actor:int; item_id:str
+class QuickSalvageCommand: actor:int; item_id:str; count:int=1
 @dataclass(frozen=True,slots=True)
 class DiscoveryPotCommand: actor:int; items:tuple[str,...]; station_id:str=""
 @dataclass(frozen=True,slots=True)

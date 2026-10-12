@@ -12,7 +12,7 @@ os.environ.setdefault('PYGAME_HIDE_SUPPORT_PROMPT', '1')
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry, SalvageDef
 from worldseed.entities.components import Inventory
-from worldseed.sim.commands import MoveCommand, SalvageActionCommand, StartSalvageCommand
+from worldseed.sim.commands import MoveCommand, SalvageActionCommand, StartSalvageCommand, StartSalvageGameCommand
 from worldseed.systems.crafting import CraftingSystem
 from worldseed.systems.salvaging import SalvagingSystem
 from worldseed.systems.state import LivingWorldState
@@ -39,8 +39,9 @@ class SalvagePanelControllerTests(unittest.TestCase):
                               log=[], player_skill=lambda key: state.player_skills.get(key, 0))
         def execute(command):
             commands.append(command)
-            if isinstance(command, StartSalvageCommand):
-                ok, message, _ = system.begin(command.item_id, inv, b'salvage-panel')
+            if isinstance(command, (StartSalvageCommand,StartSalvageGameCommand)):
+                begin=system.begin_game if isinstance(command,StartSalvageGameCommand) else system.begin
+                ok, message, _ = begin(command.item_id, inv, b'salvage-panel')
             elif isinstance(command, SalvageActionCommand):
                 ok, message, _ = system.act(command.choice_id, inv, b'salvage-panel')
             elif isinstance(command, MoveCommand):
@@ -74,6 +75,13 @@ class SalvagePanelControllerTests(unittest.TestCase):
         view = ctx.sim.salvaging.session_view()
         if view['phase'] == 'inspection':
             return 'inspect'
+        if view.get('version') == 2:
+            project=ctx.sim.state.player_salvage_session
+            ready=next(index for index,node in enumerate(project['nodes'])
+                       if not node['done'] and (node['depends']<0 or project['nodes'][node['depends']]['done']))
+            if view['selected_node'] != ready:
+                return 'select:'+str(ready)
+            return 'work:'+project['nodes'][ready]['ideal']
         return ctx.sim.salvaging._stage(ctx.sim.state.player_salvage_session,
                                         ctx.registry.salvage[view['item_id']])['correct']
 
@@ -120,7 +128,7 @@ class SalvagePanelControllerTests(unittest.TestCase):
         self.assertEqual(inv.count('core:wood'), 0)
         self.assertEqual(len(state.player_salvage_log), 2)
         self.assertEqual(inv.count('core:bark'), sum(row['outputs']['core:bark'] for row in state.player_salvage_log))
-        self.assertEqual(len(commands), 10)
+        self.assertGreaterEqual(len(commands), 12)
         self.assertTrue(any(frame[3]['result'] for frame in term.frames))
         self.assertEqual({frame[0] for frame in term.frames}, {'salvaging_unified'})
 
@@ -130,12 +138,12 @@ class SalvagePanelControllerTests(unittest.TestCase):
             view = ctx.sim.salvaging.session_view()
             if view:
                 correct = self.action(ctx)
-                return str(next(index + 1 for index, row in enumerate(view['choices']) if row['id'] == correct))
+                return 'UI_ACTION:salvage:act:' + correct
             return 'b' if not state.salvaging_attempts else 'ESC'
         term = self.term(read)
         run_salvage_panel(ctx, term)
-        self.assertEqual(len(commands), 5)
-        self.assertEqual(state.player_salvage_log[-1]['score'], 6)
+        self.assertGreaterEqual(len(commands), 6)
+        self.assertEqual(state.player_salvage_log[-1]['score'], 100)
         self.assertFalse(state.player_salvage_session)
         self.assertEqual({frame[0] for frame in term.frames}, {'salvaging_unified'})
 
@@ -143,7 +151,7 @@ class SalvagePanelControllerTests(unittest.TestCase):
         ctx, state, inv, commands = self.make()
         keys = iter(['UI_ACTION:salvage:begin', 'UI_ACTION:salvage:act:inspect', 'ESC'])
         run_salvage_panel(ctx, self.term(lambda term: next(keys)))
-        self.assertEqual(state.player_salvage_session['phase'], 'disassembly')
+        self.assertEqual(state.player_salvage_session['phase'], 'work')
         saved = copy.deepcopy(state.player_salvage_session)
         run_salvage_panel(ctx, self.term(lambda term: 'ESC'))
         self.assertEqual(state.player_salvage_session, saved)

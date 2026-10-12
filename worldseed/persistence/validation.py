@@ -207,6 +207,70 @@ def validate_salvage_session(session: Any, attempts: int) -> list[str]:
     issues = []
     def identity(value):
         return isinstance(value, str) and ':' in value and not any(c.isspace() for c in value)
+    if session.get('version') == 2:
+        if not identity(session.get('item_id')) or not identity(session.get('definition_id')):
+            issues.append('invalid tabletop salvage identity')
+        attempt = session.get('attempt')
+        if type(attempt) is not int or type(attempts) is not int or not 0 <= attempt < attempts:
+            issues.append('invalid tabletop salvage reservation')
+        if type(session.get('started_minute')) is not int or session['started_minute'] < 0:
+            issues.append('invalid tabletop salvage start time')
+        game = session.get('game')
+        actions = {
+            'disassembly': {'unfasten', 'wedge', 'cut'},
+            'fracture': {'tap', 'wedge', 'strike'},
+            'recovery': {'unpick', 'wash', 'dry', 'cut'},
+        }
+        nodes = session.get('nodes')
+        if game not in actions or not isinstance(nodes, list) or not 4 <= len(nodes) <= 5:
+            issues.append('invalid tabletop salvage puzzle')
+            return issues
+        if session.get('phase') not in ('inspection', 'work'):
+            issues.append('invalid tabletop salvage phase')
+        selected = session.get('selected')
+        if type(selected) is not int or not 0 <= selected < len(nodes):
+            issues.append('invalid tabletop salvage selection')
+        for index, node in enumerate(nodes):
+            if not isinstance(node, dict):
+                issues.append('invalid tabletop salvage component')
+                continue
+            if any(not isinstance(node.get(k), str) or not node[k] for k in ('label', 'clue', 'ideal', 'condition')):
+                issues.append('invalid tabletop salvage clue')
+            if node.get('ideal') not in actions.get(game, set()):
+                issues.append('invalid tabletop salvage tool')
+            if type(node.get('depends')) is not int or not -1 <= node['depends'] < index:
+                issues.append('invalid tabletop salvage dependency')
+            if type(node.get('done')) is not bool or type(node.get('surveyed')) is not bool:
+                issues.append('invalid tabletop salvage status')
+            if type(node.get('grade')) is not int or not 0 <= node['grade'] <= 100:
+                issues.append('invalid tabletop salvage quality')
+            if type(node.get('valuable')) is not bool:
+                issues.append('invalid tabletop salvage value')
+            if node.get('done') and not node.get('operation'):
+                issues.append('completed tabletop part has no operation')
+            if not node.get('done') and node.get('grade') != 0:
+                issues.append('unfinished tabletop part has quality')
+        step = session.get('step')
+        if type(step) is not int or step != sum(n.get('done') is True for n in nodes if isinstance(n, dict)):
+            issues.append('invalid tabletop salvage progress')
+        for field, ceiling in (('score', 100), ('stress', 100), ('mistakes', 5),
+                               ('skill_level', 10), ('tool_bonus', 12), ('minutes_spent', 40)):
+            value = session.get(field)
+            if type(value) is not int or not 0 <= value <= ceiling:
+                issues.append('invalid tabletop salvage '+field)
+        for key in ('stabilized', 'undone', 'reveal_first'):
+            if type(session.get(key)) is not bool:
+                issues.append('invalid tabletop salvage '+key)
+        history = session.get('history')
+        if not isinstance(history, list) or len(history) > len(nodes) or any(
+                type(i) is not int or not 0 <= i < len(nodes) for i in history):
+            issues.append('invalid tabletop salvage correction history')
+        priority = session.get('priority')
+        if not isinstance(priority, str) or len(priority) > 120:
+            issues.append('invalid tabletop salvage priority')
+        if session.get('phase') == 'inspection' and step != 0:
+            issues.append('inspection contains completed tabletop work')
+        return issues
     if type(session.get('version')) is not int or session.get('version') != 1:
         issues.append('unsupported salvage session version')
     if not identity(session.get('item_id')) or not identity(session.get('definition_id')):
@@ -250,6 +314,31 @@ def _validate_salvaging(raw: dict[str, Any]) -> list[str]:
     xp = raw.get('player_salvaging_xp', 0)
     if type(xp) is not int or not 0 <= xp < 24 + level * 14:
         issues.append('salvaging practice out of bounds')
+    from worldseed.systems.salvage_perks import PERKS, LEVEL_GATES
+    perk_list = raw.get('player_salvage_perks', [])
+    if (not isinstance(perk_list, list) or len(perk_list) > level
+            or len(set(str(p) for p in perk_list)) != len(perk_list)
+            or any(p not in PERKS for p in perk_list if isinstance(p, str))
+            or any(not isinstance(p, str) for p in perk_list)):
+        issues.append('invalid salvaging perk allocation')
+    elif isinstance(perk_list, list):
+        known = set(perk_list)
+        for p in perk_list:
+            perk = PERKS[p]
+            if level < perk.level or (perk.tier > 1 and not any(
+                    other.path == perk.path and other.tier == perk.tier-1 and other.id in known
+                    for other in PERKS.values())):
+                issues.append('salvaging perk violates level or path prerequisite')
+    respecs = raw.get('player_salvage_respecs', 1)
+    if type(respecs) is not int or not 0 <= respecs <= 3:
+        issues.append('invalid salvaging respec tokens')
+    dossiers = raw.get('player_salvage_dossiers', {})
+    if (not isinstance(dossiers, dict) or len(dossiers) > 100 or
+            any(not isinstance(k, str) or len(k) > 120 or
+                not isinstance(v, list) or len(v) > 3 or len(set(map(str, v))) != len(v)
+                or any(not isinstance(i, str) or ':' not in i for i in v)
+                for k, v in dossiers.items())):
+        issues.append('invalid salvage research dossiers')
     attempts = raw.get('salvaging_attempts', 0)
     if type(attempts) is not int or not 0 <= attempts <= 1_000_000_000:
         issues.append('salvaging attempt count out of bounds')
@@ -269,7 +358,7 @@ def _validate_salvaging(raw: dict[str, Any]) -> list[str]:
         if type(attempt) is int:
             seen.add(attempt)
         score = row.get('score')
-        if type(score) is not int or not 0 <= score <= 6 or score % 2 or row.get('max_score') != 6:
+        if type(score) is not int or not ((0 <= score <= 6 and score % 2 == 0 and row.get('max_score') == 6) or (0 <= score <= 100 and row.get('max_score') == 100)):
             issues.append('invalid salvage result score')
         for key in ('outputs', 'rare_outputs'):
             drops = row.get(key)

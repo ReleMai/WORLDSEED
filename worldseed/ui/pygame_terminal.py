@@ -977,6 +977,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
     def _floating_panel_minimum(self, panel_id: str) -> tuple[int,int]:
         if panel_id in ('homestead_styles','homestead_depot'):return (540,440)
         if panel_id=='crafting':return (740,500)
+        if panel_id=='salvaging':return (740,500)
         return (760,500) if panel_id=='container_inventory' else (640,440)
 
     def _floating_panel_state(self, panel_id: str) -> dict[str,int]:
@@ -984,8 +985,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         min_w,min_h=self._floating_panel_minimum(panel_id)
         min_w=min(min_w,max(1,sw-16));min_h=min(min_h,max(1,sh-16))
         home_ui=panel_id in ('homestead_styles','homestead_depot')
-        default_w=min(sw-48,760 if home_ui else 1080 if panel_id in ('container_inventory','crafting') else 900)
-        default_h=min(sh-48,580 if home_ui else 680 if panel_id in ('container_inventory','crafting') else 620)
+        default_w=min(sw-48,760 if home_ui else 1080 if panel_id in ('container_inventory','crafting','salvaging') else 900)
+        default_h=min(sh-48,580 if home_ui else 680 if panel_id in ('container_inventory','crafting','salvaging') else 620)
         state=self._floating_panels.get(panel_id)
         if state is None:
             base_x=max(12,(sw-default_w)//2);base_y=max(12,(sh-default_h)//2)
@@ -1806,7 +1807,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         if presentation=='crafting_unified':return self._crafting_browser_geometry()['capacity']
         if presentation=='discovery_pot':return self._discovery_browser_geometry()['capacity']
         if presentation=='workshop_station':return self._workshop_browser_geometry()['capacity']
-        if presentation=='salvaging_unified':return self._salvage_browser_geometry()['capacity']
+        if presentation=='salvaging_unified':return self._salvage_browser_geometry(tabletop=False)['capacity']
         if presentation not in {'workshop_station','salvaging'}:
             return super().menu_page_size(presentation)
         panel=self._floating_panel_state('crafting');height=panel['h']

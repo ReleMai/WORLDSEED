@@ -1209,6 +1209,9 @@ class LivingWorldState:
     fishing_pressure: dict[str, int] = field(default_factory=dict)
     player_fishing_log: list[dict] = field(default_factory=list)
     player_salvaging_xp: int = 0
+    player_salvage_perks: list[str] = field(default_factory=list)
+    player_salvage_respecs: int = 1
+    player_salvage_dossiers: dict[str, list[str]] = field(default_factory=dict)
     salvaging_attempts: int = 0
     player_salvage_session: dict[str, Any] = field(default_factory=dict)
     player_salvage_log: list[dict] = field(default_factory=list)
@@ -1311,7 +1314,7 @@ class LivingWorldState:
             "fires": rows(self.fires), "fluids": rows(self.fluids), "diseases": rows(self.diseases), "infections": rows(self.infections), "magic_laws": rows(self.magic_laws), "magic_traditions": rows(self.magic_traditions), "spells": rows(self.spells), "rituals": rows(self.rituals), "arcane_contamination": rows(self.arcane_contamination), "myths": rows(self.myths),
             "cultures": rows(self.cultures), "religions": rows(self.religions), "libraries": rows(self.libraries), "knowledge_schools": rows(self.knowledge_schools), "religious_institutions": rows(self.religious_institutions), "player_name": self.player_name, "player_origin": self.player_origin, "player_sex": self.player_sex, "player_sprite_index": int(self.player_sprite_index), "player_attributes": dict(self.player_attributes), "player_skills": dict(self.player_skills), "player_swimming_xp": self.player_swimming_xp, "player_fishing_xp": self.player_fishing_xp, "fishing_attempts": self.fishing_attempts, "fishing_pressure": dict(self.fishing_pressure), "player_fishing_log": list(self.player_fishing_log[-240:]), "player_talents": list(self.player_talents), "player_knowledge": list(self.player_knowledge), "player_crafting_discovery_enabled": self.player_crafting_discovery_enabled, "player_discovered_items": sorted(set(self.player_discovered_items)), "player_discovered_recipes": sorted(set(self.player_discovered_recipes)), "player_unseen_recipes": sorted(set(self.player_unseen_recipes)), "player_crafting_experiments": self.player_crafting_experiments, "player_literacy": self.player_literacy, "player_languages": dict(self.player_languages),
             "player_crafting_log": deepcopy(self.player_crafting_log[-80:]), "player_crafting_hints": deepcopy(self.player_crafting_hints[-200:]),
-            "player_salvaging_xp": self.player_salvaging_xp, "salvaging_attempts": self.salvaging_attempts,
+            "player_salvaging_xp": self.player_salvaging_xp, "player_salvage_perks": list(self.player_salvage_perks), "player_salvage_respecs": self.player_salvage_respecs, "player_salvage_dossiers": deepcopy(self.player_salvage_dossiers), "salvaging_attempts": self.salvaging_attempts,
             "player_salvage_session": deepcopy(self.player_salvage_session), "player_salvage_log": deepcopy(self.player_salvage_log[-80:]),
             "player_equipment": dict(self.player_equipment), "player_equipped_artifacts": dict(self.player_equipped_artifacts), "player_readied_weapon": self.player_readied_weapon, "player_aim_target": self.player_aim_target, "player_aim_zone": self.player_aim_zone, "player_aim_quality": int(self.player_aim_quality), "player_facing_dx": int(self.player_facing_dx), "player_facing_dy": int(self.player_facing_dy), "player_guarding": bool(self.player_guarding), "player_defense_mode": self.player_defense_mode, "player_defense_quality": int(self.player_defense_quality), "player_disengage_turn": int(self.player_disengage_turn), "player_hunting_stance": self.player_hunting_stance, "player_hunting_xp": int(self.player_hunting_xp), "player_body_parts": dict(self.player_body_parts), "player_wounds": list(self.player_wounds), "player_combat_log": list(self.player_combat_log[-240:]), "player_infections": list(self.player_infections), "player_immunities": dict(self.player_immunities), "player_nutrition": dict(self.player_nutrition), "player_diet_history": list(self.player_diet_history[-240:]), "player_food_effects": dict(self.player_food_effects),
             "player_bounties": dict(self.player_bounties), "player_crime_heat": dict(self.player_crime_heat),
@@ -1349,7 +1352,7 @@ class LivingWorldState:
         s.player_crafting_hints = deepcopy(raw.get("player_crafting_hints", [])[-200:])
         # Active projects have already spent their input; retain their exact
         # choices and random identity without aliasing the caller's save data.
-        for key in ("player_salvaging_xp", "salvaging_attempts", "player_salvage_session", "player_salvage_log"):
+        for key in ("player_salvaging_xp", "player_salvage_perks", "player_salvage_respecs", "player_salvage_dossiers", "salvaging_attempts", "player_salvage_session", "player_salvage_log"):
             if key in raw:
                 setattr(s, key, deepcopy(raw[key]))
         # Old saves disclosed identity on first speech. Preserve those already

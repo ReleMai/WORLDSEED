@@ -13,6 +13,7 @@ from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
 from worldseed.persistence.validation import validate_salvage_session
 from worldseed.systems.state import LivingWorldState
+from worldseed.systems import salvage_games, salvage_perks
 
 SALVAGE_PROTOCOL_VERSION = 1
 SALVAGE_LOG_LIMIT = 80
@@ -124,6 +125,151 @@ class SalvagingSystem:
         }
         return True, f"You set aside one {self.registry.items[item_id].name.lower()} for salvaging. Inspect it before disassembly.", 1
 
+    def begin_game(self, item_id: str, inv: Inventory, world_seed: bytes, minute: int = 0) -> tuple[bool, str, int]:
+        """Start the detailed tabletop mode; v1 active projects remain resumable."""
+        ok, message, duration = self.begin(item_id, inv, world_seed, minute)
+        if not ok:
+            return ok, message, duration
+        old = self.state.player_salvage_session
+        definition = self.registry.salvage[item_id]
+        self.state.player_salvage_session = salvage_games.create_project(
+            definition, item_id, old["attempt"], world_seed, minute,
+            old["skill_level"], old["tool_bonus"], self.state)
+        return True, f"Set aside {self.registry.items[item_id].name}. {salvage_games.GAME_DESCRIPTIONS[self.state.player_salvage_session['game']]}", duration
+
+    def perk_view(self) -> dict:
+        return salvage_perks.view(self.state)
+
+    def buy_perk(self, perk_id: str) -> tuple[bool, str]:
+        return salvage_perks.purchase(self.state, perk_id)
+
+    def reset_perks(self) -> tuple[bool, str]:
+        return salvage_perks.respec(self.state)
+
+    def quick_batch(self, item_id: str, count: int, inv: Inventory, world_seed: bytes,
+                    minute: int = 0) -> tuple[bool, str, int]:
+        """Repeated authorized quick jobs, with a deterministic batch time discount."""
+        count = int(count) if type(count) is int else 0
+        limit = 6 if salvage_perks.has(self.state, 'wreckbreaker') else 4 if salvage_perks.has(self.state, 'sweep_job') else 1
+        if count < 1 or count > limit or inv.count(item_id) < count:
+            return False, f"Select between one and {limit} carried copies.", 0
+        ok, reason = self.can_start(item_id, inv)
+        if not ok:
+            return False, reason, 0
+        total, completed = 0, 0
+        for index in range(count):
+            ok, reason, duration = self.quick(item_id, inv, world_seed, minute + total)
+            if not ok:
+                break
+            total += duration
+            completed += 1
+        if completed == 0:
+            return False, reason, 0
+        if completed > 1:
+            total = max(completed * 2, total - (completed - 1) * 2)
+        return True, f"Quick-salvaged {completed} items. Recovery reports are in your log.", total
+
+    def claim_dossier(self, station_id: str, nearby_stations: set[str]) -> tuple[bool, str]:
+        """Spend completed research only while physically at its workshop."""
+        if not salvage_perks.has(self.state, "lost_arts"):
+            return False, "Unlock Lost Arts first."
+        if station_id not in nearby_stations:
+            return False, "You must stand at this physical workshop to research the dossier."
+        sources = self.state.player_salvage_dossiers.get(station_id, [])
+        if len(sources) < 3:
+            return False, "Salvage three distinct pristine sources to finish this dossier."
+        candidates = sorted((recipe for recipe in self.registry.recipes.values()
+                             if recipe.station == station_id
+                             and recipe.id not in self.state.player_discovered_recipes
+                             and (not recipe.knowledge or recipe.knowledge in self.state.player_knowledge)),
+                            key=lambda recipe: recipe.id)
+        if not candidates:
+            return False, "No eligible undiscovered designs remain for this workshop."
+        recipe = candidates[0]
+        self.state.player_discovered_recipes = sorted(set(self.state.player_discovered_recipes) | {recipe.id})
+        self.state.player_unseen_recipes = sorted(set(self.state.player_unseen_recipes) | {recipe.id})
+        self.state.player_salvage_dossiers[station_id] = []
+        return True, f"The {self.registry.structures[station_id].name if station_id in self.registry.structures else 'workshop'} dossier reveals {recipe.name}."
+
+    def _finish_game(self, session: dict, definition: SalvageDef, inv: Inventory,
+                     world_seed: bytes, minute: int, duration: int) -> tuple[bool, str, int]:
+        quality = salvage_games.quality(session)
+        level = session["skill_level"]
+        score = max(0, min(6, (quality * 6 + 50) // 100))
+        outputs = self.roll_outputs(definition.item_id, score, level,
+                                    world_seed, session["attempt"], session["tool_bonus"])
+        rare_ids = {drop.item_id for drop in definition.rare_yields}
+        perks = salvage_perks.owned(self.state)
+        if quality >= 70 and "intact_recovery" in perks and definition.yields:
+            first = sorted(definition.yields)[0]
+            outputs[first] = outputs.get(first, 0) + 1
+        priority = session.get("priority", "")
+        if "targeted_search" in perks and priority:
+            if priority in definition.yields:
+                outputs[priority] = outputs.get(priority, 0) + 1
+            else:
+                for drop in definition.rare_yields:
+                    if drop.item_id != priority:
+                        continue
+                    chance = self._rare_chance(drop.chance_percent, score, level,
+                                               session["tool_bonus"], definition.difficulty)
+                    roll = hash_u64(world_seed, "salvaging.rare.v1", session["attempt"],
+                                    definition.item_id, drop.item_id) % 100
+                    if roll < min(100, chance + 10) and priority not in outputs:
+                        outputs[priority] = drop.min
+        if quality == 100 and "conservator" in perks:
+            if definition.rare_yields:
+                first = sorted(definition.rare_yields, key=lambda entry: entry.item_id)[0]
+                outputs.setdefault(first.item_id, first.min)
+            elif definition.yields:
+                first = sorted(definition.yields)[0]
+                outputs[first] = outputs.get(first, 0) + 1
+        for iid, amount in outputs.items():
+            inv.add(iid, amount)
+        prior_sources = {row.get('item_id') for row in self.state.player_salvage_log}
+        messages = []
+        if "workshop_whisper" in perks or ("notes_from_ruins" in perks and definition.item_id not in prior_sources):
+            for iid in sorted(outputs):
+                matched = next((recipe for recipe in sorted(self.registry.recipes.values(), key=lambda r: r.id)
+                                if recipe.station and iid in recipe.inputs
+                                and recipe.id not in self.state.player_discovered_recipes), None)
+                if matched:
+                    existing = {h.get("recipe_id") for h in self.state.player_crafting_hints}
+                    if matched.id not in existing:
+                        self.state.player_crafting_hints.append({"recipe_id": matched.id, "station_id": matched.station, "item_id": iid})
+                        self.state.player_crafting_hints = self.state.player_crafting_hints[-200:]
+                        station = self.registry.structures.get(matched.station)
+                        messages.append("Workshop hint: " + (station.name if station else matched.station))
+                    break
+        if "notes_from_ruins" in perks and definition.item_id not in prior_sources:
+            messages.append("Field notes: " + definition.description)
+        if quality == 100 and "lost_arts" in perks:
+            for station in sorted({recipe.station for recipe in self.registry.recipes.values()
+                                    if recipe.station and any(iid in recipe.inputs for iid in outputs)}):
+                rows = self.state.player_salvage_dossiers.setdefault(station, [])
+                if definition.item_id not in rows and len(rows) < 3:
+                    rows.append(definition.item_id)
+                    if len(rows) == 3:
+                        messages.append("Completed a workshop research dossier.")
+                break
+        gain = self._practice(score, definition.difficulty)
+        names = ", ".join(f"{self.registry.items[iid].name} x{amount}"
+                          for iid, amount in sorted(outputs.items()))
+        message = f"Salvaged {self.registry.items[definition.item_id].name}: {names}. Quality {quality}/100; practice +{gain}."
+        if messages:
+            message += " " + " ".join(messages)
+        self.state.player_salvage_log.append({
+            "item_id": definition.item_id, "name": self.registry.items[definition.item_id].name,
+            "attempt": session["attempt"], "completed_minute": minute + duration,
+            "score": quality, "max_score": 100, "outputs": dict(outputs),
+            "rare_outputs": {iid: amount for iid, amount in outputs.items() if iid in rare_ids},
+            "skill_level": self._level(), "skill_xp": self.state.player_salvaging_xp,
+            "xp_gained": gain, "method": session["game"], "message": message,
+        })
+        del self.state.player_salvage_log[:-SALVAGE_LOG_LIMIT]
+        self.state.player_salvage_session = {}
+        return True, message, duration
+
     def _stage(self, session: dict, definition: SalvageDef) -> dict:
         index = session["step"]
         challenge = session["challenges"][index]
@@ -174,6 +320,9 @@ class SalvagingSystem:
         definition = self.registry.salvage.get(session.get("item_id"))
         if definition is None:
             return None
+        if session.get("version") == 2:
+            return salvage_games.view(session, self.registry.items[definition.item_id].name,
+                                      self.state, definition)
         view = {"item_id": definition.item_id, "name": self.registry.items[definition.item_id].name,
                 "phase": session["phase"], "step": session["step"], "stage_count": 3,
                 "score": session["score"], "max_score": 6,
@@ -229,11 +378,20 @@ class SalvagingSystem:
         if self.state.player_salvaging_xp >= threshold:
             self.state.player_salvaging_xp -= threshold
             self.state.player_skills["salvaging"] = level + 1
+            if level + 1 in (5, 10):
+                self.state.player_salvage_respecs = min(3, self.state.player_salvage_respecs + 1)
         return gain
 
     def quick(self,item_id:str,inv:Inventory,world_seed:bytes,minute:int=0)->tuple[bool,str,int]:
         """Low-yield, no-rare, minimal-XP alternative to careful salvage."""
         ok,reason=self.can_start(item_id,inv)
+        if not ok and salvage_perks.has(self.state,"makeshift_rig") and item_id in self.registry.salvage:
+            definition=self.registry.salvage[item_id]
+            saved=definition.tool_qualities
+            if inv.count(item_id)>0 and not self.state.player_salvage_session and item_id not in self.state.player_equipment.values() and item_id!=self.state.player_readied_weapon and all(
+                    self._best_quality(inv,quality,item_id) >= max(0,needed-1)
+                    for quality,needed in saved.items()):
+                ok,reason=True,""
         if not ok:return False,reason,0
         definition=self.registry.salvage[item_id]
         attempt=self.state.salvaging_attempts
@@ -242,18 +400,29 @@ class SalvagingSystem:
         retire_consumed_artifacts(self.state,self.registry,{item_id:1},minute=minute,reason='Quick salvage')
         self.state.salvaging_attempts+=1
         potential=self.roll_outputs(item_id,0,self._level(),world_seed,attempt,0)
-        outputs={iid:max(1,min(high,int(potential.get(iid,low)*0.65)))
+        efficiency = 0.85 if salvage_perks.has(self.state,"wreckbreaker") else 0.75 if salvage_perks.has(self.state,"sorted_scrap") else 0.65
+        outputs={iid:max(1,min(high,int(potential.get(iid,low)*efficiency)))
                  for iid,(low,high) in definition.yields.items()}
+        rare_outputs={}
+        if salvage_perks.has(self.state,"wreckbreaker"):
+            for drop in definition.rare_yields:
+                chance=self._rare_chance(drop.chance_percent,0,self._level(),0,definition.difficulty)
+                roll=hash_u64(world_seed,"salvaging.rare.v1",attempt,item_id,drop.item_id)%100
+                if roll < max(1,chance//5):
+                    rare_outputs[drop.item_id]=drop.min
+                    outputs[drop.item_id]=drop.min
         for iid,amount in outputs.items():inv.add(iid,amount)
         gain=self._practice(0,definition.difficulty,quick=True)
         duration=max(4,min(12,(definition.minutes+2)//3))
+        if salvage_perks.has(self.state,"fast_hands"):
+            duration=max(3,(duration*4+4)//5)
         message=("Quick salvaged "+self.registry.items[item_id].name+": "+
                  ", ".join(f"{self.registry.items[iid].name} x{qty}" for iid,qty in sorted(outputs.items()))+
                  f". Rough recovery, no rare parts; +{gain} practice.")
         self.state.player_salvage_log.append({
             "item_id":item_id,"name":self.registry.items[item_id].name,
             "attempt":attempt,"completed_minute":minute+duration,
-            "score":0,"max_score":6,"outputs":dict(outputs),"rare_outputs":{},
+            "score":0,"max_score":6,"outputs":dict(outputs),"rare_outputs":rare_outputs,
             "skill_level":self._level(),"skill_xp":self.state.player_salvaging_xp,
             "xp_gained":gain,"method":"quick","message":message,
         })
@@ -271,6 +440,17 @@ class SalvagingSystem:
             return False, "This project's salvage definition is unavailable.", 0
         if not isinstance(choice_id, str):
             return False, "Choose one of the displayed salvage actions.", 0
+        if session.get("version") == 2:
+            if choice_id.startswith("prioritize:"):
+                iid=choice_id.split(":",1)[1]
+                if iid not in definition.yields and iid not in {d.item_id for d in definition.rare_yields}:
+                    return False,"Select an actual possible recovery output.",0
+            ok, message, duration, finished = salvage_games.play(session, choice_id, self.state)
+            if not ok:
+                return False, message, 0
+            if finished:
+                return self._finish_game(session, definition, inv, world_seed, minute, duration)
+            return True, message, duration
         if session["phase"] == "inspection":
             if choice_id != "inspect":
                 return False, "Inspect the assembly before disassembling it.", 0

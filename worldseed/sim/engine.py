@@ -554,7 +554,7 @@ class Simulation:
         elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
         elif isinstance(command,TreatDiseaseCommand):self._message(self.disease.treat_player(self.entities.get(command.actor,Inventory),self.clock.minute,self.player_skill('medicine'),self.has_talent('field_medic')))
         else:raise TypeError(f"Unknown command: {type(command).__name__}")
-        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,CollectWaterCommand)) and minutes == 0:
+        if isinstance(command,(StartSalvageCommand,StartSalvageGameCommand,SalvageActionCommand,QuickSalvageCommand,SalvagePerkCommand,ResetSalvagePerksCommand,ResearchSalvageDossierCommand,CollectWaterCommand)) and minutes == 0:
             return result
         # Inventory-changing commands can reveal material families and simple
         # recipes. This runs on the authoritative command path only.
