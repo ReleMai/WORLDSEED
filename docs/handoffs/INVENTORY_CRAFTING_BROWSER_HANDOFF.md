@@ -37,6 +37,12 @@ index and salvaging retain their existing navigation.
   characters while the current manifest has 20. These assertions are unchanged.
   A broad UI RC2 run reached its 90-second deadline during repeated generated
   world setup; focused lightweight navigation tests pass. No enlarged retry.
+- CI correction: the first automatic run exposed a legacy regression that read
+  the removed description-only scroll fields. Its replacement checks the new
+  full-detail scroll viewport, real mouse-wheel input, stable selected item and
+  preserved action controls. The existing 47-test Dev41 gate passes locally;
+  the 92 focused UI tests remain validated. Previous main already failed the Dev62
+  portrait expansion golden-image check; this UI work does not modify portraits.
 - Known limits: validation uses real SDL surfaces with the dummy driver and
   command fixtures; it is not a live gameplay session or a full release gate.
   The terminal backend retains its text presentation. Container storage keeps

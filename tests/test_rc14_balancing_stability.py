@@ -136,14 +136,21 @@ class InventoryDescriptionScrollTests(unittest.TestCase):
                   "selected_item_id":item,"filter_categories":[],"active_filter":"all"}
             rows=[MenuRow(item,"Reeds")]
             term._present_inventory_unified("Inventory",rows,0,data=data)
-            self.assertGreater(term._inventory_desc_max,0)
-            self.assertIsNotNone(term._inventory_desc_track)
-            position=term._inventory_desc_rect.center
+            key,viewport,maximum=term._panel_detail_view
+            self.assertEqual(key,"inventory:"+item)
+            self.assertGreater(maximum,0)
+            self.assertIsNotNone(term._panel_detail_track)
+            position=viewport.center
             term._last_mouse=position
             term.pg.event.clear()
             term.pg.event.post(term.pg.event.Event(term.pg.MOUSEWHEEL,x=0,y=-1))
             self.assertEqual(term.read_key(),"UI_REDRAW")
-            self.assertGreater(term._inventory_desc_scroll,0)
+            self.assertGreater(term._panel_detail_states[key],0)
+            # Scrolling details must leave the selected item and action controls stable.
+            self.assertEqual(data["selected_item_id"],item)
+            term._present_inventory_unified("Inventory",rows,0,data=data)
+            self.assertEqual(term._panel_detail_view[0],key)
+            self.assertIn("UI_ACTION:drop",{token for _,token in term._pointer_targets})
         finally:term.restore()
 
 
