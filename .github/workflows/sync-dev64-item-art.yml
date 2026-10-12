@@ -38,4 +38,6 @@ jobs:
           git add -f worldseed/data/items.json             worldseed/assets/sprites/items/pine_bough.png             worldseed/assets/sprites/items/hearth_root_stew.png             worldseed/assets/sprites/items/berry_barley_bun.png             worldseed/assets/source_items/dev64/manifest.json             worldseed/assets/ITEM_ATLAS.md             worldseed/assets/atlas_index.json             worldseed/assets/atlases/items.png             worldseed/assets/item_catalog.png
           git diff --cached --check
           git commit -m "Restore unique Dev64 art and synchronize all item atlas records"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase "origin/${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"
