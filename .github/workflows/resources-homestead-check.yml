@@ -12,6 +12,7 @@ on:
       - "worldseed/ui/homestead_art.py"
       - "worldseed/ui/homestead_panels.py"
       - "worldseed/app.py"
+      - "tools/build_salvage_content.py"
       - "tests/test_reed_thatch_resources.py"
       - "tests/test_homestead_*.py"
       - ".github/workflows/resources-homestead-check.yml"
@@ -45,3 +46,5 @@ jobs:
         run: python -m unittest discover -s tests -p "test_reed_thatch_resources.py" -v
       - name: Test homestead deposits, ghost placement and art
         run: python -m unittest discover -s tests -p "test_homestead_*.py" -v
+      - name: Test catalog regeneration and material crafting compatibility
+        run: python -m unittest discover -s tests -p "test_material_crafting_content.py" -v

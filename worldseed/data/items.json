@@ -190,6 +190,33 @@
     "sprite_tag": "iron_ore"
   },
   {
+    "id": "core:pine_bough",
+    "name": "Pine Boughs",
+    "asset": "salvage_juniper_bough",
+    "category": "resource",
+    "material": "core:organic",
+    "mass_g": 350,
+    "volume_ml": 1500,
+    "tags": [
+      "raw",
+      "plant",
+      "plant_material",
+      "conifer",
+      "bough",
+      "thatch_material",
+      "fuel",
+      "tinder_material"
+    ],
+    "description": "Needled pine branches collected while felling pines; suitable for layered temporary thatch roofing, bedding and fuel.",
+    "flavor": "Fresh conifer boughs make a quick shelter roof.",
+    "utility_roles": [
+      "construction",
+      "bedding",
+      "fuel"
+    ],
+    "sprite_tag": "salvage_juniper_bough"
+  },
+  {
     "id": "core:reed_bundle",
     "name": "Reeds",
     "asset": "reeds",
@@ -218,33 +245,6 @@
       "fuel"
     ],
     "sprite_tag": "reeds"
-  },
-  {
-    "id": "core:pine_bough",
-    "name": "Pine Boughs",
-    "asset": "salvage_juniper_bough",
-    "category": "resource",
-    "material": "core:organic",
-    "mass_g": 350,
-    "volume_ml": 1500,
-    "tags": [
-      "raw",
-      "plant",
-      "plant_material",
-      "conifer",
-      "bough",
-      "thatch_material",
-      "fuel",
-      "tinder_material"
-    ],
-    "description": "Needled pine branches collected while felling pines; suitable for layered temporary thatch roofing, bedding and fuel.",
-    "flavor": "Fresh conifer boughs make a quick shelter roof.",
-    "utility_roles": [
-      "construction",
-      "bedding",
-      "fuel"
-    ],
-    "sprite_tag": "salvage_juniper_bough"
   },
   {
     "id": "core:stone",

@@ -494,12 +494,26 @@ CRAFTING_MATERIAL_TAGS.update({
     ]
 })
 
+# Shared natural construction material tags are authored metadata. Dev63
+# recovery items are regenerated, so these IDs must receive the same category
+# tags during each deterministic rebuild.
+THATCH_SOURCE_IDS = {
+    "core:reed_bundle", "core:pine_bough", "core:juniper_bough",
+    "core:beachgrass", "core:saltmarsh_grass", "core:eelgrass",
+    "core:rush_pith_bundle", "core:brush",
+}
+
 def save():
     for filename, additions in [('items.json',new_items),('recipes.json',new_recipes)]:
         original=json.loads((DATA/filename).read_text())
         original_order={row['id']:index for index,row in enumerate(original)}
         if filename=='items.json':
-            original=[x for x in original if not str(x.get('sprite_tag','')).startswith(('salvage_','craft_','component_'))]
+            # Remove only definitions owned by this generator, not every
+            # manually authored item borrowing an existing salvage sprite.
+            # In particular, tree-harvested pine boughs use the juniper
+            # bough sprite temporarily, but they are a persistent core item.
+            generated_ids={row['id'] for row in new_items}
+            original=[x for x in original if x['id'] not in generated_ids]
         else:
             original=[x for x in original if not x['id'].startswith('core:craft_')]
         original.extend(additions)
@@ -519,6 +533,10 @@ def save():
             for item in original:
                 for tag in (*CRAFTING_MATERIAL_TAGS.get(item['id'], ()),*source_tags.get(item['id'], ())):
                     if tag not in item.get('tags', ()): item.setdefault('tags', []).append(tag)
+                # Apply after source tags so regenerated salvage flora match the
+                # checked-in catalog exactly, including tag ordering.
+                if item['id'] in THATCH_SOURCE_IDS and 'thatch_material' not in item.get('tags', ()):
+                    item.setdefault('tags', []).append('thatch_material')
             original=canonical_item_catalog(apply_item_profiles(original))
         else:
             # Regenerate definitions in place so repeated builds preserve the
