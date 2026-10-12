@@ -1,0 +1,34 @@
+name: WORLDSEED NPC Lab Deep Endurance
+
+# Run the expensive multi-worker case weekly or on demand, not on every push.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worldseed-npc-deep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workshop-eight-workers:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED
+        shell: pwsh
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Multi-worker NPC conservation and production
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "NPC eight-worker endurance" --timeout 3300 -- python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.test_every_supplied_workshop_job_produces_at_eight_workers
