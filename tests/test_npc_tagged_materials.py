@@ -106,7 +106,7 @@ class NPCTaggedMaterialTests(unittest.TestCase):
         professions.registry=self.reg
         professions.storage_access=None
         professions.commerce=None
-        professions._containers=lambda uid: []
+        professions._containers=lambda uid: (_ for _ in ()).throw(AssertionError("legacy job scanned stores"))
         npc=SimpleNamespace(inventory={},home_id="",workplace_id="")
         town=SimpleNamespace(uid="test:town",knowledge=[],stocks={})
         self.assertEqual(professions._recipe_requirements(npc,town,proc),proc.inputs)

@@ -338,7 +338,8 @@ class SettlementProfessionSystem:
 
     def _recipe_requirements(self,npc,town,proc,owned_containers=None):
         recipe=self._process_recipe(proc)
-        if recipe is not None and recipe.knowledge and recipe.knowledge not in town.knowledge:return None
+        if recipe is None:return dict(proc.inputs)  # Legacy exact jobs avoid irrelevant store scans.
+        if recipe.knowledge and recipe.knowledge not in town.knowledge:return None
         own=(owned_containers if owned_containers is not None else
              (self.storage_access.own_storages(npc,town) if self.storage_access else self._containers(town.uid)))
         physical={iid:max(0,int(qty)) for iid,qty in npc.inventory.items()}
@@ -356,7 +357,6 @@ class SettlementProfessionSystem:
         if needed is None:return None
         if recipe is not None:
             for iid,qty in recipe.catalysts.items():needed[iid]=needed.get(iid,0)+int(qty)
-        if recipe is None:return needed  # Legacy workshop processes have no recipe tool requirements.
         available={iid for iid,qty in physical.items() if qty>0}
         for quality,minimum in recipe.tool_qualities.items():
             if max((self.registry.items[i].quality(quality) for i,q in npc.inventory.items()
