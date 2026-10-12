@@ -187,9 +187,11 @@ class BuildingVariantTests(unittest.TestCase):
         town = SettlementState("town:variants", "Stockford", 0, 0, 2, 4, 4, "", "", "",
                                stocks={iid: 20 for iid in self.registry.items})
         state.settlements[town.uid] = town
-        # Isolate the original authored-stock reservation contract from the
-        # separate, once-only village salvage-origin mechanism.
+        # Isolate original stock reservation from both once-only origins:
+        # household provisions and village salvage. Neither should mint
+        # goods during this stock-debit fixture.
         state.resource_depletion["salvage-village-stock:" + town.uid] = state.clock_minute
+        state.resource_depletion["household-food-origin:" + town.uid] = state.clock_minute
         civics = SimpleNamespace(ensure_settlement=lambda uid: None,
                                  owner_for_structure=lambda *args: "npc:owner")
         return PropertyStorageSystem(state, self.registry, b"variant-stock-test", physical, civics), town, structure
@@ -202,7 +204,13 @@ class BuildingVariantTests(unittest.TestCase):
                 result = storage.sync_settlement(town.uid)
                 self.assertGreater(result.created, 0)
                 primary = storage.by_id("property-storage:" + structure.uid)
-                self.assertTrue(set(variant["loot"][:5]) <= set(primary.items))
+                if variant["function"] == "residence":
+                    # Food occupies the first pantry slots by design; the
+                    # remaining capacity still draws authored variant stock.
+                    self.assertTrue({"core:berry_barley_bun","core:hearth_root_stew"} <= set(primary.items))
+                    self.assertTrue(set(variant["loot"]) & set(primary.items))
+                else:
+                    self.assertTrue(set(variant["loot"][:5]) <= set(primary.items))
                 # Additional physical salvage finds can be allocated to this
                 # container, but every item must debit existing town stock.
                 self.assertTrue(set(primary.items) <= set(before))

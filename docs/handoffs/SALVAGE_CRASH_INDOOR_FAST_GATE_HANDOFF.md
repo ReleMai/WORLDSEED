@@ -21,3 +21,6 @@ Run `.github/workflows/salvage-tabletop-check.yml` (targeted on validation branc
 
 ## Future
 The current work is about correctness and regression gates, not a redesign of the three authored minigame layouts. Keep expanded world smoke and other unrelated regressions visible rather than claiming all tests are green without their run results.
+
+## Additional Fast Gate Dev52 diagnosis
+The broader world-smoke log also reported eleven `test_dev52_building_variants.py` stock-check failures. These checks predated the authored household food origin and pantry precedence. The isolated fixture now explicitly marks the food origin as already seeded, preventing intentional food creation from polluting its empty-ledger conservation test. Residence-chest assertions retain the important conservation check but account for the two guaranteed foods and the pantry slot limit before checking variant-specific loot. The normal gameplay origin and stock reservation logic are unchanged.
