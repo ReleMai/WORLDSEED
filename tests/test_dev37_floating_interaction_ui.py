@@ -297,7 +297,9 @@ class FloatingInteractionPygameTests(unittest.TestCase):
         rows=[MenuRow("core:stone_flake","Stone Flake")]
         ready={"name":"Stone Flake","ready":True,"missing":[],"inputs":[],"outputs":[],"minutes":8,"skill":"crafting","description":""}
         self.term.present_feature_menu("crafting_unified","CRAFTING",rows,0,data={"recipes":{"core:stone_flake":ready},"categories":["primitive"],"category":"primitive"})
-        rects=[self._target_rect(f"UI_ACTION:tab:{name}") for name in ("recipes","discovery","index")]
+        # Current crafting browser exposes workshop and salvage workflows as
+        # separate tabs rather than the retired index tab.
+        rects=[self._target_rect(f"UI_ACTION:tab:{name}") for name in ("recipes","workshops","discovery","salvaging")]
         self.assertTrue(all(r.width>70 for r in rects))
         self.assertTrue(all(not a.colliderect(b) for i,a in enumerate(rects) for b in rects[i+1:]))
 

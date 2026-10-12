@@ -233,101 +233,166 @@ jobs:
         run: python -m pip install -e . "Pillow>=10,<12"
 
       - name: Dev36 world interaction regressions
+        id: smoke_01
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev36 world interaction regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev36_world_interactions
 
       - name: Dev37 floating interaction UI regressions
+        id: smoke_02
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui tests.test_item_panel_widgets tests.test_inventory_browser tests.test_crafting_browser tests.test_workbench_panels tests.test_salvage_panel tests.test_ui_rc2.UIRC4InputTests
 
       - name: WU7 village stability and debugger regressions
+        id: smoke_03
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "WU7 village stability and debugger regressions" --timeout 90 -- python -u -m unittest -v tests.test_wu7_village_stability_debug
 
       - name: Dev31 world-startup playtest regressions
+        id: smoke_04
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev31 world-startup playtest regressions" --timeout 180 -- python -u -m unittest -v tests.test_dev31_playtest_fixes
 
       - name: Dev42 normalized character art regressions
+        id: smoke_05
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev42 normalized character art regressions" --timeout 90 -- python -u -m unittest -v tests.test_character_sprite_normalization tests.test_npc_sex tests.test_dev20_graphical_regressions.GraphicalAssetTests
 
       - name: Dev43 domestic animal art regressions
+        id: smoke_06
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev43 domestic animal art regressions" --timeout 90 -- python -u -m unittest -v tests.test_animal_sprites
 
       - name: Dev44 stance dialogue and respawn regressions
+        id: smoke_07
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev44 interaction regressions" --timeout 90 -- python -u -m unittest -v tests.test_dev44_stance_dialogue_respawn tests.test_ui_rc2.AggressiveStanceRoutingTests
 
       - name: Dev46 continuous interior regressions
+        id: smoke_08
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev46 interiors" --timeout 180 -- python -u -m unittest -v tests.test_interiors tests.test_interior_engine tests.test_interior_ai tests.test_interior_knocking tests.test_interior_presentation tests.test_interior_projection
 
       - name: Dev47-48 building shell and differentiated interior regressions
+        id: smoke_09
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev47-48 buildings" --timeout 180 -- python -u -m unittest -v tests.test_building_shells tests.test_building_interior_profiles tests.test_building_presentation tests.test_exterior_pointer_routing tests.test_interior_materials tests.test_interior_workstation_ui tests.test_interior_security tests.test_interior_work tests.test_interior_activity_validation tests.test_dev47_building_context tests.test_ui_rc2.AggressiveStanceRoutingTests
 
       - name: Dev49 production layouts and civilization siting
+        id: smoke_10
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev49 production layouts" --timeout 180 -- python -u -m unittest -v tests.test_settlement_layouts tests.test_dev49_production_layouts tests.test_dev49_civilization_siting
 
       - name: Dev50 access storage and introductions
+        id: smoke_11
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev50 settlement polish" --timeout 180 -- python -u -m unittest -v tests.test_dev50_settlement_access tests.test_dev50_interior_storage tests.test_dev50_npc_introductions tests.test_dev50_presentation tests.test_dev50_storage_ui
 
       - name: Dev51 furnished floors and Stalk theft
+        id: smoke_12
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev51 furnished interiors" --timeout 180 -- python -u -m unittest -v tests.test_dev51_furnishing tests.test_dev51_interior_floors tests.test_dev51_interior_pointer tests.test_dev51_stalk_theft
 
       - name: Dev52 authored building and furnishing content
+        id: smoke_13
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev52 authored content" --timeout 180 -- python -u -m unittest -v tests.test_dev52_building_variants tests.test_dev52_furniture_content tests.test_dev52_exterior_alignment
 
       - name: Dev53-54 furnishing lighting HUD and building footprint fit
+        id: smoke_14
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev53-54 interiors and exterior fit" --timeout 180 -- python -u -m unittest -v tests.test_dev53_furnishing_slots tests.test_dev53_lighting tests.test_dev53_interior_ui tests.test_dev53_decoration tests.test_dev54_exterior_fit tests.test_dev54_building_access
 
       - name: Crafting discovery pot regressions
+        id: smoke_15
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_crafting_journal tests.test_tagged_crafting tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests
 
       - name: Dev63 salvaging and profession expansion
+        id: smoke_16
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev63 salvaging and profession expansion" --timeout 180 -- python -u -m unittest -v tests.test_salvaging tests.test_salvaging_ui tests.test_salvage_tabletop_art tests.test_crafting_water tests.test_crafting_expansion tests.test_crafting_expansion_economy tests.test_dev63_salvage_loot
 
       - name: Dev38 natural container art regressions
+        id: smoke_17
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev38 natural container art regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_art
 
       - name: Dev38 natural container visual regressions
+        id: smoke_18
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev38 natural container visual regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev38_natural_container_visuals
 
       - name: Phase 5 coast tests
+        id: smoke_19
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Phase 5 coast tests" --timeout 240 -- python -u -m unittest -v tests.test_worldgen_v8_coast tests.test_coastal_mouths tests.test_terrain_performance tests.test_terrain_variants
 
       - name: Surface-cache and save-compatibility smoke tests
+        id: smoke_20
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Surface-cache and save-compatibility smoke tests" --timeout 120 -- python -u -m unittest -v tests.test_rc13_pregeneration tests.test_rc14_hydrology.RC14HydrologyTests.test_surface_chunk_cache_isolated_by_hydrology_and_morphology_contract tests.test_rc14_hydrology.RC14HydrologyTests.test_legacy_save_open_adds_contract_metadata_without_geography_rewrite
 
       - name: Atlas UI regressions
+        id: smoke_21
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Atlas UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev22_atlas.AtlasRenderTests.test_render_controls_resize_hover_and_assets tests.test_settlement_atlas_ui
 
       - name: Content audit
+        id: smoke_22
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name content-audit --timeout 90 -- python -u tools/audit_content.py
 
       - name: Visual audit
+        id: smoke_23
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name visual-audit --timeout 90 -- python -u tools/audit_visuals.py
 
       - name: Bounded coast morphology audit
+        id: smoke_24
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name coast-audit --timeout 180 -- python -u tools/audit_worldgen_v8_coast.py --seeds 3 --radius 1536 --step 128
 
       - name: Coastal mouths audit
+        id: smoke_25
+        continue-on-error: true
         shell: pwsh
         run: python -u tools/run_ci_check.py --name coastal-mouths-audit --timeout 180 -- python -u tools/audit_coastal_mouths.py --seeds 3
+
+      # Keep running diagnostic checks even after a failed assertion, but never
+      # mark this job green unless every individual smoke check passed.
+      - name: Enforce world smoke results
+        if: ${{ always() }}
+        shell: pwsh
+        env:
+          WORLD_SMOKE_STEPS: ${{ toJSON(steps) }}
+        run: |
+          $results = $env:WORLD_SMOKE_STEPS | ConvertFrom-Json
+          $failed = @($results.PSObject.Properties | Where-Object { $_.Value.outcome -eq 'failure' } | ForEach-Object { $_.Name })
+          if ($failed.Count) {
+            Write-Error ("World smoke regressions failed: " + ($failed -join ', '))
+            exit 1
+          }
