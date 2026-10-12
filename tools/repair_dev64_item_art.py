@@ -118,6 +118,7 @@ def repair():
 
     ICONS.mkdir(parents=True, exist_ok=True)
     provenance = json.loads(PROVENANCE.read_text(encoding="utf-8"))
+    existing_records = {row['item_id']: row for row in provenance['items']}
     painter_functions = (paint_pine_bough, paint_hearth_root_stew, paint_berry_barley_bun)
     for asset, draw_image in zip(TARGETS, painter_functions):
         path = ICONS / (asset + ".png")
@@ -134,17 +135,24 @@ def repair():
         raw = path.read_bytes()
         sid = "dev64_authored_" + asset
         item_id = "core:" + asset
+        record = {
+            "item_id":item_id, "asset":asset, "sprite_tag":asset, "sheet_id":sid,
+            "png_sha256":hashlib.sha256(raw).hexdigest(),
+            "rgba_sha256":hashlib.sha256(image.tobytes()).hexdigest()
+        }
+        if item_id in existing_records:
+            # Re-running the authoring tool must not duplicate provenance
+            # or silently bless modified published pixels.
+            if existing_records[item_id] != record:
+                raise ValueError(f"Published art changed for {item_id}")
+            continue
         provenance["sheets"].append({
             "id":sid, "source":path.relative_to(ROOT).as_posix(),
             "source_sha256":hashlib.sha256(raw).hexdigest(),
             "source_size":[64,64], "columns":1, "rows":1, "item_ids":[item_id],
             "generator":"deterministic_pillow_authoring"
         })
-        provenance["items"].append({
-            "item_id":item_id, "asset":asset, "sprite_tag":asset, "sheet_id":sid,
-            "png_sha256":hashlib.sha256(raw).hexdigest(),
-            "rgba_sha256":hashlib.sha256(image.tobytes()).hexdigest()
-        })
+        provenance["items"].append(record)
     PROVENANCE.write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
     from tools.build_sprite_atlases import build_all
     build_all(items_only=True)
