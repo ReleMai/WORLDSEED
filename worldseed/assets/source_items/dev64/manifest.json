@@ -6293,6 +6293,51 @@
       "generation_parameters": {
         "transparent_background": true
       }
+    },
+    {
+      "id": "dev64_authored_pine_bough",
+      "source": "worldseed/assets/sprites/items/pine_bough.png",
+      "source_sha256": "b65148909e356cbc71eefc9cacdbb336f2d23b9cd514d8028b2466b5828bd1a0",
+      "source_size": [
+        64,
+        64
+      ],
+      "columns": 1,
+      "rows": 1,
+      "item_ids": [
+        "core:pine_bough"
+      ],
+      "generator": "deterministic_pillow_authoring"
+    },
+    {
+      "id": "dev64_authored_hearth_root_stew",
+      "source": "worldseed/assets/sprites/items/hearth_root_stew.png",
+      "source_sha256": "1b913a530d6c1b7ca01b79ec543c6bbd9d00fb104ed58de8333d8f518e8824d4",
+      "source_size": [
+        64,
+        64
+      ],
+      "columns": 1,
+      "rows": 1,
+      "item_ids": [
+        "core:hearth_root_stew"
+      ],
+      "generator": "deterministic_pillow_authoring"
+    },
+    {
+      "id": "dev64_authored_berry_barley_bun",
+      "source": "worldseed/assets/sprites/items/berry_barley_bun.png",
+      "source_sha256": "617217a9620d2a92971c6062d29aedf7f0927a834fd5dfa597c153980db3dfb2",
+      "source_size": [
+        64,
+        64
+      ],
+      "columns": 1,
+      "rows": 1,
+      "item_ids": [
+        "core:berry_barley_bun"
+      ],
+      "generator": "deterministic_pillow_authoring"
     }
   ],
   "items": [
@@ -38733,6 +38778,30 @@
       "output_occupancy": 0.443115,
       "rgba_sha256": "162dfe2c15b86d65388d9dd7110dc0fc3dd8fc1d080d510edd45b49ef5d13d48",
       "png_sha256": "479b8d8e1cc2a96c6ba9f2a553446d3ee83d906570077f03c9b759846c3ccf63"
+    },
+    {
+      "item_id": "core:pine_bough",
+      "asset": "pine_bough",
+      "sprite_tag": "pine_bough",
+      "sheet_id": "dev64_authored_pine_bough",
+      "png_sha256": "b65148909e356cbc71eefc9cacdbb336f2d23b9cd514d8028b2466b5828bd1a0",
+      "rgba_sha256": "0e85595ce5f303d87b861b50eb6e637140338d36f20b7c110eed022971882fd3"
+    },
+    {
+      "item_id": "core:hearth_root_stew",
+      "asset": "hearth_root_stew",
+      "sprite_tag": "hearth_root_stew",
+      "sheet_id": "dev64_authored_hearth_root_stew",
+      "png_sha256": "1b913a530d6c1b7ca01b79ec543c6bbd9d00fb104ed58de8333d8f518e8824d4",
+      "rgba_sha256": "be2e82105243a9e9a6a825f60918952740ccb0cbed991183245f50d381d3f7ea"
+    },
+    {
+      "item_id": "core:berry_barley_bun",
+      "asset": "berry_barley_bun",
+      "sprite_tag": "berry_barley_bun",
+      "sheet_id": "dev64_authored_berry_barley_bun",
+      "png_sha256": "617217a9620d2a92971c6062d29aedf7f0927a834fd5dfa597c153980db3dfb2",
+      "rgba_sha256": "32ebff85287c1394096fb327d5bdcd43d0212e213767a9b16174265c84399a71"
     }
   ]
 }

@@ -192,7 +192,7 @@
   {
     "id": "core:pine_bough",
     "name": "Pine Boughs",
-    "asset": "salvage_juniper_bough",
+    "asset": "pine_bough",
     "category": "resource",
     "material": "core:organic",
     "mass_g": 350,
@@ -214,7 +214,7 @@
       "bedding",
       "fuel"
     ],
-    "sprite_tag": "salvage_juniper_bough"
+    "sprite_tag": "pine_bough"
   },
   {
     "id": "core:reed_bundle",
