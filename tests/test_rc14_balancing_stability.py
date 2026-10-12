@@ -101,6 +101,7 @@ class BalancingStabilityTests(unittest.TestCase):
         door=SimpleNamespace(uid="entrance:1",role="entrance",x=10,y=10,z=0)
         ai.property_security=SimpleNamespace(doors_for_property=lambda _: (door,),
                                             blocks_actor=lambda *args:False)
+        ai.interiors=SimpleNamespace()
         ai.settlement_physicalization=SimpleNamespace(frontage_for=lambda _:WorldPos(2,2,0))
         task=ai._home_entry_task(npc)
         self.assertLessEqual(abs(task["x"]-10)+abs(task["y"]-10),1)
