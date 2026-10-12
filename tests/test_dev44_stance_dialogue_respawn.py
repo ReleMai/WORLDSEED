@@ -118,6 +118,34 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         self.assertIsNone(nearby_land_spawn(WorldPos(2000, 2000), lambda p: calls.append(p) or 'water', terrain, lambda _: True))
         self.assertLess(len(calls), 5000)
 
+    def test_extreme_temperature_damage_is_hourly_not_per_realtime_tick(self):
+        sim=Simulation.__new__(Simulation)
+        sim.state=LivingWorldState()
+        sim.entities=EntityStore()
+        sim.entities.spawn(preferred_id=1)
+        sim.entities.add(1,Position(WorldPos(0,0,0)))
+        sim.entities.add(1,Inventory())
+        sim.entities.add(1,Vitals(hp=90,max_hp=100,body_temp=10,blood=100))
+        sim.clock=SimpleNamespace(minute=60)
+        sim.turn=5
+        sim.interiors=None
+        sim.world=SimpleNamespace(generator=SimpleNamespace(sample_fields=lambda *_: SimpleNamespace(temperature=40000)))
+        sim.environment=SimpleNamespace(weather=SimpleNamespace(at=lambda *_: {'temp_delta':0}))
+        sim.building=SimpleNamespace(room_at=lambda *_: {'sheltered':False},environmental_bonuses=lambda *_:{})
+        sim.registry=SimpleNamespace(items={})
+        sim.player_attribute=lambda *_:5
+        sim.player_skill=lambda *_:0
+        with patch('worldseed.systems.swimming.exposure',return_value=SimpleNamespace(mode='dry')):
+            sim._update_vitals(1)
+            self.assertEqual(sim.entities.get(1,Vitals).hp,89)
+            self.assertEqual(sim.state.player_combat_log[-1]['source'],'Hypothermia')
+            sim.clock.minute=60
+            sim._update_vitals(0)
+            self.assertEqual(sim.entities.get(1,Vitals).hp,89)
+            sim.clock.minute=61
+            sim._update_vitals(1)
+            self.assertEqual(sim.entities.get(1,Vitals).hp,89)
+
     def test_death_preserves_dropped_goods_and_spawns_on_nearby_surface(self):
         sim = Simulation.__new__(Simulation)
         sim.state = LivingWorldState()
@@ -125,7 +153,9 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         sim.entities.spawn(preferred_id=1)
         sim.entities.add(1, Position(WorldPos(100, 200, -2)))
         sim.entities.add(1, Inventory({'core:wood': 3}))
-        sim.entities.add(1, Vitals())
+        sim.entities.add(1, Vitals(hp=1,body_temp=5,blood=2))
+        sim.state.player_infections=['player-infection:old']
+        sim.state.infections['player-infection:old']=SimpleNamespace(disease_id='old')
         land = SimpleNamespace(passable=True, tags=[])
         water = SimpleNamespace(passable=True, tags=['water'])
         query = lambda p: 'land' if (p.x, p.y) == (101, 200) else 'water'
@@ -145,6 +175,11 @@ class StanceKnowledgeRespawnTests(unittest.TestCase):
         self.assertEqual(sim.state.ground_piles['100,200,-2'].items, {'core:wood': 3})
         self.assertEqual(sim.entities.get(1, Inventory).count('core:wood'), 0)
         self.assertEqual(len(sim.state.legacy), 1)
+        v=sim.entities.get(1,Vitals)
+        self.assertEqual((v.hp,v.body_temp,v.blood),(v.max_hp,50,100))
+        self.assertFalse(sim.state.player_infections)
+        self.assertNotIn('player-infection:old',sim.state.infections)
+        self.assertEqual((sim.state.player_fx,sim.state.player_fy),(0.5,0.5))
 
     def test_knowledge_tree_back_navigation_preserves_parent_route(self):
         from worldseed.app import _conversation_menu

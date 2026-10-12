@@ -10,6 +10,12 @@ class CombatSystem:
 
     def __init__(self,state:LivingWorldState,registry:ContentRegistry,seed:bytes,artifact_system=None):
         self.state=state;self.registry=registry;self.seed=seed;self.artifact_system=artifact_system
+        self.damage_callback=None
+
+    def _damage_event(self,direction,amount,source,target,kind,part=""):
+        callback=self.damage_callback
+        if callback is not None and amount>0:
+            callback(direction,int(amount),str(source),str(target),str(kind),str(part))
 
     def readied_weapon(self,inv:Inventory):
         iid=self.state.player_readied_weapon
@@ -199,7 +205,9 @@ class CombatSystem:
         rr=PCG32(derive_seed(self.seed,"player-hit-fracture",turn,source_uid,part,attack_kind,raw_damage,damage_type))
         fracture=(tissue=="bone" and damage>=6) or (fracture_chance>0 and rr.randbelow(100)<int(fracture_chance))
         severity=min(100,damage*7+max(0,penetration)*2)
+        old_hp=vitals.hp
         vitals.hp=max(0,vitals.hp-damage);vitals.pain=min(100,vitals.pain+max(1,severity//5));vitals.blood=max(0,vitals.blood-max(0,bleed//2))
+        self._damage_event("taken",old_hp-vitals.hp,source_name,"Player",damage_type,part)
         self.state.player_body_parts[part]=max(0,self.state.player_body_parts.get(part,100)-damage*3)
         self.state.player_wounds.append({"part":part,"tissue":tissue,"type":damage_type,"severity":severity,"bleeding":bleed,"fracture":fracture,"turn":turn,"source":source_name,"attack_kind":attack_kind})
         if self.artifact_system and names:
@@ -300,7 +308,8 @@ class CombatSystem:
                 damage,bleeding,organ_damage=self._apply_organ_trauma(creature,organ,meta,damage,bleeding,penetration)
                 severity=min(100,max(severity,organ_damage))
         fracture=(tissue=="bone" and damage>=9) or (mode=="power" and dtype=="blunt" and damage>=8 and rng.randbelow(100)<35)
-        creature.hp-=damage
+        old_hp=creature.hp;creature.hp-=damage
+        self._damage_event("dealt",max(0,min(damage,old_hp)),"Player",sp.name,dtype,part)
         creature.blood=max(0,creature.blood-bleeding);creature.pain=min(100,creature.pain+severity//3)
         creature.wounds.append({"part":part,"tissue":tissue,"organ":organ or "","organ_damage":organ_damage,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id if weapon else "unarmed"})
         if weapon is not None and self.artifact_system:
@@ -324,7 +333,9 @@ class CombatSystem:
         rng=PCG32(derive_seed(self.seed,"shield-bash",turn,creature.uid,shield.id,creature.hp))
         if rng.randbelow(100)>=chance:return f"You drive the {shield.name.lower()} forward, but the {sp.name.lower()} slips the bash."
         damage=max(1,int(shield.shield_block)//2+max(0,strength-4)//2+skill//4)
-        part="head" if rng.randbelow(100)<20 else "torso";creature.hp-=damage
+        part="head" if rng.randbelow(100)<20 else "torso"
+        old_hp=creature.hp;creature.hp-=damage
+        self._damage_event("dealt",max(0,min(damage,old_hp)),"Player",sp.name,"blunt",part)
         severity=min(100,damage*6);creature.pain=min(100,creature.pain+max(3,severity//3))
         creature.wounds.append({"part":part,"tissue":"skin","type":"blunt","severity":severity,"bleeding":0,"fracture":False,"turn":turn,"weapon":shield.id,"mode":"shield_bash"})
         stagger_force=damage+int(shield.shield_stability)//12+skill//2
@@ -376,7 +387,9 @@ class CombatSystem:
                 damage,bleeding,organ_damage=self._apply_organ_trauma(creature,organ,meta,damage,bleeding,penetration)
         fracture=tissue=="bone" and (damage>=7 or rng.randbelow(100)<25);severity=min(100,damage*6+max(0,penetration-6)*2)
         if organ_damage:severity=max(severity,organ_damage)
+        old_hp=creature.hp
         creature.hp-=damage;creature.blood=max(0,creature.blood-bleeding);creature.pain=min(100,creature.pain+max(2,severity//4))
+        self._damage_event("dealt",max(0,min(damage,old_hp)),"Player",sp.name,dtype,part)
         creature.wounds.append({"part":part,"tissue":tissue,"organ":organ or "","organ_damage":organ_damage,"type":dtype,"severity":severity,"bleeding":bleeding,"fracture":fracture,"turn":turn,"weapon":weapon.id,"aim_zone":zone,"aim_quality":aim_quality})
         creature.alertness=100
         if creature.hp<=0 or creature.blood<=0:
@@ -455,7 +468,9 @@ class CombatSystem:
         rng=PCG32(derive_seed(self.seed,"player-collision",turn,source_name,force,vitals.hp))
         fracture=rng.randbelow(100)<fracture_chance
         part=("torso","left_arm","right_arm","left_leg","right_leg")[rng.randbelow(5)]
+        old_hp=vitals.hp
         vitals.hp=max(0,vitals.hp-damage);vitals.pain=min(100,vitals.pain+max(2,severity//4))
+        self._damage_event("taken",old_hp-vitals.hp,source_name,"Player","collision",part)
         self.state.player_body_parts[part]=max(0,self.state.player_body_parts.get(part,100)-damage*2)
         self.state.player_wounds.append({"part":part,"tissue":"muscle" if damage>=5 else "skin","type":"blunt","severity":severity,"bleeding":0,"fracture":fracture,"turn":turn,"source":source_name,"attack_kind":"collision"})
         if len(self.state.player_wounds)>80:self.state.player_wounds=self.state.player_wounds[-80:]
@@ -464,7 +479,9 @@ class CombatSystem:
     def creature_collision_injury(self,creature:CreatureState,turn:int,force:int,source_name:str="impact")->str:
         sp=self.registry.species[creature.species_id];force=max(1,int(force));damage=max(1,min(16,force//9))
         severity=min(100,damage*6+force//3);fracture=force>=35
+        old_hp=creature.hp
         creature.hp-=damage;creature.pain=min(100,creature.pain+max(2,severity//3))
+        self._damage_event("dealt",max(0,min(damage,old_hp)),source_name,sp.name,"collision","torso")
         creature.wounds.append({"part":"torso","tissue":"muscle" if damage>=5 else "skin","type":"blunt","severity":severity,"bleeding":0,"fracture":fracture,"turn":turn,"weapon":source_name,"mode":"collision"})
         if creature.hp<=0:
             self._reconcile_population_death(creature);self._make_carcass(creature,sp);self.state.creatures.pop(creature.uid,None)
@@ -536,7 +553,9 @@ class CombatSystem:
             bleed=max(0,int(w.get("bleeding",0)));total_bleed+=bleed//4
             if bleed>0 and int(w.get("severity",0))<70:w["bleeding"]=max(0,bleed-1)
         if total_bleed:
+            old_hp=vitals.hp
             vitals.blood=max(0,vitals.blood-total_bleed);vitals.hp=max(0,vitals.hp-max(0,total_bleed//2));vitals.pain=min(100,vitals.pain+max(1,total_bleed//2))
+            self._damage_event("taken",old_hp-vitals.hp,"Bleeding wounds","Player","bleeding")
 
     def arm_injury_penalty(self)->int:
         penalty=0

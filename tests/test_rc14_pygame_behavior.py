@@ -124,6 +124,21 @@ class PygameBehaviorTests(unittest.TestCase):
                           side_effect=AssertionError('idle weather rendered before player input')):
             self.assertEqual(self.term.read_key(),'UI_REDRAW')
 
+    def test_world_activity_combat_tab_shows_damage_source(self):
+        from types import SimpleNamespace
+        pg=self.pg
+        sim=SimpleNamespace(log=[],state=SimpleNamespace(player_combat_log=[
+            {'minute':474,'direction':'taken','amount':5,'source':'Hypothermia',
+             'target':'Player','kind':'temperature','part':''}]))
+        rect=pg.Rect(20,550,800,140)
+        self.term._draw_footer(rect,'',sim)
+        point=(rect.x+220,rect.y+12)
+        pg.event.post(pg.event.Event(pg.MOUSEBUTTONDOWN,button=1,pos=point))
+        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE,unicode=''))
+        self.assertEqual(self.term.read_key(),'ESC')
+        self.assertEqual(self.term._world_activity_tab,'combat')
+        self.assertEqual(sim.state.player_combat_log[0]['source'],'Hypothermia')
+
     def test_startup_flush_preserves_window_close(self):
         self.pg.event.post(self.pg.event.Event(self.pg.QUIT))
         self.term.discard_pending_input()

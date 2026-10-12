@@ -139,6 +139,7 @@ class Simulation:
         self.macrohistory=MacroHistorySystem(self.state,self.seed)
         self.magic=MagicSystem(self.state,self.seed,self.history,self.environment)
         self.combat=CombatSystem(self.state,registry,self.seed,self.artifacts)
+        self.combat.damage_callback=self._record_damage
         self.projectiles=ProjectileSystem(self.state,registry,self.seed,self.world,self.resources,self.building)
         self.arena=TestArenaSystem(self.state,registry,self.world,self.resources,self.building)
         self.visual_effects:list[dict]=[];self._visual_effect_counter=0
@@ -680,7 +681,10 @@ class Simulation:
                 if collapsed:
                     v=self.entities.try_get(self.player_id,Vitals)
                     for cp in collapsed:
-                        if cp==self.player_pos and v:v.hp=max(0,v.hp-12);v.pain=min(100,v.pain+20);self._message("An unsupported roof collapses onto you!")
+                        if cp==self.player_pos and v:
+                            old_hp=v.hp;v.hp=max(0,v.hp-12);v.pain=min(100,v.pain+20)
+                            self._record_damage("taken",old_hp-v.hp,"Collapsing roof","Player","crushing")
+                            self._message("An unsupported roof collapses onto you!")
                         elif abs(cp.x-player.x)+abs(cp.y-player.y)<=8 and cp.z==player.z:self._message("You hear a roof collapse nearby.")
             if minute in tick_minutes:self.npcs.tick_update(minute,player)
         old_day=old//1440;new_day=self.clock.minute//1440
@@ -708,7 +712,8 @@ class Simulation:
             effort=swim_steps*max(1,3-self.player_attribute('endurance')//6)
             deficit=max(0,effort-v.stamina);v.stamina=max(0,v.stamina-effort)
             if deficit:
-                v.hp=max(0,v.hp-deficit*2)
+                old_hp=v.hp;v.hp=max(0,v.hp-deficit*2)
+                self._record_damage("taken",old_hp-v.hp,"Swimming exhaustion","Player","drowning")
                 self._message('You are drowning from exhaustion! Move to shallows, shore or a bridge!')
         else:v.stamina=min(100,v.stamina+stam)
         hours=max(0,end//60-start//60)
@@ -744,10 +749,18 @@ class Simulation:
             else:
                 if v.body_temp<50:v.body_temp=min(50,v.body_temp+hours)
                 elif v.body_temp>50:v.body_temp=max(50,v.body_temp-hours)
-        if v.hunger>=95:v.hp=max(0,v.hp-1)
-        if v.thirst>=95:v.hp=max(0,v.hp-2)
-        if v.blood<50:v.hp=max(0,v.hp-1)
-        if v.body_temp<20 or v.body_temp>85:v.hp=max(0,v.hp-1)
+        # Apply physiological attrition on crossed game-hour boundaries,
+        # NEVER once per 1-minute realtime callback or zero-minute action.
+        for active,damage,source,kind in (
+            (v.hunger>=95,1,"Starvation","hunger"),
+            (v.thirst>=95,2,"Dehydration","thirst"),
+            (v.blood<50,1,"Low blood volume","blood_loss"),
+            (v.body_temp<20,1,"Hypothermia","temperature"),
+            (v.body_temp>85,1,"Heat exhaustion","temperature"),
+        ):
+            if active and hours:
+                old_hp=v.hp;v.hp=max(0,v.hp-damage*hours)
+                self._record_damage("taken",old_hp-v.hp,source,"Player",kind)
 
     def _ensure_nearby_world(self,pos:WorldPos,force:bool=False)->None:
         """Realize local civilization in bounded stages and log their cost.
@@ -867,7 +880,9 @@ class Simulation:
                 self._message(message)
             if v:
                 self.combat.tick_player_wounds(v)
+                before_illness=v.hp
                 for message in self.disease.tick_player(self.clock.minute,v):self._message(message)
+                self._record_damage("taken",before_illness-v.hp,"Illness","Player","disease")
                 if v.hp<=0:self._handle_death('died indoors from wounds and exposure')
             return
         self._ensure_nearby_world(self.player_pos)
@@ -879,7 +894,9 @@ class Simulation:
             self.combat.tick_player_wounds(v)
             for did in self.disease.local_player_exposure(self.player_pos,self.clock.minute):
                 ddef=self.registry.diseases.get(did);self._message(f"You may have been exposed to {ddef.name if ddef else did}.")
+            before_illness=v.hp
             for msg in self.disease.tick_player(self.clock.minute,v):self._message(msg)
+            self._record_damage("taken",before_illness-v.hp,"Illness","Player","disease")
         self._refresh_combat_candidates()
         local=[self.state.creatures[uid] for uid in self._combat_actor_ids]
         before_behavior={c.uid:c.behavior for c in local}
@@ -1359,7 +1376,9 @@ class Simulation:
             # remains possible, but unmet exertion damages health.
             deficit=max(0,cost-v.stamina)
             v.stamina=max(0,v.stamina-cost)
-            if deficit:v.hp=max(0,v.hp-deficit)
+            if deficit:
+                old_hp=v.hp;v.hp=max(0,v.hp-deficit)
+                self._record_damage("taken",old_hp-v.hp,"Exhausted swimming stroke","Player","drowning")
             practice(self)
         elif water.mode=='wading':v.stamina=max(0,v.stamina-2)
         pc.value=new;result.events.append(MovedEvent(cmd.actor,old,new));fluid=self.environment.fluid_at(new)
@@ -1375,7 +1394,9 @@ class Simulation:
             self._message(security_message)
         for security_message in self.property_security.update_response(new,self.clock.minute,self.stealth):
             self._message(security_message)
-        trap_msg=self.dungeons.trigger_trap(new,self.entities.get(cmd.actor,Vitals),self.turn)
+        before_trap_hp=v.hp
+        trap_msg=self.dungeons.trigger_trap(new,v,self.turn)
+        self._record_damage("taken",before_trap_hp-v.hp,"Dungeon trap","Player","trap")
         if trap_msg:self._message(trap_msg)
         injury_cost=self.combat.leg_injury_penalty()
         if injury_cost:
@@ -2330,16 +2351,32 @@ class Simulation:
         for iid,n in list(inv.items.items()):pile.items[iid]=pile.items.get(iid,0)+n
         for iid in list(self.state.player_equipment.values()):pile.items[iid]=pile.items.get(iid,0)+1
         self.state.player_equipment.clear();self.state.player_equipped_artifacts.clear();self.state.player_wounds.clear();self.state.player_body_parts={"head":100,"neck":100,"torso":100,"left_arm":100,"right_arm":100,"left_leg":100,"right_leg":100}
+        # A successor cannot inherit the deceased person's active illnesses.
+        for uid in self.state.player_infections:self.state.infections.pop(uid,None)
+        self.state.player_infections.clear()
+        self.state.player_immunities.clear()
         for a in list(self.state.artifacts.values()):
             if a.owner=="player":self.artifacts.transfer_uid(a.uid,ground_owner,self.clock.minute,"lost with a dead bearer")
         inv.items.clear();name=f"Wanderer {len(self.state.legacy)+1}";self.state.legacy.append(LegacyCharacter(name,max(0,self.clock.minute-365*1440),self.clock.minute,cause,pos.x,pos.y,pos.z,[]));self.history.record("death",f"{name} died: {cause}.",self.clock.minute,pos.x//512,pos.y//512,[name],salience=70)
-        v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100
+        v=self.entities.get(self.player_id,Vitals);v.hp=v.max_hp;v.hunger=0;v.thirst=0;v.stamina=100;v.pain=0;v.blood=100;v.body_temp=50
+        self.state.player_fx=0.5;self.state.player_fy=0.5
         self.entities.get(self.player_id,Position).value=successor
         if inside is not None:self.interiors._remove_actor('player')
         self.hunting.set_player_stance('normal')
         self.state.player_trespass_property_id=''
         self.state.player_aim_target='';self.state.player_aim_quality=0
         self._message(f"Your character dies. The world continues. A successor enters on dry land at {successor.x},{successor.y}.")
+    def _record_damage(self,direction:str,amount:int,source:str,target:str="Player",kind:str="physical",part:str="")->None:
+        """Persist a bounded source-and-amount history, independent of the UI."""
+        amount=max(0,int(amount))
+        if not amount:return
+        entries=self.state.player_combat_log
+        entries.append({"minute":int(self.clock.minute),"turn":int(self.turn),
+                        "direction":str(direction),"amount":amount,
+                        "source":str(source),"target":str(target),
+                        "kind":str(kind),"part":str(part)})
+        if len(entries)>240:del entries[:-240]
+
     def _message(self,message:str)->None:
         self.log.append(GameEvent(self.turn,message))
         if len(self.log)>150:del self.log[:-150]

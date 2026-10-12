@@ -25,8 +25,17 @@ class HomesteadGhostUITests(unittest.TestCase):
     def test_world_click_returns_exact_tile_and_orientation(self):
         self.terminal.begin_homestead_placement('log_cabin_03')
         self.mouse(1,(40+32*4+2,60+32*3+2))
-        self.assertEqual(self.terminal.read_key(),'UI_BLUEPRINT_PLACE:-1:-1:0')
+        self.assertEqual(self.terminal.read_key(),'UI_BLUEPRINT_PLACE:-2:-2:0')
         self.assertEqual(self.terminal._homestead_placement['style_id'],'log_cabin_03')
+
+    def test_ghost_footprint_is_centered_on_mouse_for_all_rotations(self):
+        self.terminal.begin_homestead_placement('log_cabin_09')
+        cursor=(40+32*4+15,60+32*3+15)
+        for orientation in range(4):
+            self.terminal._homestead_placement['orientation']=orientation
+            x,y=self.terminal._blueprint_cursor_cell(cursor)
+            self.assertEqual((x,y),(-2,-2))
+            self.assertEqual((x+1,y+1),(-1,-1))
 
     def test_right_click_cancels_instead_of_opening_floor_menu(self):
         self.terminal.begin_homestead_placement('log_cabin_01')
@@ -44,7 +53,7 @@ class HomesteadGhostUITests(unittest.TestCase):
         self.terminal.begin_homestead_placement('log_cabin_09')
         self.pg.event.post(self.pg.event.Event(self.pg.KEYDOWN,key=self.pg.K_r,unicode='r'))
         self.mouse(1,(42,62))
-        self.assertEqual(self.terminal.read_key(),'UI_BLUEPRINT_PLACE:-5:-4:1')
+        self.assertEqual(self.terminal.read_key(),'UI_BLUEPRINT_PLACE:-6:-5:1')
         self.assertEqual(self.terminal._homestead_placement['orientation'],1)
 
     def test_click_outside_world_does_not_place(self):

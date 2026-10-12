@@ -123,6 +123,8 @@ class PygameTerminal(PointerUI):
         self._ui_window_resizing: str | None = None
         self._ui_window_pointer_last = (0, 0)
         self._current_presentation = ''
+        self._world_activity_tab = 'activity'
+        self._activity_footer_context = None
         self._realtime_callback = None
         self._free_movement_callback = None
         self._free_movement_last_ms = 0
@@ -498,6 +500,16 @@ class PygameTerminal(PointerUI):
                 return 'RESIZE'
             if event.type == pg.MOUSEBUTTONDOWN:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
+                if event.button==1:
+                    tab_token=self._hit_token(self._last_mouse)
+                    if tab_token in ('FOOTER_TAB:activity','FOOTER_TAB:combat'):
+                        self._world_activity_tab=tab_token.split(':',1)[1]
+                        footer=self._activity_footer_context
+                        if footer is not None:
+                            rect,message,sim=footer
+                            self._draw_footer(rect,message,sim)
+                            pg.display.update(rect)
+                        continue
                 placing=getattr(self,'_homestead_placement',None)
                 if placing and self._input_mode=='world':
                     if event.button==3:
@@ -3916,8 +3928,20 @@ class PygameTerminal(PointerUI):
         ctx=self._hover_context
         if not ctx or not ctx['used'].collidepoint(pos):return None
         size=ctx['tile_px']
-        return (ctx['left']+(pos[0]-ctx.get('grid_x',ctx['used'].x))//size,
-                ctx['top']+(pos[1]-ctx.get('grid_y',ctx['used'].y))//size)
+        wx=ctx['left']+(pos[0]-ctx.get('grid_x',ctx['used'].x))//size
+        wy=ctx['top']+(pos[1]-ctx.get('grid_y',ctx['used'].y))//size
+        # Select the center of the rotated house, not its upper-left tile.
+        # Preview and click both use this function and cannot disagree.
+        placement=getattr(self,'_homestead_placement',None)
+        if placement:
+            from worldseed.systems.homestead_blueprints import catalog
+            style=catalog()[1].get(str(placement.get('style_id','')))
+            if style:
+                home=catalog()[0][style['home_id']]
+                width,height=int(home['width']),int(home['depth'])
+                if int(placement.get('orientation',0))%2:width,height=height,width
+                wx-=width//2;wy-=height//2
+        return wx,wy
 
     def _refresh_homestead_ghost(self,force:bool=False,update_display:bool=True)->None:
         """Paint an alpha footprint, cabin silhouette and explicit door onto the
@@ -4033,27 +4057,54 @@ class PygameTerminal(PointerUI):
         if update_display and damage is not None:self.pg.display.update(damage)
 
     def _draw_footer(self, rect, message: str, sim=None) -> None:
-        """Show recent simulation events, with the latest action at the bottom."""
-        screen=self.screen;th=self._theme
+        """Draw mouse-switchable world events and authoritative damage entries."""
+        pg=self.pg;screen=self.screen;th=self._theme
+        if sim is not None:self._activity_footer_context=(rect.copy(),message,sim)
+        self._pointer_targets=[(area,token) for area,token in self._pointer_targets
+                               if not token.startswith('FOOTER_TAB:')]
         old_clip=screen.get_clip();screen.set_clip(rect.inflate(-8,-6))
         try:
+            pg.draw.rect(screen,th['panel2'],rect,border_radius=3)
             screen.blit(self.small_font.render('WORLD ACTIVITY',True,th['accent']),(rect.x+14,rect.y+9))
-            screen.blit(self.small_font.render('RECENT EVENTS',True,th['muted']),(rect.right-115,rect.y+9))
-            self.pg.draw.line(screen,th['edge'],(rect.x+14,rect.y+30),(rect.right-14,rect.y+30))
-            events=[str(e.message).replace('\n',' ') for e in list(getattr(sim,'log',()))[-5:]] if sim is not None else []
-            latest=str(message).replace('\n',' ').strip()
-            if latest and (not events or latest!=events[-1]):events.append(latest)
-            if not events:events=['The world continues around you.']
-            max_lines=max(1,(rect.height-44)//22)
-            for i,line in enumerate(events[-max_lines:]):
-                current=i==len(events[-max_lines:])-1
-                y=rect.y+38+i*22
-                if current:
-                    self.pg.draw.rect(screen,(45,47,42),(rect.x+9,y-2,rect.width-18,21),border_radius=3)
-                dot=th['accent'] if current else th['muted']
-                self.pg.draw.circle(screen,dot,(rect.x+18,y+8),3)
-                label=self._fit_ui_text(line,self.small_font,rect.width-52)
-                screen.blit(self.small_font.render(label,True,th['text'] if current else th['muted']),(rect.x+30,y))
+            active=self._world_activity_tab
+            for tab,label,offset,width in (
+                ('activity','Events',137,66),('combat','Combat Log',211,105)):
+                button=pg.Rect(rect.x+offset,rect.y+3,width,26)
+                selected=active==tab
+                pg.draw.rect(screen,th['panel'] if selected else th['panel2'],button,border_radius=3)
+                pg.draw.rect(screen,th['accent'] if selected else th['edge'],button,1,border_radius=3)
+                txt=self.small_font.render(label,True,th['accent'] if selected else th['muted'])
+                screen.blit(txt,txt.get_rect(center=button.center))
+                self._ui_target(button,'FOOTER_TAB:'+tab)
+            section='DAMAGE EVENTS' if active=='combat' else 'RECENT EVENTS'
+            screen.blit(self.small_font.render(section,True,th['muted']),(rect.right-132,rect.y+9))
+            pg.draw.line(screen,th['edge'],(rect.x+14,rect.y+30),(rect.right-14,rect.y+30))
+            if active=='combat':
+                entries=list(getattr(getattr(sim,'state',None),'player_combat_log',()) or ())
+                events=[]
+                for item in entries[-12:]:
+                    direction=str(item.get('direction','taken'))
+                    amount=int(item.get('amount',0));minute=int(item.get('minute',0))%1440
+                    name=str(item.get('source','Unknown') if direction=='taken' else item.get('target','Unknown'))
+                    kind=str(item.get('kind','physical')).replace('_',' ')
+                    part=str(item.get('part','')).replace('_',' ')
+                    suffix=' - '+part if part else ''
+                    verb='TOOK' if direction=='taken' else 'DEALT'
+                    events.append((f'{minute//60:02d}:{minute%60:02d}  {verb} {amount} HP  {name} [{kind}]{suffix}',direction))
+                if not events:events=[('No damage recorded yet.','none')]
+            else:
+                events=[(str(e.message).replace('\\n',' '),'activity') for e in list(getattr(sim,'log',()))[-5:]] if sim is not None else []
+                latest=str(message).replace('\\n',' ').strip()
+                if latest and (not events or latest!=events[-1][0]):events.append((latest,'activity'))
+                if not events:events=[('The world continues around you.','activity')]
+            max_lines=max(1,(rect.height-44)//22);shown=events[-max_lines:]
+            for i,(line,direction) in enumerate(shown):
+                current=i==len(shown)-1;y=rect.y+38+i*22
+                if current:pg.draw.rect(screen,(45,47,42),(rect.x+9,y-2,rect.width-18,21),border_radius=3)
+                color=(th['danger'] if direction=='taken' else th['good'] if direction=='dealt'
+                       else th['text'] if current else th['muted'])
+                pg.draw.circle(screen,th['accent'] if current else color,(rect.x+18,y+8),3)
+                screen.blit(self.small_font.render(self._fit_ui_text(line,self.small_font,rect.width-52),True,color),(rect.x+30,y))
         finally:screen.set_clip(old_clip)
 
     def _draw_hud_icon(self, name, rect, color):
@@ -4733,6 +4784,12 @@ class PygameTerminal(PointerUI):
             text(f"{label:<10} {val:>3}/{maxv:<3}",gap=17)
             bw=side_rect.width-32; frac=max(0,min(1,val/max(1,maxv))); pg.draw.rect(screen,(45,50,52),(tx,ty-1,bw,6),border_radius=2); pg.draw.rect(screen,self._theme['good'] if frac>.35 else self._theme['danger'],(tx,ty-1,int(bw*frac),6),border_radius=2); ty+=11
         ty+=6
+        if vit.body_temp<20 or vit.body_temp>85:
+            text(f'CRITICAL BODY TEMP {vit.body_temp}/100',self._theme['danger'],gap=18)
+        if vit.blood<50:
+            text(f'LOW BLOOD VOLUME {vit.blood}/100',self._theme['danger'],gap=18)
+        if sim.state.player_infections:
+            text('ACTIVE INFECTION - check Health',self._theme['danger'],gap=18)
         terrain=world.tile_at(pos).terrain.name; text('LOCAL',self._theme['accent'],gap=19); text(terrain); text(f"Carried stacks: {len(inv.items)}",self._theme['muted'])
         stance=str(getattr(sim.state,'player_hunting_stance','normal')).title()
         if stance!='Normal':text(f'Hunting stance: {stance}',self._theme['good'],gap=18)
