@@ -448,9 +448,11 @@ class SalvagingSystem:
         duration=max(4,min(12,(definition.minutes+2)//3))
         if salvage_perks.has(self.state,"fast_hands"):
             duration=max(3,(duration*4+4)//5)
+        rare_notice = ("rare parts possible" if salvage_perks.has(self.state,"wreckbreaker")
+                       else "no rare parts")
         message=("Quick salvaged "+self.registry.items[item_id].name+": "+
                  ", ".join(f"{self.registry.items[iid].name} x{qty}" for iid,qty in sorted(outputs.items()))+
-                 f". Rough recovery, no rare parts; +{gain} practice.")
+                 f". Rough recovery, {rare_notice}; +{gain} practice.")
         self.state.player_salvage_log.append({
             "item_id":item_id,"name":self.registry.items[item_id].name,
             "attempt":attempt,"completed_minute":minute+duration,

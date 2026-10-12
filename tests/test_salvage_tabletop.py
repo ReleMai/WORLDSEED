@@ -128,6 +128,7 @@ class TabletopSalvageTests(unittest.TestCase):
         self.assertFalse(batch.quick_batch("test:object",7,items,SEED)[0])
         self.assertTrue(batch.quick_batch("test:object",6,items,SEED)[0])
         self.assertEqual(state.salvaging_attempts,6)
+        self.assertIn("rare parts possible",state.player_salvage_log[-1]["message"])
         self.assertEqual(len(state.player_salvage_log),6)
         self.assertEqual(items.count("test:object"),1)
         self.assertEqual(validate_sim_state(state.to_dict()),[])
