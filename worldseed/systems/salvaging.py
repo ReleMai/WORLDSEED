@@ -182,12 +182,14 @@ class SalvagingSystem:
             ok, reason, duration = self.quick(item_id, inv, world_seed, minute + total)
             if not ok:
                 break
-            total += duration
+            # Settle each source's in-world record at its actual (discounted)
+            # completion minute; the clock and provenance ledger must agree.
+            effective_duration = duration if index == 0 else max(2, duration - 2)
+            total += effective_duration
+            self.state.player_salvage_log[-1]["completed_minute"] = minute + total
             completed += 1
         if completed == 0:
             return False, reason, 0
-        if completed > 1:
-            total = max(completed * 2, total - (completed - 1) * 2)
         return True, f"Quick-salvaged {completed} items. Recovery reports are in your log.", total
 
     def claim_dossier(self, station_id: str, nearby_stations: set[str]) -> tuple[bool, str]:

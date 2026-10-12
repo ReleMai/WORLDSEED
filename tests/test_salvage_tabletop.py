@@ -132,6 +132,18 @@ class TabletopSalvageTests(unittest.TestCase):
         self.assertEqual(items.count("test:object"),1)
         self.assertEqual(validate_sim_state(state.to_dict()),[])
 
+    def test_discounted_batch_completion_times_match_simulation_elapsed_time(self):
+        system, state, inv, _ = fixture("crush", 6)
+        state.player_skills["salvaging"] = 10
+        for perk in ("fast_hands", "sorted_scrap", "sweep_job"):
+            self.assertTrue(system.buy_perk(perk)[0])
+        ok, message, duration = system.quick_batch("test:object", 4, inv, SEED, minute=200)
+        self.assertTrue(ok, message)
+        times = [row["completed_minute"] for row in state.player_salvage_log]
+        self.assertEqual(times[-1], 200 + duration)
+        self.assertEqual(times, sorted(times))
+        self.assertTrue(all(200 < t <= times[-1] for t in times))
+
     def test_lost_arts_requires_three_distinct_sources_and_a_real_workshop(self):
         system,state,inv,registry=fixture("unfasten",3)
         state.player_skills["salvaging"]=10
