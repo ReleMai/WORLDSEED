@@ -207,13 +207,18 @@ class BuildingVariantTests(unittest.TestCase):
                 # container, but every item must debit existing town stock.
                 self.assertTrue(set(primary.items) <= set(before))
                 for iid, total in before.items():
-                    self.assertEqual(town.stocks[iid] + sum(c.items.get(iid, 0)
-                                                           for c in storage.state.containers.values()), total)
+                    # Discarded inventory is still physical stock once
+                    # transferred into an accessible, persistent ground pile.
+                    containers = sum(c.items.get(iid, 0) for c in storage.state.containers.values())
+                    ground = sum(p.items.get(iid, 0) for p in storage.state.ground_piles.values())
+                    self.assertEqual(town.stocks[iid] + containers + ground, total, iid)
                 stocks = dict(town.stocks)
                 containers = {c.uid: asdict(c) for c in storage.state.containers.values()}
+                ground_piles = {key: asdict(p) for key,p in storage.state.ground_piles.items()}
                 self.assertEqual(storage.sync_settlement(town.uid).created, 0)
                 self.assertEqual(town.stocks, stocks)
                 self.assertEqual({c.uid: asdict(c) for c in storage.state.containers.values()}, containers)
+                self.assertEqual({key: asdict(p) for key,p in storage.state.ground_piles.items()}, ground_piles)
 
     def test_empty_settlement_does_not_generate_themed_loot(self):
         storage, town, _ = self.storage_fixture(catalog()[0])

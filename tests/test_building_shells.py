@@ -95,10 +95,15 @@ class BuildingShellTests(unittest.TestCase):
         self.assertNotIn(pos_key(frontage.x,frontage.y,frontage.z),state.containers)
         self.assertEqual(storage.items,{"core:wood":3})
         self.assertEqual(town.stocks,{"core:wood":10})
-        self.assertEqual(len(state.containers),2)
+        # The current physical profile has a tool chest and an independent
+        # tabletop slot. Neither may duplicate the migrated worker storage.
+        self.assertEqual(len(state.containers),3)
         indoor=next(c for c in state.containers.values() if c.profile_id=='core:tool_chest')
+        tabletop=next(c for c in state.containers.values() if c.profile_id=='core:tabletop')
         self.assertEqual(indoor.profile_id,"core:tool_chest")
         self.assertEqual(indoor.items,{})
+        self.assertEqual(tabletop.items,{})
+        self.assertEqual(len({c.uid for c in state.containers.values()}),3)
         self.assertNotIn(pos_key(4,4,0),state.containers)
         position=(storage.x,storage.y,storage.z)
         system.sync_settlement(town.uid)
