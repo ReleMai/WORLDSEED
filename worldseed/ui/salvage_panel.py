@@ -8,7 +8,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 from worldseed.entities.components import Inventory
-from worldseed.sim.commands import SalvageActionCommand, StartSalvageCommand
+from worldseed.sim.commands import SalvageActionCommand, StartSalvageCommand, QuickSalvageCommand
 from worldseed.ui.session import NavigationStack, RouteState
 from worldseed.ui.widgets import prompt_text
 
@@ -89,6 +89,13 @@ def run_salvage_panel(ctx, term):
             # screen or consuming it. Begin remains a labelled player action.
             selected_item = choice
             continue
+        if choice == 'UI_ACTION:salvage:quick':
+            ok,reason=ctx.sim.salvaging.can_start(selected_item,inv)
+            if not ok:status=reason;continue
+            ctx.sim.execute(QuickSalvageCommand(ctx.player_id,selected_item))
+            status=ctx.sim.log[-1].message if ctx.sim.log else ''
+            result=ctx.sim.state.player_salvage_log[-1] if ctx.sim.state.player_salvage_log else {}
+            continue
         if choice == 'UI_ACTION:salvage:begin':
             ok, reason = ctx.sim.salvaging.can_start(selected_item, inv)
             if not ok:
@@ -102,7 +109,9 @@ def run_salvage_panel(ctx, term):
         if choice.startswith('UI_ACTION:salvage:act:'):
             action = choice.rsplit(':', 1)[-1]
             session = ctx.sim.salvaging.session_view()
-            if not session or action not in {row['id'] for row in session['choices']}:
+            actions={row['id'] for row in session['choices']} if session else set()
+            if session and session['phase']=='disassembly':actions.update(('tune_left','tune_right'))
+            if not session or action not in actions:
                 continue
             ctx.sim.execute(SalvageActionCommand(ctx.player_id, action))
             status = ctx.sim.log[-1].message if ctx.sim.log else ''
@@ -221,7 +230,9 @@ class SalvagePanelMixin:
             self._panel_text(summary, (game.x + 12, game.y + 43, game.width - 24, max(40, game.height - 104)), color=th['muted'])
             button = pg.Rect(game.x + 12, game.bottom - 45, game.width - 24, 32)
             if preview.get('can_start'):
-                self._button(button, 'SALVAGE NEXT ITEM [B]' if complete else 'BEGIN SALVAGE [B]', 'UI_ACTION:salvage:begin')
+                half=(game.width-30)//2
+                self._button((button.x,button.y,half,button.height),'CAREFUL [B]','UI_ACTION:salvage:begin')
+                self._button((button.x+half+6,button.y,half,button.height),'QUICK · LESS XP','UI_ACTION:salvage:quick')
             else:
                 self._panel_text(preview.get('reason') or 'No carried salvageable item selected.', button.inflate(-8, -2), color=th['muted'], max_lines=2)
         self._draw_floating_footer(x, y, w, h, subtitle or 'Click selects · B begins · 1–3 choose · WASD moves · Esc keeps work')
@@ -237,10 +248,21 @@ class SalvagePanelMixin:
                          (rect.x + 12, rect.y + 10, rect.width - 24, 22), color=th['accent'], max_lines=1)
         self._panel_text(session.get('name', ''), (rect.x + 12, rect.y + 32, rect.width - 24, 20), max_lines=1)
         choices = session.get('choices', ())
-        button_h, gap = (35, 5)
+        button_h, gap = (31, 4)
         actions_top = rect.bottom - 10 - len(choices) * (button_h + gap)
         self._panel_text(session.get('cue') or session.get('prompt', ''),
-                         (rect.x + 12, rect.y + 55, rect.width - 24, max(20, actions_top - rect.y - 61)), color=th['muted'])
+                         (rect.x + 12, rect.y + 52, rect.width - 24, 36), color=th['muted'],max_lines=2)
+        if phase!='inspection':
+            target=int(session.get('target',0));dial=int(session.get('dial',0))
+            meter_y=rect.y+90;meter_w=max(80,rect.width-155)
+            for position in range(5):
+                slot=pg.Rect(rect.x+15+position*(meter_w//5),meter_y,max(10,meter_w//5-4),22)
+                fg=th['good'] if position==target and position==dial else th['accent'] if position==target else (77,90,85) if position==dial else th['panel2']
+                pg.draw.rect(self.screen,fg,slot,border_radius=3)
+            self._button((rect.right-110,meter_y,43,25),'◀','UI_ACTION:salvage:act:tune_left')
+            self._button((rect.right-62,meter_y,43,25),'▶','UI_ACTION:salvage:act:tune_right')
+            self._panel_text(f"Align dark marker with gold target · Precision {session.get('precision',0)}/3",
+                             (rect.x+12,meter_y+23,rect.width-24,17),color=th['muted'],max_lines=1)
         for index, choice in enumerate(choices):
             button = pg.Rect(rect.x + 12, actions_top + index * (button_h + gap), rect.width - 24, button_h)
             self._button(button, f"[{index + 1}] " + choice.get('label', ''), 'UI_ACTION:salvage:act:' + choice['id'])

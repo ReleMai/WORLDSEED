@@ -120,6 +120,7 @@ class SalvagingSystem:
             "started_minute": minute, "phase": "inspection", "step": 0,
             "score": 0, "choices": [], "challenges": challenges,
             "skill_level": level, "tool_bonus": tool_bonus,
+            "dial":(challenges[0]+4)%5,"precision":0,"dial_moves":0,
         }
         return True, f"You set aside one {self.registry.items[item_id].name.lower()} for salvaging. Inspect it before disassembly.", 1
 
@@ -175,7 +176,10 @@ class SalvagingSystem:
             return None
         view = {"item_id": definition.item_id, "name": self.registry.items[definition.item_id].name,
                 "phase": session["phase"], "step": session["step"], "stage_count": 3,
-                "score": session["score"], "max_score": 6}
+                "score": session["score"], "max_score": 6,
+                "precision":session.get("precision",0),
+                "dial":session.get("dial",(session["challenges"][session["step"]]+4)%5),
+                "target":(session["challenges"][session["step"]]*2+1)%5}
         if session["phase"] == "inspection":
             view.update(prompt="Inspect the assembly", cue=definition.description,
                         choices=[{"id": "inspect", "label": "Inspect assembly",
@@ -215,17 +219,46 @@ class SalvagingSystem:
                 outputs[drop.item_id] = drop.min + hash_u64(world_seed, "salvaging.rare_amount.v1", attempt, item_id, drop.item_id) % (drop.max - drop.min + 1)
         return outputs
 
-    def _practice(self, score: int, difficulty: int) -> int:
+    def _practice(self, score: int, difficulty: int, *,quick:bool=False) -> int:
         level = self._level()
         if level >= 10:
             return 0
-        gain = 2 + score // 2 + min(2, difficulty // 3)
+        gain = 1 if quick else 2 + score // 2 + min(2, difficulty // 3)
         self.state.player_salvaging_xp += gain
         threshold = self.skill_threshold(level)
         if self.state.player_salvaging_xp >= threshold:
             self.state.player_salvaging_xp -= threshold
             self.state.player_skills["salvaging"] = level + 1
         return gain
+
+    def quick(self,item_id:str,inv:Inventory,world_seed:bytes,minute:int=0)->tuple[bool,str,int]:
+        """Low-yield, no-rare, minimal-XP alternative to careful salvage."""
+        ok,reason=self.can_start(item_id,inv)
+        if not ok:return False,reason,0
+        definition=self.registry.salvage[item_id]
+        attempt=self.state.salvaging_attempts
+        if not inv.remove(item_id,1):return False,"You no longer carry that item.",0
+        from worldseed.systems.crafting_quality import retire_consumed_artifacts
+        retire_consumed_artifacts(self.state,self.registry,{item_id:1},minute=minute,reason='Quick salvage')
+        self.state.salvaging_attempts+=1
+        potential=self.roll_outputs(item_id,0,self._level(),world_seed,attempt,0)
+        outputs={iid:max(1,min(high,int(potential.get(iid,low)*0.65)))
+                 for iid,(low,high) in definition.yields.items()}
+        for iid,amount in outputs.items():inv.add(iid,amount)
+        gain=self._practice(0,definition.difficulty,quick=True)
+        duration=max(4,min(12,(definition.minutes+2)//3))
+        message=("Quick salvaged "+self.registry.items[item_id].name+": "+
+                 ", ".join(f"{self.registry.items[iid].name} x{qty}" for iid,qty in sorted(outputs.items()))+
+                 f". Rough recovery, no rare parts; +{gain} practice.")
+        self.state.player_salvage_log.append({
+            "item_id":item_id,"name":self.registry.items[item_id].name,
+            "attempt":attempt,"completed_minute":minute+duration,
+            "score":0,"max_score":6,"outputs":dict(outputs),"rare_outputs":{},
+            "skill_level":self._level(),"skill_xp":self.state.player_salvaging_xp,
+            "xp_gained":gain,"method":"quick","message":message,
+        })
+        del self.state.player_salvage_log[:-SALVAGE_LOG_LIMIT]
+        return True,message,duration
 
     def act(self, choice_id: str, inv: Inventory, world_seed: bytes, minute: int = 0) -> tuple[bool, str, int]:
         session = self.state.player_salvage_session
@@ -244,25 +277,35 @@ class SalvagingSystem:
             session["phase"] = "disassembly"
             return True, "You inspect the seams and identify how to preserve the useful parts.", 1
         stage = self._stage(session, definition)
+        if choice_id in ("tune_left","tune_right"):
+            if session.get("dial_moves",0)>=6:
+                return False,"The mechanism resists further adjustment. Select a technique.",0
+            session["dial"]=(session.get("dial",0)+(1 if choice_id=="tune_right" else -1))%5
+            session["dial_moves"]=session.get("dial_moves",0)+1
+            return True,"Calibration adjusted; match the highlight before choosing a technique.",0
         if choice_id not in {row["id"] for row in stage["choices"]}:
             return False, "Choose one of the displayed salvage actions.", 0
         careful = choice_id == stage["correct"]
         session["score"] += 2 if careful else 0
+        if careful and session.get("dial_moves",0)>0 and session.get("dial",0)==(session["challenges"][session["step"]]*2+1)%5:
+            session["precision"]=session.get("precision",0)+1
         session["choices"].append(choice_id)
         base, extra = divmod(max(3, definition.minutes - 2), 3)
         duration = base + int(session['step'] < extra)
         if session["step"] < 2:
             session["step"] += 1
+            session["dial"]=(session["challenges"][session["step"]]+4)%5
+            session["dial_moves"]=0
             return True, "You preserve the useful parts." if careful else "Some finer parts are damaged, but basic scraps remain recoverable.", duration
         outputs = self.roll_outputs(definition.item_id, session["score"], session["skill_level"],
-                                    world_seed, session["attempt"], session["tool_bonus"])
+                                    world_seed, session["attempt"], session["tool_bonus"]+session.get("precision",0)*4)
         for iid, amount in outputs.items():
             inv.add(iid, amount)
         rare_ids = {drop.item_id for drop in definition.rare_yields}
         gain = self._practice(session["score"], definition.difficulty)
         message = "Salvaged " + self.registry.items[definition.item_id].name + ": " + ", ".join(
             f"{self.registry.items[iid].name} x{amount}" for iid, amount in sorted(outputs.items()))
-        message += f". Care {session['score']}/6; salvaging practice +{gain}."
+        message += f". Care {session['score']}/6, precision {session.get('precision',0)}/3; salvaging practice +{gain}."
         self.state.player_salvage_log.append({
             "item_id": definition.item_id, "name": self.registry.items[definition.item_id].name,
             "attempt": session["attempt"], "completed_minute": minute + duration,

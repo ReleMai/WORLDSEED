@@ -1853,7 +1853,7 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
     private=container.kind=='property' and container.owner!='player' and container.access!='public'
     uid=container.uid
     nav=NavigationStack(RouteState('container-inventory','CONTAINER STORAGE'))
-    action_amount=1;last_selected=None;status=''
+    action_amount=1;last_selected=None;status='';container_query=''
     while True:
         container=next((row for row in sim.state.containers.values() if row.uid==uid),None)
         if not container:return status or UI_BACK
@@ -1865,8 +1865,10 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         entries={};rows=[]
         pack_rows=[];container_rows=[]
         for iid,meta in pack_data['items'].items():
+            if container_query and container_query.casefold() not in meta['name'].casefold():continue
             key=f'pack|{iid}';entries[key]={**meta,'side':'pack','iid':iid};pack_rows.append((key,f"{meta['name']} x{meta['count']}"))
         for iid,meta in container_data['items'].items():
+            if container_query and container_query.casefold() not in meta['name'].casefold():continue
             key=f'container|{iid}';entries[key]={**meta,'side':'container','iid':iid};container_rows.append((key,f"{meta['name']} x{meta['count']}"))
         for i in range(max(len(pack_rows),len(container_rows))):
             if i<len(pack_rows):rows.append(pack_rows[i])
@@ -1902,6 +1904,32 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
             status=moved;continue
         if not choice.startswith('UI_ACTION:'):
             last_selected=choice;action_amount=1;continue
+        if choice=='UI_ACTION:container_search':
+            value=prompt_text(term,'STORAGE // SEARCH','Filter both inventories (blank clears):',default=container_query,max_len=48)
+            if value is not None:
+                container_query=value;route.selected=0;route.scroll=0;last_selected=None
+            continue
+        if choice in ('UI_ACTION:store_many','UI_ACTION:take_many'):
+            if choice.endswith('take_many') and private and sim.state.player_hunting_stance!='stalk':
+                status='Select Stalk mode before stealing from private storage.'
+                continue
+            source=inv.items if choice=='UI_ACTION:store_many' else container.items
+            transferred=0
+            for iid,qty in sorted(source.items()):
+                if transferred>=12:break
+                if qty<=0 or iid not in reg.items:continue
+                if container_query and container_query.casefold() not in reg.items[iid].name.casefold():continue
+                before=inv.count(iid) if choice=='UI_ACTION:store_many' else container.items.get(iid,0)
+                command=(StoreCommand(pid,iid,qty,uid) if choice=='UI_ACTION:store_many'
+                         else StealContainerCommand(pid,uid,iid,qty) if private
+                         else TakeFromContainerCommand(pid,iid,qty,uid))
+                sim.execute(command)
+                after=inv.count(iid) if choice=='UI_ACTION:store_many' else container.items.get(iid,0)
+                if before>after:transferred+=1
+            status=(f'Transferred {transferred} stacks.' if transferred
+                    else 'Nothing transferable; check capacity, locks and access.')
+            route.selected=0;route.scroll=0;last_selected=None
+            continue
         if rows and 0<=route.selected<len(rows):
             selected_key=rows[route.selected][0];meta=entries.get(selected_key,{})
             count=int(meta.get('count',0))
@@ -2941,9 +2969,9 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         finally:
             if callable(pop):pop()
         return True
-    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','salvaging'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','salvaging'} else 'recipes';categories=['all']+sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
-    category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
+    category='all'
     category_page=categories.index(category)//6 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
     workshop_state=RouteState('crafting-workshop','WORKSHOP')
@@ -2953,7 +2981,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
     station_page=0
     material_preference='auto'
     result_dismissed=False
-    placed=[];status='';recipe_query='';salvage_return_tab='recipes'
+    placed=[];status='';recipe_query='';salvage_return_tab='recipes';recipe_filter='all';discovery_station=''
     while True:
         inv=ctx.entities.get(pid,Inventory)
         if tab=='salvaging':
@@ -3034,15 +3062,21 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 continue
             continue
         if tab=='recipes':
-            known=[r for r in sim.crafting.discovered_recipes(inv)
-                   if (not recipe_query and (r.category or 'general')==category)
-                   or (recipe_query and recipe_query.casefold() in ' '.join((r.name,r.category,*(reg.items[iid].name for iid in r.outputs if iid in reg.items))).casefold())]
-            known.sort(key=lambda r:r.name)
+            all_known=sim.crafting.discovered_recipes(inv)
+            stations=_player_station_ids(sim)
+            missing_cache={r.id:sim.crafting.missing_requirements(r.id,inv,stations,preference=material_preference) for r in all_known}
+            known=[r for r in all_known if
+                   (category=='all' or (r.category or 'general')==category)
+                   and (recipe_filter!='ready' or not missing_cache[r.id])
+                   and (recipe_filter!='missing' or bool(missing_cache[r.id]))
+                   and (not recipe_query or recipe_query.casefold() in ' '.join(
+                       (r.name,r.category or '',*(reg.items[iid].name for iid in r.outputs if iid in reg.items))).casefold())]
+            known.sort(key=lambda r:(bool(missing_cache[r.id]),r.name.casefold(),r.id))
             rows=[(r.id,r.name) for r in known] or [('__none__','No recipes in this category')]
             recipe_state.selected=max(0,min(recipe_state.selected,len(rows)-1))
             data=_recipe_ui_data(reg,sim,inv,known,material_preference=material_preference)
             unseen=set(getattr(sim.state,'player_unseen_recipes',[]));new_categories=sorted({reg.recipes[rid].category or 'general' for rid in unseen if rid in reg.recipes})
-            data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories,'query':recipe_query})
+            data.update({'categories':categories,'category':category,'category_page':category_page,'new_categories':new_categories,'query':recipe_query,'recipe_filter':recipe_filter,'ready_total':sum(not x for x in missing_cache.values()),'known_total':len(all_known)})
             choice=_select(term,'CRAFTING',rows,state=recipe_state,presentation='crafting_unified',
                            subtitle=status or 'Browse techniques and inspect exactly what each recipe produces.',presentation_data=data)
             status=''
@@ -3066,6 +3100,9 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice=='UI_ACTION:search':
                 value=prompt_text(term,'CRAFTING // SEARCH','Technique, profession or output (blank clears):',default=recipe_query,max_len=48)
                 if value is not None:recipe_query=value;recipe_state.selected=0;recipe_state.scroll=0
+                continue
+            if choice.startswith('UI_ACTION:recipe_filter:'):
+                recipe_filter=choice.rsplit(':',1)[-1];recipe_state.selected=0;recipe_state.scroll=0
                 continue
             if choice.startswith('UI_ACTION:category_page:'):
                 page_size=6
@@ -3095,7 +3132,9 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         rows=[(iid,v['name']) for iid,v in entries.items()] or [('__none__','Gather materials to experiment')]
         pot_state.selected=max(0,min(pot_state.selected,len(rows)-1))
         from collections import Counter
-        counts=Counter(placed);exact=sim.crafting.pot_candidates(tuple(placed),inv)
+        nearby_discovery=sorted(sid for sid in _player_station_ids(sim) if any(r.station==sid for r in reg.recipes.values()))
+        if discovery_station not in nearby_discovery:discovery_station=''
+        counts=Counter(placed);exact=sim.crafting.pot_candidates(tuple(placed),inv,station_id=discovery_station)
         known_exact=[r.name for r in reg.recipes.values()
                      if r.id in set(sim.state.player_discovered_recipes) and counts
                      and sim.crafting.discovery_matches(r,placed)]
@@ -3106,7 +3145,15 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 if r.knowledge and r.knowledge not in sim.state.player_knowledge:continue
                 if sim.crafting.discovery_matches(r,placed,partial=True):close=True;break
         mix_state='green' if exact else ('yellow' if close else 'red')
-        data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),'known_exact':known_exact,'mix_state':mix_state}
+        station_tabs=[{'id':'','name':'Field'}]+[
+            {'id':sid,'name':reg.structures[sid].name if sid in reg.structures else sid}
+            for sid in nearby_discovery]
+        data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),
+              'known_exact':known_exact,'mix_state':mix_state,'discovery_station':discovery_station,
+              'discovery_stations':station_tabs,
+              'known_hints':[{'recipe_id':h['recipe_id'],'station_name':(
+                  reg.structures[h['station_id']].name if h['station_id'] in reg.structures else h['station_id'])}
+                  for h in sim.state.player_crafting_hints if h.get('recipe_id') not in sim.state.player_discovered_recipes]}
         data.update(crafting_journal_data(reg,sim.state))
         if result_dismissed:data['latest_result']=None
         choice=_select(term,'EXPERIMENT GRID',rows,state=pot_state,presentation='discovery_pot',
@@ -3133,18 +3180,26 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             continue
         if choice=='UI_ACTION:dismiss_result':result_dismissed=True;continue
         if choice=='UI_ACTION:clear':placed.clear();continue
+        if choice.startswith('UI_ACTION:discovery_station:'):
+            sid=choice.split(':',2)[2]
+            if sid=='' or sid in nearby_discovery:
+                discovery_station=sid;placed.clear();pot_state.selected=0
+            continue
         if choice=='UI_ACTION:mix':
             # The command validates quantities and chooses the recipe. The UI
             # animates only after the simulation reports a successful result.
             before=set(sim.state.player_discovered_recipes)
             ingredients=tuple(placed)
-            sim.execute(DiscoveryPotCommand(pid,ingredients))
+            before_hints=len(sim.state.player_crafting_hints)
+            sim.execute(DiscoveryPotCommand(pid,ingredients,discovery_station))
             status=sim.log[-1].message if sim.log else ''
             new=set(sim.state.player_discovered_recipes)-before
             if new:
                 result_dismissed=False
                 rid=sorted(new)[0];anim=getattr(term,'animate_discovery_pot',None)
                 if callable(anim):anim(ingredients,reg.recipes[rid].name)
+                placed.clear()
+            elif len(sim.state.player_crafting_hints)>before_hints:
                 placed.clear()
             continue
         if choice in entries:

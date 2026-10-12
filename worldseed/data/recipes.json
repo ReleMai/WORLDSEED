@@ -8097,5 +8097,47 @@
     ],
     "discovery_mode": "experiment",
     "description": "Recover one common component from animal leather; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:berry_barley_bun_recipe",
+    "name": "Berry Barley Bun",
+    "inputs": {
+      "core:barley": 2,
+      "core:berries": 1
+    },
+    "outputs": {
+      "core:berry_barley_bun": 1
+    },
+    "minutes": 18,
+    "station": "core:campfire",
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 2,
+    "description": "Bake a berry-filled barley bun at a campfire or village hearth.",
+    "discovery_items": [
+      "core:barley",
+      "core:berries"
+    ]
+  },
+  {
+    "id": "core:hearth_root_stew_recipe",
+    "name": "Hearth Root Stew",
+    "inputs": {
+      "core:turnip": 1,
+      "core:carrot": 1
+    },
+    "outputs": {
+      "core:hearth_root_stew": 1
+    },
+    "minutes": 24,
+    "station": "core:campfire",
+    "category": "cooking",
+    "skill": "cooking",
+    "difficulty": 2,
+    "description": "Simmer root vegetables together in a household pot.",
+    "discovery_items": [
+      "core:turnip",
+      "core:carrot"
+    ]
   }
 ]

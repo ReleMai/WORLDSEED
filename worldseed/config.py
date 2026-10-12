@@ -54,7 +54,7 @@ MOVE_MINUTES = 0
 # Continuous-play clock.  Half a wall-clock second advances one game minute while
 # gameplay is active; long stalls are capped and resumed from "now" instead of
 # replaying an unbounded backlog.  Explicit long actions may still fast-forward.
-REALTIME_SECONDS_PER_GAME_MINUTE = 0.5
+REALTIME_SECONDS_PER_GAME_MINUTE = 1.5
 REALTIME_MAX_CATCHUP_MINUTES = 5
 # Nearby NPC action execution remains on deterministic game-time boundaries.
 # The boundaries are now fed by continuous time rather than player movement.

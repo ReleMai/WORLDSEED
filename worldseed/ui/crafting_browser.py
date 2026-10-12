@@ -5,8 +5,8 @@ from __future__ import annotations
 class CraftingBrowserMixin:
     """A bounded recipe list and independently scrollable recipe inspection pane."""
 
-    _CRAFT_ROW_HEIGHT = 70
-    _CRAFT_ROW_PITCH = 76
+    _CRAFT_ROW_HEIGHT = 51
+    _CRAFT_ROW_PITCH = 56
 
     def _crafting_browser_geometry(self):
         pg = self.pg
@@ -93,14 +93,19 @@ class CraftingBrowserMixin:
                                                             self.small_font.size(label)[0] + 20, 25))
         band_y = y + 35
         if pages > 1:
-            self._button((x + width - 125, band_y, 28, 24), '‹', 'UI_ACTION:category_page:prev')
-            self._button((x + width - 28, band_y, 28, 24), '›', 'UI_ACTION:category_page:next')
-            self._panel_text(f'{page + 1} / {pages}', pg.Rect(x + width - 92, band_y + 4, 60, 20),
+            self._button((x + 170, band_y, 28, 24), '‹', 'UI_ACTION:category_page:prev')
+            self._button((x + 268, band_y, 28, 24), '›', 'UI_ACTION:category_page:next')
+            self._panel_text(f'{page + 1} / {pages}', pg.Rect(x + 203, band_y + 4, 60, 20),
                              color=self._theme['muted'], max_lines=1)
         status = str(data.get('query') or '')
-        status = 'Search: ' + status if status else active.replace('_', ' ').title() + ' recipes'
-        self._panel_text(status, pg.Rect(x, band_y + 3, width - (140 if pages > 1 else 0), 22),
+        status = 'Search: ' + status if status else f"{data.get('ready_total',0)}/{data.get('known_total',0)} craftable"
+        self._panel_text(status, pg.Rect(x, band_y + 3, max(1,width - 440), 22),
                          color=self._theme['muted'], max_lines=1)
+        active_filter=data.get('recipe_filter','all')
+        for index,(fid,label) in enumerate((('all','ALL KNOWN'),('ready','CAN CRAFT'),('missing','NEEDS ITEMS'))):
+            bx=x+max(0,width-341)+index*114
+            self._button((bx,band_y,108,25),('✓ ' if fid==active_filter else '')+label,
+                         'UI_ACTION:recipe_filter:'+fid)
 
     def _crafting_detail_lines(self, recipe):
         """Show the authoritative physical allocation and material-result quality."""
@@ -208,17 +213,17 @@ class CraftingBrowserMixin:
             if chosen:
                 pg.draw.rect(screen, th['accent'], (rect.x + 1, rect.y + 8, 3, rect.height - 16), border_radius=1)
             outputs = recipe.get('outputs') or []
-            icon = pg.Rect(rect.x + 9, rect.y + 8, 50, 50)
+            icon = pg.Rect(rect.x + 8, rect.y + 5, 40, 40)
             pg.draw.rect(screen, (20, 27, 27), icon, border_radius=4)
             if outputs:
                 self._panel_item_icon(str(outputs[0].get('id', '')), icon.inflate(-6, -6))
             name = str(recipe.get('name') or getattr(row, 'label', key))
-            self._panel_text(name, pg.Rect(rect.x + 68, rect.y + 7, rect.width - 78, 36),
+            self._panel_text(name, pg.Rect(rect.x + 55, rect.y + 4, rect.width - 65, 27),
                              color=th['text'], max_lines=2)
             ready = bool(recipe.get('ready'))
-            badge = 'READY' if ready else 'NEEDS MATERIALS' if recipe else 'NO RECIPES'
+            badge = 'READY' if ready else 'WORKSHOP NEEDED' if recipe.get('station') and any('station:' in m for m in recipe.get('missing',())) else 'MISSING ITEMS' if recipe else 'NO RECIPES'
             badge_color = th['good'] if ready else th['danger'] if recipe else th['muted']
-            self._panel_text(badge, pg.Rect(rect.x + 68, rect.bottom - 22, rect.width - 78, 18),
+            self._panel_text(badge, pg.Rect(rect.x + 55, rect.bottom - 19, rect.width - 65, 17),
                              color=badge_color, max_lines=1)
             if recipe.get('new'):
                 pg.draw.circle(screen, th['good'], (rect.x + 55, rect.y + 10), 3)

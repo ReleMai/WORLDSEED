@@ -7,7 +7,7 @@ class WorkbenchPanelsMixin:
         pg = self.pg
         state = self._floating_panel_state('crafting')
         x, y, w, h = (state[key] for key in ('x', 'y', 'w', 'h'))
-        body = pg.Rect(x + 16, y + 92, w - 32, max(1, h - 134))
+        body = pg.Rect(x + 16, y + 132, w - 32, max(1, h - 174))
         grid = pg.Rect(body.x, body.y, int(body.width * .55), body.height)
         right = pg.Rect(grid.right + 12, body.y, body.width - grid.width - 12, body.height)
         experiment = pg.Rect(right.x, right.y, right.width, min(198, right.height))
@@ -152,6 +152,12 @@ class WorkbenchPanelsMixin:
             lines.extend(('text', str(name), th['text']) for name in uses)
             if not uses:
                 lines.append(('text', 'No learned techniques use this material yet.', th['muted']))
+        hints=list(data.get('known_hints') or ())
+        if hints:
+            lines.append(('text', 'KNOWN WORKSHOP HINTS', th['accent']))
+            for hint in hints[-20:]:
+                lines.append(('text', 'I could probably make something with this at a '+
+                              str(hint.get('station_name','workshop'))+'.', th['muted']))
         lines.append(('text', 'LEARNED HISTORY', th['accent']))
         for recipe in history:
             lines.append(('text', str(recipe.get('name', 'Learned technique')), th['text']))
@@ -168,6 +174,15 @@ class WorkbenchPanelsMixin:
         data = data or {}
         x, y, w, h, _, _, _ = self._workbench_shell('Discovery', 'discovery')
         geometry = self._discovery_browser_geometry()
+        station_tabs=list(data.get('discovery_stations') or [{'id':'','name':'Field'}])
+        left=x+16;top=y+94;tab_w=max(68,min(140,(w-40)//max(1,len(station_tabs))))
+        for idx,station in enumerate(station_tabs[:max(1,(w-40)//68)]):
+            sid=station.get('id','')
+            name=station.get('name','Field')
+            selected_tab=data.get('discovery_station','')==sid
+            self._button((left+idx*(tab_w+4),top,tab_w,29),
+                         ('● ' if selected_tab else '')+str(name)[:19],
+                         'UI_ACTION:discovery_station:'+sid)
         self._discovery_material_cards(rows, selected, data, geometry, page_start, total)
         self._discovery_experiment(geometry['experiment'], data)
         selected_key = data.get('selected_key')

@@ -373,7 +373,7 @@ class Simulation:
             minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         result=TickResult()
-        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,CollectWaterCommand)):
+        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,CollectWaterCommand)):
             if type(command.actor) is not int or command.actor != self.player_id:
                 self._message('Only the player may use these crafting work commands.');return result
         # Interior coordinates never fall through to commands at the outdoor anchor.
@@ -424,7 +424,7 @@ class Simulation:
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
                                        UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
                                        SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand,
-                                       CraftCommand,ComponentCraftCommand,StartSalvageCommand,SalvageActionCommand,StoreCommand,TakeFromContainerCommand,
+                                       CraftCommand,ComponentCraftCommand,StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,StoreCommand,TakeFromContainerCommand,
                                        StealContainerCommand,LockpickContainerCommand,SetContainerLockCommand,
                                        IntroduceNPCCommand)):
                 self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
@@ -468,6 +468,7 @@ class Simulation:
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
         elif isinstance(command,StartSalvageCommand):minutes=self._start_salvage(command)
         elif isinstance(command,SalvageActionCommand):minutes=self._salvage_action(command)
+        elif isinstance(command,QuickSalvageCommand):minutes=self._quick_salvage(command)
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
         elif isinstance(command,ExperimentRecipeCommand):minutes=self._experiment_recipe(command)
         elif isinstance(command,DiscoveryPotCommand):minutes=self._discovery_pot(command)
@@ -553,7 +554,7 @@ class Simulation:
         elif isinstance(command,PayRoadTollCommand):minutes=self._pay_road_toll(command)
         elif isinstance(command,TreatDiseaseCommand):self._message(self.disease.treat_player(self.entities.get(command.actor,Inventory),self.clock.minute,self.player_skill('medicine'),self.has_talent('field_medic')))
         else:raise TypeError(f"Unknown command: {type(command).__name__}")
-        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,CollectWaterCommand)) and minutes == 0:
+        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,CollectWaterCommand)) and minutes == 0:
             return result
         # Inventory-changing commands can reveal material families and simple
         # recipes. This runs on the authoritative command path only.
@@ -1579,10 +1580,17 @@ class Simulation:
     def _salvage_action(self,cmd:SalvageActionCommand)->int:
         ok,msg,minutes=self.salvaging.act(cmd.choice_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
         self._message(msg);return minutes if ok else 0
+    def _quick_salvage(self,cmd:QuickSalvageCommand)->int:
+        ok,msg,minutes=self.salvaging.quick(cmd.item_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
+        self._message(msg);return minutes if ok else 0
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
-        ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed,int(getattr(getattr(self,'clock',None),'minute',0)))
+        station=str(getattr(cmd,'station_id','') or '')
+        if station and station not in self._player_station_ids():
+            self._message('You must be beside that workshop to experiment there.')
+            return MINUTES_PER_ACTION
+        ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed,int(getattr(getattr(self,'clock',None),'minute',0)),station_id=station)
         self._message(msg)
         return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _construction_duration(self,base_minutes:int)->int:

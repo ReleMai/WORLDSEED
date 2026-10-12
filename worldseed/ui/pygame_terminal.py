@@ -564,6 +564,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                         continue
                 if event.button==1:
                     token=self._hit_token(self._last_mouse)
+                    if token=='UI_ACTION:portrait_zoom':
+                        self._show_portrait_popup()
+                        continue
                     if token and token.startswith('UI_WINDOW_DRAG:'):
                         self._ui_window_dragging=token.split(':',1)[1]
                         self._ui_window_resizing=None
@@ -1075,6 +1078,35 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             self.screen.blit(portrait,portrait.get_rect(center=rect.center))
         pg.draw.rect(self.screen,self._theme['edge_hi'],rect,1,border_radius=5)
         self._npc_portrait_rect=rect
+        if spec is not None:
+            self._portrait_popup_spec=spec
+            self._ui_target(rect,'UI_ACTION:portrait_zoom')
+
+    def _show_portrait_popup(self):
+        """Enlarge the exact same NPC composite, without changing simulation."""
+        spec=getattr(self,'_portrait_popup_spec',None)
+        if spec is None or self.screen is None:return
+        pg=self.pg;before=self.screen.copy()
+        with self.pause_realtime():
+            overlay=pg.Surface(self.screen.get_size(),pg.SRCALPHA)
+            overlay.fill((3,7,9,218));self.screen.blit(overlay,(0,0))
+            from worldseed.presentation.portraits import PortraitComposer
+            composer=getattr(self,'_portrait_composer',None)
+            if composer is None:
+                composer=self._portrait_composer=PortraitComposer(max_entries=96)
+            size=max(96,min(520,self.screen.get_width()-100,self.screen.get_height()-145))
+            image=composer.render(spec,size=size)
+            frame=image.get_rect(center=(self.screen.get_width()//2,self.screen.get_height()//2))
+            pg.draw.rect(self.screen,self._theme['edge_hi'],frame.inflate(12,12),border_radius=7)
+            self.screen.blit(image,frame)
+            msg=self.small_font.render('CLICK OR ESC TO CLOSE',True,self._theme['text'])
+            self.screen.blit(msg,msg.get_rect(center=(frame.centerx,frame.bottom+30)))
+            pg.display.flip()
+            while True:
+                event=pg.event.wait(100)
+                if event.type in (pg.MOUSEBUTTONDOWN,pg.KEYDOWN,pg.QUIT):break
+                self.clock.tick(30)
+        self.screen.blit(before,(0,0));pg.display.flip()
 
     def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str='Drag title • Resize corner • Esc closes') -> None:
         self.pg.draw.line(self.screen,self._theme['edge'],(x+16,y+h-39),(x+w-16,y+h-39))
@@ -1567,6 +1599,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         data=data or {};pg=self.pg;screen=self.screen
         entries=data.get('entries',{});container=data.get('container',{})
         x,y,w,h,cx,cy,cw=self._floating_feature_shell('container_inventory','STORAGE',str(container.get('name','CONTAINER')).upper(),subtitle)
+        self._button((x+w-142,y+7,84,27),'SEARCH','UI_ACTION:container_search')
         head_h=58;gap=10
         mass=float(container.get('mass_kg',0));mass_cap=max(.001,float(container.get('capacity_mass_kg',0) or .001))
         vol=float(container.get('volume_l',0));vol_cap=max(.001,float(container.get('capacity_volume_l',0) or .001))
@@ -1595,6 +1628,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 s=self.small_font.render(self._fit_ui_text(detail_text,self.small_font,rect.width-24),True,self._theme['muted']);screen.blit(s,(rect.x+12,rect.y+32))
         pane_title(pack_rect,'BACKPACK',f"{data.get('pack',{}).get('item_count',0)} items")
         pane_title(cont_rect,'CONTAINER',f"{container.get('item_count',0)} items")
+        self._button((pack_rect.right-107,pack_rect.y+7,97,28),'STORE 12','UI_ACTION:store_many')
+        self._button((cont_rect.right-107,cont_rect.y+7,97,28),'TAKE 12','UI_ACTION:take_many')
 
         side_rows={'pack':[],'container':[]}
         for i,row in enumerate(rows):
@@ -1762,6 +1797,12 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
     def menu_page_size(self,presentation:str='')->int:
         """Expose actual rendered row capacity to the shared paging widget."""
         if presentation=='inventory_unified':return self._inventory_browser_geometry()['capacity']
+        if presentation=='container_inventory':
+            panel=self._floating_panel_state('container_inventory')
+            # Entries alternate between the two matching grid panes; permit
+            # exactly the count of cards that can fit in both.
+            rows=max(1,(panel['h']-252)//105)
+            return max(2,rows*2)
         if presentation=='crafting_unified':return self._crafting_browser_geometry()['capacity']
         if presentation=='discovery_pot':return self._discovery_browser_geometry()['capacity']
         if presentation=='workshop_station':return self._workshop_browser_geometry()['capacity']

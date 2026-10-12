@@ -34,7 +34,9 @@ class StartSalvageCommand: actor:int; item_id:str
 @dataclass(frozen=True,slots=True)
 class SalvageActionCommand: actor:int; choice_id:str
 @dataclass(frozen=True,slots=True)
-class DiscoveryPotCommand: actor:int; items:tuple[str,...]
+class QuickSalvageCommand: actor:int; item_id:str
+@dataclass(frozen=True,slots=True)
+class DiscoveryPotCommand: actor:int; items:tuple[str,...]; station_id:str=""
 @dataclass(frozen=True,slots=True)
 class ComponentCraftCommand: actor:int; design_id:str; choices:dict[str,str]
 @dataclass(frozen=True,slots=True)

@@ -1,0 +1,53 @@
+name: WORLDSEED Crafting and Discovery Checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worldseed/systems/crafting.py"
+      - "worldseed/systems/salvaging.py"
+      - "worldseed/systems/state.py"
+      - "worldseed/sim/commands.py"
+      - "worldseed/sim/engine.py"
+      - "worldseed/ui/crafting_browser.py"
+      - "worldseed/ui/workbench_panels.py"
+      - "worldseed/ui/salvage_panel.py"
+      - "worldseed/ui/pygame_terminal.py"
+      - "worldseed/app.py"
+      - "worldseed/config.py"
+      - "tests/test_workbench_progression.py"
+      - ".github/workflows/crafting-discovery-check.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: worldseed-crafting-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  targeted-crafting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Compile Python
+        run: python -m compileall -q worldseed tests
+      - name: New workbench contracts
+        run: python -m unittest discover -s tests -p "test_workbench_progression.py" -v
+      - name: Existing salvage contracts
+        run: python -m unittest discover -s tests -p "test_salvaging*.py" -v
+      - name: Existing crafting UI and logic
+        run: |
+          python -m unittest discover -s tests -p "test_crafting_pot_ui.py" -v
+          python -m unittest discover -s tests -p "test_crafting_browser.py" -v
+          python -m unittest discover -s tests -p "test_crafting_journal.py" -v
+          python -m unittest discover -s tests -p "test_conversation_portrait_ui.py" -v
+      - name: Save and persistence
+        run: python -m unittest discover -s tests -p "test_persistence.py" -v

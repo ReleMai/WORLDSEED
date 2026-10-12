@@ -109,7 +109,7 @@ class CraftingSystem:
         return sorted((r for r in self.registry.recipes.values()
                        if any(token_matches(token,item_id,self.registry) for token in self.discovery_signature(r))),key=lambda r:r.id)
 
-    def pot_candidates(self,items:tuple[str,...],inv:Inventory):
+    def pot_candidates(self,items:tuple[str,...],inv:Inventory,station_id:str=""):
         """Read-only recipes that could result from the placed quantities."""
         counts=Counter(items)
         if not self.state.player_crafting_discovery_enabled or not 1<=len(items)<=5:
@@ -117,25 +117,40 @@ class CraftingSystem:
         if any(i not in self.registry.items or inv.count(i)<n for i,n in counts.items()):
             return []
         known=set(self.state.player_discovered_recipes)
+        hinted={h.get("recipe_id") for h in self.state.player_crafting_hints}
         return sorted((r for r in self.registry.recipes.values()
             if r.id not in known
+            and (station_id=="" or r.station==station_id)
+            and (station_id!="" or r.id not in hinted)
             and (not r.knowledge or r.knowledge in self.state.player_knowledge)
             and self.discovery_matches(r,items)
             and self.discovery_signature(r)),key=lambda r:r.id)
 
-    def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes,minute:int=0) -> tuple[bool,str,int]:
+    def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes,minute:int=0,station_id:str="") -> tuple[bool,str,int]:
         """Consume a valid experiment and select one catalog result reproducibly."""
         if not self.state.player_crafting_discovery_enabled:
             return False,'This world uses the legacy crafting catalog.',5
         counts=Counter(items)
         if not 1<=len(items)<=5 or any(i not in self.registry.items or inv.count(i)<n for i,n in counts.items()):
             return False,'Place 1–5 items you actually carry in the experiment grid.',5
-        candidates=self.pot_candidates(items,inv)
+        candidates=self.pot_candidates(items,inv,station_id=station_id)
         if not candidates:
-            return False,'These materials reveal no new recipe. Try another combination.',5
+            return False,'These materials reveal no new recipe in this discovery tab.',3
+        # Field mixing cannot reveal a station-only process or mint its
+        # prototype. It records the workshop clue without consuming samples.
+        options=([r for r in candidates if not r.station] if not station_id else candidates)
+        if options:candidates=options
         attempt=max(0,int(self.state.player_crafting_experiments))
         choice=hash_u64(world_seed,'crafting.discovery_pot.v1',attempt,*sorted(items))%len(candidates)
         recipe=candidates[choice]
+        if recipe.station and station_id!=recipe.station:
+            station=self.registry.structures.get(recipe.station)
+            name=station.name if station else recipe.station.split(':')[-1].replace('_',' ').title()
+            if recipe.id not in {h.get("recipe_id") for h in self.state.player_crafting_hints}:
+                self.state.player_crafting_hints.append({"recipe_id":recipe.id,"station_id":recipe.station,"item_id":items[0]})
+                self.state.player_crafting_hints=self.state.player_crafting_hints[-200:]
+            self.state.player_crafting_experiments=attempt+1
+            return True,f'I could probably make something with this at a {name}. Hint added to known hints.',3
         inv.consume(dict(counts))
         from worldseed.systems.crafting_quality import retire_consumed_artifacts
         retire_consumed_artifacts(self.state,self.registry,counts,minute=minute,reason='Used in crafting experiment')
@@ -257,7 +272,7 @@ class CraftingSystem:
         suffix=(" Artifact: "+", ".join(made)) if made else ""
         metal=(f" Metal quality {meta.quality_hint}." if meta and meta.quality_hint is not None else "")
         self.sync_discoveries(inv)
-        minutes=max(1,r.minutes*max(45,100-skill_level*4-work_bonus)//100)
+        minutes=max(3,min(70,r.minutes)*max(45,100-skill_level*4-work_bonus)//100)
         return True,f"You complete {r.name}."+metal+suffix,minutes
 
     def can_craft_design(self,design_id:str,choices:dict[str,str],inv:Inventory,nearby_structures:set[str])->tuple[bool,str]:

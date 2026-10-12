@@ -1,0 +1,35 @@
+name: WORLDSEED Household Inventory Audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worldseed/systems/property_intrusion.py"
+      - "worldseed/data/items.json"
+      - "worldseed/data/recipes.json"
+      - "worldseed/data/container_profiles.json"
+      - "tests/test_household_food_origin.py"
+      - ".github/workflows/household-inventory-check.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  household-stocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Test household provisioning, property storage and generation
+        run: |
+          python -m unittest discover -s tests -p "test_household_food_origin.py" -v
+          python -m unittest discover -s tests -p "test_property_storage_casing.py" -v
+          python -m unittest discover -s tests -p "test_dev50_interior_storage.py" -v
+          python -m unittest discover -s tests -p "test_material_crafting_content.py" -v

@@ -20,6 +20,10 @@
       "capacity_mass_g": 90000,
       "capacity_volume_ml": 140000,
       "loot": [
+        "core:berry_barley_bun",
+        "core:hearth_root_stew",
+        "core:grain_porridge",
+        "core:fruit_preserve",
         "core:soap",
         "core:leather",
         "core:plant_cordage",
@@ -197,6 +201,10 @@
       "capacity_mass_g": 120000,
       "capacity_volume_ml": 180000,
       "loot": [
+        "core:berry_barley_bun",
+        "core:hearth_root_stew",
+        "core:grain_porridge",
+        "core:fruit_preserve",
         "core:wheat",
         "core:turnip",
         "core:bread",

@@ -2473,6 +2473,39 @@
     "hydration": 0
   },
   {
+    "id": "core:berry_barley_bun",
+    "name": "Berry Barley Bun",
+    "asset": "rustic_bread",
+    "sprite_tag": "rustic_bread",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 195,
+    "volume_ml": 350,
+    "nutrition": 18,
+    "calories": 240,
+    "protein": 7,
+    "carbs": 42,
+    "fat": 3,
+    "fiber": 5,
+    "food_groups": [
+      "grain",
+      "fruit"
+    ],
+    "tags": [
+      "food",
+      "prepared",
+      "baked"
+    ],
+    "spoilage_hours": 96,
+    "base_value": 7,
+    "description": "Small bakery buns filled with foraged berries and barley grain.",
+    "flavor": "An everyday treat from a village hearth.",
+    "utility_roles": [
+      "prepared_food",
+      "trade_good"
+    ]
+  },
+  {
     "id": "core:berry_reduction",
     "name": "Berry Reduction",
     "asset": "craft_berry_reduction",
@@ -3249,6 +3282,39 @@
     "fiber": 0,
     "nutrition": 27,
     "hydration": 18
+  },
+  {
+    "id": "core:hearth_root_stew",
+    "name": "Hearth Root Stew",
+    "asset": "cooked_meat",
+    "sprite_tag": "cooked_meat",
+    "category": "food",
+    "material": "core:organic",
+    "mass_g": 250,
+    "volume_ml": 350,
+    "nutrition": 20,
+    "hydration": 12,
+    "calories": 170,
+    "protein": 4,
+    "carbs": 34,
+    "fat": 2,
+    "fiber": 6,
+    "food_groups": [
+      "vegetable"
+    ],
+    "tags": [
+      "food",
+      "prepared",
+      "cooked"
+    ],
+    "spoilage_hours": 36,
+    "base_value": 8,
+    "description": "Rustic turnip and carrot stew simmered for household meals.",
+    "flavor": "A warm crock of roots makes a humble supper.",
+    "utility_roles": [
+      "prepared_food",
+      "cooking"
+    ]
   },
   {
     "id": "core:largemouth_bass",

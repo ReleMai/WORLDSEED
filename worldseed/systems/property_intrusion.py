@@ -140,6 +140,33 @@ class PropertyStorageSystem:
     def _existing(self, uid: str):
         return next((c for c in self.state.containers.values() if c.uid==uid),None)
 
+    def _seed_household_food(self,town,structures):
+        """One origin batch of village provisions, never a container refill.
+
+        All stock is placed in the authoritative settlement ledger before
+        it is allocated; repeat planning and old owned chests do not spawn
+        additional loot.
+        """
+        marker="household-food-origin:"+str(town.uid)
+        if marker in self.state.resource_depletion:return 0
+        residences=sorted((s for s in structures
+                           if not s.destroyed and s.function=="residence"),key=lambda s:s.uid)
+        food=("core:berry_barley_bun","core:hearth_root_stew","core:bread",
+              "core:fruit_preserve","core:grain_porridge","core:turnip",
+              "core:carrot","core:dried_meat","core:smoked_fish")
+        provisioned=0
+        for structure in residences[:64]:
+            for j in range(5):
+                # Every newly seeded household has at least one regional bun
+                # and one root stew; remaining provisions vary by seed.
+                iid=food[j] if j<2 else food[hash_u64(self.seed,"household-food-v1",structure.uid,j)%len(food)]
+                if iid not in self.registry.items:continue
+                qty=1+int(hash_u64(self.seed,"household-food-qty-v1",structure.uid,j)%3)
+                town.stocks[iid]=max(0,int(town.stocks.get(iid,0)))+qty
+                provisioned+=qty
+        self.state.resource_depletion[marker]=self.state.clock_minute
+        return provisioned
+
     def _reserve_contents(self, town, structure_uid: str, preferred, stack_cap: int):
         items={}
         for iid in preferred:
@@ -222,6 +249,7 @@ class PropertyStorageSystem:
             return PropertyStorageSync(str(settlement_id))
         self.civics.ensure_settlement(town.uid)
         provision_village(self.state,self.registry,self.seed,town,skeleton.structures)
+        self._seed_household_food(town,skeleton.structures)
         space_ids={"interior:"+structure.uid for structure in skeleton.structures}
         occupants={}
         for actor in self.state.interior_actors.values():
@@ -292,7 +320,13 @@ class PropertyStorageSystem:
                     reserved+=withdraw_misc(self.state,self.registry,self.seed,town,existing,
                                             count=1 if profile_id=='core:tabletop' else 2)
                     continue
-                items=self._reserve_contents(town,uid,stock or style.loot,2 if profile_id=='core:tabletop' else 5)
+                home=structure.function=="residence"
+                preferred=stock or style.loot
+                if home and profile_id in ("core:household_chest","core:pantry_cabinet"):
+                    preferred=("core:berry_barley_bun","core:hearth_root_stew",
+                               "core:grain_porridge","core:fruit_preserve",
+                               "core:bread","core:carrot","core:turnip",*preferred)
+                items=self._reserve_contents(town,uid,preferred,2 if profile_id=='core:tabletop' else 8 if home else 5)
                 reserved+=sum(items.values())
                 self.state.containers[key]=ContainerState(
                     uid=uid,x=position.x,y=position.y,z=position.z,owner=owner,
