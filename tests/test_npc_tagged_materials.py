@@ -98,6 +98,19 @@ class NPCTaggedMaterialTests(unittest.TestCase):
         self.assertIsNone(resolve_recipe_inputs(recipe,{"core:fiber":2},self.reg))
         self.assertIsNone(resolve_recipe_inputs(recipe,stock,self.reg,2))
 
+    def test_legacy_npc_process_without_recipe_keeps_exact_inputs(self):
+        from worldseed.systems.professions import SettlementProfessionSystem
+        proc=next(p for p in self.reg.settlement_processes.values()
+                  if not p.recipe_id and p.inputs)
+        professions=SettlementProfessionSystem.__new__(SettlementProfessionSystem)
+        professions.registry=self.reg
+        professions.storage_access=None
+        professions.commerce=None
+        professions._containers=lambda uid: []
+        npc=SimpleNamespace(inventory={},home_id="",workplace_id="")
+        town=SimpleNamespace(uid="test:town",knowledge=[],stocks={})
+        self.assertEqual(professions._recipe_requirements(npc,town,proc),proc.inputs)
+
     def test_npc_tagged_processes_match_source_catalog(self):
         for proc in self.reg.settlement_processes.values():
             if not proc.id.startswith("core:npc_tagged_"):continue
