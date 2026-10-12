@@ -345,6 +345,27 @@ class UIRC3FlowTests(unittest.TestCase):
         self.assertGreaterEqual(joined.count('inventory'),2)
 
 class UIRC4InputTests(unittest.TestCase):
+    def test_retained_inventory_hover_and_scroll_preserve_action_target(self):
+        from worldseed.ui.session import RouteState
+        class FakeTerm:
+            def __init__(self):
+                self.keys=iter(['UI_HOVER:0','UI_SCROLL:2','UI_HOVER:1','UI_ACTION:drop'])
+                self.frames=[]
+            def size(self):return (80,24)
+            def menu_page_size(self,presentation):return 2
+            def present_feature_menu(self,presentation,title,rows,selected,**kwargs):
+                self.frames.append((selected,kwargs['page_start'],kwargs['data']['selected_key'],kwargs['data']['action_amount']))
+            def read_key(self):return next(self.keys)
+        term=FakeTerm()
+        state=RouteState('inventory','Inventory',selected=1)
+        rows=[('core:stone','Stone'),('core:wood','Wood'),('core:bark','Bark'),('core:flint','Flint')]
+        choice=select_menu(term,'Inventory',rows,state=state,presentation='inventory_unified',
+                           presentation_data={'action_amount':3})
+        self.assertEqual(choice,'UI_ACTION:drop')
+        self.assertEqual((state.selected,state.scroll),(1,2))
+        self.assertEqual(term.frames[-1],(-1,2,'core:wood',3))
+        self.assertTrue(all(key=='core:wood' and amount==3 for _,_,key,amount in term.frames))
+
     def test_large_crafting_catalogue_pages_wrapped_rows_within_narrow_terminal(self):
         term=_fake_term(['END','\r'],size=(42,16))
         rows=[(str(index),f'Workshop technique {index}: recover, shape and finish assorted components') for index in range(240)]

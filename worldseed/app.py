@@ -2829,9 +2829,9 @@ def _inventory_menu(ctx:GameContext,term:Terminal)->str:
         if action.startswith('filter_page:'):
             filter_page=max(0,min(filter_page+(1 if action.endswith(':next') else -1),len(filters)//6));continue
         if action.startswith('filter:'):
-            active_filter=action.split(':',1)[1] or 'all';route.selected=0;last_selected=None;action_amount=1;continue
-        # Hover can change select_menu's retained row immediately before an
-        # inline action click, so resolve the active item from the route again.
+            active_filter=action.split(':',1)[1] or 'all';route.selected=0;route.scroll=0;last_selected=None;action_amount=1;continue
+        # Explicit keyboard/click navigation can change the retained row before
+        # an inline action; hover and viewport scrolling preserve that target.
         if rows and 0<=route.selected<len(rows):
             selected_iid=rows[route.selected][0]
             count=inv.count(selected_iid) if selected_iid!='__empty__' else 0
@@ -2989,7 +2989,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice=='UI_ACTION:search':
                 value=prompt_text(term,'CRAFTING // SEARCH','Technique, profession or output (blank clears):',default=recipe_query,max_len=48)
-                if value is not None:recipe_query=value;recipe_state.selected=0
+                if value is not None:recipe_query=value;recipe_state.selected=0;recipe_state.scroll=0
                 continue
             if choice.startswith('UI_ACTION:category_page:'):
                 page_size=6
@@ -2997,7 +2997,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 category_page=max(0,min(category_page+delta,max(0,(len(categories)-1)//page_size)))
                 continue
             if choice.startswith('UI_ACTION:category:'):
-                category=choice.split(':',2)[2];recipe_query='';recipe_state.selected=0;continue
+                category=choice.split(':',2)[2];recipe_query='';recipe_state.selected=0;recipe_state.scroll=0;continue
             if choice in reg.recipes:
                 sim.state.player_unseen_recipes=[rid for rid in sim.state.player_unseen_recipes if rid!=choice]
                 continue

@@ -28,7 +28,11 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 from worldseed.ui.pointer import PointerUI, WindowCloseRequested
 
 
-class PygameTerminal(PointerUI):
+from worldseed.ui.item_browser import ItemPanelMixin
+from worldseed.ui.crafting_browser import CraftingBrowserMixin
+
+
+class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
     """WORLDSEED's dedicated game-window backend.
 
     It intentionally exposes the same small interface as the ANSI Terminal so
@@ -438,6 +442,8 @@ class PygameTerminal(PointerUI):
                 pending = pg.event.get(pg.MOUSEMOTION)
                 if pending:
                     self._last_mouse = pending[-1].pos
+                if getattr(self,'_panel_scroll_drag',None):
+                    return self._panel_scroll_pointer(self._panel_scroll_drag)
                 if self._input_mode in ('ui','text'):self._animate_menu_effects(pg.time.get_ticks(),force=True)
                 self._update_hud_tooltip_hover(pg.time.get_ticks())
                 if self._ui_window_dragging or self._ui_window_resizing:
@@ -480,7 +486,11 @@ class PygameTerminal(PointerUI):
                     try:pg.mouse.set_cursor(pointer)
                     except pg.error:pass
                     self._last_pointer_cursor=pointer
-                if self._input_mode=='ui' and token and token.startswith('UI_SELECT:'):
+                if self._input_mode=='ui' and self._current_presentation in ('inventory_unified','crafting_unified','container_inventory'):
+                    if self._ui_context is None and token!=getattr(self,'_panel_hover_token',None):
+                        self._panel_hover_token=token
+                        return 'UI_REDRAW'
+                elif self._input_mode=='ui' and token and token.startswith('UI_SELECT:'):
                     if self._ui_context is None:return token.replace('UI_SELECT:', 'UI_HOVER:')
                 if self._input_mode=='ui' and token and token.startswith('UI_ACTION:tab:'):
                     return 'UI_REDRAW'
@@ -492,6 +502,13 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == pg.MOUSEWHEEL:
                 if self._input_mode != 'world':
+                    view=getattr(self,'_panel_detail_view',None)
+                    if self._current_presentation in ('inventory_unified','crafting_unified') and view and view[1].collidepoint(self._last_mouse) and event.y:
+                        key,rect,maximum=view
+                        self._panel_detail_states[key]=max(0,min(maximum,self._panel_detail_states.get(key,0)-event.y*48))
+                        return 'UI_REDRAW'
+                    if self._current_presentation in ('inventory_unified','crafting_unified','container_inventory') and event.y:
+                        return 'UI_WHEEL:'+str(-event.y*self.menu_grid_columns(self._current_presentation))
                     desc=getattr(self,'_inventory_desc_rect',None)
                     if self._current_presentation=='inventory_unified' and desc and desc.collidepoint(self._last_mouse) and event.y:
                         max_scroll=max(0,self._inventory_desc_max)
@@ -518,6 +535,11 @@ class PygameTerminal(PointerUI):
                         self._inventory_desc_scroll=max(0,min(self._inventory_desc_max,
                             round(ratio*self._inventory_desc_max)))
                         return 'UI_REDRAW'
+                if event.button==1:
+                    track_token=self._hit_token(self._last_mouse)
+                    if track_token in ('UI_SCROLL_TRACK','UI_DETAIL_TRACK'):
+                        self._panel_scroll_drag=track_token
+                        return self._panel_scroll_pointer(track_token)
                 if event.button==1:
                     tab_token=self._hit_token(self._last_mouse)
                     if tab_token in ('FOOTER_TAB:activity','FOOTER_TAB:combat'):
@@ -632,6 +654,9 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == pg.MOUSEBUTTONUP:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
+                if event.button==1 and getattr(self,'_panel_scroll_drag',None):
+                    self._panel_scroll_drag=None
+                    return 'UI_REDRAW'
                 if event.button==1 and (self._ui_window_dragging or self._ui_window_resizing):
                     self._ui_window_dragging=None;self._ui_window_resizing=None
                     return 'UI_REDRAW'
@@ -641,6 +666,7 @@ class PygameTerminal(PointerUI):
                     return 'ATLAS:drag_end' if moved else 'ATLAS_INSPECT'
                 continue
             if event.type == getattr(pg,'WINDOWFOCUSLOST',-1):
+                self._panel_scroll_drag=None
                 self._held_movement.clear();self._active_movement_key=None
                 self._movement_next_repeat_ms=0
                 self._free_movement_last_ms=pg.time.get_ticks()
@@ -1533,167 +1559,6 @@ class PygameTerminal(PointerUI):
         self._draw_floating_footer(x,y,w,h,'Click / Tab words • Enter opens • Arrows choose replies • Esc returns one topic')
         pg.display.flip();self.clock.tick(120)
 
-    def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
-        """Render one graphical inventory surface with inline item actions."""
-        data=data or {};pg=self.pg;screen=self.screen;items=data.get('items',{})
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('inventory_unified','PACK','INVENTORY',subtitle)
-        self._button((x+w-138,y+7,88,27),'CRAFTING','UI_ACTION:open_crafting')
-        gap=9;summary_h=50
-        metric_gap=8;metric_w=max(90,(cw-metric_gap*3)//4)
-        metrics=[
-            ('Mass',f"{data.get('total_mass_kg',0):.1f} kg"),
-            ('Volume',f"{data.get('total_volume_l',0):.1f} L"),
-            ('Stacks',str(data.get('stack_count',0))),
-            ('Items',str(data.get('item_count',0))),
-        ]
-        for i,(lab,val) in enumerate(metrics):
-            mx=cx+i*(metric_w+metric_gap)
-            self._draw_metric(pg.Rect(mx,cy,metric_w,summary_h),lab,val)
-        filter_y=cy+summary_h+7
-        active_filter=str(data.get('active_filter','all'))
-        filters=['all']+list(data.get('filter_categories') or [])
-        per_page=6;page=max(0,min(int(data.get('filter_page',0)),(len(filters)-1)//per_page))
-        paged=len(filters)>per_page
-        visible_filters=filters[page*per_page:(page+1)*per_page]
-        fx=cx
-        space=cw-(84 if paged else 0)
-        max_width=max(30,(space-6*(len(visible_filters)-1))//max(1,len(visible_filters)))
-        for cat in visible_filters:
-            label='ALL' if cat=='all' else ITEM_TYPE_LABELS.get(cat,str(cat).replace('_',' ')).upper()
-            fw=min(max_width,min(160,max(54,self.small_font.size(label)[0]+20)))
-            rect=pg.Rect(fx,filter_y,fw,26);active=(cat==active_filter)
-            pg.draw.rect(screen,(42,46,43) if active else self._theme['panel2'],rect,border_radius=13)
-            pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=13)
-            txt=self.small_font.render(self._fit_ui_text(label,self.small_font,fw-12),True,self._theme['text'] if active else self._theme['muted']);screen.blit(txt,txt.get_rect(center=rect.center))
-            self._ui_target(rect,f'UI_ACTION:filter:{cat}')
-            fx+=fw+6
-        if paged:
-            self._button((cx+cw-78,filter_y,34,26),'‹','UI_ACTION:filter_page:prev')
-            self._button((cx+cw-38,filter_y,34,26),'›','UI_ACTION:filter_page:next')
-        body_y=filter_y+33
-        body_bottom=y+h-48
-        panel_h=max(120,body_bottom-body_y)
-        detail_w=max(292,min(378,cw//3))
-        grid=pg.Rect(cx,body_y,max(180,cw-detail_w-16),panel_h)
-        detail=pg.Rect(grid.right+16,body_y,cw-grid.width-16,panel_h)
-        for panel_rect in (grid,detail):
-            pg.draw.rect(screen,self._theme['panel'],panel_rect,border_radius=7)
-            pg.draw.rect(screen,self._theme['edge'],panel_rect,1,border_radius=7)
-        heading=self.small_font.render('ITEMS',True,self._theme['accent'])
-        screen.blit(heading,(grid.x+12,grid.y+10))
-
-        if not rows:
-            msg=self.font.render('Your pack is empty.',True,self._theme['muted'])
-            screen.blit(msg,msg.get_rect(center=grid.center))
-        else:
-            cols=4 if grid.width>=570 else (3 if grid.width>=390 else 2)
-            card_gap=8;card_w=max(78,(grid.width-24-card_gap*(cols-1))//cols);card_h=112
-            for i,row in enumerate(rows):
-                gx=i%cols;gy=i//cols
-                rect=pg.Rect(grid.x+12+gx*(card_w+card_gap),grid.y+35+gy*(card_h+card_gap),card_w,card_h)
-                if rect.bottom>grid.bottom-10:break
-                iid=getattr(row,'key','');meta=items.get(iid,{})
-                self._ui_target(rect,f'UI_SELECT:{i}')
-                active=i==selected
-                hovered=rect.collidepoint(self._last_mouse)
-                pg.draw.rect(screen,(48,54,48) if active or hovered else (29,36,35),rect,border_radius=6)
-                pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],rect,2 if active else 1,border_radius=6)
-                if active:pg.draw.rect(screen,self._theme['accent'],(rect.x,rect.y,4,rect.h),border_radius=3)
-                pg.draw.rect(screen,(22,28,28),(rect.x+7,rect.y+7,rect.width-14,58),border_radius=4)
-                count=int(meta.get('count',0))
-                if iid!='__empty__':
-                    icon=pg.Rect(rect.x+7,rect.y+7,rect.width-14,58);self._draw_item_icon(iid,icon,scale=.9)
-                name=str(meta.get('name',getattr(row,'label',iid)))
-                name_s=self.small_font.render(self._fit_ui_text(name,self.small_font,rect.width-14),True,self._theme['text'])
-                screen.blit(name_s,(rect.x+7,rect.y+70))
-                if iid!='__empty__':
-                    qty=self.small_font.render(f'x{count}',True,self._theme['accent']);screen.blit(qty,(rect.x+7,rect.bottom-19))
-                    cat=self.small_font.render(self._fit_ui_text(str(meta.get('category','misc')).replace('_',' '),self.small_font,max(20,rect.width-52)),True,self._theme['muted'])
-                    screen.blit(cat,(rect.right-cat.get_width()-7,rect.bottom-19))
-            if total is not None and total>len(rows):
-                page=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted'])
-                screen.blit(page,(grid.right-page.get_width()-10,grid.bottom-20))
-
-        if rows:
-            row=rows[max(0,min(selected,len(rows)-1))]
-            iid=getattr(row,'key','');meta=items.get(iid,{})
-        else:
-            iid='';meta={}
-        if iid in items:
-            shown_amount=data.get('action_amount',1) if iid==data.get('selected_item_id') else 1
-            action_amount=max(1,min(int(shown_amount),int(meta.get('count',1))))
-            action_area_h=118
-            action_top=detail.bottom-action_area_h-12
-            icon_h=max(64,min(96,max(64,(action_top-detail.y)//3)))
-            icon=pg.Rect(detail.x+14,detail.y+12,detail.width-28,icon_h)
-            pg.draw.rect(screen,(17,20,21),icon,border_radius=6);self._draw_item_icon(iid,icon,scale=.78)
-            yy=icon.bottom+8
-            name=self.title_font.render(self._fit_ui_text(str(meta.get('name',iid)),self.title_font,detail.width-28),True,self._theme['accent']);screen.blit(name,(detail.x+14,yy));yy+=name.get_height()+2
-            cat=self.small_font.render(str(meta.get('category','misc')).replace('_',' ').upper(),True,self._theme['muted']);screen.blit(cat,(detail.x+14,yy));yy+=19
-            stat=f"x{meta.get('count',0)}  •  {meta.get('unit_mass_kg',0):.2f} kg ea  •  {meta.get('unit_volume_l',0):.2f} L ea"
-            stat_s=self.small_font.render(self._fit_ui_text(stat,self.small_font,detail.width-28),True,self._theme['text']);screen.blit(stat_s,(detail.x+14,yy));yy+=20
-            desc=str(meta.get('description','')).strip()
-            line_width=detail.width-44
-            desc_lines=self._wrap_pixel_text(desc,self.small_font,line_width) if desc else []
-            detail_lines=[str(v) for v in meta.get('detail_lines',[]) if v]
-            lines=list(desc_lines)
-            for extra in detail_lines:
-                lines.extend(self._wrap_pixel_text(extra,self.small_font,line_width))
-            viewport=pg.Rect(detail.x+14,yy,detail.width-32,max(20,action_top-yy-3))
-            self._inventory_desc_rect=viewport
-            if self._inventory_desc_item!=iid:
-                self._inventory_desc_item=iid
-                self._inventory_desc_scroll=0
-            visible=max(1,viewport.h//17)
-            self._inventory_desc_max=max(0,len(lines)-visible)
-            self._inventory_desc_scroll=min(self._inventory_desc_scroll,self._inventory_desc_max)
-            start=self._inventory_desc_scroll
-            oldclip=screen.get_clip();screen.set_clip(viewport)
-            for i,line in enumerate(lines[start:start+visible]):
-                line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,line_width),True,self._theme['muted'])
-                screen.blit(line_s,(viewport.x,viewport.y+i*17))
-            screen.set_clip(oldclip)
-            if self._inventory_desc_max:
-                track=pg.Rect(detail.right-14,viewport.y,5,viewport.h)
-                self._inventory_desc_track=track
-                pg.draw.rect(screen,self._theme['edge'],track,border_radius=2)
-                thumb_h=max(12,round(track.h*visible/max(1,len(lines))))
-                top=track.y+round((track.h-thumb_h)*start/self._inventory_desc_max)
-                pg.draw.rect(screen,self._theme['accent'],(track.x,top,track.w,thumb_h),border_radius=2)
-            else:
-                self._inventory_desc_track=None
-
-            qty_y=action_top
-            qlab=self.small_font.render(f'QTY {action_amount}/{meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))
-            bw=44;bh=28;bx=detail.right-14-(bw*4+6*3)
-            self._button((bx,qty_y+2,bw,bh),'−','UI_ACTION:qty_down')
-            self._button((bx+bw+6,qty_y+2,bw,bh),'+','UI_ACTION:qty_up')
-            self._button((bx+(bw+6)*2,qty_y+2,bw,bh),'HALF','UI_ACTION:split')
-            self._button((bx+(bw+6)*3,qty_y+2,bw,bh),'ALL','UI_ACTION:qty_all')
-
-            def action_button(rect,label,token,enabled=True):
-                rect=pg.Rect(rect);hover=enabled and rect.collidepoint(self._last_mouse)
-                fill=(43,48,48) if hover else self._theme['panel2']
-                edge=self._theme['accent'] if hover else (self._theme['edge_hi'] if enabled else self._theme['edge'])
-                fg=self._theme['text'] if enabled else self._theme['muted']
-                pg.draw.rect(screen,fill,rect,border_radius=5);pg.draw.rect(screen,edge,rect,1,border_radius=5)
-                txt=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-10),True,fg);screen.blit(txt,txt.get_rect(center=rect.center))
-                if enabled:self._ui_target(rect,token)
-            ay=qty_y+36;ag=7;ah=32;aw=(detail.width-28-ag)//2
-            action_button((detail.x+14,ay,aw,ah),str(meta.get('use_label','Use'))+' [U]','UI_ACTION:use',bool(meta.get('can_use')))
-            action_button((detail.x+14+aw+ag,ay,aw,ah),f'Drop x{action_amount} [X]','UI_ACTION:drop',True)
-            ay+=ah+7
-            storage=bool(data.get('near_storage'))
-            action_button((detail.x+14,ay,aw,ah),f'Store x{action_amount} [E]' if storage else 'Store — no container','UI_ACTION:store',storage)
-            action_button((detail.x+14+aw+ag,ay,aw,ah),'Inspect / actions','UI_ACTION:noop',False)
-        else:
-            msg=self.font.render('Select an item to inspect it.',True,self._theme['muted'])
-            screen.blit(msg,msg.get_rect(center=detail.center))
-
-        self._draw_item_context_popup(rows,data,selected)
-        self._draw_floating_footer(x,y,w,h,'Shift-click moves a full stack • Right-click actions • Drag title • Resize corner • Esc closes')
-        pg.display.flip();self.clock.tick(120)
-
     def _present_container_inventory(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         """Dual-pane visual storage transfer UI."""
         data=data or {};pg=self.pg;screen=self.screen
@@ -1756,7 +1621,8 @@ class PygameTerminal(PointerUI):
 
         selected_meta={}
         if rows:
-            key=getattr(rows[max(0,min(selected,len(rows)-1))],'key','');selected_meta=entries.get(key,{})
+            key=data.get('selected_key') or (getattr(rows[selected],'key','') if 0<=selected<len(rows) else '')
+            selected_meta=entries.get(key,{})
         action_amount=max(1,int(data.get('action_amount',1)))
         yy=detail.y+12
         if selected_meta:
@@ -1890,113 +1756,11 @@ class PygameTerminal(PointerUI):
             self._draw_menu_card(pg.Rect(right.x+14,ry+i*(rh+9),right.width-28,rh),getattr(row,'label',str(row)),i==selected,badge=str(i+1))
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
 
-    def _crafting_tabs(self,x,y,w,active):
-        pg=self.pg
-        self._crafting_tab_tooltip=None
-        tabs=(('Recipes','recipes'),('Workshops','workshops'),('Experiment Grid','discovery'),('Item Index','index'),('Salvaging','salvaging'))
-        hovered=None
-        for i,(name,token) in enumerate(tabs):
-            rect=pg.Rect(x+i*42,y,34,30);chosen=active==token;hover=rect.collidepoint(self._last_mouse)
-            pg.draw.rect(self.screen,(53,49,37) if chosen else self._theme['panel2'],rect,border_radius=6)
-            pg.draw.rect(self.screen,self._theme['accent'] if chosen else (self._theme['edge_hi'] if hover else self._theme['edge']),rect,2 if chosen or hover else 1,border_radius=6)
-            fg=self._theme['accent'] if chosen else self._theme['text']
-            cx,cy=rect.center
-            if token=='recipes':
-                # recipe card: page with three instruction rows
-                icon=pg.Rect(cx-9,cy-10,18,20);pg.draw.rect(self.screen,fg,icon,1,border_radius=2)
-                for oy in (-5,0,5):pg.draw.line(self.screen,fg,(cx-5,cy+oy),(cx+5,cy+oy),1)
-            elif token=='workshops':
-                # compact workshop silhouette: roof, bench, chimney
-                pg.draw.line(self.screen,fg,(cx-11,cy-2),(cx,cy-10),2)
-                pg.draw.line(self.screen,fg,(cx,cy-10),(cx+11,cy-2),2)
-                pg.draw.rect(self.screen,fg,(cx-8,cy-2,16,11),1)
-                pg.draw.line(self.screen,fg,(cx-6,cy+3),(cx+6,cy+3),2)
-                pg.draw.rect(self.screen,fg,(cx+5,cy-10,3,7),1)
-            elif token=='discovery':
-                # five experiment sockets arranged around a center
-                for dx,dy in ((0,-7),(-7,-1),(7,-1),(-4,7),(4,7)):
-                    pg.draw.circle(self.screen,fg,(cx+dx,cy+dy),2)
-                pg.draw.circle(self.screen,fg,(cx,cy),11,1)
-            elif token=='salvaging':
-                # Separated wood, metal and fastener parts.
-                pg.draw.line(self.screen,fg,(cx-9,cy+8),(cx+7,cy-8),3)
-                pg.draw.circle(self.screen,fg,(cx-7,cy-6),4,2)
-                pg.draw.rect(self.screen,fg,(cx+4,cy+4,7,7),1)
-            else:
-                # index card + magnifier
-                pg.draw.rect(self.screen,fg,(cx-10,cy-9,13,17),1,border_radius=2)
-                pg.draw.line(self.screen,fg,(cx-7,cy-4),(cx,cy-4),1)
-                pg.draw.line(self.screen,fg,(cx-7,cy),(cx,cy),1)
-                pg.draw.circle(self.screen,fg,(cx+5,cy+4),5,1);pg.draw.line(self.screen,fg,(cx+9,cy+8),(cx+13,cy+12),2)
-            self._ui_target(rect,f'UI_ACTION:tab:{token}')
-            if hover:hovered=(name,rect)
-        if hovered:
-            name,rect=hovered
-            tw=self.small_font.size(name)[0]+16;tip=pg.Rect(rect.x,rect.bottom+5,tw,25)
-            if tip.right>x+w:tip.right=x+w
-            # Defer the tooltip until every panel body has been painted.  The
-            # old immediate draw was covered by the category/body panels.
-            self._crafting_tab_tooltip=(name,tip)
-
-    def _draw_crafting_tab_tooltip(self):
-        pending=self._crafting_tab_tooltip
-        if not pending:return
-        name,tip=pending;pg=self.pg
-        pg.draw.rect(self.screen,(12,16,17),tip,border_radius=4)
-        pg.draw.rect(self.screen,self._theme['edge_hi'],tip,1,border_radius=4)
-        s=self.small_font.render(name,True,self._theme['text'])
-        self.screen.blit(s,s.get_rect(center=tip.center))
-
-    def _present_crafting_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
-        data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','CRAFTING',subtitle)
-        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
-        self._crafting_tabs(cx,cy,cw,'recipes');cy+=38
-        self._button((cx+cw-110,cy-38,110,30),'SEARCH','UI_ACTION:search')
-        cats=list(data.get('categories',[]));cat=str(data.get('category',''));newcats=set(data.get('new_categories',[]));per=6
-        cat_page=max(0,min(int(data.get('category_page',0)),max(0,(len(cats)-1)//per)));visible=cats[cat_page*per:(cat_page+1)*per]
-        gap=6;tw=max(88,(cw-gap*max(0,len(visible)-1))//max(1,len(visible)))
-        for i,name in enumerate(visible):
-            r=pg.Rect(cx+i*(tw+gap),cy,tw,31);active=name==cat
-            pg.draw.rect(screen,(50,48,39) if active else self._theme['panel2'],r,border_radius=5);pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],r,2 if active else 1,border_radius=5)
-            label=name.replace('_',' ').title()+('  •' if name in newcats else '');fg=self._theme['good'] if name in newcats and not active else (self._theme['text'] if active else self._theme['muted'])
-            s=self.small_font.render(self._fit_ui_text(label,self.small_font,r.width-12),True,fg);screen.blit(s,s.get_rect(center=r.center));self._ui_target(r,f'UI_ACTION:category:{name}')
-        if len(cats)>per:
-            self._button((cx,cy+36,34,24),'‹','UI_ACTION:category_page:prev');self._button((cx+cw-34,cy+36,34,24),'›','UI_ACTION:category_page:next');cy+=66
-        else:cy+=39
-        ph=y+h-48-cy;dw=max(260,min(340,cw//3));g=10;middle=pg.Rect(cx,cy,cw-dw-g,ph);detail=pg.Rect(middle.right+g,cy,dw,ph)
-        for r in (middle,detail):pg.draw.rect(screen,self._theme['panel'],r,border_radius=6);pg.draw.rect(screen,self._theme['edge'],r,1,border_radius=6)
-        heading=f'SEARCH: {data["query"]}' if data.get('query') else cat.replace('_',' ').upper()
-        heading+=f'  /  {total or len(rows)} RECIPES'
-        screen.blit(self.small_font.render(self._fit_ui_text(heading,self.small_font,middle.width-24),True,self._theme['accent']),(middle.x+12,middle.y+12))
-        rh=67;sy=middle.y+38
-        for i,row in enumerate(rows):
-            r=pg.Rect(middle.x+9,sy+i*(rh+5),middle.width-18,rh)
-            if r.bottom>middle.bottom-12:break
-            rid=getattr(row,'key','');m=recipes.get(rid,{});ready=bool(m.get('ready'));active=i==selected
-            pg.draw.rect(screen,(44,48,42) if ready else (32,35,35),r,border_radius=5);pg.draw.rect(screen,self._theme['accent'] if active else self._theme['edge'],r,2 if active else 1,border_radius=5)
-            outs=m.get('outputs') or []
-            if outs:self._draw_item_icon(outs[0]['id'],pg.Rect(r.x+6,r.y+6,52,52),scale=.8)
-            nm=m.get('name',rid)+('  NEW' if m.get('new') else '');fg=self._theme['good'] if m.get('new') else (self._theme['text'] if ready else (131,139,137))
-            screen.blit(self.small_font.render(self._fit_ui_text(nm,self.small_font,r.width-120),True,fg),(r.x+62,r.y+10))
-            info=', '.join(f"{o['name']} x{o['qty']}" for o in outs) if ready else next((str(v) for v in m.get('missing',[]) if '/' in str(v)),'Missing requirements')
-            screen.blit(self.small_font.render(self._fit_ui_text(info,self.small_font,r.width-76),True,self._theme['muted'] if ready else self._theme['danger']),(r.x+62,r.y+37));self._ui_target(r,f'UI_SELECT:{i}')
-        m=recipes.get(getattr(rows[max(0,min(selected,len(rows)-1))],'key',''),{}) if rows else {}
-        if m:
-            yy=detail.y+12;screen.blit(self.font.render(self._fit_ui_text(m.get('name',''),self.font,detail.width-26),True,self._theme['accent']),(detail.x+13,yy));yy+=29
-            screen.blit(self.small_font.render('PRODUCES',True,self._theme['muted']),(detail.x+13,yy));yy+=23
-            for out in m.get('outputs',[]):self._draw_item_icon(out['id'],pg.Rect(detail.x+12,yy-4,28,26));screen.blit(self.small_font.render(self._fit_ui_text(f"{out['name']} x{out['qty']}",self.small_font,detail.width-46),True,self._theme['good']),(detail.x+45,yy+1));yy+=30
-            yy+=6;screen.blit(self.small_font.render('REQUIRES',True,self._theme['muted']),(detail.x+13,yy));yy+=23
-            for inp in m.get('inputs',[]):
-                ok=inp['have']>=inp['need'];screen.blit(self.small_font.render(self._fit_ui_text(f"{inp['name']} {inp['have']}/{inp['need']}",self.small_font,detail.width-25),True,self._theme['text'] if ok else self._theme['danger']),(detail.x+13,yy));yy+=20
-            iy=max(yy+8,detail.bottom-92)
-            for line in (f"{m.get('minutes',0)} min  •  {m.get('skill','crafting')}",str(m.get('description',''))):screen.blit(self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-25),True,self._theme['muted']),(detail.x+13,iy));iy+=19
-            if m.get('ready'):self._button((detail.x+12,detail.bottom-40,detail.width-24,30),'CRAFT RECIPE','UI_ACTION:craft')
-        self._draw_floating_footer(x,y,w,h,'Category tabs • Select a recipe • Drag title • Resize corner • Esc closes');self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
-
-    def menu_page_size(self,presentation:str)->int:
+    def menu_page_size(self,presentation:str='')->int:
         """Expose actual rendered row capacity to the shared paging widget."""
-        if presentation not in {'crafting_unified','workshop_station','salvaging'}:
+        if presentation=='inventory_unified':return self._inventory_browser_geometry()['capacity']
+        if presentation=='crafting_unified':return self._crafting_browser_geometry()['capacity']
+        if presentation not in {'workshop_station','salvaging'}:
             return super().menu_page_size(presentation)
         panel=self._floating_panel_state('crafting');height=panel['h']
         heading=self.title_font.get_height()+5

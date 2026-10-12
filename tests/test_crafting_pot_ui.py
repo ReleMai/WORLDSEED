@@ -155,7 +155,7 @@ class CraftingWindowTests(unittest.TestCase):
         ready={'name':'Stone Flake','ready':True,'missing':[],'inputs':[],'outputs':[],'minutes':8,'skill':'crafting','description':''}
         self.term.present_feature_menu('crafting_unified','CRAFTING',rows,0,data={'recipes':{'core:stone_flake':ready},'categories':['primitive'],'category':'primitive'})
         tab=self.target('UI_ACTION:tab:discovery')
-        self.assertLessEqual(tab.width,40)
+        self.assertGreater(tab.width,70)
         self.pg.event.post(self.pg.event.Event(self.pg.MOUSEMOTION,pos=tab.center,rel=(1,0),buttons=(0,0,0)))
         self.assertEqual(self.term.read_key(),'UI_REDRAW')
 

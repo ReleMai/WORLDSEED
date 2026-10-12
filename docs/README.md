@@ -32,6 +32,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 - [Combat and hunting](handoffs/COMBAT_HUNTING_HANDOFF.md)
 - [Crafting discovery](handoffs/CRAFTING_DISCOVERY_HANDOFF.md)
 - [Inventory context UI](handoffs/UI_INVENTORY_CONTEXT_HANDOFF.md)
+- [Inventory and crafting browser overhaul](handoffs/INVENTORY_CRAFTING_BROWSER_HANDOFF.md)
 - [Development reliability](handoffs/DEVELOPMENT_RELIABILITY_HANDOFF.md)
 - [Animal sprites](handoffs/ANIMAL_SPRITE_HANDOFF.md)
 - [Fish-container sprites](handoffs/FISH_CONTAINER_SPRITE_HANDOFF.md)

@@ -141,7 +141,10 @@ class MouseUITests(unittest.TestCase):
         f=UIRC3FlowTests();f.setUp()
         try:
             read=self.t.read_key
-            sequence=iter(['UI_SELECT:1','UI_ACTION:split','UI_ACTION:drop','ESC'])
+            from worldseed.app import _inventory_ui_data
+            carried=list(_inventory_ui_data(f.reg,f.entities.get(f.pid,Inventory),f.sim)['items'])
+            wood_index=carried.index('core:wood')
+            sequence=iter([f'UI_SELECT:{wood_index}','UI_ACTION:split','UI_ACTION:drop','ESC'])
             def input_event():
                 token=next(sequence);self.click(token);return read()
             self.t.read_key=input_event

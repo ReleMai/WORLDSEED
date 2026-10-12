@@ -101,6 +101,8 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         return None
     selected = max(0, min(len(items)-1, getattr(state, 'selected', initial) if state is not None else initial))
     focused_topic=''
+    retained_items=presentation in {'inventory_unified','container_inventory','crafting_unified'}
+    viewport_start=max(0,int(getattr(state,'scroll',0))) if state is not None else None
     while True:
         cols, lines = term.size()
         width = max(8, min(96, cols - 2))
@@ -128,8 +130,23 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             if len(items)>1:chrome+=2
             row_cost=max(len(wrap_line(f'> 9. {row.label}',inner))+ (len(wrap_line('     '+row.hint,inner)) if row.hint else 0) for row in items)
             available=max(1,(lines-chrome)//max(1,row_cost))
-        page_start = (selected // available) * available
-        page_items = items[page_start:page_start + available]
+        grid_columns=getattr(term,'menu_grid_columns',None)
+        grid_columns=max(1,int(grid_columns(presentation))) if retained_items and callable(grid_columns) else 1
+        max_scroll=max(0,len(items)-available)
+        if retained_items:
+            if viewport_start is None:viewport_start=(selected//available)*available
+            viewport_start=max(0,min(viewport_start,max_scroll))
+            page_start=viewport_start
+            if state is not None:state.scroll=viewport_start
+        else:
+            page_start=(selected//available)*available
+        page_items=items[page_start:page_start+available]
+        visible_selected=selected-page_start if page_start<=selected<page_start+len(page_items) else -1
+        frame_data=presentation_data or {}
+        if retained_items:
+            # The selected row can remain outside the scrolled viewport. Details
+            # and actions must still resolve that exact row rather than row zero.
+            frame_data=dict(frame_data,selected_key=items[selected].key)
         if presentation=='npc_dialogue' and presentation_data is not None:
             presentation_data['focused_topic']=focused_topic
         body = []
@@ -155,11 +172,11 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         if presentation=='npc_dialogue':
             if terminal_dialogue:footer='Tab/↑↓ Enter Esc'
         if presentation and callable(feature_graphical):
-            feature_graphical(presentation, title, page_items, selected - page_start,
+            feature_graphical(presentation, title, page_items, visible_selected,
                               subtitle=subtitle, breadcrumb=breadcrumb, footer=footer,
-                              page_start=page_start, total=len(items), data=presentation_data or {})
+                              page_start=page_start, total=len(items), data=frame_data)
         elif callable(graphical):
-            graphical(title, page_items, selected - page_start,
+            graphical(title, page_items, visible_selected,
                       subtitle=subtitle, breadcrumb=breadcrumb, footer=footer,
                       page_start=page_start, total=len(items))
         else:
@@ -167,7 +184,17 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         k = _ui_key(term.read_key())
         if state is not None:
             state.selected = selected
-        if k == 'UI_REDRAW':
+        if k in {'UI_REDRAW','RESIZE'}:
+            continue
+        if retained_items and k.startswith(('UI_SCROLL:','UI_WHEEL:')):
+            try:value=int(k.split(':',1)[1])
+            except ValueError:continue
+            viewport_start=value if k.startswith('UI_SCROLL:') else page_start+value
+            viewport_start=max(0,min(viewport_start,max_scroll))
+            if state is not None:state.scroll=viewport_start
+            continue
+        if retained_items and k.startswith('UI_HOVER:'):
+            # Hover is presentation feedback, never a change of action target.
             continue
         if presentation=='npc_dialogue' and k in {'\t','TAB'}:
             topics=list(dict.fromkeys(str(span.get('topic','')) for span in (presentation_data or {}).get('spans',()) if span.get('topic')))
@@ -232,10 +259,13 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             continue
         if allow_escape and k in ('ESC', 'q'):
             return None
-        if k in ('UP', 'k'):
-            selected = (selected - 1) % len(items)
+        previous_selected=selected
+        if retained_items and grid_columns>1 and k in {'LEFT','RIGHT'}:
+            selected=max(0,min(len(items)-1,selected+(-1 if k=='LEFT' else 1)))
+        elif k in ('UP', 'k'):
+            selected=max(0,selected-grid_columns) if retained_items else (selected-1)%len(items)
         elif k in ('DOWN', 'j'):
-            selected = (selected + 1) % len(items)
+            selected=min(len(items)-1,selected+grid_columns) if retained_items else (selected+1)%len(items)
         elif k == 'PGUP':
             selected = max(0, selected - available)
         elif k == 'PGDN':
@@ -249,8 +279,19 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         elif len(k) == 1 and k.isdigit() and k != '0':
             offset = int(k) - 1
             idx = page_start + offset
-            if idx < len(items):
+            if idx < page_start+len(page_items):
+                if state is not None:state.selected=idx
                 return items[idx].key
+        if retained_items and (selected!=previous_selected or k in {'UP','DOWN','LEFT','RIGHT','HOME','END','PGUP','PGDN'}):
+            if selected<page_start:
+                viewport_start=selected-(selected%grid_columns)
+            elif selected>=page_start+available:
+                viewport_start=selected-available+grid_columns
+                viewport_start-=viewport_start%grid_columns
+            viewport_start=max(0,min(viewport_start,max_scroll))
+            if state is not None:
+                state.selected=selected
+                state.scroll=viewport_start
 
 
 def view_text(term, text: str, *, title: str = 'VIEW', breadcrumb: str = '', state=None,
