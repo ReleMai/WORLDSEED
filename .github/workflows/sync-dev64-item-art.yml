@@ -1,0 +1,41 @@
+name: Temporary Dev64 item atlas repair
+
+# One-time, branch-scoped authoring task. Remove after its commit.
+on:
+  push:
+    branches:
+      - fix/rc14-salvage-fast-gate-assets
+    paths:
+      - tools/repair_dev64_item_art.py
+      - .github/workflows/sync-dev64-item-art.yml
+
+permissions:
+  contents: write
+
+jobs:
+  author-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install "Pillow>=10,<12"
+      - name: Author missing icons and regenerate the catalog
+        run: python -m tools.repair_dev64_item_art
+      - name: Validate generated item catalog
+        run: |
+          python -m unittest -v tests.test_item_asset_catalog tests.test_generated_item_icons
+          python -m compileall -q tools worldseed
+      - name: Commit exact generated outputs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f worldseed/data/items.json             worldseed/assets/sprites/items/pine_bough.png             worldseed/assets/sprites/items/hearth_root_stew.png             worldseed/assets/sprites/items/berry_barley_bun.png             worldseed/assets/source_items/dev64/manifest.json             worldseed/assets/ITEM_ATLAS.md             worldseed/assets/atlas_index.json             worldseed/assets/atlases/items.png             worldseed/assets/item_catalog.png
+          git diff --cached --check
+          git commit -m "Restore unique Dev64 art and synchronize all item atlas records"
+          git push origin "HEAD:${{ github.ref_name }}"
