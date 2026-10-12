@@ -11,7 +11,10 @@
       "raw",
       "bark",
       "tannin",
-      "fuel"
+      "fuel",
+      "plant",
+      "plant_material",
+      "bark_strip"
     ],
     "description": "Strips of bark rich in tannins, useful for cordage, fire-starting, and preserving hides.",
     "flavor": "\"The tree gives more than timber.\"",
@@ -56,7 +59,10 @@
     "tags": [
       "raw",
       "fuel",
-      "fiber"
+      "fiber",
+      "plant",
+      "plant_material",
+      "fiber_source"
     ],
     "description": "Brush has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Brush: ordinary in isolation, important when the right need appears.\"",
@@ -137,7 +143,11 @@
     "mass_g": 150,
     "volume_ml": 300,
     "tags": [
-      "craft"
+      "craft",
+      "fiber",
+      "textile",
+      "prepared_fiber",
+      "spinnable_plant_fiber"
     ],
     "description": "Fiber has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Fiber: ordinary in isolation, important when the right need appears.\"",
@@ -303,7 +313,10 @@
     "tags": [
       "fiber",
       "coastal_plant",
-      "forage"
+      "forage",
+      "plant",
+      "plant_material",
+      "fiber_source"
     ],
     "base_value": 1,
     "description": "Tough dune grass useful as coarse fiber and thatching.",
@@ -683,7 +696,10 @@
     "tags": [
       "aquatic_plant",
       "marine",
-      "fiber"
+      "fiber",
+      "plant",
+      "plant_material",
+      "fiber_source"
     ],
     "flavor": "A submerged meadow pulled from brackish water.",
     "sprite_tag": "eelgrass"
@@ -1136,7 +1152,10 @@
     "tags": [
       "aquatic_plant",
       "fiber",
-      "salt_tolerant"
+      "salt_tolerant",
+      "plant",
+      "plant_material",
+      "fiber_source"
     ],
     "flavor": "Salt, wind, and tide have made every blade stubborn.",
     "sprite_tag": "saltmarsh_grass"
@@ -1625,7 +1644,10 @@
     "tags": [
       "food",
       "crop",
-      "grain"
+      "grain",
+      "plant",
+      "plant_material",
+      "fiber_source"
     ],
     "description": "Harvested flax seed suitable for cooking, storage, and seed-saving.",
     "flavor": "\"A field turns weather and soil into something you can carry.\"",
@@ -4482,7 +4504,10 @@
     "volume_ml": 171,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "cordage",
+      "binding_material"
     ],
     "description": "fine reinforced cord for precision needles and layered paper gear",
     "flavor": "\"Good scholarship gives binding cord a job to do.\""
@@ -4603,7 +4628,11 @@
     "volume_ml": 192,
     "base_value": 14,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "cordage",
+      "binding_material",
+      "animal_fiber"
     ],
     "description": "warm strong cord for padded garments and sling straps",
     "flavor": "\"Good husbandry gives braided wool cord a job to do.\""
@@ -4619,7 +4648,10 @@
     "volume_ml": 480,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "cloth",
+      "cloth_panel"
     ],
     "description": "heavy canvas for protective clothing and nets",
     "flavor": "\"Good textiles gives canvas panel a job to do.\""
@@ -4735,7 +4767,10 @@
     "base_value": 2,
     "tags": [
       "craft_component",
-      "recovered"
+      "recovered",
+      "textile",
+      "cloth",
+      "textile_scrap"
     ],
     "description": "Cleaned textile scraps and soft recovered animal fibers for felt, yarn and dressing cloth.",
     "flavor": "\"A patient craftsperson saves the useful cloth scraps.\""
@@ -4851,7 +4886,10 @@
     "volume_ml": 180,
     "tags": [
       "craft",
-      "cordage"
+      "cordage",
+      "plant",
+      "textile",
+      "binding_material"
     ],
     "description": "Twisted plant fibers strong enough for bindings, snares, lashings, and primitive tools.",
     "flavor": "\"Strength made from many weak fibers.\"",
@@ -5398,7 +5436,10 @@
     "volume_ml": 438,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "cloth",
+      "cloth_panel"
     ],
     "description": "a strong linen panel for dressings and summer clothes",
     "flavor": "\"Good textiles gives linen panel a job to do.\""
@@ -5548,7 +5589,11 @@
     "volume_ml": 408,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "fiber",
+      "textile",
+      "prepared_fiber",
+      "spinnable_plant_fiber"
     ],
     "description": "sorted pasture fiber for warm cord and felt",
     "flavor": "\"Good husbandry gives pasture fiber bundle a job to do.\""
@@ -5596,7 +5641,10 @@
     "volume_ml": 1087,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "plant",
+      "plant_material",
+      "fiber_pulp"
     ],
     "description": "washed fiber pulp for cords and paper boards",
     "flavor": "\"Good farming gives plant fiber pulp a job to do.\""
@@ -5613,7 +5661,11 @@
     "base_value": 1,
     "tags": [
       "craft_component",
-      "recovered"
+      "recovered",
+      "plant",
+      "plant_material",
+      "plant_scrap",
+      "fiber_source"
     ],
     "description": "Plant Scraps sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
     "flavor": "\"A patient craftsperson saves the useful plant scraps.\""
@@ -5730,7 +5782,10 @@
     "volume_ml": 517,
     "base_value": 14,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "cloth",
+      "cloth_panel"
     ],
     "description": "cloth reinforced with recovered tough fiber for travel coats",
     "flavor": "\"Good textiles gives reinforced cloth a job to do.\""
@@ -5904,7 +5959,9 @@
     "tags": [
       "craft",
       "cordage",
-      "sinew"
+      "sinew",
+      "binding_material",
+      "animal_fiber"
     ],
     "description": "Tightly twisted sinew cord with excellent tensile strength.",
     "flavor": "\"It dries hard and holds harder.\"",
@@ -5941,7 +5998,9 @@
     "volume_ml": 225,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "yarn"
     ],
     "description": "twisted yarn for felt, cloth and fine thread",
     "flavor": "\"Good textiles gives spun yarn a job to do.\""
@@ -6092,7 +6151,10 @@
     "tags": [
       "craft_component",
       "recovered",
-      "rare_component"
+      "rare_component",
+      "fiber",
+      "textile",
+      "reinforcing_fiber"
     ],
     "description": "Tough Fiber sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
     "flavor": "\"A patient craftsperson saves the useful tough fiber.\""
@@ -6124,7 +6186,9 @@
     "volume_ml": 180,
     "base_value": 14,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "textile",
+      "thread"
     ],
     "description": "sealed thread for bowstrings, line and leather seams",
     "flavor": "\"Good textiles gives waxed thread a job to do.\""
@@ -6173,7 +6237,11 @@
     "volume_ml": 105,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "fiber",
+      "textile",
+      "prepared_fiber",
+      "animal_fiber"
     ],
     "description": "cleaned sheep wool for warm felt and yarn",
     "flavor": "\"Good husbandry gives wool roving a job to do.\""
@@ -6189,7 +6257,8 @@
     "tags": [
       "craft",
       "textile",
-      "cloth"
+      "cloth",
+      "cloth_panel"
     ],
     "description": "Tightly woven cloth for clothing, furnishings, bandaging, and trade.",
     "utility_roles": [

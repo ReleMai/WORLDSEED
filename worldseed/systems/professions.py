@@ -140,6 +140,8 @@ class SettlementProfessionSystem:
         return proc if proc is not None and proc.occupation==npc.occupation and self._supports_process(proc) else None
 
     def _supports_process(self,proc)->bool:
+        recipe=self._process_recipe(proc)
+        if recipe is not None and recipe.input_tags:return False
         if proc.id=="core:draw_settlement_water":return proc.occupation=="farmer"
         if proc.id in self.PROCESS_IDS.get(str(proc.occupation),set()):return True
         if proc.occupation=="farmer" and proc.id.startswith("core:field_"):

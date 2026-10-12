@@ -27,11 +27,11 @@ class CraftingBrowserMixin:
         pg = self.pg
         self._crafting_tab_tooltip = None
         tabs = (('Recipes', 'recipes'), ('Workshops', 'workshops'),
-                ('Discovery', 'discovery'), ('Item Index', 'index'),
+                ('Discovery', 'discovery'),
                 ('Salvaging', 'salvaging'))
         gap = 4
         available = max(5, w - 112)
-        width = max(1, (available - gap * 4) // 5)
+        width = max(1, (available - gap * 3) // 4)
         for index, (label, token) in enumerate(tabs):
             rect = pg.Rect(x + index * (width + gap), y, width, 30)
             chosen = token == active
@@ -118,6 +118,13 @@ class CraftingBrowserMixin:
             lines.append(('item', str(ingredient.get('id', '')),
                           f"{ingredient.get('name', ingredient.get('id', ''))}  {ingredient.get('have', 0)}/{ingredient.get('need', 0)}",
                           th['text'] if enough else th['danger']))
+            if ingredient.get('tag'):
+                options=ingredient.get('options') or []
+                labels=[str(option.get('name','')) for option in options]
+                lines.append(('text','Accepts: '+', '.join(labels),th['muted']))
+                allocated=ingredient.get('allocated') or {}
+                used=[f"{option['name']} ×{allocated[option['id']]}" for option in options if allocated.get(option['id'])]
+                if used:lines.append(('text','Will consume: '+', '.join(used),th['accent']))
         if not recipe.get('inputs'):
             lines.append(('text', 'No carried materials required.', th['text']))
         if recipe.get('missing'):

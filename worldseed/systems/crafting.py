@@ -5,25 +5,59 @@ from worldseed.content.registry import ContentRegistry
 from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
 from worldseed.systems.state import LivingWorldState
+from worldseed.systems.crafting_ingredients import allocate_tag_inputs, signature_matches, token_matches
 
 
 class CraftingSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry,artifact_system=None,metallurgy=None):self.state=state;self.registry=registry;self.artifact_system=artifact_system;self.metallurgy=metallurgy
 
     def discovery_signature(self, recipe) -> tuple[str, ...]:
-        """Return the exact 1-5 item experiment signature for one recipe.
+        """Return the 1-5 exact-item or tag clue slots for one recipe.
 
         Crafting cost and discovery clues are deliberately separate. Most simple
         recipes use their full input stack. Larger recipes author discovery_items
         so the experiment grid never requires more than five physical samples.
         Repeated ids are significant quantities.
         """
-        if recipe.discovery_items:
-            return tuple(str(iid) for iid in recipe.discovery_items)
+        if recipe.discovery_items or recipe.discovery_tags:
+            return tuple(recipe.discovery_items)+tuple("tag:"+tag for tag in recipe.discovery_tags)
         out=[]
         for iid,n in sorted(recipe.inputs.items()):
             out.extend([str(iid)]*max(0,int(n)))
+        for tag,n in sorted(recipe.input_tags.items()):out.extend(["tag:"+tag]*int(n))
         return tuple(out)
+
+    def discovery_matches(self,recipe,items,*,partial=False)->bool:
+        return signature_matches(self.discovery_signature(recipe),tuple(items),self.registry,partial=partial)
+
+    def discovery_examples(self,recipe)->tuple[str,...]:
+        """Concrete carried samples for audits and authors, including tag clues."""
+        return tuple(next(iid for iid in sorted(self.registry.items) if token_matches(token,iid,self.registry))
+                     for token in self.discovery_signature(recipe))
+
+    def recipe_uses_item(self,recipe,item_id:str)->bool:
+        return item_id in recipe.inputs or item_id in recipe.catalysts or any(
+            token_matches("tag:"+tag,item_id,self.registry) for tag in recipe.input_tags)
+
+    def ingredient_rows(self,recipe,inv:Inventory)->list[dict]:
+        allocation=allocate_tag_inputs(recipe,inv,self.registry)
+        rows=[{"id":iid,"name":self.registry.items[iid].name,"need":n,
+               "have":max(0,inv.count(iid)-recipe.catalysts.get(iid,0))} for iid,n in recipe.inputs.items()]
+        for tag,need in sorted(recipe.input_tags.items()):
+            options=[{"id":iid,"name":item.name,"have":inv.count(iid)} for iid,item in sorted(self.registry.items.items()) if tag in item.tags]
+            rows.append({"id":"tag:"+tag,"name":"Any "+tag.replace("_"," "),"tag":tag,"need":need,
+                         "have":sum(allocation[tag].values()),"options":options,"allocated":allocation[tag]})
+        return rows
+
+    def resolve_inputs(self,recipe,inv:Inventory)->dict[str,int]|None:
+        if any(inv.count(iid)<n+recipe.catalysts.get(iid,0) for iid,n in recipe.inputs.items()):return None
+        if any(inv.count(iid)<n for iid,n in recipe.catalysts.items()):return None
+        allocation=allocate_tag_inputs(recipe,inv,self.registry)
+        if any(sum(allocation[tag].values())<need for tag,need in recipe.input_tags.items()):return None
+        costs=dict(recipe.inputs)
+        for choices in allocation.values():
+            for iid,n in choices.items():costs[iid]=costs.get(iid,0)+n
+        return costs
 
     def _discovery_requirements(self, recipe) -> set[str]:
         return set(self.discovery_signature(recipe))
@@ -61,7 +95,7 @@ class CraftingSystem:
     def recipe_pool_for_item(self,item_id:str):
         """Catalog-backed outcomes for which this item is an actual experiment clue."""
         return sorted((r for r in self.registry.recipes.values()
-                       if item_id in set(self.discovery_signature(r))),key=lambda r:r.id)
+                       if any(token_matches(token,item_id,self.registry) for token in self.discovery_signature(r))),key=lambda r:r.id)
 
     def pot_candidates(self,items:tuple[str,...],inv:Inventory):
         """Read-only recipes that could result from the placed quantities."""
@@ -74,7 +108,7 @@ class CraftingSystem:
         return sorted((r for r in self.registry.recipes.values()
             if r.id not in known
             and (not r.knowledge or r.knowledge in self.state.player_knowledge)
-            and counts==Counter(self.discovery_signature(r))
+            and self.discovery_matches(r,items)
             and self.discovery_signature(r)),key=lambda r:r.id)
 
     def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes,minute:int=0) -> tuple[bool,str,int]:
@@ -94,6 +128,8 @@ class CraftingSystem:
         self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe.id})
         self.state.player_unseen_recipes=sorted(set(self.state.player_unseen_recipes)|{recipe.id})
         self.state.player_crafting_experiments=attempt+1
+        self.state.player_crafting_log.append({"recipe_id":recipe.id,"minute":int(minute),"ingredients":list(items)})
+        self.state.player_crafting_log=self.state.player_crafting_log[-80:]
         # Experiment rewards are deliberately weaker than normal crafting.
         # A successful recipe produces one prototype per distinct output.
         samples=[]
@@ -137,8 +173,9 @@ class CraftingSystem:
             elif r.id in discovered:status='known'
             elif r.knowledge and r.knowledge not in self.state.player_knowledge:status='knowledge'
             else:
-                req=self._discovery_requirements(r);status='materials' if req-known_items else 'locked'
-            parents=sorted({pid for iid in r.inputs for pid in output_to_recipes.get(iid,[]) if pid!=r.id})
+                missing=any(not any(token_matches(token,iid,self.registry) for iid in known_items) for token in self.discovery_signature(r))
+                status='materials' if missing else 'locked'
+            parents=sorted({pid for iid in output_to_recipes if self.recipe_uses_item(r,iid) for pid in output_to_recipes[iid] if pid!=r.id})
             rows.append((r.id,status,', '.join(parents[:3])))
         return rows
     def _best_quality(self,inv:Inventory,key:str)->int:
@@ -149,8 +186,8 @@ class CraftingSystem:
         if not self.recipe_is_discovered(recipe_id):out.append("recipe not yet discovered")
         if r.knowledge and r.knowledge not in self.state.player_knowledge:out.append(f"knowledge: {r.knowledge}")
         if r.station and r.station not in nearby_structures:out.append(f"station: {self.registry.structures[r.station].name}")
-        for iid,n in r.inputs.items():
-            if inv.count(iid)<n:out.append(f"{self.registry.items[iid].name} {inv.count(iid)}/{n}")
+        for row in self.ingredient_rows(r,inv):
+            if row["have"]<row["need"]:out.append(f'{row["name"]} {row["have"]}/{row["need"]}')
         for iid,n in r.catalysts.items():
             if inv.count(iid)<n:out.append(f"{self.registry.items[iid].name} catalyst {inv.count(iid)}/{n}")
         for q,need in r.tool_qualities.items():
@@ -167,7 +204,7 @@ class CraftingSystem:
         if not self.recipe_is_discovered(recipe_id):return False,"You have not discovered that recipe yet."
         if r.knowledge and r.knowledge not in self.state.player_knowledge:return False,f"You lack knowledge: {r.knowledge}."
         if r.station and r.station not in nearby_structures:return False,f"Requires {self.registry.structures[r.station].name}."
-        if not inv.has(r.inputs):return False,"You lack the required materials."
+        if self.resolve_inputs(r,inv) is None:return False,"You lack the required materials or reserved catalyst quantities."
         for quality,need in r.tool_qualities.items():
             have=self._best_quality(inv,quality)
             if have<int(need):return False,f"Requires {quality} quality {need}; your best is {have}."
@@ -180,7 +217,7 @@ class CraftingSystem:
     def craft(self,recipe_id:str,inv:Inventory,nearby_structures:set[str],minute:int=0,creator:str="player",skill_level:int=0,work_bonus:int=0)->tuple[bool,str,int]:
         ok,why=self.can_craft(recipe_id,inv,nearby_structures)
         if not ok:return False,why,0
-        r=self.registry.recipes[recipe_id];inv.consume(r.inputs)
+        r=self.registry.recipes[recipe_id];inv.consume(self.resolve_inputs(r,inv))
         meta=self.metallurgy.apply(r,creator,minute) if self.metallurgy else None
         made=[]
         for iid,n in r.outputs.items():

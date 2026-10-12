@@ -30,9 +30,11 @@ from worldseed.ui.pointer import PointerUI, WindowCloseRequested
 
 from worldseed.ui.item_browser import ItemPanelMixin
 from worldseed.ui.crafting_browser import CraftingBrowserMixin
+from worldseed.ui.workbench_panels import WorkbenchPanelsMixin
+from worldseed.ui.salvage_panel import SalvagePanelMixin
 
 
-class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
+class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin, SalvagePanelMixin, PointerUI):
     """WORLDSEED's dedicated game-window backend.
 
     It intentionally exposes the same small interface as the ANSI Terminal so
@@ -486,7 +488,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
                     try:pg.mouse.set_cursor(pointer)
                     except pg.error:pass
                     self._last_pointer_cursor=pointer
-                if self._input_mode=='ui' and self._current_presentation in ('inventory_unified','crafting_unified','container_inventory'):
+                if self._input_mode=='ui' and self._current_presentation in ('inventory_unified','crafting_unified','container_inventory','workshop_station','discovery_pot','salvaging_unified'):
                     if self._ui_context is None and token!=getattr(self,'_panel_hover_token',None):
                         self._panel_hover_token=token
                         return 'UI_REDRAW'
@@ -503,11 +505,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
             if event.type == pg.MOUSEWHEEL:
                 if self._input_mode != 'world':
                     view=getattr(self,'_panel_detail_view',None)
-                    if self._current_presentation in ('inventory_unified','crafting_unified') and view and view[1].collidepoint(self._last_mouse) and event.y:
+                    if self._current_presentation in ('inventory_unified','crafting_unified','workshop_station','discovery_pot','salvaging_unified') and view and view[1].collidepoint(self._last_mouse) and event.y:
                         key,rect,maximum=view
                         self._panel_detail_states[key]=max(0,min(maximum,self._panel_detail_states.get(key,0)-event.y*48))
                         return 'UI_REDRAW'
-                    if self._current_presentation in ('inventory_unified','crafting_unified','container_inventory') and event.y:
+                    if self._current_presentation in ('inventory_unified','crafting_unified','container_inventory','workshop_station','discovery_pot','salvaging_unified') and event.y:
                         return 'UI_WHEEL:'+str(-event.y*self.menu_grid_columns(self._current_presentation))
                     desc=getattr(self,'_inventory_desc_rect',None)
                     if self._current_presentation=='inventory_unified' and desc and desc.collidepoint(self._last_mouse) and event.y:
@@ -694,7 +696,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
                     if self._input_mode!='text' and event.key in (pg.K_w,pg.K_a,pg.K_s,pg.K_d):
                         if self._current_presentation in {
                             'inventory_unified','container_inventory','crafting_unified',
-                            'workshop_station','discovery_pot','crafting_index','salvaging'
+                            'workshop_station','discovery_pot','crafting_index','salvaging','salvaging_unified'
                         }:
                             return movement_keys[event.key]
                         continue
@@ -1232,6 +1234,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
             'container_inventory':self._present_container_inventory,
             'crafting_unified':self._present_crafting_unified,
             'salvaging':self._present_salvaging,
+            'salvaging_unified':self._present_salvaging_unified,
             'workshop_station':self._present_workshop_station,
             'discovery_pot':self._present_discovery_pot,
             'crafting_index':self._present_crafting_index,
@@ -1760,6 +1763,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
         """Expose actual rendered row capacity to the shared paging widget."""
         if presentation=='inventory_unified':return self._inventory_browser_geometry()['capacity']
         if presentation=='crafting_unified':return self._crafting_browser_geometry()['capacity']
+        if presentation=='discovery_pot':return self._discovery_browser_geometry()['capacity']
+        if presentation=='workshop_station':return self._workshop_browser_geometry()['capacity']
+        if presentation=='salvaging_unified':return self._salvage_browser_geometry()['capacity']
         if presentation not in {'workshop_station','salvaging'}:
             return super().menu_page_size(presentation)
         panel=self._floating_panel_state('crafting');height=panel['h']
@@ -1870,142 +1876,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, PointerUI):
         self._draw_floating_footer(x,y,w,h,'Select with arrows / Enter or click • Wheel pages • Esc returns one level')
         self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
 
-    def _present_workshop_station(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
-        """Station-specific workshop surface driven by authoritative workshop profiles."""
-        data=data or {};pg=self.pg;screen=self.screen;recipes=data.get('recipes',{})
-        profile=data.get('profile') or {};accent=tuple(profile.get('accent') or self._theme['accent'])
-        station_title=str(profile.get('title') or 'WORKSHOP')
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKSHOP',station_title,subtitle)
-        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
-        self._crafting_tabs(cx,cy,cw,'workshops');cy+=38
 
-        # Nearby station switcher. Each chip is a real station currently within
-        # BuildingSystem range, not a global recipe-category shortcut.
-        stations=list(data.get('stations') or [])
-        active_station=str(data.get('station_id') or '')
-        sx=cx
-        for row in stations:
-            sid=str(row.get('station_id',''));label=str(row.get('short_title') or row.get('title') or sid)
-            sw=min(156,max(72,self.small_font.size(label)[0]+20))
-            if sx+sw>cx+cw:break
-            rr=pg.Rect(sx,cy,sw,29);active=sid==active_station
-            pg.draw.rect(screen,(48,45,39) if active else self._theme['panel2'],rr,border_radius=5)
-            pg.draw.rect(screen,accent if active else self._theme['edge'],rr,2 if active else 1,border_radius=5)
-            txt=self.small_font.render(self._fit_ui_text(label,self.small_font,rr.width-12),True,self._theme['text'] if active else self._theme['muted'])
-            screen.blit(txt,txt.get_rect(center=rr.center));self._ui_target(rr,f'UI_ACTION:workshop:{sid}')
-            sx+=sw+6
-        cy+=37
-
-        purpose=str(profile.get('purpose') or 'Move beside a usable workshop station to begin.')
-        header=pg.Rect(cx,cy,cw,66)
-        pg.draw.rect(screen,self._theme['panel'],header,border_radius=7);pg.draw.rect(screen,accent,header,1,border_radius=7)
-        # Station icon is intentionally diagrammatic and varies by profession.
-        icon=str(profile.get('icon') or 'bench');ibox=pg.Rect(header.x+10,header.y+9,46,46)
-        pg.draw.rect(screen,(18,22,22),ibox,border_radius=5);pg.draw.rect(screen,accent,ibox,1,border_radius=5)
-        ix,iy=ibox.center
-        if icon in {'hammer','mason','stone'}:
-            pg.draw.line(screen,accent,(ix-8,iy+9),(ix+7,iy-7),4);pg.draw.rect(screen,accent,(ix+2,iy-12,14,7),border_radius=2)
-        elif icon in {'bread','mill'}:
-            pg.draw.ellipse(screen,accent,(ix-14,iy-8,28,17),2);pg.draw.line(screen,accent,(ix-8,iy-1),(ix+8,iy-1),1)
-        elif icon in {'loom','hide'}:
-            pg.draw.rect(screen,accent,(ix-13,iy-13,26,26),2);pg.draw.line(screen,accent,(ix-8,iy-10),(ix-8,iy+10),1);pg.draw.line(screen,accent,(ix,iy-10),(ix,iy+10),1);pg.draw.line(screen,accent,(ix+8,iy-10),(ix+8,iy+10),1)
-        elif icon in {'pot','vat'}:
-            pg.draw.ellipse(screen,accent,(ix-12,iy-11,24,10),2);pg.draw.arc(screen,accent,(ix-12,iy-8,24,25),0,3.14159,2)
-        elif icon=='herb':
-            pg.draw.line(screen,accent,(ix,iy+12),(ix,iy-10),2);pg.draw.ellipse(screen,accent,(ix-11,iy-8,12,7),2);pg.draw.ellipse(screen,accent,(ix,iy-2,12,7),2)
-        elif icon in {'knife','fish'}:
-            pg.draw.line(screen,accent,(ix-12,iy+7),(ix+11,iy-7),3);pg.draw.line(screen,accent,(ix-12,iy+7),(ix-6,iy+11),2)
-        else:
-            pg.draw.rect(screen,accent,(ix-13,iy,26,7),2);pg.draw.line(screen,accent,(ix-9,iy+7),(ix-9,iy+14),2);pg.draw.line(screen,accent,(ix+9,iy+7),(ix+9,iy+14),2)
-        name=self.font.render(self._fit_ui_text(station_title,self.font,header.width-76),True,accent);screen.blit(name,(header.x+66,header.y+9))
-        for li,line in enumerate(self._wrap_pixel_text(purpose,self.small_font,header.width-78)[:2]):
-            screen.blit(self.small_font.render(line,True,self._theme['muted']),(header.x+66,header.y+33+li*15))
-        cy=header.bottom+9
-
-        ph=y+h-48-cy;dw=max(270,min(350,cw//3));gap=10
-        listing=pg.Rect(cx,cy,cw-dw-gap,ph);detail=pg.Rect(listing.right+gap,cy,dw,ph)
-        for panel in (listing,detail):
-            pg.draw.rect(screen,self._theme['panel'],panel,border_radius=6);pg.draw.rect(screen,self._theme['edge'],panel,1,border_radius=6)
-        locked=int(data.get('locked_count',0))
-        cap=f"{len(rows)} KNOWN PROCESS{'ES' if len(rows)!=1 else ''}"
-        if locked:cap+=f"  •  {locked} UNDISCOVERED"
-        screen.blit(self.small_font.render(cap,True,accent),(listing.x+12,listing.y+11))
-
-        rh=67;sy=listing.y+36
-        for i,row in enumerate(rows):
-            rr=pg.Rect(listing.x+9,sy+i*(rh+5),listing.width-18,rh)
-            if rr.bottom>listing.bottom-10:break
-            rid=getattr(row,'key','');meta=recipes.get(rid,{});ready=bool(meta.get('ready'));active=i==selected
-            pg.draw.rect(screen,(43,48,43) if ready else (31,34,35),rr,border_radius=5)
-            pg.draw.rect(screen,accent if active else self._theme['edge'],rr,2 if active else 1,border_radius=5)
-            outs=meta.get('outputs') or []
-            if outs:self._draw_item_icon(outs[0]['id'],pg.Rect(rr.x+6,rr.y+6,52,52),scale=.82)
-            status='READY' if ready else 'NEEDS'
-            sc=self._theme['good'] if ready else self._theme['danger']
-            screen.blit(self.small_font.render(status,True,sc),(rr.right-58,rr.y+9))
-            screen.blit(self.small_font.render(self._fit_ui_text(meta.get('name',rid),self.small_font,rr.width-130),True,self._theme['text']),(rr.x+62,rr.y+9))
-            summary=', '.join(f"{o['name']} x{o['qty']}" for o in outs)
-            if not ready:summary=next((str(v) for v in meta.get('missing',[]) if v),'Missing requirements')
-            screen.blit(self.small_font.render(self._fit_ui_text(summary,self.small_font,rr.width-76),True,self._theme['muted'] if ready else self._theme['danger']),(rr.x+62,rr.y+37))
-            self._ui_target(rr,f'UI_SELECT:{i}')
-
-        meta=recipes.get(getattr(rows[max(0,min(selected,len(rows)-1))],'key',''),{}) if rows else {}
-        if meta:
-            yy=detail.y+13
-            screen.blit(self.font.render(self._fit_ui_text(meta.get('name',''),self.font,detail.width-26),True,accent),(detail.x+13,yy));yy+=30
-            screen.blit(self.small_font.render('OUTPUT',True,self._theme['muted']),(detail.x+13,yy));yy+=20
-            for out in meta.get('outputs',[])[:3]:
-                self._draw_item_icon(out['id'],pg.Rect(detail.x+12,yy-2,26,24),scale=.82)
-                screen.blit(self.small_font.render(self._fit_ui_text(f"{out['name']} x{out['qty']}",self.small_font,detail.width-48),True,self._theme['good']),(detail.x+43,yy+2));yy+=27
-            screen.blit(self.small_font.render('MATERIALS',True,self._theme['muted']),(detail.x+13,yy+5));yy+=27
-            for inp in meta.get('inputs',[])[:6]:
-                ok=int(inp['have'])>=int(inp['need']);fg=self._theme['text'] if ok else self._theme['danger']
-                screen.blit(self.small_font.render(self._fit_ui_text(f"{inp['name']}  {inp['have']}/{inp['need']}",self.small_font,detail.width-26),True,fg),(detail.x+13,yy));yy+=19
-            info_y=max(yy+8,detail.bottom-94)
-            info=f"{meta.get('minutes',0)} min  •  {meta.get('skill','crafting').replace('_',' ').title()}  •  difficulty {meta.get('difficulty',0)}"
-            screen.blit(self.small_font.render(self._fit_ui_text(info,self.small_font,detail.width-26),True,self._theme['muted']),(detail.x+13,info_y))
-            desc=str(meta.get('description',''))
-            if desc:
-                line=self._fit_ui_text(desc,self.small_font,detail.width-26);screen.blit(self.small_font.render(line,True,self._theme['muted']),(detail.x+13,info_y+20))
-            if meta.get('ready'):
-                label=str(profile.get('action_label') or 'WORK')
-                self._button((detail.x+12,detail.bottom-39,detail.width-24,29),label,'UI_ACTION:workshop_craft')
-        else:
-            msg='No discovered process for this station yet.' if active_station else 'No usable workshop station nearby.'
-            lines=self._wrap_pixel_text(msg,self.font,detail.width-32)
-            for i,line in enumerate(lines[:3]):
-                screen.blit(self.font.render(line,True,self._theme['muted']),(detail.x+16,detail.y+22+i*24))
-        self._draw_floating_footer(x,y,w,h,'Nearby physical workshops only • Station tabs change the process UI • Esc closes')
-        self._draw_crafting_tab_tooltip()
-        pg.display.flip();self.clock.tick(120)
-
-    def _present_discovery_pot(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
-        data=data or {};pg=self.pg;screen=self.screen
-        x,y,w,h,cx,cy,cw=self._floating_feature_shell('crafting','WORKBENCH','EXPERIMENT GRID',subtitle)
-        self._button((x+w-128,y+7,78,27),'PACK','UI_ACTION:open_inventory')
-        self._crafting_tabs(cx,cy,cw,'discovery');cy+=40
-        ph=y+h-48-cy;left=pg.Rect(cx,cy,int(cw*.52),ph);right=pg.Rect(left.right+12,cy,cw-left.width-12,ph)
-        for r in (left,right):pg.draw.rect(screen,self._theme['panel'],r,border_radius=6);pg.draw.rect(screen,self._theme['edge'],r,1,border_radius=6)
-        screen.blit(self.small_font.render('MATERIALS WITH DISCOVERY PATHS',True,self._theme['accent']),(left.x+12,left.y+12));entries=data.get('items',{});placed=list(data.get('selected_items',()))
-        for i,row in enumerate(rows):
-            r=pg.Rect(left.x+10,left.y+40+i*49,left.width-20,43)
-            if r.bottom>left.bottom-10:break
-            key=getattr(row,'key','');m=entries.get(key,{})
-            pg.draw.rect(screen,self._theme['panel2'] if i!=selected else (46,49,40),r,border_radius=5);pg.draw.rect(screen,self._theme['edge'],r,1,border_radius=5);self._draw_item_icon(key,pg.Rect(r.x+5,r.y+3,36,36))
-            screen.blit(self.small_font.render(self._fit_ui_text(f"{m.get('name',key)}  x{m.get('count',0)}",self.small_font,r.width-100),True,self._theme['text']),(r.x+44,r.y+5));screen.blit(self.small_font.render(f"{len(m.get('known_recipes',[]))}/{m.get('pool_count',0)} recipes known",True,self._theme['muted']),(r.x+44,r.y+23));self._ui_target(r,f'UI_SELECT:{i}')
-        state=str(data.get('mix_state','red'));accent={'red':self._theme['danger'],'yellow':self._theme['accent'],'green':self._theme['good']}.get(state,self._theme['danger'])
-        screen.blit(self.font.render('EXPERIMENT GRID  •  1–5 ITEMS',True,accent),(right.x+14,right.y+13));gx=right.centerx;gy=right.y+145;size=54
-        points=[(gx+dx,gy+dy) for dx,dy in ((0,-62),(-62,-8),(62,-8),(-38,55),(38,55))]
-        # Five isolated sockets keep the circular layout readable without
-        # connector lines implying an ordering or graph relationship.
-        for i,(px,py) in enumerate(points):
-            r=pg.Rect(px-size//2,py-size//2,size,size);filled=i<len(placed);pg.draw.rect(screen,(33,40,38),r,border_radius=14);pg.draw.rect(screen,accent if filled else self._theme['edge'],r,3 if filled else 1,border_radius=14)
-            if filled:self._draw_item_icon(placed[i],r.inflate(-8,-8),scale=.85);self._ui_target(r,f'UI_ACTION:remove_slot:{i}')
-        self._discovery_pot_center=(gx,gy);label={'red':'No matching recipe path','yellow':'Close — add or adjust a material','green':'Ready — mix to reveal the recipe'}.get(state,'')
-        if data.get('known_exact'):label='Already tried — recorded: '+', '.join(data.get('known_exact',[])[:2])
-        screen.blit(self.small_font.render(self._fit_ui_text(label,self.small_font,right.width-28),True,accent),(right.x+14,right.bottom-84));self._button((right.x+14,right.bottom-61,right.width-28,28),'CLEAR GRID','UI_ACTION:clear')
-        if state=='green':self._button((right.x+14,right.bottom-29,right.width-28,26),'MIX MATERIALS','UI_ACTION:mix')
-        self._draw_floating_footer(x,y,w,h,'Click to add • Right-click a filled slot to remove • Color shows recipe proximity • Esc closes');self._draw_crafting_tab_tooltip();pg.display.flip();self.clock.tick(120)
 
     def _present_crafting_index(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
         data=data or {};pg=self.pg;screen=self.screen

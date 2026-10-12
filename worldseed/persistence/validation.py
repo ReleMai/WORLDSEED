@@ -307,6 +307,24 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
             issues.append(f'invalid crafting discovery list: {key}')
         elif len(rows)!=len(set(rows)):
             issues.append(f'duplicate crafting discovery entries: {key}')
+    journal = raw.get('player_crafting_log', [])
+    if not isinstance(journal, list) or len(journal) > 80:
+        issues.append('invalid crafting discovery history')
+    else:
+        learned = raw.get('player_discovered_recipes', [])
+        if not isinstance(learned, list):learned=[]
+        for entry in journal:
+            if not isinstance(entry, dict):
+                issues.append('invalid crafting discovery history entry')
+                continue
+            rid = entry.get('recipe_id')
+            samples = entry.get('ingredients')
+            minute = entry.get('minute')
+            if (not isinstance(rid, str) or rid not in learned
+                    or not isinstance(minute, int) or minute < 0
+                    or not isinstance(samples, list) or not 1 <= len(samples) <= 5
+                    or any(not isinstance(iid, str) for iid in samples)):
+                issues.append('invalid crafting discovery history entry')
     settlements = _table(raw, "settlements")
     introduced=raw.get('introduced_npcs',[]) or []
     if not isinstance(introduced,list) or any(not isinstance(uid,str) for uid in introduced):

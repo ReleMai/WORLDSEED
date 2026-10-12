@@ -12,6 +12,8 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Discovery, workshops, salvage and ingredient tags](handoffs/WORKBENCH_DISCOVERY_SALVAGE_HANDOFF.md)
+
 - [Dev64 generated item art and a sorted item database](handoffs/DEV64_ITEM_ART_DATABASE_HANDOFF.md)
 - [Dev63 salvaging, world finds and profession crafting](handoffs/DEV63_SALVAGING_CRAFTING_HANDOFF.md)
 - [Dev62 expanded portrait parts, colors and detail layers](handoffs/DEV62_PORTRAIT_EXPANSION_HANDOFF.md)

@@ -72,7 +72,7 @@ class CraftingBrowserTests(unittest.TestCase):
         tabs = [rect for rect, token in self.term._pointer_targets if token.startswith('UI_ACTION:tab:')]
         categories = [rect for rect, token in self.term._pointer_targets if token.startswith('UI_ACTION:category:')]
         search = self.target('UI_ACTION:search')
-        self.assertEqual(len(tabs), 5)
+        self.assertEqual(len(tabs), 4)
         self.assertEqual(len(categories), 6)
         for index, rect in enumerate(tabs):
             self.assertGreater(rect.width, 40)

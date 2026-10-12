@@ -124,6 +124,8 @@ class ItemPanelMixin:
         return {'body':body,'grid':grid,'detail':detail,'columns':columns,'capacity':capacity}
 
     def menu_grid_columns(self, presentation):
+        if presentation=='discovery_pot':return self._discovery_browser_geometry()['columns']
+        if presentation=='salvaging_unified':return self._salvage_browser_geometry()['columns']
         return self._inventory_browser_geometry()['columns'] if presentation=='inventory_unified' else 1
 
     def _present_inventory_unified(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
@@ -179,8 +181,10 @@ class ItemPanelMixin:
             action_top=detail.bottom-146
             lines=[('item',iid,m.get('name',iid),th['text']),('text',f"{m.get('count',0)} carried  ·  {str(m.get('category','misc')).replace('_',' ').title()}",th['accent']),('text',f"{m.get('unit_mass_kg',0):.2f} kg each   ·   {m.get('unit_volume_l',0):.2f} L each",th['muted']),('text',m.get('description',''),th['text'])]
             lines.extend(('text',str(v),th['muted']) for v in m.get('detail_lines',[]) if v)
+            if m.get('tags'):lines.append(('text','Crafting tags: '+', '.join(str(tag).replace('_',' ') for tag in m['tags']),th['accent']))
             self._panel_detail('inventory:'+iid,pg.Rect(detail.x+12,detail.y+34,detail.w-24,max(18,action_top-detail.y-42)),lines)
-            amount=max(1,min(int(data.get('action_amount',1)),max(1,int(m.get('count',1)))))
+            shown_amount=data.get('action_amount',1) if iid==data.get('selected_item_id',iid) else 1
+            amount=max(1,min(int(shown_amount),max(1,int(m.get('count',1)))))
             self._panel_text(f'Quantity  {amount} / {m.get("count",0)}',(detail.x+12,action_top,detail.w-24,20))
             bw=(detail.w-39)//4
             for i,(label,token) in enumerate((('−','qty_down'),('+','qty_up'),('Half','split'),('All','qty_all'))):

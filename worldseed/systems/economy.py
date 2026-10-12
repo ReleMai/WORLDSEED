@@ -180,6 +180,7 @@ class EconomySystem:
     def _recipe_prerequisites(self,town,proc)->bool:
         recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
         if recipe is None:return True
+        if recipe.input_tags:return False
         if recipe.knowledge and recipe.knowledge not in town.knowledge:return False
         inventory=town.stocks
         if any(inventory.get(iid,0)<qty for iid,qty in recipe.catalysts.items()):return False

@@ -121,6 +121,22 @@ class InventoryBrowserTests(unittest.TestCase):
         self.assertEqual(self.term.screen.get_at((first.centerx, first.y))[:3], self.term._theme['accent'])
         self.assertNotEqual(self.term.screen.get_at((second.centerx, second.y))[:3], self.term._theme['accent'])
 
+    def test_arrow_selection_displays_same_reset_quantity_as_action_controller(self):
+        from unittest.mock import patch
+        self.configure_panel((900, 620))
+        self.data['action_amount']=4
+        self.data['selected_item_id']=self.rows[0].key
+        self.data['selected_key']=self.rows[1].key
+        self.data['items'][self.rows[1].key]['count']=10
+        labels=[]
+        original=self.term._panel_text
+        def capture(text,*args,**kwargs):
+            labels.append(str(text))
+            return original(text,*args,**kwargs)
+        with patch.object(self.term,'_panel_text',side_effect=capture):
+            self.render(selected=1)
+        self.assertIn('Quantity  1 / 10',labels)
+
     def test_wheel_scrolls_details_independently_from_grid(self):
         self.configure_panel((640, 440))
         key = self.rows[0].key

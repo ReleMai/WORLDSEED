@@ -72,6 +72,7 @@ class RecipeDef:
     process: str | None = None; description: str = ""; category: str = "general"
     skill: str = "crafting"; difficulty: int = 0; tool_qualities: dict[str, int] = field(default_factory=dict)
     discovery_items: tuple[str, ...] = (); discovery_mode: str = ""
+    input_tags: dict[str, int] = field(default_factory=dict); discovery_tags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,7 +242,7 @@ class ContentRegistry:
 
     def _load_recipes(self,path):
         for raw in self._json(path):
-            obj=RecipeDef(id=raw["id"],name=raw["name"],inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),minutes=int(raw["minutes"]),station=raw.get("station"),knowledge=raw.get("knowledge"),catalysts=dict(raw.get("catalysts",{})),process=raw.get("process"),description=raw.get("description",""),category=raw.get("category","general"),skill=raw.get("skill","crafting"),difficulty=int(raw.get("difficulty",0)),tool_qualities={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()},discovery_items=_tuple(raw.get("discovery_items")),discovery_mode=str(raw.get("discovery_mode", "")))
+            obj=RecipeDef(id=raw["id"],name=raw["name"],inputs=dict(raw.get("inputs",{})),outputs=dict(raw.get("outputs",{})),minutes=int(raw["minutes"]),station=raw.get("station"),knowledge=raw.get("knowledge"),catalysts=dict(raw.get("catalysts",{})),process=raw.get("process"),description=raw.get("description",""),category=raw.get("category","general"),skill=raw.get("skill","crafting"),difficulty=int(raw.get("difficulty",0)),tool_qualities={str(k):int(v) for k,v in raw.get("tool_qualities",{}).items()},discovery_items=_tuple(raw.get("discovery_items")),discovery_mode=str(raw.get("discovery_mode", "")),input_tags=dict(raw.get("input_tags",{})),discovery_tags=_tuple(raw.get("discovery_tags")))
             if obj.id in self.recipes: raise ValueError(f"Duplicate recipe id: {obj.id}")
             self.recipes[obj.id]=obj
 
@@ -357,13 +358,21 @@ class ContentRegistry:
                 raise ValueError(f"Natural container {feature.id} requires container_structure_id")
             if feature.container_structure_id and (feature.container_capacity_mass_g<0 or feature.container_capacity_volume_ml<0):
                 raise ValueError(f"Invalid container capacity in {feature.id}")
+        item_tags={tag for item in self.items.values() for tag in item.tags}
         for recipe in self.recipes.values():
+            if len(recipe.input_tags)>16:raise ValueError(f"Too many ingredient tags in {recipe.id}")
+            for tag,n in recipe.input_tags.items():
+                if not isinstance(tag,str) or tag not in item_tags or not isinstance(n,int) or isinstance(n,bool) or not 1<=n<=1000:
+                    raise ValueError(f"Invalid ingredient tag {tag} in {recipe.id}")
+            if any(tag not in item_tags for tag in recipe.discovery_tags):raise ValueError(f"Unknown discovery tag in {recipe.id}")
             for iid in (*recipe.inputs.keys(),*recipe.outputs.keys(),*recipe.catalysts.keys(),*recipe.discovery_items):
                 if iid not in self.items: raise ValueError(f"Unknown recipe item {iid} in {recipe.id}")
             if recipe.station and recipe.station not in self.structures: raise ValueError(f"Unknown station {recipe.station} in {recipe.id}")
             signature=list(recipe.discovery_items)
-            if not signature:
+            if not signature and not recipe.discovery_tags:
                 for iid,n in sorted(recipe.inputs.items()): signature.extend([iid]*max(0,int(n)))
+                for tag,n in sorted(recipe.input_tags.items()):signature.extend(["tag:"+tag]*n)
+            signature.extend("tag:"+tag for tag in recipe.discovery_tags)
             if not 1<=len(signature)<=5:
                 raise ValueError(f"Recipe {recipe.id} needs a 1-5 item discovery signature; author discovery_items for large recipes")
         for definition in self.salvage.values():
@@ -433,6 +442,7 @@ class ContentRegistry:
             if proc.recipe_id and proc.recipe_id not in self.recipes: raise ValueError(f"Unknown settlement-process recipe in {proc.id}")
             if proc.recipe_id:
                 recipe=self.recipes[proc.recipe_id]
+                if recipe.input_tags:raise ValueError(f"Settlement process {proc.id} does not support tagged ingredients")
                 if not proc.inputs or proc.inputs!=recipe.inputs or proc.outputs!=recipe.outputs:
                     raise ValueError(f"Settlement process {proc.id} must consume its recipe's exact inputs and outputs")
                 if proc.station!=recipe.station:

@@ -7434,5 +7434,66 @@
     "discovery_mode": "experiment",
     "description": "Layered Paper Coat: protect and insulate the torso with sealed paper laminations.",
     "station": "core:workbench"
+  },
+  {
+    "id": "core:reclaim_plant_fiber",
+    "name": "Reclaim Plant Fiber",
+    "inputs": {},
+    "input_tags": {
+      "fiber_source": 5
+    },
+    "outputs": {
+      "core:fiber": 1
+    },
+    "minutes": 20,
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_tags": [
+      "fiber_source"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Sort and strip five plant scraps or other fibrous plant bundles into clean loose fiber. Mixed sources can be used together."
+  },
+  {
+    "id": "core:twist_prepared_fiber",
+    "name": "Twist Prepared Fiber",
+    "inputs": {},
+    "input_tags": {
+      "spinnable_plant_fiber": 1
+    },
+    "outputs": {
+      "core:plant_cordage": 1
+    },
+    "minutes": 15,
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_tags": [
+      "spinnable_plant_fiber"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Twist one prepared plant-fiber bundle into useful cordage. Loose fiber and sorted pasture fiber are interchangeable sources."
+  },
+  {
+    "id": "core:twist_mixed_cord_line",
+    "name": "Twist Mixed Cord Fishing Line",
+    "inputs": {},
+    "input_tags": {
+      "cordage": 2
+    },
+    "outputs": {
+      "core:fiber_line": 1
+    },
+    "minutes": 20,
+    "category": "fishing",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_tags": [
+      "cordage",
+      "cordage"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Join two lengths of cordage into a light fishing line. Plant cord, sinew cord and specialist binding cords can be mixed."
   }
 ]

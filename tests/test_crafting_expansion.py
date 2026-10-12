@@ -64,7 +64,9 @@ class CraftingExpansionTests(unittest.TestCase):
                     before = set(state.player_discovered_recipes)
                     self.assertTrue(crafting.combine_in_pot(signature, inv, b'content-learn')[0])
                     self.assertEqual(len(set(state.player_discovered_recipes) - before), 1)
-                    self.assertFalse(inv.items)
+                    learned_id=next(iter(set(state.player_discovered_recipes)-before))
+                    expected={iid:1 for iid,n in self.registry.recipes[learned_id].outputs.items() if n>0}
+                    self.assertEqual(inv.items,expected)
                     if crafting.recipe_is_discovered(recipe.id):
                         break
                 self.assertTrue(crafting.recipe_is_discovered(recipe.id))

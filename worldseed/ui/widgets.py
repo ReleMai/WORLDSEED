@@ -101,7 +101,8 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         return None
     selected = max(0, min(len(items)-1, getattr(state, 'selected', initial) if state is not None else initial))
     focused_topic=''
-    retained_items=presentation in {'inventory_unified','container_inventory','crafting_unified'}
+    retained_items=presentation in {'inventory_unified','container_inventory','crafting_unified',
+                                      'workshop_station','discovery_pot','salvaging_unified'}
     viewport_start=max(0,int(getattr(state,'scroll',0))) if state is not None else None
     while True:
         cols, lines = term.size()
@@ -228,11 +229,17 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
         # forwarded to the gameplay owner while arrows/Enter remain UI navigation.
         if presentation in {
             'inventory_unified','container_inventory','crafting_unified',
-            'workshop_station','discovery_pot','crafting_index','salvaging'
+            'workshop_station','discovery_pot','crafting_index','salvaging','salvaging_unified'
         } and k in {'w','a','s','d'}:
             return f'UI_WORLD_MOVE:{k}'
         if k.startswith('UI_ACTION:'):
             return k
+        if presentation=='salvaging_unified':
+            if k=='b':return 'UI_ACTION:salvage:begin'
+            if k in {'1','2','3'}:
+                choices=((frame_data.get('active_session') or {}).get('choices') or [])
+                index=int(k)-1
+                if index<len(choices):return 'UI_ACTION:salvage:act:'+choices[index]['id']
         if presentation=='inventory_unified':
             inventory_keys={
                 'u':'UI_ACTION:use','x':'UI_ACTION:drop','h':'UI_ACTION:split',

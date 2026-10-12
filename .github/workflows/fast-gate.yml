@@ -146,7 +146,7 @@ jobs:
 
       - name: Dev37 floating interaction UI regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui tests.test_item_panel_widgets tests.test_inventory_browser tests.test_crafting_browser tests.test_ui_rc2.UIRC4InputTests
+        run: python -u tools/run_ci_check.py --name "Dev37 floating interaction UI regressions" --timeout 120 -- python -u -m unittest -v tests.test_dev37_floating_interaction_ui tests.test_item_panel_widgets tests.test_inventory_browser tests.test_crafting_browser tests.test_workbench_panels tests.test_salvage_panel tests.test_ui_rc2.UIRC4InputTests
 
       - name: WU7 village stability and debugger regressions
         shell: pwsh
@@ -198,7 +198,7 @@ jobs:
 
       - name: Crafting discovery pot regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests
+        run: python -u tools/run_ci_check.py --name "Crafting discovery pot regressions" --timeout 120 -- python -u -m unittest -v tests.test_crafting_pot_ui tests.test_crafting_journal tests.test_tagged_crafting tests.test_dev16_caves_crafting.Dev16CraftDiscoveryTests
 
       - name: Dev63 salvaging and profession expansion
         shell: pwsh

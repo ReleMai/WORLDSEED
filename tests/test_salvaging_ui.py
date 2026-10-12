@@ -47,9 +47,9 @@ class SalvagingRoutesTests(unittest.TestCase):
         ctx=SimpleNamespace(sim=sim,registry=reg,player_id=1,entities=SimpleNamespace(get=lambda actor,typ:inv))
         return ctx,state,inv,commands
 
-    def term(self,keys,graphical=False):
+    def term(self,keys,graphical=False,legacy=False):
         class FakeTerm:
-            def __init__(self):self.keys=iter(keys);self.frames=[];self.events=[];self.mouse_ui=graphical
+            def __init__(self):self.keys=iter(keys);self.frames=[];self.events=[];self.mouse_ui=graphical and not legacy
             def size(self):return 42,16
             def present(self,text):self.frames.append(text)
             def read_key(self):return next(self.keys)
@@ -61,7 +61,7 @@ class SalvagingRoutesTests(unittest.TestCase):
 
     def test_preview_back_preserves_catalogue_selection_and_does_not_mutate(self):
         ctx,state,inv,commands=self.make();before=state.to_dict();items=inv.items.copy()
-        term=self.term(['DOWN','\r','ESC','ESC'],True)
+        term=self.term(['DOWN','\r','ESC','ESC'],True,legacy=True)
         self.assertEqual(_salvaging_menu(ctx,term),UI_BACK)
         modes=[(event[3]['mode'],event[2]) for event in term.events]
         self.assertEqual(modes[-2:],[('preview',0),('catalogue',1)])
@@ -69,7 +69,7 @@ class SalvagingRoutesTests(unittest.TestCase):
 
     def test_escape_preserves_active_work_and_each_parent_selection(self):
         ctx,state,inv,commands=self.make()
-        term=self.term(['DOWN','\r','DOWN','\r','ESC','ESC','ESC'],True)
+        term=self.term(['DOWN','\r','DOWN','\r','ESC','ESC','ESC'],True,legacy=True)
         _salvaging_menu(ctx,term)
         self.assertEqual(inv.count('core:wood'),1)
         self.assertEqual(len(commands),1)
@@ -85,7 +85,7 @@ class SalvagingRoutesTests(unittest.TestCase):
     def test_resume_runs_three_decisions_and_result_escape_returns_one_level(self):
         ctx,state,inv,commands=self.make()
         ctx.sim.execute(StartSalvageCommand(1,'core:wood'))
-        term=self.term([],True)
+        term=self.term([],True,legacy=True)
         def read():
             mode=term.events[-1][3]['mode']
             if mode=='catalogue':return '\r' if state.player_salvage_session else 'ESC'
@@ -139,7 +139,7 @@ class SalvagingRoutesTests(unittest.TestCase):
         ctx,state,inv,commands=self.make();before=state.to_dict()
         term=self.term(['UI_ACTION:tab:salvaging','ESC','ESC'],True)
         self.assertEqual(_crafting_menu_graphical(ctx,term),UI_BACK)
-        self.assertEqual([event[0] for event in term.events],['crafting_unified','salvaging','crafting_unified'])
+        self.assertEqual([event[0] for event in term.events],['crafting_unified','salvaging_unified','crafting_unified'])
         self.assertEqual(state.to_dict(),before);self.assertEqual(commands,[])
 
 

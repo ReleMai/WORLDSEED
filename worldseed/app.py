@@ -2491,7 +2491,7 @@ def _recipe_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,recipes)->d
                   'roles':list(reg.items[iid].utility_roles) if iid in reg.items else [],
                   'unit_mass_kg':reg.items[iid].mass_g/1000 if iid in reg.items else 0}
                  for iid,n in r.outputs.items()]
-        inputs=[{'id':iid,'name':reg.items[iid].name if iid in reg.items else iid,'need':n,'have':inv.count(iid)} for iid,n in r.inputs.items()]
+        inputs=sim.crafting.ingredient_rows(r,inv)
         inputs.extend({'id':iid,'name':(reg.items[iid].name if iid in reg.items else iid)+' (catalyst)','need':n,'have':inv.count(iid)} for iid,n in r.catalysts.items())
         rows[r.id]={
             'name':r.name,'category':r.category or 'general','description':r.description or '',
@@ -2558,7 +2558,7 @@ def _salvage_preview_ui_data(reg:ContentRegistry,sim:Simulation,inv:Inventory,it
         data[group]=[]
         for component in preview.get(group,()):
             row=dict(component);iid=row['item_id']
-            uses=[r.name for r in known if iid in r.inputs or iid in r.catalysts]
+            uses=[r.name for r in known if sim.crafting.recipe_uses_item(r,iid) or iid in r.catalysts]
             row['uses']=uses
             item=reg.items.get(iid)
             row['description']=item.description if item else ''
@@ -2591,6 +2591,9 @@ def _salvage_preview_lines(data:dict)->list[str]:
 
 def _salvaging_menu(ctx:GameContext,term:Terminal)->str:
     """Retained catalogue, preview, resumable minigame and completion routes."""
+    if getattr(term,'mouse_ui',False) and callable(getattr(term,'present_feature_menu',None)):
+        from worldseed.ui.salvage_panel import run_salvage_panel
+        return run_salvage_panel(ctx,term)
     sim=ctx.sim;reg=ctx.registry;pid=ctx.player_id
     nav=NavigationStack(RouteState('salvaging','SALVAGING // CARRIED ITEMS',payload={'query':''}))
     status=''
@@ -2880,14 +2883,17 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         finally:
             if callable(pop):pop()
         return True
-    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','index','salvaging'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
+    tab=initial_tab if initial_tab in {'recipes','workshops','discovery','salvaging'} else 'recipes';categories=sorted({r.category or 'general' for r in reg.recipes.values()})
     initial=sim.crafting.discovered_recipes(ctx.entities.get(pid,Inventory))
     category=(initial[0].category or 'general') if initial else ('primitive' if 'primitive' in categories else (categories[0] if categories else 'general'))
     category_page=categories.index(category)//6 if category in categories else 0
     recipe_state=RouteState('crafting-recipes','CRAFTING')
     workshop_state=RouteState('crafting-workshop','WORKSHOP')
     pot_state=RouteState('crafting-pot','DISCOVERY')
+    from worldseed.ui.crafting_journal import crafting_journal_data
     workshop_station=str(initial_station or '')
+    station_page=0
+    result_dismissed=False
     placed=[];status='';recipe_query='';salvage_return_tab='recipes'
     while True:
         inv=ctx.entities.get(pid,Inventory)
@@ -2921,6 +2927,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 'profile':profile_dict(WORKSHOP_PROFILES[workshop_station]) if workshop_station else {},
                 'stations':station_rows,'station_id':workshop_station,
                 'locked_count':max(0,len(all_station_recipes)-len(station_recipes)),
+                'station_page':station_page,
             })
             choice=_select(
                 term,'WORKSHOP',rows,state=workshop_state,presentation='workshop_station',
@@ -2935,7 +2942,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if moved is not None:status=moved;continue
             if choice.startswith('UI_ACTION:tab:'):
                 destination=choice.split(':',2)[2]
-                if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                if destination in {'recipes','workshops','discovery','salvaging'}:
                     if destination=='salvaging':salvage_return_tab=tab
                     tab=destination
                 continue
@@ -2945,7 +2952,10 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
             if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
-            if choice=='UI_ACTION:tab:index':tab='index';continue
+            if choice.startswith('UI_ACTION:workshop_page:'):
+                delta=1 if choice.endswith(':next') else -1
+                station_page=max(0,min(station_page+delta,max(0,(len(nearby)-1)//4)))
+                continue
             if choice.startswith('UI_ACTION:workshop:'):
                 sid=choice.split(':',2)[2]
                 if sid in nearby:workshop_station=sid;workshop_state.selected=0
@@ -2978,7 +2988,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             if moved is not None:status=moved;continue
             if choice.startswith('UI_ACTION:tab:'):
                 destination=choice.split(':',2)[2]
-                if destination in {'recipes','workshops','discovery','index','salvaging'}:
+                if destination in {'recipes','workshops','discovery','salvaging'}:
                     if destination=='salvaging':salvage_return_tab=tab
                     tab=destination
                 continue
@@ -2986,7 +2996,6 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                 if not open_inventory_panel():return UI_BACK
                 continue
             if choice=='UI_ACTION:tab:discovery':tab='discovery';continue
-            if choice=='UI_ACTION:tab:index':tab='index';continue
             if choice=='UI_ACTION:search':
                 value=prompt_text(term,'CRAFTING // SEARCH','Technique, profession or output (blank clears):',default=recipe_query,max_len=48)
                 if value is not None:recipe_query=value;recipe_state.selected=0;recipe_state.scroll=0
@@ -3008,59 +3017,31 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
                     status=sim.log[-1].message if sim.log else ''
                 continue
             continue
-        if tab=='index':
-            carried=[iid for iid,n in inv.items.items() if n>0 and iid in reg.items]
-            carried.sort(key=lambda iid:item_sort_key(reg.items[iid]))
-            if not carried:tab='discovery';status='Gather a material to see its possible recipes.';continue
-            pot_state.selected=min(pot_state.selected,len(carried)-1)
-            iid=carried[pot_state.selected]
-            pool=sim.crafting.recipe_pool_for_item(iid)
-            index_rows=[(r.id,(r.name if sim.crafting.recipe_is_discovered(r.id) else 'Undiscovered technique')+
-                         f'  •  {r.category.replace("_"," ").title()}') for r in pool]
-            if not index_rows:index_rows=[('__none__','No catalog recipes use this item')]
-            choice=_select(term,'ITEM DISCOVERIES',index_rows,presentation='crafting_index',
-                           presentation_data={'item_name':reg.items[iid].name,
-                                              'known':sum(sim.crafting.recipe_is_discovered(r.id) for r in pool)},
-                           subtitle='Possible recipes for the selected carried item.')
-            if choice is None:return UI_BACK
-            moved=_live_panel_world_move(ctx,term,choice)
-            if moved is not None:status=moved;continue
-            if choice.startswith('UI_ACTION:tab:'):
-                destination=choice.split(':',2)[2]
-                if destination in {'recipes','workshops','discovery','index','salvaging'}:
-                    if destination=='salvaging':salvage_return_tab=tab
-                    tab=destination
-                continue
-            if choice=='UI_ACTION:open_inventory':
-                if not open_inventory_panel():return UI_BACK
-                continue
-            if choice=='UI_ACTION:tab:recipes':tab='recipes'
-            elif choice=='UI_ACTION:tab:workshops':tab='workshops'
-            elif choice=='UI_ACTION:tab:discovery':tab='discovery'
-            continue
         entries={}
         for item in ordered_items(reg.items[iid] for iid,n in inv.items.items() if iid in reg.items and n>0):
             iid=item.id;n=inv.count(iid)
             pool=sim.crafting.recipe_pool_for_item(iid)
             if not pool:continue
             entries[iid]={'name':reg.items[iid].name,'count':n,'pool_count':len(pool),
-                          'known_recipes':[r.name for r in pool if sim.crafting.recipe_is_discovered(r.id)]}
+                          'known_recipes':[r.name for r in pool if sim.crafting.recipe_is_discovered(r.id)],
+                          'tags':list(item.tags)}
         rows=[(iid,v['name']) for iid,v in entries.items()] or [('__none__','Gather materials to experiment')]
         pot_state.selected=max(0,min(pot_state.selected,len(rows)-1))
         from collections import Counter
         counts=Counter(placed);exact=sim.crafting.pot_candidates(tuple(placed),inv)
         known_exact=[r.name for r in reg.recipes.values()
                      if r.id in set(sim.state.player_discovered_recipes) and counts
-                     and counts==Counter(sim.crafting.discovery_signature(r))]
+                     and sim.crafting.discovery_matches(r,placed)]
         close=False
         if counts and not exact and not known_exact:
             for r in reg.recipes.values():
                 if r.id in set(sim.state.player_discovered_recipes):continue
                 if r.knowledge and r.knowledge not in sim.state.player_knowledge:continue
-                sig=Counter(sim.crafting.discovery_signature(r))
-                if sig and all(counts[i]<=sig.get(i,0) for i in counts):close=True;break
+                if sim.crafting.discovery_matches(r,placed,partial=True):close=True;break
         mix_state='green' if exact else ('yellow' if close else 'red')
         data={'items':entries,'selected_items':tuple(placed),'candidates':len(exact),'known_exact':known_exact,'mix_state':mix_state}
+        data.update(crafting_journal_data(reg,sim.state))
+        if result_dismissed:data['latest_result']=None
         choice=_select(term,'EXPERIMENT GRID',rows,state=pot_state,presentation='discovery_pot',
                        subtitle=status or 'Combine up to five carried materials. The grid color shows how close the mix is to a discoverable recipe.',presentation_data=data)
         status=''
@@ -3069,7 +3050,7 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
         if moved is not None:status=moved;continue
         if choice.startswith('UI_ACTION:tab:'):
             destination=choice.split(':',2)[2]
-            if destination in {'recipes','workshops','discovery','index','salvaging'}:
+            if destination in {'recipes','workshops','discovery','salvaging'}:
                 if destination=='salvaging':salvage_return_tab=tab
                 tab=destination
             continue
@@ -3078,12 +3059,12 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             continue
         if choice=='UI_ACTION:tab:recipes':tab='recipes';continue
         if choice=='UI_ACTION:tab:workshops':tab='workshops';continue
-        if choice=='UI_ACTION:tab:index':tab='index';continue
         if choice.startswith('UI_ACTION:remove_slot:'):
             try:idx=int(choice.rsplit(':',1)[1])
             except ValueError:continue
             if 0<=idx<len(placed):placed.pop(idx)
             continue
+        if choice=='UI_ACTION:dismiss_result':result_dismissed=True;continue
         if choice=='UI_ACTION:clear':placed.clear();continue
         if choice=='UI_ACTION:mix':
             # The command validates quantities and chooses the recipe. The UI
@@ -3094,7 +3075,8 @@ def _crafting_menu_graphical(ctx:GameContext,term:Terminal,initial_tab:str='reci
             status=sim.log[-1].message if sim.log else ''
             new=set(sim.state.player_discovered_recipes)-before
             if new:
-                rid=next(iter(new));anim=getattr(term,'animate_discovery_pot',None)
+                result_dismissed=False
+                rid=sorted(new)[0];anim=getattr(term,'animate_discovery_pot',None)
                 if callable(anim):anim(ingredients,reg.recipes[rid].name)
                 placed.clear()
             continue

@@ -70,9 +70,11 @@ class PotRulesTests(unittest.TestCase):
             signature=system.discovery_signature(recipe)
             self.assertGreaterEqual(len(signature),1,recipe.id)
             self.assertLessEqual(len(signature),5,recipe.id)
+            samples=system.discovery_examples(recipe)
+            self.assertTrue(system.discovery_matches(recipe,samples),recipe.id)
             inv=Inventory()
-            for iid in signature:inv.add(iid,1)
-            ids={r.id for r in system.pot_candidates(signature,inv)}
+            for iid in samples:inv.add(iid,1)
+            ids={r.id for r in system.pot_candidates(samples,inv)}
             self.assertIn(recipe.id,ids,recipe.id)
 
     def test_cordage_recipe_outputs_cordage_and_crude_knife_opens_early_butchery(self):
