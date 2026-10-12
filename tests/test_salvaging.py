@@ -9,7 +9,9 @@ from worldseed.content.registry import ContentRegistry, ItemDef, SalvageDef, Sal
 from worldseed.entities.components import Inventory
 from worldseed.persistence.database import WorldDatabase
 from worldseed.persistence.validation import validate_sim_state
-from worldseed.sim.commands import StartSalvageCommand, SalvageActionCommand
+from worldseed.sim.commands import (StartSalvageCommand, StartSalvageGameCommand,
+    SalvageActionCommand, QuickSalvageCommand, SalvagePerkCommand,
+    ResetSalvagePerksCommand, ResearchSalvageDossierCommand)
 from worldseed.systems.salvaging import SalvagingSystem
 from worldseed.systems.state import LivingWorldState
 
@@ -262,6 +264,78 @@ class SalvagingCommandTests(unittest.TestCase):
         self.assertIn('test:wood_parts', self.sim.state.player_discovered_items)
         self.assertFalse(self.sim.state.player_salvage_session)
         self.assertEqual(validate_sim_state(self.sim.state.to_dict()), [])
+
+    def test_new_tabletop_is_authorized_and_completes_inside_an_interior(self):
+        sim, inv = self.sim, self.inv
+        self.assertIsNotNone(sim.interiors.player_presence())
+        start_minute = sim.clock.minute
+        with patch.object(sim.building, 'nearby_station_ids',
+                          side_effect=AssertionError('Outdoor station lookup from indoors')):
+            sim.execute(StartSalvageGameCommand(sim.player_id, 'test:damaged_box'))
+            self.assertEqual(inv.count('test:damaged_box'), 0)
+            self.assertEqual(sim.salvaging.session_view()['version'], 2)
+            self.assertEqual(sim.state.player_salvage_session['game'], 'disassembly')
+            sim.execute(SalvageActionCommand(sim.player_id, 'inspect'))
+            for _ in range(5):
+                view = sim.salvaging.session_view()
+                if view is None: break
+                nodes = sim.state.player_salvage_session['nodes']
+                chosen = next(i for i, n in enumerate(nodes) if not n['done'] and (
+                    n['depends'] < 0 or nodes[n['depends']]['done']))
+                sim.execute(SalvageActionCommand(sim.player_id, 'select:' + str(chosen)))
+                sim.execute(SalvageActionCommand(sim.player_id, 'survey'))
+                sim.execute(SalvageActionCommand(sim.player_id, 'work:' + nodes[chosen]['ideal']))
+        self.assertIsNone(sim.salvaging.session_view())
+        self.assertGreater(inv.count('test:wood_parts'), 0)
+        self.assertEqual(sim.state.player_salvage_log[-1]['max_score'], 100)
+        self.assertGreater(sim.clock.minute, start_minute)
+        self.assertEqual(validate_sim_state(sim.state.to_dict()), [])
+
+    def test_new_tabletop_can_resume_after_transition_to_outdoors(self):
+        sim = self.sim
+        sim.execute(StartSalvageGameCommand(sim.player_id, 'test:damaged_box'))
+        sim.execute(SalvageActionCommand(sim.player_id, 'inspect'))
+        saved = deepcopy(sim.state.player_salvage_session)
+        # Simulate the permitted indoor/outdoor transition without moving the
+        # outdoor player anchor to an unrelated point in this isolated fixture.
+        sim.state.interior_actors.pop('player')
+        self.assertIsNone(sim.interiors.player_presence())
+        self.assertEqual(saved, sim.state.player_salvage_session)
+        while sim.salvaging.session_view() is not None:
+            nodes = sim.state.player_salvage_session['nodes']
+            selected = next(i for i, node in enumerate(nodes) if not node['done'] and (
+                node['depends'] < 0 or nodes[node['depends']]['done']))
+            sim.execute(SalvageActionCommand(sim.player_id, 'select:' + str(selected)))
+            sim.execute(SalvageActionCommand(sim.player_id, 'work:' + nodes[selected]['ideal']))
+        self.assertEqual(len(sim.state.player_salvage_log), 1)
+        self.assertEqual(validate_sim_state(sim.state.to_dict()), [])
+
+    def test_new_commands_perks_batch_and_invalid_actor_are_guarded_indoor(self):
+        sim, inv = self.sim, self.inv
+        start = (deepcopy(sim.state.to_dict()), dict(inv.items), sim.clock.minute)
+        for cmd in (StartSalvageGameCommand(999, 'test:damaged_box'),
+                    SalvagePerkCommand(999, 'seam_sense'),
+                    ResetSalvagePerksCommand(999),
+                    ResearchSalvageDossierCommand(999, 'core:forge'),
+                    QuickSalvageCommand(999, 'test:damaged_box', 1),
+                    StartSalvageGameCommand(sim.player_id, 'test:missing'),
+                    SalvagePerkCommand(sim.player_id, 'invalid_perk')):
+            sim.execute(cmd)
+        self.assertEqual((sim.state.to_dict(), inv.items, sim.clock.minute), start)
+        sim.state.player_skills['salvaging'] = 10
+        with patch.object(sim.building, 'nearby_station_ids',
+                          side_effect=AssertionError('Outdoor station lookup from indoors')):
+            for perk in ('fast_hands','sorted_scrap','sweep_job'):
+                sim.execute(SalvagePerkCommand(sim.player_id, perk))
+                self.assertIn(perk, sim.state.player_salvage_perks)
+            inv.add('test:damaged_box', 3)
+            sim.execute(QuickSalvageCommand(sim.player_id,'test:damaged_box', 4))
+            self.assertEqual(inv.count('test:damaged_box'), 0)
+            self.assertEqual(len(sim.state.player_salvage_log), 4)
+            self.assertEqual(sim.state.salvaging_attempts, 4)
+            sim.execute(ResearchSalvageDossierCommand(sim.player_id, 'core:forge'))
+            self.assertIn('Lost Arts', sim.log[-1].message)
+        self.assertEqual(validate_sim_state(sim.state.to_dict()), [])
 
     def test_invalid_actor_item_and_decision_leave_inventory_progress_and_time_unchanged(self):
         before = self.sim.state.to_dict(), dict(self.inv.items), self.sim.clock.minute

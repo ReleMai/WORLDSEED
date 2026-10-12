@@ -95,7 +95,10 @@ class CraftingQualityProgressionTests(unittest.TestCase):
                 bag=Inventory({'core:iron_bloom':1})
                 if experiment:
                     state.player_crafting_discovery_enabled=True
-                    ok,reason,_=crafting.combine_in_pot(('core:iron_bloom',),bag,b'quality-experiment')
+                    # A forge-bound experiment only consumes the metal at its
+                    # physical station. Field mixing merely records a hint.
+                    ok,reason,_=crafting.combine_in_pot(('core:iron_bloom',),bag,b'quality-experiment',
+                                                         station_id='core:forge')
                 else:
                     ok,reason,_=crafting.craft('core:craft_shear_iron_offcuts',bag,{'core:forge'})
                 self.assertTrue(ok,reason)

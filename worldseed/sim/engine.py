@@ -373,7 +373,7 @@ class Simulation:
             minute=int(self.clock.minute),position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         result=TickResult()
-        if isinstance(command,(StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,CollectWaterCommand)):
+        if isinstance(command,(StartSalvageCommand,StartSalvageGameCommand,SalvageActionCommand,QuickSalvageCommand,SalvagePerkCommand,ResetSalvagePerksCommand,ResearchSalvageDossierCommand,CollectWaterCommand)):
             if type(command.actor) is not int or command.actor != self.player_id:
                 self._message('Only the player may use these crafting work commands.');return result
         # Interior coordinates never fall through to commands at the outdoor anchor.
@@ -424,7 +424,7 @@ class Simulation:
             if not isinstance(command,(WaitCommand,RestCommand,EatCommand,EatMealCommand,EquipCommand,
                                        UnequipCommand,TreatWoundCommand,TreatDiseaseCommand,ReadBookCommand,
                                        SetHuntingStanceCommand,ReadyWeaponCommand,ClearReadyWeaponCommand,
-                                       CraftCommand,ComponentCraftCommand,StartSalvageCommand,SalvageActionCommand,QuickSalvageCommand,StoreCommand,TakeFromContainerCommand,
+                                       CraftCommand,ComponentCraftCommand,StartSalvageCommand,StartSalvageGameCommand,SalvageActionCommand,QuickSalvageCommand,SalvagePerkCommand,ResetSalvagePerksCommand,ResearchSalvageDossierCommand,StoreCommand,TakeFromContainerCommand,
                                        StealContainerCommand,LockpickContainerCommand,SetContainerLockCommand,
                                        IntroduceNPCCommand)):
                 self._message('That outdoor action is unavailable inside. Right-click an interior object.');return result
@@ -467,6 +467,17 @@ class Simulation:
             self._message("You wait one combat tick." if combat_before else f"You wait {minutes} minutes.")
         elif isinstance(command,CraftCommand):minutes=self._craft(command)
         elif isinstance(command,StartSalvageCommand):minutes=self._start_salvage(command)
+        elif isinstance(command,StartSalvageGameCommand):
+            ok,msg,minutes=self.salvaging.begin_game(command.item_id,self.entities.get(command.actor,Inventory),self.seed,self.clock.minute)
+            self._message(msg)
+            if not ok:minutes=0
+        elif isinstance(command,SalvagePerkCommand):
+            ok,msg=self.salvaging.buy_perk(command.perk_id);self._message(msg);minutes=0
+        elif isinstance(command,ResetSalvagePerksCommand):
+            ok,msg=self.salvaging.reset_perks();self._message(msg);minutes=0
+        elif isinstance(command,ResearchSalvageDossierCommand):
+            ok,msg=self.salvaging.claim_dossier(command.station_id,self._player_station_ids())
+            self._message(msg);minutes=10 if ok else 0
         elif isinstance(command,SalvageActionCommand):minutes=self._salvage_action(command)
         elif isinstance(command,QuickSalvageCommand):minutes=self._quick_salvage(command)
         elif isinstance(command,ComponentCraftCommand):minutes=self._component_craft(command)
@@ -1581,7 +1592,7 @@ class Simulation:
         ok,msg,minutes=self.salvaging.act(cmd.choice_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
         self._message(msg);return minutes if ok else 0
     def _quick_salvage(self,cmd:QuickSalvageCommand)->int:
-        ok,msg,minutes=self.salvaging.quick(cmd.item_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
+        ok,msg,minutes=self.salvaging.quick_batch(cmd.item_id,cmd.count,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
         self._message(msg);return minutes if ok else 0
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)

@@ -58,14 +58,16 @@ class CraftingExpansionTests(unittest.TestCase):
                 samples = crafting.discovery_examples(recipe)
                 self.assertTrue(crafting.discovery_matches(recipe, samples))
                 inv = Inventory(dict(Counter(samples)))
-                candidates = crafting.pot_candidates(samples, inv)
+                # Workshops require an actual station; field mixing records a hint only.
+                station_id = recipe.station or ''
+                candidates = crafting.pot_candidates(samples, inv, station_id=station_id)
                 self.assertIn(recipe.id, {candidate.id for candidate in candidates})
                 # Each successful mix consumes physical samples and removes one
                 # unknown candidate, so ambiguous recipes still have a bound.
                 for _ in candidates:
                     inv.items = dict(Counter(samples))
                     before = set(state.player_discovered_recipes)
-                    self.assertTrue(crafting.combine_in_pot(samples, inv, b'content-learn')[0])
+                    self.assertTrue(crafting.combine_in_pot(samples, inv, b'content-learn', station_id=station_id)[0])
                     self.assertEqual(len(set(state.player_discovered_recipes) - before), 1)
                     learned_id=next(iter(set(state.player_discovered_recipes)-before))
                     expected={iid:1 for iid,n in self.registry.recipes[learned_id].outputs.items() if n>0}
