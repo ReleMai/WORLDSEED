@@ -130,6 +130,9 @@ class InteriorActor:
     action: str = "idle"
     last_tick: int = -1
     last_need_minute: int = -1
+    # A meal is completed once per scheduled block after reaching furniture.
+    # Persisted across save/load so reloading cannot award multiple meals.
+    last_meal_minute: int = -1
     waypoints: list[list[int]] = field(default_factory=list)
 
     def to_dict(self) -> dict:

@@ -873,6 +873,7 @@ class InteriorSystem:
                            abs(a.x-target[0])>ACTOR_RADIUS*2 or
                            abs(a.y-target[1])>ACTOR_RADIUS*2
                            for a in self.state.interior_actors.values()):
+                        actor.target_x,actor.target_y=target
                         self._household_route(plan, actor, target)
             if actor.waypoints:
                 tx, ty = actor.waypoints[0]
@@ -883,11 +884,19 @@ class InteriorSystem:
                     actor.waypoints.pop(0)
                 elif not moved:
                     actor.waypoints.clear()
-            if not actor.waypoints and old_tick // 30 != minute // 30:
-                if actor.action=="resting":
-                    npc.rest=max(0,npc.rest-20)
-                elif actor.action=="eating" and dining:
-                    # Only fulfill the meal after walking to household seating.
-                    # Food needs are state changes, not free inventory production.
+            if not actor.waypoints and old_tick // 30 != minute // 30 and actor.action=="resting":
+                npc.rest=max(0,npc.rest-20)
+            # A scheduled meal lasts just thirty minutes, frequently exactly
+            # between two half-hour boundaries. The old shared resting timer
+            # never completed one before the block ended. Consume once, after
+            # the NPC has had ten in-world minutes and actually walked to the
+            # selected chair or its usable apron.
+            if dining and actor.action=="eating" and not actor.waypoints:
+                start=minute//1440*1440+block.start_minute
+                seat=(actor.target_x,actor.target_y)
+                seated=(None not in seat and
+                        abs(actor.x-seat[0])+abs(actor.y-seat[1])<=250)
+                if seated and minute>=start+10 and actor.last_meal_minute<start:
                     npc.hunger=max(0,npc.hunger-32)
                     npc.thirst=max(0,npc.thirst-12)
+                    actor.last_meal_minute=minute
