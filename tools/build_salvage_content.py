@@ -428,8 +428,20 @@ def save():
             original=[x for x in original if not x['id'].startswith('core:craft_')]
         original.extend(additions)
         if filename=='items.json':
+            source_tags={}
+            for entry in manifest['misc']:
+                source,family=entry['source'],entry['art_family']
+                tags=['material_source_'+source+'_'+family]
+                if source=='wild':tags+=['plant','plant_material','pulp_feedstock']
+                if source=='animal':tags+=[{'cloth':'animal_fiber_source','bone':'bone_source','leather':'leather_source'}[family]]
+                if source=='village' and family=='paper':tags+=['tinder_material','plant_material','pulp_feedstock']
+                if source=='village' and family=='provisions':tags+=['plant_material','pulp_feedstock']
+                if source=='village' and family=='cloth':tags+=['textile_scrap_source']
+                if source=='village' and family=='mixed':tags+=['mixed_hardware_source']
+                if source=='wild' and entry['rarity']=='rare':tags+=['rare_botanical']
+                source_tags[entry['item_id']]=tags
             for item in original:
-                for tag in CRAFTING_MATERIAL_TAGS.get(item['id'], ()):
+                for tag in (*CRAFTING_MATERIAL_TAGS.get(item['id'], ()),*source_tags.get(item['id'], ())):
                     if tag not in item.get('tags', ()): item.setdefault('tags', []).append(tag)
             original=canonical_item_catalog(original)
         (DATA/filename).write_text(json.dumps(original,indent=2)+'\n')

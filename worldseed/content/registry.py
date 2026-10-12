@@ -442,8 +442,7 @@ class ContentRegistry:
             if proc.recipe_id and proc.recipe_id not in self.recipes: raise ValueError(f"Unknown settlement-process recipe in {proc.id}")
             if proc.recipe_id:
                 recipe=self.recipes[proc.recipe_id]
-                if recipe.input_tags:raise ValueError(f"Settlement process {proc.id} does not support tagged ingredients")
-                if not proc.inputs or proc.inputs!=recipe.inputs or proc.outputs!=recipe.outputs:
+                if (not recipe.inputs and not recipe.input_tags) or proc.inputs!=recipe.inputs or proc.outputs!=recipe.outputs:
                     raise ValueError(f"Settlement process {proc.id} must consume its recipe's exact inputs and outputs")
                 if proc.station!=recipe.station:
                     raise ValueError(f"Settlement process {proc.id} must use its recipe's station")

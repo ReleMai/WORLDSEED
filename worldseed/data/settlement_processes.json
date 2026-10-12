@@ -5651,5 +5651,467 @@
     "difficulty": 6,
     "market_target": 20,
     "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_blend_plant_pulp",
+    "name": "Blend Mixed Plant Pulp",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {
+      "core:clean_water": 1
+    },
+    "outputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "priority_good": "core:plant_fiber_pulp",
+    "recipe_id": "core:blend_plant_pulp",
+    "station": null,
+    "minutes": 16,
+    "skill": "crafting",
+    "difficulty": 2,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_crude_hoe",
+    "name": "Make Crude Hoe",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:crude_hoe": 1
+    },
+    "priority_good": "core:crude_hoe",
+    "recipe_id": "core:crude_hoe",
+    "station": null,
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_animal_bone",
+    "name": "Break Damaged Horn and Bone",
+    "occupation": "butcher",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:bone_chips": 1
+    },
+    "priority_good": "core:bone_chips",
+    "recipe_id": "core:reclaim_animal_bone",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_animal_cloth",
+    "name": "Sort Loose Animal Fibers",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:cloth_scraps": 1
+    },
+    "priority_good": "core:cloth_scraps",
+    "recipe_id": "core:reclaim_animal_cloth",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_animal_leather",
+    "name": "Trim Animal Hide Offcuts",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:leather_scraps": 1
+    },
+    "priority_good": "core:leather_scraps",
+    "recipe_id": "core:reclaim_animal_leather",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_plant_fiber",
+    "name": "Reclaim Plant Fiber",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:fiber": 1
+    },
+    "priority_good": "core:fiber",
+    "recipe_id": "core:reclaim_plant_fiber",
+    "station": null,
+    "minutes": 20,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_ceramic",
+    "name": "Crush Failed Pottery",
+    "occupation": "potter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:ceramic_shards": 1
+    },
+    "priority_good": "core:ceramic_shards",
+    "recipe_id": "core:reclaim_village_ceramic",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_cloth",
+    "name": "Strip Worn Textiles",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:cloth_scraps": 1
+    },
+    "priority_good": "core:cloth_scraps",
+    "recipe_id": "core:reclaim_village_cloth",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_glass",
+    "name": "Sort Discarded Glass",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:glass_shards": 1
+    },
+    "priority_good": "core:glass_shards",
+    "recipe_id": "core:reclaim_village_glass",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_leather",
+    "name": "Cut Damaged Leather",
+    "occupation": "tanner",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:leather_scraps": 1
+    },
+    "priority_good": "core:leather_scraps",
+    "recipe_id": "core:reclaim_village_leather",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_metal",
+    "name": "Sort Broken Metal Hardware",
+    "occupation": "smith",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:metal_scraps": 1
+    },
+    "priority_good": "core:metal_scraps",
+    "recipe_id": "core:reclaim_village_metal",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_mixed",
+    "name": "Separate Mixed Hardware",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:metal_scraps": 1
+    },
+    "priority_good": "core:metal_scraps",
+    "recipe_id": "core:reclaim_village_mixed",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_paper",
+    "name": "Shred Waste Paper",
+    "occupation": "scholar",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "priority_good": "core:plant_scraps",
+    "recipe_id": "core:reclaim_village_paper",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_provisions",
+    "name": "Compost Spoiled Plant Stock",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "priority_good": "core:plant_scraps",
+    "recipe_id": "core:reclaim_village_provisions",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_stone",
+    "name": "Grind Broken Masonry",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:mineral_grit": 1
+    },
+    "priority_good": "core:mineral_grit",
+    "recipe_id": "core:reclaim_village_stone",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_village_wood",
+    "name": "Recover Broken Woodwork",
+    "occupation": "carpenter",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:wood_pieces": 1
+    },
+    "priority_good": "core:wood_pieces",
+    "recipe_id": "core:reclaim_village_wood",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_reclaim_wild_plant",
+    "name": "Clean Gathered Botanical Waste",
+    "occupation": "farmer",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "priority_good": "core:plant_scraps",
+    "recipe_id": "core:reclaim_wild_plant",
+    "station": null,
+    "minutes": 12,
+    "skill": "salvaging",
+    "difficulty": 1,
+    "market_target": 12,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_stone_axe",
+    "name": "Make Stone Axe",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone_flake": 1,
+      "core:stone": 1,
+      "core:stout_branch": 1
+    },
+    "outputs": {
+      "core:stone_axe": 1
+    },
+    "priority_good": "core:stone_axe",
+    "recipe_id": "core:stone_axe",
+    "station": null,
+    "minutes": 35,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_stone_hammer",
+    "name": "Make Stone Hammer",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 1
+    },
+    "outputs": {
+      "core:stone_hammer": 1
+    },
+    "priority_good": "core:stone_hammer",
+    "recipe_id": "core:stone_hammer",
+    "station": null,
+    "minutes": 30,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_stone_knife",
+    "name": "Make Stone Knife",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:stone_knife": 1
+    },
+    "priority_good": "core:stone_knife",
+    "recipe_id": "core:stone_knife",
+    "station": null,
+    "minutes": 25,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_stone_pick",
+    "name": "Make Stone Pick",
+    "occupation": "mason",
+    "workers": 1,
+    "inputs": {
+      "core:stone": 2
+    },
+    "outputs": {
+      "core:stone_pick": 1
+    },
+    "priority_good": "core:stone_pick",
+    "recipe_id": "core:stone_pick",
+    "station": null,
+    "minutes": 45,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_strip_fibrous_plants",
+    "name": "Strip Fibrous Plants",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:fiber": 1
+    },
+    "priority_good": "core:fiber",
+    "recipe_id": "core:strip_fibrous_plants",
+    "station": null,
+    "minutes": 18,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_tease_fine_plant_fiber",
+    "name": "Tease Fine Plant Fiber",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:fiber": 1
+    },
+    "priority_good": "core:fiber",
+    "recipe_id": "core:tease_fine_plant_fiber",
+    "station": null,
+    "minutes": 14,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_twist_mixed_cord_line",
+    "name": "Twist Mixed Cord Fishing Line",
+    "occupation": "fisher",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:fiber_line": 1
+    },
+    "priority_good": "core:fiber_line",
+    "recipe_id": "core:twist_mixed_cord_line",
+    "station": null,
+    "minutes": 20,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
+  },
+  {
+    "id": "core:npc_tagged_twist_prepared_fiber",
+    "name": "Twist Prepared Fiber",
+    "occupation": "weaver",
+    "workers": 1,
+    "inputs": {},
+    "outputs": {
+      "core:plant_cordage": 1
+    },
+    "priority_good": "core:plant_cordage",
+    "recipe_id": "core:twist_prepared_fiber",
+    "station": null,
+    "minutes": 15,
+    "skill": "crafting",
+    "difficulty": 1,
+    "market_target": 8,
+    "consumption_days": 0
   }
 ]

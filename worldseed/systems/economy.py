@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from worldseed.systems.crafting_ingredients import resolve_recipe_inputs, max_recipe_batches
 from worldseed.systems.household_economy import food_items
 
 from collections import defaultdict
@@ -156,7 +158,9 @@ class EconomySystem:
         if score<=0:
             return 0
         if proc.knowledge and proc.knowledge not in town.knowledge:return 0
-        missing=any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items())
+        recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
+        missing=(resolve_recipe_inputs(recipe,town.stocks,self.registry) is None
+                 if recipe else any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items()))
         if getattr(proc,"recipe_id",""):
             # An absent tool/catalyst blocks anonymous production just as an
             # absent ingredient does. Only a supplied named worker may reserve
@@ -180,7 +184,6 @@ class EconomySystem:
     def _recipe_prerequisites(self,town,proc)->bool:
         recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
         if recipe is None:return True
-        if recipe.input_tags:return False
         if recipe.knowledge and recipe.knowledge not in town.knowledge:return False
         inventory=town.stocks
         if any(inventory.get(iid,0)<qty for iid,qty in recipe.catalysts.items()):return False
@@ -285,8 +288,10 @@ class EconomySystem:
             supplied_workers={}
             for row in reservations:
                 proc=self.registry.settlement_processes[row.process_id]
-                if getattr(proc,"recipe_id","") and (not self._recipe_prerequisites(town,proc)
-                        or any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items())):
+                recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
+                missing=(resolve_recipe_inputs(recipe,town.stocks,self.registry) is None
+                         if recipe else any(town.stocks.get(iid,0)<qty for iid,qty in proc.inputs.items()))
+                if getattr(proc,"recipe_id","") and (not self._recipe_prerequisites(town,proc) or missing):
                     supplied_workers[row.process_id]=set(row.representative_uids)
         by_occ=defaultdict(list)
         for row in reservations:
@@ -367,9 +372,16 @@ class EconomySystem:
             return self.workplace_logistics.run_process(town,proc,workers,int(day),int(minute),bonus)
         batches = workers // max(1, proc.workers)
         if batches <= 0:return 0
-        for iid,qty in proc.inputs.items():batches=min(batches,town.stocks.get(iid,0)//max(1,qty))
-        if batches<=0:return 0
-        for iid,qty in proc.inputs.items():town.stocks[iid]=town.stocks.get(iid,0)-qty*batches
+        recipe=self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
+        if recipe and recipe.input_tags:
+            batches=max_recipe_batches(recipe,town.stocks,self.registry,batches)
+            if batches<=0:return 0
+            costs=resolve_recipe_inputs(recipe,town.stocks,self.registry,batches)
+        else:
+            for iid,qty in proc.inputs.items():batches=min(batches,town.stocks.get(iid,0)//max(1,qty))
+            if batches<=0:return 0
+            costs={iid:qty*batches for iid,qty in proc.inputs.items()}
+        for iid,qty in costs.items():town.stocks[iid]=town.stocks.get(iid,0)-qty
         for iid,qty in proc.outputs.items():town.stocks[iid]=town.stocks.get(iid,0)+max(1,qty*batches*bonus//100)
         return batches
 

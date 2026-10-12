@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from worldseed.systems.crafting_ingredients import resolve_recipe_inputs, max_recipe_batches
+
 from worldseed.core.coords import WorldPos
 from worldseed.systems.state import WorkplaceLogisticsState, WorkplaceShipmentState
 
@@ -80,26 +82,37 @@ class WorkplaceLogisticsSystem:
         vfit=999999 if item.volume_ml<=0 else max(0,(container.capacity_volume_ml-volume)//item.volume_ml)
         return max(0,min(mfit,vfit))
 
-    @staticmethod
-    def _has_batch_inputs(container,proc)->bool:
-        return all(container.items.get(iid,0)>=qty for iid,qty in proc.inputs.items())
+    def _recipe(self,proc):
+        return self.registry.recipes.get(str(getattr(proc,"recipe_id","") or ""))
 
-    @staticmethod
-    def _consume_batch_inputs(container,proc)->None:
-        for iid,qty in proc.inputs.items():
+    def _batch_costs(self,proc,stocks,batches=1):
+        recipe=self._recipe(proc)
+        if recipe and recipe.input_tags:return resolve_recipe_inputs(recipe,stocks,self.registry,batches)
+        costs={iid:int(qty)*batches for iid,qty in proc.inputs.items()}
+        return costs if all(stocks.get(iid,0)>=qty for iid,qty in costs.items()) else None
+
+    def _has_batch_inputs(self,container,proc)->bool:
+        return self._batch_costs(proc,container.items) is not None
+
+    def _consume_batch_inputs(self,container,proc)->None:
+        costs=self._batch_costs(proc,container.items)
+        if costs is None:return
+        for iid,qty in costs.items():
             left=container.items.get(iid,0)-qty
             if left>0:container.items[iid]=left
             else:container.items.pop(iid,None)
 
-    @staticmethod
-    def _aggregate_capacity(town,proc,batches:int)->int:
-        batches=max(0,int(batches))
+    def _aggregate_capacity(self,town,proc,batches:int)->int:
+        recipe=self._recipe(proc)
+        if recipe and recipe.input_tags:return max_recipe_batches(recipe,town.stocks,self.registry,batches)
         for iid,qty in proc.inputs.items():batches=min(batches,town.stocks.get(iid,0)//max(1,qty))
         return max(0,batches)
 
-    @staticmethod
-    def _consume_aggregate_inputs(town,proc,batches:int)->None:
-        for iid,qty in proc.inputs.items():town.stocks[iid]=town.stocks.get(iid,0)-qty*int(batches)
+    def _consume_aggregate_inputs(self,town,proc,batches:int)->None:
+        if batches<=0:return
+        costs=self._batch_costs(proc,town.stocks,batches)
+        if costs is None:raise ValueError("Cannot consume unsupplied aggregate recipe")
+        for iid,qty in costs.items():town.stocks[iid]=town.stocks.get(iid,0)-qty
 
     @staticmethod
     def _output_total(proc,batches:int,bonus:int)->dict[str,int]:
@@ -108,7 +121,16 @@ class WorkplaceLogisticsSystem:
 
     def _replenish_inputs(self,town,proc,npc,storage,row,minute:int)->None:
         moved={}
-        for iid,qty in proc.inputs.items():
+        recipe=self._recipe(proc)
+        if recipe is not None and recipe.input_tags:
+            combined=dict(storage.items)
+            for iid,qty in town.stocks.items():combined[iid]=combined.get(iid,0)+max(0,int(qty))
+            cost=self._batch_costs(proc,combined)
+            if cost is None:return
+            target=dict(cost)
+            for iid,qty in recipe.catalysts.items():target[iid]=target.get(iid,0)+qty
+        else:target=dict(proc.inputs)
+        for iid,qty in target.items():
             have=max(0,int(storage.items.get(iid,0)));missing=max(0,int(qty)-have)
             if missing<=0:continue
             transfer=min(missing,max(0,int(town.stocks.get(iid,0))),self._fit(storage,iid))
@@ -184,7 +206,7 @@ class WorkplaceLogisticsSystem:
                 self._consume_batch_inputs(storage,proc);row.physical_batches_total+=1;row.blocked_reason=""
                 physical.append((npc,storage,row))
             else:
-                row.blocked_reason="input buffer empty" if proc.inputs else ""
+                row.blocked_reason="input buffer empty" if (proc.inputs or getattr(self._recipe(proc),"input_tags",{})) else ""
 
         remaining=labor_batches-len(physical)
         aggregate=self._aggregate_capacity(town,proc,remaining)
@@ -222,7 +244,7 @@ class WorkplaceLogisticsSystem:
         # production while making future physical production depend on stock.
         for npc,storage in bindings:
             row=self._row(town,proc,npc,storage);self._replenish_inputs(town,proc,npc,storage,row,minute)
-            if total<=0 and proc.inputs and not self._has_batch_inputs(storage,proc):row.blocked_reason="input shortage"
+            if total<=0 and (proc.inputs or getattr(self._recipe(proc),"input_tags",{})) and not self._has_batch_inputs(storage,proc):row.blocked_reason="input shortage"
         return total
 
     def pickup_shipment(self,shipment_uid:str,carrier_uid:str,minute:int)->bool:

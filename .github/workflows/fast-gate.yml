@@ -100,6 +100,10 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Dev61 conversation portraits" --timeout 90 -- python -u -m unittest -v tests.test_conversation_pause tests.test_npc_portraits tests.test_conversation_portrait_ui tests.test_dev61_conversation_integration
 
+      - name: NPC tagged miscellaneous material regressions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "NPC tagged miscellaneous materials" --timeout 90 -- python -u -m unittest -v tests.test_npc_tagged_materials tests.test_tagged_crafting
+
       - name: Crafting material progression regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Crafting material progression" --timeout 90 -- python -u -m unittest -v tests.test_crafting_material_progression tests.test_tagged_crafting

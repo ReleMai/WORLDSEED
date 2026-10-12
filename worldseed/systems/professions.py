@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from worldseed.systems.crafting_ingredients import resolve_recipe_inputs
+
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.activities import ActivityAffordance
@@ -141,7 +143,6 @@ class SettlementProfessionSystem:
 
     def _supports_process(self,proc)->bool:
         recipe=self._process_recipe(proc)
-        if recipe is not None and recipe.input_tags:return False
         if proc.id=="core:draw_settlement_water":return proc.occupation=="farmer"
         if proc.id in self.PROCESS_IDS.get(str(proc.occupation),set()):return True
         if proc.occupation=="farmer" and proc.id.startswith("core:field_"):
@@ -336,16 +337,23 @@ class SettlementProfessionSystem:
         return None
 
     def _recipe_requirements(self,npc,town,proc,owned_containers=None):
-        needed=dict(proc.inputs);recipe=self._process_recipe(proc)
-        if recipe is None:return needed
-        if recipe.knowledge and recipe.knowledge not in town.knowledge:return None
-        for iid,qty in recipe.catalysts.items():needed[iid]=max(needed.get(iid,0),int(qty))
+        recipe=self._process_recipe(proc)
+        if recipe is not None and recipe.knowledge and recipe.knowledge not in town.knowledge:return None
         own=(owned_containers if owned_containers is not None else
              (self.storage_access.own_storages(npc,town) if self.storage_access else self._containers(town.uid)))
-        available=set(npc.inventory)
-        available.update(iid for c in own if c.property_id in {npc.home_id,npc.workplace_id}
-                         for iid,qty in c.items.items() if qty>0)
-        if self.commerce is not None:available.update(iid for iid,qty in town.stocks.items() if qty>0)
+        physical={iid:max(0,int(qty)) for iid,qty in npc.inventory.items()}
+        for container in own:
+            if container.property_id not in {npc.home_id,npc.workplace_id}:continue
+            for iid,qty in container.items.items():
+                physical[iid]=physical.get(iid,0)+max(0,int(qty))
+        if self.commerce is not None:
+            for iid,qty in town.stocks.items():
+                physical[iid]=physical.get(iid,0)+max(0,int(qty))
+        needed=resolve_recipe_inputs(recipe,physical,self.registry) if recipe else dict(proc.inputs)
+        if needed is None:return None
+        if recipe is not None:
+            for iid,qty in recipe.catalysts.items():needed[iid]=needed.get(iid,0)+int(qty)
+        available={iid for iid,qty in physical.items() if qty>0}
         for quality,minimum in recipe.tool_qualities.items():
             if max((self.registry.items[i].quality(quality) for i,q in npc.inventory.items()
                     if q>0 and i in self.registry.items),default=0)>=int(minimum):continue
@@ -375,7 +383,7 @@ class SettlementProfessionSystem:
             price=self.commerce.economy.trade_price(town.uid,iid,True) if self.commerce else 0
             if self.commerce and town.stocks.get(iid,0)>=deficit and budget>=price*deficit:
                 budget-=price*deficit;continue
-            if self.salvaging is None or iid not in proc.inputs:return False
+            if self.salvaging is None or (iid not in proc.inputs and not self._process_recipe(proc).input_tags):return False
             found=False
             for scrap,definition in sorted(getattr(self.registry,"salvage",{}).items()):
                 yield_range=definition.yields.get(iid)
@@ -430,13 +438,20 @@ class SettlementProfessionSystem:
             tasks=withdraw+self.activities._tasks_for(row,f"{npc.occupation}_work")
             final_reservation=row.uid
 
+        # Freeze the chosen physical tagged inputs on the reserved work order.
+        recipe=self._process_recipe(proc)
+        if recipe is not None and recipe.input_tags:
+            batch=resolve_recipe_inputs(recipe,requirements,self.registry)
+            if batch is None:return []
+        else:batch=dict(proc.inputs)
+
         # The last activity completion creates the process output in carried cargo.
         for task in reversed(tasks):
             if task.get("kind")=="activity" and task.get("reservation_uid")==final_reservation:
                 task["on_complete"]="profession_process"
                 task["profession_task"]=True
                 task["process_id"]=proc.id
-                task["inputs"]=dict(proc.inputs)
+                task["inputs"]=dict(batch)
                 task["outputs"]=dict(proc.outputs)
                 task["assigned_day"]=int(npc.work_assignment_day)
                 break
@@ -452,8 +467,14 @@ class SettlementProfessionSystem:
         reservation=self.state.activity_reservations.get(str(task.get("reservation_uid","") or ""))
         if (proc is None or reservation is None or reservation.actor_uid!=npc.uid
                 or reservation.settlement_id!=town.uid or proc.occupation!=npc.occupation):return False
-        if task.get("inputs")!=proc.inputs or task.get("outputs")!=proc.outputs:return False
+        if task.get("outputs")!=proc.outputs:return False
         recipe=self._process_recipe(proc) if proc else None
+        if recipe is not None and recipe.input_tags:
+            provided={str(i):int(n) for i,n in (task.get("inputs") or {}).items()}
+            inventory=dict(provided)
+            for iid,qty in recipe.catalysts.items():inventory[iid]=inventory.get(iid,0)+qty
+            if resolve_recipe_inputs(recipe,inventory,self.registry)!=provided:return False
+        elif task.get("inputs")!=proc.inputs:return False
         if recipe is not None:
             if reservation.status!="completed":return False
             if not any(row.target_uid==reservation.target_uid for row in self._station_rows(npc,town,proc)):return False

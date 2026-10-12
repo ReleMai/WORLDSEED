@@ -7625,5 +7625,285 @@
     ],
     "discovery_mode": "experiment",
     "description": "Soak and mash six plant-material portions, including salvaged scraps, wetland reeds or bark, into paper and binder pulp."
+  },
+  {
+    "id": "core:reclaim_village_metal",
+    "name": "Sort Broken Metal Hardware",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_metal": 1
+    },
+    "outputs": {
+      "core:metal_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_metal"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village metal; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_wood",
+    "name": "Recover Broken Woodwork",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_wood": 1
+    },
+    "outputs": {
+      "core:wood_pieces": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_wood"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village wood; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_cloth",
+    "name": "Strip Worn Textiles",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_cloth": 1
+    },
+    "outputs": {
+      "core:cloth_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_cloth"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village cloth; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_leather",
+    "name": "Cut Damaged Leather",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_leather": 1
+    },
+    "outputs": {
+      "core:leather_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_leather"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village leather; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_ceramic",
+    "name": "Crush Failed Pottery",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_ceramic": 1
+    },
+    "outputs": {
+      "core:ceramic_shards": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_ceramic"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village ceramic; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_glass",
+    "name": "Sort Discarded Glass",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_glass": 1
+    },
+    "outputs": {
+      "core:glass_shards": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_glass"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village glass; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_paper",
+    "name": "Shred Waste Paper",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_paper": 1
+    },
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_paper"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village paper; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_stone",
+    "name": "Grind Broken Masonry",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_stone": 1
+    },
+    "outputs": {
+      "core:mineral_grit": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_stone"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village stone; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_mixed",
+    "name": "Separate Mixed Hardware",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_mixed": 1
+    },
+    "outputs": {
+      "core:metal_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_mixed"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village mixed; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_village_provisions",
+    "name": "Compost Spoiled Plant Stock",
+    "inputs": {},
+    "input_tags": {
+      "material_source_village_provisions": 1
+    },
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_village_provisions"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from village provisions; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_wild_plant",
+    "name": "Clean Gathered Botanical Waste",
+    "inputs": {},
+    "input_tags": {
+      "material_source_wild_plant": 1
+    },
+    "outputs": {
+      "core:plant_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_wild_plant"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from wild plant; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_animal_cloth",
+    "name": "Sort Loose Animal Fibers",
+    "inputs": {},
+    "input_tags": {
+      "material_source_animal_cloth": 1
+    },
+    "outputs": {
+      "core:cloth_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_animal_cloth"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from animal cloth; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_animal_bone",
+    "name": "Break Damaged Horn and Bone",
+    "inputs": {},
+    "input_tags": {
+      "material_source_animal_bone": 1
+    },
+    "outputs": {
+      "core:bone_chips": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_animal_bone"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from animal bone; careful multistage salvaging recovers more and may preserve rare parts."
+  },
+  {
+    "id": "core:reclaim_animal_leather",
+    "name": "Trim Animal Hide Offcuts",
+    "inputs": {},
+    "input_tags": {
+      "material_source_animal_leather": 1
+    },
+    "outputs": {
+      "core:leather_scraps": 1
+    },
+    "minutes": 12,
+    "category": "misc_recovery",
+    "skill": "salvaging",
+    "difficulty": 1,
+    "discovery_tags": [
+      "material_source_animal_leather"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Recover one common component from animal leather; careful multistage salvaging recovers more and may preserve rare parts."
   }
 ]

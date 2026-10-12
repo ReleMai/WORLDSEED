@@ -65,3 +65,32 @@ def allocate_tag_inputs(recipe, inv, registry):
             if node[0]=='item' and capacity.get((('tag',tag),node),0)>0:
                 allocation[tag][node[1]]=capacity[('tag',tag),node]
     return allocation
+
+def resolve_recipe_inputs(recipe, stocks, registry, batches=1):
+    """Shared deterministic exact/tag allocation; reserve catalysts, never consume."""
+    from types import SimpleNamespace
+    batches=int(batches)
+    if batches<1:return {}
+    exact={iid:int(n)*batches for iid,n in recipe.inputs.items()}
+    catalysts={iid:int(n) for iid,n in recipe.catalysts.items()}
+    available={iid:int(n) for iid,n in stocks.items() if int(n)>0}
+    if any(available.get(iid,0)<qty+catalysts.get(iid,0) for iid,qty in exact.items()):return None
+    if any(available.get(iid,0)<qty for iid,qty in catalysts.items()):return None
+    if not recipe.input_tags:return exact
+    scaled=SimpleNamespace(inputs=exact,catalysts=catalysts,input_tags={tag:int(n)*batches for tag,n in recipe.input_tags.items()})
+    assigned=allocate_tag_inputs(scaled,SimpleNamespace(items=available),registry)
+    if any(sum(assigned.get(tag,{}).values())!=qty for tag,qty in scaled.input_tags.items()):return None
+    costs=dict(exact)
+    for choices in assigned.values():
+        for iid,n in choices.items():costs[iid]=costs.get(iid,0)+n
+    return costs
+
+
+def max_recipe_batches(recipe,stocks,registry,limit):
+    """Find maximal feasible batches with logarithmic tagged allocations."""
+    low,high=0,max(0,int(limit))
+    while low<high:
+        mid=(low+high+1)//2
+        if resolve_recipe_inputs(recipe,stocks,registry,mid) is not None:low=mid
+        else:high=mid-1
+    return low

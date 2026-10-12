@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"worldseed"/"data"
 PREFIX="core:npc_expansion_"
+TAG_PREFIX="core:npc_tagged_"
 
 
 def process_rows(manifest,recipes,items):
@@ -43,6 +44,36 @@ def process_rows(manifest,recipes,items):
     return rows
 
 
+FAMILY_JOBS={"metal":"smith","wood":"carpenter","cloth":"weaver","leather":"tanner",
+             "ceramic":"potter","glass":"scholar","paper":"scholar","stone":"mason",
+             "mixed":"carpenter","provisions":"farmer","plant":"farmer","bone":"butcher"}
+CATEGORY_JOBS={"fiberwork":"weaver","primitive_tools":"mason","fishing":"fisher",
+               "survival":"farmer","hunting":"hunter","misc_recovery":"carpenter"}
+
+
+def tagged_process_rows(recipes,items):
+    """Mirror all tag-aware recipes into the authoritative NPC work catalog."""
+    rows=[]
+    for recipe in sorted(recipes.values(),key=lambda row:row["id"]):
+        tags=recipe.get("input_tags") or {}
+        if not tags:continue
+        family=next((tag for tag in tags if tag.startswith("material_source_")),"")
+        occupation=FAMILY_JOBS.get(family.split("_")[-1],"farmer") if family else CATEGORY_JOBS.get(recipe.get("category"),"carpenter")
+        output=next(iter(recipe["outputs"]))
+        rows.append({
+            "id":TAG_PREFIX+recipe["id"].split(":",1)[-1],
+            "name":recipe["name"],"occupation":occupation,"workers":1,
+            "inputs":dict(recipe.get("inputs",{})),"outputs":dict(recipe["outputs"]),
+            "priority_good":output,"recipe_id":recipe["id"],
+            "station":recipe.get("station"),"minutes":int(recipe["minutes"]),
+            "skill":recipe.get("skill","crafting"),"difficulty":int(recipe.get("difficulty",1)),
+            "market_target":12 if "craft_component" in items[output].get("tags",[]) else 8,
+            "consumption_days":0,
+            **({"knowledge":recipe["knowledge"]} if recipe.get("knowledge") else {}),
+        })
+    return rows
+
+
 def missing_crop_processes(original,crops):
     """Existing farm parcels and seed stocks support every authored crop."""
     ids={p["id"] for p in original};rows=[]
@@ -64,7 +95,7 @@ def main():
     recipes={r["id"]:r for r in json.loads((DATA/"recipes.json").read_text())}
     items={r["id"]:r for r in json.loads((DATA/"items.json").read_text())}
     path=DATA/"settlement_processes.json";original=json.loads(path.read_text())
-    base=[p for p in original if not p["id"].startswith(PREFIX)]
+    base=[p for p in original if not p["id"].startswith((PREFIX,TAG_PREFIX))]
     crops=json.loads((DATA/"crops.json").read_text())
     base+=missing_crop_processes(base,crops)
     base_ids={p["id"] for p in base}
@@ -87,7 +118,7 @@ def main():
     if hunt is not None:hunt["outputs"].setdefault("core:bone",1)
     rows=process_rows(manifest,recipes,items)
     if len(rows)<=200:raise ValueError("Expansion must contain more than 200 authored NPC recipes")
-    updated=base+rows
+    updated=base+rows+tagged_process_rows(recipes,items)
     if args.check:
         if original!=updated:raise SystemExit("Crafting economy catalog differs; run tools/build_crafting_economy.py")
     else:path.write_text(json.dumps(updated,indent=2)+"\n")

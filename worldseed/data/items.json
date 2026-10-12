@@ -269,7 +269,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Alder Cone Cluster. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that alder cone cluster is worthless.\""
@@ -289,7 +292,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Alpine Sorrel Root. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that alpine sorrel root is worthless.\""
@@ -309,7 +315,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Amberroot Crown. Careful stripping recovers plant scraps, resin lumps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that amberroot crown is worthless.\""
@@ -352,7 +362,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Beech Nut Cup. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that beech nut cup is worthless.\""
@@ -403,7 +416,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Birch Catkin Cluster. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that birch catkin cluster is worthless.\""
@@ -423,7 +439,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Bladderwrack Holdfast. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that bladderwrack holdfast is worthless.\""
@@ -475,7 +494,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Bog Myrtle Branch. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that bog myrtle branch is worthless.\""
@@ -495,7 +517,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Burdock Burr Cluster. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that burdock burr cluster is worthless.\""
@@ -550,7 +575,8 @@
       "forage",
       "plant_material",
       "fine_fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant"
     ],
     "description": "Cattail Seed Head. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cattail seed head is worthless.\""
@@ -570,7 +596,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Chicory Root Crown. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chicory root crown is worthless.\""
@@ -594,7 +623,8 @@
       "plant_material",
       "fiber_source",
       "fine_fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant"
     ],
     "description": "Cotton Grass Tuft. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that cotton grass tuft is worthless.\""
@@ -614,7 +644,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Crowberry Stem Mat. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that crowberry stem mat is worthless.\""
@@ -634,7 +667,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Dogwood Stem Bundle. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that dogwood stem bundle is worthless.\""
@@ -656,7 +692,9 @@
       "plant",
       "forage",
       "plant_material",
-      "tinder_material"
+      "tinder_material",
+      "material_source_wild_plant",
+      "pulp_feedstock"
     ],
     "description": "Dried Teasel Head. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that dried teasel head is worthless.\""
@@ -701,7 +739,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Dwarf Willow Twigs. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that dwarf willow twigs is worthless.\""
@@ -747,7 +788,8 @@
       "forage",
       "plant_material",
       "fine_fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant"
     ],
     "description": "Flax Seed Capsule. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that flax seed capsule is worthless.\""
@@ -767,7 +809,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Goldenrod Spray. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that goldenrod spray is worthless.\""
@@ -787,7 +832,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Hazel Catkin Spray. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that hazel catkin spray is worthless.\""
@@ -807,7 +855,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Juniper Bough. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that juniper bough is worthless.\""
@@ -853,7 +904,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Marsh Mallow Stems. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that marsh mallow stems is worthless.\""
@@ -877,7 +931,8 @@
       "plant_material",
       "fiber_source",
       "fine_fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant"
     ],
     "description": "Milkweed Pod. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that milkweed pod is worthless.\""
@@ -897,7 +952,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Mountain Avens Seedhead. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that mountain avens seedhead is worthless.\""
@@ -917,7 +975,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Mullein Flower Spike. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that mullein flower spike is worthless.\""
@@ -974,7 +1035,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Oak Gall Cluster. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that oak gall cluster is worthless.\""
@@ -994,7 +1058,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Pearl Kelp Knot. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that pearl kelp knot is worthless.\""
@@ -1014,7 +1082,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Peat Moss Clump. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that peat moss clump is worthless.\""
@@ -1091,7 +1162,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Reindeer Lichen Mat. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that reindeer lichen mat is worthless.\""
@@ -1113,7 +1187,9 @@
       "plant",
       "forage",
       "plant_material",
-      "tinder_material"
+      "tinder_material",
+      "material_source_wild_plant",
+      "pulp_feedstock"
     ],
     "description": "Resinous Pine Cone. Careful stripping recovers plant scraps, resin lumps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that resinous pine cone is worthless.\""
@@ -1133,7 +1209,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Rock Samphire Stems. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that rock samphire stems is worthless.\""
@@ -1153,7 +1232,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Rose Hip Branch. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that rose hip branch is worthless.\""
@@ -1173,7 +1255,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Rush Pith Bundle. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that rush pith bundle is worthless.\""
@@ -1216,7 +1301,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Sea Lavender Spray. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sea lavender spray is worthless.\""
@@ -1240,7 +1328,8 @@
       "plant_material",
       "fibrous_plant",
       "fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant"
     ],
     "description": "Sedge Root Mat. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sedge root mat is worthless.\""
@@ -1260,7 +1349,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Spruce Pitch Knot. Careful stripping recovers plant scraps, resin lumps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that spruce pitch knot is worthless.\""
@@ -1284,7 +1376,9 @@
       "plant_material",
       "fibrous_plant",
       "fiber_source",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "material_source_wild_plant",
+      "rare_botanical"
     ],
     "description": "Star Reed Tuft. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that star reed tuft is worthless.\""
@@ -1336,7 +1430,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Sweet Clover Tops. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that sweet clover tops is worthless.\""
@@ -1356,7 +1453,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Sweet Flag Root. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sweet flag root is worthless.\""
@@ -1376,7 +1476,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Water Iris Rhizome. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that water iris rhizome is worthless.\""
@@ -1522,7 +1625,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Willow Bark Curl. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that willow bark curl is worthless.\""
@@ -1887,7 +1993,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Frost Sage Branch. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that frost sage branch is worthless.\""
@@ -1907,7 +2017,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Moonmint Sprig. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that moonmint sprig is worthless.\""
@@ -1927,7 +2041,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Saffron Crocus Tuft. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that saffron crocus tuft is worthless.\""
@@ -1947,7 +2065,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Sunspice Rhizome. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sunspice rhizome is worthless.\""
@@ -1967,7 +2089,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Blue Lotus Stalk. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that blue lotus stalk is worthless.\""
@@ -1987,7 +2113,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Crimson Stonecrop Crown. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that crimson stonecrop crown is worthless.\""
@@ -2007,7 +2137,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Ghost Orchid Stem. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that ghost orchid stem is worthless.\""
@@ -2027,7 +2161,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Marsh Amber Bulb. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that marsh amber bulb is worthless.\""
@@ -2091,7 +2229,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "material_source_wild_plant",
+      "plant_material",
+      "pulp_feedstock",
+      "rare_botanical"
     ],
     "description": "Silverleaf Sprig. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that silverleaf sprig is worthless.\""
@@ -9866,7 +10008,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Bent Door Hinge. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that bent door hinge is worthless.\"",
@@ -9886,7 +10029,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Bent Fire Poker. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that bent fire poker is worthless.\"",
@@ -9906,7 +10050,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Bent Wagon Bracket. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that bent wagon bracket is worthless.\"",
@@ -9926,7 +10071,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Broken Buckle. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that broken buckle is worthless.\"",
@@ -9946,7 +10092,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Broken Chain Link. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that broken chain link is worthless.\"",
@@ -9966,7 +10113,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Cracked Pan Handle. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that cracked pan handle is worthless.\"",
@@ -9986,7 +10134,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Cracked Sickle Head. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that cracked sickle head is worthless.\"",
@@ -10006,7 +10155,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Dented Candle Snuffer. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that dented candle snuffer is worthless.\"",
@@ -10026,7 +10176,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Discarded Harness Bell. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that discarded harness bell is worthless.\"",
@@ -10046,7 +10197,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Discarded Spur. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that discarded spur is worthless.\"",
@@ -10066,7 +10218,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Jammed Clockwork Catch. Careful unfastening recovers metal scraps, nuts and bolts. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that jammed clockwork catch is worthless.\"",
@@ -10086,7 +10239,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Loose Gate Latch. Careful unfastening recovers metal scraps, nuts and bolts. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that loose gate latch is worthless.\"",
@@ -10106,7 +10260,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Rusted Padlock. Careful unfastening recovers metal scraps, nuts and bolts. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that rusted padlock is worthless.\"",
@@ -10126,7 +10281,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Rusted Stove Grate. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that rusted stove grate is worthless.\"",
@@ -10146,7 +10302,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Seized Hand Drill. Careful unfastening recovers metal scraps, nuts and bolts. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that seized hand drill is worthless.\"",
@@ -10166,7 +10323,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Snapped Shears. Careful unfastening recovers metal scraps, nuts and bolts. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that snapped shears is worthless.\"",
@@ -10186,7 +10344,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Split Iron Ring. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that split iron ring is worthless.\"",
@@ -10206,7 +10365,8 @@
       "misc",
       "salvageable",
       "metal",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_metal"
     ],
     "description": "Worn Horseshoe. Careful unfastening recovers metal scraps, nuts and bolts.",
     "flavor": "\"Look at the material before deciding that worn horseshoe is worthless.\"",
@@ -10226,7 +10386,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Broken Cart Axle. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken cart axle is worthless.\"",
@@ -10246,7 +10407,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Broken Chair Rung. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken chair rung is worthless.\"",
@@ -10266,7 +10428,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Broken Ladder Step. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken ladder step is worthless.\"",
@@ -10286,7 +10449,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Broken Loom Shuttle. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken loom shuttle is worthless.\"",
@@ -10306,7 +10470,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Chipped Wooden Ladle. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chipped wooden ladle is worthless.\"",
@@ -10326,7 +10491,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Cracked Barrel Stave. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked barrel stave is worthless.\"",
@@ -10346,7 +10512,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Cracked Spinning Distaff. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked spinning distaff is worthless.\"",
@@ -10366,7 +10533,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Discarded Paddle. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded paddle is worthless.\"",
@@ -10386,7 +10554,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Discarded Yoke. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded yoke is worthless.\"",
@@ -10406,7 +10575,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Loose Window Shutter. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that loose window shutter is worthless.\"",
@@ -10426,7 +10596,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Snapped Broom Shaft. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that snapped broom shaft is worthless.\"",
@@ -10446,7 +10617,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Splintered Rake. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that splintered rake is worthless.\"",
@@ -10466,7 +10638,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Split Crate Lid. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split crate lid is worthless.\"",
@@ -10486,7 +10659,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Split Tool Rack. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split tool rack is worthless.\"",
@@ -10506,7 +10680,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Split Wagon Spoke. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split wagon spoke is worthless.\"",
@@ -10526,7 +10701,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Warped Cupboard Door. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that warped cupboard door is worthless.\"",
@@ -10546,7 +10722,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Worn Rolling Pin. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn rolling pin is worthless.\"",
@@ -10566,7 +10743,8 @@
       "misc",
       "salvageable",
       "wood",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_wood"
     ],
     "description": "Worn Tent Peg. Careful carving recovers wood pieces, tool handles. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn tent peg is worthless.\"",
@@ -10586,7 +10764,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Broken Felt Slipper. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken felt slipper is worthless.\"",
@@ -10606,7 +10786,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Discarded Bandolier Lining. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded bandolier lining is worthless.\"",
@@ -10626,7 +10808,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Discarded Cap Lining. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded cap lining is worthless.\"",
@@ -10646,7 +10830,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Frayed Bedroll. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that frayed bedroll is worthless.\"",
@@ -10666,7 +10852,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Frayed Fishing Smock. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that frayed fishing smock is worthless.\"",
@@ -10686,7 +10874,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Old Saddle Blanket. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that old saddle blanket is worthless.\"",
@@ -10706,7 +10896,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Ragged Quilt. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that ragged quilt is worthless.\"",
@@ -10726,7 +10918,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Split Grain Sack. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split grain sack is worthless.\"",
@@ -10746,7 +10940,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Split Pillowcase. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split pillowcase is worthless.\"",
@@ -10766,7 +10962,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Stained Table Runner. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that stained table runner is worthless.\"",
@@ -10786,7 +10984,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Tangled Embroidery. Careful stripping recovers cloth scraps, plant scraps. An intact silver filament may survive careful recovery. Its decorative metallic thread is silver-plated copper.",
     "flavor": "\"Look at the material before deciding that tangled embroidery is worthless.\"",
@@ -10806,7 +11006,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Threadbare Curtain. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that threadbare curtain is worthless.\"",
@@ -10826,7 +11028,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Torn Apron. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn apron is worthless.\"",
@@ -10846,7 +11050,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Torn Banner. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn banner is worthless.\"",
@@ -10866,7 +11072,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Torn Mosquito Veil. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn mosquito veil is worthless.\"",
@@ -10886,7 +11094,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Unraveled Scarf. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that unraveled scarf is worthless.\"",
@@ -10906,7 +11116,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Worn Laundry Strap. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn laundry strap is worthless.\"",
@@ -10926,7 +11138,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_cloth",
+      "textile_scrap_source"
     ],
     "description": "Worn Sail Patch. Careful stripping recovers cloth scraps, plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn sail patch is worthless.\"",
@@ -10946,7 +11160,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Broken Glove. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken glove is worthless.\"",
@@ -10966,7 +11181,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Broken Satchel Flap. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken satchel flap is worthless.\"",
@@ -10986,7 +11202,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Broken Scabbard. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken scabbard is worthless.\"",
@@ -11006,7 +11223,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Cracked Belt. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked belt is worthless.\"",
@@ -11026,7 +11244,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Cracked Saddle Flap. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked saddle flap is worthless.\"",
@@ -11046,7 +11265,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Cracked Sling Strap. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked sling strap is worthless.\"",
@@ -11066,7 +11286,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Discarded Bridle. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded bridle is worthless.\"",
@@ -11086,7 +11307,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Discarded Muzzle. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded muzzle is worthless.\"",
@@ -11106,7 +11328,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Loose Shield Grip. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that loose shield grip is worthless.\"",
@@ -11126,7 +11349,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Old Bellows Skin. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that old bellows skin is worthless.\"",
@@ -11146,7 +11370,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Split Harness Strap. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split harness strap is worthless.\"",
@@ -11166,7 +11391,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Split Quiver Seam. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split quiver seam is worthless.\"",
@@ -11186,7 +11412,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Split Water Bag. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split water bag is worthless.\"",
@@ -11206,7 +11433,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Torn Hunting Gaiter. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn hunting gaiter is worthless.\"",
@@ -11226,7 +11454,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Torn Leather Pouch. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn leather pouch is worthless.\"",
@@ -11246,7 +11475,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Worn Boot Sole. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn boot sole is worthless.\"",
@@ -11266,7 +11496,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Worn Drum Head. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn drum head is worthless.\"",
@@ -11286,7 +11517,8 @@
       "misc",
       "salvageable",
       "leather",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_leather"
     ],
     "description": "Worn Knee Guard. Careful stripping recovers leather scraps, nuts and bolts. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that worn knee guard is worthless.\"",
@@ -11306,7 +11538,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Broken Drain Pipe. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that broken drain pipe is worthless.\"",
@@ -11326,7 +11559,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Broken Flower Pot. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that broken flower pot is worthless.\"",
@@ -11346,7 +11580,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Broken Kiln Spacer. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that broken kiln spacer is worthless.\"",
@@ -11366,7 +11601,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Broken Oil Lamp. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that broken oil lamp is worthless.\"",
@@ -11386,7 +11622,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Broken Roof Tile. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that broken roof tile is worthless.\"",
@@ -11406,7 +11643,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Chipped Chamber Pot. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that chipped chamber pot is worthless.\"",
@@ -11426,7 +11664,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Chipped Crock. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that chipped crock is worthless.\"",
@@ -11446,7 +11685,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Chipped Mortar Bowl. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that chipped mortar bowl is worthless.\"",
@@ -11466,7 +11706,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Chipped Salt Cellar. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that chipped salt cellar is worthless.\"",
@@ -11486,7 +11727,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Cracked Fermentation Weight. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that cracked fermentation weight is worthless.\"",
@@ -11506,7 +11748,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Cracked Honey Jar. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that cracked honey jar is worthless.\"",
@@ -11526,7 +11769,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Cracked Jug. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that cracked jug is worthless.\"",
@@ -11546,7 +11790,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Cracked Soap Dish. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that cracked soap dish is worthless.\"",
@@ -11566,7 +11811,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Discarded Crucible. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that discarded crucible is worthless.\"",
@@ -11586,7 +11832,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Shattered Inkpot. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that shattered inkpot is worthless.\"",
@@ -11606,7 +11853,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Split Baking Stone. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that split baking stone is worthless.\"",
@@ -11626,7 +11874,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Split Butter Dish. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that split butter dish is worthless.\"",
@@ -11646,7 +11895,8 @@
       "misc",
       "salvageable",
       "ceramic",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_ceramic"
     ],
     "description": "Split Tea Bowl. Careful crushing recovers ceramic shards, mineral grit.",
     "flavor": "\"Look at the material before deciding that split tea bowl is worthless.\"",
@@ -11666,7 +11916,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Broken Glass Pendant. Careful sorting recovers glass shards, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken glass pendant is worthless.\"",
@@ -11686,7 +11937,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Broken Hourglass Bulb. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken hourglass bulb is worthless.\"",
@@ -11706,7 +11958,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Broken Lantern Globe. Careful sorting recovers glass shards, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken lantern globe is worthless.\"",
@@ -11726,7 +11979,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Broken Seal Stamp. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken seal stamp is worthless.\"",
@@ -11746,7 +12000,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Broken Spectacle Lens. Careful sorting recovers glass shards, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken spectacle lens is worthless.\"",
@@ -11766,7 +12021,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Chipped Drinking Glass. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chipped drinking glass is worthless.\"",
@@ -11786,7 +12042,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Chipped Glass Bead. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chipped glass bead is worthless.\"",
@@ -11806,7 +12063,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Chipped Glass Stopper. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chipped glass stopper is worthless.\"",
@@ -11826,7 +12084,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Clouded Prism. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that clouded prism is worthless.\"",
@@ -11846,7 +12105,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Clouded Window Pane. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that clouded window pane is worthless.\"",
@@ -11866,7 +12126,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Cracked Apothecary Jar. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked apothecary jar is worthless.\"",
@@ -11886,7 +12147,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Cracked Bottle Neck. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked bottle neck is worthless.\"",
@@ -11906,7 +12168,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Cracked Fishing Float. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked fishing float is worthless.\"",
@@ -11926,7 +12189,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Cracked Mirror Edge. Careful sorting recovers glass shards, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked mirror edge is worthless.\"",
@@ -11946,7 +12210,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Shattered Measuring Tube. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that shattered measuring tube is worthless.\"",
@@ -11966,7 +12231,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Shattered Perfume Vial. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that shattered perfume vial is worthless.\"",
@@ -11986,7 +12252,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Split Glass Funnel. Careful sorting recovers glass shards. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split glass funnel is worthless.\"",
@@ -12006,7 +12273,8 @@
       "misc",
       "salvageable",
       "glass",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_glass"
     ],
     "description": "Split Lamp Chimney. Careful sorting recovers glass shards, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split lamp chimney is worthless.\"",
@@ -12026,7 +12294,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Broken Seal Envelope. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken seal envelope is worthless.\"",
@@ -12046,7 +12318,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Broken Writing Board. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken writing board is worthless.\"",
@@ -12066,7 +12342,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Discarded Account Slip. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded account slip is worthless.\"",
@@ -12086,7 +12366,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Discarded Letter Bundle. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded letter bundle is worthless.\"",
@@ -12106,7 +12390,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Discarded Shipping Label. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded shipping label is worthless.\"",
@@ -12126,7 +12414,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Faded Market Notice. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that faded market notice is worthless.\"",
@@ -12146,7 +12438,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Frayed Document Roll. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that frayed document roll is worthless.\"",
@@ -12166,7 +12462,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Loose Book Binding. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that loose book binding is worthless.\"",
@@ -12186,7 +12486,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Molded Scroll Tube. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that molded scroll tube is worthless.\"",
@@ -12206,7 +12510,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Old Tax Register. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that old tax register is worthless.\"",
@@ -12226,7 +12534,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Ruined Recipe Leaf. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that ruined recipe leaf is worthless.\"",
@@ -12246,7 +12558,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Split Notebook Cover. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split notebook cover is worthless.\"",
@@ -12266,7 +12582,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Split Wax Tablet. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that split wax tablet is worthless.\"",
@@ -12286,7 +12606,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Tattered Charter Copy. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that tattered charter copy is worthless.\"",
@@ -12306,7 +12630,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Torn Map Case. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn map case is worthless.\"",
@@ -12326,7 +12654,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Torn Song Folio. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that torn song folio is worthless.\"",
@@ -12346,7 +12678,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Waterlogged Ledger. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that waterlogged ledger is worthless.\"",
@@ -12366,7 +12702,11 @@
       "misc",
       "salvageable",
       "paper",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_paper",
+      "tinder_material",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Waterstained Almanac. Careful stripping recovers plant scraps, cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that waterstained almanac is worthless.\"",
@@ -12386,7 +12726,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Broken Grindstone Rim. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that broken grindstone rim is worthless.\"",
@@ -12406,7 +12747,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Broken Mosaic Piece. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that broken mosaic piece is worthless.\"",
@@ -12426,7 +12768,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Broken Soapstone Cup. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that broken soapstone cup is worthless.\"",
@@ -12446,7 +12789,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Broken Stone Spindle. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that broken stone spindle is worthless.\"",
@@ -12466,7 +12810,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Chipped Mill Fragment. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that chipped mill fragment is worthless.\"",
@@ -12486,7 +12831,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Chipped Plumb Bob. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that chipped plumb bob is worthless.\"",
@@ -12506,7 +12852,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Chipped Sandstone Disc. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that chipped sandstone disc is worthless.\"",
@@ -12526,7 +12873,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Chipped Stone Pestle. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that chipped stone pestle is worthless.\"",
@@ -12546,7 +12894,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Cracked Door Sill. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that cracked door sill is worthless.\"",
@@ -12566,7 +12915,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Cracked Hearth Brick. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that cracked hearth brick is worthless.\"",
@@ -12586,7 +12936,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Cracked Slate Shingle. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that cracked slate shingle is worthless.\"",
@@ -12606,7 +12957,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Fractured Mortar Block. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that fractured mortar block is worthless.\"",
@@ -12626,7 +12978,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Loose Gravel Paver. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that loose gravel paver is worthless.\"",
@@ -12646,7 +12999,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Split Chalk Marker. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that split chalk marker is worthless.\"",
@@ -12666,7 +13020,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Split Quarry Wedge. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that split quarry wedge is worthless.\"",
@@ -12686,7 +13041,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Split Stone Weight. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that split stone weight is worthless.\"",
@@ -12706,7 +13062,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Worn Grinding Pebble. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that worn grinding pebble is worthless.\"",
@@ -12726,7 +13083,8 @@
       "misc",
       "salvageable",
       "stone",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_stone"
     ],
     "description": "Worn Whetstone. Careful crushing recovers mineral grit, ceramic shards.",
     "flavor": "\"Look at the material before deciding that worn whetstone is worthless.\"",
@@ -12746,7 +13104,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Bent Loom Ratchet. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that bent loom ratchet is worthless.\"",
@@ -12766,7 +13126,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Bellows Valve. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that broken bellows valve is worthless.\"",
@@ -12786,7 +13148,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Crossbow Trigger. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken crossbow trigger is worthless.\"",
@@ -12806,7 +13170,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Hand Lantern. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that broken hand lantern is worthless.\"",
@@ -12826,7 +13192,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Spinning Reel. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that broken spinning reel is worthless.\"",
@@ -12846,7 +13214,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Wagon Brake. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that broken wagon brake is worthless.\"",
@@ -12866,7 +13236,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Broken Winding Key. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that broken winding key is worthless.\"",
@@ -12886,7 +13258,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Cracked Balance Scale. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that cracked balance scale is worthless.\"",
@@ -12906,7 +13280,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Cracked Orrery Arm. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cracked orrery arm is worthless.\"",
@@ -12926,7 +13302,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Damaged Grinding Crank. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that damaged grinding crank is worthless.\"",
@@ -12946,7 +13324,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Damaged Sighting Tube. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that damaged sighting tube is worthless.\"",
@@ -12966,7 +13346,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Damaged Spring Trap. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that damaged spring trap is worthless.\"",
@@ -12986,7 +13368,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Damaged Survey Compass. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact clear crystal may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that damaged survey compass is worthless.\"",
@@ -13006,7 +13390,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Jammed Door Closer. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact tempered spring may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that jammed door closer is worthless.\"",
@@ -13026,7 +13412,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Jammed Ratchet Wheel. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that jammed ratchet wheel is worthless.\"",
@@ -13046,7 +13434,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Seized Clock Pendulum. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that seized clock pendulum is worthless.\"",
@@ -13066,7 +13456,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Seized Music Box. Careful unfastening recovers metal scraps, wood pieces, copper wire. An intact fine gear may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that seized music box is worthless.\"",
@@ -13086,7 +13478,9 @@
       "misc",
       "salvageable",
       "mixed",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_mixed",
+      "mixed_hardware_source"
     ],
     "description": "Split Pump Piston. Careful unfastening recovers metal scraps, wood pieces, copper wire.",
     "flavor": "\"Look at the material before deciding that split pump piston is worthless.\"",
@@ -13106,7 +13500,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Broken Beeswax Comb. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that broken beeswax comb is worthless.\"",
@@ -13126,7 +13523,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Cracked Nut Shells. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that cracked nut shells is worthless.\"",
@@ -13146,7 +13546,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Crumbled Herb Wreath. Careful sorting recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that crumbled herb wreath is worthless.\"",
@@ -13166,7 +13569,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Discarded Reed Mat Offcuts. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that discarded reed mat offcuts is worthless.\"",
@@ -13186,7 +13592,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Discarded Tea Stems. Careful sorting recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that discarded tea stems is worthless.\"",
@@ -13206,7 +13615,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Dried Citrus Peel. Careful sorting recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that dried citrus peel is worthless.\"",
@@ -13226,7 +13638,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Dried Gourd Rind. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that dried gourd rind is worthless.\"",
@@ -13246,7 +13661,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Dried Onion Skins. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that dried onion skins is worthless.\"",
@@ -13266,7 +13684,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Empty Seed Husk Bundle. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that empty seed husk bundle is worthless.\"",
@@ -13286,7 +13707,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Mildewed Grain Chaff. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that mildewed grain chaff is worthless.\"",
@@ -13306,7 +13730,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Molded Hop Sack. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that molded hop sack is worthless.\"",
@@ -13326,7 +13753,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Old Apple Pressings. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that old apple pressings is worthless.\"",
@@ -13346,7 +13776,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Old Spice Sweepings. Careful sorting recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that old spice sweepings is worthless.\"",
@@ -13366,7 +13799,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Spent Dye Leaves. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that spent dye leaves is worthless.\"",
@@ -13386,7 +13822,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Spent Malt Heap. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that spent malt heap is worthless.\"",
@@ -13406,7 +13845,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Split Pine Pitch Pot. Careful sorting recovers plant scraps, resin lumps.",
     "flavor": "\"Look at the material before deciding that split pine pitch pot is worthless.\"",
@@ -13426,7 +13868,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Spoiled Flax Bundle. Careful sorting recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that spoiled flax bundle is worthless.\"",
@@ -13446,7 +13891,10 @@
       "misc",
       "salvageable",
       "provisions",
-      "village_salvage"
+      "village_salvage",
+      "material_source_village_provisions",
+      "plant_material",
+      "pulp_feedstock"
     ],
     "description": "Spoiled Herb Sachet. Careful sorting recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that spoiled herb sachet is worthless.\"",
@@ -13466,7 +13914,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Badger Guard Hairs. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that badger guard hairs is worthless.\"",
@@ -13486,7 +13936,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Bear Claw Sheath. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that bear claw sheath is worthless.\"",
@@ -13506,7 +13958,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Beaver Incisor Pair. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that beaver incisor pair is worthless.\"",
@@ -13526,7 +13980,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Boar Bristle Patch. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that boar bristle patch is worthless.\"",
@@ -13546,7 +14002,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Chicken Quill Bundle. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that chicken quill bundle is worthless.\"",
@@ -13566,7 +14024,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Cow Horn Ring. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that cow horn ring is worthless.\"",
@@ -13586,7 +14046,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Crawler Carapace Plate. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that crawler carapace plate is worthless.\"",
@@ -13606,7 +14068,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Deer Antler Tip. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that deer antler tip is worthless.\"",
@@ -13626,7 +14090,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Elk Tooth Row. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that elk tooth row is worthless.\"",
@@ -13646,7 +14112,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Fox Tail Tuft. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that fox tail tuft is worthless.\"",
@@ -13666,7 +14134,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Goat Horn Sheath. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that goat horn sheath is worthless.\"",
@@ -13686,7 +14156,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Grazer Horn Chip. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that grazer horn chip is worthless.\"",
@@ -13706,7 +14178,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Grouse Down Tuft. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that grouse down tuft is worthless.\"",
@@ -13726,7 +14200,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Gull Wing Down. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that gull wing down is worthless.\"",
@@ -13746,7 +14222,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Heron Pinion Quills. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that heron pinion quills is worthless.\"",
@@ -13766,7 +14244,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Moose Hoof Plate. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that moose hoof plate is worthless.\"",
@@ -13786,7 +14266,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Muskrat Fur Clump. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that muskrat fur clump is worthless.\"",
@@ -13806,7 +14288,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Otter Whisker Bundle. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that otter whisker bundle is worthless.\"",
@@ -13826,7 +14310,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Rabbit Foot Tuft. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that rabbit foot tuft is worthless.\"",
@@ -13846,7 +14332,9 @@
       "misc",
       "salvageable",
       "leather",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_leather",
+      "leather_source"
     ],
     "description": "Seal Whisker Pad. Careful cleaning recovers leather scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that seal whisker pad is worthless.\"",
@@ -13866,7 +14354,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Sheep Wool Locks. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sheep wool locks is worthless.\"",
@@ -13886,7 +14376,9 @@
       "misc",
       "salvageable",
       "leather",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_leather",
+      "leather_source"
     ],
     "description": "Stalker Tendon Knot. Careful cleaning recovers leather scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that stalker tendon knot is worthless.\"",
@@ -13906,7 +14398,9 @@
       "misc",
       "salvageable",
       "cloth",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_cloth",
+      "animal_fiber_source"
     ],
     "description": "Turkey Quill Fan. Careful cleaning recovers cloth scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that turkey quill fan is worthless.\"",
@@ -13926,7 +14420,9 @@
       "misc",
       "salvageable",
       "bone",
-      "animal_part"
+      "animal_part",
+      "material_source_animal_bone",
+      "bone_source"
     ],
     "description": "Wolf Fang Pair. Careful cleaning recovers bone chips.",
     "flavor": "\"Look at the material before deciding that wolf fang pair is worthless.\"",

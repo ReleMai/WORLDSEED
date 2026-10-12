@@ -5,7 +5,7 @@ from worldseed.content.registry import ContentRegistry
 from worldseed.core.rng import hash_u64
 from worldseed.entities.components import Inventory
 from worldseed.systems.state import LivingWorldState
-from worldseed.systems.crafting_ingredients import allocate_tag_inputs, signature_matches, token_matches
+from worldseed.systems.crafting_ingredients import allocate_tag_inputs, resolve_recipe_inputs, signature_matches, token_matches
 
 
 class CraftingSystem:
@@ -50,14 +50,7 @@ class CraftingSystem:
         return rows
 
     def resolve_inputs(self,recipe,inv:Inventory)->dict[str,int]|None:
-        if any(inv.count(iid)<n+recipe.catalysts.get(iid,0) for iid,n in recipe.inputs.items()):return None
-        if any(inv.count(iid)<n for iid,n in recipe.catalysts.items()):return None
-        allocation=allocate_tag_inputs(recipe,inv,self.registry)
-        if any(sum(allocation[tag].values())<need for tag,need in recipe.input_tags.items()):return None
-        costs=dict(recipe.inputs)
-        for choices in allocation.values():
-            for iid,n in choices.items():costs[iid]=costs.get(iid,0)+n
-        return costs
+        return resolve_recipe_inputs(recipe,inv.items,self.registry)
 
     def _discovery_requirements(self, recipe) -> set[str]:
         return set(self.discovery_signature(recipe))

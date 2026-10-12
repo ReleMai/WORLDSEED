@@ -129,21 +129,32 @@ class TaggedCraftingTests(unittest.TestCase):
                 recipe=replace(base,**changes);system,_=self.system(recipe)
                 with self.assertRaises(ValueError):system.registry._validate()
 
-    def test_tagged_recipes_cannot_enter_exact_settlement_production(self):
+    def test_tagged_recipes_share_physical_settlement_input_contract(self):
+        from types import SimpleNamespace
         from worldseed.systems.economy import EconomySystem
         from worldseed.systems.professions import SettlementProfessionSystem
-        recipe=RecipeDef('test:tagged_production','Tagged production',{'core:wood':1},{'core:plant_cordage':1},5,
+        recipe=RecipeDef('test:tagged_production','Tagged production',
+                         {'core:wood':1},{'core:plant_cordage':1},5,
                          input_tags={'prepared_fiber':1},discovery_tags=('prepared_fiber',))
         system,_=self.system(recipe)
-        proc=replace(next(iter(self.registry.settlement_processes.values())),recipe_id=recipe.id,
-                     inputs=recipe.inputs,outputs=recipe.outputs,station=None,occupation='carpenter')
+        proc=replace(next(iter(self.registry.settlement_processes.values())),
+                     recipe_id=recipe.id,inputs=recipe.inputs,outputs=recipe.outputs,
+                     station=None,occupation='carpenter')
         system.registry.settlement_processes=dict(system.registry.settlement_processes,**{proc.id:proc})
-        with self.assertRaisesRegex(ValueError,'tagged ingredients'):
-            system.registry._validate()
-        economy=EconomySystem.__new__(EconomySystem);economy.registry=system.registry
-        self.assertFalse(economy._recipe_prerequisites(None,proc))
-        professions=SettlementProfessionSystem.__new__(SettlementProfessionSystem);professions.registry=system.registry
-        self.assertFalse(professions._supports_process(proc))
+        system.registry._validate()
+        economy=EconomySystem.__new__(EconomySystem)
+        economy.registry=system.registry
+        economy.workplace_logistics=None
+        town=SimpleNamespace(stocks={'core:wood':1,'core:fiber':1},
+                             knowledge=[],culture_id='',religion_id='')
+        self.assertTrue(economy._recipe_prerequisites(town,proc))
+        professions=SettlementProfessionSystem.__new__(SettlementProfessionSystem)
+        professions.registry=system.registry
+        self.assertTrue(professions._supports_process(proc))
+        self.assertEqual(system.resolve_inputs(recipe,Inventory(town.stocks)),
+                         {'core:wood':1,'core:fiber':1})
+        town.stocks.pop('core:fiber')
+        self.assertIsNone(system.resolve_inputs(recipe,Inventory(town.stocks)))
 
     def test_existing_exact_recipe_signature_and_cost_are_unchanged(self):
         recipe=self.registry.recipes['core:plant_cordage'];system,_=self.system()
