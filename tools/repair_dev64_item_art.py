@@ -122,9 +122,15 @@ def repair():
     for asset, draw_image in zip(TARGETS, painter_functions):
         path = ICONS / (asset + ".png")
         if path.exists():
-            raise RuntimeError(f"Refusing to overwrite an existing curated icon: {path}")
-        image = draw_image().resize((64,64), Image.Resampling.LANCZOS)
-        image.save(path, optimize=True)
+            # Existing icons for recipes are curated art. Keep exact pixels and
+            # bytes; only the missing pine icon requires new authored art.
+            with Image.open(path) as stored:
+                image = stored.convert("RGBA")
+            if image.size != (64, 64):
+                raise ValueError(f"Existing sprite has unexpected dimensions: {path}")
+        else:
+            image = draw_image().resize((64,64), Image.Resampling.LANCZOS)
+            image.save(path, optimize=True)
         raw = path.read_bytes()
         sid = "dev64_authored_" + asset
         item_id = "core:" + asset
