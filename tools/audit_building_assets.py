@@ -15,6 +15,8 @@ from worldseed.config import DATA_DIR
 from worldseed.systems.building_shells import BuildingShell
 from worldseed.systems.state import pos_key
 from worldseed.ui.exterior_view import draw_shells, shell_at_pointer, _anchor_catalog
+from worldseed.ui.homestead_art import cabin_asset_path, topdown_cabin_asset_path, topdown_manifest
+from worldseed.systems.homestead_blueprints import catalog as homestead_catalog
 from worldseed.ui.pygame_terminal import PygameTerminal
 
 
@@ -27,19 +29,40 @@ def audit(output):
     cases=0;report=[]
     try:
         pg=term.pg
-        # The remaining building-folder PNGs are door leaves, including the
-        # retained legacy wood leaf. Check those exports as well as facades.
+        # A registered facade, an authored homestead sprite, and a door leaf
+        # have different geometry contracts. Audit each instead of assuming
+        # every non-facade PNG is a door.
         facade_paths={(root/p).resolve() for p in paths}
-        doors=[]
+        cabins={style_id for style_id,style in homestead_catalog()[1].items()
+                if style['home_id']=='log_cabin'}
+        homestead_paths=set()
+        for style_id in sorted(cabins):
+            asset=cabin_asset_path(style_id)
+            assert asset is not None,style_id+' has no legacy cabin artwork'
+            homestead_paths.add(asset.resolve())
+        for style_id in sorted(topdown_manifest()['style_family']):
+            assert style_id in cabins,style_id+' is not in the cabin catalog'
+            for orientation in range(4):
+                asset=topdown_cabin_asset_path(style_id,orientation)
+                assert asset is not None,(style_id,orientation,'missing directional cabin')
+                homestead_paths.add(asset.resolve())
+        doors=[];homesteads=[]
         for path in sorted((root/'assets/sprites/buildings').rglob('*.png')):
-            if path.resolve() in facade_paths:continue
-            assert path.stem.startswith('door_'),str(path)+' is an unaudited building asset'
+            resolved=path.resolve()
+            if resolved in facade_paths:continue
             source=pg.image.load(str(path)).convert_alpha()
+            if resolved in homestead_paths:
+                assert source.get_width()>0 and source.get_height()>0,str(path)+' has invalid dimensions'
+                assert pg.mask.from_surface(source,16).count()>0,str(path)+' has no visible cabin'
+                homesteads.append(str(path.relative_to(root)))
+                continue
+            assert path.stem.startswith('door_'),str(path)+' is an unaudited building asset'
             assert source.get_bounding_rect(16).width>0,str(path)+' has no visible door'
             for size in (16,28,56):
                 fitted=pg.transform.smoothscale(source,(size,max(3,size*2)))
                 assert pg.mask.from_surface(fitted,16).count()>0,str(path)+' has no selectable pixels'
             doors.append(str(path.relative_to(root)))
+        assert len(homesteads)==len(homestead_paths),(len(homesteads),len(homestead_paths))
         review_screen=term.screen
         audit_screen=pg.Surface(review_screen.get_size())
         for index,relative in enumerate(paths):
@@ -92,9 +115,9 @@ def audit(output):
             report.append({'asset':relative,'cases':36})
             if index%12==11 or index==len(paths)-1:
                 target=output/f'facades-{index//12+1}.png';pg.image.save(term.screen,str(target))
-        result={'assets':len(paths),'door_assets':doors,'geometry_cases':cases,'rows':report}
+        result={'assets':len(paths),'door_assets':doors,'homestead_assets':homesteads,'geometry_cases':cases,'rows':report}
         (output/'audit.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
-        print(json.dumps({'assets':len(paths),'door_assets':len(doors),'geometry_cases':cases,'output':str(output)}))
+        print(json.dumps({'assets':len(paths),'door_assets':len(doors),'homestead_assets':len(homesteads),'geometry_cases':cases,'output':str(output)}))
     finally:term.restore()
 
 
