@@ -116,18 +116,10 @@ class ResourceSystem:
         tid=self.world.tile_at(pos).terrain_id;season=self._season(minute)
         ck, lx, ly=split_world(pos);prepared=self._load_prepared_feature_chunk(ck.x,ck.y,season)
         fid=prepared[ly*CHUNK_SIZE+lx] if prepared is not None else self._raw_feature(pos.x,pos.y,tid,season)
-        # Shoreline reed patches remain available on previously prepared v5
-        # chunks. The choice is deterministic in world coordinates, so it
-        # does not mutate saved hydrology or rewrite the underlying water tile.
-        if self.version>=5 and tid=="core:river_shallow":
-            patch=hash_u64(self.seed,"wetland-reed-patch-v1",pos.x//5,pos.y//5)%1000
-            local=hash_u64(self.seed,"wetland-reed-cell-v1",pos.x,pos.y)%1000
-            if patch<460 and local<680:
-                reed=self.registry.resources.get("core:reed_bed")
-                if reed:
-                    fields=self.world.generator.sample_fields(pos)
-                    if reed.min_temp<=fields.temperature<=reed.max_temp and reed.min_moisture<=fields.moisture<=reed.max_moisture:
-                        fid=reed.id
+        # Preserve prepared resourcegen v5 chunks and existing feature choices.
+        # Only empty resource cells gain a deterministic shoreline reed patch.
+        if fid is None:
+            fid=self._shoreline_reed(pos,tid)
         if not fid:return None
         f=self.registry.resources.get(fid)
         if not f:return None
@@ -136,6 +128,35 @@ class ResourceSystem:
         # immutable and simply suppress incompatible placement at read time.
         if f.terrains and tid not in f.terrains:return None
         return fid
+
+    def _shoreline_reed(self,pos:WorldPos,tid:str)->str|None:
+        """Readable reed patches on freshwater shores, wetlands and nearby grass.
+
+        Earlier v5 reads offered reeds mainly on shallow river water and
+        gated them behind a high climate moisture threshold. Bank habitats
+        count as wet even if the broad climate sample is relatively dry.
+        """
+        if self.version<5 or "core:reed_bed" not in self.registry.resources:
+            return None
+        chance={
+            "core:riverbank":520,"core:wetland":480,
+            "core:floodplain":280,"core:river_shallow":300,
+            "core:grass":230,
+        }.get(tid,0)
+        if not chance:return None
+        if hash_u64(self.seed,"shore-reed-patch-v2",pos.x//6,pos.y//6)%1000>=740:
+            return None
+        if hash_u64(self.seed,"shore-reed-cell-v2",pos.x,pos.y)%1000>=chance:
+            return None
+        if tid=="core:grass":
+            nearby={"core:riverbank","core:wetland","core:floodplain",
+                    "core:river_shallow"}
+            if not any(self.world.tile_at(WorldPos(pos.x+dx,pos.y+dy,0)).terrain_id in nearby
+                       for dx,dy in ((1,0),(-1,0),(0,1),(0,-1))):
+                return None
+        fields=self.world.generator.sample_fields(pos)
+        reed=self.registry.resources["core:reed_bed"]
+        return reed.id if reed.min_temp<=fields.temperature<=reed.max_temp else None
 
     def _eligible_rows(self,x:int,y:int,tid:str,season:str):
         rows=self.by_terrain.get(tid,())

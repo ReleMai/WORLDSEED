@@ -1,0 +1,47 @@
+name: WORLDSEED Resource and Homestead Regression
+
+# Fast, narrowly scoped check; full game packaging remains manual.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worldseed/data/items.json"
+      - "worldseed/data/resources.json"
+      - "worldseed/systems/resources.py"
+      - "worldseed/systems/homestead_blueprints.py"
+      - "worldseed/ui/homestead_art.py"
+      - "worldseed/ui/homestead_panels.py"
+      - "worldseed/app.py"
+      - "tests/test_reed_thatch_resources.py"
+      - "tests/test_homestead_*.py"
+      - ".github/workflows/resources-homestead-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: worldseed-resource-homestead-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  focused-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Compile changed Python and tests
+        run: python -m compileall -q worldseed tests
+      - name: Test reed placement and pine harvesting
+        run: python -m unittest discover -s tests -p "test_reed_thatch_resources.py" -v
+      - name: Test homestead deposits, ghost placement and art
+        run: python -m unittest discover -s tests -p "test_homestead_*.py" -v

@@ -3326,9 +3326,24 @@ def _structure_group(st)->str:
 
 def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
     """Clickable modal for player blueprint stock, stages, and cancellation."""
-    from worldseed.systems.homestead_blueprints import STAGES, progress, catalog
+    from worldseed.systems.homestead_blueprints import (
+        STAGES,progress,catalog,material_sources,carried_material)
     sim=ctx.sim
     inv=ctx.entities.get(ctx.player_id,Inventory)
+
+    def deposit_requested(iid,amount):
+        """Deposit accepted source items against one construction requirement."""
+        remaining=max(0,int(amount));deposited=0
+        for source in material_sources(iid):
+            if not remaining:break
+            qty=min(remaining,inv.count(source))
+            if qty<=0:continue
+            before=inv.count(source)
+            sim.execute(DepositBlueprintCommand(ctx.player_id,uid,source,qty))
+            accepted=before-inv.count(source)
+            deposited+=accepted;remaining-=accepted
+        return deposited
+
     show=getattr(term,'present_homestead_depot',None)
     if callable(show):
         notice='';confirm_cancel=False
@@ -3336,11 +3351,13 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
             site=sim.state.homesteads[uid]
             ledger=progress(site)
             style=catalog()[1].get(site['style_id'],{})
-            materials=[(iid,ctx.registry.items[iid].name if iid in ctx.registry.items else iid,
-                        have,need,inv.count(iid)) for iid,(have,need) in ledger.items()]
+            materials=[(iid,'Roof thatch (mixed)' if iid=='core:reed_bundle'
+                         else ctx.registry.items[iid].name if iid in ctx.registry.items else iid,
+                         have,need,carried_material(inv,iid)) for iid,(have,need) in ledger.items()]
             show({'site':site,'style_name':style.get('name','Log cabin').split(' — ')[-1],
                   'stage_name':'Finished' if site['stage']>=4 else STAGES[site['stage']],
-                  'materials':materials,'notice':notice,'confirm_cancel':confirm_cancel})
+                  'materials':materials,'notice':notice,'confirm_cancel':confirm_cancel,
+                  'thatch_hint':'Thatch: reeds, pine/juniper boughs, grasses, eelgrass, rushes or brush'})
             key=term.read_key()
             if key=='UI_REDRAW':continue
             if key in ('ESC','UI_ACTION:depot_close'):return UI_BACK
@@ -3357,13 +3374,8 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
                 notice=sim.log[-1].message if sim.log else ''
                 continue
             if key=='UI_ACTION:depot_all':
-                count=0
-                for iid,(have,need) in ledger.items():
-                    qty=min(max(0,need-have),inv.count(iid))
-                    if qty>0:
-                        before=inv.count(iid)
-                        sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,qty))
-                        count+=before-inv.count(iid)
+                count=sum(deposit_requested(iid,need-have)
+                          for iid,(have,need) in ledger.items())
                 notice=f'Deposited {count} materials.' if count else 'No required materials can be deposited.'
                 continue
             for prefix,one in (('UI_ACTION:depot_item_one:',True),
@@ -3372,11 +3384,9 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
                 iid=key[len(prefix):]
                 if iid not in ledger:break
                 have,need=ledger[iid]
-                qty=1 if one else min(max(0,need-have),inv.count(iid))
-                if qty>0:
-                    sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,qty))
-                    notice=sim.log[-1].message if sim.log else ''
-                else:notice='You do not carry more of this material.'
+                qty=min(1,max(0,need-have)) if one else max(0,need-have)
+                taken=deposit_requested(iid,qty)
+                notice=f'Deposited {taken} materials.' if taken else 'You do not carry more of this material.'
                 break
         return UI_BACK
     while uid in sim.state.homesteads:
@@ -3390,7 +3400,7 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
                 f"Cabin: {catalog()[1][site['style_id']]['name']}",
                 f"Location: {site['x']}, {site['y']} | Rotation: {site['orientation']*90} degrees",
                 '']
-        status += [f"{ctx.registry.items[iid].name if iid in ctx.registry.items else iid}: {have}/{need} (carry {inv.count(iid)})"
+        status += [f"{'Roof thatch' if iid=='core:reed_bundle' else ctx.registry.items[iid].name if iid in ctx.registry.items else iid}: {have}/{need} (carry {carried_material(inv,iid)})"
                    for iid,(have,need) in rows.items()]
         options=[('inspect','Material ledger and building details')]
         if stage<4:
@@ -3406,8 +3416,7 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
             continue
         if choice=='deposit_all':
             for iid,(have,need) in rows.items():
-                n=min(need-have,inv.count(iid))
-                if n>0:sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,n))
+                deposit_requested(iid,need-have)
             continue
         if choice.startswith('deposit:'):
             iid=choice.split(':',1)[1]
@@ -3416,7 +3425,7 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
                 ('1','Deposit 1'),('5','Deposit up to 5'),('all','Deposit everything needed that you carry')])
             if qty:
                 amount=(need-have) if qty=='all' else int(qty)
-                sim.execute(DepositBlueprintCommand(ctx.player_id,uid,iid,amount))
+                deposit_requested(iid,amount)
             continue
         if choice=='build':
             sim.execute(AdvanceBlueprintCommand(ctx.player_id,uid))

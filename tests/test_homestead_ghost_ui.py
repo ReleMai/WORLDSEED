@@ -36,6 +36,12 @@ class HomesteadGhostUITests(unittest.TestCase):
             x,y=self.terminal._blueprint_cursor_cell(cursor)
             self.assertEqual((x,y),(-2,-2))
             self.assertEqual((x+1,y+1),(-1,-1))
+            from worldseed.systems.homestead_blueprints import footprint
+            site={'home_id':'log_cabin','style_id':'log_cabin_09',
+                  'x':x,'y':y,'z':0,'orientation':orientation}
+            cells=footprint(site)
+            self.assertEqual((sum(c[0] for c in cells)//len(cells),
+                              sum(c[1] for c in cells)//len(cells)),(-1,-1))
 
     def test_right_click_cancels_instead_of_opening_floor_menu(self):
         self.terminal.begin_homestead_placement('log_cabin_01')

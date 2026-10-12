@@ -50,18 +50,22 @@ class AuthoringContracts(unittest.TestCase):
                 fingerprints.add(sha256(path.read_bytes()).digest())
         self.assertEqual(len(fingerprints),16)
 
-    def test_painted_door_anchor_is_projected_to_its_actual_entrance(self):
+    def test_house_center_matches_footprint_center_for_all_styles_and_rotations(self):
         for style_id,style in catalog()[1].items():
             if style["home_id"]!="log_cabin":continue
             for orientation,direction in enumerate(CARDINAL_BY_ORIENTATION):
-                site={"home_id":"log_cabin","style_id":style_id,"x":10,"y":10,"z":0,"orientation":orientation}
-                x,y,w,h=cabin_image_rect(site,0,0,0,0,32,(440,440),directional=True)
-                (wx,wy,_),_=doorway(site)
-                ax,ay=TOPDOWN_DOOR_ANCHOR[direction]
-                tx=wx*32+(0 if orientation==1 else 32 if orientation==3 else 16)
-                ty=wy*32+(0 if orientation==2 else 32 if orientation==0 else 16)
-                self.assertLessEqual(abs(x+w*ax-tx),1.0,(style_id,direction))
-                self.assertLessEqual(abs(y+h*ay-ty),1.0,(style_id,direction))
+                site={"home_id":"log_cabin","style_id":style_id,
+                      "x":10,"y":10,"z":0,"orientation":orientation}
+                cells=footprint(site)
+                expected_x=(min(x for x,y,z in cells)+max(x for x,y,z in cells)+1)*16
+                expected_y=(min(y for x,y,z in cells)+max(y for x,y,z in cells)+1)*16
+                for directional in (True,False):
+                    x,y,w,h=cabin_image_rect(site,0,0,0,0,32,(440,440),directional=directional)
+                    self.assertLessEqual(abs(x+w/2-expected_x),.5,(style_id,direction,directional))
+                    self.assertLessEqual(abs(y+h/2-expected_y),.5,(style_id,direction,directional))
+                inside,outside=doorway(site)
+                self.assertIn(inside,cells)
+                self.assertNotIn(outside,cells)
 
     def test_door_anchors_and_asset_positions_are_catalog_complete(self):
         styles={key for key,value in catalog()[1].items() if value['home_id']=='log_cabin'}

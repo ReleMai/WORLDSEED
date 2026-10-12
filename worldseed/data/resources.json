@@ -64,11 +64,15 @@
       "core:bark": [
         1,
         2
+      ],
+      "core:pine_bough": [
+        2,
+        4
       ]
     },
     "blocks_movement": true,
     "blocks_sight": true,
-    "description": "A straight conifer yielding useful timber and fibrous bark.",
+    "description": "A straight conifer yielding timber, bark and roofing boughs when felled.",
     "flavor": "\"Needles whisper even when the forest is still.\"",
     "terrains": [
       "core:forest",

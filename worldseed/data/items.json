@@ -71,7 +71,8 @@
       "plant_material",
       "fiber_source",
       "tinder_material",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "description": "Brush has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Brush: ordinary in isolation, important when the right need appears.\"",
@@ -206,7 +207,8 @@
       "fiber_source",
       "fibrous_plant",
       "pulp_feedstock",
-      "tinder_material"
+      "tinder_material",
+      "thatch_material"
     ],
     "description": "Long wetland reeds suitable for mats, baskets, thatching, cordage, and kindling.",
     "flavor": "\"Where the ground is too wet for grass, reeds do the building.\"",
@@ -216,6 +218,33 @@
       "fuel"
     ],
     "sprite_tag": "reeds"
+  },
+  {
+    "id": "core:pine_bough",
+    "name": "Pine Boughs",
+    "asset": "salvage_juniper_bough",
+    "category": "resource",
+    "material": "core:organic",
+    "mass_g": 350,
+    "volume_ml": 1500,
+    "tags": [
+      "raw",
+      "plant",
+      "plant_material",
+      "conifer",
+      "bough",
+      "thatch_material",
+      "fuel",
+      "tinder_material"
+    ],
+    "description": "Needled pine branches collected while felling pines; suitable for layered temporary thatch roofing, bedding and fuel.",
+    "flavor": "Fresh conifer boughs make a quick shelter roof.",
+    "utility_roles": [
+      "construction",
+      "bedding",
+      "fuel"
+    ],
+    "sprite_tag": "salvage_juniper_bough"
   },
   {
     "id": "core:stone",
@@ -351,7 +380,8 @@
       "plant_material",
       "fiber_source",
       "fibrous_plant",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "base_value": 1,
     "description": "Tough dune grass useful as coarse fiber and thatching.",
@@ -776,7 +806,8 @@
       "plant_material",
       "fiber_source",
       "fibrous_plant",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "flavor": "A submerged meadow pulled from brackish water.",
     "sprite_tag": "eelgrass"
@@ -869,7 +900,8 @@
       "forage",
       "material_source_wild_plant",
       "plant_material",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "description": "Juniper Bough. Careful stripping recovers plant scraps. An intact aromatic oil may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that juniper bough is worthless.\""
@@ -1269,7 +1301,8 @@
       "forage",
       "material_source_wild_plant",
       "plant_material",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "description": "Rush Pith Bundle. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that rush pith bundle is worthless.\""
@@ -1292,7 +1325,8 @@
       "plant_material",
       "fiber_source",
       "fibrous_plant",
-      "pulp_feedstock"
+      "pulp_feedstock",
+      "thatch_material"
     ],
     "flavor": "Salt, wind, and tide have made every blade stubborn.",
     "sprite_tag": "saltmarsh_grass"

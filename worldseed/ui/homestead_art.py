@@ -68,38 +68,20 @@ def doorway_pixel(site,grid_x:int,grid_y:int,left:int,top:int,size:int):
             grid_y+(inside[1]-top+.5)*size)
 
 def cabin_image_rect(site,grid_x:int,grid_y:int,left:int,top:int,size:int,source_size,*,directional=False):
-    """Place artwork by its painted door relative to the *actual* entrance.
+    """Center the house image over its actual tile footprint.
 
-    All four directional PNGs are overhead views; never flip them to simulate
-    another compass direction. Keep the authored door on the real exterior
-    edge even for legacy styles with an off-center gameplay door.
+    Previously the entire image was translated to align a painted doorway,
+    shifting the building ghost off the cursor for off-center door styles.
+    The authoritative entrance remains marked separately by doorway_edge_rect.
     """
     cells=footprint(site)
     lo_x=min(x for x,y,z in cells);hi_x=max(x for x,y,z in cells)
     lo_y=min(y for x,y,z in cells);hi_y=max(y for x,y,z in cells)
-    bounds_width=(hi_x-lo_x+1)*size
-    iw=max(12,round(bounds_width*(1.11 if directional else 1.16)))
+    fw=(hi_x-lo_x+1)*size;fh=(hi_y-lo_y+1)*size
+    iw=max(12,round(fw*(1.11 if directional else 1.16)))
     ih=max(12,round(iw*source_size[1]/max(1,source_size[0])))
-    px=grid_x+(lo_x-left)*size
-    py=grid_y+(lo_y-top)*size
-    if directional:
-        ori=int(site["orientation"])
-        direction=CARDINAL_BY_ORIENTATION[ori]
-        anchor_x,anchor_y=TOPDOWN_DOOR_ANCHOR[direction]
-        (wx,wy,_),_=doorway(site)
-        # The threshold sits on the boundary between the entry cell and
-        # its exterior landing, not at an arbitrary centered sprite position.
-        target_x=grid_x+(wx-left+(.0 if ori==1 else 1.0 if ori==3 else .5))*size
-        target_y=grid_y+(wy-top+(.0 if ori==2 else 1.0 if ori==0 else .5))*size
-        return round(target_x-iw*anchor_x),round(target_y-ih*anchor_y),iw,ih
-    if site["orientation"]==0:
-        door_x,door_y=doorway_pixel(site,grid_x,grid_y,left,top,size)
-        ix=round(door_x-iw*DOOR_IMAGE_X[site["style_id"]])
-        iy=round(door_y+size*.24-ih*DOOR_IMAGE_Y[site["style_id"]])
-    else:
-        ix=px+(bounds_width-iw)//2
-        iy=py+(hi_y-lo_y+1)*size-ih-round(size*.1)
-    return ix,iy,iw,ih
+    px=grid_x+(lo_x-left)*size;py=grid_y+(lo_y-top)*size
+    return (round(px+(fw-iw)/2),round(py+(fh-ih)/2),iw,ih)
 
 def doorway_edge_rect(pg,site,grid_x:int,grid_y:int,left:int,top:int,size:int):
     """One edge of the actual entry tile, never the sprite's painted roof."""

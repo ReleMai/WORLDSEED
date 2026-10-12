@@ -46,6 +46,23 @@ class HomesteadBlueprintTests(unittest.TestCase):
         for _ in range(4):self.assertTrue(self.system.advance("home:1")[0])
         self.assertEqual(self.sim.state.homesteads["home:1"]["stage"],4)
         self.assertFalse(self.system.cancel("home:1",inv)[0])
+    def test_mixed_thatch_deposits_and_exact_refund(self):
+        self.assertTrue(self.system.place("log_cabin_01",0,0)[0])
+        inv=Inventory({"core:pine_bough":5,"core:beachgrass":4,
+                       "core:reed_bundle":3,"core:juniper_bough":2})
+        for item,count in (("core:pine_bough",5),("core:beachgrass",4),
+                           ("core:reed_bundle",3)):
+            self.assertTrue(self.system.deposit("home:1",item,count,inv)[0])
+        site=self.sim.state.homesteads["home:1"]
+        self.assertEqual(progress(site)["core:reed_bundle"],(12,12))
+        self.assertFalse(self.system.deposit("home:1","core:juniper_bough",1,inv)[0])
+        self.assertEqual(inv.count("core:juniper_bough"),2)
+        self.assertEqual(site["stored"]["core:pine_bough"],5)
+        self.assertTrue(self.system.cancel("home:1",inv)[0])
+        for iid,n in (("core:pine_bough",5),("core:beachgrass",4),
+                      ("core:reed_bundle",3),("core:juniper_bough",2)):
+            self.assertEqual(inv.count(iid),n)
+
     def test_cancel_returns_materials(self):
         self.assertTrue(self.system.place("log_cabin_01",0,0)[0])
         inv=Inventory({"core:wood":4})
@@ -75,6 +92,15 @@ class HomesteadBlueprintTests(unittest.TestCase):
                 self.assertEqual(len(set(cells)),9)
                 self.assertIn(inside,cells)
                 self.assertNotIn(outside,cells)
+
+    def test_thatch_substitutes_satisfy_every_roof_stage(self):
+        self.assertTrue(self.system.place("log_cabin_01",0,0)[0])
+        site=self.sim.state.homesteads["home:1"]
+        for iid,n in catalog()[0]["log_cabin"]["materials"].items():
+            if iid!="core:reed_bundle":site["stored"][iid]=n
+        site["stored"]["core:pine_bough"]=12
+        for _ in range(4):self.assertTrue(self.system.advance("home:1")[0])
+        self.assertEqual(site["stage"],4)
 
     def test_unexplored_landing_disallows_preview_and_placement(self):
         self.sim.discovered_tiles_set={"0,0,0"}

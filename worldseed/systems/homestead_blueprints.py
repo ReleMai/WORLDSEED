@@ -11,6 +11,20 @@ from worldseed.systems.state import pos_key
 STAGES = ("Foundation", "Frame", "Roof", "Finishing")
 MILESTONES = (0, 20, 60, 90, 100)
 
+# Each roofing item supplies one unit of thatch. Keep its original identity in
+# the saved depot so refunds and inventory history are not silently converted.
+THATCH_MATERIALS = (
+    "core:reed_bundle", "core:pine_bough", "core:juniper_bough",
+    "core:beachgrass", "core:saltmarsh_grass", "core:eelgrass",
+    "core:rush_pith_bundle", "core:brush",
+)
+
+def material_sources(required_item_id):
+    return THATCH_MATERIALS if required_item_id=="core:reed_bundle" else (required_item_id,)
+
+def carried_material(inv,required_item_id):
+    return sum(inv.count(iid) for iid in material_sources(required_item_id))
+
 @lru_cache(maxsize=1)
 def catalog():
     raw = json.loads((DATA_DIR / "homestead_catalog_v1.json").read_text(encoding="utf-8"))
@@ -38,7 +52,10 @@ def doorway(site):
 
 def progress(site):
     materials=catalog()[0][site["home_id"]]["materials"]
-    return {iid: (site["stored"].get(iid,0),n) for iid,n in materials.items()}
+    # Count substitute items toward the roof without losing refund identities.
+    return {iid: (min(n,sum(site["stored"].get(source,0)
+                        for source in material_sources(iid))),n)
+            for iid,n in materials.items()}
 
 class HomesteadBlueprintService:
     def __init__(self,sim):
@@ -114,8 +131,11 @@ class HomesteadBlueprintService:
         site=self._reachable(uid)
         if not site or site["stage"]==4:return False,"Move within reach of your unfinished marker."
         required=catalog()[0][site["home_id"]]["materials"]
-        if item_id not in required or count<1:return False,"Not a required material."
-        n=min(int(count),inv.count(item_id),required[item_id]-site["stored"].get(item_id,0))
+        target=("core:reed_bundle" if item_id in THATCH_MATERIALS and "core:reed_bundle" in required
+                else item_id)
+        if target not in required or count<1:return False,"Not a required material."
+        supplied,needed=progress(site)[target]
+        n=min(int(count),inv.count(item_id),needed-supplied)
         if n<1:return False,"Nothing more of that item can be deposited."
         if not inv.remove(item_id,n):return False,"Those materials are no longer carried."
         site["stored"][item_id]=site["stored"].get(item_id,0)+n
@@ -128,8 +148,9 @@ class HomesteadBlueprintService:
         if site["stage"]==4:return False,"The log cabin is complete."
         materials=catalog()[0][site["home_id"]]["materials"]
         threshold=MILESTONES[site["stage"]+1]
+        ledger=progress(site)
         missing=[name for name,n in materials.items()
-                 if site["stored"].get(name,0)<n*threshold//100]
+                 if ledger[name][0]<n*threshold//100]
         if missing:return False,"Still needed for this stage: "+", ".join(missing)
         stage=site["stage"];site["stage"]+=1;site["revision"]+=1
         return True,"Log cabin complete." if site["stage"]==4 else STAGES[stage]+" constructed."

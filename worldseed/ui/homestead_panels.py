@@ -247,6 +247,9 @@ def present_blueprint_depot(term,data):
     info=str(data.get('notice','')).strip()
     if info:
         _label(term,info,(cx,controls_top),color=term._theme['accent'],width=cw)
+    else:
+        _label(term,str(data.get('thatch_hint','')),(cx,controls_top),
+               color=term._theme['muted'],width=cw)
     by=y+h-91
     if data.get('confirm_cancel'):
         _label(term,'Return all deposited materials and remove the blueprint?',(cx,by-22),
