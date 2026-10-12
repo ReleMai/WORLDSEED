@@ -78,19 +78,27 @@ class EconomyRoutineTransactionTests(unittest.TestCase):
             uid='npc:phase4-move',name='Walker',age=29,occupation='merchant',
             traits=[],x=0,y=0,z=0,settlement_id=town.uid,faction_id=town.faction_id,
             home_id='home:phase4',workplace_id='work:phase4',
-            tasks=[{'kind':'move','x':3,'y':0}],
+            tasks=[{'kind':'move','x':10,'y':0}],
         )
         state.npcs[npc.uid]=npc
-        ai=NPCSystem(state,b'phase4-move',NullHistory())
+        # Real movement requires a passable physical world. The fixed tick
+        # may traverse multiple cached path cells; the decision must not.
+        world=SimpleNamespace(is_passable=lambda _pos: True)
+        ai=NPCSystem(state,b'phase4-move',NullHistory(),world=world)
         player=WorldPos(0,0,0)
         ai.tick_update(5,player)
-        self.assertEqual((npc.x,npc.y),(1,0))
+        first_position=(npc.x,npc.y)
+        self.assertGreater(npc.x,0)
+        self.assertEqual(npc.y,0)
+        self.assertLess(npc.x,10)
         hunger=npc.hunger
         ai.decision_update(60,player,execute_active=False)
-        self.assertEqual((npc.x,npc.y),(1,0))
+        self.assertEqual((npc.x,npc.y),first_position)
         self.assertGreater(npc.hunger,hunger)
         ai.tick_update(65,player)
-        self.assertEqual((npc.x,npc.y),(2,0))
+        self.assertGreater(npc.x,first_position[0])
+        self.assertEqual(npc.y,0)
+        self.assertLessEqual(npc.x,10)
 
     def test_phase4_engine_replays_fixed_ticks_during_normal_advance(self):
         class Harness:

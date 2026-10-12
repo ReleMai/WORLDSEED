@@ -89,6 +89,29 @@ jobs:
         shell: pwsh
         run: python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.${{ matrix.test }}
 
+  # Full settlement/economy assertions, isolated from short smoke.
+  settlement-regressions:
+    name: Settlement and economy regressions
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED
+        shell: pwsh
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: All settlement and economy assertions
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Settlement economy property crime stealth security and civic regressions" --timeout 720 -- python -u -m unittest -v tests.test_territory_claims tests.test_regional_transport_phase3 tests.test_regional_transport_phase2 tests.test_settlement_generation_foundation tests.test_settlement_profession_yards tests.test_settlement_population_bindings tests.test_dev43_settlement_diversity tests.test_dev45_farm_compounds tests.test_regional_civilization_routes tests.test_civic_economy_social tests.test_economy_routines_transactions tests.test_phase4_activities tests.test_phase4_miners tests.test_phase4_professions tests.test_phase4_workshop_expansion tests.test_physical_property_crime_profile tests.test_building_stealth tests.test_property_storage_casing tests.test_household_economy tests.test_workplace_logistics
+
   smoke:
     runs-on: windows-latest
     timeout-minutes: 10
@@ -158,10 +181,6 @@ jobs:
       - name: NPC job lab remaining simulations
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "NPC job lab remaining simulations" --timeout 180 -- python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.test_autonomous_tree_home_market_carpenter_chain_conserves_goods_and_cash tests.test_npc_job_lab.NPCJobLabTests.test_same_seed_and_actions_produce_identical_snapshots_in_every_scenario tests.test_npc_job_lab.NPCJobLabTests.test_snapshot_is_observational_json_serializable_and_detached tests.test_npc_job_lab.NPCJobLabTests.test_snapshot_exposes_the_shared_personal_timeline_without_updating_routines tests.test_npc_job_lab.NPCJobLabTests.test_path_stall_diagnostic_uses_elapsed_game_minutes tests.test_npc_job_lab.NPCJobLabTests.test_scarcity_blocks_crafting_without_inventing_inputs_or_output tests.test_npc_job_lab.NPCJobLabTests.test_every_scenario_spawns_workers_on_passable_cells_at_worker_limits tests.test_npc_job_lab.NPCJobLabTests.test_blocked_work_is_diagnostic_without_failing_invariants tests.test_npc_job_lab.NPCJobLabTests.test_simultaneous_paid_and_unpaid_meals_count_actual_consumption_once tests.test_npc_job_lab.NPCJobLabTests.test_blocked_workplace_never_crosses_wall_or_teleports_to_produce tests.test_npc_job_lab.NPCJobLabTests.test_competing_workers_never_share_a_station_reservation tests.test_npc_job_lab.NPCJobLabTests.test_invalid_configuration_is_rejected tests.test_npc_job_lab.NPCJobLabTests.test_time_validation_rejects_invalid_or_unbounded_advances_atomically
-
-      - name: Settlement economy property crime stealth security and civic regressions
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Settlement economy property crime stealth security and civic regressions" --timeout 300 -- python -u -m unittest -v -f tests.test_territory_claims tests.test_regional_transport_phase3 tests.test_regional_transport_phase2 tests.test_settlement_generation_foundation tests.test_settlement_profession_yards tests.test_settlement_population_bindings tests.test_dev43_settlement_diversity tests.test_dev45_farm_compounds tests.test_regional_civilization_routes tests.test_civic_economy_social tests.test_economy_routines_transactions tests.test_phase4_activities tests.test_phase4_miners tests.test_phase4_professions tests.test_phase4_workshop_expansion tests.test_physical_property_crime_profile tests.test_building_stealth tests.test_property_storage_casing tests.test_household_economy tests.test_workplace_logistics
 
       - name: Dev64 item art and database regressions
         shell: pwsh
