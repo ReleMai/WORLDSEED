@@ -220,27 +220,32 @@ class NPCJobLabTests(unittest.TestCase):
                         self.assertIsNotNone(home)
                         self.assertTrue(lab.world.is_passable(home), npc.home_id)
 
-    def test_every_supplied_workshop_job_produces_at_worker_limits(self):
-        for workers in (1, 8):
-            with self.subTest(workers=workers):
-                lab = NPCJobLab(scenario="workshops", seed="all-workshop-outputs", workers=workers)
-                initial_goods, initial_cash = all_goods(lab), cash(lab)
-                lab.run(1440)
-                metrics = lab.snapshot()["metrics"]
-                self.assertEqual(metrics["warnings"], [])
-                self.assertEqual(cash(lab), initial_cash)
-                self.assert_goods_conserved(lab, initial_goods)
-                for occupation in {n.occupation for n in lab.state.npcs.values()}:
-                    worker = next(n for n in lab.state.npcs.values() if n.occupation == occupation)
-                    with self.subTest(occupation=occupation):
-                        if occupation == "farmer":
-                            harvest_item = lab.registry.crops["core:wheat"].harvest_item
-                            self.assertGreater(metrics["gathered"].get(harvest_item, 0), 0)
-                        else:
-                            self.assertGreater(metrics["batches"].get(worker.assigned_process_id, 0), 0)
-                            process = lab.registry.settlement_processes[worker.assigned_process_id]
-                            for item_id in process.outputs:
-                                self.assertGreater(metrics["produced"].get(item_id, 0), 0)
+    def _assert_supplied_workshop_jobs_produce(self, workers):
+        """Keep both worker limits independently testable and fully simulated."""
+        lab = NPCJobLab(scenario="workshops", seed="all-workshop-outputs", workers=workers)
+        initial_goods, initial_cash = all_goods(lab), cash(lab)
+        lab.run(1440)
+        metrics = lab.snapshot()["metrics"]
+        self.assertEqual(metrics["warnings"], [])
+        self.assertEqual(cash(lab), initial_cash)
+        self.assert_goods_conserved(lab, initial_goods)
+        for occupation in {n.occupation for n in lab.state.npcs.values()}:
+            worker = next(n for n in lab.state.npcs.values() if n.occupation == occupation)
+            with self.subTest(occupation=occupation, workers=workers):
+                if occupation == "farmer":
+                    harvest_item = lab.registry.crops["core:wheat"].harvest_item
+                    self.assertGreater(metrics["gathered"].get(harvest_item, 0), 0)
+                else:
+                    self.assertGreater(metrics["batches"].get(worker.assigned_process_id, 0), 0)
+                    process = lab.registry.settlement_processes[worker.assigned_process_id]
+                    for item_id in process.outputs:
+                        self.assertGreater(metrics["produced"].get(item_id, 0), 0)
+
+    def test_every_supplied_workshop_job_produces_at_one_worker(self):
+        self._assert_supplied_workshop_jobs_produce(1)
+
+    def test_every_supplied_workshop_job_produces_at_eight_workers(self):
+        self._assert_supplied_workshop_jobs_produce(8)
 
     def test_blocked_work_is_diagnostic_without_failing_invariants(self):
         lab = NPCJobLab(scenario="blocked_path", seed="expected-path-stall")

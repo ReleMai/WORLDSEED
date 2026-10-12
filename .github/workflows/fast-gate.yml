@@ -54,6 +54,41 @@ jobs:
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
 
+  # Long NPC simulations run as independent jobs instead of consuming the
+  # short smoke job's 10-minute budget. No extra 180-second subprocess cutoff:
+  # GitHub's 360-minute hosted-job ceiling is the final safety limit.
+  npc-lab-endurance:
+    name: NPC lab — ${{ matrix.label }}
+    runs-on: windows-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: full-day conservation
+            test: test_all_scenarios_conserve_every_good_and_cash_through_one_day
+          - label: workshop 1 worker
+            test: test_every_supplied_workshop_job_produces_at_one_worker
+          - label: workshop 8 workers
+            test: test_every_supplied_workshop_job_produces_at_eight_workers
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED
+        shell: pwsh
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Full-duration NPC simulation
+        shell: pwsh
+        run: python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.${{ matrix.test }}
+
   smoke:
     runs-on: windows-latest
     timeout-minutes: 10
@@ -119,14 +154,6 @@ jobs:
       - name: Living NPC routines equipment and action combat
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Living NPCs and action combat" --timeout 180 -- python -u -m unittest -v tests.test_npc_schedules tests.test_npc_schedule_integration tests.test_npc_living_routines tests.test_npc_equipment tests.test_npc_living_ui tests.test_action_combat tests.test_npc_production_economy tests.test_npc_job_lab.NPCJobLabCLITests tests.test_npc_job_lab.NPCJobLabViewerTests
-
-      - name: NPC job lab full-day conservation
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "NPC job lab full-day conservation" --timeout 180 -- python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.test_all_scenarios_conserve_every_good_and_cash_through_one_day
-
-      - name: NPC job lab workshop availability
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "NPC job lab workshop availability" --timeout 180 -- python -u -m unittest -v tests.test_npc_job_lab.NPCJobLabTests.test_every_supplied_workshop_job_produces_at_worker_limits
 
       - name: NPC job lab remaining simulations
         shell: pwsh
