@@ -33,3 +33,4 @@ jobs:
           python -m unittest discover -s tests -p "test_property_storage_casing.py" -v
           python -m unittest discover -s tests -p "test_dev50_interior_storage.py" -v
           python -m unittest discover -s tests -p "test_material_crafting_content.py" -v
+          python -m unittest discover -s tests -p "test_craftable_sprite_coverage.py" -v
