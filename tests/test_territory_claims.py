@@ -123,7 +123,8 @@ class TerritoryClaimTests(unittest.TestCase):
         )
         state.npcs[guard.uid] = guard
         territory = TerritorySystem(StubWorld(), state, StubRegionPlanner())
-        ai = NPCSystem(state, b"guard-territory", SimpleNamespace(record=lambda *args, **kwargs: None))
+        # Physical guard movement requires the same passability authority as gameplay.
+        ai = NPCSystem(state, b"guard-territory", SimpleNamespace(record=lambda *args, **kwargs: None), world=StubWorld())
         ai.attach_territory(territory)
         ai.attach_route_planner(SimpleNamespace(
             territory_target_for_settlement=lambda _uid: monument,
