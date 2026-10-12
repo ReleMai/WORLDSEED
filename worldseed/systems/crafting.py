@@ -77,7 +77,7 @@ class CraftingSystem:
             and counts==Counter(self.discovery_signature(r))
             and self.discovery_signature(r)),key=lambda r:r.id)
 
-    def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes) -> tuple[bool,str,int]:
+    def combine_in_pot(self,items:tuple[str,...],inv:Inventory,world_seed:bytes,minute:int=0) -> tuple[bool,str,int]:
         """Consume a valid experiment and select one catalog result reproducibly."""
         if not self.state.player_crafting_discovery_enabled:
             return False,'This world uses the legacy crafting catalog.',5
@@ -94,9 +94,18 @@ class CraftingSystem:
         self.state.player_discovered_recipes=sorted(set(self.state.player_discovered_recipes)|{recipe.id})
         self.state.player_unseen_recipes=sorted(set(self.state.player_unseen_recipes)|{recipe.id})
         self.state.player_crafting_experiments=attempt+1
+        # Experiment rewards are deliberately weaker than normal crafting.
+        # A successful recipe produces one prototype per distinct output.
+        samples=[]
+        for iid,n in sorted(recipe.outputs.items()):
+            if n<=0 or iid not in self.registry.items:continue
+            inv.add(iid,1)
+            samples.append(self.registry.items[iid].name)
+            if self.artifact_system is not None:
+                self.artifact_system.create(iid,"experiment",minute,owner="player",experimental=True)
         self.sync_discoveries(inv)
-        return True,f'You discover {recipe.name}! The recipe is recorded; crafting it will produce '+', '.join(
-            f'{self.registry.items[i].name} x{n}' for i,n in recipe.outputs.items() if i in self.registry.items)+'.',max(10,15+recipe.difficulty*5)
+        detail=", ".join(samples) if samples else "no physical sample"
+        return True,f'You discover {recipe.name}! Experimental, lower-quality prototype received: {detail}. Recipe learned.',max(10,15+recipe.difficulty*5)
 
     def recipe_is_discovered(self, recipe_id:str) -> bool:
         if not self.state.player_crafting_discovery_enabled:return True

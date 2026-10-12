@@ -637,29 +637,31 @@
     "required_tool_tag": null,
     "required_tool_power": 0,
     "minutes": 10,
-    "regrow_days": 30,
+    "regrow_days": 9,
     "yields": {
       "core:reed_bundle": [
-        1,
-        3
+        2,
+        5
       ]
     },
     "blocks_movement": false,
     "blocks_sight": false,
-    "description": "Tall reeds rooted in saturated soil near water.",
+    "description": "A harvestable patch of wetland reeds rooted at shallow freshwater margins; useful for thatching, mats and woven goods.",
     "flavor": "\"Wet ground grows its own building material.\"",
     "terrains": [
       "core:grass",
       "core:wetland",
-      "core:floodplain"
+      "core:floodplain",
+      "core:riverbank",
+      "core:river_shallow"
     ],
     "min_temp": 16000,
     "max_temp": 56000,
     "min_moisture": 50000,
     "max_moisture": 65535,
     "seasons": [],
-    "density": 120,
-    "patch_scale": 4
+    "density": 220,
+    "patch_scale": 5
   },
   {
     "id": "core:wild_grain_patch",
@@ -733,14 +735,15 @@
     "flavor": "\"Food and fiber standing ankle-deep in water.\"",
     "terrains": [
       "core:grass",
-      "core:wetland"
+      "core:wetland",
+      "core:riverbank"
     ],
     "min_temp": 18000,
     "max_temp": 56000,
     "min_moisture": 54000,
     "max_moisture": 65535,
     "seasons": [],
-    "density": 70,
+    "density": 105,
     "patch_scale": 4
   },
   {

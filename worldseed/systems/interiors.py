@@ -553,6 +553,19 @@ class InteriorSystem:
             return f"{name}: household furnishing. You can freely reposition it if you own this home."
         return f"{name}. This is the original building fixture, not a duplicate source of goods."
 
+    def _npc_entry_point(self,plan:InteriorPlan)->tuple[int,int]|None:
+        """Find an accessible free arrival point so residents do not stack."""
+        gap=ACTOR_RADIUS*3
+        for dx,dy in ((0,0),(gap,0),(-gap,0),(0,gap),(0,-gap),
+                      (gap,gap),(-gap,gap),(gap,-gap),(-gap,-gap)):
+            x,y=plan.entry_x+dx,plan.entry_y+dy
+            if not position_clear(plan,x,y):continue
+            if any(a.space_id==plan.uid and
+                   abs(a.x-x)<ACTOR_RADIUS*2+40 and abs(a.y-y)<ACTOR_RADIUS*2+40
+                   for a in self.state.interior_actors.values()):continue
+            return x,y
+        return None
+
     def enter_npc(self, npc, door_uid: str) -> bool:
         """Home arrival uses the same physical door and lock authority as players."""
         if npc.uid in self.state.interior_actors:
@@ -567,10 +580,10 @@ class InteriorSystem:
         plan = self._prepare(door)
         if plan is None or plan.function not in {"residence", "inn", "barracks", "outskirt_camp"}:
             return False
-        if not position_clear(plan, plan.entry_x, plan.entry_y):
-            return False
+        entry=self._npc_entry_point(plan)
+        if entry is None:return False
         minute = int(self.sim.clock.minute)
-        self._put_actor(npc.uid, InteriorActor(plan.uid, plan.entry_x, plan.entry_y, action="arriving", last_need_minute=minute))
+        self._put_actor(npc.uid, InteriorActor(plan.uid, entry[0], entry[1], action="arriving", last_need_minute=minute))
         # Legacy coordinates are an exterior portal anchor, never indoor cells.
         npc.x, npc.y, npc.z = door.x, door.y, door.z
         return True
@@ -604,9 +617,10 @@ class InteriorSystem:
                 or security.blocks_actor(WorldPos(door.x, door.y, door.z), npc.uid)):
             return False
         plan = self._prepare(door)
-        if plan is None or not position_clear(plan, plan.entry_x, plan.entry_y):
-            return False
-        self._put_actor(npc.uid, InteriorActor(plan.uid, plan.entry_x, plan.entry_y, action="working", last_need_minute=int(self.sim.clock.minute)))
+        if plan is None:return False
+        entry=self._npc_entry_point(plan)
+        if entry is None:return False
+        self._put_actor(npc.uid, InteriorActor(plan.uid, entry[0], entry[1], action="working", last_need_minute=int(self.sim.clock.minute)))
         npc.x, npc.y, npc.z = door.x, door.y, door.z
         return True
 
@@ -800,8 +814,11 @@ class InteriorSystem:
             # cadence; once satisfied, a stale rest goal cannot retain them.
             recovering = npc.goal == "rest" and npc.rest > 0
             sleeping = block.activity == "sleep" or npc.rest >= 80 or recovering
-            domestic = sleeping or scheduled_goal == "rest"
-            leave = bool(npc.tasks) or answering or urgent or not domestic
+            dining=scheduled_goal=="eat" and not sleeping
+            domestic = sleeping or scheduled_goal == "rest" or dining
+            # Needing food is a reason to sit down, not to run out of the
+            # building during the very meal the daily schedule assigned.
+            leave = bool(npc.tasks) or answering or (urgent and not dining) or not domestic
             distant = abs(plan.exterior_x - self.sim.player_pos.x) + abs(plan.exterior_y - self.sim.player_pos.y) > 80
             if distant:
                 # Tier-C does not replay household locomotion indefinitely.
@@ -831,18 +848,30 @@ class InteriorSystem:
                 actor.target_x = actor.target_y = None
             if not leave and not actor.waypoints:
                 phase = minute // 30
-                candidates = [f for f in plan.furniture if is_bed_piece(f.piece_id)] if sleeping else [f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair", "table", "bench"))]
-                candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None)
+                tables=[f for f in plan.furniture if "table" in furniture_base_piece(f.piece_id)]
+                if sleeping:
+                    candidates=[f for f in plan.furniture if is_bed_piece(f.piece_id)]
+                else:
+                    candidates=[f for f in plan.furniture if any(k in furniture_base_piece(f.piece_id) for k in ("chair","bench"))]
+                    if dining and tables:
+                        # Seat nearest an actual dining table, not inside its
+                        # collision box. All candidates are real fixtures.
+                        candidates.sort(key=lambda f:(min(abs(f.x-t.x)+abs(f.y-t.y) for t in tables),f.uid))
+                candidate = next((f for f in candidates if f.uid == npc.bed_fixture_id), None) if sleeping else None
                 if candidate is None and candidates:
-                    candidate = sorted(candidates, key=lambda f: f.uid)[hash_u64(self.sim.seed, "interior-household-routine", uid, phase) % len(candidates)]
+                    candidate = candidates[0] if dining else sorted(candidates, key=lambda f: f.uid)[hash_u64(self.sim.seed, "interior-household-routine", uid, phase) % len(candidates)]
                 if candidate:
                     target = next(((x, y) for x, y in ((candidate.x + candidate.w // 2, candidate.y + candidate.h + ACTOR_RADIUS + 30), (candidate.x + candidate.w + ACTOR_RADIUS + 30, candidate.y + candidate.h // 2)) if position_clear(plan, x, y)), None)
                 else:
                     room = plan.rooms[1 + hash_u64(self.sim.seed, "interior-household-room", uid, phase) % (len(plan.rooms) - 1)]
                     target = (room.rect.x + room.rect.w // 2, room.rect.y + room.rect.h - 600)
-                actor.action = "resting" if sleeping else "relaxing"
+                actor.action = "resting" if sleeping else "eating" if dining else "relaxing"
                 if target:
-                    self._household_route(plan, actor, target)
+                    if all(a is actor or a.space_id!=plan.uid or
+                           abs(a.x-target[0])>ACTOR_RADIUS*2 or
+                           abs(a.y-target[1])>ACTOR_RADIUS*2
+                           for a in self.state.interior_actors.values()):
+                        self._household_route(plan, actor, target)
             if actor.waypoints:
                 tx, ty = actor.waypoints[0]
                 dx, dy = tx - actor.x, ty - actor.y
@@ -852,5 +881,11 @@ class InteriorSystem:
                     actor.waypoints.pop(0)
                 elif not moved:
                     actor.waypoints.clear()
-            if not actor.waypoints and actor.action == "resting" and old_tick // 30 != minute // 30:
-                npc.rest = max(0, npc.rest - 20)
+            if not actor.waypoints and old_tick // 30 != minute // 30:
+                if actor.action=="resting":
+                    npc.rest=max(0,npc.rest-20)
+                elif actor.action=="eating" and dining:
+                    # Only fulfill the meal after walking to household seating.
+                    # Food needs are state changes, not free inventory production.
+                    npc.hunger=max(0,npc.hunger-32)
+                    npc.thirst=max(0,npc.thirst-12)

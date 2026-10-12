@@ -212,6 +212,17 @@ class NPCIntroductionTests(unittest.TestCase):
         self.assertEqual(term.frames[0][2], ['introduce', 'goodbye'])
         self.assertEqual(before, sim.state.to_dict())
 
+    def test_introduction_refreshes_name_and_opening_before_exit(self):
+        sim,npc,ctx=self.fixture()
+        term=RecordingTerm(['UI_SELECT:0','ESC'])
+        _conversation_menu(ctx,term,npc)
+        self.assertEqual(term.frames[0][1],'Stranger')
+        self.assertEqual(term.frames[1][1],npc.name)
+        view=term.frames[1][4]
+        opening=view.get('data',{}).get('opening','')
+        self.assertNotEqual(opening,term.frames[0][4].get('data',{}).get('opening',''))
+        self.assertIn(npc.uid,sim.state.introduced_npcs)
+
     def test_intro_then_nested_topic_esc_preserves_parent_selection(self):
         sim, npc, ctx = self.fixture()
         term = RecordingTerm(['UI_SELECT:0', 'UI_SELECT:1', 'ESC', 'ESC'])

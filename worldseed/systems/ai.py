@@ -100,6 +100,13 @@ class NPCSystem:
         frontage_lookup=getattr(self.settlement_physicalization,"frontage_for",None)
         threshold=frontage_lookup(npc.home_id) if callable(frontage_lookup) else None
         target=threshold or WorldPos(door.x,door.y,door.z)
+        # A decorative frontage can be several cells from the portal.
+        # Only a tile at most one step from the real door can trigger entry.
+        if abs(target.x-door.x)+abs(target.y-door.y)>1 or target.z!=door.z:
+            neighbors=(WorldPos(door.x+dx,door.y+dy,door.z)
+                       for dx,dy in ((0,1),(1,0),(-1,0),(0,-1)))
+            target=next((p for p in neighbors if self.movement_passable(npc,p,self.state.clock_minute)),
+                        WorldPos(door.x,door.y,door.z))
         # Residents approach the same physical door as the player before the
         # shared portal authority transfers them to a continuous local space.
         return {"kind":"move","x":target.x,"y":target.y,"z":target.z,
@@ -121,6 +128,12 @@ class NPCSystem:
         if not world_pass:return False
         if self.building and not self.building.passable(p,world_pass):return False
         if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
+        # Outdoor NPCs are physical actors, not one-per-tile render overlays.
+        # Use the existing 16-tile bucket index instead of an O(world population)
+        # scan for every A* neighbor or interpolated locomotion step.
+        for other in self.nearby_npcs(p,0):
+            if other.uid!=npc.uid and other.uid not in self.state.interior_actors:
+                return False
         return True
 
     def _is_active_local(self,npc:NPCState,player_pos:WorldPos)->bool:
@@ -376,8 +389,13 @@ class NPCSystem:
             entry=self._home_entry_task(npc)
             npc.tasks=[entry or {"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"rest"}]
         elif goal=="eat":
-            target=self._service_destination(town,("market",))
-            npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"eat"}]
+            entry=self._home_entry_task(npc)
+            if entry is not None:
+                # Eat in the actual furnished home, at the dining furniture.
+                npc.tasks=[entry]
+            else:
+                target=self._service_destination(town,("market",))
+                npc.tasks=[{"kind":"move","x":target.x,"y":target.y},{"kind":"perform","action":"eat"}]
         elif goal=="drink":
             npc.tasks=[{"kind":"move","x":center.x,"y":center.y},{"kind":"perform","action":"drink"}]
         elif goal=="guard":
@@ -574,7 +592,12 @@ class NPCSystem:
                 return
             # aggregate/remote travel is straight-line at coarse fidelity
             old_x,old_y=npc.x,npc.y
-            npc.x += 0 if npc.x==goal.x else (1 if goal.x>npc.x else -1);npc.y += 0 if npc.y==goal.y else (1 if goal.y>npc.y else -1)
+            nx=npc.x+(0 if npc.x==goal.x else (1 if goal.x>npc.x else -1))
+            ny=npc.y+(0 if npc.y==goal.y else (1 if goal.y>npc.y else -1))
+            candidate=WorldPos(nx,ny,npc.z)
+            if not self.movement_passable(npc,candidate,minute):
+                return
+            npc.x,npc.y=nx,ny
             npc.fx=0.5;npc.fy=0.5
             self._face_step(npc,old_x,old_y)
             if (npc.x,npc.y)==(goal.x,goal.y) and not any(task.get(key) for key in ('interior_home_door_uid','interior_work_door_uid','interior_storage_door_uid')):npc.tasks.pop(0)

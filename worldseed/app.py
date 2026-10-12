@@ -783,7 +783,12 @@ def _conversation_thread(ctx:GameContext,term:Terminal,target,response:str='')->
             sim.execute(IntroduceNPCCommand(ctx.player_id,target.uid))
             response=sim.log[-1].message if sim.log else ''
             nav.reset_to_root();nav.current.selected=0;nav.current.scroll=0
+            # Invalidate the stranger transcript cache immediately. Otherwise
+            # the new speaker name is known but the on-screen greeting still
+            # contains the anonymous pre-introduction utterance until exit.
             nav.current.payload={'topic':'root','response':response}
+            updater=getattr(term,'invalidate_dialogue_cache',None)
+            if callable(updater):updater()
             continue
         dialogue.apply_option(target,option,sim.clock.minute)
         route.scroll=0

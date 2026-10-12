@@ -10,17 +10,20 @@ EPITHETS=['Wayfarer','Red Edge','Oathkeeper','Deep Song','Ashen Hand','River Sta
 class ArtifactSystem:
     def __init__(self,state:LivingWorldState,registry:ContentRegistry,seed:bytes):self.state=state;self.registry=registry;self.seed=seed
 
-    def create(self,base_item:str,creator:str,minute:int,quality_hint:int|None=None,material_override:str|None=None,process_notes:list[str]|None=None,owner:str='player',components_override:dict|None=None)->ArtifactState:
+    def create(self,base_item:str,creator:str,minute:int,quality_hint:int|None=None,material_override:str|None=None,process_notes:list[str]|None=None,owner:str='player',components_override:dict|None=None,experimental:bool=False)->ArtifactState:
         item=self.registry.items[base_item];material=material_override or item.material;mat=self.registry.materials.get(material) if material else None;rng=PCG32(derive_seed(self.seed,'artifact',base_item,creator,minute,len(self.state.artifacts)))
-        if quality_hint is None:quality=max(20,min(98,45+rng.randbelow(45)+(5 if mat and mat.toughness>70 else 0)))
+        if experimental:
+            quality=8+rng.randbelow(13)
+        elif quality_hint is None:quality=max(20,min(98,45+rng.randbelow(45)+(5 if mat and mat.toughness>70 else 0)))
         else:quality=max(20,min(99,quality_hint-5+rng.randbelow(11)))
-        uid=self.state.uid('artifact');name=f'{item.name} of {rng.choice(EPITHETS)}'
+        uid=self.state.uid('artifact')
+        name=f'Experimental {item.name}' if experimental else f'{item.name} of {rng.choice(EPITHETS)}'
         if components_override is not None:components=components_override
         elif 'sword' in base_item:components={'blade':{'material':material or 'unknown','quality':quality,'condition':100},'guard':{'material':'core:iron','quality':max(20,quality-8),'condition':100},'grip':{'material':'core:wood','quality':max(20,quality-12),'condition':100},'wrapping':{'material':'core:leather','quality':max(20,quality-10),'condition':100}}
         elif 'pick' in base_item:components={'head':{'material':material or 'unknown','quality':quality,'condition':100},'haft':{'material':'core:wood','quality':max(20,quality-10),'condition':100},'binding':{'material':'core:fiber','quality':max(20,quality-15),'condition':100}}
         else:components={'body':{'material':material or 'unknown','quality':quality,'condition':100}}
         if process_notes:components['metallurgy']={'notes':list(process_notes),'quality_input':quality_hint or quality}
-        a=ArtifactState(uid,name,base_item,material or 'unknown',quality,creator,minute,owner,[f'Forged at minute {minute}.'],components,[{'minute':minute,'from':'','to':owner,'reason':'created','holder':creator}],100,20,0)
+        a=ArtifactState(uid,name,base_item,material or 'unknown',quality,creator,minute,owner,[f'Experimental prototype at minute {minute}.' if experimental else f'Forged at minute {minute}.'],components,[{'minute':minute,'from':'','to':owner,'reason':'created','holder':creator}],100,20,0)
         self.state.artifacts[uid]=a;return a
 
     def ensure_for_owner(self,base_item:str,owner:str,minute:int,creator:str='unknown maker')->ArtifactState:

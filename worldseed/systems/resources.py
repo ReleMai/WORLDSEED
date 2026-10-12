@@ -116,6 +116,18 @@ class ResourceSystem:
         tid=self.world.tile_at(pos).terrain_id;season=self._season(minute)
         ck, lx, ly=split_world(pos);prepared=self._load_prepared_feature_chunk(ck.x,ck.y,season)
         fid=prepared[ly*CHUNK_SIZE+lx] if prepared is not None else self._raw_feature(pos.x,pos.y,tid,season)
+        # Shoreline reed patches remain available on previously prepared v5
+        # chunks. The choice is deterministic in world coordinates, so it
+        # does not mutate saved hydrology or rewrite the underlying water tile.
+        if self.version>=5 and tid=="core:river_shallow":
+            patch=hash_u64(self.seed,"wetland-reed-patch-v1",pos.x//5,pos.y//5)%1000
+            local=hash_u64(self.seed,"wetland-reed-cell-v1",pos.x,pos.y)%1000
+            if patch<460 and local<680:
+                reed=self.registry.resources.get("core:reed_bed")
+                if reed:
+                    fields=self.world.generator.sample_fields(pos)
+                    if reed.min_temp<=fields.temperature<=reed.max_temp and reed.min_moisture<=fields.moisture<=reed.max_moisture:
+                        fid=reed.id
         if not fid:return None
         f=self.registry.resources.get(fid)
         if not f:return None
@@ -352,6 +364,9 @@ class ResourceSystem:
             if "natural_container" in f.tags:
                 return False,f"Open, move, or break apart the {f.name.lower()} instead.",5,{}
             tool=self._best_tool(inv,self.registry,f.required_tool_tag)
+            reed_bed=fv.feature_id=="core:reed_bed"
+            # A knife/shears improve reed gathering but are not mandatory.
+            reed_cutter=self._best_tool(inv,self.registry,"knife") if reed_bed else 0
             if tool < f.required_tool_power:
                 need=f.required_tool_tag or "tool"
                 return False,f"You need a suitable {need} to harvest the {f.name.lower()}.",5,{}
@@ -361,13 +376,16 @@ class ResourceSystem:
             for iid,(lo,hi) in f.yields.items():
                 span=max(1,hi-lo+1);amount=lo+(hash_u64(self.seed,"resource-yield",self.version,pos.x,pos.y,pos.z,iid)%span)
                 if f.required_tool_tag and tool>=3:amount+=1
+                if reed_bed and reed_cutter>0:amount+=1+min(2,reed_cutter//3)
                 amount+=skill//5+talent_bonus
                 inv.add(iid,amount);out[iid]=amount
             self.state.resource_depletion[pos_key(pos.x,pos.y,pos.z)]=minute
             self.revision+=1
             pretty=", ".join(f"{n} {self.registry.items[i].name.lower()}" for i,n in out.items())
-            minutes=max(4,f.minutes*max(38,100-skill*5)//100)
-            return True,f"You harvest {f.name.lower()}: {pretty}.",minutes,out
+            effort=max(30,100-skill*5-(min(35,reed_cutter*12) if reed_bed else 0))
+            minutes=max(3,f.minutes*effort//100)
+            detail=f" (foraging {skill}, cutter {reed_cutter})" if reed_bed else ""
+            return True,f"You harvest {f.name.lower()}: {pretty}. Work time: {minutes} game minutes{detail}.",minutes,out
         t=self.world.tile_at(pos).terrain
         if pos.z<0 and t.gather_item and t.gather_amount>0 and t.depleted_to:
             tool=self._best_tool(inv,self.registry,"pick")

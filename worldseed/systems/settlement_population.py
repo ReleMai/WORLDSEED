@@ -213,8 +213,9 @@ class SettlementPopulationBinder:
         occupied = {
             (int(npc.x), int(npc.y))
             for npc in representatives
-            if npc.home_id in valid_homes
+            if npc.uid not in getattr(self.state,"interior_actors",{})
         }
+        seen_positions=set()
         homes_bound = workplaces_bound = repositioned = homeless = 0
 
         for npc in representatives:
@@ -296,6 +297,23 @@ class SettlementPopulationBinder:
                     npc.tasks = []
                     occupied.add(target)
                     repositioned += 1
+
+            if reposition_unbound and npc.uid not in getattr(self.state,"interior_actors",{}):
+                # Old saves and initial settlement generation can contain
+                # multiple actors on one exterior tile. Rehome only the later
+                # conflicting actor onto an unoccupied prepared spawn, never
+                # silently destroy or hide an NPC during rendering.
+                current=(int(npc.x),int(npc.y))
+                if current in seen_positions:
+                    destination=self._common_spawn(skeleton,npc.uid,occupied)
+                    if destination not in occupied:
+                        npc.x,npc.y,npc.z=destination[0],destination[1],0
+                        npc.fx=npc.fy=0.5
+                        npc.tasks=[]
+                        repositioned+=1
+                        current=destination
+                seen_positions.add(current)
+                occupied.add(current)
 
             preferences = self.WORK_FUNCTIONS.get(npc.occupation, ())
             workplace_candidates = [

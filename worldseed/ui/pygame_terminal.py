@@ -123,6 +123,11 @@ class PygameTerminal(PointerUI):
         self._ui_window_resizing: str | None = None
         self._ui_window_pointer_last = (0, 0)
         self._current_presentation = ''
+        self._inventory_desc_scroll=0
+        self._inventory_desc_item=''
+        self._inventory_desc_max=0
+        self._inventory_desc_rect=None
+        self._inventory_desc_track=None
         self._world_activity_tab = 'activity'
         self._activity_footer_context = None
         self._realtime_callback = None
@@ -487,6 +492,11 @@ class PygameTerminal(PointerUI):
                 continue
             if event.type == pg.MOUSEWHEEL:
                 if self._input_mode != 'world':
+                    desc=getattr(self,'_inventory_desc_rect',None)
+                    if self._current_presentation=='inventory_unified' and desc and desc.collidepoint(self._last_mouse) and event.y:
+                        max_scroll=max(0,self._inventory_desc_max)
+                        self._inventory_desc_scroll=max(0,min(max_scroll,self._inventory_desc_scroll-(3 if event.y>0 else -3)))
+                        return 'UI_REDRAW'
                     if event.y:return 'PGUP' if event.y>0 else 'PGDN'
                     continue
                 # Mouse wheel controls local-world zoom.
@@ -500,6 +510,14 @@ class PygameTerminal(PointerUI):
                 return 'RESIZE'
             if event.type == pg.MOUSEBUTTONDOWN:
                 self._last_mouse=getattr(event,'pos',self._last_mouse)
+                if (event.button==1 and self._current_presentation=='inventory_unified'
+                        and self._input_mode!='world'):
+                    track=getattr(self,'_inventory_desc_track',None)
+                    if track is not None and track.collidepoint(self._last_mouse):
+                        ratio=(self._last_mouse[1]-track.y)/max(1,track.h)
+                        self._inventory_desc_scroll=max(0,min(self._inventory_desc_max,
+                            round(ratio*self._inventory_desc_max)))
+                        return 'UI_REDRAW'
                 if event.button==1:
                     tab_token=self._hit_token(self._last_mouse)
                     if tab_token in ('FOOTER_TAB:activity','FOOTER_TAB:combat'):
@@ -1615,11 +1633,35 @@ class PygameTerminal(PointerUI):
             stat=f"x{meta.get('count',0)}  •  {meta.get('unit_mass_kg',0):.2f} kg ea  •  {meta.get('unit_volume_l',0):.2f} L ea"
             stat_s=self.small_font.render(self._fit_ui_text(stat,self.small_font,detail.width-28),True,self._theme['text']);screen.blit(stat_s,(detail.x+14,yy));yy+=20
             desc=str(meta.get('description','')).strip()
-            desc_lines=self._wrap_pixel_text(desc,self.small_font,detail.width-28) if desc else []
+            line_width=detail.width-44
+            desc_lines=self._wrap_pixel_text(desc,self.small_font,line_width) if desc else []
             detail_lines=[str(v) for v in meta.get('detail_lines',[]) if v]
-            for line in (desc_lines[:2]+detail_lines):
-                if yy+16>action_top:break
-                line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,detail.width-28),True,self._theme['muted']);screen.blit(line_s,(detail.x+14,yy));yy+=17
+            lines=list(desc_lines)
+            for extra in detail_lines:
+                lines.extend(self._wrap_pixel_text(extra,self.small_font,line_width))
+            viewport=pg.Rect(detail.x+14,yy,detail.width-32,max(20,action_top-yy-3))
+            self._inventory_desc_rect=viewport
+            if self._inventory_desc_item!=iid:
+                self._inventory_desc_item=iid
+                self._inventory_desc_scroll=0
+            visible=max(1,viewport.h//17)
+            self._inventory_desc_max=max(0,len(lines)-visible)
+            self._inventory_desc_scroll=min(self._inventory_desc_scroll,self._inventory_desc_max)
+            start=self._inventory_desc_scroll
+            oldclip=screen.get_clip();screen.set_clip(viewport)
+            for i,line in enumerate(lines[start:start+visible]):
+                line_s=self.small_font.render(self._fit_ui_text(line,self.small_font,line_width),True,self._theme['muted'])
+                screen.blit(line_s,(viewport.x,viewport.y+i*17))
+            screen.set_clip(oldclip)
+            if self._inventory_desc_max:
+                track=pg.Rect(detail.right-14,viewport.y,5,viewport.h)
+                self._inventory_desc_track=track
+                pg.draw.rect(screen,self._theme['edge'],track,border_radius=2)
+                thumb_h=max(12,round(track.h*visible/max(1,len(lines))))
+                top=track.y+round((track.h-thumb_h)*start/self._inventory_desc_max)
+                pg.draw.rect(screen,self._theme['accent'],(track.x,top,track.w,thumb_h),border_radius=2)
+            else:
+                self._inventory_desc_track=None
 
             qty_y=action_top
             qlab=self.small_font.render(f'QTY {action_amount}/{meta.get("count",0)}',True,self._theme['text']);screen.blit(qlab,(detail.x+14,qty_y+8))

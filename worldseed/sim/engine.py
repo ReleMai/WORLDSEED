@@ -473,10 +473,12 @@ class Simulation:
             ok,msg=self.homestead.deposit(command.uid,command.item_id,command.amount,self.entities.get(command.actor,Inventory))
             self._message(msg)
         elif isinstance(command,AdvanceBlueprintCommand):
-            ok,msg=self.homestead.advance(command.uid);self._message(msg)
+            ok,msg=self.homestead.advance(command.uid)
+            minutes=self._construction_duration(35) if ok else MINUTES_PER_ACTION
+            self._message(msg+(f" Construction time: {minutes} game minutes." if ok else ""))
         elif isinstance(command,CancelBlueprintCommand):
             ok,msg=self.homestead.cancel(command.uid,self.entities.get(command.actor,Inventory));self._message(msg)
-        elif isinstance(command,BuildCommand):self._build(command)
+        elif isinstance(command,BuildCommand):minutes=self._build(command)
         elif isinstance(command,DismantleCommand):self._dismantle(command)
         elif isinstance(command,PickupCommand):self._pickup(command)
         elif isinstance(command,DropCommand):self._drop(command)
@@ -1575,11 +1577,25 @@ class Simulation:
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
         ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
-        ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed)
+        ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed,int(getattr(getattr(self,'clock',None),'minute',0)))
         self._message(msg)
         return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
-    def _build(self,cmd:BuildCommand)->None:
-        pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.place(cmd.structure_id,pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
+    def _construction_duration(self,base_minutes:int)->int:
+        skill=self.player_skill('crafting')
+        strength=self.player_attribute('strength')
+        # Existing crafting skill already covers timber, joinery and
+        # construction; do not invent a separate skill incompatible with saves.
+        return max(5,int(base_minutes)*max(35,100-skill*5-max(0,strength-5)*2)//100)
+
+    def _build(self,cmd:BuildCommand)->int:
+        pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy)
+        spec=self.registry.structures.get(cmd.structure_id)
+        ok,msg=self.building.place(cmd.structure_id,pos,self.entities.get(cmd.actor,Inventory))
+        if not ok:self._message(msg);return MINUTES_PER_ACTION
+        cost=sum(int(n) for n in (spec.cost.values() if spec is not None else ()))
+        duration=self._construction_duration(12+4*cost)
+        self._message(f'{msg} Construction time: {duration} game minutes (crafting skill {self.player_skill("crafting")}).')
+        return duration
     def _dismantle(self,cmd:DismantleCommand)->None:
         pos=self.entities.get(cmd.actor,Position).value.moved(cmd.dx,cmd.dy);ok,msg=self.building.dismantle(pos,self.entities.get(cmd.actor,Inventory));self._message(msg)
     def _command_container(self,uid:str):
