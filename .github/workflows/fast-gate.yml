@@ -54,13 +54,12 @@ jobs:
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
 
-  # Long NPC simulations run as independent jobs instead of consuming the
-  # short smoke job's 10-minute budget. No extra 180-second subprocess cutoff:
-  # GitHub's 360-minute hosted-job ceiling is the final safety limit.
+  # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
+  # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
   npc-lab-endurance:
     name: NPC lab — ${{ matrix.label }}
     runs-on: windows-latest
-    timeout-minutes: 360
+    timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
@@ -69,8 +68,6 @@ jobs:
             test: test_all_scenarios_conserve_every_good_and_cash_through_one_day
           - label: workshop 1 worker
             test: test_every_supplied_workshop_job_produces_at_one_worker
-          - label: workshop 8 workers
-            test: test_every_supplied_workshop_job_produces_at_eight_workers
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
