@@ -108,7 +108,7 @@ Wooded terrain and legacy berry-thicket ground. Forest wildlife also treats berr
 |---|---|---:|---|
 | Mature Birch | year-round | 180 | Bark x2-3, Wood x2-5 |
 | Mature Oak | year-round | 420 | Bark x1-2, Wood x4-7 |
-| Mature Pine | year-round | 380 | Bark x1-2, Wood x3-6 |
+| Mature Pine | year-round | 380 | Bark x1-2, Pine Boughs x2-4, Wood x3-6 |
 | Mature Willow | year-round | 120 | Bark x2-4, Branch x1-2, Wood x2-4 |
 
 ### Plants and forage
@@ -240,7 +240,7 @@ Cold open ground. Current authored resource coverage is sparse and strongly clim
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
-| Mature Pine | year-round | 380 | Bark x1-2, Wood x3-6 |
+| Mature Pine | year-round | 380 | Bark x1-2, Pine Boughs x2-4, Wood x3-6 |
 
 ### Plants and forage
 

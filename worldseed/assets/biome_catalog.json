@@ -372,7 +372,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 26,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         },
         {
@@ -381,7 +381,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         },
         {
@@ -390,7 +390,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
@@ -573,7 +573,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 380,
-          "yields": "Bark x1-2, Wood x3-6",
+          "yields": "Bark x1-2, Pine Boughs x2-4, Wood x3-6",
           "exclusive": false
         },
         {
@@ -802,7 +802,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 26,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         },
         {
@@ -811,7 +811,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
@@ -1190,7 +1190,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
@@ -1289,7 +1289,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 380,
-          "yields": "Bark x1-2, Wood x3-6",
+          "yields": "Bark x1-2, Pine Boughs x2-4, Wood x3-6",
           "exclusive": false
         }
       ],
@@ -1536,7 +1536,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
@@ -1804,7 +1804,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
@@ -2082,7 +2082,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "—",
+          "yields": "\u2014",
           "exclusive": false
         }
       ],
