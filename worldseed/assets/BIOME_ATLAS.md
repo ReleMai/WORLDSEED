@@ -32,11 +32,23 @@ Open temperate land. Resource and wildlife eligibility still depends on climate 
 |---|---|---:|---|
 | Blueberry Bush | summer, autumn | 120 | Blueberries x2-5 |
 | Broadleaf Plantain ★ | spring, summer, autumn | 55 | Plantain x1-3 |
-| Cattails | year-round | 70 | Cattail Root x1-2, Reeds x1-2 |
+| Burdock Burr Cluster Patch | year-round | 60 | Burdock Burr Cluster x1 |
+| Cattails | year-round | 105 | Cattail Root x1-2, Reeds x1-2 |
+| Chicory Root Crown Patch | year-round | 60 | Chicory Root Crown x1 |
 | Dandelion Patch | spring, summer, autumn | 110 | Dandelion x1-3 |
+| Dried Teasel Head Patch | year-round | 60 | Dried Teasel Head x1 |
+| Flax Seed Capsule Patch | year-round | 60 | Flax Seed Capsule x1 |
+| Goldenrod Spray Patch | year-round | 30 | Goldenrod Spray x1 |
+| Milkweed Pod Patch | year-round | 60 | Milkweed Pod x1 |
+| Moonmint Sprig Patch | summer, autumn | 8 | Moonmint Sprig x1 |
+| Mullein Flower Spike Patch | year-round | 60 | Mullein Flower Spike x1 |
 | Nettle Patch | spring, summer | 80 | Brush x1-2, Nettle x1-3 |
 | Raspberry Cane | summer | 90 | Raspberries x2-4 |
-| Reed Bed | year-round | 120 | Reeds x1-3 |
+| Reed Bed | year-round | 220 | Reeds x2-5 |
+| Rose Hip Branch Patch | year-round | 30 | Rose Hip Branch x1 |
+| Saffron Crocus Tuft Patch | summer, autumn | 8 | Saffron Crocus Tuft x1 |
+| Sunspice Rhizome Patch | summer, autumn | 8 | Sunspice Rhizome x1 |
+| Sweet Clover Tops Patch | year-round | 30 | Sweet Clover Tops x1 |
 | Wild Carrot | summer, autumn | 55 | Wild Carrot x1-2 |
 | Wild Grain | summer, autumn | 80 | Wild Grain x1-3 |
 | Wild Onion | spring, summer, autumn | 65 | Wild Onion x1-3 |
@@ -103,12 +115,24 @@ Wooded terrain and legacy berry-thicket ground. Forest wildlife also treats berr
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
+| Amberroot Crown Patch | summer, autumn | 8 | Amberroot Crown x1 |
+| Beech Nut Cup Patch | year-round | 30 | Beech Nut Cup x1 |
+| Birch Catkin Cluster Patch | year-round | 60 | Birch Catkin Cluster x1 |
 | Blueberry Bush | summer, autumn | 120 | Blueberries x2-5 |
 | Bolete Cluster ★ | summer, autumn | 45 | Bolete x1-3 |
+| Dogwood Stem Bundle Patch | year-round | 30 | Dogwood Stem Bundle x1 |
+| Ghost Orchid Stem Patch | summer, autumn | 8 | Ghost Orchid Stem x1 |
+| Hazel Catkin Spray Patch | year-round | 60 | Hazel Catkin Spray x1 |
+| Juniper Bough Patch | year-round | 60 | Juniper Bough x1 |
 | Morel Cluster ★ | spring | 35 | Morel x1-3 |
 | Nettle Patch | spring, summer | 80 | Brush x1-2, Nettle x1-3 |
+| Oak Gall Cluster Patch | year-round | 60 | Oak Gall Cluster x1 |
 | Raspberry Cane | summer | 90 | Raspberries x2-4 |
+| Resinous Pine Cone Patch | year-round | 60 | Resinous Pine Cone x1 |
+| Silverleaf Sprig Patch | summer, autumn | 8 | Silverleaf Sprig x1 |
+| Spruce Pitch Knot Patch | year-round | 60 | Spruce Pitch Knot x1 |
 | Wild Strawberry Patch | spring, summer | 70 | Strawberries x1-4 |
+| Willow Bark Curl Patch | year-round | 30 | Willow Bark Curl x1 |
 
 ### Animals
 
@@ -158,10 +182,22 @@ Dry, warm scrubland with hardy forage, loose resources, and scrub-adapted wildli
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
+| Amberroot Crown Patch | summer, autumn | 8 | Amberroot Crown x1 |
+| Beech Nut Cup Patch | year-round | 30 | Beech Nut Cup x1 |
+| Birch Catkin Cluster Patch | year-round | 60 | Birch Catkin Cluster x1 |
 | Dandelion Patch | spring, summer, autumn | 110 | Dandelion x1-3 |
+| Dogwood Stem Bundle Patch | year-round | 30 | Dogwood Stem Bundle x1 |
+| Ghost Orchid Stem Patch | summer, autumn | 8 | Ghost Orchid Stem x1 |
+| Hazel Catkin Spray Patch | year-round | 60 | Hazel Catkin Spray x1 |
+| Juniper Bough Patch | year-round | 60 | Juniper Bough x1 |
+| Oak Gall Cluster Patch | year-round | 60 | Oak Gall Cluster x1 |
+| Resinous Pine Cone Patch | year-round | 60 | Resinous Pine Cone x1 |
+| Silverleaf Sprig Patch | summer, autumn | 8 | Silverleaf Sprig x1 |
+| Spruce Pitch Knot Patch | year-round | 60 | Spruce Pitch Knot x1 |
 | Wild Carrot | summer, autumn | 55 | Wild Carrot x1-2 |
 | Wild Grain | summer, autumn | 80 | Wild Grain x1-3 |
 | Wild Onion | spring, summer, autumn | 65 | Wild Onion x1-3 |
+| Willow Bark Curl Patch | year-round | 30 | Willow Bark Curl x1 |
 | Yarrow | summer, autumn | 50 | Yarrow x1-3 |
 
 ### Animals
@@ -206,6 +242,19 @@ Cold open ground. Current authored resource coverage is sparse and strongly clim
 |---|---|---:|---|
 | Mature Pine | year-round | 380 | Bark x1-2, Wood x3-6 |
 
+### Plants and forage
+
+| Feature | Seasons | Density | Yields |
+|---|---|---:|---|
+| Alpine Sorrel Root Patch | year-round | 30 | Alpine Sorrel Root x1 |
+| Cotton Grass Tuft Patch | year-round | 30 | Cotton Grass Tuft x1 |
+| Crimson Stonecrop Crown Patch | year-round | 8 | Crimson Stonecrop Crown x1 |
+| Crowberry Stem Mat Patch | year-round | 60 | Crowberry Stem Mat x1 |
+| Dwarf Willow Twigs Patch | year-round | 60 | Dwarf Willow Twigs x1 |
+| Frost Sage Branch Patch | year-round | 8 | Frost Sage Branch x1 |
+| Mountain Avens Seedhead Patch | year-round | 60 | Mountain Avens Seedhead x1 |
+| Reindeer Lichen Mat Patch | year-round | 60 | Reindeer Lichen Mat x1 |
+
 ### Animals
 
 | Animal | Diet | Group | Climate-limited |
@@ -231,6 +280,19 @@ Exposed rocky ground associated with steep or high terrain.
 | Terrain | Runtime ID | Feature |
 |---|---|---|
 | Rocky Ground | core:rock | terrain |
+
+### Plants and forage
+
+| Feature | Seasons | Density | Yields |
+|---|---|---:|---|
+| Alpine Sorrel Root Patch | year-round | 30 | Alpine Sorrel Root x1 |
+| Cotton Grass Tuft Patch | year-round | 30 | Cotton Grass Tuft x1 |
+| Crimson Stonecrop Crown Patch | year-round | 8 | Crimson Stonecrop Crown x1 |
+| Crowberry Stem Mat Patch | year-round | 60 | Crowberry Stem Mat x1 |
+| Dwarf Willow Twigs Patch | year-round | 60 | Dwarf Willow Twigs x1 |
+| Frost Sage Branch Patch | year-round | 8 | Frost Sage Branch x1 |
+| Mountain Avens Seedhead Patch | year-round | 60 | Mountain Avens Seedhead x1 |
+| Reindeer Lichen Mat Patch | year-round | 60 | Reindeer Lichen Mat x1 |
 
 ### Animals
 
@@ -273,11 +335,23 @@ Wet soil and standing-water margins supporting moisture-dependent plants and nat
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
-| Cattails | year-round | 70 | Cattail Root x1-2, Reeds x1-2 |
+| Alder Cone Cluster Patch | year-round | 60 | Alder Cone Cluster x1 |
+| Blue Lotus Stalk Patch | summer, autumn | 8 | Blue Lotus Stalk x1 |
+| Bog Myrtle Branch Patch | year-round | 60 | Bog Myrtle Branch x1 |
+| Cattail Seed Head Patch | year-round | 60 | Cattail Seed Head x1 |
+| Cattails | year-round | 105 | Cattail Root x1-2, Reeds x1-2 |
 | Duckweed Mat | spring, summer, autumn | 85 | Duckweed x1-4 |
+| Marsh Amber Bulb Patch | summer, autumn | 8 | Marsh Amber Bulb x1 |
+| Marsh Mallow Stems Patch | year-round | 60 | Marsh Mallow Stems x1 |
 | Nettle Patch | spring, summer | 80 | Brush x1-2, Nettle x1-3 |
+| Peat Moss Clump Patch | year-round | 30 | Peat Moss Clump x1 |
 | Pickerelweed | spring, summer, autumn | 75 | Pickerelweed x1-3 |
-| Reed Bed | year-round | 120 | Reeds x1-3 |
+| Reed Bed | year-round | 220 | Reeds x2-5 |
+| Rush Pith Bundle Patch | year-round | 60 | Rush Pith Bundle x1 |
+| Sedge Root Mat Patch | year-round | 60 | Sedge Root Mat x1 |
+| Star Reed Tuft Patch | summer, autumn | 8 | Star Reed Tuft x1 |
+| Sweet Flag Root Patch | year-round | 30 | Sweet Flag Root x1 |
+| Water Iris Rhizome Patch | year-round | 30 | Water Iris Rhizome x1 |
 | Water Lilies | spring, summer | 45 | Water Lily Root x1-2 |
 
 ### Animals
@@ -324,9 +398,21 @@ Fertile river-adjacent ground with wetland plants, clay, and deadwood containers
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
+| Burdock Burr Cluster Patch | year-round | 60 | Burdock Burr Cluster x1 |
+| Chicory Root Crown Patch | year-round | 60 | Chicory Root Crown x1 |
+| Dried Teasel Head Patch | year-round | 60 | Dried Teasel Head x1 |
+| Flax Seed Capsule Patch | year-round | 60 | Flax Seed Capsule x1 |
+| Goldenrod Spray Patch | year-round | 30 | Goldenrod Spray x1 |
+| Milkweed Pod Patch | year-round | 60 | Milkweed Pod x1 |
+| Moonmint Sprig Patch | summer, autumn | 8 | Moonmint Sprig x1 |
+| Mullein Flower Spike Patch | year-round | 60 | Mullein Flower Spike x1 |
 | Nettle Patch | spring, summer | 80 | Brush x1-2, Nettle x1-3 |
 | Pickerelweed | spring, summer, autumn | 75 | Pickerelweed x1-3 |
-| Reed Bed | year-round | 120 | Reeds x1-3 |
+| Reed Bed | year-round | 220 | Reeds x2-5 |
+| Rose Hip Branch Patch | year-round | 30 | Rose Hip Branch x1 |
+| Saffron Crocus Tuft Patch | summer, autumn | 8 | Saffron Crocus Tuft x1 |
+| Sunspice Rhizome Patch | summer, autumn | 8 | Sunspice Rhizome x1 |
+| Sweet Clover Tops Patch | year-round | 30 | Sweet Clover Tops x1 |
 | Wild Grain | summer, autumn | 80 | Wild Grain x1-3 |
 
 ### Animals
@@ -388,8 +474,22 @@ River channels, rapids, streams, and banks generated by hydrology.
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
+| Alder Cone Cluster Patch | year-round | 60 | Alder Cone Cluster x1 |
+| Blue Lotus Stalk Patch | summer, autumn | 8 | Blue Lotus Stalk x1 |
+| Bog Myrtle Branch Patch | year-round | 60 | Bog Myrtle Branch x1 |
+| Cattail Seed Head Patch | year-round | 60 | Cattail Seed Head x1 |
+| Cattails | year-round | 105 | Cattail Root x1-2, Reeds x1-2 |
 | Duckweed Mat | spring, summer, autumn | 85 | Duckweed x1-4 |
+| Marsh Amber Bulb Patch | summer, autumn | 8 | Marsh Amber Bulb x1 |
+| Marsh Mallow Stems Patch | year-round | 60 | Marsh Mallow Stems x1 |
+| Peat Moss Clump Patch | year-round | 30 | Peat Moss Clump x1 |
 | Pickerelweed | spring, summer, autumn | 75 | Pickerelweed x1-3 |
+| Reed Bed | year-round | 220 | Reeds x2-5 |
+| Rush Pith Bundle Patch | year-round | 60 | Rush Pith Bundle x1 |
+| Sedge Root Mat Patch | year-round | 60 | Sedge Root Mat x1 |
+| Star Reed Tuft Patch | summer, autumn | 8 | Star Reed Tuft x1 |
+| Sweet Flag Root Patch | year-round | 30 | Sweet Flag Root x1 |
+| Water Iris Rhizome Patch | year-round | 30 | Water Iris Rhizome x1 |
 
 ### Animals
 
@@ -493,6 +593,23 @@ Rocky shores, gravel, and coastal cliffs selected from shoreline geology and mor
 | Coastal Cliff | core:coastal_cliff | shore, cliff |
 | Coastal Gravel | core:coastal_gravel | shore |
 
+### Plants and forage
+
+| Feature | Seasons | Density | Yields |
+|---|---|---:|---|
+| Alpine Sorrel Root Patch | year-round | 30 | Alpine Sorrel Root x1 |
+| Bladderwrack Holdfast Patch ★ | year-round | 30 | Bladderwrack Holdfast x1 |
+| Cotton Grass Tuft Patch | year-round | 30 | Cotton Grass Tuft x1 |
+| Crimson Stonecrop Crown Patch | year-round | 8 | Crimson Stonecrop Crown x1 |
+| Crowberry Stem Mat Patch | year-round | 60 | Crowberry Stem Mat x1 |
+| Dwarf Willow Twigs Patch | year-round | 60 | Dwarf Willow Twigs x1 |
+| Frost Sage Branch Patch | year-round | 8 | Frost Sage Branch x1 |
+| Mountain Avens Seedhead Patch | year-round | 60 | Mountain Avens Seedhead x1 |
+| Pearl Kelp Knot Patch ★ | year-round | 8 | Pearl Kelp Knot x1 |
+| Reindeer Lichen Mat Patch | year-round | 60 | Reindeer Lichen Mat x1 |
+| Rock Samphire Stems Patch ★ | year-round | 60 | Rock Samphire Stems x1 |
+| Sea Lavender Spray Patch | year-round | 60 | Sea Lavender Spray x1 |
+
 ### Animals
 
 | Animal | Diet | Group | Climate-limited |
@@ -523,7 +640,17 @@ Tidal flats and salt marshes formed where coastal deposition and marsh potential
 
 | Feature | Seasons | Density | Yields |
 |---|---|---:|---|
+| Alder Cone Cluster Patch | year-round | 60 | Alder Cone Cluster x1 |
+| Bog Myrtle Branch Patch | year-round | 60 | Bog Myrtle Branch x1 |
+| Cattail Seed Head Patch | year-round | 60 | Cattail Seed Head x1 |
+| Marsh Amber Bulb Patch | summer, autumn | 8 | Marsh Amber Bulb x1 |
+| Marsh Mallow Stems Patch | year-round | 60 | Marsh Mallow Stems x1 |
+| Peat Moss Clump Patch | year-round | 30 | Peat Moss Clump x1 |
+| Rush Pith Bundle Patch | year-round | 60 | Rush Pith Bundle x1 |
 | Saltmarsh Grass ★ | year-round | 120 | Saltmarsh Grass x1-3 |
+| Sea Lavender Spray Patch | year-round | 60 | Sea Lavender Spray x1 |
+| Sedge Root Mat Patch | year-round | 60 | Sedge Root Mat x1 |
+| Sweet Flag Root Patch | year-round | 30 | Sweet Flag Root x1 |
 
 ### Animals
 
@@ -565,7 +692,7 @@ Brackish shallow and deep channels where river and marine water meet.
 | Red Drum | 0.7-16.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Bass | 0.8-18.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Mullet | 0.2-2.8 kg | hand/spear/rod/net | Earthworms, Berries |
-| Summer Flounder | 0.2-6.5 kg | spear/rod/net | Offal, Earthworms |
+| Summer Flounder | 0.3-6.5 kg | spear/rod/net | Offal, Earthworms |
 
 ## Ocean
 
@@ -598,7 +725,7 @@ Coastal wading water through shallow, shelf, and deep-ocean classes.
 | Red Drum | 0.7-16.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Bass | 0.8-18.0 kg | spear/rod/net | Copper Spoon Lure, Offal, Earthworms |
 | Striped Mullet | 0.2-2.8 kg | hand/spear/rod/net | Earthworms, Berries |
-| Summer Flounder | 0.2-6.5 kg | spear/rod/net | Offal, Earthworms |
+| Summer Flounder | 0.3-6.5 kg | spear/rod/net | Offal, Earthworms |
 
 ## Caves & Subterranean
 

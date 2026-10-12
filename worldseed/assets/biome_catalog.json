@@ -82,12 +82,30 @@
           "exclusive": true
         },
         {
+          "id": "core:salvage_patch_burdock_burr_cluster",
+          "name": "Burdock Burr Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Burdock Burr Cluster x1",
+          "exclusive": false
+        },
+        {
           "id": "core:cattail_bed",
           "name": "Cattails",
           "seasons": [],
           "season_label": "year-round",
-          "density": 70,
+          "density": 105,
           "yields": "Cattail Root x1-2, Reeds x1-2",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_chicory_root_crown",
+          "name": "Chicory Root Crown Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Chicory Root Crown x1",
           "exclusive": false
         },
         {
@@ -101,6 +119,63 @@
           "season_label": "spring, summer, autumn",
           "density": 110,
           "yields": "Dandelion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dried_teasel_head",
+          "name": "Dried Teasel Head Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Dried Teasel Head x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_flax_seed_capsule",
+          "name": "Flax Seed Capsule Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Flax Seed Capsule x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_goldenrod_spray",
+          "name": "Goldenrod Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Goldenrod Spray x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_milkweed_pod",
+          "name": "Milkweed Pod Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Milkweed Pod x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_moonmint_sprig",
+          "name": "Moonmint Sprig Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Moonmint Sprig x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_mullein_flower_spike",
+          "name": "Mullein Flower Spike Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Mullein Flower Spike x1",
           "exclusive": false
         },
         {
@@ -131,8 +206,50 @@
           "name": "Reed Bed",
           "seasons": [],
           "season_label": "year-round",
-          "density": 120,
-          "yields": "Reeds x1-3",
+          "density": 220,
+          "yields": "Reeds x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rose_hip_branch",
+          "name": "Rose Hip Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Rose Hip Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_saffron_crocus_tuft",
+          "name": "Saffron Crocus Tuft Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Saffron Crocus Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sunspice_rhizome",
+          "name": "Sunspice Rhizome Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Sunspice Rhizome x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sweet_clover_tops",
+          "name": "Sweet Clover Tops Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Sweet Clover Tops x1",
           "exclusive": false
         },
         {
@@ -255,7 +372,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 26,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         },
         {
@@ -264,7 +381,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         },
         {
@@ -273,7 +390,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -471,6 +588,36 @@
       ],
       "plants": [
         {
+          "id": "core:salvage_patch_amberroot_crown",
+          "name": "Amberroot Crown Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Amberroot Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_beech_nut_cup",
+          "name": "Beech Nut Cup Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Beech Nut Cup x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_birch_catkin_cluster",
+          "name": "Birch Catkin Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Birch Catkin Cluster x1",
+          "exclusive": false
+        },
+        {
           "id": "core:blueberry_bush",
           "name": "Blueberry Bush",
           "seasons": [
@@ -493,6 +640,45 @@
           "density": 45,
           "yields": "Bolete x1-3",
           "exclusive": true
+        },
+        {
+          "id": "core:salvage_patch_dogwood_stem_bundle",
+          "name": "Dogwood Stem Bundle Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Dogwood Stem Bundle x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_ghost_orchid_stem",
+          "name": "Ghost Orchid Stem Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Ghost Orchid Stem x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_hazel_catkin_spray",
+          "name": "Hazel Catkin Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Hazel Catkin Spray x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_juniper_bough",
+          "name": "Juniper Bough Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Juniper Bough x1",
+          "exclusive": false
         },
         {
           "id": "core:morel_patch",
@@ -518,6 +704,15 @@
           "exclusive": false
         },
         {
+          "id": "core:salvage_patch_oak_gall_cluster",
+          "name": "Oak Gall Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Oak Gall Cluster x1",
+          "exclusive": false
+        },
+        {
           "id": "core:raspberry_cane",
           "name": "Raspberry Cane",
           "seasons": [
@@ -526,6 +721,36 @@
           "season_label": "summer",
           "density": 90,
           "yields": "Raspberries x2-4",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_resinous_pine_cone",
+          "name": "Resinous Pine Cone Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Resinous Pine Cone x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_silverleaf_sprig",
+          "name": "Silverleaf Sprig Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Silverleaf Sprig x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_spruce_pitch_knot",
+          "name": "Spruce Pitch Knot Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Spruce Pitch Knot x1",
           "exclusive": false
         },
         {
@@ -538,6 +763,15 @@
           "season_label": "spring, summer",
           "density": 70,
           "yields": "Strawberries x1-4",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_willow_bark_curl",
+          "name": "Willow Bark Curl Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Willow Bark Curl x1",
           "exclusive": false
         }
       ],
@@ -568,7 +802,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 26,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         },
         {
@@ -577,7 +811,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -750,6 +984,36 @@
       "trees": [],
       "plants": [
         {
+          "id": "core:salvage_patch_amberroot_crown",
+          "name": "Amberroot Crown Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Amberroot Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_beech_nut_cup",
+          "name": "Beech Nut Cup Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Beech Nut Cup x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_birch_catkin_cluster",
+          "name": "Birch Catkin Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Birch Catkin Cluster x1",
+          "exclusive": false
+        },
+        {
           "id": "core:dandelion_patch",
           "name": "Dandelion Patch",
           "seasons": [
@@ -760,6 +1024,84 @@
           "season_label": "spring, summer, autumn",
           "density": 110,
           "yields": "Dandelion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dogwood_stem_bundle",
+          "name": "Dogwood Stem Bundle Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Dogwood Stem Bundle x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_ghost_orchid_stem",
+          "name": "Ghost Orchid Stem Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Ghost Orchid Stem x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_hazel_catkin_spray",
+          "name": "Hazel Catkin Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Hazel Catkin Spray x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_juniper_bough",
+          "name": "Juniper Bough Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Juniper Bough x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_oak_gall_cluster",
+          "name": "Oak Gall Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Oak Gall Cluster x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_resinous_pine_cone",
+          "name": "Resinous Pine Cone Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Resinous Pine Cone x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_silverleaf_sprig",
+          "name": "Silverleaf Sprig Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Silverleaf Sprig x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_spruce_pitch_knot",
+          "name": "Spruce Pitch Knot Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Spruce Pitch Knot x1",
           "exclusive": false
         },
         {
@@ -797,6 +1139,15 @@
           "season_label": "spring, summer, autumn",
           "density": 65,
           "yields": "Wild Onion x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_willow_bark_curl",
+          "name": "Willow Bark Curl Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Willow Bark Curl x1",
           "exclusive": false
         },
         {
@@ -839,7 +1190,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -942,7 +1293,80 @@
           "exclusive": false
         }
       ],
-      "plants": [],
+      "plants": [
+        {
+          "id": "core:salvage_patch_alpine_sorrel_root",
+          "name": "Alpine Sorrel Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Alpine Sorrel Root x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_cotton_grass_tuft",
+          "name": "Cotton Grass Tuft Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Cotton Grass Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crimson_stonecrop_crown",
+          "name": "Crimson Stonecrop Crown Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Crimson Stonecrop Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crowberry_stem_mat",
+          "name": "Crowberry Stem Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Crowberry Stem Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dwarf_willow_twigs",
+          "name": "Dwarf Willow Twigs Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Dwarf Willow Twigs x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_frost_sage_branch",
+          "name": "Frost Sage Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Frost Sage Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_mountain_avens_seedhead",
+          "name": "Mountain Avens Seedhead Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Mountain Avens Seedhead x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_reindeer_lichen_mat",
+          "name": "Reindeer Lichen Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Reindeer Lichen Mat x1",
+          "exclusive": false
+        }
+      ],
       "deposits": [
         {
           "id": "core:loose_stone",
@@ -1011,7 +1435,80 @@
         }
       ],
       "trees": [],
-      "plants": [],
+      "plants": [
+        {
+          "id": "core:salvage_patch_alpine_sorrel_root",
+          "name": "Alpine Sorrel Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Alpine Sorrel Root x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_cotton_grass_tuft",
+          "name": "Cotton Grass Tuft Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Cotton Grass Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crimson_stonecrop_crown",
+          "name": "Crimson Stonecrop Crown Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Crimson Stonecrop Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crowberry_stem_mat",
+          "name": "Crowberry Stem Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Crowberry Stem Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dwarf_willow_twigs",
+          "name": "Dwarf Willow Twigs Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Dwarf Willow Twigs x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_frost_sage_branch",
+          "name": "Frost Sage Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Frost Sage Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_mountain_avens_seedhead",
+          "name": "Mountain Avens Seedhead Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Mountain Avens Seedhead x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_reindeer_lichen_mat",
+          "name": "Reindeer Lichen Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Reindeer Lichen Mat x1",
+          "exclusive": false
+        }
+      ],
       "deposits": [
         {
           "id": "core:loose_stone",
@@ -1039,7 +1536,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 16,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -1091,11 +1588,50 @@
       ],
       "plants": [
         {
+          "id": "core:salvage_patch_alder_cone_cluster",
+          "name": "Alder Cone Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Alder Cone Cluster x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_blue_lotus_stalk",
+          "name": "Blue Lotus Stalk Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Blue Lotus Stalk x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_bog_myrtle_branch",
+          "name": "Bog Myrtle Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Bog Myrtle Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_cattail_seed_head",
+          "name": "Cattail Seed Head Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Cattail Seed Head x1",
+          "exclusive": false
+        },
+        {
           "id": "core:cattail_bed",
           "name": "Cattails",
           "seasons": [],
           "season_label": "year-round",
-          "density": 70,
+          "density": 105,
           "yields": "Cattail Root x1-2, Reeds x1-2",
           "exclusive": false
         },
@@ -1113,6 +1649,27 @@
           "exclusive": false
         },
         {
+          "id": "core:salvage_patch_marsh_amber_bulb",
+          "name": "Marsh Amber Bulb Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Marsh Amber Bulb x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_marsh_mallow_stems",
+          "name": "Marsh Mallow Stems Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Marsh Mallow Stems x1",
+          "exclusive": false
+        },
+        {
           "id": "core:nettle_patch",
           "name": "Nettle Patch",
           "seasons": [
@@ -1122,6 +1679,15 @@
           "season_label": "spring, summer",
           "density": 80,
           "yields": "Brush x1-2, Nettle x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_peat_moss_clump",
+          "name": "Peat Moss Clump Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Peat Moss Clump x1",
           "exclusive": false
         },
         {
@@ -1142,8 +1708,56 @@
           "name": "Reed Bed",
           "seasons": [],
           "season_label": "year-round",
-          "density": 120,
-          "yields": "Reeds x1-3",
+          "density": 220,
+          "yields": "Reeds x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rush_pith_bundle",
+          "name": "Rush Pith Bundle Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Rush Pith Bundle x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sedge_root_mat",
+          "name": "Sedge Root Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Sedge Root Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_star_reed_tuft",
+          "name": "Star Reed Tuft Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Star Reed Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sweet_flag_root",
+          "name": "Sweet Flag Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Sweet Flag Root x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_water_iris_rhizome",
+          "name": "Water Iris Rhizome Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Water Iris Rhizome x1",
           "exclusive": false
         },
         {
@@ -1190,7 +1804,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -1274,6 +1888,81 @@
       ],
       "plants": [
         {
+          "id": "core:salvage_patch_burdock_burr_cluster",
+          "name": "Burdock Burr Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Burdock Burr Cluster x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_chicory_root_crown",
+          "name": "Chicory Root Crown Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Chicory Root Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dried_teasel_head",
+          "name": "Dried Teasel Head Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Dried Teasel Head x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_flax_seed_capsule",
+          "name": "Flax Seed Capsule Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Flax Seed Capsule x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_goldenrod_spray",
+          "name": "Goldenrod Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Goldenrod Spray x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_milkweed_pod",
+          "name": "Milkweed Pod Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Milkweed Pod x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_moonmint_sprig",
+          "name": "Moonmint Sprig Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Moonmint Sprig x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_mullein_flower_spike",
+          "name": "Mullein Flower Spike Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Mullein Flower Spike x1",
+          "exclusive": false
+        },
+        {
           "id": "core:nettle_patch",
           "name": "Nettle Patch",
           "seasons": [
@@ -1303,8 +1992,50 @@
           "name": "Reed Bed",
           "seasons": [],
           "season_label": "year-round",
-          "density": 120,
-          "yields": "Reeds x1-3",
+          "density": 220,
+          "yields": "Reeds x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rose_hip_branch",
+          "name": "Rose Hip Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Rose Hip Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_saffron_crocus_tuft",
+          "name": "Saffron Crocus Tuft Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Saffron Crocus Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sunspice_rhizome",
+          "name": "Sunspice Rhizome Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Sunspice Rhizome x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sweet_clover_tops",
+          "name": "Sweet Clover Tops Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Sweet Clover Tops x1",
           "exclusive": false
         },
         {
@@ -1351,7 +2082,7 @@
           "seasons": [],
           "season_label": "year-round",
           "density": 20,
-          "yields": "\u2014",
+          "yields": "—",
           "exclusive": false
         }
       ],
@@ -1498,6 +2229,54 @@
       "trees": [],
       "plants": [
         {
+          "id": "core:salvage_patch_alder_cone_cluster",
+          "name": "Alder Cone Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Alder Cone Cluster x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_blue_lotus_stalk",
+          "name": "Blue Lotus Stalk Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Blue Lotus Stalk x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_bog_myrtle_branch",
+          "name": "Bog Myrtle Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Bog Myrtle Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_cattail_seed_head",
+          "name": "Cattail Seed Head Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Cattail Seed Head x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:cattail_bed",
+          "name": "Cattails",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 105,
+          "yields": "Cattail Root x1-2, Reeds x1-2",
+          "exclusive": false
+        },
+        {
           "id": "core:duckweed_mat",
           "name": "Duckweed Mat",
           "seasons": [
@@ -1511,6 +2290,36 @@
           "exclusive": false
         },
         {
+          "id": "core:salvage_patch_marsh_amber_bulb",
+          "name": "Marsh Amber Bulb Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Marsh Amber Bulb x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_marsh_mallow_stems",
+          "name": "Marsh Mallow Stems Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Marsh Mallow Stems x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_peat_moss_clump",
+          "name": "Peat Moss Clump Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Peat Moss Clump x1",
+          "exclusive": false
+        },
+        {
           "id": "core:pickerelweed_patch",
           "name": "Pickerelweed",
           "seasons": [
@@ -1521,6 +2330,63 @@
           "season_label": "spring, summer, autumn",
           "density": 75,
           "yields": "Pickerelweed x1-3",
+          "exclusive": false
+        },
+        {
+          "id": "core:reed_bed",
+          "name": "Reed Bed",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 220,
+          "yields": "Reeds x2-5",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rush_pith_bundle",
+          "name": "Rush Pith Bundle Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Rush Pith Bundle x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sedge_root_mat",
+          "name": "Sedge Root Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Sedge Root Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_star_reed_tuft",
+          "name": "Star Reed Tuft Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Star Reed Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sweet_flag_root",
+          "name": "Sweet Flag Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Sweet Flag Root x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_water_iris_rhizome",
+          "name": "Water Iris Rhizome Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Water Iris Rhizome x1",
           "exclusive": false
         }
       ],
@@ -2191,7 +3057,116 @@
         }
       ],
       "trees": [],
-      "plants": [],
+      "plants": [
+        {
+          "id": "core:salvage_patch_alpine_sorrel_root",
+          "name": "Alpine Sorrel Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Alpine Sorrel Root x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_bladderwrack_holdfast",
+          "name": "Bladderwrack Holdfast Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Bladderwrack Holdfast x1",
+          "exclusive": true
+        },
+        {
+          "id": "core:salvage_patch_cotton_grass_tuft",
+          "name": "Cotton Grass Tuft Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Cotton Grass Tuft x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crimson_stonecrop_crown",
+          "name": "Crimson Stonecrop Crown Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Crimson Stonecrop Crown x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_crowberry_stem_mat",
+          "name": "Crowberry Stem Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Crowberry Stem Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_dwarf_willow_twigs",
+          "name": "Dwarf Willow Twigs Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Dwarf Willow Twigs x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_frost_sage_branch",
+          "name": "Frost Sage Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Frost Sage Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_mountain_avens_seedhead",
+          "name": "Mountain Avens Seedhead Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Mountain Avens Seedhead x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_pearl_kelp_knot",
+          "name": "Pearl Kelp Knot Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 8,
+          "yields": "Pearl Kelp Knot x1",
+          "exclusive": true
+        },
+        {
+          "id": "core:salvage_patch_reindeer_lichen_mat",
+          "name": "Reindeer Lichen Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Reindeer Lichen Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rock_samphire_stems",
+          "name": "Rock Samphire Stems Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Rock Samphire Stems x1",
+          "exclusive": true
+        },
+        {
+          "id": "core:salvage_patch_sea_lavender_spray",
+          "name": "Sea Lavender Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Sea Lavender Spray x1",
+          "exclusive": false
+        }
+      ],
       "deposits": [
         {
           "id": "core:blue_mussel_bed",
@@ -2266,6 +3241,72 @@
       "trees": [],
       "plants": [
         {
+          "id": "core:salvage_patch_alder_cone_cluster",
+          "name": "Alder Cone Cluster Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Alder Cone Cluster x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_bog_myrtle_branch",
+          "name": "Bog Myrtle Branch Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Bog Myrtle Branch x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_cattail_seed_head",
+          "name": "Cattail Seed Head Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Cattail Seed Head x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_marsh_amber_bulb",
+          "name": "Marsh Amber Bulb Patch",
+          "seasons": [
+            "summer",
+            "autumn"
+          ],
+          "season_label": "summer, autumn",
+          "density": 8,
+          "yields": "Marsh Amber Bulb x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_marsh_mallow_stems",
+          "name": "Marsh Mallow Stems Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Marsh Mallow Stems x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_peat_moss_clump",
+          "name": "Peat Moss Clump Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Peat Moss Clump x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_rush_pith_bundle",
+          "name": "Rush Pith Bundle Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Rush Pith Bundle x1",
+          "exclusive": false
+        },
+        {
           "id": "core:saltmarsh_grass_patch",
           "name": "Saltmarsh Grass",
           "seasons": [],
@@ -2273,6 +3314,33 @@
           "density": 120,
           "yields": "Saltmarsh Grass x1-3",
           "exclusive": true
+        },
+        {
+          "id": "core:salvage_patch_sea_lavender_spray",
+          "name": "Sea Lavender Spray Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Sea Lavender Spray x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sedge_root_mat",
+          "name": "Sedge Root Mat Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 60,
+          "yields": "Sedge Root Mat x1",
+          "exclusive": false
+        },
+        {
+          "id": "core:salvage_patch_sweet_flag_root",
+          "name": "Sweet Flag Root Patch",
+          "seasons": [],
+          "season_label": "year-round",
+          "density": 30,
+          "yields": "Sweet Flag Root x1",
+          "exclusive": false
         }
       ],
       "deposits": [
