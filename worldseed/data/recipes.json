@@ -555,30 +555,36 @@
   {
     "id": "core:stone_knife",
     "name": "Make Stone Knife",
-    "inputs": {
-      "core:stone_flake": 1,
-      "core:stout_branch": 1,
-      "core:plant_cordage": 1
-    },
+    "inputs": {},
     "outputs": {
       "core:stone_knife": 1
     },
     "minutes": 25,
     "station": null,
     "knowledge": null,
-    "description": "Lash a sharp flake to a short haft for the first serious cutting tool.",
+    "description": "Haft one usable sharp stone edge with a short branch or recovered handle, then secure it using plant, sinew or reinforced cord.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "sharp_edge": 1,
+      "short_haft": 1,
+      "binding_material": 1
+    },
+    "discovery_tags": [
+      "sharp_edge",
+      "short_haft",
+      "binding_material"
+    ]
   },
   {
     "id": "core:stone_axe",
     "name": "Make Stone Axe",
     "inputs": {
-      "core:stone_flake": 2,
-      "core:stout_branch": 1,
-      "core:plant_cordage": 1
+      "core:stone_flake": 1,
+      "core:stone": 1,
+      "core:stout_branch": 1
     },
     "outputs": {
       "core:stone_axe": 1
@@ -586,21 +592,30 @@
     "minutes": 35,
     "station": null,
     "knowledge": null,
-    "description": "Bind a heavy cutting edge to a branch so mature timber can be felled.",
+    "description": "Shape a weight-bearing stone head with a struck edge, fit it to a straight branch and lash it with suitable cord.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
     "tool_qualities": {
       "hammer": 0
-    }
+    },
+    "input_tags": {
+      "binding_material": 1
+    },
+    "discovery_items": [
+      "core:stone_flake",
+      "core:stone",
+      "core:stout_branch"
+    ],
+    "discovery_tags": [
+      "binding_material"
+    ]
   },
   {
     "id": "core:stone_pick",
     "name": "Make Stone Pick",
     "inputs": {
-      "core:stone": 2,
-      "core:stout_branch": 1,
-      "core:plant_cordage": 1
+      "core:stone": 2
     },
     "outputs": {
       "core:stone_pick": 1
@@ -608,19 +623,28 @@
     "minutes": 45,
     "station": null,
     "knowledge": null,
-    "description": "Build a crude pick capable of breaking cave rock and surface boulders.",
+    "description": "Set two hard stones around a long branch or hardwood shaft and lash them into a primitive mining pick.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "shaft_material": 1,
+      "binding_material": 1
+    },
+    "discovery_items": [
+      "core:stone"
+    ],
+    "discovery_tags": [
+      "shaft_material",
+      "binding_material"
+    ]
   },
   {
     "id": "core:stone_hammer",
     "name": "Make Stone Hammer",
     "inputs": {
-      "core:stone": 1,
-      "core:stout_branch": 1,
-      "core:plant_cordage": 1
+      "core:stone": 1
     },
     "outputs": {
       "core:stone_hammer": 1
@@ -628,11 +652,22 @@
     "minutes": 30,
     "station": null,
     "knowledge": null,
-    "description": "Lash a rounded hammerstone to a branch for building and processing.",
+    "description": "Secure a rounded hammerstone to a full-length branch or prepared hardwood shaft with cord.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "shaft_material": 1,
+      "binding_material": 1
+    },
+    "discovery_items": [
+      "core:stone"
+    ],
+    "discovery_tags": [
+      "shaft_material",
+      "binding_material"
+    ]
   },
   {
     "id": "core:digging_stick",
@@ -656,9 +691,7 @@
     "id": "core:crude_hoe",
     "name": "Make Crude Hoe",
     "inputs": {
-      "core:stone_flake": 1,
-      "core:stout_branch": 1,
-      "core:plant_cordage": 1
+      "core:stone": 1
     },
     "outputs": {
       "core:crude_hoe": 1
@@ -666,11 +699,24 @@
     "minutes": 30,
     "station": null,
     "knowledge": null,
-    "description": "Bind a broad stone edge for more efficient cultivation.",
+    "description": "Cut a crude working edge into stone, seat it on a long shaft and bind the head securely for cultivation.",
     "category": "primitive_tools",
     "skill": "crafting",
     "difficulty": 1,
-    "tool_qualities": {}
+    "tool_qualities": {},
+    "input_tags": {
+      "sharp_edge": 1,
+      "shaft_material": 1,
+      "binding_material": 1
+    },
+    "discovery_items": [
+      "core:stone"
+    ],
+    "discovery_tags": [
+      "sharp_edge",
+      "shaft_material",
+      "binding_material"
+    ]
   },
   {
     "id": "core:wooden_spear",
@@ -7495,5 +7541,89 @@
     ],
     "discovery_mode": "experiment",
     "description": "Join two lengths of cordage into a light fishing line. Plant cord, sinew cord and specialist binding cords can be mixed."
+  },
+  {
+    "id": "core:strip_fibrous_plants",
+    "name": "Strip Fibrous Plants",
+    "inputs": {},
+    "input_tags": {
+      "fibrous_plant": 3
+    },
+    "outputs": {
+      "core:fiber": 1
+    },
+    "minutes": 18,
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_tags": [
+      "fibrous_plant"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Strip three bundles of nettles, reeds or similar fibrous plants into prepared fiber. Mixed plant species are accepted."
+  },
+  {
+    "id": "core:tease_fine_plant_fiber",
+    "name": "Tease Fine Plant Fiber",
+    "inputs": {},
+    "input_tags": {
+      "fine_fiber_source": 2
+    },
+    "outputs": {
+      "core:fiber": 1
+    },
+    "minutes": 14,
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_tags": [
+      "fine_fiber_source"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Comb soft seed heads, cotton grass and milkweed floss into a clean, spinnable bundle of fiber."
+  },
+  {
+    "id": "core:pack_scrap_tinder",
+    "name": "Pack Plant-Scrap Tinder",
+    "inputs": {
+      "core:plant_scraps": 10
+    },
+    "outputs": {
+      "core:brush": 1
+    },
+    "minutes": 8,
+    "category": "survival",
+    "skill": "crafting",
+    "difficulty": 1,
+    "discovery_items": [
+      "core:plant_scraps"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Dry and pack salvaged plant scraps into one brush-sized combustible bundle, usable where campfire construction requires brush. Ten light scraps are needed to replace one bundle."
+  },
+  {
+    "id": "core:blend_plant_pulp",
+    "name": "Blend Mixed Plant Pulp",
+    "inputs": {
+      "core:clean_water": 1
+    },
+    "input_tags": {
+      "plant_material": 6
+    },
+    "outputs": {
+      "core:plant_fiber_pulp": 1
+    },
+    "minutes": 16,
+    "category": "fiberwork",
+    "skill": "crafting",
+    "difficulty": 2,
+    "discovery_items": [
+      "core:clean_water"
+    ],
+    "discovery_tags": [
+      "plant_material"
+    ],
+    "discovery_mode": "experiment",
+    "description": "Soak and mash six plant-material portions, including salvaged scraps, wetland reeds or bark, into paper and binder pulp."
   }
 ]

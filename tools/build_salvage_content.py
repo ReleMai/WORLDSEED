@@ -316,6 +316,109 @@ for row in salvage:
 
 # Recipe authoring follows below; save() is called once at the bottom.
 
+# Material semantics must also survive regeneration of Dev63 salvage/craft items.
+# Keep runtime item tags and the authored generator synchronized.
+CRAFTING_MATERIAL_TAGS = {
+    "core:plant_scraps": [
+        "tinder_material",
+        "pulp_feedstock"
+    ],
+    "core:brush": [
+        "tinder_material",
+        "pulp_feedstock"
+    ],
+    "core:bark": [
+        "tinder_material",
+        "pulp_feedstock"
+    ],
+    "core:reed_bundle": [
+        "plant",
+        "plant_material",
+        "fiber_source",
+        "fibrous_plant",
+        "pulp_feedstock",
+        "tinder_material"
+    ],
+    "core:nettles": [
+        "plant",
+        "plant_material",
+        "fiber_source",
+        "fibrous_plant",
+        "pulp_feedstock"
+    ],
+    "core:beachgrass": [
+        "fibrous_plant",
+        "pulp_feedstock"
+    ],
+    "core:saltmarsh_grass": [
+        "fibrous_plant",
+        "pulp_feedstock"
+    ],
+    "core:eelgrass": [
+        "fibrous_plant",
+        "pulp_feedstock"
+    ],
+    "core:milkweed_pod": [
+        "plant_material",
+        "fiber_source",
+        "fine_fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:cotton_grass_tuft": [
+        "plant_material",
+        "fiber_source",
+        "fine_fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:cattail_seed_head": [
+        "plant_material",
+        "fine_fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:flax_seed_capsule": [
+        "plant_material",
+        "fine_fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:sedge_root_mat": [
+        "plant_material",
+        "fibrous_plant",
+        "fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:star_reed_tuft": [
+        "plant_material",
+        "fibrous_plant",
+        "fiber_source",
+        "pulp_feedstock"
+    ],
+    "core:stout_branch": [
+        "shaft_material",
+        "short_haft"
+    ],
+    "core:hardwood_blank": [
+        "shaft_material",
+        "short_haft"
+    ],
+    "core:tool_handles": [
+        "short_haft"
+    ],
+    "core:stone_flake": [
+        "sharp_edge"
+    ],
+    "core:stone_blade_blank": [
+        "sharp_edge"
+    ],
+    "core:resinous_pine_cone": [
+        "plant_material",
+        "tinder_material"
+    ],
+    "core:dried_teasel_head": [
+        "plant_material",
+        "tinder_material"
+    ]
+}
+
 def save():
     for filename, additions in [('items.json',new_items),('recipes.json',new_recipes)]:
         original=json.loads((DATA/filename).read_text())
@@ -324,7 +427,11 @@ def save():
         else:
             original=[x for x in original if not x['id'].startswith('core:craft_')]
         original.extend(additions)
-        if filename=='items.json':original=canonical_item_catalog(original)
+        if filename=='items.json':
+            for item in original:
+                for tag in CRAFTING_MATERIAL_TAGS.get(item['id'], ()):
+                    if tag not in item.get('tags', ()): item.setdefault('tags', []).append(tag)
+            original=canonical_item_catalog(original)
         (DATA/filename).write_text(json.dumps(original,indent=2)+'\n')
     (DATA/'salvage.json').write_text(json.dumps(salvage,indent=2)+'\n')
     (DATA/'crafting_expansion.json').write_text(json.dumps(manifest,indent=2)+'\n')

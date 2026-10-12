@@ -14,7 +14,9 @@
       "fuel",
       "plant",
       "plant_material",
-      "bark_strip"
+      "bark_strip",
+      "tinder_material",
+      "pulp_feedstock"
     ],
     "description": "Strips of bark rich in tannins, useful for cordage, fire-starting, and preserving hides.",
     "flavor": "\"The tree gives more than timber.\"",
@@ -37,7 +39,9 @@
       "raw",
       "wood",
       "branch",
-      "fuel"
+      "fuel",
+      "shaft_material",
+      "short_haft"
     ],
     "description": "A straight fallen branch thick enough to become a haft, spear shaft, firewood, or frame member.",
     "flavor": "\"A useful branch is already half a tool.\"",
@@ -62,7 +66,9 @@
       "fiber",
       "plant",
       "plant_material",
-      "fiber_source"
+      "fiber_source",
+      "tinder_material",
+      "pulp_feedstock"
     ],
     "description": "Brush has a clear practical place in survival, craft, trade, or daily life.",
     "flavor": "\"Brush: ordinary in isolation, important when the right need appears.\"",
@@ -188,7 +194,13 @@
       "raw",
       "fiber",
       "reed",
-      "fuel"
+      "fuel",
+      "plant",
+      "plant_material",
+      "fiber_source",
+      "fibrous_plant",
+      "pulp_feedstock",
+      "tinder_material"
     ],
     "description": "Long wetland reeds suitable for mats, baskets, thatching, cordage, and kindling.",
     "flavor": "\"Where the ground is too wet for grass, reeds do the building.\"",
@@ -316,7 +328,9 @@
       "forage",
       "plant",
       "plant_material",
-      "fiber_source"
+      "fiber_source",
+      "fibrous_plant",
+      "pulp_feedstock"
     ],
     "base_value": 1,
     "description": "Tough dune grass useful as coarse fiber and thatching.",
@@ -533,7 +547,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fine_fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Cattail Seed Head. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that cattail seed head is worthless.\""
@@ -573,7 +590,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fiber_source",
+      "fine_fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Cotton Grass Tuft. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that cotton grass tuft is worthless.\""
@@ -633,7 +654,9 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "tinder_material"
     ],
     "description": "Dried Teasel Head. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that dried teasel head is worthless.\""
@@ -699,7 +722,9 @@
       "fiber",
       "plant",
       "plant_material",
-      "fiber_source"
+      "fiber_source",
+      "fibrous_plant",
+      "pulp_feedstock"
     ],
     "flavor": "A submerged meadow pulled from brackish water.",
     "sprite_tag": "eelgrass"
@@ -719,7 +744,10 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fine_fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Flax Seed Capsule. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that flax seed capsule is worthless.\""
@@ -845,7 +873,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fiber_source",
+      "fine_fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Milkweed Pod. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that milkweed pod is worthless.\""
@@ -903,7 +935,12 @@
       "food",
       "vegetable",
       "forage",
-      "fiber_plant"
+      "fiber_plant",
+      "plant",
+      "plant_material",
+      "fiber_source",
+      "fibrous_plant",
+      "pulp_feedstock"
     ],
     "description": "Stinging leaves that become edible when cooked and useful as coarse fiber when processed.",
     "flavor": "\"Handle badly and it bites; handle well and it feeds.\"",
@@ -1074,7 +1111,9 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "tinder_material"
     ],
     "description": "Resinous Pine Cone. Careful stripping recovers plant scraps, resin lumps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that resinous pine cone is worthless.\""
@@ -1155,7 +1194,9 @@
       "salt_tolerant",
       "plant",
       "plant_material",
-      "fiber_source"
+      "fiber_source",
+      "fibrous_plant",
+      "pulp_feedstock"
     ],
     "flavor": "Salt, wind, and tide have made every blade stubborn.",
     "sprite_tag": "saltmarsh_grass"
@@ -1195,7 +1236,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fibrous_plant",
+      "fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Sedge Root Mat. Careful stripping recovers plant scraps. An intact tough fiber may survive careful recovery.",
     "flavor": "\"Look at the material before deciding that sedge root mat is worthless.\""
@@ -1235,7 +1280,11 @@
       "misc",
       "salvageable",
       "plant",
-      "forage"
+      "forage",
+      "plant_material",
+      "fibrous_plant",
+      "fiber_source",
+      "pulp_feedstock"
     ],
     "description": "Star Reed Tuft. Careful stripping recovers plant scraps.",
     "flavor": "\"Look at the material before deciding that star reed tuft is worthless.\""
@@ -5201,7 +5250,9 @@
     "volume_ml": 1687,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "shaft_material",
+      "short_haft"
     ],
     "description": "selected straight-grained timber for axes and log hooks",
     "flavor": "\"Good forestry gives hardwood blank a job to do.\""
@@ -5665,7 +5716,9 @@
       "plant",
       "plant_material",
       "plant_scrap",
-      "fiber_source"
+      "fiber_source",
+      "tinder_material",
+      "pulp_feedstock"
     ],
     "description": "Plant Scraps sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
     "flavor": "\"A patient craftsperson saves the useful plant scraps.\""
@@ -6034,7 +6087,8 @@
     "volume_ml": 388,
     "base_value": 5,
     "tags": [
-      "craft_intermediate"
+      "craft_intermediate",
+      "sharp_edge"
     ],
     "description": "selected hard flakes for cutting and scraping implements",
     "flavor": "\"Good masonry gives stone blade blank a job to do.\""
@@ -6133,7 +6187,8 @@
     "base_value": 4,
     "tags": [
       "craft_component",
-      "recovered"
+      "recovered",
+      "short_haft"
     ],
     "description": "Tool Handles sorted and cleaned for reuse in specialist crafting. Recovery avoids wasting sound material.",
     "flavor": "\"A patient craftsperson saves the useful tool handles.\""
@@ -7795,7 +7850,8 @@
     "tags": [
       "tool",
       "primitive",
-      "sharp"
+      "sharp",
+      "sharp_edge"
     ],
     "description": "A deliberately struck stone flake with a keen but fragile edge.",
     "flavor": "\"The first blade needed no forge.\"",
