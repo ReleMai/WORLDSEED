@@ -349,7 +349,10 @@ class SettlementProfessionSystem:
         if self.commerce is not None:
             for iid,qty in town.stocks.items():
                 physical[iid]=physical.get(iid,0)+max(0,int(qty))
-        needed=resolve_recipe_inputs(recipe,physical,self.registry) if recipe else dict(proc.inputs)
+        # Exact recipes keep their historic shortage -> purchase/salvage plan;
+        # only tagged recipes require an actual alternative to be selected now.
+        needed=(resolve_recipe_inputs(recipe,physical,self.registry)
+                if recipe is not None and recipe.input_tags else dict(proc.inputs))
         if needed is None:return None
         if recipe is not None:
             for iid,qty in recipe.catalysts.items():needed[iid]=needed.get(iid,0)+int(qty)

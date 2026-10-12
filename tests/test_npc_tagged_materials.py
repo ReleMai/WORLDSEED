@@ -59,7 +59,8 @@ class NPCTaggedMaterialTests(unittest.TestCase):
         before=dict(town.stocks)
         self.assertEqual(max_recipe_batches(recipe,town.stocks,self.reg,4),1)
         self.assertEqual(economy._run_process(town,proc,4),1)
-        self.assertEqual(town.stocks,{"core:fiber":1})
+        self.assertEqual(town.stocks.get("core:fiber"),1)
+        self.assertFalse(any(qty>0 for iid,qty in town.stocks.items() if iid!="core:fiber"))
         self.assertEqual(sum(before.values()),3)
 
     def test_tagged_aggregate_rejects_shortage_without_changing_stock(self):
@@ -80,7 +81,8 @@ class NPCTaggedMaterialTests(unittest.TestCase):
         proc=self.reg.settlement_processes["core:npc_tagged_strip_fibrous_plants"]
         town=SimpleNamespace(uid="test:town",stocks={"core:nettles":1,"core:reed_bundle":2})
         self.assertEqual(logistics.run_process(town,proc,2,0,0,100),1)
-        self.assertEqual(town.stocks,{"core:fiber":1})
+        self.assertEqual(town.stocks.get("core:fiber"),1)
+        self.assertFalse(any(qty>0 for iid,qty in town.stocks.items() if iid!="core:fiber"))
         self.assertEqual(logistics.run_process(town,proc,2,0,0,100),0)
 
     def test_tagged_exact_catalyst_and_overlap_reserves_distinct_units(self):

@@ -102,7 +102,11 @@ jobs:
 
       - name: NPC tagged miscellaneous material regressions
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "NPC tagged miscellaneous materials" --timeout 90 -- python -u -m unittest -v tests.test_npc_tagged_materials tests.test_tagged_crafting
+        run: python -u tools/run_ci_check.py --name "NPC tagged miscellaneous materials" --timeout 90 -- python -u -m unittest -v tests.test_npc_tagged_materials tests.test_tagged_crafting tests.test_crafting_expansion_economy
+
+      - name: Tagged NPC recipe catalog parity
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "NPC recipe catalog parity" --timeout 45 -- python -u tools/build_crafting_economy.py --check
 
       - name: Crafting material progression regressions
         shell: pwsh
