@@ -2475,8 +2475,8 @@
   {
     "id": "core:berry_barley_bun",
     "name": "Berry Barley Bun",
-    "asset": "rustic_bread",
-    "sprite_tag": "rustic_bread",
+    "asset": "berry_barley_bun",
+    "sprite_tag": "berry_barley_bun",
     "category": "food",
     "material": "core:organic",
     "mass_g": 195,
@@ -3286,8 +3286,8 @@
   {
     "id": "core:hearth_root_stew",
     "name": "Hearth Root Stew",
-    "asset": "cooked_meat",
-    "sprite_tag": "cooked_meat",
+    "asset": "hearth_root_stew",
+    "sprite_tag": "hearth_root_stew",
     "category": "food",
     "material": "core:organic",
     "mass_g": 250,
