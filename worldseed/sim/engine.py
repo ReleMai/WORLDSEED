@@ -465,7 +465,17 @@ class Simulation:
             stance=str(getattr(self.state,"player_hunting_stance","normal"))
             minutes=MOVE_MINUTES*(3 if stance=="crouch" else 2 if stance=="stalk" else 1)
         elif isinstance(command,VerticalMoveCommand):self._vertical(command,result)
-        elif isinstance(command,GatherCommand):minutes=self._gather(command,result)
+        elif isinstance(command,GatherCommand):
+            target=self.player_pos.moved(command.dx,command.dy)
+            prepare=getattr(self,'_action_target_prepare_callback',None)
+            if callable(prepare) and abs(command.dx)+abs(command.dy)<=1:
+                feature=self.resources.feature_at(target)
+                if feature is not None and feature.stage=='mature':
+                    prepare(command,target)
+            minutes=self._gather(command,result)
+            if not result.events:
+                discard=getattr(self,'_action_target_discard_callback',None)
+                if callable(discard):discard()
         elif isinstance(command,FishingCommand):minutes=self._fish(command,result)
         elif isinstance(command,ExcavateShaftCommand):minutes=self._excavate_shaft(command)
         elif isinstance(command,WaitCommand):
@@ -559,8 +569,8 @@ class Simulation:
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
         elif isinstance(command,TreatWoundCommand):self._message(self.combat.treat_player_wound(command.wound_index,command.item_id,self.entities.get(command.actor,Inventory)))
-        elif isinstance(command,StoreCommand):self._store(command)
-        elif isinstance(command,TakeFromContainerCommand):self._take_container(command)
+        elif isinstance(command,StoreCommand):minutes=1 if self._store(command) else 0
+        elif isinstance(command,TakeFromContainerCommand):minutes=1 if self._take_container(command) else 0
         elif isinstance(command,MoveContainerCommand):self._move_container(command)
         elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
@@ -584,6 +594,8 @@ class Simulation:
         # Long work is rejected above before it can apply an instant result.
         respond_to_action=combat_before or self.combat_active()
         if respond_to_action:minutes=1
+        if minutes>1 and not respond_to_action:
+            minutes=self._work_minutes(command,minutes)
         self.turn+=1
         presentation_seconds=0.0
         progress=getattr(self,'_action_progress_callback',None)
@@ -1651,21 +1663,64 @@ class Simulation:
             return None
         c=self.building.nearby_container(self.player_pos)
         return c if c and not self.settlement_physicalization.shell_blocks(WorldPos(c.x,c.y,c.z)) else None
-    def _store(self,cmd:StoreCommand)->None:
+    def _work_minutes(self,command,minutes:int)->int:
+        """Bounded work-rate modifiers; never modify explicit waits or travel.
+
+        Base recipe/resource durations remain authoritative. These factors only
+        apply after the command resolves, so failed/instant operations never
+        accidentally gain a multi-minute animation.
+        """
+        kind=type(command).__name__
+        skill_keys={
+            'CraftCommand':'crafting','ComponentCraftCommand':'crafting',
+            'DiscoveryPotCommand':'crafting','ExperimentRecipeCommand':'crafting',
+            'GatherCommand':'foraging','FishingCommand':'fishing',
+            'CookMealCommand':'cooking','ProcessCarcassCommand':'hunting',
+            'StartSalvageCommand':'crafting','StartSalvageGameCommand':'crafting',
+            'SalvageActionCommand':'crafting','QuickSalvageCommand':'crafting',
+            'BuildCommand':'construction','AdvanceBlueprintCommand':'construction',
+            'RepairCrossingCommand':'construction','ExcavateShaftCommand':'mining',
+            'StartProcessingCommand':'crafting','CollectWaterCommand':'survival',
+        }
+        skill=skill_keys.get(kind)
+        if skill is None:return minutes
+        # Work speed is affected by preparation, condition and local exposure.
+        factor=100-min(25,max(0,self.player_skill(skill))*3)
+        wounds=getattr(self.state,'player_wounds',())
+        factor+=min(45,sum(max(0,int(w.get('severity',0))) for w in wounds)//5)
+        vitals=self.entities.try_get(self.player_id,Vitals)
+        if vitals is not None:
+            factor+=15 if vitals.stamina<25 else 7 if vitals.stamina<50 else 0
+        indoor=bool(getattr(self,'interiors',None) and self.interiors.player_presence() is not None)
+        if not indoor:
+            pos=self.player_pos
+            weather=self.environment.weather.at(self.clock.minute,pos.x,pos.y)
+            factor+=min(35,int(weather.get('rain',0))*3)
+            factor+=min(10,int(weather.get('wind_speed',0))//12)
+        if kind=='GatherCommand':
+            # The harvesting resource system already rewards appropriate tools.
+            # A well-maintained tool further helps the active work phase.
+            power=max(self.resources.tool_power(self.entities.get(self.player_id,Inventory),tag)
+                      for tag in ('axe','pick','knife'))
+            factor-=min(12,max(0,power)*2)
+        factor=max(55,min(180,factor))
+        return max(1,(int(minutes)*factor+99)//100)
+
+    def _store(self,cmd:StoreCommand)->bool:
         c=self._command_container(cmd.container_uid)
-        if not c:self._message("There is no storage container within reach.");return
+        if not c:self._message("There is no storage container within reach.");return False False
         if c.kind=="property" and self.property_storage.blocks_actor(c,"player"):
-            self._message(f"{c.name or 'That storage'} is locked.");return
+            self._message(f"{c.name or 'That storage'} is locked.");return False
         if c.kind=="property" and c.owner!="player" and c.access!="public":
-            self._message("That storage belongs to someone else.");return
+            self._message("That storage belongs to someone else.");return False
         ok,msg=self.building.store(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
-    def _take_container(self,cmd:TakeFromContainerCommand)->None:
+    def _take_container(self,cmd:TakeFromContainerCommand)->bool:
         c=self._command_container(cmd.container_uid)
-        if not c:self._message("There is no storage container within reach.");return
+        if not c:self._message("There is no storage container within reach.");return False
         if c.kind=="property" and self.property_storage.blocks_actor(c,"player"):
-            self._message(f"{c.name or 'That storage'} is locked.");return
+            self._message(f"{c.name or 'That storage'} is locked.");return False
         if c.kind=="property" and c.owner!="player" and c.access!="public":
-            self._message("That storage is private. Select Stalk mode to attempt theft.");return
+            self._message("That storage is private. Select Stalk mode to attempt theft.");return False
         ok,msg=self.building.take(c,self.entities.get(cmd.actor,Inventory),cmd.item_id,cmd.amount);self._message(msg)
     def _move_container(self,cmd:MoveContainerCommand)->None:
         c=self._command_container(cmd.container_uid)
