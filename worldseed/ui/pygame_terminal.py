@@ -276,8 +276,12 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 for event in pg.event.get():
                     if event.type==pg.QUIT:
                         quit_requested=True
-                    elif event.type in (pg.VIDEORESIZE,getattr(pg,'WINDOWRESIZED',pg.VIDEORESIZE)):
+                    elif event.type==pg.VIDEORESIZE:
                         self._resize(event.w,event.h)
+                        redraw_required=True
+                        background=None
+                    elif hasattr(pg,'WINDOWRESIZED') and event.type==pg.WINDOWRESIZED:
+                        self._resize(getattr(event,'x',self.width),getattr(event,'y',self.height))
                         redraw_required=True
                         background=None
                     elif event.type==pg.KEYUP:
