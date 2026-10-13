@@ -139,6 +139,10 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
+      - name: Save failure preservation and recovery
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Save retry and failure UI" --timeout 60 -- python -u -m unittest -v tests.test_save_retry tests.test_save_failure_ui
+
       - name: Log cabin blueprint and placement ghost
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Log cabin blueprint and ghost" --timeout 60 -- python -u -m unittest -v tests.test_homestead_blueprints tests.test_homestead_ghost_ui tests.test_homestead_panels tests.test_homestead_art

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Protocol, Callable
+from types import MappingProxyType
+from typing import Protocol, Callable, Mapping
 from worldseed.config import (
     DEFAULT_CACHE_CHUNKS, CHUNK_SIZE, HYDROLOGY_VERSION,
     HYDROLOGY_MORPHOLOGY_VERSION, COAST_MORPHOLOGY_VERSION,
@@ -16,9 +17,17 @@ class DeltaSource(Protocol):
 @dataclass(frozen=True,slots=True)
 class TileView:
     position:WorldPos; terrain_id:str; terrain:TerrainDef
+
+@dataclass(frozen=True,slots=True)
+class DirtyTileSnapshot:
+    """Detached pending terrain and mutation identities for one checkpoint."""
+    tiles:Mapping[WorldPos,str]
+    revisions:Mapping[WorldPos,int]
+
 class World:
     def __init__(self,generator:WorldGenerator,registry:ContentRegistry,delta_source:DeltaSource,cache_chunks:int=DEFAULT_CACHE_CHUNKS,auto_hydrology:bool=True)->None:
         self.generator=generator; self.registry=registry; self.delta_source=delta_source; self.dirty_tiles:dict[WorldPos,str]={}; self.revision=0
+        self._dirty_tile_revisions:dict[WorldPos,int]={}
         coast_version=COAST_MORPHOLOGY_VERSION if self.generator.version>=8 else 0
         getter=getattr(delta_source,'get_meta',None)
         if callable(getter) and self.generator.version>=8:
@@ -167,7 +176,20 @@ class World:
         key,lx,ly=split_world(pos); chunk=self.cache.get(key); tid=self.registry.terrain_id(chunk.get(lx,ly)); return TileView(pos,tid,self.registry.terrain(tid))
     def set_terrain(self,pos:WorldPos,terrain_id:str)->None:
         if terrain_id not in self.registry.terrains:raise KeyError(terrain_id)
-        key,lx,ly=split_world(pos); chunk=self.cache.get(key); chunk.set(lx,ly,self.registry.terrain_index(terrain_id)); self.dirty_tiles[pos]=terrain_id; self.revision+=1; self.cache.pin(key)
+        key,lx,ly=split_world(pos)
+        # Pin before loading: if every older chunk is dirty, get() would
+        # otherwise evict this new chunk before its mutation can be retained.
+        self.cache.pin(key)
+        try:
+            chunk=self.cache.get(key)
+            chunk.set(lx,ly,self.registry.terrain_index(terrain_id))
+        except Exception:
+            if not any(split_world(p)[0]==key for p in self.dirty_tiles):
+                self.cache.clear_pin(key)
+            raise
+        self.revision+=1
+        self.dirty_tiles[pos]=terrain_id
+        self._dirty_tile_revisions[pos]=self.revision
     def is_passable(self,pos:WorldPos)->bool:return self.tile_at(pos).terrain.passable
     def environment_at(self, pos: WorldPos):
         """Read natural site potential without realizing terrain or populations."""
@@ -197,7 +219,26 @@ class World:
     def crossing_cost(self,pos:WorldPos)->int:
         surface=self.hydrology_at(pos)
         return int(getattr(surface,'crossing_cost',0) or 0) if surface is not None else 0
+    def snapshot_dirty_tiles(self)->DirtyTileSnapshot:
+        """Capture retry data without clearing edits or releasing chunk pins."""
+        return DirtyTileSnapshot(MappingProxyType(dict(self.dirty_tiles)),
+                                 MappingProxyType(dict(self._dirty_tile_revisions)))
+
+    def acknowledge_dirty_tiles(self,snapshot:DirtyTileSnapshot)->None:
+        """Release only revisions durably saved by this exact snapshot."""
+        saved_chunks=set()
+        for pos,revision in snapshot.revisions.items():
+            if (self._dirty_tile_revisions.get(pos)==revision
+                    and self.dirty_tiles.get(pos)==snapshot.tiles[pos]):
+                del self.dirty_tiles[pos]
+                del self._dirty_tile_revisions[pos]
+                saved_chunks.add(split_world(pos)[0])
+        pending_chunks={split_world(pos)[0] for pos in self.dirty_tiles}
+        for key in saved_chunks-pending_chunks:
+            self.cache.clear_pin(key)
+
     def drain_dirty_tiles(self)->dict[WorldPos,str]:
-        out=dict(self.dirty_tiles); self.dirty_tiles.clear()
-        for pos in out:self.cache.clear_pin(split_world(pos)[0])
-        return out
+        """Legacy eager drain; checkpoint writers must snapshot/acknowledge."""
+        snapshot=self.snapshot_dirty_tiles()
+        self.acknowledge_dirty_tiles(snapshot)
+        return dict(snapshot.tiles)

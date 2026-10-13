@@ -1,5 +1,6 @@
 from __future__ import annotations
 from contextlib import nullcontext
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from pathlib import Path
 import json,secrets,sys,time,traceback
@@ -504,15 +505,32 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     sim.state.last_offline_wall_time=time.time();return GameContext(db,reg,world,entities,sim,player)
 def _save(ctx:GameContext, *, backup:bool=True)->None:
     started=time.perf_counter()
-    p=ctx.entities.get(ctx.player_id,Position).value;inv=ctx.entities.get(ctx.player_id,Inventory);v=ctx.entities.get(ctx.player_id,Vitals);ctx.sim.state.last_offline_wall_time=time.time()
+    p=ctx.entities.get(ctx.player_id,Position).value
+    inventory=dict(ctx.entities.get(ctx.player_id,Inventory).items)
+    vitals=asdict(ctx.entities.get(ctx.player_id,Vitals))
+    tiles=ctx.world.snapshot_dirty_tiles()
+    saved_at=time.time()
+    # Capture state before touching the database. A failed snapshot must leave
+    # both the previous checkpoint metadata and the live retry data intact.
+    state=deepcopy(ctx.sim.state.to_dict())
+    state['last_offline_wall_time']=saved_at
+    metadata={
+        'last_saved_at':saved_at,'player_name':ctx.sim.state.player_name,
+        'player_origin':ctx.sim.state.player_origin,'player_sex':ctx.sim.state.player_sex,
+        'player_sprite_index':int(ctx.sim.state.player_sprite_index),
+    }
     # Rotating full-database backups are intentionally reserved for explicit
     # save/menu/quit checkpoints. Copying an ever-growing generated-world DB on
     # every routine autosave caused increasingly long apparent freezes during
     # exploration. Autosave still commits all authoritative state atomically.
     if backup and ctx.db.path.exists() and ctx.db.path.stat().st_size>0:
         ctx.db.backup(3)
-    ctx.db.set_meta('last_saved_at',time.time());ctx.db.set_meta('player_name',ctx.sim.state.player_name);ctx.db.set_meta('player_origin',ctx.sim.state.player_origin);ctx.db.set_meta('player_sex',ctx.sim.state.player_sex);ctx.db.set_meta('player_sprite_index',int(ctx.sim.state.player_sprite_index))
-    ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=ctx.world.drain_dirty_tiles(),player_id=ctx.player_id,position=p,inventory=inv.items,vitals=asdict(v),sim_state=ctx.sim.state.to_dict())
+    ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=tiles.tiles,player_id=ctx.player_id,
+                      position=p,inventory=inventory,vitals=vitals,sim_state=state,metadata=metadata)
+    # save_state returns only after SQLite commits. A later edit, even one
+    # restoring the same terrain value, has another revision and stays pending.
+    ctx.world.acknowledge_dirty_tiles(tiles)
+    ctx.sim.state.last_offline_wall_time=saved_at
     try:
         ctx.sim.debug.event("save",backup=bool(backup),elapsed_ms=round((time.perf_counter()-started)*1000,3),turn=int(ctx.sim.turn),world=str(ctx.db.path))
         ctx.sim.debug.flush()
@@ -3846,6 +3864,37 @@ def _diagnostics_view(ctx:GameContext,term:Terminal)->str:
     _view_text(term,box('SESSION DIAGNOSTICS',lines,screen_width(term.size()[0],112)))
     return UI_BACK
 
+def _try_save(ctx:GameContext,term:Terminal|None=None,*,backup:bool=True)->bool:
+    """Keep failed checkpoints recoverable without leaving the live world."""
+    try:
+        if backup:_save(ctx)
+        else:_save(ctx,backup=False)
+        return True
+    except Exception as exc:
+        message='Save failed. Current changes remain in memory.'
+        path=str(ctx.db.path)
+        try:ctx.sim.debug.exception('save',exc,world=path,backup=bool(backup))
+        except Exception:pass
+        try:ctx.sim._message(message)
+        except Exception:pass
+        if term is not None:
+            pause=getattr(term,'pause_realtime',None)
+            try:
+                with pause() if callable(pause) else nullcontext():
+                    _view_text(term,box('SAVE FAILED',[
+                        message,
+                        f'Save path: {path}',
+                        f'Error: {exc}',
+                        'After fixing disk space or access to this path, open Pause > Save game to retry.',
+                        'Resume keeps the current session open.'
+                    ],screen_width(term.size()[0],110)),title='SAVE FAILED')
+            except Exception:
+                # A second window-close request while reading the error cannot
+                # discard the live world. Recovery still returns to the caller.
+                pass
+        return False
+
+
 def _pause_menu(ctx:GameContext,term:Terminal)->str:
     while True:
         choice=_select(term,'PAUSED',[
@@ -3856,11 +3905,13 @@ def _pause_menu(ctx:GameContext,term:Terminal)->str:
         ],allow_escape=True)
         if not choice:return 'resume'
         if choice=='resume':return 'resume'
-        if choice=='save':_save(ctx);return 'saved'
+        if choice=='save':
+            if _try_save(ctx,term):return 'saved'
+            continue
         if choice=='diagnostics':_diagnostics_view(ctx,term);continue
         if choice=='console':_world_console(ctx,term);continue
-        if choice=='menu':_save(ctx);return 'menu'
-        if choice=='quit':_save(ctx);return 'quit'
+        if choice in {'menu','quit'}:
+            if _try_save(ctx,term):return choice
 
 def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:str='')->str:
     """Pointer coordinates and objects belong to the current interior, not a tile."""
@@ -3948,7 +3999,9 @@ def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:st
     return sim.log[-1].message if sim.log else ''
 
 def run_game(ctx:GameContext,term:Terminal)->str:
-    renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
+    # Track attempts, including failures, so a failed autosave cannot repeat on
+    # every redraw. Pause > Save game remains available for an immediate retry.
+    renderer=Renderer(ctx.registry);last='';autosave_attempt=ctx.sim.turn
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
     action_presenter=getattr(term,'present_timed_action',None)
     if callable(action_presenter):
@@ -3975,8 +4028,9 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         _present_game_frame(term,ctx,renderer,last);last=''
         key=term.read_key()
         if key=='UI_REDRAW':
-            if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
-                _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
+            if ctx.sim.turn-autosave_attempt>=AUTOSAVE_TURNS:
+                saved=_try_save(ctx,term,backup=False);autosave_attempt=ctx.sim.turn
+                last='Autosaved.' if saved else 'Autosave failed. Current changes remain in memory. Pause > Save game to retry.'
             continue
         try:
             ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
@@ -4031,7 +4085,9 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             continue
         intent=classify_key(key)
         if intent.kind=='quit':
-            _save(ctx);return 'quit'
+            if _try_save(ctx,term):return 'quit'
+            last='Save failed. Current changes remain in memory. Pause > Save game to retry.'
+            continue
         if intent.kind=='pause':
             realtime.pause()
             choice=_pause_menu(ctx,term)
@@ -4076,8 +4132,9 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         else:
             continue
         last=ctx.sim.log[-1].message if ctx.sim.log else ''
-        if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
-            _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
+        if ctx.sim.turn-autosave_attempt>=AUTOSAVE_TURNS:
+            saved=_try_save(ctx,term,backup=False);autosave_attempt=ctx.sim.turn
+            last='Autosaved.' if saved else 'Autosave failed. Current changes remain in memory. Pause > Save game to retry.'
     finally:
         if callable(action_presenter):ctx.sim._action_progress_callback=None
         if callable(install):install(None)
@@ -4132,9 +4189,16 @@ def main()->int:
             discard=getattr(term,'discard_pending_input',None)
             if callable(discard):discard()
             try:
-                outcome=run_game(ctx,term)
-            except WindowCloseRequested:
-                _save(ctx);return 0
+                while True:
+                    try:
+                        outcome=run_game(ctx,term)
+                        break
+                    except WindowCloseRequested:
+                        if _try_save(ctx,term):
+                            outcome='quit'
+                            break
+                        # Re-enter the same live context after a failed modal
+                        # close; the database must stay open for retry/resume.
             except Exception as exc:
                 # Session diagnostics are continuous, so a crash adds the full
                 # traceback and state location to the same shareable JSONL log.

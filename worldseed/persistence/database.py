@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json, sqlite3, shutil, time, zlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 from worldseed.config import (
     ENGINE_VERSION, SAVE_SCHEMA_VERSION, WORLDGEN_VERSION, RESOURCEGEN_VERSION,
     HYDROLOGY_VERSION, HYDROLOGY_MORPHOLOGY_VERSION, COAST_MORPHOLOGY_VERSION,
@@ -294,8 +294,9 @@ class WorldDatabase:
         row=self.connection.execute("SELECT payload_json FROM components WHERE entity_id=? AND kind=?",(entity_id,kind)).fetchone();return None if row is None else json.loads(row[0])
     def load_sim_state(self)->dict|None:
         row=self.connection.execute("SELECT payload_json FROM sim_state WHERE slot=1").fetchone();return None if row is None else json.loads(row[0])
-    def save_state(self,*,turn:int,tile_deltas:dict[WorldPos,str],player_id:int,position:WorldPos,inventory:dict[str,int],vitals:dict|None=None,sim_state:dict|None=None)->None:
+    def save_state(self,*,turn:int,tile_deltas:Mapping[WorldPos,str],player_id:int,position:WorldPos,inventory:dict[str,int],vitals:dict|None=None,sim_state:dict|None=None,metadata:Mapping[str,Any]|None=None)->None:
         with self.connection:
+            for key,value in (metadata or {}).items():self.set_meta(key,value)
             self.set_meta("turn",turn);self.set_meta("engine_version",ENGINE_VERSION)
             self.connection.execute("INSERT INTO entities(entity_id,archetype) VALUES(?,?) ON CONFLICT(entity_id) DO UPDATE SET archetype=excluded.archetype",(player_id,"core:player"))
             self._save_component(player_id,"Position",1,{"x":position.x,"y":position.y,"z":position.z});self._save_component(player_id,"Inventory",2,{"items":inventory})

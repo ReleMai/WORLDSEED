@@ -3019,6 +3019,8 @@ Presentation must remain observational. Opening, resizing, hovering or rendering
 
 # Changelog
 
+- 2026-10-13 early access save reliability: checkpoints now retain pending terrain edits and chunk pins until SQLite commits, acknowledge only the captured revisions, and save checkpoint metadata atomically. Failed saves show a paused recovery message and keep the current world open for retry; autosave failures cannot retrigger every frame. Added failure, retry, reload, legacy-save and cache-eviction regressions. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_SAVE_RETRY_HANDOFF.md).
+
 - RC14 dev5: replaced SDL/OS movement repeat with held-key state and paced simulation input so slow frames cannot queue catch-up movement after key release; added scroll-reuse terrain rendering and absolute-cell resource overlay caching. Added deterministic 512×512 regional block plans, causally scored settlement anchors, exact directional region entry, symmetric road exits, authoritative prepared river exits, and a discovery-gated graphical region map. Regional plans persist as rebuildable generated data while simulation/economy authority remains unchanged.
 
 - RC14 dev4: added deterministic environmental read models and per-resource opportunity scores, bounded fingerprint-keyed caching, skill-gated Look ground signs, and a three-seed map audit. Preserved continental/climate fields, physical hydrology and resource density. Fixed in-memory hydrology plans failing to persist on a later save request; centered the graphical camera at every zoom; wrapped footer controls inside small windows. Added behavioral SDL startup/zoom/render checks and environmental determinism/persistence tests.
