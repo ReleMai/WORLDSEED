@@ -47,6 +47,10 @@ class ActionProgressPygameTests(unittest.TestCase):
         term.enter()
         try:
             term._input_mode = "ui"
+            term._current_presentation = "crafting_unified"
+            term._floating_panels["crafting"] = {"x":80,"y":65,"w":280,"h":260}
+            term.screen.fill((20,22,24))
+            term.pg.draw.rect(term.screen,(75,65,42),term.pg.Rect(80,65,280,260))
             events = []
             def advance(delta):
                 self.assertGreater(delta, 0)
@@ -60,6 +64,8 @@ class ActionProgressPygameTests(unittest.TestCase):
             self.assertEqual(sum(n for kind,n in events if kind == "tick"), 20)
             self.assertTrue(any(kind == "world" and 0 < n < 20 for kind,n in events), events)
             self.assertEqual(term._input_mode, "ui")
+            self.assertEqual(tuple(term.screen.get_at((120,120))[:3]),(75,65,42),
+                             "crafting window stays visible while the world redraws behind it")
             self.assertIsNone(term._floating_backdrop)
         finally:
             term.restore()
