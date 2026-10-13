@@ -3989,7 +3989,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             pass
         if key.startswith('UI_TIME:'):
             chosen=key.split(':',1)[1]
-            if chosen=='pause':realtime.pause()
+            if chosen=='pause':realtime.toggle_pause()
             elif chosen in ('1','2','3'):realtime.set_speed(int(chosen))
             continue
         if key=='UI_BLUEPRINT_CANCEL':
