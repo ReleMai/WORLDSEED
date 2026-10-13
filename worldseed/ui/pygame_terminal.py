@@ -137,6 +137,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._world_activity_tab = 'activity'
         self._activity_footer_context = None
         self._realtime_callback = None
+        self._game_clock_driver = None
+        self._action_target_snapshot = None
         self._free_movement_callback = None
         self._free_movement_last_ms = 0
         self._movement_redraw_last_ms = 0
@@ -198,6 +200,23 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             self.pg.quit()
         except Exception:
             pass
+
+    def set_game_clock_driver(self, driver) -> None:
+        self._game_clock_driver=driver
+
+    def capture_action_target(self, command, pos) -> None:
+        """Snapshot one visible gathered tile before the command depletes it."""
+        self._action_target_snapshot=None
+        ctx=self._hover_context
+        if not ctx or self.screen is None:return
+        px=int(ctx['grid_x']+(pos.x-ctx['left'])*ctx['tile_px'])
+        py=int(ctx['grid_y']+(pos.y-ctx['top'])*ctx['tile_px'])
+        rect=self.pg.Rect(px,py,ctx['tile_px'],ctx['tile_px'])
+        if not self.screen.get_rect().contains(rect) or not ctx['used'].contains(rect):return
+        self._action_target_snapshot=(rect,self.screen.subsurface(rect).copy())
+
+    def discard_action_target(self) -> None:
+        self._action_target_snapshot=None
 
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
@@ -358,6 +377,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         dx=int(any(k in held for k in (pg.K_d,pg.K_RIGHT)))-int(any(k in held for k in (pg.K_a,pg.K_LEFT)))
         dy=int(any(k in held for k in (pg.K_s,pg.K_DOWN)))-int(any(k in held for k in (pg.K_w,pg.K_UP)))
         sprint=bool(pg.key.get_mods() & pg.KMOD_SHIFT)
+        if (dx or dy) and self._game_clock_driver is not None:
+            self._game_clock_driver.resume_for_movement()
         changed=bool(callback(dt,dx,dy,sprint))
         if changed:
             self._entity_spatial_cache_key=None
@@ -824,6 +845,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     # Keep SDL repeat disabled permanently. Re-arming here now
                     # means only that fresh post-loading keyboard input is valid.
                     self._input_repeat_armed = True
+                if event.key == pg.K_SPACE:
+                    return ' '
                 if event.key in movement_keys:
                     # Ignore any duplicate/repeat KEYDOWN already queued by the
                     # platform or injected before repeat was disabled. Held
@@ -2584,7 +2607,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             # based, but cap refresh frequency by actual drawable pixel area.
             used=self._hover_context['used']
             area=used.width*used.height
-            interval=100 if area>1_600_000 else 66 if area>800_000 else 33
+            interval=180 if area>1_600_000 else 110 if area>800_000 else 50
             phase=int(now)//interval
             if phase == getattr(self, '_weather_animation_phase', None):
                 if menu_pointer:self._animate_menu_effects(now,force=True)
@@ -3992,8 +4015,26 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         old_clip=screen.get_clip();screen.set_clip(bar.clip(old_clip))
         pg.draw.rect(screen,(19,23,25),bar,border_radius=5)
         pg.draw.rect(screen,th['edge'],bar,1,border_radius=5)
-        title=self._fit_ui_text('TOOLS & ACTIONS',self.small_font,max(1,bar.width-2*margin))
-        screen.blit(self.small_font.render(title,True,th['accent']),(bar.x+margin,bar.y+7))
+        controller=self._game_clock_driver
+        if controller is not None and self._input_mode=='world':
+            # Four compact, clickable clock controls in the existing HUD.
+            modes=(('||','pause'),('1x','1'),('2x','2'),('3x','3'))
+            gap_time=3
+            bw_time=max(36,(bar.width-2*margin-3*gap_time)//4)
+            for i,(label,key) in enumerate(modes):
+                clock_box=pg.Rect(bar.x+margin+i*(bw_time+gap_time),bar.y+3,bw_time,23)
+                active=(controller.paused if key=='pause' else
+                        (not controller.paused and controller.speed==int(key)))
+                pg.draw.rect(screen,(83,69,45) if active else th['panel'],clock_box,border_radius=4)
+                pg.draw.rect(screen,th['accent'] if active else th['edge'],clock_box,1,border_radius=4)
+                ink=self.small_font.render(label,True,th['text'] if active else th['muted'])
+                screen.blit(ink,ink.get_rect(center=clock_box.center))
+                self._pointer_targets.append((clock_box,'UI_TIME:'+key))
+                self._hud_tooltips.append((clock_box,('Pause' if key=='pause' else label+' clock'),
+                                           'Space toggles pause; walking restores 1x from fast-forward'))
+        else:
+            title=self._fit_ui_text('TOOLS & ACTIONS',self.small_font,max(1,bar.width-2*margin))
+            screen.blit(self.small_font.render(title,True,th['accent']),(bar.x+margin,bar.y+7))
         cols=5;gap=min(6,max(0,bar.width//35));bw=max(1,(bar.width-2*margin-gap*4)//cols)
         buttons=HUD_BUTTONS if self._input_mode=='world' else (('Confirm','\r'),('Cancel','ESC'))
         header=min(28,max(1,bar.height//5));stance_height=min(29,max(1,bar.height//5))
@@ -4131,7 +4172,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         pos=entities.get(player_id,Position).value
         vit=entities.try_get(player_id,Vitals) or Vitals()
         inv=entities.get(player_id,Inventory)
-        tile_px=self._tile_px
+        # Bound high-resolution software compositing by world cells, not display
+        # pixels. Maximizing a window should not quadratically multiply work.
+        tile_px=max(self._tile_px,math.ceil(math.sqrt(max(1,map_rect.width*map_rect.height)/1050)))
         cols, rows, inset_x, inset_y = centered_tile_grid(map_rect.width, map_rect.height, tile_px)
         map_rect = pg.Rect(map_rect.x + inset_x, map_rect.y + inset_y, cols * tile_px, rows * tile_px)
         # Keep a fixed viewport but render one extra tile on each side.
@@ -4734,4 +4777,4 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._hover_map_snapshot=screen.subsurface(used).copy()
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
         self._refresh_hover_only(force=True,update_display=False)
-        pg.display.flip(); self.clock.tick(120)
+        pg.display.flip(); self.clock.tick(60)
