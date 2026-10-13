@@ -252,7 +252,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 panel_rect=panel_rect.clip(self.screen.get_rect())
                 if panel_rect.width>0 and panel_rect.height>0:
                     panel_pixels=self.screen.subsurface(panel_rect).copy()
-        duration=visual_duration(total)
+        duration=(0.18 if type(command).__name__ in
+                  ('StoreCommand','TakeFromContainerCommand') else visual_duration(total))
+        target_snapshot=self._action_target_snapshot
+        self._action_target_snapshot=None
+        target_clean=None
         started=time.monotonic()
         advanced=0
         last_world_paint=0.0
@@ -283,27 +287,53 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     last_world_paint=time.monotonic()
                     redraw_required=False
                     background=None
+                    if target_snapshot is not None:
+                        ghost_rect,_=target_snapshot
+                        if self.screen.get_rect().contains(ghost_rect):
+                            target_clean=self.screen.subsurface(ghost_rect).copy()
+                ctx=self._hover_context
                 sw,sh=self.screen.get_size()
-                width=min(540,max(260,sw-36))
-                box=pg.Rect((sw-width)//2,max(20,sh-136),width,92)
+                if ctx:
+                    sim=ctx.get('sim')
+                    pos=sim.player_pos
+                    tile=int(ctx['tile_px'])
+                    state=sim.state
+                    fx=float(getattr(state,'player_fx',0.5))
+                    fy=float(getattr(state,'player_fy',0.5))
+                    center_x=int(ctx['grid_x']+(pos.x-ctx['left']+fx)*tile)
+                    head_y=int(ctx['grid_y']+(pos.y-ctx['top']+fy-0.65)*tile)
+                    clip=ctx['used']
+                else:
+                    center_x=sw//2
+                    head_y=sh//2
+                    clip=self.screen.get_rect()
+                width=138
+                box=pg.Rect(max(clip.left+4,min(center_x-width//2,clip.right-width-4)),
+                            max(clip.top+5,min(head_y-51,clip.bottom-50)),width,45)
                 if backdrop_rect!=box or background is None:
                     backdrop_rect=box
                     background=self.screen.subsurface(box).copy()
+                if target_snapshot is not None and target_clean is not None:
+                    ghost_rect,ghost_source=target_snapshot
+                    self.screen.blit(target_clean,ghost_rect.topleft)
+                    if fraction<1.0:
+                        ghost=ghost_source.copy()
+                        ghost.set_alpha(max(0,round(255*(1.0-fraction))))
+                        self.screen.blit(ghost,ghost_rect.topleft)
+                    pg.display.update(ghost_rect)
                 self.screen.blit(background,box.topleft)
                 overlay=pg.Surface(box.size,pg.SRCALPHA)
-                pg.draw.rect(overlay,(18,24,27,240),overlay.get_rect(),border_radius=10)
-                pg.draw.rect(overlay,(*self._theme['accent'],220),overlay.get_rect(),width=1,border_radius=10)
-                title=self.font.render(label,True,self._theme['text'])
-                overlay.blit(title,(18,11))
-                elapsed_label=f'{advanced:,}/{total:,} game min   •   {round(fraction*100):d}%'
-                text=self.small_font.render(elapsed_label,True,self._theme['muted'])
-                overlay.blit(text,(18,39))
-                bar=pg.Rect(18,68,width-36,10)
-                pg.draw.rect(overlay,(51,60,63),bar,border_radius=4)
-                fill=max(0,min(bar.width,round(bar.width*fraction)))
+                pg.draw.rect(overlay,(17,22,24,222),overlay.get_rect(),border_radius=7)
+                pg.draw.rect(overlay,(*self._theme['accent'],170),overlay.get_rect(),width=1,border_radius=7)
+                title=self.small_font.render(self._fit_ui_text(label,self.small_font,87),True,self._theme['text'])
+                overlay.blit(title,(8,5))
+                number=self.small_font.render(f'+{advanced}m',True,self._theme['accent'])
+                overlay.blit(number,(width-number.get_width()-8,5))
+                track=pg.Rect(8,29,width-16,8)
+                pg.draw.rect(overlay,(48,57,58),track,border_radius=3)
+                fill=max(0,min(track.width,round(track.width*fraction)))
                 if fill:
-                    pg.draw.rect(overlay,self._theme['accent'],
-                                 pg.Rect(bar.x,bar.y,fill,bar.height),border_radius=4)
+                    pg.draw.rect(overlay,self._theme['accent'],pg.Rect(track.x,track.y,fill,track.height),border_radius=3)
                 self.screen.blit(overlay,box.topleft)
                 pg.display.update(box)
                 # Ignore fresh commands while one transaction is in progress;
