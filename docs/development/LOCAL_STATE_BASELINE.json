@@ -1,0 +1,547 @@
+{
+  "actor_probes": [
+    {
+      "allocations": null,
+      "animation_ms": 1600,
+      "authority_fingerprint": "dc8a4a8447e415365222e81916203f24ae0fb5b2becbe90547acb58451e0b372",
+      "authority_unchanged": true,
+      "build_identity": {
+        "git_revision": "7b8868029611c723d8e08d2680761aff4a965a02",
+        "working_tree_dirty": true
+      },
+      "cache_counts": {
+        "base_layer_cache": 0,
+        "interior_art_scaled": 0,
+        "interior_art_sources": 0,
+        "overlay_cache": 0,
+        "panel_icon_cache": 0,
+        "prepared_resource_chunks": 16,
+        "resource_cell_cache": 627,
+        "resource_view_cache": 0,
+        "sprite_cache": 44,
+        "terrain_transition_cache": 10,
+        "terrain_transition_masks": 0,
+        "water_current_cache": 0,
+        "weather_cloud_cache": 1,
+        "weather_rain_cache": 0,
+        "world_chunks": 16
+      },
+      "driver": "dummy",
+      "fixture_mode": "prepared-synthetic-qa",
+      "fixture_version": 1,
+      "frames_measured": 80,
+      "frames_requested": 80,
+      "game_minute": 720,
+      "hardware": {
+        "engine_version": "1.0.0-rc14-dev64",
+        "logical_cpus": 3,
+        "machine": "x86_64",
+        "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+        "processor": "AMD EPYC 9V74 80-Core Processor",
+        "python": "3.12.14",
+        "python_build": [
+          "main",
+          "Aug 25 2026 14:00:49"
+        ]
+      },
+      "headless": true,
+      "idle_movement_probe": true,
+      "interrupted": false,
+      "pacing": "unpaced-renderer-throughput",
+      "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+      "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+      "png": null,
+      "preparation_ms": 1384.3951239996386,
+      "pygame": "2.5.8",
+      "save_bytes": 1757184,
+      "scene": "large_save",
+      "sdl": [
+        2,
+        32,
+        10
+      ],
+      "seed": "worldseed-reference-v1",
+      "settlement_plan_version": 12,
+      "size": [
+        1280,
+        720
+      ],
+      "state_counts": {
+        "containers": 243,
+        "discovered_cells": 9701,
+        "distant_npcs": 1000,
+        "interior_actors": 0,
+        "interiors": 0,
+        "npcs": 1024,
+        "physical_cells": 4128,
+        "planned_structures": 66,
+        "settlements": 1,
+        "structures": 0,
+        "visible_cells": 9701
+      },
+      "state_json_bytes": 1418159,
+      "timing_notes": {
+        "cold_loads_included": false,
+        "nested_stages": {
+          "render.terrain_cache": "render.terrain"
+        },
+        "percentiles": "linear interpolation over retained rolling samples",
+        "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+        "render.frame": "excludes clock pacing; includes display flip"
+      },
+      "timings": {
+        "dropped_stages": 0,
+        "enabled": true,
+        "max_samples": 600,
+        "max_stages": 32,
+        "stages": {
+          "reference.iteration": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 25.123663001068053,
+            "mean_ms": 15.722694762553147,
+            "over_100ms_count": 0,
+            "p50_ms": 15.108274999874993,
+            "p95_ms": 19.068530451568222,
+            "p99_ms": 24.94349086027796,
+            "window_count": 80,
+            "worst_ms": 25.123663001068053
+          },
+          "render.effects": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 2.71977700140269,
+            "mean_ms": 1.1053043500851345,
+            "over_100ms_count": 0,
+            "p50_ms": 1.034331500704866,
+            "p95_ms": 1.4906118001817958,
+            "p99_ms": 2.163042670617865,
+            "window_count": 80,
+            "worst_ms": 2.71977700140269
+          },
+          "render.frame": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 24.76499899967166,
+            "mean_ms": 15.367414049956096,
+            "over_100ms_count": 0,
+            "p50_ms": 14.75982800093334,
+            "p95_ms": 18.729254201662116,
+            "p99_ms": 24.40300203976221,
+            "window_count": 80,
+            "worst_ms": 24.76499899967166
+          },
+          "render.objects_actors": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 5.694229999789968,
+            "mean_ms": 2.7786374124389113,
+            "over_100ms_count": 0,
+            "p50_ms": 2.6393099997221725,
+            "p95_ms": 3.5040763509641684,
+            "p99_ms": 4.92698121008288,
+            "window_count": 80,
+            "worst_ms": 5.694229999789968
+          },
+          "render.prepare": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 4.556989000775502,
+            "mean_ms": 2.998967787402762,
+            "over_100ms_count": 0,
+            "p50_ms": 2.918322998993972,
+            "p95_ms": 3.825060050348838,
+            "p99_ms": 4.442818199659086,
+            "window_count": 80,
+            "worst_ms": 4.556989000775502
+          },
+          "render.present": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.06217400004970841,
+            "mean_ms": 0.011093349917246087,
+            "over_100ms_count": 0,
+            "p50_ms": 0.010039999324362725,
+            "p95_ms": 0.01122800003940938,
+            "p99_ms": 0.04794057076651359,
+            "window_count": 80,
+            "worst_ms": 0.06217400004970841
+          },
+          "render.terrain": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 12.620284000149695,
+            "mean_ms": 7.568775274990003,
+            "over_100ms_count": 0,
+            "p50_ms": 7.201276500381937,
+            "p95_ms": 9.098660598920105,
+            "p99_ms": 12.24318302938627,
+            "window_count": 80,
+            "worst_ms": 12.620284000149695
+          },
+          "render.terrain_cache": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 3.773972999624675,
+            "mean_ms": 2.2484675624809825,
+            "over_100ms_count": 0,
+            "p50_ms": 2.136519498890266,
+            "p95_ms": 2.677649600173026,
+            "p99_ms": 3.139456059816434,
+            "window_count": 80,
+            "worst_ms": 3.773972999624675
+          },
+          "render.ui": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 1.3849859988113167,
+            "mean_ms": 0.9046358751220396,
+            "over_100ms_count": 0,
+            "p50_ms": 0.8488700013913331,
+            "p95_ms": 1.2792802493095223,
+            "p99_ms": 1.3614250393766267,
+            "window_count": 80,
+            "worst_ms": 1.3849859988113167
+          },
+          "simulation.free_movement": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.4433309986779932,
+            "mean_ms": 0.20412083742940013,
+            "over_100ms_count": 0,
+            "p50_ms": 0.18490500042389613,
+            "p95_ms": 0.31688569870311767,
+            "p99_ms": 0.41574972972739466,
+            "window_count": 80,
+            "worst_ms": 0.4433309986779932
+          }
+        }
+      },
+      "warmup_requested": 10,
+      "worldgen_version": 8,
+      "zoom_tile_px": 28
+    },
+    {
+      "allocations": null,
+      "animation_ms": 1600,
+      "authority_fingerprint": "0d8f0122691ed7e0caaaeb6731ef57bf9a6a153602995d01951f501cfce2f8e9",
+      "authority_unchanged": true,
+      "build_identity": {
+        "git_revision": "7b8868029611c723d8e08d2680761aff4a965a02",
+        "working_tree_dirty": true
+      },
+      "cache_counts": {
+        "base_layer_cache": 0,
+        "interior_art_scaled": 0,
+        "interior_art_sources": 0,
+        "overlay_cache": 0,
+        "panel_icon_cache": 0,
+        "prepared_resource_chunks": 16,
+        "resource_cell_cache": 627,
+        "resource_view_cache": 0,
+        "sprite_cache": 44,
+        "terrain_transition_cache": 10,
+        "terrain_transition_masks": 0,
+        "water_current_cache": 0,
+        "weather_cloud_cache": 1,
+        "weather_rain_cache": 0,
+        "world_chunks": 16
+      },
+      "driver": "dummy",
+      "fixture_mode": "prepared-synthetic-qa",
+      "fixture_version": 1,
+      "frames_measured": 80,
+      "frames_requested": 80,
+      "game_minute": 720,
+      "hardware": {
+        "engine_version": "1.0.0-rc14-dev64",
+        "logical_cpus": 3,
+        "machine": "x86_64",
+        "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+        "processor": "AMD EPYC 9V74 80-Core Processor",
+        "python": "3.12.14",
+        "python_build": [
+          "main",
+          "Aug 25 2026 14:00:49"
+        ]
+      },
+      "headless": true,
+      "idle_movement_probe": true,
+      "interrupted": false,
+      "pacing": "unpaced-renderer-throughput",
+      "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+      "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+      "png": null,
+      "preparation_ms": 1977.4933780008723,
+      "pygame": "2.5.8",
+      "save_bytes": 10272768,
+      "scene": "large_save",
+      "sdl": [
+        2,
+        32,
+        10
+      ],
+      "seed": "worldseed-reference-v1",
+      "settlement_plan_version": 12,
+      "size": [
+        1280,
+        720
+      ],
+      "state_counts": {
+        "containers": 243,
+        "discovered_cells": 9701,
+        "distant_npcs": 10000,
+        "interior_actors": 0,
+        "interiors": 0,
+        "npcs": 10024,
+        "physical_cells": 4128,
+        "planned_structures": 66,
+        "settlements": 1,
+        "structures": 0,
+        "visible_cells": 9701
+      },
+      "state_json_bytes": 9923165,
+      "timing_notes": {
+        "cold_loads_included": false,
+        "nested_stages": {
+          "render.terrain_cache": "render.terrain"
+        },
+        "percentiles": "linear interpolation over retained rolling samples",
+        "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+        "render.frame": "excludes clock pacing; includes display flip"
+      },
+      "timings": {
+        "dropped_stages": 0,
+        "enabled": true,
+        "max_samples": 600,
+        "max_stages": 32,
+        "stages": {
+          "reference.iteration": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 49.78497899901413,
+            "mean_ms": 18.48680564996812,
+            "over_100ms_count": 0,
+            "p50_ms": 16.482336000080977,
+            "p95_ms": 27.682776449091758,
+            "p99_ms": 42.460106109829155,
+            "window_count": 80,
+            "worst_ms": 49.78497899901413
+          },
+          "render.effects": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 9.305948002293007,
+            "mean_ms": 1.3479452375804613,
+            "over_100ms_count": 0,
+            "p50_ms": 1.1363855001036427,
+            "p95_ms": 1.5555444992969567,
+            "p99_ms": 8.543960610113567,
+            "window_count": 80,
+            "worst_ms": 9.305948002293007
+          },
+          "render.frame": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 48.941922999802046,
+            "mean_ms": 18.056506875200284,
+            "over_100ms_count": 0,
+            "p50_ms": 16.116392000185442,
+            "p95_ms": 27.25385180137891,
+            "p99_ms": 41.93453373065489,
+            "window_count": 80,
+            "worst_ms": 48.941922999802046
+          },
+          "render.objects_actors": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 9.826250001424341,
+            "mean_ms": 3.1763714624958084,
+            "over_100ms_count": 0,
+            "p50_ms": 2.852182999959041,
+            "p95_ms": 5.111172850592992,
+            "p99_ms": 9.034866710444469,
+            "window_count": 80,
+            "worst_ms": 9.826250001424341
+          },
+          "render.prepare": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 10.77753999925335,
+            "mean_ms": 3.558209237644405,
+            "over_100ms_count": 0,
+            "p50_ms": 3.149192000819312,
+            "p95_ms": 6.433164700320048,
+            "p99_ms": 8.645467459500633,
+            "window_count": 80,
+            "worst_ms": 10.77753999925335
+          },
+          "render.present": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.09040700024343096,
+            "mean_ms": 0.012105200062251242,
+            "over_100ms_count": 0,
+            "p50_ms": 0.009985000360757113,
+            "p95_ms": 0.014470049427472983,
+            "p99_ms": 0.07413220955640996,
+            "window_count": 80,
+            "worst_ms": 0.09040700024343096
+          },
+          "render.terrain": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 32.398424000348314,
+            "mean_ms": 8.88681517490113,
+            "over_100ms_count": 0,
+            "p50_ms": 7.797559500431817,
+            "p95_ms": 13.929296349124343,
+            "p99_ms": 26.26655855006897,
+            "window_count": 80,
+            "worst_ms": 32.398424000348314
+          },
+          "render.terrain_cache": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 6.426147998354281,
+            "mean_ms": 2.574636825011112,
+            "over_100ms_count": 0,
+            "p50_ms": 2.3461965001843055,
+            "p95_ms": 4.341504300373344,
+            "p99_ms": 6.162948439759928,
+            "window_count": 80,
+            "worst_ms": 6.426147998354281
+          },
+          "render.ui": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 7.6356589979695855,
+            "mean_ms": 1.075060562516228,
+            "over_100ms_count": 0,
+            "p50_ms": 0.936547499804874,
+            "p95_ms": 1.352720248451078,
+            "p99_ms": 2.9108080391778994,
+            "window_count": 80,
+            "worst_ms": 7.6356589979695855
+          },
+          "simulation.free_movement": {
+            "count": 80,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 1.5706770009273896,
+            "mean_ms": 0.27954246252193116,
+            "over_100ms_count": 0,
+            "p50_ms": 0.23678350044065155,
+            "p95_ms": 0.47832760110395606,
+            "p99_ms": 0.8304722815410001,
+            "window_count": 80,
+            "worst_ms": 1.5706770009273896
+          }
+        }
+      },
+      "warmup_requested": 10,
+      "worldgen_version": 8,
+      "zoom_tile_px": 28
+    }
+  ],
+  "capture_checks": [
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "8174283ccf4d1b2c348b6f3ed29f48d4156e84e0459c16f2303199a2cbe171df",
+      "scene": "forest",
+      "unchanged_from_previous_baseline": true
+    },
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "14b38f06006a72357d8aab86b9230e6e2c233eaaa8ac6b27eaae65862bfb5003",
+      "scene": "camp",
+      "unchanged_from_previous_baseline": true
+    },
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "b209bb2503c98724ca28033ed8d4a29eed810b5559bc70bf69e1a284204f7b20",
+      "scene": "village_street",
+      "unchanged_from_previous_baseline": true
+    },
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "3df64f1240b80bb181a7bf3a2bbdbd782aaa50714d66706491ba82e3af66b29b",
+      "scene": "interior",
+      "unchanged_from_previous_baseline": true
+    },
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "059d5d2af03a09cea67b83cd4ce96ef211bb1da4d991e185a82096dcc2759aa9",
+      "scene": "open_panel",
+      "unchanged_from_previous_baseline": true
+    },
+    {
+      "authority_unchanged": true,
+      "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+      "scene": "large_save",
+      "unchanged_from_previous_baseline": true
+    }
+  ],
+  "date_utc": "2026-10-13",
+  "discovery_probe": {
+    "method": "400-wide surface rectangle, heights 350 and 3500; 10 warmup + 80 measured single-cell _record_discovered_tiles additions; compare exact compact JSON versus expanded legacy JSON; compact checkpoint verified.",
+    "results": [
+      {
+        "compact_json_bytes": 39306,
+        "final_cells": 140090,
+        "initial_cells": 140000,
+        "legacy_json_bytes": 1738650,
+        "python": "3.12.14",
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 1024,
+          "max_stages": 32,
+          "stages": {
+            "discovery.record": {
+              "count": 80,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.011927999366889708,
+              "mean_ms": 0.002489112489456602,
+              "over_100ms_count": 0,
+              "p50_ms": 0.0021884998204768635,
+              "p95_ms": 0.0029434996577037947,
+              "p99_ms": 0.007244089683808815,
+              "window_count": 80,
+              "worst_ms": 0.011927999366889708
+            }
+          }
+        }
+      },
+      {
+        "compact_json_bytes": 384383,
+        "final_cells": 1400090,
+        "initial_cells": 1400000,
+        "legacy_json_bytes": 18772230,
+        "python": "3.12.14",
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 1024,
+          "max_stages": 32,
+          "stages": {
+            "discovery.record": {
+              "count": 80,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.009014000170282088,
+              "mean_ms": 0.0022796623852627818,
+              "over_100ms_count": 0,
+              "p50_ms": 0.0021129999367985874,
+              "p95_ms": 0.00265950011453242,
+              "p99_ms": 0.00513667950144733,
+              "window_count": 80,
+              "worst_ms": 0.009014000170282088
+            }
+          }
+        }
+      }
+    ],
+    "source_revision": "7b8868029611c723d8e08d2680761aff4a965a02",
+    "working_tree_dirty": true
+  },
+  "limitations": "Sequential synthetic prepared QA throughput; not live FPS or minimum hardware acceptance. Actor fixtures explicitly register all actors before timing. Short scaling medians exceed the proposed 20 percent variation target; population-scan prohibition is tested separately. Discovery probe predates the bounded membership-cache addition (record updates unchanged)."
+}

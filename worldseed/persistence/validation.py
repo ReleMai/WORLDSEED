@@ -437,6 +437,9 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     if not raw:
         return []
     issues: list[str] = []
+    if 'discovered_chunks' in raw or 'discovered_format_version' in raw:
+        from worldseed.systems.discovery import validate_discovery_chunks
+        issues.extend(validate_discovery_chunks(raw.get('discovered_chunks'), raw.get('discovered_format_version')))
     issues.extend(_validate_interiors(raw))
     issues.extend(_validate_salvaging(raw))
     issues.extend(_validate_crafted_artifacts(raw))

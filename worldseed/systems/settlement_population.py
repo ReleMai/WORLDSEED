@@ -59,6 +59,9 @@ class SettlementPopulationBinder:
         self.seed = seed or b""
         self.physicalization = physicalization
         self.equipment = NPCEquipmentSystem(state, registry)
+        # Binding may move several residents at once. Keep the simulation's
+        # transient locator current within the existing resident loop.
+        self.npc_index = None
 
     @staticmethod
     def _rooms_for(skeleton, structure_id: str):
@@ -350,6 +353,8 @@ class SettlementPopulationBinder:
             elif not preferences:
                 npc.workplace_id = ""
                 npc.work_room_id = ""
+            if self.npc_index is not None:
+                self.npc_index(npc)
 
         self.equipment.provision_settlement(settlement, representatives)
         return SettlementBindingStats(

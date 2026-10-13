@@ -249,15 +249,8 @@ def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-
                 sim.resources._cache_feature_chunk((cx, cy, season), tuple(resources))
         known = {pos_key(x, y, 0) for y in range(bounds[1], bounds[3]+1)
                  for x in range(bounds[0], bounds[2]+1)}
-        state.discovered_tiles = sorted(known)
-        sim._discovered_tile_set = known
+        sim._record_discovered_tiles(known)
         sim._visible_tile_set = set(known)
-        sim._discovered_surface_cells_by_chunk = {}
-        for y in range(bounds[1], bounds[3]+1):
-            for x in range(bounds[0], bounds[2]+1):
-                sim._discovered_surface_cells_by_chunk.setdefault((x//CHUNK_SIZE, y//CHUNK_SIZE), set()).add(
-                    (y%CHUNK_SIZE)*CHUNK_SIZE + x%CHUNK_SIZE)
-        sim._discovered_surface_chunks = set(sim._discovered_surface_cells_by_chunk)
         if name == 'interior':
             house = next(row for row in skeleton.structures if row.enclosed and row.function == 'residence')
             plan = sim.interiors.prepare_workplace(house.uid)
@@ -271,6 +264,10 @@ def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-
                                       100000 + i*3, 100000, 0, '', '', goal='idle')
         # Serialize to the fixture-owned SQLite database before measurement so
         # reported save bytes correspond to actual state, including large saves.
+        # Fixtures insert actors directly after constructing the simulation.
+        # Publish their locator once at the preparation boundary, just as real
+        # activation does, before any measured query or frame.
+        sim.npcs.rebuild_spatial_index()
         serialized_state = state.to_dict()
         db.save_state(turn=sim.turn, tile_deltas={}, player_id=player,
                       position=entities.get(player, Position).value,

@@ -45,6 +45,7 @@ class NPCProductionEconomyTests(unittest.TestCase):
                          work_assignment_day=0,assigned_process_id='core:woodcraft')
         crafter.hunger=crafter.thirst=crafter.rest=0
         f.state.npcs[crafter.uid]=crafter
+        f.ai._index_npc(crafter)
         f.physical._skeleton.pieces.append(profession_fixtures.fixture_piece('bench','core:carpenter_bench_piece',crafter.workplace_id,8,3))
         home=ContainerState('carpenter-home',9,6,0,crafter.uid,500000,500000,
                             kind='property',property_id=crafter.home_id,settlement_id=f.town.uid)

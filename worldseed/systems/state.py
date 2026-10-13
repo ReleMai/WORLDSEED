@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from worldseed.systems.names import npc_sex_for_identity
+from worldseed.systems.discovery import DiscoveryTiles, DISCOVERY_FORMAT_VERSION
 
 @dataclass(slots=True)
 class StructureInstance:
@@ -1258,7 +1259,7 @@ class LivingWorldState:
     player_trespass_property_id: str = ""
     player_toll_passes: dict[str, int] = field(default_factory=dict)
     casing_intel: dict[str, CasingIntelState] = field(default_factory=dict)
-    discovered_tiles: list[str] = field(default_factory=list)
+    discovered_tiles: DiscoveryTiles | list[str] = field(default_factory=DiscoveryTiles)
     discovered_settlements: list[str] = field(default_factory=list)
     visited_settlements: list[str] = field(default_factory=list)
     discovered_npcs: list[str] = field(default_factory=list)
@@ -1303,6 +1304,7 @@ class LivingWorldState:
     def to_dict(self) -> dict[str, Any]:
         def rows(table):
             return {k: asdict(v) for k, v in table.items()}
+        discovery = self.discovered_tiles if isinstance(self.discovered_tiles, DiscoveryTiles) else DiscoveryTiles(self.discovered_tiles)
         return {
             "clock_minute": self.clock_minute,
             "player_fx": float(self.player_fx), "player_fy": float(self.player_fy),
@@ -1322,7 +1324,12 @@ class LivingWorldState:
             "player_casing_property_id": self.player_casing_property_id,
             "player_trespass_property_id": self.player_trespass_property_id,
             "player_toll_passes": dict(self.player_toll_passes),
-            "discovered_tiles": list(self.discovered_tiles[-120000:]),
+            # Optional versioned schema-3 fields replace the lossy legacy cap.
+            # Explicit legacy export is available on DiscoveryTiles; retaining
+            # an expanded duplicate here would defeat compact checkpoints.
+            "discovered_tiles": [],
+            "discovered_format_version": DISCOVERY_FORMAT_VERSION,
+            "discovered_chunks": discovery.to_chunks(),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
             "introduced_npcs": sorted(set(self.introduced_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
@@ -1348,6 +1355,12 @@ class LivingWorldState:
         for key in scalar:
             if key in raw:
                 setattr(s, key, raw[key])
+        if "discovered_chunks" in raw or "discovered_format_version" in raw:
+            # Reject corrupted/unknown compact data instead of forgetting cells.
+            s.discovered_tiles = DiscoveryTiles.from_chunks(raw.get("discovered_chunks"), raw.get("discovered_format_version"))
+            s.discovered_tiles.extend(raw.get("discovered_tiles", []))
+        else:
+            s.discovered_tiles = DiscoveryTiles(raw.get("discovered_tiles", []))
         s.player_crafting_log = deepcopy(raw.get("player_crafting_log", [])[-80:])
         s.player_crafting_hints = deepcopy(raw.get("player_crafting_hints", [])[-200:])
         # Active projects have already spent their input; retain their exact

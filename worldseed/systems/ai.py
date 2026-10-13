@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import wraps
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import hash_u64
 from worldseed.systems.state import LivingWorldState, NPCState
@@ -6,6 +7,14 @@ from worldseed.systems.history import HistorySystem
 from worldseed.systems.pathfinding import local_path
 from worldseed.systems.household_economy import FOODS
 from worldseed.systems.npc_schedule import preferred_goal, schedule_at
+
+
+def _refresh_index_after_execution(function):
+    @wraps(function)
+    def execute(self,npc,*args,**kwargs):
+        try:return function(self,npc,*args,**kwargs)
+        finally:self._index_npc(npc)
+    return execute
 
 class NPCSystem:
     # Explicit local durations release completed routines on simulation ticks.
@@ -32,25 +41,36 @@ class NPCSystem:
         # fixed-tick stepping path by leaving this disabled.
         self.continuous_motion_enabled=False
         self._schedule_blocks={}
-        self._npc_spatial_buckets={};self._npc_spatial_positions={}
+        self._npc_spatial_buckets={};self._npc_spatial_positions={};self._npc_spatial_level_counts={}
+        self._npc_spatial_order={};self._npc_next_order=0
         self.rebuild_spatial_index()
 
     def _index_npc(self,npc)->None:
         """Maintain a transient locator, never a second actor/state authority."""
-        current=(int(npc.x)//16,int(npc.y)//16,int(npc.z)) if npc.alive else None
+        if npc.uid not in self._npc_spatial_order:
+            self._npc_spatial_order[npc.uid]=self._npc_next_order
+            self._npc_next_order+=1
+        current=(int(npc.x)//16,int(npc.y)//16,int(npc.z)) if (npc.alive and self.state.npcs.get(npc.uid) is npc) else None
         previous=self._npc_spatial_positions.get(npc.uid)
         if previous!=current and previous is not None:
             bucket=self._npc_spatial_buckets.get(previous,{})
             bucket.pop(npc.uid,None)
             if not bucket:self._npc_spatial_buckets.pop(previous,None)
             self._npc_spatial_positions.pop(npc.uid,None)
+            count=self._npc_spatial_level_counts.get(previous[2],0)-1
+            if count>0:self._npc_spatial_level_counts[previous[2]]=count
+            else:self._npc_spatial_level_counts.pop(previous[2],None)
         if current is not None:
+            if previous!=current:
+                self._npc_spatial_level_counts[current[2]]=self._npc_spatial_level_counts.get(current[2],0)+1
             self._npc_spatial_buckets.setdefault(current,{})[npc.uid]=npc
             self._npc_spatial_positions[npc.uid]=current
 
     def rebuild_spatial_index(self)->None:
         """Explicit startup/activation preparation only, never a UI query."""
         self._npc_spatial_buckets.clear();self._npc_spatial_positions.clear()
+        self._npc_spatial_level_counts.clear()
+        self._npc_spatial_order.clear();self._npc_next_order=0
         self._schedule_blocks={uid:token for uid,token in self._schedule_blocks.items()
                                if uid in self.state.npcs and self.state.npcs[uid].alive}
         for npc in self.state.npcs.values():self._index_npc(npc)
@@ -73,6 +93,60 @@ class NPCSystem:
                             and max(abs(npc.x-pos.x),abs(npc.y-pos.y))<=radius):
                         rows.append(npc)
         return tuple(sorted(rows,key=lambda npc:npc.uid))
+
+    def indexed_npcs_in_rect(self,x0:int,y0:int,x1:int,y1:int,z:int)->tuple:
+        """Return authoritative live actors in a prepared exterior rectangle.
+
+        Only intersecting 16-tile buckets are visited. The insertion ordinal
+        retains simulation actor order for collision-contending movement; the
+        uid-sorted nearby_npcs read API keeps its existing ordering contract.
+        Interior membership remains the caller's filter because NPC exterior
+        coordinates also represent their portal anchors.
+        """
+        x0,y0,x1,y1,z=map(int,(x0,y0,x1,y1,z))
+        if x1<x0 or y1<y0 or z not in self._npc_spatial_level_counts:return ()
+        rows=[]
+        for by in range(y0//16,y1//16+1):
+            for bx in range(x0//16,x1//16+1):
+                for uid,npc in self._npc_spatial_buckets.get((bx,by,z),{}).items():
+                    if (self.state.npcs.get(uid) is npc and npc.alive and npc.z==z
+                            and x0<=npc.x<=x1 and y0<=npc.y<=y1):
+                        rows.append(npc)
+        return tuple(sorted(rows,key=lambda npc:self._npc_spatial_order[npc.uid]))
+
+    def tick_managed_npcs(self,player_pos:WorldPos)->tuple:
+        """Select bounded actors managed by the existing fixed-tick classifier.
+
+        Ordinary walkers belong to Tier A. Explicit profession/commerce trips
+        may continue in Tier B, including its adjacent underground levels.
+        Re-evaluating the existing classifier each frame makes player movement,
+        actor death, portal entry and LOD transitions effective immediately.
+        Coarse distant movement remains owned by the simulation cadence.
+        """
+        radius=int(getattr(self.lod,"B_RADIUS",256))
+        # Production LOD assigns 96 tiles of distance to each z transition.
+        # This is a bounded candidate window; _tick_managed is authoritative.
+        levels=(range(player_pos.z-radius//96,player_pos.z+radius//96+1)
+                if self.lod is not None else tuple(self._npc_spatial_level_counts))
+        interiors=getattr(self.state,"interior_actors",{})
+        rows=[]
+        for z in levels:
+            for npc in self.indexed_npcs_in_rect(player_pos.x-radius,player_pos.y-radius,
+                                                 player_pos.x+radius,player_pos.y+radius,z):
+                if npc.uid not in interiors and self._tick_managed(npc,player_pos):
+                    rows.append(npc)
+        return tuple(sorted(rows,key=lambda npc:self._npc_spatial_order[npc.uid]))
+
+    def continuous_movement_npcs(self,player_pos:WorldPos)->tuple:
+        """Read managed cached walks; taskless actors still receive fixed ticks."""
+        return tuple(npc for npc in self.tick_managed_npcs(player_pos)
+                     if npc.tasks and npc.tasks[0].get("kind")=="move"
+                     and npc.tasks[0].get("_local_path"))
+
+    def _indexed_tick_npcs(self,player_pos:WorldPos):
+        for npc in self.tick_managed_npcs(player_pos):
+            try:yield npc
+            finally:self._index_npc(npc)
 
     def attach_settlement_population(self,physicalization,population_binder)->None:
         self.settlement_physicalization=physicalization
@@ -216,8 +290,8 @@ class NPCSystem:
         # presentation but cannot execute domestic actions or move residents.
         interior_start=set(getattr(self.state,"interior_actors",{})) if self.interiors is not None else set()
         if self.interiors is not None:self.interiors.tick_update(minute)
-        for npc in self._indexed_npcs():
-            if not npc.alive or npc.uid in interior_start or self._inside(npc) or not self._tick_managed(npc,player_pos):continue
+        for npc in self._indexed_tick_npcs(player_pos):
+            if not npc.alive or npc.uid in interior_start or self._inside(npc):continue
             town=self.state.settlements.get(npc.settlement_id)
             if not town:continue
             if not npc.home_id:self._assign_property(npc,town)
@@ -474,6 +548,7 @@ class NPCSystem:
         if npc.tasks and npc.tasks[0].get('kind')=='perform' and npc.tasks[0].get('storage_task'):
             self._execute_task(npc,town,minute,WorldPos(npc.x,npc.y,npc.z),allow_interior_activity=True)
 
+    @_refresh_index_after_execution
     def _execute_task(self,npc:NPCState,town,minute:int,player_pos:WorldPos,*,allow_interior_activity:bool=False)->None:
         if not npc.tasks:return
         if self._inside(npc) and not (allow_interior_activity and (npc.tasks[0].get("kind")=="activity" or npc.tasks[0].get('storage_task'))):return
@@ -513,6 +588,7 @@ class NPCSystem:
             continuous_outdoor=bool(
                 self.continuous_motion_enabled
                 and not (self.interiors is not None and self.interiors.player_presence() is not None)
+                and self._tick_managed(npc,player_pos)
             )
             if exact:
                 reached=(npc.x,npc.y)==(goal.x,goal.y)

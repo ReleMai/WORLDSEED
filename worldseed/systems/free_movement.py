@@ -148,7 +148,13 @@ def update_npcs_free(sim, dt: float) -> bool:
         return False
     interiors=getattr(sim.state,"interior_actors",{})
     changed=False
-    for npc in list(sim.state.npcs.values()):
+    local_query=getattr(sim.npcs,"continuous_movement_npcs",None)
+    # Production always uses the simulation-owned locator. The small controller
+    # compatibility path keeps standalone locomotion callers without a player
+    # or an NPCSystem working; it is not used by the game runtime.
+    candidates=(local_query(sim.player_pos) if callable(local_query)
+                else tuple(sim.state.npcs.values()))
+    for npc in candidates:
         if not npc.alive or npc.uid in interiors:
             continue
         changed=_advance_npc_one_step(sim,npc,dt,WALK_SPEED) or changed

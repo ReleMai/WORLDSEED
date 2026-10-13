@@ -14,6 +14,7 @@ class MigrationSystem:
         self.seed = seed
         self.history = history
         self.pathfinder = HierarchicalPathfinder(state, seed)
+        self.npc_index = None
 
     def _pressure(self, town) -> int:
         faction = self.state.factions.get(town.faction_id)
@@ -83,6 +84,8 @@ class MigrationSystem:
                     npc.goal = "work"
                     npc.tasks.clear()
                     npc.property_id = npc.home_id = npc.workplace_id = ""
+                    if self.npc_index is not None:
+                        self.npc_index(npc)
             self.history.record("migration_arrival", f"{arrived} migrants from {origin.name if origin else cohort.origin} arrived in {dest.name}." + (f" {loss} were lost on the road." if loss else ""), minute, dest.region_x, dest.region_y, [cohort.uid,dest.uid], salience=22)
         cutoff=minute-90*1440
         for uid,cohort in list(self.state.migration_cohorts.items()):

@@ -12,6 +12,7 @@ from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import *
 from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.state import LivingWorldState, GroundPile, CropPlot, SoilState, pos_key
+from worldseed.systems.discovery import DiscoveryTiles, DiscoverySet
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.ecology import EcologySystem
 from worldseed.systems.hunting import HuntingSystem
@@ -87,20 +88,15 @@ class Simulation:
         self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
         self.debug.profiler=self.profiler
         self.debug.event("simulation_init",turn=int(turn),clock_minute=int(self.state.clock_minute))
-        # Runtime discovery index. Persisted state remains an ordered list for
-        # stable saves, but membership checks and per-step updates use a set.
-        self._discovered_tile_set=set(self.state.discovered_tiles)
-        self._visible_tile_set=set()
-        self._discovered_surface_chunks=set()
-        self._discovered_surface_cells_by_chunk={}
-        for token in self._discovered_tile_set:
-            try:
-                x,y,z=(int(v) for v in token.split(','))
-            except (TypeError,ValueError,AttributeError):
-                continue
-            if z==0:
-                ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
-                self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
+        # One compact authority serves legacy list reads, membership, and exact
+        # atlas indexes. Only loading/importing builds indexes over old memory.
+        if not isinstance(self.state.discovered_tiles, DiscoveryTiles):
+            self.state.discovered_tiles = DiscoveryTiles(self.state.discovered_tiles)
+        discovery = self.state.discovered_tiles
+        self._discovered_tile_set = DiscoverySet(discovery)
+        self._visible_tile_set = set()
+        self._discovered_surface_chunks = discovery.surface_chunks
+        self._discovered_surface_cells_by_chunk = discovery.surface_cells
         install_procedural_species(self.registry,self.seed)
 
         self.clock=GameClock(self.state.clock_minute)
@@ -131,14 +127,17 @@ class Simulation:
         self.hunting=HuntingSystem(self.state,registry,self.seed,self.world,self.environment,self.resources,self.building)
         self.disease=EpidemiologySystem(self.state,registry,self.seed,self.history)
         self.npcs=NPCSystem(self.state,self.seed,self.history,self.world,self.building,self.lod)
+        self.disease.npc_index=self.npcs._index_npc
         self.factions=FactionSystem(self.state,self.seed,self.history)
         self.civics=CivicsSystem(self.state,self.seed,self.history)
         self.migration=MigrationSystem(self.state,self.seed,self.history)
+        self.migration.npc_index=self.npcs._index_npc
         self.governance=GovernanceSystem(self.state,self.seed,self.history)
         self.institutions=InstitutionSystem(self.state,self.seed,self.history)
         self.knowledge=KnowledgeSystem(self.state,self.seed,self.history)
         self.law=LawSystem(self.state,self.seed,self.history)
         self.family=FamilySystem(self.state,self.seed,self.history)
+        self.family.npc_index=self.npcs._index_npc
         self.households=HouseholdEconomySystem(self.state,self.seed,registry,self.economy)
         self.macrohistory=MacroHistorySystem(self.state,self.seed)
         self.magic=MagicSystem(self.state,self.seed,self.history,self.environment)
@@ -190,6 +189,7 @@ class Simulation:
         self.settlement_population=SettlementPopulationBinder(
             self.state,registry,self.seed,self.settlement_physicalization
         )
+        self.settlement_population.npc_index=self.npcs._index_npc
         self.building.attach_settlement_physicalization(self.settlement_physicalization)
         self.npcs.attach_settlement_population(
             self.settlement_physicalization,self.settlement_population
@@ -277,7 +277,7 @@ class Simulation:
         if self.interiors.player_presence() is None:self._discover(start)
 
     @property
-    def discovered_tiles_set(self)->set[str]:
+    def discovered_tiles_set(self)->DiscoverySet:
         return self._discovered_tile_set
 
     def _prepared_shell_landing(self,pos:WorldPos)->bool:
@@ -301,40 +301,23 @@ class Simulation:
         return self._discovered_surface_chunks
 
     @property
-    def discovered_surface_cells_by_chunk(self)->dict[tuple[int,int],set[int]]:
+    def discovered_surface_cells_by_chunk(self):
         return self._discovered_surface_cells_by_chunk
 
     def is_discovered(self,pos:WorldPos)->bool:
         return pos_key(pos.x,pos.y,pos.z) in self._discovered_tile_set
 
     def _record_discovered_tiles(self,keys:set[str])->None:
-        new=keys-self._discovered_tile_set
-        if not new:return
-        self._discovered_tile_set.update(new)
-        for token in new:
-            try:
-                x,y,z=(int(v) for v in token.split(','))
-            except (TypeError,ValueError,AttributeError):
-                continue
-            if z==0:
-                ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
-                self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
-        # Append deterministically; avoid sorting the entire potentially 120k
-        # entry exploration history on every movement step.
-        self.state.discovered_tiles.extend(sorted(new))
-        if len(self.state.discovered_tiles)>120000:
-            self.state.discovered_tiles=self.state.discovered_tiles[-120000:]
-            self._discovered_tile_set=set(self.state.discovered_tiles)
-            self._discovered_surface_chunks=set()
-            self._discovered_surface_cells_by_chunk={}
-            for token in self._discovered_tile_set:
-                try:
-                    x,y,z=(int(v) for v in token.split(','))
-                except (TypeError,ValueError,AttributeError):
-                    continue
-                if z==0:
-                    ck=(x//32,y//32);self._discovered_surface_chunks.add(ck)
-                    self._discovered_surface_cells_by_chunk.setdefault(ck,set()).add((y%32)*32+(x%32))
+        # Preserve direct legacy field assignments by importing them once. Normal
+        # movement updates one bitset per touched chunk, never lifetime history.
+        if self.state.discovered_tiles is not self._discovered_tile_set.tiles:
+            if not isinstance(self.state.discovered_tiles, DiscoveryTiles):
+                self.state.discovered_tiles = DiscoveryTiles(self.state.discovered_tiles)
+            discovery = self.state.discovered_tiles
+            self._discovered_tile_set = DiscoverySet(discovery)
+            self._discovered_surface_chunks = discovery.surface_chunks
+            self._discovered_surface_cells_by_chunk = discovery.surface_cells
+        self._discovered_tile_set.update(keys)
 
     @property
     def player_id(self)->int:

@@ -208,6 +208,15 @@ class InteriorSystem:
         actor = self.state.interior_actors.pop(uid, None)
         if actor:
             self._actors_by_space.get(actor.space_id, set()).discard(uid)
+            # Exit callers set the authoritative exterior landing before
+            # removing presence. Refresh its locator at the same boundary.
+            self._refresh_npc_index(uid)
+
+    def _refresh_npc_index(self, uid: str) -> None:
+        npc = getattr(self.state, "npcs", {}).get(uid)
+        index_npc = getattr(getattr(self.sim, "npcs", None), "_index_npc", None)
+        if npc is not None and callable(index_npc):
+            index_npc(npc)
 
     def room_at(self, x: int, y: int) -> InteriorRoom | None:
         plan = self.current_plan()
@@ -624,6 +633,7 @@ class InteriorSystem:
         self._put_actor(npc.uid, InteriorActor(plan.uid, entry[0], entry[1], action="arriving", last_need_minute=minute))
         # Legacy coordinates are an exterior portal anchor, never indoor cells.
         npc.x, npc.y, npc.z = door.x, door.y, door.z
+        self._refresh_npc_index(npc.uid)
         return True
 
     def prepare_workplace(self, building_id: str, door_uid: str = "") -> InteriorPlan | None:
@@ -660,6 +670,7 @@ class InteriorSystem:
         if entry is None:return False
         self._put_actor(npc.uid, InteriorActor(plan.uid, entry[0], entry[1], action="working", last_need_minute=int(self.sim.clock.minute)))
         npc.x, npc.y, npc.z = door.x, door.y, door.z
+        self._refresh_npc_index(npc.uid)
         return True
 
     def enter_storage_npc(self, npc, door_uid: str) -> bool:

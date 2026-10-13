@@ -75,6 +75,8 @@ class PreparedFixtureTests(unittest.TestCase):
                 self.assertEqual(fixture.plan_fingerprint, skeleton.fingerprint)
                 self.assertEqual(fixture.counts()['planned_structures'], len(skeleton.structures))
                 center = fixture.sim.player_pos
+                for npc in fixture.sim.state.npcs.values():
+                    self.assertIn(npc, fixture.sim.npcs.indexed_npcs_in_rect(npc.x, npc.y, npc.x, npc.y, npc.z))
                 self.assertTrue(physical.passable(center, True))
                 self.assertIsNone(physical.shell_at(center))
                 before = fixture.authority_fingerprint()

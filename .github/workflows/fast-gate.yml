@@ -139,6 +139,10 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
+      - name: Local NPC indexing and compact discovery
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Local NPC indexing and compact discovery" --timeout 90 -- python -u -m unittest -v tests.test_active_npc_movement tests.test_npc_spatial_lifecycle tests.test_npc_presentation_index tests.test_compact_discovery
+
       - name: Runtime profiling and prepared reference scenes
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Runtime profiling and reference scenes" --timeout 120 -- python -u -m unittest -v tests.test_runtime_profiling tests.test_profiling_integration tests.test_render_profiling tests.test_reference_scenes

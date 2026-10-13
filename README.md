@@ -3019,6 +3019,8 @@ Presentation must remain observational. Opening, resizing, hovering or rendering
 
 # Changelog
 
+- 2026-10-13 early access local state: outdoor NPC interpolation and fixed ticks now read bounded simulation spatial buckets, preserving collision order and immediate birth, migration, door, death and housing transitions. Discovery uses exact per-chunk bitsets with legacy import and no 120000-cell cap; atlas discovery queries visit view chunks. See [the local state handoff](docs/handoffs/EARLY_ACCESS_LOCAL_STATE_HANDOFF.md) for measurements, save compatibility and remaining index work.
+
 - 2026-10-13 early access runtime profiling: added opt-in bounded simulation, preparation, pygame and save-phase timings, Diagnostics percentiles/stall counts, and six repeatable prepared reference scenes with reports and optional PNGs. Population and save probes establish the next performance targets without changing simulation or save contracts. See [the usage and baseline guide](docs/development/RUNTIME_PROFILING.md) and [implementation handoff](docs/handoffs/EARLY_ACCESS_RUNTIME_PROFILING_HANDOFF.md).
 
 - 2026-10-13 early access cabin safety: construction now checks occupants, prepared doorway landings and bounded escape routes before making a cabin solid. Rejected stage commands preserve time and deposits. Completed cabins share persistent door/interior entry and exit through their exact rotated doorway, with Action Hub and context-menu access. Legacy saves with a player trapped inside a solid cabin recover to safe prepared nearby ground. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_CABIN_SAFETY_HANDOFF.md).

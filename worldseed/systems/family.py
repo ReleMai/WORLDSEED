@@ -5,7 +5,10 @@ from worldseed.systems.names import person_name
 from worldseed.systems.history import HistorySystem
 
 class FamilySystem:
-    def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem):self.state=state;self.seed=seed;self.history=history
+    def __init__(self,state:LivingWorldState,seed:bytes,history:HistorySystem):
+        self.state=state;self.seed=seed;self.history=history
+        # Optional transient locator maintained by the owning simulation.
+        self.npc_index=None
 
     def ensure_settlement_identity(self,settlement_id:str)->None:
         town=self.state.settlements.get(settlement_id)
@@ -109,6 +112,7 @@ class FamilySystem:
                 if len(a.children)>=4:continue
                 if hash_u64(self.seed,'birth',a.uid,b.uid,month)%100<5 and town.food_stress<65:
                     rng=PCG32(derive_seed(self.seed,'child',a.uid,b.uid,month));uid=self.state.uid('npc');child=NPCState(uid,person_name(rng),0,'child',[],town.x+rng.randbelow(7)-3,town.y+rng.randbelow(7)-3,0,town.uid,town.faction_id,wealth=0,parents=[a.uid,b.uid],family_uid=a.family_uid or b.family_uid,lineage_uid=a.lineage_uid or b.lineage_uid,kinship={a.uid:"parent",b.uid:"parent"},backstory={"birthplace":town.name,"upbringing":"family household","formative_event":"none yet","ambition":"grow into a place in the household"},needs={"social":5,"safety":5,"health":0,"faith":5,"learning":5,"purpose":5},wants=["family security"]);a.children.append(uid);b.children.append(uid);a.kinship[uid]="child";b.kinship[uid]="child";self._kin_relation(a,child,45,55,50);self._kin_relation(b,child,45,55,50);self.state.npcs[uid]=child;town.population+=1
+                    if self.npc_index is not None:self.npc_index(child)
                     self.history.record('birth',f'{child.name} was born in {town.name}.',minute,town.region_x,town.region_y,[uid,a.uid,b.uid],salience=10)
         self._mortality(minute)
     def _mortality(self,minute:int)->None:
@@ -119,6 +123,7 @@ class FamilySystem:
             town=self.state.settlements.get(n.settlement_id);disease_risk=10 if town and any(d.region_x==town.region_x and d.region_y==town.region_y and d.infected>0 for d in self.state.diseases.values()) else 0
             if hash_u64(self.seed,'npc-death',n.uid,month)%1000 < age_risk+disease_risk:
                 n.alive=False
+                if self.npc_index is not None:self.npc_index(n)
                 heirs=[self.state.npcs[c] for c in n.children if c in self.state.npcs and self.state.npcs[c].alive]
                 if not heirs and n.spouse_uid in self.state.npcs and self.state.npcs[n.spouse_uid].alive:heirs=[self.state.npcs[n.spouse_uid]]
                 if heirs:

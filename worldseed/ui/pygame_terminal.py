@@ -3655,12 +3655,13 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         Previously every game-frame scanned every realized NPC, creature,
         structure, crop, pile and fire in the whole explored world. The cost
         therefore rose permanently as exploration materialized more regions.
-        Rebuild this presentation-only index only when hourly movers/counts can
-        change, then query the few chunks intersecting the viewport.
+        NPCs use the simulation's maintained actor locator, so a tile/bucket
+        crossing is visible immediately without rebuilding stationary rows.
+        Other collections retain the existing presentation cache for now.
         """
         state=sim.state
         collections=(
-            ('creatures',state.creatures),('npcs',state.npcs),('structures',state.structures),
+            ('creatures',state.creatures),('structures',state.structures),
             ('containers',state.containers),('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
             ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
             ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
@@ -3683,6 +3684,20 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 bucket=(cx,cy,z)
                 for name,_ in collections:
                     out[name].extend(index[name].get(bucket,()))
+        # Retain the old viewport-adjacent 32-cell bucket extent and ordering.
+        # The simulation locator performs the bounded read; drawing cannot
+        # repair indexes or enumerate the whole realized NPC population.
+        x0,y0=(left//32)*32,(top//32)*32
+        x1,y1=(right//32+1)*32-1,(bottom//32+1)*32-1
+        query=getattr(getattr(sim,'npcs',None),'indexed_npcs_in_rect',None)
+        if callable(query):
+            rows=query(x0,y0,x1,y1,z)
+        else:
+            # Compatibility for small presentation-only controllers; the real
+            # Simulation always supplies the maintained index.
+            rows=(npc for npc in state.npcs.values()
+                  if npc.z==z and x0<=npc.x<=x1 and y0<=npc.y<=y1)
+        out['npcs']=sorted(rows,key=lambda npc:(int(npc.y)//32,int(npc.x)//32))
         return out
 
     def _resource_view(self, sim, known, z:int, left:int, top:int, cols:int, rows:int):

@@ -34,6 +34,7 @@ class EpidemiologySystem:
         self.registry = registry
         self.seed = seed
         self.history = history
+        self.npc_index = None
 
     def _def(self, disease_id: str) -> DiseaseDef | None:
         return self.registry.diseases.get(disease_id)
@@ -194,6 +195,8 @@ class EpidemiologySystem:
         if not npc.alive:
             return
         npc.alive = False
+        if self.npc_index is not None:
+            self.npc_index(npc)
         if town:
             town.population = max(1, town.population - 1)
         gid = f"grave:{npc.uid}"

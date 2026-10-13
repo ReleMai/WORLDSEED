@@ -52,9 +52,11 @@ def _discovered_cells_in_view(sim, view: AtlasSnapshot):
     if indexed is not None:
         min_cx,max_cx=view.left//CHUNK_SIZE,(view.left+view.span-1)//CHUNK_SIZE
         min_cy,max_cy=view.top//CHUNK_SIZE,(view.top+view.span-1)//CHUNK_SIZE
-        for (cx,cy),indices in indexed.items():
-            if min_cx<=cx<=max_cx and min_cy<=cy<=max_cy:
-                grouped[ChunkKey(cx,cy,0)]=set(indices)
+        for cy in range(min_cy,max_cy+1):
+            for cx in range(min_cx,max_cx+1):
+                indices=indexed.get((cx,cy))
+                if indices:
+                    grouped[ChunkKey(cx,cy,0)]=set(indices)
     else:
         for token in sim.discovered_tiles_set:
             try:x,y,z=map(int,token.split(','))
@@ -174,12 +176,11 @@ def read_atlas(sim, center=None, span=512):
         camp_cells.add(cluster)
         markers.append(AtlasMarker('camp:'+str(key), 'camp', definition.name, structure.x, structure.y,
                                    detail='Known camp structure'))
-    for token in sorted(sim.discovered_tiles_set):
-        try:
-            x, y, z = map(int, token.split(','))
-        except (ValueError, TypeError, AttributeError):
-            continue
-        if z == 0 and view.terrain_at(x, y) == 'core:cave_mouth':
-            markers.append(AtlasMarker('cave:'+token, 'cave', 'Cave entrance', x, y, detail='Observed surface entrance'))
+    for key, indices in discovered.items():
+        for index in indices:
+            x, y = key.x*CHUNK_SIZE+index%CHUNK_SIZE, key.y*CHUNK_SIZE+index//CHUNK_SIZE
+            if view.terrain_at(x, y) == 'core:cave_mouth':
+                token=f'{x},{y},0'
+                markers.append(AtlasMarker('cave:'+token, 'cave', 'Cave entrance', x, y, detail='Observed surface entrance'))
     view.markers = tuple(sorted(markers, key=lambda m: (m.kind, m.name, m.uid)))
     return view
