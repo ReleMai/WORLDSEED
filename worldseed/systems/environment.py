@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import lru_cache
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
@@ -25,39 +26,59 @@ class WeatherSystem:
                 "wetness":min(100,rain*10),"fog":75 if kind=="fog" else 0,"wind_dx":0,"wind_dy":0,"wind_speed":wind*20}
 
     def _v8_slot(self,slot:int,x:int,y:int,climate)->dict:
-        # Two-hour weather cells advect along the physical prevailing wind.
-        phase=slot%84
-        advx=int(x)-(int(climate.prevailing_wind_dx)*phase)//24
-        advy=int(y)-(int(climate.prevailing_wind_dy)*phase)//24
-        cellx=advx//192;celly=advy//192
-        token=hash_u64(self.seed,"weather-v8",slot,cellx,celly)
-        precip=int(climate.precipitation_potential)*100//Q
-        humidity=int(climate.humidity)*100//Q
-        jitter=int(token%51)-25
-        cloud=max(0,min(100,(humidity*3+precip)//4+jitter))
-        rain_chance=max(0,min(92,precip+cloud//3-40))
-        rain_roll=int((token>>11)%100)
+        """Deterministic slow-moving weather fronts with long dry intervals.
+
+        Six two-hour slots share one synoptic front instead of rolling rain
+        independently every two hours. A front arrives along prevailing winds,
+        peaks, then moves out. Precipitation potential and humidity affect
+        incidence, while wind/orography control severity. Rendering remains
+        observational; no persistent weather state or save migration is needed.
+        """
+        slot=max(0,int(slot))
+        front_id=slot//6
+        phase=slot%6
+        drift=front_id*6+phase
+        advx=int(x)-(int(climate.prevailing_wind_dx)*drift)//24
+        advy=int(y)-(int(climate.prevailing_wind_dy)*drift)//24
+        cellx=advx//256;celly=advy//256
+        token=hash_u64(self.seed,"weather-v8-front3",front_id,cellx,celly)
+        precip=max(0,min(100,int(climate.precipitation_potential)*100//Q))
+        humidity=max(0,min(100,int(climate.humidity)*100//Q))
+        wind_strength=max(0,min(100,int(climate.wind_strength)*100//Q))
+        chance=max(2,min(36,(precip*36+humidity*10)//100-14))
+        wet_front=(token%100)<chance
+        # Cloudy periods occur between rain systems, without guaranteeing rain.
+        clouds=max(6,min(95,(humidity*2+precip)//4+int((token>>13)%37)-18))
+        if wet_front:clouds=max(clouds,72+(int((token>>23)%19)))
         rain=0
-        if cloud>=45 and rain_roll<rain_chance:
-            rain=max(1,min(10,2+(cloud-45)//9+precip//24+int((token>>23)%3)))
-        storm_roll=int((token>>31)%100)
-        storm=max(0,min(100,(rain-6)*22+max(0,cloud-80)*2)) if rain>=7 and storm_roll<max(12,rain_chance//2) else 0
-        wind_speed=max(5,min(100,int(climate.wind_strength)*100//Q+int((token>>41)%25)-8))
+        if wet_front:
+            # Beginning/end of a weather front are lighter than its center.
+            envelope=(1,2,3,3,2,1)[phase]
+            severity=1+(precip//23)+int((token>>29)%3)
+            rain=min(10,max(1,severity*envelope//3))
+        # Thunderstorms are uncommon even within rainy fronts.
+        storm=0
+        if wet_front and rain>=5 and int((token>>35)%100)<10+precip//15:
+            storm=min(95,max(24,(rain-4)*16+int((token>>42)%20)))
+        wind_speed=max(5,min(100,wind_strength+int((token>>48)%21)-10+(12 if storm else 0)))
         fog=0
-        if rain==0 and humidity>=72 and wind_speed<42 and int((token>>52)%100)<humidity-45:
-            fog=max(15,min(90,humidity-5))
-        if storm>0:kind="storm"
-        elif rain>0:kind="rain"
-        elif fog>0:kind="fog"
-        elif cloud>=58:kind="cloudy"
+        if not wet_front and humidity>=76 and wind_speed<42 and (token>>8)%100<humidity-55:
+            fog=max(15,min(85,humidity-8))
+        if storm:kind="storm"
+        elif rain:kind="rain"
+        elif fog:kind="fog"
+        elif clouds>=58:kind="cloudy"
         elif wind_speed>=62:kind="wind"
         else:kind="clear"
-        temp_delta=2 if kind=="clear" else 0 if kind=="cloudy" else -3 if kind=="rain" else -6 if kind=="storm" else -2
+        temp_delta=3 if kind=="clear" else 0 if kind=="cloudy" else -3 if kind=="rain" else -6 if kind=="storm" else -2
         visibility=4 if fog>=55 else 5 if storm>=55 else 6 if rain>=6 else 8
-        return {"kind":kind,"temp_delta":temp_delta,"wind":wind_speed//20,"rain":rain,"visibility":visibility,
-                "cloud_cover":cloud,"storm_intensity":storm,"humidity":humidity,"fog":fog,
-                "wind_dx":int(climate.prevailing_wind_dx),"wind_dy":int(climate.prevailing_wind_dy),"wind_speed":wind_speed}
+        return {"kind":kind,"temp_delta":temp_delta,"wind":wind_speed//20,"rain":rain,
+                "visibility":visibility,"cloud_cover":cloud,"storm_intensity":storm,
+                "humidity":humidity,"fog":fog,
+                "wind_dx":int(climate.prevailing_wind_dx),
+                "wind_dy":int(climate.prevailing_wind_dy),"wind_speed":wind_speed}
 
+    @lru_cache(maxsize=512)
     def at(self,minute:int,x:int,y:int)->dict:
         generator=self.generator
         climate_getter=getattr(generator,"climate_at",None) if generator is not None else None
