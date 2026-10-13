@@ -133,7 +133,7 @@ jobs:
 
       - name: Fast diagnostics and item art/database consistency
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name diagnostics-assets --timeout 90 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_craftable_sprite_coverage tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons tests.test_dev20_graphical_regressions.GraphicalAssetTests
+        run: python -u tools/run_ci_check.py --name diagnostics-assets --timeout 90 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_action_progress tests.test_craftable_sprite_coverage tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons tests.test_dev20_graphical_regressions.GraphicalAssetTests
 
       - name: Compile Python
         shell: pwsh

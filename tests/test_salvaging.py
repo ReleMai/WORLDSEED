@@ -252,6 +252,35 @@ class SalvagingCommandTests(unittest.TestCase):
         self.inv = self.sim.entities.get(self.sim.player_id, Inventory)
         self.inv.add('test:damaged_box', 1)
 
+    def test_timed_work_advances_authoritative_clock_before_return_without_double_charge(self):
+        from worldseed.sim.commands import WaitCommand
+        sim=self.sim
+        start=sim.clock.minute
+        seen=[]
+        def progress(command, duration, advance):
+            self.assertIsInstance(command, WaitCommand)
+            self.assertEqual(duration, 12)
+            self.assertEqual(sim.clock.minute, start)
+            advance(4)
+            seen.append(sim.clock.minute)
+            advance(8)
+            seen.append(sim.clock.minute)
+        sim._action_progress_callback=progress
+        self.addCleanup(lambda: setattr(sim,'_action_progress_callback',None))
+        sim.execute(WaitCommand(sim.player_id,12))
+        self.assertEqual(seen,[start+4,start+12])
+        self.assertEqual(sim.clock.minute,start+12)
+
+    def test_rejected_salvage_does_not_start_a_progress_bar(self):
+        sim=self.sim
+        called=[]
+        sim._action_progress_callback=lambda *_args:called.append(True)
+        self.addCleanup(lambda: setattr(sim,'_action_progress_callback',None))
+        start=sim.clock.minute
+        sim.execute(StartSalvageCommand(sim.player_id,'test:not_owned'))
+        self.assertEqual(called,[])
+        self.assertEqual(sim.clock.minute,start)
+
     def test_actual_execute_handles_indoor_project_and_discovers_output_items(self):
         self.sim.state.player_crafting_discovery_enabled = True
         minute = self.sim.clock.minute
