@@ -3950,6 +3950,7 @@ def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:st
 def run_game(ctx:GameContext,term:Terminal)->str:
     renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
+    if hasattr(term,'set_game_clock_driver'):term.set_game_clock_driver(realtime)
     action_presenter=getattr(term,'present_timed_action',None)
     if callable(action_presenter):
         def display_timed_action(command,minutes,advance):
@@ -3982,6 +3983,11 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             ctx.sim.debug.event("ui_input",key=str(key),presentation=str(getattr(term,"_current_presentation","")))
         except Exception:
             pass
+        if key.startswith('UI_TIME:'):
+            chosen=key.split(':',1)[1]
+            if chosen=='pause':realtime.pause()
+            elif chosen in ('1','2','3'):realtime.set_speed(int(chosen))
+            continue
         if key=='UI_BLUEPRINT_CANCEL':
             last='Cabin blueprint placement cancelled.';continue
         if key.startswith('UI_BLUEPRINT_PLACE:'):
@@ -4011,6 +4017,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if key.startswith('UI_BUILDING_MENU:'):
             _,part,uid=key.split(':',2);result=_building_context_menu(ctx,term,uid,part);last='' if result==UI_BACK else result;continue
         if key.startswith('INTERIOR_MOVE:'):
+            realtime.resume_for_movement()
             _,dx,dy=key.split(':');ctx.sim.execute(MoveCommand(ctx.player_id,int(dx),int(dy)));continue
         if key.startswith('INTERIOR_CONTEXT:'):
             term._interior_placing=None
@@ -4030,15 +4037,19 @@ def run_game(ctx:GameContext,term:Terminal)->str:
                 last=ctx.sim.log[-1].message if ctx.sim.log else ''
             continue
         intent=classify_key(key)
+        if intent.kind=='time_pause':
+            realtime.toggle_pause()
+            continue
         if intent.kind=='quit':
             _save(ctx);return 'quit'
         if intent.kind=='pause':
+            was_paused=realtime.paused
             realtime.pause()
             choice=_pause_menu(ctx,term)
             if choice=='quit':return 'quit'
             if choice=='menu':return 'menu'
             if choice=='saved':last='Game saved.'
-            realtime.resume()
+            if not was_paused:realtime.resume()
             continue
         if intent.kind=='actions':
             if ctx.sim.interiors.player_presence() is not None:
@@ -4055,7 +4066,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             last='That action requires outdoor ground. Right-click furniture for interior actions.';continue
         if intent.kind=='direct_menu':
             result=_handle_menu(ctx,term,str(intent.value));last='' if result==UI_BACK else result;continue
-        if intent.kind=='move':ctx.sim.execute(MoveCommand(ctx.player_id,*intent.value))
+        if intent.kind=='move':realtime.resume_for_movement();ctx.sim.execute(MoveCommand(ctx.player_id,*intent.value))
         elif intent.kind=='gather':
             result=_gather_action(ctx,term);last='' if result==UI_BACK else result;continue
         elif intent.kind=='pickup':ctx.sim.execute(PickupCommand(ctx.player_id))
@@ -4079,6 +4090,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
             _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
     finally:
+        if hasattr(term,'set_game_clock_driver'):term.set_game_clock_driver(None)
         if callable(action_presenter):ctx.sim._action_progress_callback=None
         if callable(install):install(None)
         if callable(install_free):
