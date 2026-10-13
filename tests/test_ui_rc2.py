@@ -68,6 +68,10 @@ class AggressiveStanceRoutingTests(unittest.TestCase):
         from worldseed.ui.router import classify_key
         for key in ('w','a','s','d'):
             self.assertEqual(classify_key(key).kind,'move')
+        # Cabin entry is offered by the same primary navigation as every other
+        # player verb; adding a portal must not claim another global key table.
+        self.assertEqual(classify_key('\r').kind,'actions')
+        self.assertEqual(classify_key('\t').kind,'console')
     def test_aggressive_pointer_intent_preserves_movement_keys(self):
         intent = classify_key('UI_STANCE:aggressive')
         self.assertEqual(intent.kind, 'stance')

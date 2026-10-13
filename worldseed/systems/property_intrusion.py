@@ -476,6 +476,9 @@ class PropertySecuritySystem:
         self.keys=keys or PhysicalKeySystem(state,seed)
 
     def _function(self, property_id: str) -> str:
+        homestead = getattr(self, "homestead", None)
+        if homestead is not None and homestead.completed(property_id) is not None:
+            return "residence"
         structure=self.physicalization.structure_by_id(str(property_id))
         return str(structure.function) if structure is not None else ""
 
@@ -533,6 +536,12 @@ class PropertySecuritySystem:
         return sum(self.sync_settlement(uid) for uid in sorted(self.physicalization.active_settlement_ids))
 
     def door_at(self,pos:WorldPos):
+        homestead = getattr(self, "homestead", None)
+        site = homestead.at(pos) if homestead is not None else None
+        if site is not None and int(site.get("stage", 0)) == 4:
+            from worldseed.systems.homestead_blueprints import doorway, door_uid
+            if (pos.x, pos.y, pos.z) == doorway(site)[0]:
+                return self.state.door_security.get(door_uid(site))
         cell=self.physicalization.door_at(pos)
         if cell is None or not cell.structure_piece_uid:return None
         return self.state.door_security.get(cell.structure_piece_uid)
@@ -578,7 +587,8 @@ class PropertySecuritySystem:
 
     def blocks_actor(self,pos:WorldPos,actor_uid:str,minute:int|None=None)->bool:
         door=self.door_at(pos)
-        return bool(door and door.locked and not door.forced and not self.authorized_actor(door,actor_uid) and not self.keys.actor_has_key(actor_uid,self.keys.ensure_lock(door)))
+        # Collision/inspection must not mutate a legacy door's missing lock ID.
+        return bool(door and door.locked and not door.forced and not self.authorized_actor(door,actor_uid) and not self.keys.actor_has_key(actor_uid,door.lock_uid or self.keys.lock_uid(door.uid)))
 
     def blocks_player(self,pos:WorldPos)->bool:
         return self.blocks_actor(pos,"player")

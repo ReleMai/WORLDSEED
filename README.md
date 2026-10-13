@@ -3019,6 +3019,8 @@ Presentation must remain observational. Opening, resizing, hovering or rendering
 
 # Changelog
 
+- 2026-10-13 early access cabin safety: construction now checks occupants, prepared doorway landings and bounded escape routes before making a cabin solid. Rejected stage commands preserve time and deposits. Completed cabins share persistent door/interior entry and exit through their exact rotated doorway, with Action Hub and context-menu access. Legacy saves with a player trapped inside a solid cabin recover to safe prepared nearby ground. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_CABIN_SAFETY_HANDOFF.md).
+
 - 2026-10-13 early access save reliability: checkpoints now retain pending terrain edits and chunk pins until SQLite commits, acknowledge only the captured revisions, and save checkpoint metadata atomically. Failed saves show a paused recovery message and keep the current world open for retry; autosave failures cannot retrigger every frame. Added failure, retry, reload, legacy-save and cache-eviction regressions. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_SAVE_RETRY_HANDOFF.md).
 
 - RC14 dev5: replaced SDL/OS movement repeat with held-key state and paced simulation input so slow frames cannot queue catch-up movement after key release; added scroll-reuse terrain rendering and absolute-cell resource overlay caching. Added deterministic 512×512 regional block plans, causally scored settlement anchors, exact directional region entry, symmetric road exits, authoritative prepared river exits, and a discovery-gated graphical region map. Regional plans persist as rebuildable generated data while simulation/economy authority remains unchanged.

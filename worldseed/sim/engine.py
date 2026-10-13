@@ -210,6 +210,12 @@ class Simulation:
         self.property_security=PropertySecuritySystem(
             self.state,registry,self.seed,self.settlement_physicalization,self.civics,self.physical_keys
         )
+        self.property_security.homestead=self.homestead
+        # Existing completed cabins gain the same stable entrance binding as
+        # newly finished cabins; saved lock and interior state is preserved.
+        from worldseed.systems.homestead_access import ensure_access
+        for site in self.state.homesteads.values():
+            if int(site['stage'])==4:ensure_access(self,site)
         self.npcs.attach_property_security(self.property_security)
         self.interiors=InteriorSystem(self)
         self.stealth.attach_interior_system(self.interiors)
@@ -250,6 +256,17 @@ class Simulation:
                 self.entities.get(self.player_id,Position).value=landing
                 start=landing
                 self._message('You step outside the building to its accessible frontage.')
+            site=self.homestead.at(start)
+            if site is not None and int(site['stage'])>=2:
+                landing=self.homestead.recovery_landing(site,start)
+                if landing is not None:
+                    # Repair legacy saves produced by the old unsafe Frame
+                    # transition, preferring its doorway and then safe prepared
+                    # apron cells. Normal entry/exit still uses the exact door.
+                    self.entities.get(self.player_id,Position).value=landing
+                    self.state.player_fx=self.state.player_fy=0.5
+                    start=landing
+                    self._message('You step outside the cabin to safe nearby ground.')
         self.magic.ensure_traditions()
         self.magic.ensure_rituals()
         # Reconstruct current visibility immediately on load. Persistent map
@@ -497,7 +514,9 @@ class Simulation:
             self._message(msg)
         elif isinstance(command,AdvanceBlueprintCommand):
             ok,msg=self.homestead.advance(command.uid)
-            minutes=self._construction_duration(35) if ok else MINUTES_PER_ACTION
+            if not ok:
+                self._message(msg);return result
+            minutes=self._construction_duration(35)
             self._message(msg+(f" Construction time: {minutes} game minutes." if ok else ""))
         elif isinstance(command,CancelBlueprintCommand):
             ok,msg=self.homestead.cancel(command.uid,self.entities.get(command.actor,Inventory));self._message(msg)

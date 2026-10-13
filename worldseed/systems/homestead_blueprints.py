@@ -3,6 +3,7 @@ Only simulation commands may change stored materials or construction stages.
 """
 from __future__ import annotations
 import json
+from collections import deque
 from functools import lru_cache
 from worldseed.config import DATA_DIR
 from worldseed.core.coords import WorldPos
@@ -50,6 +51,9 @@ def doorway(site):
     ox,oy=((0,1),(-1,0),(0,-1),(1,0))[site["orientation"]]
     return inside,(inside[0]+ox,inside[1]+oy,inside[2])
 
+def door_uid(site):
+    return str(site['uid'])+':entrance'
+
 def progress(site):
     materials=catalog()[0][site["home_id"]]["materials"]
     # Count substitute items toward the roof without losing refund identities.
@@ -66,8 +70,102 @@ class HomesteadBlueprintService:
         key=(pos.x,pos.y,pos.z)
         return next((site for site in self.sites.values() if key in footprint(site)),None)
 
+    def completed(self,uid):
+        site=self.sites.get(str(uid))
+        return site if site and int(site['stage'])==4 else None
+
+    def _outdoor_actors(self):
+        """Indoor actors' saved exterior anchors are not occupied ground."""
+        indoor=getattr(self.sim.state,'interior_actors',{})
+        if 'player' not in indoor:
+            yield 'player',self.sim.player_pos
+        for uid,npc in self.sim.state.npcs.items():
+            if npc.alive and uid not in indoor:
+                yield uid,WorldPos(npc.x,npc.y,npc.z)
+        for uid,creature in self.sim.state.creatures.items():
+            if creature.hp>0:
+                yield 'creature:'+uid,WorldPos(creature.x,creature.y,creature.z)
+
+    def _prepared(self,pos):
+        """Resource collision may also read the four neighboring ground cells."""
+        from worldseed.core.coords import split_world
+        cache=getattr(self.sim.world,'cache',None)
+        peek=getattr(cache,'peek',None)
+        if not callable(peek):return True
+        queries=(pos,*(pos.moved(dx,dy) for dx,dy in ((0,-1),(-1,0),(1,0),(0,1))))
+        return all(peek(split_world(q)[0]) is not None for q in queries)
+
+    def _ground_open(self,pos,actor_uid='player'):
+        """Read prepared collision authority without generating nearby land."""
+        if not self._prepared(pos):return False
+        terrain=self.sim.world.tile_at(pos).terrain
+        if not terrain.passable or 'water' in terrain.tags:return False
+        if not self.sim.building.passable(pos,True):return False
+        overlay=getattr(self.sim,'settlement_physicalization',None)
+        clears=getattr(overlay,'clears_natural_feature',None)
+        if self.sim.resources.blocks_movement(pos) and not (callable(clears) and clears(pos)):
+            return False
+        environment=getattr(self.sim,'environment',None)
+        if environment is not None and not environment.fluid_passable(pos):return False
+        security=getattr(self.sim,'property_security',None)
+        if security is not None and security.blocks_actor(pos,actor_uid):return False
+        return True
+
+    def recovery_landing(self,site,origin):
+        """Repair an invalid legacy outdoor anchor using only the local apron."""
+        cells=set(footprint(site));outside=WorldPos(*doorway(site)[1])
+        x0=min(x for x,y,z in cells)-2;x1=max(x for x,y,z in cells)+2
+        y0=min(y for x,y,z in cells)-2;y1=max(y for x,y,z in cells)+2
+        occupied={(p.x,p.y,p.z):uid for uid,p in self._outdoor_actors() if uid!='player'}
+        apron=[WorldPos(x,y,site['z']) for y in range(y0,y1+1) for x in range(x0,x1+1)
+               if (x,y,site['z']) not in cells]
+        apron.sort(key=lambda p:(abs(p.x-origin.x)+abs(p.y-origin.y),p.y,p.x))
+        for pos in dict.fromkeys([outside,*apron]):
+            if self._apron_escape(cells,pos,'player',occupied):return pos
+        return None
+
+    def _apron_escape(self,cells,start,actor_uid,occupied):
+        """Shared bounded reachability for construction and legacy recovery."""
+        x0=min(x for x,y,z in cells)-2;x1=max(x for x,y,z in cells)+2
+        y0=min(y for x,y,z in cells)-2;y1=max(y for x,y,z in cells)+2
+        queue=deque([start]);seen={start}
+        while queue:
+            pos=queue.popleft()
+            if ((pos.x,pos.y,pos.z) in cells or not self._ground_open(pos,actor_uid)
+                    or occupied.get((pos.x,pos.y,pos.z),actor_uid)!=actor_uid):continue
+            if pos.x in (x0,x1) or pos.y in (y0,y1):return True
+            for dx,dy in ((0,-1),(-1,0),(1,0),(0,1)):
+                nxt=pos.moved(dx,dy)
+                if x0<=nxt.x<=x1 and y0<=nxt.y<=y1 and nxt not in seen:
+                    seen.add(nxt);queue.append(nxt)
+        return False
+
+    def construction_safety(self,site,next_stage):
+        """Validate the proposed shell before committing any stage/depot change."""
+        if next_stage<2:return True,''
+        cells=set(footprint(site));outside=WorldPos(*doorway(site)[1])
+        actors=list(self._outdoor_actors())
+        if any((p.x,p.y,p.z) in cells for _,p in actors):
+            return False,'Move all people and animals outside the cabin footprint before building.'
+        if not self._ground_open(outside):
+            return False,'Clear and prepare the cabin doorway landing before building.'
+        if any(uid!='player' and p==outside for uid,p in actors):
+            return False,'Wait for the cabin doorway landing to be unoccupied before building.'
+        x0=min(x for x,y,z in cells)-2;x1=max(x for x,y,z in cells)+2
+        y0=min(y for x,y,z in cells)-2;y1=max(y for x,y,z in cells)+2
+        occupied={(p.x,p.y,p.z):uid for uid,p in actors}
+
+        if not self._apron_escape(cells,outside,'player',occupied):
+            return False,'The cabin doorway needs a clear route to surrounding ground.'
+        for uid,pos in actors:
+            nearby=pos.z==site['z'] and x0<pos.x<x1 and y0<pos.y<y1
+            if (nearby or uid=='player') and not self._apron_escape(cells,pos,uid,occupied):
+                return False,'This stage would block an occupant or their route away from the cabin.'
+        return True,''
+
     def _clear(self,cell):
         sim=self.sim;pos=WorldPos(*cell)
+        if not self._prepared(pos):return False
         tile=sim.world.tile_at(pos).terrain
         if not tile.passable or "water" in tile.tags:return False
         if sim.resources.blocks_movement(pos) or not sim.building.passable(pos,True):return False
@@ -75,9 +173,7 @@ class HomesteadBlueprintService:
         overlay=getattr(sim,"settlement_physicalization",None)
         projected=overlay.cell_at(pos) if overlay else None
         if projected and projected.occupied:return False
-        if any((c.x,c.y,c.z)==cell and c.hp>0 for c in sim.state.creatures.values()):return False
-        if any((n.x,n.y,n.z)==cell and n.alive for n in sim.state.npcs.values()):return False
-        if (sim.player_pos.x,sim.player_pos.y,sim.player_pos.z)==cell:return False
+        if any((p.x,p.y,p.z)==cell for _,p in self._outdoor_actors()):return False
         return True
 
     def preview(self,style_id,x,y,orientation=0):
@@ -97,10 +193,8 @@ class HomesteadBlueprintService:
             return False,"Explore the complete footprint and doorway first.",site
         # Validate only prepared tiles. A cursor preview may not realize world
         # chunks, generate terrain, or mutate persistent world state.
-        from worldseed.core.coords import split_world
         tile_cache=getattr(getattr(self.sim.world,"cache",None),"peek",None)
-        if callable(tile_cache) and any(tile_cache(split_world(WorldPos(*cell))[0]) is None
-                                        for cell in (*cells,outside)):
+        if callable(tile_cache) and any(not self._prepared(WorldPos(*cell)) for cell in (*cells,outside)):
             return False,"Move closer so this area loads before building.",site
         if any(not self._clear(cell) for cell in (*cells,outside)):
             return False,"Clear terrain, trees, objects and the doorway first.",site
@@ -152,7 +246,12 @@ class HomesteadBlueprintService:
         missing=[name for name,n in materials.items()
                  if ledger[name][0]<n*threshold//100]
         if missing:return False,"Still needed for this stage: "+", ".join(missing)
+        safe,reason=self.construction_safety(site,site['stage']+1)
+        if not safe:return False,reason
         stage=site["stage"];site["stage"]+=1;site["revision"]+=1
+        if site['stage']==4 and hasattr(self.sim.state,'door_security'):
+            from worldseed.systems.homestead_access import ensure_access
+            ensure_access(self.sim,site)
         return True,"Log cabin complete." if site["stage"]==4 else STAGES[stage]+" constructed."
 
     def cancel(self,uid,inv):

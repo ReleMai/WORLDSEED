@@ -1426,9 +1426,24 @@ def _action_palette(ctx:GameContext,term:Terminal)->str:
             nav.push(RouteState(f'action-group:{choice}',choice.title(),payload={'group':choice}))
             continue
         if route.route_id.startswith('action-group:'):
-            group=route.payload['group'];action=_stack_menu(term,nav,submenus[group])
+            group=route.payload['group'];options=submenus[group]
+            if group=='interact' and getattr(ctx.sim,'homestead',None) is not None:
+                from worldseed.systems.homestead_blueprints import doorway,door_uid
+                p=ctx.sim.player_pos
+                cabin_entries=[('enter_cabin:'+site['uid'],'Enter your log cabin')
+                               for site in ctx.sim.state.homesteads.values()
+                               if int(site['stage'])==4 and (p.x,p.y,p.z)==doorway(site)[1]
+                               and ctx.sim.property_security.door_by_id(door_uid(site)) is not None]
+                options=cabin_entries+list(options)
+            action=_stack_menu(term,nav,options)
             if action is None:return ''
             if action=='__BACK__':continue
+            if action.startswith('enter_cabin:'):
+                from worldseed.systems.homestead_blueprints import door_uid
+                site=ctx.sim.homestead.completed(action.split(':',1)[1])
+                if site is None:continue
+                ctx.sim.execute(EnterInteriorCommand(ctx.player_id,door_uid(site)))
+                return ctx.sim.log[-1].message if ctx.sim.log else ''
             if action=='l':_look_mode(ctx,term);continue
             if action=='farm':
                 result=_farm_menu(ctx,term)
@@ -2186,6 +2201,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     crossing=None if building_part else sim.settlement_physicalization.crossing_at(target)
     border_post=None if building_part else sim.settlement_physicalization.border_post_at(target)
     door=None if building_part=='body' else sim.property_security.door_at(target)
+    homestead=sim.homestead.at(target)
     signs=[] if building_part else sim.hunting.signs_at(target)
     home=None if building_part else sim.hunting.home_at(target)
     monument=None if building_part else next((m for m in sim.state.claim_monuments.values() if (m.x,m.y,target.z)==(target.x,target.y,target.z)),None)
@@ -2211,7 +2227,7 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     fixture_piece=sim.registry.settlement_pieces.get(physical.fixture_piece_id) if not building_part and physical and physical.fixture_piece_id else None
     fixture_station=STATION_PIECE_ALIASES.get(str(physical.fixture_piece_id)) if not building_part and physical and physical.fixture_piece_id else None
     if door is not None and distance<=1:
-        if shell is not None and door.role=='entrance':
+        if (shell is not None or homestead is not None and homestead['stage']==4) and door.role=='entrance':
             rows.append(('enter_interior','Enter building interior'))
         if planned is not None and planned.function=='residence' and door.role=='entrance':
             rows.append(('knock_property_door','Knock and wait for a resident'))
@@ -2283,9 +2299,9 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
     if distance<=1 and container and not private_storage:
         rows.append(('open',f'Open {container.name or "container"}'))
-    homestead=sim.homestead.at(target)
     if homestead is not None and distance<=8:
-        rows.append(('manage_blueprint','Open cabin blueprint & materials'))
+        rows.append(('manage_blueprint','Inspect cabin & entrance' if homestead['stage']==4
+                     else 'Open cabin blueprint & materials'))
     rows.append(('examine','Examine tile and contents'))
     subtitle='Right-click world actions.' + (' Move closer for pickup/gather/container actions.' if distance>1 else '')
     if building_part and shell is not None:
@@ -3407,6 +3423,17 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
     sim=ctx.sim
     inv=ctx.entities.get(ctx.player_id,Inventory)
 
+    def completed_panel(site):
+        from worldseed.systems.homestead_blueprints import doorway,door_uid
+        outside=doorway(site)[1]
+        choice=_select(term,'LOG CABIN • COMPLETE',[
+            ('enter','Enter your log cabin'),('close','Return to the world')],
+            subtitle=f'Approach the outside doorway at {outside[0]}, {outside[1]} to enter.')
+        if choice=='enter':
+            sim.execute(EnterInteriorCommand(ctx.player_id,door_uid(site)))
+            return sim.log[-1].message if sim.log else ''
+        return UI_BACK
+
     def deposit_requested(iid,amount):
         """Deposit accepted source items against one construction requirement."""
         remaining=max(0,int(amount));deposited=0
@@ -3425,6 +3452,7 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
         notice='';confirm_cancel=False
         while uid in sim.state.homesteads:
             site=sim.state.homesteads[uid]
+            if int(site['stage'])==4:return completed_panel(site)
             ledger=progress(site)
             style=catalog()[1].get(site['style_id'],{})
             materials=[(iid,'Roof thatch (mixed)' if iid=='core:reed_bundle'
@@ -3467,6 +3495,7 @@ def _homestead_blueprint_panel(ctx:GameContext,term:Terminal,uid:str)->str:
         return UI_BACK
     while uid in sim.state.homesteads:
         site=sim.state.homesteads[uid]
+        if int(site['stage'])==4:return completed_panel(site)
         rows=progress(site)
         stage=int(site['stage'])
         label='Complete' if stage>=4 else STAGES[stage]
@@ -4056,7 +4085,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             target=WorldPos(int(x),int(y),ctx.sim.player_pos.z)
             site=ctx.sim.homestead.at(target)
             player=ctx.sim.player_pos
-            if site is not None and abs(target.x-player.x)+abs(target.y-player.y)<=8:
+            if site is not None and int(site['stage'])<4 and abs(target.x-player.x)+abs(target.y-player.y)<=8:
                 result=_homestead_blueprint_panel(ctx,term,site['uid'])
             else:
                 result=_world_context_menu(ctx,term,target)

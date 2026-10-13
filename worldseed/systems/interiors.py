@@ -338,6 +338,24 @@ class InteriorSystem:
 
     def _prepare(self, door) -> InteriorPlan | None:
         space_id = "interior:" + door.property_id
+        homestead = getattr(self.sim, "homestead", None)
+        site = homestead.completed(door.property_id) if homestead is not None else None
+        if site is not None:
+            from worldseed.systems.homestead_access import structure_projection
+            from worldseed.systems.homestead_blueprints import catalog, door_uid
+            if door.uid != door_uid(site):
+                return None
+            plan = self.state.interiors.get(space_id)
+            if plan is None:
+                plan = build_interior(structure_projection(site), door)
+                plan.name = catalog()[0][site["home_id"]]["name"]
+                # The construction depot pays for a shell. Furnishings and
+                # their goods must be authored through later player actions.
+                plan.furnishing_version = 2
+                self.state.interiors[space_id] = plan
+            plan.exterior_x, plan.exterior_y, plan.exterior_z = door.x, door.y, door.z
+            self._bind_storage(plan)
+            return plan
         physical = self.sim.settlement_physicalization
         structure = physical.structure_by_id(door.property_id)
         if structure is None or structure.destroyed or not structure.enclosed:
@@ -394,6 +412,12 @@ class InteriorSystem:
         pos = self.sim.player_pos
         if pos.z != door.z or abs(pos.x - door.x) + abs(pos.y - door.y) > 1:
             return "Move next to the entrance first."
+        homestead = getattr(self.sim, "homestead", None)
+        site = homestead.completed(door.property_id) if homestead is not None else None
+        if site is not None:
+            from worldseed.systems.homestead_blueprints import doorway
+            if (pos.x, pos.y, pos.z) != doorway(site)[1]:
+                return "Approach the cabin's outside doorway first."
         if security.blocks_actor(WorldPos(door.x, door.y, door.z), "player"):
             return "The door is locked. Knock, use your key, or unlock it first."
         plan = self._prepare(door)
@@ -408,10 +432,18 @@ class InteriorSystem:
 
     def _exterior_landing(self, plan: InteriorPlan, actor_uid: str = "player") -> WorldPos | None:
         world = self.sim.world
+        homestead = getattr(self.sim, "homestead", None)
+        site = homestead.completed(plan.building_id) if homestead is not None else None
         frontage_lookup = getattr(self.sim.settlement_physicalization, "frontage_for", None)
         frontage = frontage_lookup(plan.building_id) if frontage_lookup else None
-        candidates = ([frontage] if frontage else []) + [WorldPos(plan.exterior_x + dx, plan.exterior_y + dy, plan.exterior_z) for dx, dy in ((0, 0), (0, 1), (-1, 0), (1, 0), (0, -1))]
+        if site is not None:
+            from worldseed.systems.homestead_blueprints import doorway
+            candidates = [WorldPos(*doorway(site)[1])]
+        else:
+            candidates = ([frontage] if frontage else []) + [WorldPos(plan.exterior_x + dx, plan.exterior_y + dy, plan.exterior_z) for dx, dy in ((0, 0), (0, 1), (-1, 0), (1, 0), (0, -1))]
         for pos in dict.fromkeys(candidates):
+            if site is not None and not homestead._prepared(pos):
+                continue
             key, lx, ly = split_world(pos)
             chunk = world.cache.peek(key)
             if chunk is None:
@@ -577,6 +609,12 @@ class InteriorSystem:
         if (npc.z != door.z or abs(npc.x - door.x) + abs(npc.y - door.y) > 1
                 or security.blocks_actor(WorldPos(door.x, door.y, door.z), npc.uid)):
             return False
+        homestead = getattr(self.sim, "homestead", None)
+        site = homestead.completed(door.property_id) if homestead is not None else None
+        if site is not None:
+            from worldseed.systems.homestead_blueprints import doorway
+            if (npc.x, npc.y, npc.z) != doorway(site)[1]:
+                return False
         plan = self._prepare(door)
         if plan is None or plan.function not in {"residence", "inn", "barracks", "outskirt_camp"}:
             return False
