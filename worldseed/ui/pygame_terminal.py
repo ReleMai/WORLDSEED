@@ -220,6 +220,19 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             return
         pg=self.pg
         label=action_title(command)
+        # Keep the retained crafting/salvaging window visible above the newly
+        # redrawn world during work; the window itself is temporarily locked.
+        # Only capture the actual panel, never the entire old world backdrop.
+        panel_pixels=None
+        panel_rect=None
+        if self._current_presentation in ('crafting_unified','workshop_station','discovery_pot',
+                                          'salvaging_unified','crafting_index'):
+            panel=self._floating_panels.get('crafting')
+            if panel:
+                panel_rect=pg.Rect(panel['x'],panel['y'],panel['w'],panel['h'])
+                panel_rect=panel_rect.clip(self.screen.get_rect())
+                if panel_rect.width>0 and panel_rect.height>0:
+                    panel_pixels=self.screen.subsurface(panel_rect).copy()
         duration=visual_duration(total)
         started=time.monotonic()
         advanced=0
@@ -245,6 +258,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     redraw_required=True
                 if redraw_required and (now-last_world_paint>=0.12 or fraction>=1.0):
                     redraw()
+                    if panel_pixels is not None and panel_rect is not None:
+                        self.screen.blit(panel_pixels,panel_rect.topleft)
+                        pg.display.update(panel_rect)
                     last_world_paint=time.monotonic()
                     redraw_required=False
                     background=None
