@@ -390,6 +390,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             return False
         now=int(self.pg.time.get_ticks() if now_ms is None else now_ms)
         if (getattr(self,'_realtime_pause_depth',0) or self._input_mode!='world'
+                or (self._game_clock_driver is not None and self._game_clock_driver.paused)
                 or self._interior_context is not None
                 or (self._combat_active_callback and self._combat_active_callback())):
             self._free_movement_last_ms=now
@@ -846,6 +847,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     return 'UI_REDRAW'
                 continue
             if event.type == pg.KEYDOWN:
+                if event.key==pg.K_SPACE and self._input_mode=='ui' and self._game_clock_driver is not None:
+                    self._game_clock_driver.toggle_pause()
+                    return 'UI_REDRAW'
+                if self._game_clock_driver is not None and self._game_clock_driver.paused and event.key in movement_keys:
+                    continue
                 if self._input_mode=='world' and getattr(self,'_homestead_placement',None):
                     if event.key==pg.K_ESCAPE:
                         self._homestead_placement=None
