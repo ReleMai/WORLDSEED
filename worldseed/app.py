@@ -3963,6 +3963,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
                 # animating the action and charge them a second time.
                 if not realtime.paused:realtime.resume()
         ctx.sim._action_progress_callback=display_timed_action
+        prepare=getattr(term,'capture_action_target',None)
+        discard=getattr(term,'discard_action_target',None)
+        if callable(prepare):ctx.sim._action_target_prepare_callback=prepare
+        if callable(discard):ctx.sim._action_target_discard_callback=discard
     install=getattr(term,'set_realtime_callback',None)
     if callable(install):install(realtime.pump)
     install_free=getattr(term,'set_free_movement_callback',None)
@@ -4091,7 +4095,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
     finally:
         if hasattr(term,'set_game_clock_driver'):term.set_game_clock_driver(None)
-        if callable(action_presenter):ctx.sim._action_progress_callback=None
+        if callable(action_presenter):
+            ctx.sim._action_progress_callback=None
+            ctx.sim._action_target_prepare_callback=None
+            ctx.sim._action_target_discard_callback=None
         if callable(install):install(None)
         if callable(install_free):
             install_free(None)
