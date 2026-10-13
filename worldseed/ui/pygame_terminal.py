@@ -205,15 +205,30 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._game_clock_driver=driver
 
     def capture_action_target(self, command, pos) -> None:
-        """Snapshot one visible gathered tile before the command depletes it."""
+        """Capture only the living resource sprite, never the player or terrain.
+
+        During harvest its sprite fades over the *current* authoritative scene,
+        even though the underlying resource was depleted at command commit.
+        """
         self._action_target_snapshot=None
         ctx=self._hover_context
         if not ctx or self.screen is None:return
-        px=int(ctx['grid_x']+(pos.x-ctx['left'])*ctx['tile_px'])
-        py=int(ctx['grid_y']+(pos.y-ctx['top'])*ctx['tile_px'])
-        rect=self.pg.Rect(px,py,ctx['tile_px'],ctx['tile_px'])
-        if not self.screen.get_rect().contains(rect) or not ctx['used'].contains(rect):return
-        self._action_target_snapshot=(rect,self.screen.subsurface(rect).copy())
+        resource=ctx.get('resource_by',{}).get((pos.x,pos.y,pos.z))
+        if resource is None or getattr(resource[0],'stage','')!='mature':return
+        tile=int(ctx['tile_px'])
+        px=int(ctx['grid_x']+(pos.x-ctx['left'])*tile)
+        py=int(ctx['grid_y']+(pos.y-ctx['top'])*tile)
+        bounds=self.pg.Rect(px-tile,py-tile,tile*3,tile*3)
+        if not ctx['used'].contains(bounds):return
+        art=self.pg.Surface(bounds.size,self.pg.SRCALPHA)
+        original=self.screen
+        try:
+            self.screen=art
+            self._draw_resource_feature(resource[0],resource[1],
+                                        self.pg.Rect(tile,tile,tile,tile))
+        finally:
+            self.screen=original
+        self._action_target_snapshot=(bounds,art)
 
     def discard_action_target(self) -> None:
         self._action_target_snapshot=None
