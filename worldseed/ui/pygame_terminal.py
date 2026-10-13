@@ -137,6 +137,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._world_activity_tab = 'activity'
         self._activity_footer_context = None
         self._realtime_callback = None
+        self._game_clock_driver = None
+        self._action_target_snapshot = None
         self._free_movement_callback = None
         self._free_movement_last_ms = 0
         self._movement_redraw_last_ms = 0
@@ -199,6 +201,38 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         except Exception:
             pass
 
+    def set_game_clock_driver(self, driver) -> None:
+        self._game_clock_driver=driver
+
+    def capture_action_target(self, command, pos) -> None:
+        """Capture only the living resource sprite, never the player or terrain.
+
+        During harvest its sprite fades over the *current* authoritative scene,
+        even though the underlying resource was depleted at command commit.
+        """
+        self._action_target_snapshot=None
+        ctx=self._hover_context
+        if not ctx or self.screen is None:return
+        resource=ctx.get('resource_by',{}).get((pos.x,pos.y,pos.z))
+        if resource is None or getattr(resource[0],'stage','')!='mature':return
+        tile=int(ctx['tile_px'])
+        px=int(ctx['grid_x']+(pos.x-ctx['left'])*tile)
+        py=int(ctx['grid_y']+(pos.y-ctx['top'])*tile)
+        bounds=self.pg.Rect(px-tile,py-tile,tile*3,tile*3)
+        if not ctx['used'].contains(bounds):return
+        art=self.pg.Surface(bounds.size,self.pg.SRCALPHA)
+        original=self.screen
+        try:
+            self.screen=art
+            self._draw_resource_feature(resource[0],resource[1],
+                                        self.pg.Rect(tile,tile,tile,tile))
+        finally:
+            self.screen=original
+        self._action_target_snapshot=(bounds,art)
+
+    def discard_action_target(self) -> None:
+        self._action_target_snapshot=None
+
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
@@ -233,7 +267,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 panel_rect=panel_rect.clip(self.screen.get_rect())
                 if panel_rect.width>0 and panel_rect.height>0:
                     panel_pixels=self.screen.subsurface(panel_rect).copy()
-        duration=visual_duration(total)
+        duration=(0.18 if type(command).__name__ in
+                  ('StoreCommand','TakeFromContainerCommand') else visual_duration(total))
+        target_snapshot=self._action_target_snapshot
+        self._action_target_snapshot=None
+        target_clean=None
         started=time.monotonic()
         advanced=0
         last_world_paint=0.0
@@ -264,27 +302,53 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     last_world_paint=time.monotonic()
                     redraw_required=False
                     background=None
+                    if target_snapshot is not None:
+                        ghost_rect,_=target_snapshot
+                        if self.screen.get_rect().contains(ghost_rect):
+                            target_clean=self.screen.subsurface(ghost_rect).copy()
+                ctx=self._hover_context
                 sw,sh=self.screen.get_size()
-                width=min(540,max(260,sw-36))
-                box=pg.Rect((sw-width)//2,max(20,sh-136),width,92)
+                if ctx:
+                    sim=ctx.get('sim')
+                    pos=sim.player_pos
+                    tile=int(ctx['tile_px'])
+                    state=sim.state
+                    fx=float(getattr(state,'player_fx',0.5))
+                    fy=float(getattr(state,'player_fy',0.5))
+                    center_x=int(ctx['grid_x']+(pos.x-ctx['left']+fx)*tile)
+                    head_y=int(ctx['grid_y']+(pos.y-ctx['top']+fy-0.65)*tile)
+                    clip=ctx['used']
+                else:
+                    center_x=sw//2
+                    head_y=sh//2
+                    clip=self.screen.get_rect()
+                width=138
+                box=pg.Rect(max(clip.left+4,min(center_x-width//2,clip.right-width-4)),
+                            max(clip.top+5,min(head_y-51,clip.bottom-50)),width,45)
                 if backdrop_rect!=box or background is None:
                     backdrop_rect=box
                     background=self.screen.subsurface(box).copy()
+                if target_snapshot is not None and target_clean is not None:
+                    ghost_rect,ghost_source=target_snapshot
+                    self.screen.blit(target_clean,ghost_rect.topleft)
+                    if fraction<1.0:
+                        ghost=ghost_source.copy()
+                        ghost.set_alpha(max(0,round(255*(1.0-fraction))))
+                        self.screen.blit(ghost,ghost_rect.topleft)
+                    pg.display.update(ghost_rect)
                 self.screen.blit(background,box.topleft)
                 overlay=pg.Surface(box.size,pg.SRCALPHA)
-                pg.draw.rect(overlay,(18,24,27,240),overlay.get_rect(),border_radius=10)
-                pg.draw.rect(overlay,(*self._theme['accent'],220),overlay.get_rect(),width=1,border_radius=10)
-                title=self.font.render(label,True,self._theme['text'])
-                overlay.blit(title,(18,11))
-                elapsed_label=f'{advanced:,}/{total:,} game min   •   {round(fraction*100):d}%'
-                text=self.small_font.render(elapsed_label,True,self._theme['muted'])
-                overlay.blit(text,(18,39))
-                bar=pg.Rect(18,68,width-36,10)
-                pg.draw.rect(overlay,(51,60,63),bar,border_radius=4)
-                fill=max(0,min(bar.width,round(bar.width*fraction)))
+                pg.draw.rect(overlay,(17,22,24,222),overlay.get_rect(),border_radius=7)
+                pg.draw.rect(overlay,(*self._theme['accent'],170),overlay.get_rect(),width=1,border_radius=7)
+                title=self.small_font.render(self._fit_ui_text(label,self.small_font,87),True,self._theme['text'])
+                overlay.blit(title,(8,5))
+                number=self.small_font.render(f'+{advanced}m',True,self._theme['accent'])
+                overlay.blit(number,(width-number.get_width()-8,5))
+                track=pg.Rect(8,29,width-16,8)
+                pg.draw.rect(overlay,(48,57,58),track,border_radius=3)
+                fill=max(0,min(track.width,round(track.width*fraction)))
                 if fill:
-                    pg.draw.rect(overlay,self._theme['accent'],
-                                 pg.Rect(bar.x,bar.y,fill,bar.height),border_radius=4)
+                    pg.draw.rect(overlay,self._theme['accent'],pg.Rect(track.x,track.y,fill,track.height),border_radius=3)
                 self.screen.blit(overlay,box.topleft)
                 pg.display.update(box)
                 # Ignore fresh commands while one transaction is in progress;
@@ -341,6 +405,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             return False
         now=int(self.pg.time.get_ticks() if now_ms is None else now_ms)
         if (getattr(self,'_realtime_pause_depth',0) or self._input_mode!='world'
+                or (self._game_clock_driver is not None and self._game_clock_driver.paused)
                 or self._interior_context is not None
                 or (self._combat_active_callback and self._combat_active_callback())):
             self._free_movement_last_ms=now
@@ -358,6 +423,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         dx=int(any(k in held for k in (pg.K_d,pg.K_RIGHT)))-int(any(k in held for k in (pg.K_a,pg.K_LEFT)))
         dy=int(any(k in held for k in (pg.K_s,pg.K_DOWN)))-int(any(k in held for k in (pg.K_w,pg.K_UP)))
         sprint=bool(pg.key.get_mods() & pg.KMOD_SHIFT)
+        if (dx or dy) and self._game_clock_driver is not None:
+            self._game_clock_driver.resume_for_movement()
         changed=bool(callback(dt,dx,dy,sprint))
         if changed:
             self._entity_spatial_cache_key=None
@@ -795,6 +862,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     return 'UI_REDRAW'
                 continue
             if event.type == pg.KEYDOWN:
+                if event.key==pg.K_SPACE and self._input_mode=='ui' and self._game_clock_driver is not None:
+                    self._game_clock_driver.toggle_pause()
+                    return 'UI_REDRAW'
+                if self._game_clock_driver is not None and self._game_clock_driver.paused and event.key in movement_keys:
+                    continue
                 if self._input_mode=='world' and getattr(self,'_homestead_placement',None):
                     if event.key==pg.K_ESCAPE:
                         self._homestead_placement=None
@@ -824,6 +896,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     # Keep SDL repeat disabled permanently. Re-arming here now
                     # means only that fresh post-loading keyboard input is valid.
                     self._input_repeat_armed = True
+                if event.key == pg.K_SPACE:
+                    return ' '
                 if event.key in movement_keys:
                     # Ignore any duplicate/repeat KEYDOWN already queued by the
                     # platform or injected before repeat was disabled. Held
@@ -2584,7 +2658,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             # based, but cap refresh frequency by actual drawable pixel area.
             used=self._hover_context['used']
             area=used.width*used.height
-            interval=100 if area>1_600_000 else 66 if area>800_000 else 33
+            interval=180 if area>1_600_000 else 110 if area>800_000 else 50
             phase=int(now)//interval
             if phase == getattr(self, '_weather_animation_phase', None):
                 if menu_pointer:self._animate_menu_effects(now,force=True)
@@ -3992,8 +4066,26 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         old_clip=screen.get_clip();screen.set_clip(bar.clip(old_clip))
         pg.draw.rect(screen,(19,23,25),bar,border_radius=5)
         pg.draw.rect(screen,th['edge'],bar,1,border_radius=5)
-        title=self._fit_ui_text('TOOLS & ACTIONS',self.small_font,max(1,bar.width-2*margin))
-        screen.blit(self.small_font.render(title,True,th['accent']),(bar.x+margin,bar.y+7))
+        controller=self._game_clock_driver
+        if controller is not None and self._input_mode=='world':
+            # Four compact, clickable clock controls in the existing HUD.
+            modes=(('||','pause'),('1x','1'),('2x','2'),('3x','3'))
+            gap_time=3
+            bw_time=max(36,(bar.width-2*margin-3*gap_time)//4)
+            for i,(label,key) in enumerate(modes):
+                clock_box=pg.Rect(bar.x+margin+i*(bw_time+gap_time),bar.y+3,bw_time,23)
+                active=(controller.paused if key=='pause' else
+                        (not controller.paused and controller.speed==int(key)))
+                pg.draw.rect(screen,(83,69,45) if active else th['panel'],clock_box,border_radius=4)
+                pg.draw.rect(screen,th['accent'] if active else th['edge'],clock_box,1,border_radius=4)
+                ink=self.small_font.render(label,True,th['text'] if active else th['muted'])
+                screen.blit(ink,ink.get_rect(center=clock_box.center))
+                self._pointer_targets.append((clock_box,'UI_TIME:'+key))
+                self._hud_tooltips.append((clock_box,('Pause' if key=='pause' else label+' clock'),
+                                           'Space toggles pause; walking restores 1x from fast-forward'))
+        else:
+            title=self._fit_ui_text('TOOLS & ACTIONS',self.small_font,max(1,bar.width-2*margin))
+            screen.blit(self.small_font.render(title,True,th['accent']),(bar.x+margin,bar.y+7))
         cols=5;gap=min(6,max(0,bar.width//35));bw=max(1,(bar.width-2*margin-gap*4)//cols)
         buttons=HUD_BUTTONS if self._input_mode=='world' else (('Confirm','\r'),('Cancel','ESC'))
         header=min(28,max(1,bar.height//5));stance_height=min(29,max(1,bar.height//5))
@@ -4131,7 +4223,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         pos=entities.get(player_id,Position).value
         vit=entities.try_get(player_id,Vitals) or Vitals()
         inv=entities.get(player_id,Inventory)
-        tile_px=self._tile_px
+        # Bound high-resolution software compositing by world cells, not display
+        # pixels. Maximizing a window should not quadratically multiply work.
+        tile_px=max(self._tile_px,math.ceil(math.sqrt(max(1,map_rect.width*map_rect.height)/1050)))
         cols, rows, inset_x, inset_y = centered_tile_grid(map_rect.width, map_rect.height, tile_px)
         map_rect = pg.Rect(map_rect.x + inset_x, map_rect.y + inset_y, cols * tile_px, rows * tile_px)
         # Keep a fixed viewport but render one extra tile on each side.
@@ -4734,4 +4828,4 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._hover_map_snapshot=screen.subsurface(used).copy()
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
         self._refresh_hover_only(force=True,update_display=False)
-        pg.display.flip(); self.clock.tick(120)
+        pg.display.flip(); self.clock.tick(60)

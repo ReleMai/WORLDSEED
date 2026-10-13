@@ -23,12 +23,35 @@ class RealtimeSimulationDriver:
         self._last = None
         self._accumulator = 0.0
         self.paused = False
+        self.speed = 1
         self._pause_depth = 0
 
     def resume(self, now: float | None = None) -> None:
         self.paused = False
         self._last = time.monotonic() if now is None else float(now)
         self._accumulator = 0.0
+
+    def set_speed(self, speed: int, now: float | None = None) -> None:
+        """Set realtime play rate, discarding any old-speed partial minute."""
+        if type(speed) is not int or speed not in (1, 2, 3):
+            raise ValueError("Game speed must be 1x, 2x or 3x.")
+        self.speed = speed
+        self.paused = False
+        self._last = time.monotonic() if now is None else float(now)
+        self._accumulator = 0.0
+
+    def toggle_pause(self, now: float | None = None) -> bool:
+        """Space toggles the simulation clock without wall-time catch-up."""
+        if self.paused:
+            self.resume(now)
+        else:
+            self.pause()
+        return self.paused
+
+    def resume_for_movement(self, now: float | None = None) -> None:
+        """Player-driven movement cancels fast-forward; paused time stays paused."""
+        if self.speed != 1:
+            self.set_speed(1, now)
 
     def pause(self) -> None:
         self.paused = True
@@ -74,7 +97,7 @@ class RealtimeSimulationDriver:
             return 0
         elapsed = max(0.0, current - self._last)
         self._last = current
-        self._accumulator += elapsed
+        self._accumulator += elapsed * self.speed
         minutes = int(self._accumulator / self.seconds_per_game_minute)
         if minutes <= 0:
             return 0

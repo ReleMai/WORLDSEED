@@ -26,6 +26,7 @@ def classify_key(key: str) -> Intent:
     from accidentally stealing movement keys (the historical `D` bug).
     """
     k = key.lower() if len(key) == 1 else key
+    if key == ' ': return Intent('time_pause')
     if key == 'ESC': return Intent('pause')
     if k in DIRECTIONS: return Intent('move', DIRECTIONS[k])
     if k in ('\r','\n'): return Intent('actions')
