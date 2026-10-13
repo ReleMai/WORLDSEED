@@ -9,6 +9,20 @@ from worldseed.config import (
 )
 from worldseed.core.coords import ChunkKey,WorldPos
 from worldseed.persistence.validation import validate_sim_state
+from worldseed.profiling import measure_if_enabled
+
+
+class _ProfiledTransaction:
+    """Delegate SQLite transaction semantics while timing its exit boundary."""
+    def __init__(self,connection,profiler):
+        self.connection=connection;self.profiler=profiler
+
+    def __enter__(self):return self.connection.__enter__()
+
+    def __exit__(self,exc_type,exc,traceback):
+        name='save.commit' if exc_type is None else 'save.rollback'
+        with measure_if_enabled(self.profiler,name):
+            return self.connection.__exit__(exc_type,exc,traceback)
 
 SCHEMA="""
 PRAGMA foreign_keys=ON;
@@ -294,18 +308,31 @@ class WorldDatabase:
         row=self.connection.execute("SELECT payload_json FROM components WHERE entity_id=? AND kind=?",(entity_id,kind)).fetchone();return None if row is None else json.loads(row[0])
     def load_sim_state(self)->dict|None:
         row=self.connection.execute("SELECT payload_json FROM sim_state WHERE slot=1").fetchone();return None if row is None else json.loads(row[0])
-    def save_state(self,*,turn:int,tile_deltas:Mapping[WorldPos,str],player_id:int,position:WorldPos,inventory:dict[str,int],vitals:dict|None=None,sim_state:dict|None=None,metadata:Mapping[str,Any]|None=None)->None:
-        with self.connection:
-            for key,value in (metadata or {}).items():self.set_meta(key,value)
-            self.set_meta("turn",turn);self.set_meta("engine_version",ENGINE_VERSION)
-            self.connection.execute("INSERT INTO entities(entity_id,archetype) VALUES(?,?) ON CONFLICT(entity_id) DO UPDATE SET archetype=excluded.archetype",(player_id,"core:player"))
-            self._save_component(player_id,"Position",1,{"x":position.x,"y":position.y,"z":position.z});self._save_component(player_id,"Inventory",2,{"items":inventory})
-            if vitals is not None:self._save_component(player_id,"Vitals",1,vitals)
-            for pos,tid in tile_deltas.items():self.connection.execute("INSERT INTO tile_deltas(x,y,z,terrain_id) VALUES(?,?,?,?) ON CONFLICT(x,y,z) DO UPDATE SET terrain_id=excluded.terrain_id",(pos.x,pos.y,pos.z,tid))
-            if sim_state is not None:
-                text=json.dumps(sim_state,separators=(",",":"),sort_keys=True);self.connection.execute("INSERT INTO sim_state(slot,payload_json) VALUES(1,?) ON CONFLICT(slot) DO UPDATE SET payload_json=excluded.payload_json",(text,))
-                for e in sim_state.get("history",[])[-250:]:
-                    self.connection.execute("INSERT OR IGNORE INTO event_log(event_id,minute,event_type,payload_json) VALUES(?,?,?,?)",(e.get("uid"),int(e.get("minute",0)),e.get("event_type","unknown"),json.dumps(e,separators=(",",":"),sort_keys=True)))
+    def save_state(self,*,turn:int,tile_deltas:Mapping[WorldPos,str],player_id:int,position:WorldPos,inventory:dict[str,int],vitals:dict|None=None,sim_state:dict|None=None,metadata:Mapping[str,Any]|None=None,profiler=None)->None:
+        # Encoding before writes provides an independent measurement and leaves
+        # the preceding durable checkpoint untouched on serialization failure.
+        with measure_if_enabled(profiler,'save.json'):
+            meta=dict(metadata or {});meta.update(turn=turn,engine_version=ENGINE_VERSION)
+            encoded_meta=[(key,json.dumps(value,separators=(",",":"),sort_keys=True)) for key,value in meta.items()]
+            components=[('Position',1,{'x':position.x,'y':position.y,'z':position.z}),
+                        ('Inventory',2,{'items':inventory})]
+            if vitals is not None:components.append(('Vitals',1,vitals))
+            encoded_components=[(player_id,kind,version,json.dumps(payload,separators=(",",":"),sort_keys=True))
+                                for kind,version,payload in components]
+            text=None if sim_state is None else json.dumps(sim_state,separators=(",",":"),sort_keys=True)
+            events=[] if sim_state is None else [
+                (e.get('uid'),int(e.get('minute',0)),e.get('event_type','unknown'),
+                 json.dumps(e,separators=(",",":"),sort_keys=True)) for e in sim_state.get('history',[])[-250:]]
+        transaction=_ProfiledTransaction(self.connection,profiler) if profiler is not None and profiler.enabled else self.connection
+        with transaction:
+            with measure_if_enabled(profiler,'save.sql'):
+                self.connection.executemany("INSERT INTO world_meta(key,value_json) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",encoded_meta)
+                self.connection.execute("INSERT INTO entities(entity_id,archetype) VALUES(?,?) ON CONFLICT(entity_id) DO UPDATE SET archetype=excluded.archetype",(player_id,"core:player"))
+                self.connection.executemany("INSERT INTO components(entity_id,kind,version,payload_json) VALUES(?,?,?,?) ON CONFLICT(entity_id,kind) DO UPDATE SET version=excluded.version,payload_json=excluded.payload_json",encoded_components)
+                for pos,tid in tile_deltas.items():self.connection.execute("INSERT INTO tile_deltas(x,y,z,terrain_id) VALUES(?,?,?,?) ON CONFLICT(x,y,z) DO UPDATE SET terrain_id=excluded.terrain_id",(pos.x,pos.y,pos.z,tid))
+                if text is not None:
+                    self.connection.execute("INSERT INTO sim_state(slot,payload_json) VALUES(1,?) ON CONFLICT(slot) DO UPDATE SET payload_json=excluded.payload_json",(text,))
+                    self.connection.executemany("INSERT OR IGNORE INTO event_log(event_id,minute,event_type,payload_json) VALUES(?,?,?,?)",events)
     def _save_component(self,entity_id:int,kind:str,version:int,payload:dict[str,Any])->None:
         text=json.dumps(payload,separators=(",",":"),sort_keys=True);self.connection.execute("INSERT INTO components(entity_id,kind,version,payload_json) VALUES(?,?,?,?) ON CONFLICT(entity_id,kind) DO UPDATE SET version=excluded.version,payload_json=excluded.payload_json",(entity_id,kind,version,text))
     def verify(self)->list[str]:

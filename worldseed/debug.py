@@ -30,6 +30,7 @@ class SessionDebugLog:
         handler.setFormatter(logging.Formatter("%(message)s"))
         self.logger.handlers[:]=[handler]
         self.started=time.perf_counter()
+        self.profiler=None
         self.event("session_start",engine_version=engine_version,world=world,python=sys.version.split()[0],pid=os.getpid())
 
     def event(self, kind: str, **data) -> None:
@@ -53,11 +54,19 @@ class SessionDebugLog:
             yield
         except Exception as exc:
             elapsed=(time.perf_counter()-start)*1000
+            self._profile_stage(name,elapsed)
             self.exception(name,exc,elapsed_ms=round(elapsed,3),**data)
             raise
         else:
             elapsed=(time.perf_counter()-start)*1000
+            self._profile_stage(name,elapsed)
             self.event("stage",name=name,elapsed_ms=round(elapsed,3),slow=elapsed>=warn_ms,**data)
+
+    def _profile_stage(self,name,elapsed_ms) -> None:
+        profiler=self.profiler
+        if profiler is not None and profiler.enabled:
+            try:profiler.record('preparation.'+str(name),elapsed_ms)
+            except Exception:pass
 
     def flush(self) -> None:
         for handler in self.logger.handlers:

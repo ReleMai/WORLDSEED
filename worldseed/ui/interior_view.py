@@ -341,8 +341,11 @@ def _draw_indoor_sidebar(term, sim, plan, player, entities, player_id, side):
         screen.set_clip(old_clip)
 
 
-def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
+def draw_interior(term, registry, sim, entities, player_id, message='', *, timings=None) -> None:
     """Draw one prepared plan only; never query exterior spatial systems."""
+    if timings is None:
+        from worldseed.ui.pygame_terminal import _RenderTimings
+        timings = _RenderTimings(getattr(sim, 'profiler', None))
     plan = sim.interiors.current_plan()
     player = sim.interiors.player_presence()
     if plan is None or player is None:
@@ -377,6 +380,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
     actor_index = 0
     old_clip = screen.get_clip()
     screen.set_clip(used)
+    timings.mark('render.prepare')
     try:
         screen.fill((12, 14, 15), used)
         floor = pg.Rect(*camera.to_screen(0, 0), max(1, round(plan.width * scale)),
@@ -410,6 +414,7 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 screen.blit(sprite, sprite.get_rect(midbottom=doorway.midbottom))
             pg.draw.circle(screen, th['accent'], portal, max(5, term._tile_px // 3), 2)
             annotations.append(('exit', 'Outside · right-click door', (portal[0] - 90, portal[1] + 12), used))
+        timings.mark('render.terrain')
         for stair in getattr(plan, 'stairs', ()):
             rect = _rect(term, camera, stair)
             path = term._visuals.resolve(term._visuals.ref('interior_stairs', stair.direction))
@@ -467,7 +472,9 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                 screen.blit(sprite, (x - sprite.get_width() // 2, y - sprite.get_height() // 2))
         for uid, actor in actors[actor_index:]:
             _draw_actor(term, sim, camera, uid, actor)
+        timings.mark('render.objects_actors')
         _draw_indoor_light(term, sim, plan, camera, used)
+        timings.mark('render.effects')
         label_regions = []
         for kind, label, anchor, bounds in annotations:
             # An offscreen exterior doorway must not leave a floating EXIT tag.
@@ -491,5 +498,8 @@ def draw_interior(term, registry, sim, entities, player_id, message='') -> None:
                               'hover_uid': None, 'object_regions': object_regions,
                               'label_regions': label_regions, 'side': side}
     refresh_hover(term, update_display=False)
+    timings.mark('render.ui')
     pg.display.flip()
+    timings.mark('render.present')
+    timings.finish()
     term.clock.tick(120)

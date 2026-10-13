@@ -139,6 +139,10 @@ jobs:
         shell: pwsh
         run: python -m compileall -q worldseed tools tests
 
+      - name: Runtime profiling and prepared reference scenes
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "Runtime profiling and reference scenes" --timeout 120 -- python -u -m unittest -v tests.test_runtime_profiling tests.test_profiling_integration tests.test_render_profiling tests.test_reference_scenes
+
       - name: Save failure preservation and recovery
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Save retry and failure UI" --timeout 60 -- python -u -m unittest -v tests.test_save_retry tests.test_save_failure_ui

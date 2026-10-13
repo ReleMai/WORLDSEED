@@ -14,6 +14,7 @@ from worldseed.core.rng import PCG32, derive_seed, hash_u64
 from worldseed.entities.components import Inventory,PlayerControlled,Position,Renderable,Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.persistence.database import WorldDatabase
+from worldseed.profiling import measure_if_enabled
 from worldseed.sim.commands import *
 from worldseed.sim.engine import Simulation
 from worldseed.sim.realtime import RealtimeSimulationDriver
@@ -504,29 +505,38 @@ def _load_context(sel,progress=None,prepare_world:bool=True)->GameContext:
     emit('World ready',1.0,f'Spawn {pos.x}, {pos.y}  •  prepared exploration area loaded')
     sim.state.last_offline_wall_time=time.time();return GameContext(db,reg,world,entities,sim,player)
 def _save(ctx:GameContext, *, backup:bool=True)->None:
+    with measure_if_enabled(getattr(ctx.sim,'profiler',None),'save.total'):
+        _save_checkpoint(ctx,backup=backup)
+
+def _save_checkpoint(ctx:GameContext, *, backup:bool=True)->None:
     started=time.perf_counter()
-    p=ctx.entities.get(ctx.player_id,Position).value
-    inventory=dict(ctx.entities.get(ctx.player_id,Inventory).items)
-    vitals=asdict(ctx.entities.get(ctx.player_id,Vitals))
-    tiles=ctx.world.snapshot_dirty_tiles()
-    saved_at=time.time()
-    # Capture state before touching the database. A failed snapshot must leave
-    # both the previous checkpoint metadata and the live retry data intact.
-    state=deepcopy(ctx.sim.state.to_dict())
-    state['last_offline_wall_time']=saved_at
-    metadata={
-        'last_saved_at':saved_at,'player_name':ctx.sim.state.player_name,
-        'player_origin':ctx.sim.state.player_origin,'player_sex':ctx.sim.state.player_sex,
-        'player_sprite_index':int(ctx.sim.state.player_sprite_index),
-    }
+    profiler=getattr(ctx.sim,'profiler',None)
+    with measure_if_enabled(profiler,'save.capture'):
+        p=ctx.entities.get(ctx.player_id,Position).value
+        inventory=dict(ctx.entities.get(ctx.player_id,Inventory).items)
+        vitals=asdict(ctx.entities.get(ctx.player_id,Vitals))
+        tiles=ctx.world.snapshot_dirty_tiles()
+        saved_at=time.time()
+        # Capture state before touching the database. A failed snapshot must
+        # leave the previous checkpoint metadata and live retry data intact.
+        state=deepcopy(ctx.sim.state.to_dict())
+        state['last_offline_wall_time']=saved_at
+        metadata={
+            'last_saved_at':saved_at,'player_name':ctx.sim.state.player_name,
+            'player_origin':ctx.sim.state.player_origin,'player_sex':ctx.sim.state.player_sex,
+            'player_sprite_index':int(ctx.sim.state.player_sprite_index),
+        }
     # Rotating full-database backups are intentionally reserved for explicit
     # save/menu/quit checkpoints. Copying an ever-growing generated-world DB on
     # every routine autosave caused increasingly long apparent freezes during
     # exploration. Autosave still commits all authoritative state atomically.
     if backup and ctx.db.path.exists() and ctx.db.path.stat().st_size>0:
-        ctx.db.backup(3)
-    ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=tiles.tiles,player_id=ctx.player_id,
-                      position=p,inventory=inventory,vitals=vitals,sim_state=state,metadata=metadata)
+        with measure_if_enabled(profiler,'save.backup'):
+            ctx.db.backup(3)
+    with measure_if_enabled(profiler,'save.database'):
+        ctx.db.save_state(turn=ctx.sim.turn,tile_deltas=tiles.tiles,player_id=ctx.player_id,
+                          position=p,inventory=inventory,vitals=vitals,sim_state=state,
+                          metadata=metadata,profiler=profiler)
     # save_state returns only after SQLite commits. A later edit, even one
     # restoring the same terrain value, has another revision and stays pending.
     ctx.world.acknowledge_dirty_tiles(tiles)
@@ -3863,6 +3873,7 @@ def _diagnostics_view(ctx:GameContext,term:Terminal)->str:
             for raw in lines:
                 try:row=json.loads(raw)
                 except Exception:continue
+                if not isinstance(row,dict):continue
                 if row.get('kind')=='stage' and row.get('slow'):
                     slow.append(f"{row.get('name','stage')}: {row.get('elapsed_ms',0)} ms")
                 elif row.get('kind')=='command_end' and row.get('slow'):
@@ -3889,6 +3900,17 @@ def _diagnostics_view(ctx:GameContext,term:Terminal)->str:
     ]
     if slow:lines+=['','RECENT SLOW OPERATIONS']+['• '+row for row in slow[-12:]]
     if recent_errors:lines+=['','RECENT ERRORS']+['• '+row for row in recent_errors[-6:]]
+    profiler=getattr(ctx.sim,'profiler',None)
+    if profiler is not None and profiler.enabled:
+        report=profiler.snapshot()
+        lines+=['','RUNTIME TIMINGS (milliseconds)',
+                f"Percentiles cover up to {report['max_samples']} recent samples per stage; lifetime worst retains older stalls."]
+        for name,row in sorted(report['stages'].items()):
+            lines.append(f"{name}: p50 {row['p50_ms']:.2f}  p95 {row['p95_ms']:.2f}  p99 {row['p99_ms']:.2f}  worst {row['lifetime_worst_ms']:.2f}  n={row['window_count']}")
+        if report['dropped_stages']:
+            lines.append(f"Stage limit reached: {report['dropped_stages']} unretained samples.")
+    else:
+        lines+=['','Enable runtime timing with --profile-runtime or WORLDSEED_PROFILE=1.']
     lines+=['','If a freeze or crash occurs, send this JSONL file together with WORLDSEED_CRASH.log if one was created.']
     _view_text(term,box('SESSION DIAGNOSTICS',lines,screen_width(term.size()[0],112)))
     return UI_BACK

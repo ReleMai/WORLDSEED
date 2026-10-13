@@ -1,0 +1,1919 @@
+{
+  "idle_movement_probes": [
+    {
+      "allocations": null,
+      "animation_ms": 1600,
+      "authority_fingerprint": "79494d7a604f1433eceb6c3920452302b623f0754533ca726fa77e99e84364af",
+      "authority_unchanged": true,
+      "build_identity": {
+        "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+        "working_tree_dirty": true
+      },
+      "cache_counts": {
+        "base_layer_cache": 0,
+        "interior_art_scaled": 0,
+        "interior_art_sources": 0,
+        "overlay_cache": 0,
+        "panel_icon_cache": 0,
+        "prepared_resource_chunks": 16,
+        "resource_cell_cache": 627,
+        "resource_view_cache": 0,
+        "sprite_cache": 44,
+        "terrain_transition_cache": 10,
+        "terrain_transition_masks": 0,
+        "water_current_cache": 0,
+        "weather_cloud_cache": 1,
+        "weather_rain_cache": 0,
+        "world_chunks": 16
+      },
+      "driver": "dummy",
+      "fixture_mode": "prepared-synthetic-qa",
+      "fixture_version": 1,
+      "frames_measured": 40,
+      "frames_requested": 40,
+      "game_minute": 720,
+      "hardware": {
+        "engine_version": "1.0.0-rc14-dev64",
+        "logical_cpus": 3,
+        "machine": "x86_64",
+        "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+        "processor": "AMD EPYC 9V74 80-Core Processor",
+        "python": "3.12.14",
+        "python_build": [
+          "main",
+          "Aug 25 2026 14:00:49"
+        ]
+      },
+      "headless": true,
+      "idle_movement_probe": true,
+      "interrupted": false,
+      "pacing": "unpaced-renderer-throughput",
+      "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+      "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+      "png": null,
+      "preparation_ms": 1368.9833230000659,
+      "pygame": "2.5.8",
+      "save_bytes": 1871872,
+      "scene": "large_save",
+      "sdl": [
+        2,
+        32,
+        10
+      ],
+      "seed": "worldseed-reference-v1",
+      "settlement_plan_version": 12,
+      "size": [
+        1280,
+        720
+      ],
+      "state_counts": {
+        "containers": 243,
+        "discovered_cells": 9701,
+        "distant_npcs": 1000,
+        "interior_actors": 0,
+        "interiors": 0,
+        "npcs": 1024,
+        "physical_cells": 4128,
+        "planned_structures": 66,
+        "settlements": 1,
+        "structures": 0,
+        "visible_cells": 9701
+      },
+      "state_json_bytes": 1531206,
+      "timing_notes": {
+        "cold_loads_included": false,
+        "nested_stages": {
+          "render.terrain_cache": "render.terrain"
+        },
+        "percentiles": "linear interpolation over retained rolling samples",
+        "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+        "render.frame": "excludes clock pacing; includes display flip"
+      },
+      "timings": {
+        "dropped_stages": 0,
+        "enabled": true,
+        "max_samples": 600,
+        "max_stages": 32,
+        "stages": {
+          "reference.iteration": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 45.76632800012703,
+            "mean_ms": 15.736559900005886,
+            "over_100ms_count": 0,
+            "p50_ms": 14.541844500058687,
+            "p95_ms": 17.683867499999895,
+            "p99_ms": 36.38076467005247,
+            "window_count": 40,
+            "worst_ms": 45.76632800012703
+          },
+          "render.effects": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 1.4671409999209573,
+            "mean_ms": 1.0853359500117676,
+            "over_100ms_count": 0,
+            "p50_ms": 1.0634604999495423,
+            "p95_ms": 1.37505624975347,
+            "p99_ms": 1.4519703900305103,
+            "window_count": 40,
+            "worst_ms": 1.4671409999209573
+          },
+          "render.frame": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 45.09858799997346,
+            "mean_ms": 15.0070493499868,
+            "over_100ms_count": 0,
+            "p50_ms": 13.835464499948102,
+            "p95_ms": 16.979165750080927,
+            "p99_ms": 35.552819689980865,
+            "window_count": 40,
+            "worst_ms": 45.09858799997346
+          },
+          "render.objects_actors": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 3.127434000134599,
+            "mean_ms": 2.536433800003124,
+            "over_100ms_count": 0,
+            "p50_ms": 2.4873700000398458,
+            "p95_ms": 2.9831938499796706,
+            "p99_ms": 3.0752473201118846,
+            "window_count": 40,
+            "worst_ms": 3.127434000134599
+          },
+          "render.prepare": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 31.554573999983404,
+            "mean_ms": 3.689966900003583,
+            "over_100ms_count": 0,
+            "p50_ms": 2.9298455000343893,
+            "p95_ms": 3.3666364000168865,
+            "p99_ms": 20.619753610017128,
+            "window_count": 40,
+            "worst_ms": 31.554573999983404
+          },
+          "render.present": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.01098699999602104,
+            "mean_ms": 0.009630874978938664,
+            "over_100ms_count": 0,
+            "p50_ms": 0.009714999919196998,
+            "p95_ms": 0.010552499884397548,
+            "p99_ms": 0.010865709948575386,
+            "window_count": 40,
+            "worst_ms": 0.01098699999602104
+          },
+          "render.terrain": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 9.34231299993371,
+            "mean_ms": 6.674015974999747,
+            "over_100ms_count": 0,
+            "p50_ms": 6.543971500036605,
+            "p95_ms": 7.925935000025673,
+            "p99_ms": 9.024778119930943,
+            "window_count": 40,
+            "worst_ms": 9.34231299993371
+          },
+          "render.terrain_cache": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 2.498773000070287,
+            "mean_ms": 1.6259718749950025,
+            "over_100ms_count": 0,
+            "p50_ms": 1.5954550000287782,
+            "p95_ms": 1.8244257999640467,
+            "p99_ms": 2.249462380034401,
+            "window_count": 40,
+            "worst_ms": 2.498773000070287
+          },
+          "render.ui": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 7.604132000324171,
+            "mean_ms": 1.0116658499896403,
+            "over_100ms_count": 0,
+            "p50_ms": 0.8207370000263836,
+            "p95_ms": 1.0109448498951674,
+            "p99_ms": 5.09582477021922,
+            "window_count": 40,
+            "worst_ms": 7.604132000324171
+          },
+          "simulation.free_movement": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.8299859998714965,
+            "mean_ms": 0.5868809750040782,
+            "over_100ms_count": 0,
+            "p50_ms": 0.5594870000322771,
+            "p95_ms": 0.6727879998948082,
+            "p99_ms": 0.7834394998803872,
+            "window_count": 40,
+            "worst_ms": 0.8299859998714965
+          }
+        }
+      },
+      "warmup_requested": 5,
+      "worldgen_version": 8,
+      "zoom_tile_px": 28
+    },
+    {
+      "allocations": null,
+      "animation_ms": 1600,
+      "authority_fingerprint": "405bf1b47f5e25748e192ed4c84d6f831b65ae11fe3e5b09afc0fd43d3ca1a16",
+      "authority_unchanged": true,
+      "build_identity": {
+        "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+        "working_tree_dirty": true
+      },
+      "cache_counts": {
+        "base_layer_cache": 0,
+        "interior_art_scaled": 0,
+        "interior_art_sources": 0,
+        "overlay_cache": 0,
+        "panel_icon_cache": 0,
+        "prepared_resource_chunks": 16,
+        "resource_cell_cache": 627,
+        "resource_view_cache": 0,
+        "sprite_cache": 44,
+        "terrain_transition_cache": 10,
+        "terrain_transition_masks": 0,
+        "water_current_cache": 0,
+        "weather_cloud_cache": 1,
+        "weather_rain_cache": 0,
+        "world_chunks": 16
+      },
+      "driver": "dummy",
+      "fixture_mode": "prepared-synthetic-qa",
+      "fixture_version": 1,
+      "frames_measured": 40,
+      "frames_requested": 40,
+      "game_minute": 720,
+      "hardware": {
+        "engine_version": "1.0.0-rc14-dev64",
+        "logical_cpus": 3,
+        "machine": "x86_64",
+        "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+        "processor": "AMD EPYC 9V74 80-Core Processor",
+        "python": "3.12.14",
+        "python_build": [
+          "main",
+          "Aug 25 2026 14:00:49"
+        ]
+      },
+      "headless": true,
+      "idle_movement_probe": true,
+      "interrupted": false,
+      "pacing": "unpaced-renderer-throughput",
+      "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+      "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+      "png": null,
+      "preparation_ms": 1889.458096999988,
+      "pygame": "2.5.8",
+      "save_bytes": 10383360,
+      "scene": "large_save",
+      "sdl": [
+        2,
+        32,
+        10
+      ],
+      "seed": "worldseed-reference-v1",
+      "settlement_plan_version": 12,
+      "size": [
+        1280,
+        720
+      ],
+      "state_counts": {
+        "containers": 243,
+        "discovered_cells": 9701,
+        "distant_npcs": 10000,
+        "interior_actors": 0,
+        "interiors": 0,
+        "npcs": 10024,
+        "physical_cells": 4128,
+        "planned_structures": 66,
+        "settlements": 1,
+        "structures": 0,
+        "visible_cells": 9701
+      },
+      "state_json_bytes": 10036212,
+      "timing_notes": {
+        "cold_loads_included": false,
+        "nested_stages": {
+          "render.terrain_cache": "render.terrain"
+        },
+        "percentiles": "linear interpolation over retained rolling samples",
+        "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+        "render.frame": "excludes clock pacing; includes display flip"
+      },
+      "timings": {
+        "dropped_stages": 0,
+        "enabled": true,
+        "max_samples": 600,
+        "max_stages": 32,
+        "stages": {
+          "reference.iteration": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 19.29861600001459,
+            "mean_ms": 17.60236617501505,
+            "over_100ms_count": 0,
+            "p50_ms": 17.422405499928573,
+            "p95_ms": 18.90248840007871,
+            "p99_ms": 19.178059589967233,
+            "window_count": 40,
+            "worst_ms": 19.29861600001459
+          },
+          "render.effects": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 1.157050999609055,
+            "mean_ms": 0.9788183249668236,
+            "over_100ms_count": 0,
+            "p50_ms": 0.9625724998159058,
+            "p95_ms": 1.0917867999410191,
+            "p99_ms": 1.1452827498283114,
+            "window_count": 40,
+            "worst_ms": 1.157050999609055
+          },
+          "render.frame": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 14.669447000187574,
+            "mean_ms": 12.96530715001154,
+            "over_100ms_count": 0,
+            "p50_ms": 12.77890500000467,
+            "p95_ms": 14.247717199918952,
+            "p99_ms": 14.510820350071754,
+            "window_count": 40,
+            "worst_ms": 14.669447000187574
+          },
+          "render.objects_actors": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 2.654749000157608,
+            "mean_ms": 2.2419512250166918,
+            "over_100ms_count": 0,
+            "p50_ms": 2.2034360000589004,
+            "p95_ms": 2.5972524500161853,
+            "p99_ms": 2.6516243201263023,
+            "window_count": 40,
+            "worst_ms": 2.654749000157608
+          },
+          "render.prepare": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 3.3617299998240924,
+            "mean_ms": 2.840226200004281,
+            "over_100ms_count": 0,
+            "p50_ms": 2.7724869999019575,
+            "p95_ms": 3.249172649987031,
+            "p99_ms": 3.3378296299429167,
+            "window_count": 40,
+            "worst_ms": 3.3617299998240924
+          },
+          "render.present": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.028844000098615652,
+            "mean_ms": 0.009356375016977836,
+            "over_100ms_count": 0,
+            "p50_ms": 0.00883300003806653,
+            "p95_ms": 0.01006305017199338,
+            "p99_ms": 0.021653180060638978,
+            "window_count": 40,
+            "worst_ms": 0.028844000098615652
+          },
+          "render.terrain": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 7.87802699983331,
+            "mean_ms": 6.107595400015953,
+            "over_100ms_count": 0,
+            "p50_ms": 5.921354500060261,
+            "p95_ms": 7.128987699877598,
+            "p99_ms": 7.613701769942054,
+            "window_count": 40,
+            "worst_ms": 7.87802699983331
+          },
+          "render.terrain_cache": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 2.6994570000624662,
+            "mean_ms": 1.5641556249818223,
+            "over_100ms_count": 0,
+            "p50_ms": 1.5049630000021352,
+            "p95_ms": 1.7784344000460803,
+            "p99_ms": 2.371664730085285,
+            "window_count": 40,
+            "worst_ms": 2.6994570000624662
+          },
+          "render.ui": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 0.9915400000863883,
+            "mean_ms": 0.7873596249908132,
+            "over_100ms_count": 0,
+            "p50_ms": 0.7607869998764727,
+            "p95_ms": 0.9672386501279105,
+            "p99_ms": 0.9903294401192397,
+            "window_count": 40,
+            "worst_ms": 0.9915400000863883
+          },
+          "simulation.free_movement": {
+            "count": 40,
+            "lifetime_over_100ms_count": 0,
+            "lifetime_worst_ms": 5.050325999945926,
+            "mean_ms": 4.538543050000499,
+            "over_100ms_count": 0,
+            "p50_ms": 4.500964000044405,
+            "p95_ms": 4.873771350003152,
+            "p99_ms": 5.046872939929017,
+            "window_count": 40,
+            "worst_ms": 5.050325999945926
+          }
+        }
+      },
+      "warmup_requested": 5,
+      "worldgen_version": 8,
+      "zoom_tile_px": 28
+    }
+  ],
+  "limitations": "Short warm-cache prepared synthetic QA samples on SDL dummy, unpaced throughput; not live FPS or minimum hardware acceptance. Benchmarks ran sequentially. Source parent plus dirty worktree identifies the pre-publication implementation. PNG files are reproducible via the tool.",
+  "measured_utc_date": "2026-10-13",
+  "reference_scenes": {
+    "completed": true,
+    "fixture_mode": "prepared-synthetic-qa",
+    "scenes": [
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "490e9f0d499cd4afdff0f4ab0b6d196382270dfba1ccfa4335f76579cc0e5fbd",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 0,
+          "interior_art_sources": 0,
+          "overlay_cache": 0,
+          "panel_icon_cache": 0,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 627,
+          "resource_view_cache": 0,
+          "sprite_cache": 270,
+          "terrain_transition_cache": 564,
+          "terrain_transition_masks": 8,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 1,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "8174283ccf4d1b2c348b6f3ed29f48d4156e84e0459c16f2303199a2cbe171df",
+        "plan_fingerprint": "",
+        "png": "forest.png",
+        "preparation_ms": 55.782851999993,
+        "pygame": "2.5.8",
+        "save_bytes": 253952,
+        "scene": "forest",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 0,
+          "discovered_cells": 9701,
+          "distant_npcs": 0,
+          "interior_actors": 0,
+          "interiors": 0,
+          "npcs": 0,
+          "physical_cells": 0,
+          "planned_structures": 0,
+          "settlements": 0,
+          "structures": 0,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 123502,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 14.80030000016086,
+              "mean_ms": 10.444639575030124,
+              "over_100ms_count": 0,
+              "p50_ms": 10.127594499977022,
+              "p95_ms": 12.763783099910594,
+              "p99_ms": 14.503477630144062,
+              "window_count": 40,
+              "worst_ms": 14.80030000016086
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.36173299983966,
+              "mean_ms": 1.0998519249994843,
+              "over_100ms_count": 0,
+              "p50_ms": 1.048531500032368,
+              "p95_ms": 1.3455841502263866,
+              "p99_ms": 1.361267729971587,
+              "window_count": 40,
+              "worst_ms": 1.36173299983966
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 14.668190000065806,
+              "mean_ms": 10.321337299996003,
+              "over_100ms_count": 0,
+              "p50_ms": 9.993626500090613,
+              "p95_ms": 12.5651192498708,
+              "p99_ms": 14.360825540070437,
+              "window_count": 40,
+              "worst_ms": 14.668190000065806
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.4544619998559938,
+              "mean_ms": 0.8327787250095753,
+              "over_100ms_count": 0,
+              "p50_ms": 0.7800509999924543,
+              "p95_ms": 1.2045058500575574,
+              "p99_ms": 1.4100558199311308,
+              "window_count": 40,
+              "worst_ms": 1.4544619998559938
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.8661059998521523,
+              "mean_ms": 1.2151717499648385,
+              "over_100ms_count": 0,
+              "p50_ms": 1.1657149998427485,
+              "p95_ms": 1.6357522499333754,
+              "p99_ms": 1.7869995698674757,
+              "window_count": 40,
+              "worst_ms": 1.8661059998521523
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.035293000109959394,
+              "mean_ms": 0.011219175030419137,
+              "over_100ms_count": 0,
+              "p50_ms": 0.009754999950928323,
+              "p95_ms": 0.015228550000756456,
+              "p99_ms": 0.03500050009961342,
+              "window_count": 40,
+              "worst_ms": 0.035293000109959394
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 9.43596700017224,
+              "mean_ms": 6.3183443000184525,
+              "over_100ms_count": 0,
+              "p50_ms": 6.041673000027004,
+              "p95_ms": 7.456127900002224,
+              "p99_ms": 9.409867810134074,
+              "window_count": 40,
+              "worst_ms": 9.43596700017224
+            },
+            "render.terrain_cache": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 3.948567999941588,
+              "mean_ms": 1.7186790499977178,
+              "over_100ms_count": 0,
+              "p50_ms": 1.6136435000362326,
+              "p95_ms": 2.007936700022126,
+              "p99_ms": 3.4984861598900343,
+              "window_count": 40,
+              "worst_ms": 3.948567999941588
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.2806700001419813,
+              "mean_ms": 0.8439714249732333,
+              "over_100ms_count": 0,
+              "p50_ms": 0.7927999999992608,
+              "p95_ms": 1.0701210999627617,
+              "p99_ms": 1.2381186601101035,
+              "window_count": 40,
+              "worst_ms": 1.2806700001419813
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      },
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "0801d7ea420193a042edebc20199b3350f4a5d712411e66f01731edccb678bdf",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 0,
+          "interior_art_sources": 0,
+          "overlay_cache": 0,
+          "panel_icon_cache": 0,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 627,
+          "resource_view_cache": 0,
+          "sprite_cache": 277,
+          "terrain_transition_cache": 515,
+          "terrain_transition_masks": 16,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 1,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "14b38f06006a72357d8aab86b9230e6e2c233eaaa8ac6b27eaae65862bfb5003",
+        "plan_fingerprint": "",
+        "png": "camp.png",
+        "preparation_ms": 50.733616999877995,
+        "pygame": "2.5.8",
+        "save_bytes": 253952,
+        "scene": "camp",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 1,
+          "discovered_cells": 9701,
+          "distant_npcs": 0,
+          "interior_actors": 0,
+          "interiors": 0,
+          "npcs": 0,
+          "physical_cells": 0,
+          "planned_structures": 0,
+          "settlements": 0,
+          "structures": 3,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 124510,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 17.130972999893856,
+              "mean_ms": 10.531415625007412,
+              "over_100ms_count": 0,
+              "p50_ms": 10.017212500088135,
+              "p95_ms": 14.749406799990082,
+              "p99_ms": 16.404201759910393,
+              "window_count": 40,
+              "worst_ms": 17.130972999893856
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.788828000144349,
+              "mean_ms": 1.1718893250474594,
+              "over_100ms_count": 0,
+              "p50_ms": 1.1518939999177746,
+              "p95_ms": 1.41777965025085,
+              "p99_ms": 1.6451761801272367,
+              "window_count": 40,
+              "worst_ms": 1.788828000144349
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 16.92651400003342,
+              "mean_ms": 10.41440612501674,
+              "over_100ms_count": 0,
+              "p50_ms": 9.913044500081014,
+              "p95_ms": 14.567481850042439,
+              "p99_ms": 16.211347210055465,
+              "window_count": 40,
+              "worst_ms": 16.92651400003342
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.7555189999711729,
+              "mean_ms": 0.8825240749843033,
+              "over_100ms_count": 0,
+              "p50_ms": 0.7943429999386353,
+              "p95_ms": 1.4366241499601526,
+              "p99_ms": 1.6564488599738068,
+              "window_count": 40,
+              "worst_ms": 1.7555189999711729
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.687465000031807,
+              "mean_ms": 1.1811321500090344,
+              "over_100ms_count": 0,
+              "p50_ms": 1.1363510000137467,
+              "p95_ms": 1.4340815001219196,
+              "p99_ms": 1.613065090020882,
+              "window_count": 40,
+              "worst_ms": 1.687465000031807
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.06285500012381817,
+              "mean_ms": 0.010552900016591593,
+              "over_100ms_count": 0,
+              "p50_ms": 0.009289000104217848,
+              "p95_ms": 0.010566599860339917,
+              "p99_ms": 0.042911570074011224,
+              "window_count": 40,
+              "worst_ms": 0.06285500012381817
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 11.716596000042045,
+              "mean_ms": 6.37374034999425,
+              "over_100ms_count": 0,
+              "p50_ms": 5.811679499856837,
+              "p95_ms": 9.529808349975609,
+              "p99_ms": 11.046452370026145,
+              "window_count": 40,
+              "worst_ms": 11.716596000042045
+            },
+            "render.terrain_cache": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.149498000060703,
+              "mean_ms": 1.7634515249881133,
+              "over_100ms_count": 0,
+              "p50_ms": 1.5616750000617685,
+              "p95_ms": 2.7823688000125895,
+              "p99_ms": 3.8750585101001884,
+              "window_count": 40,
+              "worst_ms": 4.149498000060703
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.3454770000862482,
+              "mean_ms": 0.7945673249651009,
+              "over_100ms_count": 0,
+              "p50_ms": 0.7566860000451925,
+              "p95_ms": 0.9383972501950663,
+              "p99_ms": 1.236861220124865,
+              "window_count": 40,
+              "worst_ms": 1.3454770000862482
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      },
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "b39d3cd3a4fee9ca10e8dca7aa5730cb2794332386ea1df74ddcd55da0b9d101",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 0,
+          "interior_art_sources": 0,
+          "overlay_cache": 0,
+          "panel_icon_cache": 0,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 627,
+          "resource_view_cache": 0,
+          "sprite_cache": 44,
+          "terrain_transition_cache": 10,
+          "terrain_transition_masks": 0,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 1,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "b209bb2503c98724ca28033ed8d4a29eed810b5559bc70bf69e1a284204f7b20",
+        "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+        "png": "village_street.png",
+        "preparation_ms": 1205.9071239998502,
+        "pygame": "2.5.8",
+        "save_bytes": 925696,
+        "scene": "village_street",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 243,
+          "discovered_cells": 9701,
+          "distant_npcs": 0,
+          "interior_actors": 0,
+          "interiors": 0,
+          "npcs": 24,
+          "physical_cells": 4128,
+          "planned_structures": 66,
+          "settlements": 1,
+          "structures": 0,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 587304,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 23.74462600005245,
+              "mean_ms": 13.902700725014938,
+              "over_100ms_count": 0,
+              "p50_ms": 13.250158499999998,
+              "p95_ms": 19.0292549500441,
+              "p99_ms": 22.99215181000818,
+              "window_count": 40,
+              "worst_ms": 23.74462600005245
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.960160999919026,
+              "mean_ms": 1.1009002000093915,
+              "over_100ms_count": 0,
+              "p50_ms": 1.011561499922209,
+              "p95_ms": 1.661560200295753,
+              "p99_ms": 2.4545603199680945,
+              "window_count": 40,
+              "worst_ms": 2.960160999919026
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 23.19932099999278,
+              "mean_ms": 13.772210925020545,
+              "over_100ms_count": 0,
+              "p50_ms": 13.132936000033624,
+              "p95_ms": 18.914038750051525,
+              "p99_ms": 22.608555630013143,
+              "window_count": 40,
+              "worst_ms": 23.19932099999278
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 9.358316999851013,
+              "mean_ms": 2.5223949749886287,
+              "over_100ms_count": 0,
+              "p50_ms": 2.2213875000716143,
+              "p95_ms": 3.1714809499248955,
+              "p99_ms": 7.3465686899021385,
+              "window_count": 40,
+              "worst_ms": 9.358316999851013
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 5.325942999888866,
+              "mean_ms": 2.903757674988583,
+              "over_100ms_count": 0,
+              "p50_ms": 2.743573499969898,
+              "p95_ms": 3.7902228997950234,
+              "p99_ms": 5.064047859925722,
+              "window_count": 40,
+              "worst_ms": 5.325942999888866
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.03691500000968517,
+              "mean_ms": 0.010177100017472185,
+              "over_100ms_count": 0,
+              "p50_ms": 0.009644000101616257,
+              "p95_ms": 0.011277149928901048,
+              "p99_ms": 0.027584249990013618,
+              "window_count": 40,
+              "worst_ms": 0.03691500000968517
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 9.430956999949558,
+              "mean_ms": 6.413638925016585,
+              "over_100ms_count": 0,
+              "p50_ms": 6.088497000177995,
+              "p95_ms": 8.116815999949267,
+              "p99_ms": 9.008747679981752,
+              "window_count": 40,
+              "worst_ms": 9.430956999949558
+            },
+            "render.terrain_cache": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.530310999873109,
+              "mean_ms": 1.5968969999960336,
+              "over_100ms_count": 0,
+              "p50_ms": 1.5056444999572705,
+              "p95_ms": 2.3809477001009327,
+              "p99_ms": 2.497391879865063,
+              "window_count": 40,
+              "worst_ms": 2.530310999873109
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.9181539998953667,
+              "mean_ms": 0.8213420499998847,
+              "over_100ms_count": 0,
+              "p50_ms": 0.7758694999893123,
+              "p95_ms": 0.9574736502258929,
+              "p99_ms": 1.5467094199129856,
+              "window_count": 40,
+              "worst_ms": 1.9181539998953667
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      },
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "7647b72c8d8085ee671399fdb6339e2a5fda5bcab334fc19afb7ce3b38848524",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 10,
+          "interior_art_sources": 10,
+          "overlay_cache": 0,
+          "panel_icon_cache": 0,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 0,
+          "resource_view_cache": 0,
+          "sprite_cache": 4,
+          "terrain_transition_cache": 0,
+          "terrain_transition_masks": 0,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 0,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "3df64f1240b80bb181a7bf3a2bbdbd782aaa50714d66706491ba82e3af66b29b",
+        "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+        "png": "interior.png",
+        "preparation_ms": 1239.311725000107,
+        "pygame": "2.5.8",
+        "save_bytes": 937984,
+        "scene": "interior",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 247,
+          "discovered_cells": 9701,
+          "distant_npcs": 0,
+          "interior_actors": 1,
+          "interiors": 2,
+          "npcs": 24,
+          "physical_cells": 4128,
+          "planned_structures": 66,
+          "settlements": 1,
+          "structures": 0,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 601031,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.970715000126802,
+              "mean_ms": 3.2920961999820975,
+              "over_100ms_count": 0,
+              "p50_ms": 3.1299490000264996,
+              "p95_ms": 3.906618099983914,
+              "p99_ms": 4.834371000063129,
+              "window_count": 40,
+              "worst_ms": 4.970715000126802
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.389508000078422,
+              "mean_ms": 0.940688825005509,
+              "over_100ms_count": 0,
+              "p50_ms": 0.8276029999478851,
+              "p95_ms": 1.3560716000256419,
+              "p99_ms": 2.2022662700169344,
+              "window_count": 40,
+              "worst_ms": 2.389508000078422
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.9455170001238,
+              "mean_ms": 3.26917802499338,
+              "over_100ms_count": 0,
+              "p50_ms": 3.109237499984374,
+              "p95_ms": 3.880992199992759,
+              "p99_ms": 4.809184700113747,
+              "window_count": 40,
+              "worst_ms": 4.9455170001238
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.4398760002004565,
+              "mean_ms": 0.29983209999500104,
+              "over_100ms_count": 0,
+              "p50_ms": 0.27766499999870575,
+              "p95_ms": 0.4027071501013779,
+              "p99_ms": 0.42870094008776505,
+              "window_count": 40,
+              "worst_ms": 0.4398760002004565
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.8238469999923836,
+              "mean_ms": 0.5457467749920397,
+              "over_100ms_count": 0,
+              "p50_ms": 0.5178940000405419,
+              "p95_ms": 0.6634365001218611,
+              "p99_ms": 0.7762143500485762,
+              "window_count": 40,
+              "worst_ms": 0.8238469999923836
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.01983000015570724,
+              "mean_ms": 0.004428300007930375,
+              "over_100ms_count": 0,
+              "p50_ms": 0.003950999825974577,
+              "p95_ms": 0.00553049998188726,
+              "p99_ms": 0.014271720144733982,
+              "window_count": 40,
+              "worst_ms": 0.01983000015570724
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.0123879999355268,
+              "mean_ms": 0.5656619000262708,
+              "over_100ms_count": 0,
+              "p50_ms": 0.5315955000924077,
+              "p95_ms": 0.6872002001045984,
+              "p99_ms": 0.8987708600147923,
+              "window_count": 40,
+              "worst_ms": 1.0123879999355268
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.2228719999711757,
+              "mean_ms": 0.912820124966629,
+              "over_100ms_count": 0,
+              "p50_ms": 0.8615739999413563,
+              "p95_ms": 1.0888462499110574,
+              "p99_ms": 1.1745903899736732,
+              "window_count": 40,
+              "worst_ms": 1.2228719999711757
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      },
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "b39d3cd3a4fee9ca10e8dca7aa5730cb2794332386ea1df74ddcd55da0b9d101",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 0,
+          "interior_art_sources": 0,
+          "overlay_cache": 0,
+          "panel_icon_cache": 4,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 627,
+          "resource_view_cache": 0,
+          "sprite_cache": 44,
+          "terrain_transition_cache": 10,
+          "terrain_transition_masks": 0,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 1,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "059d5d2af03a09cea67b83cd4ce96ef211bb1da4d991e185a82096dcc2759aa9",
+        "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+        "png": "open_panel.png",
+        "preparation_ms": 1165.5585199998768,
+        "pygame": "2.5.8",
+        "save_bytes": 925696,
+        "scene": "open_panel",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 243,
+          "discovered_cells": 9701,
+          "distant_npcs": 0,
+          "interior_actors": 0,
+          "interiors": 0,
+          "npcs": 24,
+          "physical_cells": 4128,
+          "planned_structures": 66,
+          "settlements": 1,
+          "structures": 0,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 587304,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 21.61462100002609,
+              "mean_ms": 16.81102450000367,
+              "over_100ms_count": 0,
+              "p50_ms": 16.60108400005811,
+              "p95_ms": 19.759623149889194,
+              "p99_ms": 20.936003449974123,
+              "window_count": 40,
+              "worst_ms": 21.61462100002609
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.8140960003165674,
+              "mean_ms": 1.014496899989581,
+              "over_100ms_count": 0,
+              "p50_ms": 0.9695180000335313,
+              "p95_ms": 1.1950434000823404,
+              "p99_ms": 1.6011969503324504,
+              "window_count": 40,
+              "worst_ms": 1.8140960003165674
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 19.071421000035116,
+              "mean_ms": 14.33007277500451,
+              "over_100ms_count": 0,
+              "p50_ms": 14.11417150006855,
+              "p95_ms": 16.835602150081286,
+              "p99_ms": 18.239570500022637,
+              "window_count": 40,
+              "worst_ms": 19.071421000035116
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.317425000181174,
+              "mean_ms": 2.4622033750176797,
+              "over_100ms_count": 0,
+              "p50_ms": 2.3690309999437886,
+              "p95_ms": 3.1084176999684114,
+              "p99_ms": 4.055057180162294,
+              "window_count": 40,
+              "worst_ms": 4.317425000181174
+            },
+            "render.panel": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 5.32783600010589,
+              "mean_ms": 2.0901853000111714,
+              "over_100ms_count": 0,
+              "p50_ms": 1.885664499923223,
+              "p95_ms": 2.8100359999598297,
+              "p99_ms": 5.297760370087872,
+              "window_count": 40,
+              "worst_ms": 5.32783600010589
+            },
+            "render.panel_total": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 5.3152460000092105,
+              "mean_ms": 2.0821856750103507,
+              "over_100ms_count": 0,
+              "p50_ms": 1.8785589999197327,
+              "p95_ms": 2.8017278000675034,
+              "p99_ms": 5.2859051299356,
+              "window_count": 40,
+              "worst_ms": 5.3152460000092105
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 7.328064000148515,
+              "mean_ms": 3.392917100040904,
+              "over_100ms_count": 0,
+              "p50_ms": 3.1676395001341007,
+              "p95_ms": 4.368269250005595,
+              "p99_ms": 6.370829670063356,
+              "window_count": 40,
+              "worst_ms": 7.328064000148515
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.062423999906968675,
+              "mean_ms": 0.009390749977455926,
+              "over_100ms_count": 0,
+              "p50_ms": 0.008041999876695627,
+              "p95_ms": 0.009681799849658989,
+              "p99_ms": 0.04338692993769652,
+              "window_count": 40,
+              "worst_ms": 0.062423999906968675
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 9.08167800002957,
+              "mean_ms": 6.593641099982506,
+              "over_100ms_count": 0,
+              "p50_ms": 6.301584999960141,
+              "p95_ms": 8.022371749939339,
+              "p99_ms": 8.684337419988424,
+              "window_count": 40,
+              "worst_ms": 9.08167800002957
+            },
+            "render.terrain_cache": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.470489999950587,
+              "mean_ms": 1.6486797250308882,
+              "over_100ms_count": 0,
+              "p50_ms": 1.5638920000355938,
+              "p95_ms": 2.064337350077494,
+              "p99_ms": 2.3383763299307248,
+              "window_count": 40,
+              "worst_ms": 2.470489999950587
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.1714940001184004,
+              "mean_ms": 0.8574235499963834,
+              "over_100ms_count": 0,
+              "p50_ms": 0.8523155000830229,
+              "p95_ms": 1.0707528996704239,
+              "p99_ms": 1.1467574701237027,
+              "window_count": 40,
+              "worst_ms": 1.1714940001184004
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      },
+      {
+        "allocations": null,
+        "animation_ms": 1600,
+        "authority_fingerprint": "79494d7a604f1433eceb6c3920452302b623f0754533ca726fa77e99e84364af",
+        "authority_unchanged": true,
+        "build_identity": {
+          "git_revision": "60bde967d14f811220cc5a7de06a6966ddfa1aae",
+          "working_tree_dirty": true
+        },
+        "cache_counts": {
+          "base_layer_cache": 0,
+          "interior_art_scaled": 0,
+          "interior_art_sources": 0,
+          "overlay_cache": 0,
+          "panel_icon_cache": 0,
+          "prepared_resource_chunks": 16,
+          "resource_cell_cache": 627,
+          "resource_view_cache": 0,
+          "sprite_cache": 44,
+          "terrain_transition_cache": 10,
+          "terrain_transition_masks": 0,
+          "water_current_cache": 0,
+          "weather_cloud_cache": 1,
+          "weather_rain_cache": 0,
+          "world_chunks": 16
+        },
+        "driver": "dummy",
+        "fixture_mode": "prepared-synthetic-qa",
+        "fixture_version": 1,
+        "frames_measured": 40,
+        "frames_requested": 40,
+        "game_minute": 720,
+        "hardware": {
+          "engine_version": "1.0.0-rc14-dev64",
+          "logical_cpus": 3,
+          "machine": "x86_64",
+          "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+          "processor": "AMD EPYC 9V74 80-Core Processor",
+          "python": "3.12.14",
+          "python_build": [
+            "main",
+            "Aug 25 2026 14:00:49"
+          ]
+        },
+        "headless": true,
+        "idle_movement_probe": false,
+        "interrupted": false,
+        "pacing": "unpaced-renderer-throughput",
+        "pixel_sha256": "1bf41e30ddd20c03a35f48e3418959a674eb4cc593e644928b4918cf8a48be03",
+        "plan_fingerprint": "76167f7e502f564553942f2a9bd8088238adc183",
+        "png": "large_save.png",
+        "preparation_ms": 1367.076046999955,
+        "pygame": "2.5.8",
+        "save_bytes": 1871872,
+        "scene": "large_save",
+        "sdl": [
+          2,
+          32,
+          10
+        ],
+        "seed": "worldseed-reference-v1",
+        "settlement_plan_version": 12,
+        "size": [
+          1280,
+          720
+        ],
+        "state_counts": {
+          "containers": 243,
+          "discovered_cells": 9701,
+          "distant_npcs": 1000,
+          "interior_actors": 0,
+          "interiors": 0,
+          "npcs": 1024,
+          "physical_cells": 4128,
+          "planned_structures": 66,
+          "settlements": 1,
+          "structures": 0,
+          "visible_cells": 9701
+        },
+        "state_json_bytes": 1531206,
+        "timing_notes": {
+          "cold_loads_included": false,
+          "nested_stages": {
+            "render.terrain_cache": "render.terrain"
+          },
+          "percentiles": "linear interpolation over retained rolling samples",
+          "reference.iteration": "world frame plus optional panel/idle movement probe; events outside sample",
+          "render.frame": "excludes clock pacing; includes display flip"
+        },
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 600,
+          "max_stages": 32,
+          "stages": {
+            "reference.iteration": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 22.397576000003028,
+              "mean_ms": 15.04976897498409,
+              "over_100ms_count": 0,
+              "p50_ms": 14.954919500041797,
+              "p95_ms": 19.407397850113732,
+              "p99_ms": 21.92698951998409,
+              "window_count": 40,
+              "worst_ms": 22.397576000003028
+            },
+            "render.effects": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.462292999804049,
+              "mean_ms": 1.0903578999943875,
+              "over_100ms_count": 0,
+              "p50_ms": 1.0561645000279896,
+              "p95_ms": 1.4023531497741712,
+              "p99_ms": 1.4542043998608278,
+              "window_count": 40,
+              "worst_ms": 1.462292999804049
+            },
+            "render.frame": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 22.257373999991614,
+              "mean_ms": 14.913624574995765,
+              "over_100ms_count": 0,
+              "p50_ms": 14.688325500060273,
+              "p95_ms": 19.271980249936856,
+              "p99_ms": 21.763914410046254,
+              "window_count": 40,
+              "worst_ms": 22.257373999991614
+            },
+            "render.objects_actors": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.076429999940956,
+              "mean_ms": 2.59524297500775,
+              "over_100ms_count": 0,
+              "p50_ms": 2.5637509999114627,
+              "p95_ms": 3.7996328000303947,
+              "p99_ms": 3.9723456299429927,
+              "window_count": 40,
+              "worst_ms": 4.076429999940956
+            },
+            "render.prepare": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 4.062770000018645,
+              "mean_ms": 3.1943614750048255,
+              "over_100ms_count": 0,
+              "p50_ms": 3.1109994999951596,
+              "p95_ms": 3.8939067500791675,
+              "p99_ms": 4.042201400018257,
+              "window_count": 40,
+              "worst_ms": 4.062770000018645
+            },
+            "render.present": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.03202799985047022,
+              "mean_ms": 0.009731224997722165,
+              "over_100ms_count": 0,
+              "p50_ms": 0.00928899999053101,
+              "p95_ms": 0.010528049858748998,
+              "p99_ms": 0.023806409894859812,
+              "window_count": 40,
+              "worst_ms": 0.03202799985047022
+            },
+            "render.terrain": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 14.499038999929326,
+              "mean_ms": 7.115562449979507,
+              "over_100ms_count": 0,
+              "p50_ms": 6.824138000069979,
+              "p95_ms": 11.369531099842332,
+              "p99_ms": 13.395268799911262,
+              "window_count": 40,
+              "worst_ms": 14.499038999929326
+            },
+            "render.terrain_cache": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.0617459999812127,
+              "mean_ms": 1.6400564500315795,
+              "over_100ms_count": 0,
+              "p50_ms": 1.5853449999667646,
+              "p95_ms": 2.0112724000114213,
+              "p99_ms": 2.0491630399487804,
+              "window_count": 40,
+              "worst_ms": 2.0617459999812127
+            },
+            "render.ui": {
+              "count": 40,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 1.687464000269756,
+              "mean_ms": 0.9083685500115735,
+              "over_100ms_count": 0,
+              "p50_ms": 0.864342999989276,
+              "p95_ms": 1.1943602000997082,
+              "p99_ms": 1.5790362000939238,
+              "window_count": 40,
+              "worst_ms": 1.687464000269756
+            }
+          }
+        },
+        "warmup_requested": 5,
+        "worldgen_version": 8,
+        "zoom_tile_px": 28
+      }
+    ]
+  },
+  "save_probes": {
+    "method": "Same large_save fixtures; 5 _save(ctx, backup=False) then 1 _save(ctx, backup=True), enabled RuntimeProfiler, db.verify(). No warmup saves.",
+    "samples": [
+      {
+        "distant_npcs": 1000,
+        "save_bytes": 3403776,
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 1024,
+          "max_stages": 32,
+          "stages": {
+            "save.backup": {
+              "count": 1,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 2.172549000079016,
+              "mean_ms": 2.172549000079016,
+              "over_100ms_count": 0,
+              "p50_ms": 2.172549000079016,
+              "p95_ms": 2.172549000079016,
+              "p99_ms": 2.172549000079016,
+              "window_count": 1,
+              "worst_ms": 2.172549000079016
+            },
+            "save.capture": {
+              "count": 6,
+              "lifetime_over_100ms_count": 2,
+              "lifetime_worst_ms": 111.13735399999314,
+              "mean_ms": 92.69124649987741,
+              "over_100ms_count": 2,
+              "p50_ms": 91.21851049985708,
+              "p95_ms": 109.8636359999432,
+              "p99_ms": 110.88261039998315,
+              "window_count": 6,
+              "worst_ms": 111.13735399999314
+            },
+            "save.commit": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.34916899994641426,
+              "mean_ms": 0.17374633334081105,
+              "over_100ms_count": 0,
+              "p50_ms": 0.15043799999148177,
+              "p95_ms": 0.3426689999628252,
+              "p99_ms": 0.34786899994969644,
+              "window_count": 6,
+              "worst_ms": 0.34916899994641426
+            },
+            "save.database": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 27.03487700000551,
+              "mean_ms": 17.659838000023836,
+              "over_100ms_count": 0,
+              "p50_ms": 15.878983499987953,
+              "p95_ms": 24.81960350002055,
+              "p99_ms": 26.591822300008516,
+              "window_count": 6,
+              "worst_ms": 27.03487700000551
+            },
+            "save.json": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 26.50400300012734,
+              "mean_ms": 16.7464398333171,
+              "over_100ms_count": 0,
+              "p50_ms": 14.915389499947196,
+              "p95_ms": 24.15210750012875,
+              "p99_ms": 26.033623900127623,
+              "window_count": 6,
+              "worst_ms": 26.50400300012734
+            },
+            "save.sql": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.9821569999530766,
+              "mean_ms": 0.6520004999401863,
+              "over_100ms_count": 0,
+              "p50_ms": 0.6045049999556795,
+              "p95_ms": 0.9395399999334586,
+              "p99_ms": 0.973633599949153,
+              "window_count": 6,
+              "worst_ms": 0.9821569999530766
+            },
+            "save.total": {
+              "count": 6,
+              "lifetime_over_100ms_count": 5,
+              "lifetime_worst_ms": 134.1088789999958,
+              "mean_ms": 111.90957033337175,
+              "over_100ms_count": 5,
+              "p50_ms": 108.99279800003114,
+              "p95_ms": 132.5444134999998,
+              "p99_ms": 133.7959858999966,
+              "window_count": 6,
+              "worst_ms": 134.1088789999958
+            }
+          }
+        },
+        "verify_issues": []
+      },
+      {
+        "distant_npcs": 10000,
+        "save_bytes": 20426752,
+        "timings": {
+          "dropped_stages": 0,
+          "enabled": true,
+          "max_samples": 1024,
+          "max_stages": 32,
+          "stages": {
+            "save.backup": {
+              "count": 1,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 9.715357999994012,
+              "mean_ms": 9.715357999994012,
+              "over_100ms_count": 0,
+              "p50_ms": 9.715357999994012,
+              "p95_ms": 9.715357999994012,
+              "p99_ms": 9.715357999994012,
+              "window_count": 1,
+              "worst_ms": 9.715357999994012
+            },
+            "save.capture": {
+              "count": 6,
+              "lifetime_over_100ms_count": 6,
+              "lifetime_worst_ms": 1081.4659750001283,
+              "mean_ms": 959.3631661667057,
+              "over_100ms_count": 6,
+              "p50_ms": 945.1919910000015,
+              "p95_ms": 1070.2035605000901,
+              "p99_ms": 1079.2134921001207,
+              "window_count": 6,
+              "worst_ms": 1081.4659750001283
+            },
+            "save.commit": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 0.3341860001455643,
+              "mean_ms": 0.18238449998383052,
+              "over_100ms_count": 0,
+              "p50_ms": 0.1614894999875105,
+              "p95_ms": 0.3260037501036095,
+              "p99_ms": 0.33254955013717336,
+              "window_count": 6,
+              "worst_ms": 0.3341860001455643
+            },
+            "save.database": {
+              "count": 6,
+              "lifetime_over_100ms_count": 6,
+              "lifetime_worst_ms": 135.55057799999304,
+              "mean_ms": 122.41601483333397,
+              "over_100ms_count": 6,
+              "p50_ms": 118.38233200001014,
+              "p95_ms": 134.9761072499973,
+              "p99_ms": 135.4356838499939,
+              "window_count": 6,
+              "worst_ms": 135.55057799999304
+            },
+            "save.json": {
+              "count": 6,
+              "lifetime_over_100ms_count": 6,
+              "lifetime_worst_ms": 126.75931500007209,
+              "mean_ms": 114.14331249996697,
+              "over_100ms_count": 6,
+              "p50_ms": 110.20484199991643,
+              "p95_ms": 126.43438400004925,
+              "p99_ms": 126.69432880006752,
+              "window_count": 6,
+              "worst_ms": 126.75931500007209
+            },
+            "save.sql": {
+              "count": 6,
+              "lifetime_over_100ms_count": 0,
+              "lifetime_worst_ms": 11.118091000071217,
+              "mean_ms": 8.023477000013676,
+              "over_100ms_count": 0,
+              "p50_ms": 8.07221100001243,
+              "p95_ms": 10.951348750097623,
+              "p99_ms": 11.084742550076498,
+              "window_count": 6,
+              "worst_ms": 11.118091000071217
+            },
+            "save.total": {
+              "count": 6,
+              "lifetime_over_100ms_count": 6,
+              "lifetime_worst_ms": 1220.5195430001368,
+              "mean_ms": 1089.7328923333969,
+              "over_100ms_count": 6,
+              "p50_ms": 1075.2471930001093,
+              "p95_ms": 1207.9562462500917,
+              "p99_ms": 1218.0068836501277,
+              "window_count": 6,
+              "worst_ms": 1220.5195430001368
+            }
+          }
+        },
+        "verify_issues": []
+      }
+    ]
+  }
+}

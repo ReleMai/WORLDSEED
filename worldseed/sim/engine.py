@@ -68,6 +68,7 @@ from worldseed.systems.interiors import InteriorSystem
 from worldseed.world.world import World
 from worldseed.world.region_blocks import RegionBlockPlanner, entry_side
 from worldseed.debug import SessionDebugLog
+from worldseed.profiling import RuntimeProfiler, profiled, runtime_profile_enabled
 
 @dataclass(slots=True)
 class TickResult:
@@ -82,7 +83,9 @@ class Simulation:
         self.log:list[GameEvent]=[]
         self.state=state or LivingWorldState()
         self.seed=world_seed or world.generator.world_seed
+        self.profiler=RuntimeProfiler(enabled=runtime_profile_enabled(),max_stages=64)
         self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
+        self.debug.profiler=self.profiler
         self.debug.event("simulation_init",turn=int(turn),clock_minute=int(self.state.clock_minute))
         # Runtime discovery index. Persisted state remains an ordered list for
         # stable saves, but membership checks and per-step updates use a set.
@@ -383,6 +386,7 @@ class Simulation:
             if c.last_attacked_turn>=0 and 0<=self.turn-c.last_attacked_turn<=2:return True
         return False
 
+    @profiled('simulation.command')
     def execute(self,command:object)->TickResult:
         command_started=time.perf_counter()
         self.debug.event(
@@ -628,6 +632,7 @@ class Simulation:
         )
         return result
 
+    @profiled('simulation.realtime')
     def advance_realtime(self, minutes:int)->int:
         """Advance peaceful play, stopping before the first hostile exchange."""
         advanced=0
@@ -818,6 +823,7 @@ class Simulation:
                 old_hp=v.hp;v.hp=max(0,v.hp-damage*hours)
                 self._record_damage("taken",old_hp-v.hp,source,"Player",kind)
 
+    @profiled('preparation.total')
     def _ensure_nearby_world(self,pos:WorldPos,force:bool=False)->None:
         """Realize local civilization in bounded stages and log their cost.
 
@@ -1504,6 +1510,7 @@ class Simulation:
             self._refresh_combat_candidates()
         return moved
 
+    @profiled('simulation.free_movement')
     def update_free_movement(self,dt:float,dx:float=0.0,dy:float=0.0,sprint:bool=False)->bool:
         """Advance graphical outdoor player/NPC interpolation by wall-clock delta time."""
         if dt<=0.0 or self.combat_active():

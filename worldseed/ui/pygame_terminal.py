@@ -13,6 +13,7 @@ from worldseed.content.item_catalog import ITEM_TYPE_LABELS
 from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.presentation.visuals import VisualRegistry
 from worldseed.presentation.weather_fx import WeatherFxRenderer
+from worldseed.profiling import profiled as _profiled
 from worldseed.presentation.local_terrain import (
     CONTEXTUAL_WATER_DISPLAY_IDS, DIRECTIONS_8, contextual_display_id,
     configure_terrain_catalog, edge_overlay_signature, is_blendable_land,
@@ -32,6 +33,79 @@ from worldseed.ui.item_browser import ItemPanelMixin
 from worldseed.ui.crafting_browser import CraftingBrowserMixin
 from worldseed.ui.workbench_panels import WorkbenchPanelsMixin
 from worldseed.ui.salvage_panel import SalvagePanelMixin
+
+
+class _RenderTimings:
+    """Accumulate one bounded phase sample per frame without changing pacing.
+
+    Renderer phases can be interleaved to preserve painter order. Their costs
+    are combined here; terrain-cache cost is also reported as a nested sample.
+    Clock or diagnostic failures must never interrupt the actual drawing.
+    """
+
+    def __init__(self, profiler):
+        self.profiler = profiler
+        self._clock = None
+        self._started = self._previous = None
+        self._samples = {}
+        self._excluded_ms = self._phase_excluded_ms = 0.0
+        try:
+            if profiler is not None and profiler.enabled:
+                self._clock = profiler.clock
+                self._started = self._previous = self.start()
+        except Exception:
+            self._clock = None
+
+    def start(self):
+        if self._clock is None:
+            return None
+        try:
+            value = float(self._clock())
+            if not math.isfinite(value):
+                self._clock = None
+                return None
+            return value
+        except Exception:
+            self._clock = None
+            return None
+
+    def sample(self, name, started):
+        if started is None:
+            return
+        ended = self.start()
+        if ended is not None:
+            self._samples[name] = self._samples.get(name, 0.0) + (ended - started) * 1000.0
+
+    def exclude(self, name, started):
+        """Report intentional animation waits separately from ordinary drawing."""
+        if started is None:
+            return
+        ended = self.start()
+        if ended is not None:
+            elapsed_ms = (ended - started) * 1000.0
+            self._samples[name] = self._samples.get(name, 0.0) + elapsed_ms
+            self._excluded_ms += elapsed_ms
+            self._phase_excluded_ms += elapsed_ms
+
+    def mark(self, name):
+        if self._previous is None:
+            return
+        ended = self.start()
+        if ended is not None:
+            elapsed_ms = (ended - self._previous) * 1000.0 - self._phase_excluded_ms
+            self._samples[name] = self._samples.get(name, 0.0) + max(0.0, elapsed_ms)
+            self._previous = ended
+            self._phase_excluded_ms = 0.0
+
+    def finish(self):
+        if self._clock is None or self._started is None or self._previous is None:
+            return
+        self._samples['render.frame'] = max(0.0, (self._previous - self._started) * 1000.0 - self._excluded_ms)
+        for name, elapsed_ms in self._samples.items():
+            try:
+                self.profiler.record(name, elapsed_ms)
+            except Exception:
+                pass
 
 
 class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin, SalvagePanelMixin, PointerUI):
@@ -60,6 +134,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self.height = height
         self.screen = None
         self.clock = None
+        self._profiler = None
         self.font = None
         self.small_font = None
         self.title_font = None
@@ -1371,6 +1446,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             det=self.small_font.render(self._fit_ui_text(detail,self.small_font,rect.right-tx-12),True,th['muted'])
             self.screen.blit(det,(tx,rect.bottom-det.get_height()-8))
 
+    @_profiled('render.panel_total', attribute='_profiler')
     def present_feature_menu(self, presentation: str, title: str, rows, selected: int, *, subtitle: str='', breadcrumb: str='',
                              footer: str='', page_start: int=0, total: int|None=None, data: dict|None=None) -> None:
         data=data or {}
@@ -2349,6 +2425,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         ls=self.small_font.render(self._fit_ui_text(legend,self.small_font,panel.width-28),True,self._theme['muted']);screen.blit(ls,(panel.x+14,panel.bottom-20))
         self._draw_feature_footer(x,y,w,h,footer);pg.display.flip();self.clock.tick(120)
 
+    @_profiled('render.menu_total', attribute='_profiler')
     def present_menu(self, title: str, rows, selected: int, *, subtitle: str='', breadcrumb: str='',
                      footer: str='', page_start: int=0, total: int|None=None) -> None:
         """Draw the retained menu widget as graphical cards.
@@ -4075,7 +4152,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         from worldseed.ui.atlas_map import draw_atlas
         draw_atlas(self, sim)
 
-    def _play_combat_effects(self,sim,used,left:int,top:int,tile_px:int,z:int)->None:
+    def _play_combat_effects(self,sim,used,left:int,top:int,tile_px:int,z:int,*,timings=None)->None:
         events=[e for e in getattr(sim,'visual_effects',()) if int(e.get('uid',0))>self._last_combat_effect_uid]
         if not events or self.screen is None:return
         pg=self.pg
@@ -4086,6 +4163,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             sx=used.x+(int(src[0])-left)*tile_px+tile_px//2;sy=used.y+(int(src[1])-top)*tile_px+tile_px//2
             tx=used.x+(int(dst[0])-left)*tile_px+tile_px//2;ty=used.y+(int(dst[1])-top)*tile_px+tile_px//2
             if not used.collidepoint(sx,sy) and not used.collidepoint(tx,ty):continue
+            animation_started = timings.start() if timings is not None else None
             base=self.screen.subsurface(used).copy();kind=str(event.get('kind',''))
             duration=120 if kind=='projectile' else 95;start=pg.time.get_ticks()
             while True:
@@ -4104,16 +4182,20 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 pg.display.update(used);pg.event.pump();self.clock.tick(120)
                 if t>=1:break
             self.screen.blit(base,used.topleft);pg.display.update(used)
+            if timings is not None:
+                timings.exclude('render.action_animation', animation_started)
 
     def present_game(self, registry, world, entities, sim, player_id: int, message: str = '', cursor: WorldPos | None = None,
                      combat_overlay: dict | None = None, stealth_overlay: dict | None = None) -> None:
         """Hybrid local-world view: sprite map + dense terminal-derived panels."""
         pg=self.pg; screen=self.screen
         if screen is None: return
+        self._profiler = getattr(sim, 'profiler', None)
+        timings = _RenderTimings(self._profiler)
         interiors=getattr(sim,'interiors',None)
         if interiors is not None and interiors.current_plan() is not None:
             from worldseed.ui.interior_view import draw_interior
-            draw_interior(self,registry,sim,entities,player_id,message)
+            draw_interior(self,registry,sim,entities,player_id,message,timings=timings)
             return
         self._interior_context=None
         terrain_token=(id(registry),len(registry.terrains))
@@ -4235,7 +4317,10 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         # original map panel; margins may extend over the HUD or window edges.
         prior_world_clip=screen.get_clip()
         screen.set_clip(viewport)
+        timings.mark('render.prepare')
+        cache_started = timings.start()
         terrain_base=self._build_base_layer(world, known, pos.z, left, top, cols, rows, tile_px)
+        timings.sample('render.terrain_cache', cache_started)
         screen.blit(terrain_base, map_rect.topleft)
         water_phase=(pg.time.get_ticks()//160)%8
         water_cells=[]
@@ -4290,6 +4375,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
+        timings.mark('render.terrain')
 
         combat_by={}
         if combat_overlay:
@@ -4320,6 +4406,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 str(row.get('uid','')):row for row in stealth_overlay.get('observers',())
                 if row.get('uid')
             }
+        timings.mark('render.effects')
         proc_species = self._visuals.procedural_species_paths()
         player_sprite = self._visuals.player_path(getattr(sim.state, 'player_sex', 'male'), getattr(sim.state, 'player_sprite_index', 0))
         cursor_sprite = self._visuals.special('cursor')
@@ -4541,6 +4628,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
             if cp:screen.blit(cp,(map_rect.x+(cursor.x-left)*tile_px,map_rect.y+(cursor.y-top)*tile_px))
 
+        timings.mark('render.objects_actors')
         # Weather/light presentation is observational and applies only to the
         # local world viewport. UI chrome remains fully readable at night.
         used=viewport.copy()
@@ -4597,6 +4685,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         screen.set_clip(prior_world_clip)
         # frame map exactly to the fixed visible viewport.
         pg.draw.rect(screen,(78,91,91),used,1)
+        timings.mark('render.effects')
 
         # Hover inspection data is retained for the read_key() fast path.
         # Mouse movement no longer causes a complete game-frame rebuild.
@@ -4691,7 +4780,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         # The snapshot lets hover repaint only a few small rectangles while the
         # main loop is blocked waiting for the next gameplay input.
         self._draw_scanlines((ox,oy,ow,oh))
-        self._play_combat_effects(sim,used,left,top,tile_px,pos.z)
+        timings.mark('render.ui')
+        self._play_combat_effects(sim,used,left,top,tile_px,pos.z,timings=timings)
+        timings.mark('render.effects')
         self._hover_context={
             'used':used.copy(),'grid_x':map_rect.x,'grid_y':map_rect.y,
             'tile_px':tile_px,'left':left,'top':top,'z':pos.z,
@@ -4734,4 +4825,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._hover_map_snapshot=screen.subsurface(used).copy()
         self._hover_rect=None;self._hover_tile_rect=None;self._hover_cell=None
         self._refresh_hover_only(force=True,update_display=False)
-        pg.display.flip(); self.clock.tick(120)
+        timings.mark('render.ui')
+        pg.display.flip()
+        timings.mark('render.present')
+        timings.finish()
+        self.clock.tick(120)

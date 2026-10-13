@@ -3019,6 +3019,8 @@ Presentation must remain observational. Opening, resizing, hovering or rendering
 
 # Changelog
 
+- 2026-10-13 early access runtime profiling: added opt-in bounded simulation, preparation, pygame and save-phase timings, Diagnostics percentiles/stall counts, and six repeatable prepared reference scenes with reports and optional PNGs. Population and save probes establish the next performance targets without changing simulation or save contracts. See [the usage and baseline guide](docs/development/RUNTIME_PROFILING.md) and [implementation handoff](docs/handoffs/EARLY_ACCESS_RUNTIME_PROFILING_HANDOFF.md).
+
 - 2026-10-13 early access cabin safety: construction now checks occupants, prepared doorway landings and bounded escape routes before making a cabin solid. Rejected stage commands preserve time and deposits. Completed cabins share persistent door/interior entry and exit through their exact rotated doorway, with Action Hub and context-menu access. Legacy saves with a player trapped inside a solid cabin recover to safe prepared nearby ground. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_CABIN_SAFETY_HANDOFF.md).
 
 - 2026-10-13 early access save reliability: checkpoints now retain pending terrain edits and chunk pins until SQLite commits, acknowledge only the captured revisions, and save checkpoint metadata atomically. Failed saves show a paused recovery message and keep the current world open for retry; autosave failures cannot retrigger every frame. Added failure, retry, reload, legacy-save and cache-eviction regressions. See [the implementation handoff](docs/handoffs/EARLY_ACCESS_SAVE_RETRY_HANDOFF.md).
