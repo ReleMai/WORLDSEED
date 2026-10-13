@@ -3655,13 +3655,13 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         Previously every game-frame scanned every realized NPC, creature,
         structure, crop, pile and fire in the whole explored world. The cost
         therefore rose permanently as exploration materialized more regions.
-        NPCs use the simulation's maintained actor locator, so a tile/bucket
-        crossing is visible immediately without rebuilding stationary rows.
-        Other collections retain the existing presentation cache for now.
+        NPCs and creatures use authoritative transient locators so movement
+        cannot cause whole-population rescans from the UI. Other collections
+        retain the existing presentation cache until their mutation hooks land.
         """
         state=sim.state
         collections=(
-            ('creatures',state.creatures),('structures',state.structures),
+            ('structures',state.structures),
             ('containers',state.containers),('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
             ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
             ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
@@ -3698,6 +3698,16 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             rows=(npc for npc in state.npcs.values()
                   if npc.z==z and x0<=npc.x<=x1 and y0<=npc.y<=y1)
         out['npcs']=sorted(rows,key=lambda npc:(int(npc.y)//32,int(npc.x)//32))
+        creatures=state.creatures
+        creature_query=getattr(creatures,"near_rect",None)
+        if callable(creature_query):
+            # Preserve historical presentation order across 32-cell buckets.
+            out['creatures']=sorted(creature_query(x0,y0,x1,y1,z),
+                key=lambda c:(int(c.y)//32,int(c.x)//32,creatures.order_of(c.uid)))
+        else:
+            # Small presentation-only fixtures may not construct Simulation.
+            out['creatures']=[c for c in creatures.values()
+                              if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1]
         return out
 
     def _resource_view(self, sim, known, z:int, left:int, top:int, cols:int, rows:int):

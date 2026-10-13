@@ -114,8 +114,12 @@ class EcologySystem:
 
     def update_local_ai(self,player_pos:WorldPos)->list[str]:
         messages=[]
-        for c in self.state.creatures.values():
+        lookup=getattr(self.state.creatures,"near_rect",None)
+        candidates=(lookup(player_pos.x-30,player_pos.y-20,player_pos.x+30,player_pos.y+20,player_pos.z)
+                    if callable(lookup) else self.state.creatures.values())
+        for c in candidates:
             if c.z!=player_pos.z or abs(c.x-player_pos.x)>30 or abs(c.y-player_pos.y)>20:continue
+            before=(c.x,c.y,c.z)
             sp=self.registry.species[c.species_id];dist=abs(c.x-player_pos.x)+abs(c.y-player_pos.y)
             if sp.aggression>=50 and dist<8:
                 dx=0 if c.x==player_pos.x else (1 if player_pos.x>c.x else -1);dy=0 if c.y==player_pos.y else (1 if player_pos.y>c.y else -1)
@@ -124,4 +128,6 @@ class EcologySystem:
                 if dist<=1:messages.append(c.uid)
             elif sp.aggression<20 and dist<5:
                 c.x += -1 if player_pos.x>c.x else 1 if player_pos.x<c.x else 0;c.y += -1 if player_pos.y>c.y else 1 if player_pos.y<c.y else 0
+            if (c.x,c.y,c.z)!=before and callable(getattr(self.state.creatures,"refresh",None)):
+                self.state.creatures.refresh(c)
         return messages

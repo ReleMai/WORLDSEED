@@ -13,6 +13,7 @@ from worldseed.sim.commands import *
 from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.state import LivingWorldState, GroundPile, CropPlot, SoilState, pos_key
 from worldseed.systems.discovery import DiscoveryTiles, DiscoverySet
+from worldseed.systems.spatial_index import CreatureSpatialMap
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.ecology import EcologySystem
 from worldseed.systems.hunting import HuntingSystem
@@ -83,6 +84,10 @@ class Simulation:
         self.turn=turn
         self.log:list[GameEvent]=[]
         self.state=state or LivingWorldState()
+        # Realized creature mutations update a transient local locator. Existing
+        # save serialization still reads authoritative CreatureState objects.
+        if not isinstance(self.state.creatures, CreatureSpatialMap):
+            self.state.creatures=CreatureSpatialMap(self.state.creatures)
         self.seed=world_seed or world.generator.world_seed
         self.profiler=RuntimeProfiler(enabled=runtime_profile_enabled(),max_stages=64)
         self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
@@ -345,9 +350,13 @@ class Simulation:
     def _refresh_combat_candidates(self)->None:
         """Rebuild transient encounter locality on simulation paths only."""
         p=self.player_pos
+        creatures=self.state.creatures
+        lookup=getattr(creatures,"near_rect",None)
+        nearby=(lookup(p.x-42,p.y-32,p.x+42,p.y+32,p.z)
+                if callable(lookup) else creatures.values())
         self._combat_actor_ids=tuple(
-            uid for uid,c in self.state.creatures.items()
-            if c.hp>0 and c.z==p.z and abs(c.x-p.x)<=42 and abs(c.y-p.y)<=32
+            c.uid for c in nearby if c.hp>0 and c.z==p.z
+            and abs(c.x-p.x)<=42 and abs(c.y-p.y)<=32
         )
 
     def combat_active(self)->bool:
@@ -958,8 +967,12 @@ class Simulation:
         # Tactical tells are logged only when the local animal actually changes
         # state, keeping the behavior legible without a renderer-side mutation.
         p=self.player_pos
-        for uid,c in sorted(self.state.creatures.items()):
-            if before_behavior.get(uid)==c.behavior or c.z!=p.z or abs(c.x-p.x)+abs(c.y-p.y)>12:continue
+        lookup=getattr(self.state.creatures,"near_rect",None)
+        local=(lookup(p.x-12,p.y-12,p.x+12,p.y+12,p.z)
+               if callable(lookup) else self.state.creatures.values())
+        for c in sorted(local,key=lambda item:item.uid):
+            uid=c.uid
+            if before_behavior.get(uid)==c.behavior or abs(c.x-p.x)+abs(c.y-p.y)>12:continue
             sp=self.registry.species.get(c.species_id);name=(sp.name if sp else c.species_id)
             if c.behavior=="display":self._message(f"{name} turns broad and gives a threat display.")
             elif c.behavior=="charge":self._message(f"{name} commits to a charge.")
@@ -987,6 +1000,8 @@ class Simulation:
                         if stopped:
                             if uid in self.state.creatures and self._combat_cell_free(prior,ignore_uid=uid):
                                 c.x,c.y=prior.x,prior.y;c.facing_dx,c.facing_dy=p.x-prior.x,p.y-prior.y
+                                refresh=getattr(self.state.creatures,"refresh",None)
+                                if callable(refresh):refresh(c)
                             continue
                 p=self.player_pos
                 if abs(c.x-p.x)+abs(c.y-p.y)>1:continue

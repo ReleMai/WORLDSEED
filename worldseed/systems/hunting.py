@@ -339,14 +339,20 @@ class HuntingSystem:
         detail=f" with {stored} cached item(s)" if stored and skill>=6 else ""
         return f"{use.title()} {animal} {home.kind}{detail}."
 
+    def _local_creatures(self,x0:int,y0:int,x1:int,y1:int,z:int):
+        lookup=getattr(self.state.creatures,"near_rect",None)
+        if callable(lookup):
+            return lookup(x0,y0,x1,y1,z)
+        # Standalone systems may still be tested against plain state mappings.
+        return (c for c in self.state.creatures.values()
+                if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1)
+
     def update_local_ai(self, player_pos: WorldPos, turn: int, minute: int) -> list[str]:
         self._prune_signs(minute)
         attackers: list[str] = []
-        local = [
-            c for c in self.state.creatures.values()
-            if c.hp > 0 and c.z == player_pos.z
-            and abs(c.x-player_pos.x) <= 42 and abs(c.y-player_pos.y) <= 32
-        ]
+        local = [c for c in self._local_creatures(
+            player_pos.x-42,player_pos.y-32,player_pos.x+42,player_pos.y+32,player_pos.z
+        ) if c.hp>0]
         self._prepare_group_tactics(local, turn)
         for creature in sorted(local, key=lambda c: c.uid):
             if creature.uid not in self.state.creatures:
@@ -464,8 +470,8 @@ class HuntingSystem:
 
     def _same_group(self,c:CreatureState,radius:int=12)->list[CreatureState]:
         rows=[]
-        for other in self.state.creatures.values():
-            if other.hp<=0 or other.z!=c.z or other.species_id!=c.species_id:
+        for other in self._local_creatures(c.x-radius,c.y-radius,c.x+radius,c.y+radius,c.z):
+            if other.hp<=0 or other.species_id!=c.species_id:
                 continue
             if c.cohort_key and other.cohort_key!=c.cohort_key:
                 continue
@@ -637,8 +643,8 @@ class HuntingSystem:
             self._write_sign(source,"call",p,p,self.state.clock_minute,min(90,amount),"alarm or warning call")
         if sp.herd_response <= 0:
             return
-        for other in self.state.creatures.values():
-            if other.uid == source.uid or other.z != source.z or other.species_id != source.species_id:
+        for other in self._local_creatures(source.x-10,source.y-10,source.x+10,source.y+10,source.z):
+            if other.uid == source.uid or other.species_id != source.species_id:
                 continue
             if source.cohort_key and other.cohort_key != source.cohort_key:
                 continue
@@ -663,7 +669,7 @@ class HuntingSystem:
         minute: int,
     ) -> bool:
         current = WorldPos(c.x, c.y, c.z)
-        occupied = {(o.x, o.y, o.z) for o in self.state.creatures.values() if o.uid != c.uid}
+        occupied = {(o.x, o.y, o.z) for o in self._local_creatures(c.x-1,c.y-1,c.x+1,c.y+1,c.z) if o.uid != c.uid}
         candidates: list[tuple[int, int, int, WorldPos]] = []
         for dx, dy in CARDINALS:
             nxt = current.moved(dx, dy)
@@ -708,6 +714,8 @@ class HuntingSystem:
         nxt = candidates[0][3]
         old = WorldPos(c.x, c.y, c.z)
         c.x, c.y = nxt.x, nxt.y
+        refresh=getattr(self.state.creatures,"refresh",None)
+        if callable(refresh):refresh(c)
         c.facing_dx, c.facing_dy = nxt.x - old.x, nxt.y - old.y
         if self.state.player_aim_target == c.uid:
             loss = 24 if c.behavior in ("flee","herd_flee","wounded_flee","charge","flank") else 20 if c.behavior=="pursue" else 10
