@@ -48,7 +48,8 @@ class SaveFailureUITests(unittest.TestCase):
             self.assertFalse(pumped)
             self.assertIn('SAVE FAILED',text)
             self.assertIn('Current changes remain in memory.',text)
-            self.assertIn('/saves/recovery.db',text)
+            # Path displays use the host OS separator (Windows in the Fast Gate).
+            self.assertIn(str(Path('/saves/recovery.db')),text)
             self.assertIn('disk full',text)
             self.assertIn('Save game',text)
 

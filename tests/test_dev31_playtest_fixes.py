@@ -114,7 +114,11 @@ class Dev31PresentationTests(unittest.TestCase):
                 uid='near',name='Near',age=30,occupation='farmer',traits=[],
                 x=2,y=3,z=0,settlement_id='',faction_id=''
             )
-            rows=self.term._spatial_state_views(sim,-20,-20,20,20,0)
+            # Direct fixture state seeding bypasses simulation insertion hooks.
+            # Rebuild once at the preparation boundary, not during rendering.
+            sim.npcs.rebuild_spatial_index()
+            with patch.object(sim.npcs,'rebuild_spatial_index',side_effect=AssertionError('render rebuilt NPC index')):
+                rows=self.term._spatial_state_views(sim,-20,-20,20,20,0)
             self.assertEqual([n.uid for n in rows['npcs']],['near'])
         finally:
             db.close();td.cleanup()
