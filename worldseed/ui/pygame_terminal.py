@@ -202,6 +202,101 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
+    def present_timed_action(self, command, game_minutes: int, advance, redraw) -> None:
+        """Show live world ticks and an action bar before returning to the menu.
+
+        The command has already committed its materials/effects inside execute().
+        Only the engine-owned advance callback can charge its game minutes.
+        The usual realtime pump is held by the caller and its baseline reset
+        afterward, so animation wall-time is never counted twice.
+        """
+        import time
+        from worldseed.ui.action_progress import action_title, elapsed_minutes, visual_duration
+
+        total=max(0,int(game_minutes))
+        if not total:return
+        if self.screen is None or self.clock is None:
+            advance(total)
+            return
+        pg=self.pg
+        label=action_title(command)
+        duration=visual_duration(total)
+        started=time.monotonic()
+        advanced=0
+        last_world_paint=0.0
+        previous_mode=self._input_mode
+        quit_requested=False
+        self._input_mode='busy'
+        # Holding movement during work must not enqueue a walk on completion.
+        self._held_movement.clear()
+        self._active_movement_key=None
+        self._movement_next_repeat_ms=0
+        background=None
+        backdrop_rect=None
+        redraw_required=True
+        try:
+            while True:
+                now=time.monotonic()
+                fraction=min(1.0,max(0.0,(now-started)/duration))
+                target=elapsed_minutes(total,fraction,advanced)
+                if target>advanced:
+                    advance(target-advanced)
+                    advanced=target
+                    redraw_required=True
+                if redraw_required and (now-last_world_paint>=0.12 or fraction>=1.0):
+                    redraw()
+                    last_world_paint=time.monotonic()
+                    redraw_required=False
+                    background=None
+                sw,sh=self.screen.get_size()
+                width=min(540,max(260,sw-36))
+                box=pg.Rect((sw-width)//2,max(20,sh-136),width,92)
+                if backdrop_rect!=box or background is None:
+                    backdrop_rect=box
+                    background=self.screen.subsurface(box).copy()
+                self.screen.blit(background,box.topleft)
+                overlay=pg.Surface(box.size,pg.SRCALPHA)
+                pg.draw.rect(overlay,(18,24,27,240),overlay.get_rect(),border_radius=10)
+                pg.draw.rect(overlay,(*self._theme['accent'],220),overlay.get_rect(),width=1,border_radius=10)
+                title=self.font.render(label,True,self._theme['text'])
+                overlay.blit(title,(18,11))
+                elapsed_label=f'{advanced:,}/{total:,} game min   •   {round(fraction*100):d}%'
+                text=self.small_font.render(elapsed_label,True,self._theme['muted'])
+                overlay.blit(text,(18,39))
+                bar=pg.Rect(18,68,width-36,10)
+                pg.draw.rect(overlay,(51,60,63),bar,border_radius=4)
+                fill=max(0,min(bar.width,round(bar.width*fraction)))
+                if fill:
+                    pg.draw.rect(overlay,self._theme['accent'],
+                                 pg.Rect(bar.x,bar.y,fill,bar.height),border_radius=4)
+                self.screen.blit(overlay,box.topleft)
+                pg.display.update(box)
+                # Ignore fresh commands while one transaction is in progress;
+                # keep window/quit events and key releases from getting stuck.
+                for event in pg.event.get():
+                    if event.type==pg.QUIT:
+                        quit_requested=True
+                    elif event.type in (pg.VIDEORESIZE,getattr(pg,'WINDOWRESIZED',pg.VIDEORESIZE)):
+                        self._resize(event.w,event.h)
+                        redraw_required=True
+                        background=None
+                    elif event.type==pg.KEYUP:
+                        self._held_movement.pop(event.key,None)
+                if fraction>=1.0:
+                    break
+                self.clock.tick(30)
+            if background is not None and backdrop_rect is not None:
+                self.screen.blit(background,backdrop_rect.topleft)
+                pg.display.update(backdrop_rect)
+        finally:
+            # The retained floating window will rebuild its world snapshot
+            # when its next menu frame is presented.
+            self._input_mode=previous_mode
+            self._floating_backdrop=None
+            self._menu_backdrop_cache.clear()
+            if quit_requested:
+                pg.event.post(pg.event.Event(pg.QUIT))
+
     def set_free_movement_callback(self, callback) -> None:
         self._free_movement_callback = callback
         self._free_movement_last_ms = self.pg.time.get_ticks() if callback else 0
