@@ -395,7 +395,13 @@ class Simulation:
                 message=self.interiors.interact(command.furniture_uid)
                 self._message(message)
                 if message.startswith('You rest on'):
-                    self.turn+=1;self._advance_time(30);self._post_action()
+                    self.turn+=1
+                    progress=getattr(self,'_action_progress_callback',None)
+                    if callable(progress):
+                        progress(command,30,self._advance_time)
+                    else:
+                        self._advance_time(30)
+                    self._post_action()
                 return result
             if isinstance(command,DropCommand):
                 from worldseed.systems.interior_state import InteriorPile
@@ -578,16 +584,27 @@ class Simulation:
         # Long work is rejected above before it can apply an instant result.
         respond_to_action=combat_before or self.combat_active()
         if respond_to_action:minutes=1
-        self.turn+=1;self._advance_time(minutes)
+        self.turn+=1
+        presentation_seconds=0.0
+        progress=getattr(self,'_action_progress_callback',None)
+        if callable(progress) and minutes>0 and not respond_to_action:
+            # UI animates the committed duration while stepping the SAME
+            # authoritative world clock. No second charge on panel close.
+            started_presentation=time.perf_counter()
+            progress(command,minutes,self._advance_time)
+            presentation_seconds=time.perf_counter()-started_presentation
+        else:
+            self._advance_time(minutes)
         self._post_action(allow_hostile_attacks=respond_to_action)
         if not combat_before and self.combat_active():
             self._message('Combat paused: choose an action to advance one tick. Looking and menus are free.')
         if isinstance(command,(GuardCommand,DodgeCommand,ParryCommand,BraceCommand)):
             self.state.player_guarding=False;self.state.player_defense_mode="";self.state.player_defense_quality=0
-        elapsed=(time.perf_counter()-command_started)*1000
+        elapsed=max(0.0,(time.perf_counter()-command_started-presentation_seconds)*1000)
         self.debug.event(
             "command_end",command=type(command).__name__,turn=int(self.turn),
-            minute=int(self.clock.minute),elapsed_ms=round(elapsed,3),slow=elapsed>=75.0,
+            minute=int(self.clock.minute),elapsed_ms=round(elapsed,3),
+            presentation_ms=round(presentation_seconds*1000,3),slow=elapsed>=75.0,
             position=(self.player_pos.x,self.player_pos.y,self.player_pos.z),
         )
         return result
