@@ -3950,6 +3950,18 @@ def _interior_context_menu(ctx,term,x:int,y:int,object_kind:str='',object_uid:st
 def run_game(ctx:GameContext,term:Terminal)->str:
     renderer=Renderer(ctx.registry);last='';autosave=ctx.sim.turn
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
+    action_presenter=getattr(term,'present_timed_action',None)
+    if callable(action_presenter):
+        def display_timed_action(command,minutes,advance):
+            try:
+                action_presenter(command,minutes,advance,
+                                 lambda:_present_game_frame(term,ctx,renderer))
+            finally:
+                # Progress has already advanced the authoritative clock. The
+                # normal realtime driver must not catch up wall seconds spent
+                # animating the action and charge them a second time.
+                if not realtime.paused:realtime.resume()
+        ctx.sim._action_progress_callback=display_timed_action
     install=getattr(term,'set_realtime_callback',None)
     if callable(install):install(realtime.pump)
     install_free=getattr(term,'set_free_movement_callback',None)
@@ -4067,6 +4079,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if ctx.sim.turn-autosave>=AUTOSAVE_TURNS:
             _save(ctx,backup=False);autosave=ctx.sim.turn;last='Autosaved.'
     finally:
+        if callable(action_presenter):ctx.sim._action_progress_callback=None
         if callable(install):install(None)
         if callable(install_free):
             install_free(None)
