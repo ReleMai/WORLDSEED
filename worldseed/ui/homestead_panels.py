@@ -5,6 +5,8 @@ homestead state. Click targets are consumed by the app's command dispatcher.
 """
 from __future__ import annotations
 
+from worldseed.ui.presentation_style import draw_button_background
+
 def _label(term, value, pos, *, color=None, large=False, centered=False, width=None):
     font=term.font if large else term.small_font
     color=color or term._theme['text']
@@ -16,16 +18,14 @@ def _label(term, value, pos, *, color=None, large=False, centered=False, width=N
     return rect
 
 
-def _button(term, rect, label, token, *, prominent=False, enabled=True):
+def _button(term, rect, label, token, *, prominent=False, enabled=True, destructive=False):
     pg=term.pg
     rect=pg.Rect(rect)
-    hover=rect.collidepoint(term._last_mouse) and enabled
-    fill=(76,72,51) if prominent else (43,49,47)
-    if hover:fill=(92,85,56) if prominent else (54,62,57)
-    if not enabled:fill=(30,34,34)
-    pg.draw.rect(term.screen,fill,rect,border_radius=5)
-    pg.draw.rect(term.screen,term._theme['accent'] if prominent and enabled else term._theme['edge'],rect,2 if prominent and enabled else 1,border_radius=5)
-    _label(term,label,rect.center,centered=True,color=term._theme['text'] if enabled else term._theme['muted'],width=rect.width-12)
+    hover=bool(enabled) and rect.collidepoint(term._last_mouse)
+    text_color=draw_button_background(pg,term.screen,rect,term._theme,hovered=hover,
+                                      enabled=enabled,prominent=prominent,
+                                      destructive=destructive,context='homestead')
+    _label(term,label,rect.center,centered=True,color=text_color,width=rect.width-12)
     if enabled:term._ui_target(rect,token)
 
 
@@ -255,11 +255,11 @@ def present_blueprint_depot(term,data):
         _label(term,'Return all deposited materials and remove the blueprint?',(cx,by-22),
                color=term._theme['danger'],width=cw)
         _button(term,(cx,by,126,33),'Keep site','UI_ACTION:depot_cancel_back')
-        _button(term,(cx+136,by,190,33),'Confirm removal','UI_ACTION:depot_cancel_confirm',prominent=True)
+        _button(term,(cx+136,by,190,33),'Confirm removal','UI_ACTION:depot_cancel_confirm',destructive=True)
     elif site['stage']<4:
         _button(term,(cx,by,144,33),'Deposit carried','UI_ACTION:depot_all',prominent=True)
         _button(term,(cx+153,by,170,33),'Build next stage','UI_ACTION:depot_build')
-        _button(term,(cx+cw-126,by,126,33),'Remove site','UI_ACTION:depot_cancel')
+        _button(term,(cx+cw-126,by,126,33),'Remove site','UI_ACTION:depot_cancel',destructive=True)
     else:
         _label(term,'Cabin construction complete.',(cx,by+8),color=term._theme['accent'])
     term._draw_floating_footer(x,y,w,h,'Click materials to deposit  ·  Drag title  ·  Resize corner  ·  Esc closes')

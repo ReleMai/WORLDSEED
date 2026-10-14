@@ -1,6 +1,9 @@
 """Presentation-only pointer targets. Tokens are interpreted by existing widgets.
 No simulation state is stored here, and hit regions are rebuilt every frame.
 """
+from worldseed.ui.presentation_style import draw_button_background
+
+
 class WindowCloseRequested(Exception):
     """Unwind a modal UI to the application save/exit boundary."""
 
@@ -21,14 +24,15 @@ class PointerUI:
     def _hit_token(self, pos):
         return next((token for rect,token in reversed(self._pointer_targets) if rect.collidepoint(pos)), None)
 
-    def _button(self, rect, label, token):
+    def _button(self, rect, label, token, *, enabled=True, prominent=False, destructive=False):
         pg=self.pg;rect=pg.Rect(rect)
-        hover=rect.collidepoint(self._last_mouse)
-        pg.draw.rect(self.screen, (43,48,48) if hover else self._theme['panel2'], rect, border_radius=5)
-        pg.draw.rect(self.screen,self._theme['accent'] if hover else self._theme['edge_hi'],rect,1,border_radius=5)
-        text=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-12),True,self._theme['text'])
+        hover=bool(enabled) and rect.collidepoint(self._last_mouse)
+        text_color=draw_button_background(pg,self.screen,rect,self._theme,
+                                          hovered=hover,enabled=enabled,
+                                          prominent=prominent,destructive=destructive)
+        text=self.small_font.render(self._fit_ui_text(label,self.small_font,rect.width-12),True,text_color)
         self.screen.blit(text,text.get_rect(center=rect.center))
-        self._ui_target(rect,token)
+        if enabled:self._ui_target(rect,token)
 
     def _ui_navigation(self, *, confirm=False, extra=None, back=True, paging=True):
         w,h=self.screen.get_size();y=h-52

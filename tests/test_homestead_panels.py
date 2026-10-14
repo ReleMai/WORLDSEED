@@ -71,6 +71,18 @@ class HomesteadPanelsTests(unittest.TestCase):
         self.assertIn('UI_ACTION:depot_cancel_back',actions)
         self.assertNotIn('UI_ACTION:depot_all',actions)
 
+    def test_destructive_actions_are_visually_distinct_but_keep_tokens(self):
+        self.term.present_homestead_depot(self.depot(confirm=True))
+        targets={token:rect for rect,token in self.term._pointer_targets}
+        target=targets['UI_ACTION:depot_cancel_confirm']
+        self.assertEqual(tuple(self.term.screen.get_at((target.left,target.centery))[:3]),
+                         self.term._theme['danger'])
+        self.term.present_homestead_depot(self.depot(confirm=False))
+        targets={token:rect for rect,token in self.term._pointer_targets}
+        target=targets['UI_ACTION:depot_cancel']
+        self.assertEqual(tuple(self.term.screen.get_at((target.left,target.centery))[:3]),
+                         self.term._theme['danger'])
+
     def test_completed_blueprint_has_no_material_transfer_actions(self):
         self.term.present_homestead_depot(self.depot(stage=4))
         actions={token for rect,token in self.term._pointer_targets}

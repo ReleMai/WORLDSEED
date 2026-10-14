@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from worldseed.ui.presentation_style import palette, draw_standard_menu_frame
+from worldseed.ui.presentation_style import palette, draw_standard_menu_frame, draw_floating_panel_frame
 
 import importlib.util
 import math
@@ -1232,15 +1232,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._pointer_targets.clear();self._set_input_mode('ui')
         state=self._floating_panel_state(panel_id)
         x,y,w,h=state['x'],state['y'],state['w'],state['h']
-        shadow=pg.Rect(x+6,y+7,w,h);pg.draw.rect(screen,(0,0,0),shadow,border_radius=8)
-        outer=pg.Rect(x,y,w,h)
-        pg.draw.rect(screen,(18,23,24),outer,border_radius=8)
-        pg.draw.rect(screen,(99,86,61),outer,2,border_radius=8)
-        pg.draw.rect(screen,(31,38,37),outer.inflate(-10,-10),1,border_radius=5)
-        titlebar=pg.Rect(x,y,w,42)
-        pg.draw.rect(screen,self._theme['panel2'],titlebar,border_radius=8)
-        pg.draw.line(screen,self._theme['edge'],(x,y+42),(x+w,y+42),1)
-        pg.draw.line(screen,self._theme['accent'],(x+14,y+42),(x+min(w-14,150),y+42),2)
+        draw_floating_panel_frame(pg, screen, pg.Rect(x,y,w,h), self._theme)
         self._ui_target(pg.Rect(x+8,y+4,w-58,34),f'UI_WINDOW_DRAG:{panel_id}')
         domain_s=self.small_font.render(domain.upper(),True,self._theme['accent']);screen.blit(domain_s,(x+14,y+7))
         title_x=x+14+domain_s.get_width()+16
