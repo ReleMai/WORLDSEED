@@ -54,6 +54,29 @@ jobs:
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
 
+  # SDL dummy video initialization in Windows intermittently exits -1 before
+  # Python can produce an audit traceback. Keep the full real facade/door
+  # geometry audit in the gate, independently on Linux, instead of retrying
+  # native crashes or disabling geometry checks.
+  building-geometry-linux:
+    name: Building asset geometry — Linux headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install WORLDSEED and image tools
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Audit every building facade and door geometry
+        run: python -u tools/run_ci_check.py --name "Building asset geometry" --timeout 90 -- python -u tools/audit_building_assets.py --output dist/building-audit
+
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
   npc-lab-endurance:
@@ -194,10 +217,6 @@ jobs:
       - name: Functional home furniture, storage and homestead blueprints
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Functional furniture" --timeout 90 -- python -u -m unittest -v tests.test_functional_furniture tests.test_indoor_building_storage tests.test_dev50_interior_storage tests.test_dev50_storage_ui tests.test_interior_workstation_ui tests.test_homestead_blueprints
-
-      - name: Audit every building facade
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Building asset geometry" --timeout 90 -- python -u tools/audit_building_assets.py --output dist/building-audit
 
       - name: Biome atlas regressions
         shell: pwsh
