@@ -68,6 +68,10 @@ class SettlementPhysicalizationSystem:
         self._active_settlement_ids: tuple[str, ...] = ()
         self._indoor_fixture_uids: set[str] = set()
         self.revision = 0
+        # Single-viewport readonly projections: bounds + authoritative
+        # revision invalidate these immutable rows without retaining regions.
+        self._viewport_cell_snapshot = None
+        self._viewport_shell_snapshot = None
 
     def attach_interior_state(self,state) -> None:
         """Rebuild sparse fixture-space projection on load, never on inspection."""
@@ -344,7 +348,14 @@ class SettlementPhysicalizationSystem:
     def cells_in_bounds(self,left:int,top:int,right:int,bottom:int) -> tuple[PhysicalizedSettlementCell, ...]:
         """Return only materialized settlement cells intersecting a local viewport."""
         left,top,right,bottom=map(int,(left,top,right,bottom))
-        return tuple(self._project_cell(cell) for (x,y),cell in self._cells.items() if left<=x<=right and top<=y<=bottom)
+        key=(self.revision,left,top,right,bottom)
+        existing=getattr(self,'_viewport_cell_snapshot',None)
+        if existing is not None and existing[0]==key:
+            return existing[1]
+        result=tuple(self._project_cell(cell) for (x,y),cell in self._cells.items()
+                     if left<=x<=right and top<=y<=bottom)
+        self._viewport_cell_snapshot=(key,result)
+        return result
 
     def route_segments(self):
         return tuple(self._route_segments[key] for key in sorted(self._route_segments))
@@ -382,8 +393,14 @@ class SettlementPhysicalizationSystem:
         return self.shell_at(pos) is not None
 
     def shells_in_bounds(self,left:int,top:int,right:int,bottom:int):
-        return tuple(s for _,s in sorted(self._shells.items())
+        key=(self.revision,int(left),int(top),int(right),int(bottom))
+        existing=getattr(self,'_viewport_shell_snapshot',None)
+        if existing is not None and existing[0]==key:
+            return existing[1]
+        result=tuple(s for _,s in sorted(self._shells.items())
             if s.bounds[0]<=right and s.bounds[2]>=left and s.bounds[1]<=bottom and s.bounds[3]>=top)
+        self._viewport_shell_snapshot=(key,result)
+        return result
 
     def frontage_for(self,structure_id:str) -> WorldPos | None:
         shell=self._shells.get(str(structure_id))

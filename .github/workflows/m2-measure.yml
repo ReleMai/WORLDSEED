@@ -1,6 +1,6 @@
 name: WORLDSEED M2 Performance Measurements
 
-# Includes resource-viewport fast-path alongside terrain and fog cache evaluation for 1080p fixtures.
+# Includes settlement viewport read-only cache comparison at higher resolutions for 1080p fixtures.
 
 # One-off reproducible profiling after an M2 benchmark-script/workflow update.
 # Not part of every normal Fast Gate run, since reference scenes are expensive.
