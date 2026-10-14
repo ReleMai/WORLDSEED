@@ -23,6 +23,10 @@ class CloudRenderer:
                          FieldEmitter("weather-art:cloud-high",40,drift_scale=1.13,lifetime_ms=480000))
         self._stamp_bytes = 0
         self.frames = OrderedDict()
+        # Only a few finished full-resolution cloud frames; underlying
+        # low-resolution layers already have their own bounded cache.
+        self._composited_frames = OrderedDict()
+        self._composited_bytes = 0
 
     def _load(self):
         if self._source is not None:
@@ -98,6 +102,17 @@ class CloudRenderer:
                           left, top, tile_px, elapsed_ms, **kwargs):
         """Composite soft clouds once at a bounded pixel density on large screens."""
         if cover<12:return ()
+        # The underlying cloud/shadow layers already key animation in 33-ms
+        # phases, but composing and smoothscaling those layers again every
+        # unchanged frame was a huge 4K CPU cost. Keep the completed read-only
+        # surface for the exact same phase and weather/sun/camera contract.
+        composed_key=(width,height,bytes(seed),int(cover),wind_dx,wind_dy,
+                      left,top,tile_px,max(0,int(elapsed_ms))//33,
+                      tuple(sorted(kwargs.items())))
+        cached=self._composited_frames.get(composed_key)
+        if cached is not None:
+            self._composited_frames.move_to_end(composed_key)
+            return (cached,)
         factor=2 if (width*height>900000 or tile_px>=40) and tile_px%2==0 else 1
         lw,lh=(width+factor-1)//factor,(height+factor-1)//factor
         shadow,cloud=self.layers(lw,lh,seed,cover,wind_dx,wind_dy,left,top,
@@ -107,6 +122,17 @@ class CloudRenderer:
         if factor>1:
             combined=self.pg.transform.smoothscale(combined,(lw*factor,lh*factor))
             if combined.get_size()!=(width,height):combined=combined.subsurface((0,0,width,height))
+        # Limit retained full-screen RGBA memory independent of exploration
+        # or animation duration. Never mutate the finished cached surface.
+        size=combined.get_width()*combined.get_height()*4
+        budget=64*1024*1024
+        while self._composited_frames and (len(self._composited_frames)>=2 or
+                                           self._composited_bytes+size>budget):
+            _,old=self._composited_frames.popitem(last=False)
+            self._composited_bytes-=old.get_width()*old.get_height()*4
+        if size<=budget:
+            self._composited_frames[composed_key]=combined
+            self._composited_bytes+=size
         return (combined,)
 
     def layers(self, width, height, seed, cover, wind_dx, wind_dy,

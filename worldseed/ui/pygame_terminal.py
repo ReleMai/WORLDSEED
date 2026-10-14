@@ -4723,7 +4723,14 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             now_ms=pg.time.get_ticks()
             previous=getattr(self,'_weather_animation_context',None)
             self._weather_fx.set_lighting(lighting,now_ms,reset=not previous or previous.get('seed')!=sim.seed or previous.get('lighting') is None)
-            self._weather_static_snapshot=screen.subsurface(used).copy()
+            # The 4K restoration copy can be tens of MB each frame. Keep it
+            # only while idle weather animation or a lighting fade needs to
+            # restore the undimmed world between presentation-only redraws.
+            requires_snapshot=(self._weather_fx.has_animated_effects(weather) or
+                               self._weather_fx.lighting_transition_active(now_ms))
+            self._weather_static_snapshot=(
+                screen.subsurface(used).copy() if requires_snapshot else None
+            )
             self._weather_fx.draw_lighting(screen,used,lighting,elapsed_ms=now_ms)
             fire_rects=[]
             for (fx,fy,fz),fire in fire_by.items():

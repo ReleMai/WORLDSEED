@@ -1,6 +1,6 @@
 name: WORLDSEED M2 Performance Measurements
 
-# Includes settlement viewport read-only cache comparison at higher resolutions for 1080p fixtures.
+# Includes bounded atmosphere caching at 1080p, 1440p and 4K for 1080p fixtures.
 
 # One-off reproducible profiling after an M2 benchmark-script/workflow update.
 # Not part of every normal Fast Gate run, since reference scenes are expensive.

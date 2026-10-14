@@ -25,6 +25,7 @@ class WeatherFxRenderer:
         self._clouds = CloudRenderer(pygame_module)
         self._cloud_cache = self._clouds.frames
         self._rain_cache = {}
+        self._fog_frame_cache = None
         self._rain_particles = {}
         self._glow_cache = {}
         self._lighting_target = None
@@ -49,8 +50,13 @@ class WeatherFxRenderer:
         fog = frame.weather.fog
         if fog <= 4:
             return ()
+        key=(frame.width,frame.height,fog)
+        cached=self._fog_frame_cache
+        if cached is not None and cached[0]==key:
+            return (cached[1],)
         overlay = self.pg.Surface((frame.width,frame.height),self.pg.SRCALPHA)
         overlay.fill((172,184,184,min(82,8+fog//2)))
+        self._fog_frame_cache=(key,overlay)
         return (overlay,)
 
     def _cloud_layers(self, frame):

@@ -203,6 +203,16 @@ class RenderProfilingTests(unittest.TestCase):
         self._render()
         self.assertIsNot(self.term._terrain_overlay_projection_cache,third)
 
+    def test_no_weather_animation_skips_large_restoration_copy(self):
+        # Static weather still paints the same on-screen pixels. Only the
+        # restoration backing surface, used by later idle animation, is absent.
+        baseline=self._render()
+        with patch.object(self.term._weather_fx,'has_animated_effects',return_value=False), \
+             patch.object(self.term._weather_fx,'lighting_transition_active',return_value=False):
+            actual=self._render()
+            self.assertIsNone(self.term._weather_static_snapshot)
+        self.assertEqual(actual,baseline)
+
     def test_memory_fog_projection_cache_keeps_exact_visibility(self):
         self._render()
         first=self.term._memory_fog_projection_cache
