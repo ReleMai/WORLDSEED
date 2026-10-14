@@ -1,0 +1,84 @@
+name: WORLDSEED Windows Playtest Executable
+
+# This build is intentionally independent of expensive release-hardening jobs.
+# A Windows runner builds and launches the actual frozen executable before it
+# is offered to playtesters. It does NOT collect or upload player diagnostics.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-playtest.yml"
+      - "worldseed/playtest_report.py"
+      - "tests/test_playtest_report.py"
+      - "run_worldseed.py"
+      - "worldseed/app.py"
+      - "PLAY_WORLDSEED_TEST.bat"
+      - "EXPORT_WORLDSEED_REPORT.bat"
+      - "WINDOWS_PLAYTEST_README.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-playtest:
+    name: Windows x64 native self-contained playtest
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install runtime and PyInstaller
+        shell: pwsh
+        run: python -m pip install -e . "Pillow>=10,<12" "pyinstaller>=6.10,<7"
+      - name: Compile and verify private offline report format
+        shell: pwsh
+        run: |
+          python -m compileall -q worldseed tools tests run_worldseed.py
+          if ($LASTEXITCODE -ne 0) { throw "Python compile failed" }
+          python -u tools/run_ci_check.py --name playtest-report-contracts --timeout 45 -- python -u -m unittest -v tests.test_playtest_report
+          if ($LASTEXITCODE -ne 0) { throw "Playtest report tests failed" }
+      - name: Bundle real pygame-ce game with assets
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onedir --console --noupx --name WORLDSEED --add-data "worldseed/data;worldseed/data" --add-data "worldseed/assets;worldseed/assets" run_worldseed.py
+          if ($LASTEXITCODE -ne 0) { throw "PyInstaller build failed" }
+      - name: Prepare one-click Windows distribution
+        shell: pwsh
+        run: |
+          Copy-Item PLAY_WORLDSEED_TEST.bat dist/WORLDSEED/PLAY_WORLDSEED_TEST.bat -Force
+          Copy-Item EXPORT_WORLDSEED_REPORT.bat dist/WORLDSEED/EXPORT_WORLDSEED_REPORT.bat -Force
+          Copy-Item WINDOWS_PLAYTEST_README.txt dist/WORLDSEED/README_PLAYTEST.txt -Force
+          '{"commit":"${{ github.sha }}","build_kind":"windows-one-dir"}' | Set-Content -LiteralPath dist/WORLDSEED/PLAYTEST_BUILD.json -Encoding utf8
+      - name: Smoke test actual frozen Windows EXE and report ZIP
+        shell: pwsh
+        run: |
+          Push-Location dist/WORLDSEED
+          try {
+            ./WORLDSEED.exe --playtest-selfcheck
+            if ($LASTEXITCODE -ne 0) { throw "Bundled data/pygame self-check failed" }
+            ./WORLDSEED.exe --playtest-export
+            if ($LASTEXITCODE -ne 0) { throw "Bundled report export failed" }
+            $reports = @(Get-ChildItem playtest_reports -Filter WORLDSEED_PLAYTEST_REPORT_*.zip)
+            if ($reports.Count -ne 1) { throw "Report ZIP missing from executable" }
+            python -m zipfile -t $reports[0].FullName
+            if ($LASTEXITCODE -ne 0) { throw "Report ZIP corrupt" }
+          } finally {
+            Pop-Location
+          }
+          Remove-Item dist/WORLDSEED/playtest_reports -Recurse -Force
+      - name: Upload playable Windows x64 build (includes all game assets)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED-Windows-Playtest-${{ github.sha }}
+          path: dist/WORLDSEED/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30

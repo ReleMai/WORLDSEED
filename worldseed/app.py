@@ -4187,6 +4187,19 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             saved=_try_save(ctx,term,backup=False);autosave_attempt=ctx.sim.turn
             last='Autosaved.' if saved else 'Autosave failed. Current changes remain in memory. Pause > Save game to retry.'
     finally:
+        # Export bounded in-memory timing percentiles at session exit; local
+        # JSONL diagnostics can still be recovered after a Python exception.
+        # The player decides whether to package/share any of this information.
+        try:
+            runtime_profiler=getattr(ctx.sim,'profiler',None)
+            if runtime_profiler is not None and runtime_profiler.enabled:
+                ctx.sim.debug.event('profile_summary',profile=runtime_profiler.snapshot())
+            ctx.sim.debug.event('playtest_session_end',
+                                turn=int(ctx.sim.turn),
+                                minute=int(ctx.sim.clock.minute))
+            ctx.sim.debug.flush()
+        except Exception:
+            pass
         if callable(action_presenter):ctx.sim._action_progress_callback=None
         if callable(install):install(None)
         if callable(install_free):

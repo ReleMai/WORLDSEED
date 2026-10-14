@@ -54,7 +54,7 @@ jobs:
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
       - name: M3 presentation and reference-manifest contracts
-        run: python -u tools/run_ci_check.py --name m3-contracts --timeout 35 -- python -u -m unittest -v tests.test_presentation_style tests.test_m3_reference_scenes
+        run: python -u tools/run_ci_check.py --name m3-contracts --timeout 35 -- python -u -m unittest -v tests.test_presentation_style tests.test_m3_reference_scenes tests.test_playtest_report
       - name: M2 GPU probe parameter and budget tests
         run: python -u tools/run_ci_check.py --name m2-gpu-probe --timeout 35 -- python -u -m unittest -v tests.test_gpu_compositing_probe
 
