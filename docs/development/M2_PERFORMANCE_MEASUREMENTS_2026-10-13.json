@@ -1,0 +1,79 @@
+{
+  "implementation_sha": "ab3f03530dac9fdac0e66ff4a30d18a9f56bea0e",
+  "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "python": "3.11.17",
+  "logical_cpus": 4,
+  "renderer": "pygame-ce SDL dummy, unpaced",
+  "seed": "worldseed-reference-v1",
+  "frames": 40,
+  "warmup": 5,
+  "zoom": 28,
+  "comparison_run_1080p": "https://github.com/ReleMai/WORLDSEED/actions/runs/38502850784",
+  "final_benchmark_run": "https://github.com/ReleMai/WORLDSEED/actions/runs/38503212708",
+  "scenes": [
+    {
+      "name": "forest",
+      "p95_720": 10.933,
+      "p95_1080_before": 35.917,
+      "p95_1080_after": 32.392
+    },
+    {
+      "name": "camp",
+      "p95_720": 10.573,
+      "p95_1080_before": 37.945,
+      "p95_1080_after": 29.183
+    },
+    {
+      "name": "village_street",
+      "p95_720": 15.803,
+      "p95_1080_before": 46.946,
+      "p95_1080_after": 36.61
+    },
+    {
+      "name": "interior",
+      "p95_720": 4.124,
+      "p95_1080_before": 6.017,
+      "p95_1080_after": 5.946
+    },
+    {
+      "name": "open_panel",
+      "p95_720": 16.005,
+      "p95_1080_before": 47.625,
+      "p95_1080_after": 38.288
+    },
+    {
+      "name": "large_save",
+      "p95_720": 16.459,
+      "p95_1080_before": 46.953,
+      "p95_1080_after": 39.233
+    }
+  ],
+  "movement": {
+    "distant_npcs_1": 1024,
+    "distant_npcs_2": 10024,
+    "p50_ratio": 1.0817047533061341,
+    "proposed_20_percent_met": true
+  },
+  "snapshot": {
+    "npc_1000": {
+      "legacy_ms": 58.494,
+      "revised_ms": 14.557,
+      "json_bytes": 1011769
+    },
+    "npc_10000": {
+      "legacy_ms": 695.121,
+      "revised_ms": 198.27,
+      "json_bytes": 10092605
+    }
+  },
+  "checks": {
+    "synthetic_720p_frame_p95_goal_met": true,
+    "synthetic_1080p_frame_p95_goal_met": false,
+    "ordinary_save_capture_50ms_met": true,
+    "large_save_capture_50ms_met": false,
+    "player_hardware_measured": false,
+    "input_to_display_latency_measured": false,
+    "long_session_soak_measured": false,
+    "simulation_authority_unchanged_in_scenes": true
+  }
+}
