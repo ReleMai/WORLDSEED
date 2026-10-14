@@ -2,7 +2,19 @@
 setlocal
 cd /d "%~dp0"
 if not exist "WORLDSEED.exe" (
-  echo WORLDSEED.exe is missing. Extract the entire GitHub build ZIP before launching.
+  echo.
+  echo ERROR: WORLDSEED.exe is not beside this launcher.
+  echo.
+  echo You probably downloaded Code ^> Download ZIP ^(source code only^).
+  echo That download includes Python files, but NOT the compiled Windows EXE.
+  echo.
+  echo Get the 400+ MB Windows x64 EXECUTABLE artifact from:
+  echo https://github.com/ReleMai/WORLDSEED/actions/workflows/windows-playtest.yml
+  echo Open the latest successful run, scroll to Artifacts, and download
+  echo WORLDSEED-Windows-x64-EXECUTABLE-...
+  echo.
+  echo Extract that artifact into a NEW EMPTY folder. Keep _internal with the EXE.
+  echo Do not merge it with an old WORLDSEED source folder.
   pause
   exit /b 2
 )

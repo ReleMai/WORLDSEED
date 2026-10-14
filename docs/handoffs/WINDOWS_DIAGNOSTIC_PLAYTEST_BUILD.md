@@ -45,3 +45,27 @@ visible clipping, responsiveness, crashes, or graphical oddities.
 
 No save-schema, worldgen, RNG, content or simulation-authority change is part
 of this instrumentation package.
+
+
+## October 14 — Source ZIP versus Windows executable artifact fix
+
+Observed issue: `PLAY_WORLDSEED_TEST.bat` was committed at the repository
+root. GitHub's source archive therefore displayed a launcher but had **no**
+`WORLDSEED.exe`. GitHub Actions *did* build, smoke-test and upload the
+Windows PyInstaller executable successfully (artifact 11906091211, run
+38585957463, 443733208 bytes). The user's extracted layout matches the
+source ZIP, not the Windows binary artifact; a local extraction cannot be
+verified remotely.
+
+Correction: move the Windows launcher, exporter and player README into
+`packaging/windows/` so they only become *root files* of the compiled
+distribution through the Windows builder. Remove the misleading source-root
+launchers, add upfront README download guidance and make launcher errors
+identify source-vs-binary confusion explicitly.
+
+The Windows release workflow now checks the actual `WORLDSEED.exe`, the
+PyInstaller `_internal` directory, readable launchers and build identity
+**after** frozen-executable smoke tests and **before** artifact upload. It
+writes a small verifiable `BUNDLE_VERIFY.json` manifest with the EXE size
+and SHA256, and uses a clearly named `WORLDSEED-Windows-x64-EXECUTABLE`
+artifact. The game and save format remain unchanged.

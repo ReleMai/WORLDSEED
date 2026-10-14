@@ -3,8 +3,13 @@ WORLDSEED WINDOWS TEST BUILD (October 2026)
 
 Requirements: Windows 10/11 x64. No Python or pip installation required.
 
-1. Download the WORLDSEED-Windows-Playtest artifact from GitHub Actions.
-2. Extract the entire ZIP to a folder you can write to (such as Documents).
+1. DO NOT use GitHub's green Code > Download ZIP button; that ZIP is only
+   source code and contains NO WORLDSEED.exe.
+   Instead open https://github.com/ReleMai/WORLDSEED/actions/workflows/windows-playtest.yml
+   and download the WORLDSEED-Windows-x64-EXECUTABLE-... artifact under the
+   latest successful Windows Playtest Executable workflow run.
+   The artifact is a large download because it includes all game graphics.
+2. Extract the entire Actions artifact ZIP into a NEW EMPTY folder (such as Documents/WORLDSEED_Test).
    IMPORTANT: Keep WORLDSEED.exe and the _internal directory together.
 3. Double-click PLAY_WORLDSEED_TEST.bat to start recording a session.
 4. Create or load a world, explore, interact, craft, save and try several

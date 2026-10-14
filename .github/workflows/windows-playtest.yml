@@ -13,9 +13,9 @@ on:
       - "tests/test_playtest_report.py"
       - "run_worldseed.py"
       - "worldseed/app.py"
-      - "PLAY_WORLDSEED_TEST.bat"
-      - "EXPORT_WORLDSEED_REPORT.bat"
-      - "WINDOWS_PLAYTEST_README.txt"
+      - "packaging/windows/**"
+      - "tools/verify_windows_bundle.py"
+      - "tests/test_windows_bundle_layout.py"
 
 permissions:
   contents: read
@@ -43,7 +43,7 @@ jobs:
         run: |
           python -m compileall -q worldseed tools tests run_worldseed.py
           if ($LASTEXITCODE -ne 0) { throw "Python compile failed" }
-          python -u tools/run_ci_check.py --name playtest-report-contracts --timeout 45 -- python -u -m unittest -v tests.test_playtest_report
+          python -u tools/run_ci_check.py --name playtest-report-contracts --timeout 45 -- python -u -m unittest -v tests.test_playtest_report tests.test_windows_bundle_layout
           if ($LASTEXITCODE -ne 0) { throw "Playtest report tests failed" }
       - name: Bundle real pygame-ce game with assets
         shell: pwsh
@@ -53,9 +53,9 @@ jobs:
       - name: Prepare one-click Windows distribution
         shell: pwsh
         run: |
-          Copy-Item PLAY_WORLDSEED_TEST.bat dist/WORLDSEED/PLAY_WORLDSEED_TEST.bat -Force
-          Copy-Item EXPORT_WORLDSEED_REPORT.bat dist/WORLDSEED/EXPORT_WORLDSEED_REPORT.bat -Force
-          Copy-Item WINDOWS_PLAYTEST_README.txt dist/WORLDSEED/README_PLAYTEST.txt -Force
+          Copy-Item packaging/windows/PLAY_WORLDSEED_TEST.bat dist/WORLDSEED/PLAY_WORLDSEED_TEST.bat -Force
+          Copy-Item packaging/windows/EXPORT_WORLDSEED_REPORT.bat dist/WORLDSEED/EXPORT_WORLDSEED_REPORT.bat -Force
+          Copy-Item packaging/windows/README_PLAYTEST.txt dist/WORLDSEED/README_PLAYTEST.txt -Force
           '{"commit":"${{ github.sha }}","build_kind":"windows-one-dir"}' | Set-Content -LiteralPath dist/WORLDSEED/PLAYTEST_BUILD.json -Encoding utf8
       - name: Smoke test actual frozen Windows EXE and report ZIP
         shell: pwsh
@@ -74,10 +74,16 @@ jobs:
             Pop-Location
           }
           Remove-Item dist/WORLDSEED/playtest_reports -Recurse -Force
-      - name: Upload playable Windows x64 build (includes all game assets)
+      - name: Verify exact executable distribution contents before upload
+        shell: pwsh
+        run: |
+          python tools/verify_windows_bundle.py dist/WORLDSEED
+          if ($LASTEXITCODE -ne 0) { throw "Windows executable distribution missing required files" }
+          Get-ChildItem dist/WORLDSEED -Force | Select-Object Name, Length | Format-Table -AutoSize
+      - name: Upload verified Windows executable and support files
         uses: actions/upload-artifact@v4
         with:
-          name: WORLDSEED-Windows-Playtest-${{ github.sha }}
+          name: WORLDSEED-Windows-x64-EXECUTABLE-${{ github.sha }}
           path: dist/WORLDSEED/
           if-no-files-found: error
           compression-level: 6

@@ -1,5 +1,21 @@
 # WORLDSEED — Consolidated Project Manual
 
+## Windows executable download — important
+
+**The green "Code → Download ZIP" button downloads the Python SOURCE, not a playable Windows executable.**
+Source checkouts intentionally do not contain `WORLDSEED.exe` or the Windows-only playtest launchers at their root.
+
+To get the actual standalone Windows application, visit the
+[WORLDSEED Windows Playtest Executable workflow](https://github.com/ReleMai/WORLDSEED/actions/workflows/windows-playtest.yml),
+open the latest **successful** run, and download the artifact named
+`WORLDSEED-Windows-x64-EXECUTABLE-<commit>` from **Artifacts**.
+Extract that artifact into a **new, empty folder** and run `PLAY_WORLDSEED_TEST.bat`
+beside `WORLDSEED.exe` and `_internal/`. Do not merge it with older source
+directories. Back up saves before copying existing worlds into the new build.
+
+The reporter generates a local ZIP in `playtest_reports/` for optional upload
+to ChatGPT; it does not upload game data automatically.
+
 This README collects WORLDSEED product documentation and historical development notes. For current checkout, branch, and validation instructions, use [DEVELOPMENT.md](docs/development/DEVELOPMENT.md) and the current testing contract in [AGENTS.md](AGENTS.md). The organized documentation index is at [docs/README.md](docs/README.md). Older commands and release reports below are historical context, not requirements to rerun full suites or multi-decade soaks during every task.
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.

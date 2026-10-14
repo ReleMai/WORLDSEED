@@ -2,7 +2,9 @@
 setlocal
 cd /d "%~dp0"
 if not exist "WORLDSEED.exe" (
-  echo Please extract the complete Windows build before exporting.
+  echo Missing WORLDSEED.exe. The GitHub source ZIP is NOT the Windows build.
+  echo Download a successful Windows x64 EXECUTABLE artifact from:
+  echo https://github.com/ReleMai/WORLDSEED/actions/workflows/windows-playtest.yml
   pause
   exit /b 2
 )
