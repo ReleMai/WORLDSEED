@@ -168,7 +168,7 @@ jobs:
 
       - name: Runtime profiling and prepared reference scenes
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Runtime profiling and reference scenes" --timeout 120 -- python -u -m unittest -v tests.test_runtime_profiling tests.test_profiling_integration tests.test_render_profiling tests.test_reference_scenes tests.test_save_capture_snapshot
+        run: python -u tools/run_ci_check.py --name "Runtime profiling and reference scenes" --timeout 120 -- python -u -m unittest -v tests.test_runtime_profiling tests.test_profiling_integration tests.test_render_profiling tests.test_reference_scenes tests.test_save_capture_snapshot tests.test_m2_validation
 
       - name: Save failure preservation and recovery
         shell: pwsh

@@ -1,0 +1,42 @@
+name: WORLDSEED M2 Performance Measurements
+
+# One-off reproducible profiling after an M2 benchmark-script/workflow update.
+# Not part of every normal Fast Gate run, since reference scenes are expensive.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/m2_validation.py"
+      - ".github/workflows/m2-measure.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  m2-measure:
+    name: M2 reference scenes and save-capture scaling
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install runtime
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Run six scenes, distant scaling and save capture
+        run: python -u tools/run_ci_check.py --name "M2 performance measurement" --timeout 870 -- python -u -m tools.m2_validation --output dist/m2-validation --frames 40 --warmup 5 --capture-repeats 3
+      - name: Preserve machine-readable measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldseed-m2-measurements
+          path: dist/m2-validation/
+          if-no-files-found: warn
+          retention-days: 30
