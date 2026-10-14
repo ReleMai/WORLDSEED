@@ -141,6 +141,35 @@ class RenderProfilingTests(unittest.TestCase):
         self.assertTrue(all(stage['count'] == 1 for stage in stages.values()))
         self.term.clock.tick.assert_called_with(120)
 
+    def test_unchanged_discovered_base_does_not_rescan_terrain(self):
+        from worldseed.core.coords import WorldPos
+
+        self._render()
+        stable,left,top,surface,_=self.term._base_scroll_state
+        _,z,cols,rows,tile_px,_=stable
+        known=self.sim.discovered_tiles_set
+        old_stamp=self.term._base_scroll_discovery_stamp
+        with patch.object(self.world,'tile_at',side_effect=AssertionError('rescanned unchanged base')):
+            reused=self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
+        self.assertIs(reused,surface)
+        self.assertEqual(old_stamp,self.term._base_scroll_discovery_stamp)
+
+        # A newly revealed neighbor changes terrain blending. Do not reuse a
+        # stale base even if a later removal preserves the discovery count.
+        known.add('1,0,0')
+        with patch.object(self.world,'tile_at',wraps=self.world.tile_at) as read:
+            self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
+            self.assertGreater(read.call_count,0)
+        self.assertNotEqual(old_stamp,self.term._base_scroll_discovery_stamp)
+        previous=self.term._base_scroll_discovery_stamp
+        known.discard('1,0,0')
+        known.add('2,0,0')
+        self.assertNotEqual(previous,(id(known.tiles),known.tiles.revision))
+        self.world.set_terrain(WorldPos(0,0,0),'core:rock')
+        with patch.object(self.world,'tile_at',wraps=self.world.tile_at) as read:
+            self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
+            self.assertGreater(read.call_count,0)
+
     def test_terrain_projection_reuses_readonly_cell_classification(self):
         from worldseed.core.coords import WorldPos
 

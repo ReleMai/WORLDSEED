@@ -150,6 +150,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._water_current_cache = {}
         self._base_layer_cache: dict[tuple[Any, ...], Any] = {}
         self._base_scroll_state: tuple[Any, ...] | None = None
+        self._base_scroll_discovery_stamp = None
         # Retain only the current viewport's static water/wet-ground
         # classification. Never cache animated water frames or game state.
         self._terrain_overlay_projection_cache = None
@@ -3553,7 +3554,17 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         """
         pg=self.pg; special_unknown=self._visuals.special('unknown')
         stable=(id(world),z,cols,rows,tile_px,getattr(world,'revision',0))
+        # Only compact discovery provides a monotonic mutation version. Plain
+        # sets/legacy fixtures intentionally retain the old full examination
+        # path. The identity prevents false hits across save/world reloads.
+        tiles=getattr(known,'tiles',None)
+        discovery_stamp=(id(tiles),tiles.revision) if tiles is not None and hasattr(tiles,'revision') else None
         prev=self._base_scroll_state
+        if prev is not None and discovery_stamp is not None:
+            old_stable,old_x,old_y,old_surf,_=prev
+            if (old_stable==stable and old_x==left and old_y==top
+                    and getattr(self,'_base_scroll_discovery_stamp',None)==discovery_stamp):
+                return old_surf
         surf=None;rendered_known=set();old_left=old_top=None
         can_scroll=False
         if prev is not None:
@@ -3650,6 +3661,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                         surf.blit(self._edge_overlay_surface(kind,direction,tile_px), rect.topleft)
                 rendered_known.add(pk)
         self._base_scroll_state=(stable,left,top,surf,rendered_known)
+        self._base_scroll_discovery_stamp=discovery_stamp
         return surf
 
     def _spatial_state_views(self, sim, left:int, top:int, right:int, bottom:int, z:int):

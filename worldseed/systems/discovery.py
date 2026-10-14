@@ -88,6 +88,9 @@ class DiscoveryTiles(Collection[str]):
     """
     def __init__(self, tokens=()):
         self._chunks: dict[tuple[int, int, int], int] = {}
+        # Runtime-only invalidation marker for derived viewport caches. A
+        # same-count replacement must not look like unchanged discovery.
+        self.revision = 0
         self._count = 0
         self._membership_cache: OrderedDict[str, bool] = OrderedDict()
         self.surface_chunks: set[tuple[int, int]] = set()
@@ -168,6 +171,7 @@ class DiscoveryTiles(Collection[str]):
         self._chunks[key] = mask
         self._membership_cache.pop(token, None)
         self._count += 1
+        self.revision += 1
         if z == 0:
             surface_key = key[:2]
             self.surface_chunks.add(surface_key)
@@ -189,6 +193,7 @@ class DiscoveryTiles(Collection[str]):
         key = (x // CHUNK_SIDE, y // CHUNK_SIDE, z)
         mask = self._chunks[key] & ~(1 << ((y % CHUNK_SIDE) * CHUNK_SIDE + x % CHUNK_SIDE))
         self._count -= 1
+        self.revision += 1
         self._membership_cache.pop(token, None)
         if mask:
             self._chunks[key] = mask
@@ -202,6 +207,7 @@ class DiscoveryTiles(Collection[str]):
                 self.surface_cells.pop(key[:2], None)
 
     def clear(self):
+        self.revision += 1
         self._chunks.clear()
         self._count = 0
         self._membership_cache.clear()

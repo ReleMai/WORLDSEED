@@ -35,6 +35,22 @@ class CompactDiscoveryTests(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_discovery_revision_detects_same_count_replacement(self):
+        cells=DiscoveryTiles(['0,0,0'])
+        before=cells.revision
+        self.assertFalse(cells.append('0,0,0'))
+        self.assertEqual(cells.revision,before)
+        self.assertTrue(cells.append('1,0,0'))
+        cells.discard('0,0,0')
+        self.assertEqual(len(cells),1)
+        self.assertEqual(cells.revision,before+2)
+        restored=DiscoveryTiles.from_chunks(cells.to_chunks())
+        self.assertEqual(restored.revision,0)
+        self.assertEqual(set(restored),{'1,0,0'})
+        restored.clear()
+        self.assertEqual(restored.revision,1)
+        self.assertEqual(len(restored),0)
+
     def test_negative_and_multilevel_cells_are_exact(self):
         tokens = ['-33,-33,0', '-32,-32,0', '-1,-1,0', '0,0,0', '31,31,0', '32,32,0', '-1,32,-2', '1,2,3']
         cells = DiscoveryTiles(tokens)
