@@ -15,6 +15,12 @@ class SettlementViewportCacheTests(unittest.TestCase):
         p._viewport_cell_snapshot=None
         p._viewport_shell_snapshot=None
         p._indoor_fixture_uids=set()
+        p._rooms={}
+        p._structures={}
+        p._skeletons={}
+        p._route_segments={}
+        p._crossings={}
+        p._active_settlement_ids=()
         p._cells={
             (1,2):PhysicalizedSettlementCell(1,2,'village',ground_piece_id='core:footpath_piece'),
             (-34,-1):PhysicalizedSettlementCell(-34,-1,'village',fixture_piece_uid='fixture:1',fixture_piece_id='core:bench'),
