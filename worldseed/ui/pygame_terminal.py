@@ -158,6 +158,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         # exact visible area or explored memory changes, not per static frame.
         self._memory_fog_projection_cache = None
         self._resource_view_cache: dict[tuple[Any, ...], dict[tuple[int,int,int], tuple[Any, Any]]] = {}
+        # One exact viewport response; the per-cell cache still handles
+        # movement strip reuse when a camera tile boundary is crossed.
+        self._resource_view_snapshot = None
         self._resource_cell_cache: dict[tuple[Any, ...], tuple[Any, Any] | None] = {}
         self._entity_spatial_cache_key = None
         self._entity_spatial_cache = None
@@ -3726,6 +3729,12 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         revision=(id(sim),sim.resources.revision,sim.clock.minute//1440,
                   len(sim.state.structures),len(sim.state.containers),
                   len(sim.state.crops),len(sim.state.soils))
+        # Visibility is a small current-LOS set, never lifetime discovery.
+        # Exact contents prevent stale views after same-count LOS changes.
+        viewport_stamp=(revision,z,left,top,cols,rows,frozenset(known))
+        snapshot=getattr(self,'_resource_view_snapshot',None)
+        if snapshot is not None and snapshot[0]==viewport_stamp:
+            return snapshot[1]
         out={}
         for sy in range(rows):
             wy=top+sy
@@ -3747,6 +3756,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                         self._resource_cell_cache=current if len(current)<16000 else {}
                 cached=self._resource_cell_cache.get(ckey)
                 if cached is not None:out[(wx,wy,z)]=cached
+        self._resource_view_snapshot=(viewport_stamp,out)
         return out
 
     def _hover_lines_for(self, wx:int, wy:int, pixel=None):
