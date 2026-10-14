@@ -41,7 +41,12 @@ def renderer_view(state, left=0, top=0, right=5, bottom=5, z=0, terminal=None):
     if not hasattr(terminal, '_entity_spatial_cache_key'):
         terminal._entity_spatial_cache_key=None
         terminal._entity_spatial_cache=None
-    sim=SimpleNamespace(state=state, clock=SimpleNamespace(minute=0), npcs=None)
+    # Keep the same simulation identity between repeated frame queries.
+    # A new sim object correctly invalidates renderer caches by design.
+    sim=getattr(terminal,'_fixture_spatial_sim',None)
+    if sim is None or sim.state is not state:
+        sim=SimpleNamespace(state=state,clock=SimpleNamespace(minute=0),npcs=None)
+        terminal._fixture_spatial_sim=sim
     return terminal, terminal._spatial_state_views(sim,left,top,right,bottom,z)
 
 
