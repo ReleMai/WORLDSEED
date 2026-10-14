@@ -3662,7 +3662,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         state=sim.state
         collections=(
             ('structures',state.structures),
-            ('containers',state.containers),('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
+            ('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
             ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
             ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
         )
@@ -3697,6 +3697,16 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             # Simulation always supplies the maintained index.
             rows=(npc for npc in state.npcs.values()
                   if npc.z==z and x0<=npc.x<=x1 and y0<=npc.y<=y1)
+        containers=state.containers
+        container_query=getattr(containers,"near_rect",None)
+        if callable(container_query):
+            out['containers']=[c for c in container_query(x0,y0,x1,y1,z)
+                               if not getattr(c,'interior_space_id','')]
+        else:
+            # Small presentation-only controllers may use plain dictionaries.
+            out['containers']=[c for c in containers.values()
+                               if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1
+                               and not getattr(c,'interior_space_id','')]
         out['npcs']=sorted(rows,key=lambda npc:(int(npc.y)//32,int(npc.x)//32))
         creatures=state.creatures
         creature_query=getattr(creatures,"near_rect",None)

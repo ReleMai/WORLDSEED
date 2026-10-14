@@ -16,6 +16,8 @@ def move_storage_indoors(state, container, structure):
     if not container.interior_space_id:
         container.interior_space_id='interior:'+structure.uid
         container.interior_furniture_uid='storage-furniture:'+container.uid
+    refresh=getattr(state.containers, 'refresh_key', None)
+    if callable(refresh):refresh(key)
     if not container.profile_id:
         container.profile_id='core:supply_crate'
     return True

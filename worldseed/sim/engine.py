@@ -13,7 +13,7 @@ from worldseed.sim.commands import *
 from worldseed.sim.timing import crossed_simulation_ticks, should_replay_active_ticks
 from worldseed.systems.state import LivingWorldState, GroundPile, CropPlot, SoilState, pos_key
 from worldseed.systems.discovery import DiscoveryTiles, DiscoverySet
-from worldseed.systems.spatial_index import CreatureSpatialMap
+from worldseed.systems.spatial_index import CreatureSpatialMap, SpatialObjectMap
 from worldseed.systems.history import HistorySystem
 from worldseed.systems.ecology import EcologySystem
 from worldseed.systems.hunting import HuntingSystem
@@ -88,6 +88,7 @@ class Simulation:
         # save serialization still reads authoritative CreatureState objects.
         if not isinstance(self.state.creatures, CreatureSpatialMap):
             self.state.creatures=CreatureSpatialMap(self.state.creatures)
+        self.state.containers=SpatialObjectMap(self.state.containers)
         self.seed=world_seed or world.generator.world_seed
         self.profiler=RuntimeProfiler(enabled=runtime_profile_enabled(),max_stages=64)
         self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))
