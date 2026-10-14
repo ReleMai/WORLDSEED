@@ -1,0 +1,45 @@
+name: WORLDSEED M3 Visual Reference Candidate
+
+# Expensive generated-scene captures are restricted to changes to this tool
+# and explicit manual runs, never each ordinary gameplay commit.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "tools/m3_reference_scenes.py"
+      - "tests/test_m3_reference_scenes.py"
+      - ".github/workflows/m3-reference-scenes.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  m3-reference-candidate:
+    name: Four M3 reference scenes, repeat parity and snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install pygame-ce and asset dependencies
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Test strict manifest and failure reporting
+        run: python -u tools/run_ci_check.py --name m3-manifest --timeout 40 -- python -u -m unittest -v tests.test_m3_reference_scenes
+      - name: Generate and independently repeat four reference captures
+        run: python -u tools/run_ci_check.py --name m3-four-scene-visual-parity --timeout 720 -- python -u -m tools.m3_reference_scenes --output-dir dist/m3-visual-reference --headless --frames 2 --warmup 1 --passes 2
+      - name: Save unreviewed four-scene PNGs and manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldseed-m3-unreviewed-reference-candidate
+          path: dist/m3-visual-reference/
+          if-no-files-found: warn
+          retention-days: 30

@@ -250,7 +250,7 @@ class CraftingBrowserMixin:
         else:
             self._panel_text('Select a known recipe to inspect its materials, outputs and workshop requirements.',
                              content, color=th['muted'])
-        self._draw_floating_footer(x, y, w, h, subtitle or 'Select a recipe · Scroll details · Drag title · Resize corner · Esc closes')
+        self._draw_floating_footer(x, y, w, h, subtitle)
         self._draw_crafting_tab_tooltip()
         pg.display.flip()
         self.clock.tick(120)

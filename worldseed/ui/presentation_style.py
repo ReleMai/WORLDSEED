@@ -21,6 +21,33 @@ DEFAULT_PALETTE = MappingProxyType({
 })
 
 
+FONT_SIZES = MappingProxyType({'body': 17, 'small': 14, 'title': 21})
+PANEL_METRICS = MappingProxyType({'header_height': 42, 'content_top': 52,
+                                  'side_padding': 16, 'footer_inset': 39})
+PANEL_HELP = MappingProxyType({
+    'inventory_unified': 'Select item · Wheel scrolls · Arrows navigate · Shift-click stores · Esc closes',
+    'container_inventory': 'Shift-click transfers stack · Right-click actions · Drag title · Esc closes',
+    'crafting': 'Select recipe · Wheel scrolls · Inspect requirements · Drag title · Esc closes',
+    'salvaging': 'Select salvage · Review recovery · Drag title · Esc closes',
+    'homestead_styles': 'Arrow keys browse styles · Enter selects · Drag title · Esc closes',
+    'homestead_depot': 'Click materials to deposit · Build when ready · Drag title · Esc closes',
+    'npc_profile': 'Select a tab · Drag title · Resize corner · Esc closes',
+    'npc_dialogue': 'Select dialogue · Arrows navigate · Esc returns to previous topic',
+})
+
+
+def panel_help_text(panel_id: str | None, explicit: str | None = None) -> str:
+    """Display contextual instructions without mutating navigation state."""
+    if explicit:
+        return str(explicit)
+    return PANEL_HELP.get(str(panel_id), 'Drag title · Resize corner · Esc closes')
+
+
+def draw_panel_focus_outline(pg, screen, rect, colors) -> None:
+    """Extra inner border: active-window feedback beyond color alone."""
+    pg.draw.rect(screen, colors['edge_hi'], rect.inflate(-6, -6), 1, border_radius=6)
+
+
 def palette() -> dict[str, tuple[int, int, int]]:
     """Each renderer receives its own palette instance."""
     return dict(DEFAULT_PALETTE)

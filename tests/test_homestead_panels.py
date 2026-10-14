@@ -49,6 +49,17 @@ class HomesteadPanelsTests(unittest.TestCase):
         arrow=next(rect for rect,token in self.term._pointer_targets if token=='UI_ACTION:cabin_next')
         self.assertEqual(self.term._hit_token(arrow.center),'UI_ACTION:cabin_next')
 
+    def test_active_window_outline_preserves_drag_close_tokens(self):
+        self.term.present_homestead_styles(self.style(2), 1, 10)
+        state = self.term._floating_panels['homestead_styles']
+        x, y = state['x'], state['y']
+        self.assertEqual(tuple(self.term.screen.get_at((x+3,y+3))[:3]),
+                         self.term._theme['edge_hi'])
+        actions = {token for rect, token in self.term._pointer_targets}
+        self.assertIn('UI_WINDOW_DRAG:homestead_styles', actions)
+        self.assertIn('UI_WINDOW_RESIZE:homestead_styles', actions)
+        self.assertIn('ESC', actions)
+
     def test_depot_panel_icons_and_commands_are_inline(self):
         icons=[]
         orig=self.term._draw_item_icon

@@ -197,7 +197,7 @@ class ItemPanelMixin:
             action((detail.x+17+aw,action_top+60,aw,30),'Drop [X]','UI_ACTION:drop',True)
             action((detail.x+12,action_top+97,detail.w-24,30),'Store [E]' if data.get('near_storage') else 'No storage nearby','UI_ACTION:store',bool(data.get('near_storage')))
         else:self._panel_text('Select an item to see its details.',detail.inflate(-24,-36),color=th['muted'])
-        self._draw_floating_footer(x,y,w,h,'Click selects · Wheel scrolls · Arrows navigate · Shift-click stores stack · Esc closes')
+        self._draw_floating_footer(x,y,w,h)
         if hover and self._ui_context is None:
             name,anchor=hover;tip_w=min(330,max(120,self.small_font.size(name)[0]+20));tip_h=22+18*len(self._wrap_pixel_text(name,self.small_font,tip_w-16))
             tip=pg.Rect(min(anchor.x,screen.get_width()-tip_w-8),min(anchor.bottom+6,screen.get_height()-tip_h-8),tip_w,tip_h)

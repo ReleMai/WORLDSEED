@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from worldseed.ui.presentation_style import palette, draw_standard_menu_frame, draw_floating_panel_frame
+from worldseed.ui.presentation_style import (palette, draw_standard_menu_frame, draw_floating_panel_frame,
+    draw_panel_focus_outline, FONT_SIZES, PANEL_METRICS, panel_help_text)
 
 import importlib.util
 import math
@@ -455,9 +456,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
     def _rebuild_fonts(self) -> None:
         pg = self.pg
         # Consolas is common on Windows; SysFont falls back cross-platform.
-        self.font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", 17)
-        self.small_font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", 14)
-        self.title_font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", 21, bold=True)
+        self.font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", FONT_SIZES['body'])
+        self.small_font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", FONT_SIZES['small'])
+        self.title_font = pg.font.SysFont("Consolas,DejaVu Sans Mono,Liberation Mono", FONT_SIZES['title'], bold=True)
         self.char_w = max(8, self.font.size("M")[0])
         self.char_h = max(16, self.font.get_linesize())
 
@@ -1233,6 +1234,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         state=self._floating_panel_state(panel_id)
         x,y,w,h=state['x'],state['y'],state['w'],state['h']
         draw_floating_panel_frame(pg, screen, pg.Rect(x,y,w,h), self._theme)
+        draw_panel_focus_outline(pg, screen, pg.Rect(x,y,w,h), self._theme)
         self._ui_target(pg.Rect(x+8,y+4,w-58,34),f'UI_WINDOW_DRAG:{panel_id}')
         domain_s=self.small_font.render(domain.upper(),True,self._theme['accent']);screen.blit(domain_s,(x+14,y+7))
         title_x=x+14+domain_s.get_width()+16
@@ -1242,7 +1244,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         pg.draw.line(screen,self._theme['edge_hi'],(grip.x+3,grip.bottom-2),(grip.right-2,grip.y+3),2)
         pg.draw.line(screen,self._theme['edge'],(grip.x+7,grip.bottom-2),(grip.right-2,grip.y+7),2)
         self._ui_target(grip,f'UI_WINDOW_RESIZE:{panel_id}')
-        cx=x+16;cy=y+52;cw=w-32
+        pad=PANEL_METRICS['side_padding']
+        cx=x+pad;cy=y+PANEL_METRICS['content_top'];cw=w-pad*2
         if show_heading:
             heading=self.title_font.render(self._fit_ui_text(title,self.title_font,cw),True,self._theme['text']);screen.blit(heading,(cx,cy));cy+=heading.get_height()+5
         if subtitle:
@@ -1292,7 +1295,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 self.clock.tick(30)
         self.screen.blit(before,(0,0));pg.display.flip()
 
-    def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str='Drag title • Resize corner • Esc closes') -> None:
+    def _draw_floating_footer(self, x:int,y:int,w:int,h:int, text:str|None=None) -> None:
+        text=panel_help_text(self._floating_panel_id,text)
         self.pg.draw.line(self.screen,self._theme['edge'],(x+16,y+h-39),(x+w-16,y+h-39))
         s=self.small_font.render(self._fit_ui_text(text,self.small_font,w-44),True,self._theme['muted'])
         self.screen.blit(s,(x+16,y+h-27))
