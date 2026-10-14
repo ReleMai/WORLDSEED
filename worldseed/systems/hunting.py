@@ -326,10 +326,18 @@ class HuntingSystem:
                 return
 
     def nearby_homes(self,pos:WorldPos,radius:int=10)->list[AnimalHomeState]:
-        return sorted([h for h in self.state.animal_homes.values() if h.z==pos.z and abs(h.x-pos.x)+abs(h.y-pos.y)<=radius],key=lambda h:(abs(h.x-pos.x)+abs(h.y-pos.y),h.uid))
+        homes=self.state.animal_homes
+        query=getattr(homes,'near_rect',None)
+        rows=(query(pos.x-radius,pos.y-radius,pos.x+radius,pos.y+radius,pos.z)
+              if callable(query) else homes.values())
+        return sorted([h for h in rows if h.z==pos.z and abs(h.x-pos.x)+abs(h.y-pos.y)<=radius],
+                      key=lambda h:(abs(h.x-pos.x)+abs(h.y-pos.y),h.uid))
 
     def home_at(self,pos:WorldPos)->AnimalHomeState|None:
-        return next((h for h in self.state.animal_homes.values() if (h.x,h.y,h.z)==(pos.x,pos.y,pos.z)),None)
+        homes=self.state.animal_homes
+        query=getattr(homes,'near_rect',None)
+        rows=(query(pos.x,pos.y,pos.x,pos.y,pos.z) if callable(query) else homes.values())
+        return next((h for h in rows if (h.x,h.y,h.z)==(pos.x,pos.y,pos.z)),None)
 
     def describe_home(self,home:AnimalHomeState,hunting_skill:int,survival_skill:int)->str:
         skill=max(int(hunting_skill),int(survival_skill));sp=self.registry.species.get(home.species_id)
@@ -817,7 +825,11 @@ class HuntingSystem:
         strength: int,
         detail: str,
     ) -> None:
-        for existing in self.state.animal_signs.values():
+        signs=self.state.animal_signs
+        query=getattr(signs,'near_rect',None)
+        candidates=(query(old.x,old.y,old.x,old.y,old.z)
+                    if callable(query) else signs.values())
+        for existing in candidates:
             if existing.source_uid==c.uid and existing.kind==kind and existing.created_minute==minute and (existing.x,existing.y,existing.z)==(old.x,old.y,old.z):
                 return
         token = hash_u64(
@@ -851,15 +863,22 @@ class HuntingSystem:
                 self.state.animal_signs.pop(uid, None)
 
     def nearby_signs(self, pos: WorldPos, radius: int = 8) -> list[AnimalSignState]:
+        signs=self.state.animal_signs
+        query=getattr(signs,'near_rect',None)
+        candidates=(query(pos.x-radius,pos.y-radius,pos.x+radius,pos.y+radius,pos.z)
+                    if callable(query) else signs.values())
         rows = [
-            sign for sign in self.state.animal_signs.values()
+            sign for sign in candidates
             if sign.z == pos.z and abs(sign.x - pos.x) + abs(sign.y - pos.y) <= radius
         ]
         return sorted(rows, key=lambda s: (abs(s.x - pos.x) + abs(s.y - pos.y), -s.created_minute, s.uid))
 
     def signs_at(self, pos: WorldPos) -> list[AnimalSignState]:
+        signs=self.state.animal_signs
+        query=getattr(signs,'near_rect',None)
+        rows=(query(pos.x,pos.y,pos.x,pos.y,pos.z) if callable(query) else signs.values())
         return sorted(
-            [s for s in self.state.animal_signs.values() if (s.x, s.y, s.z) == (pos.x, pos.y, pos.z)],
+            [s for s in rows if (s.x, s.y, s.z) == (pos.x, pos.y, pos.z)],
             key=lambda s: (-s.created_minute, s.uid),
         )
 

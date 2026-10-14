@@ -89,10 +89,11 @@ class Simulation:
         if not isinstance(self.state.creatures, CreatureSpatialMap):
             self.state.creatures=CreatureSpatialMap(self.state.creatures)
         self.state.containers=SpatialObjectMap(self.state.containers)
-        # These outdoor entities live in the authoritative mapping; indexes
-        # track creations, replacements and removals without renderer scans.
-        # Creature and container locators already use the same contract.
-        for kind in ("structures", "ground_piles", "carcasses"):
+        # All exterior presentation objects use one authoritative mapping and
+        # transient bucket references. Existing content/save dictionaries are
+        # converted once here; no renderer read may rebuild the indexes.
+        for kind in ("structures", "ground_piles", "carcasses",
+                     "crops", "fires", "fluids", "animal_signs", "animal_homes"):
             mapping=getattr(self.state,kind)
             if not isinstance(mapping,SpatialObjectMap):
                 setattr(self.state,kind,SpatialObjectMap(mapping))

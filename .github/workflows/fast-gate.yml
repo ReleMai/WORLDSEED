@@ -141,7 +141,7 @@ jobs:
 
       - name: Local NPC indexing and compact discovery
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Local actor indexing and compact discovery" --timeout 100 -- python -u -m unittest -v tests.test_active_npc_movement tests.test_npc_spatial_lifecycle tests.test_npc_presentation_index tests.test_creature_spatial_index tests.test_container_spatial_index tests.test_stationary_spatial_index tests.test_compact_discovery
+        run: python -u tools/run_ci_check.py --name "Local actor indexing and compact discovery" --timeout 100 -- python -u -m unittest -v tests.test_active_npc_movement tests.test_npc_spatial_lifecycle tests.test_npc_presentation_index tests.test_creature_spatial_index tests.test_container_spatial_index tests.test_stationary_spatial_index tests.test_remaining_spatial_index tests.test_compact_discovery
 
       - name: Runtime profiling and prepared reference scenes
         shell: pwsh

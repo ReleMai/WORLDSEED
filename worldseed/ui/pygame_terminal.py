@@ -3650,81 +3650,48 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         return surf
 
     def _spatial_state_views(self, sim, left:int, top:int, right:int, bottom:int, z:int):
-        """Return only state objects in viewport-adjacent spatial buckets.
+        """Read only local 32-tile bucket regions; never scan world state.
 
-        Previously every game-frame scanned every realized NPC, creature,
-        structure, crop, pile and fire in the whole explored world. The cost
-        therefore rose permanently as exploration materialized more regions.
-        NPCs, creatures, containers, structures, ground piles and carcasses
-        use authoritative transient locators, so movement and nearby mutations
-        cannot trigger whole-population rescans from the UI. Remaining collections
-        retain the existing presentation cache until their mutation hooks land.
+        Simulation prepares transient indexes at load and maintains them during
+        authoritative entity changes. Query and rendering remain observational.
+        Plain dictionaries are supported only for standalone UI-only fixtures.
         """
         state=sim.state
-        collections=(
-            ('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
-            ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
-        )
-        key=(id(sim),sim.clock.minute//60)+tuple(len(v) for _,v in collections)
-        if key!=self._entity_spatial_cache_key or self._entity_spatial_cache is None:
-            index={name:{} for name,_ in collections}
-            for name,mapping in collections:
-                buckets=index[name]
-                for obj in mapping.values():
-                    ox=int(getattr(obj,'x',0));oy=int(getattr(obj,'y',0));oz=int(getattr(obj,'z',0))
-                    buckets.setdefault((ox//32,oy//32,oz),[]).append(obj)
-            self._entity_spatial_cache_key=key;self._entity_spatial_cache=index
-        index=self._entity_spatial_cache
-        out={name:[] for name,_ in collections}
-        for cy in range(top//32,bottom//32+1):
-            for cx in range(left//32,right//32+1):
-                bucket=(cx,cy,z)
-                for name,_ in collections:
-                    out[name].extend(index[name].get(bucket,()))
-        # Retain the old viewport-adjacent 32-cell bucket extent and ordering.
-        # The simulation locator performs the bounded read; drawing cannot
-        # repair indexes or enumerate the whole realized NPC population.
+        # Maintain the original bucket-extent policy: the renderer prepares
+        # entire 32-cell visual buckets, not a cropped tile rectangle.
         x0,y0=(left//32)*32,(top//32)*32
         x1,y1=(right//32+1)*32-1,(bottom//32+1)*32-1
+        out={}
+        for name in ('structures','containers','crops','fires','fluids',
+                     'ground_piles','carcasses','animal_signs','animal_homes'):
+            mapping=getattr(state,name)
+            query=getattr(mapping,'near_rect',None)
+            if callable(query):
+                rows=query(x0,y0,x1,y1,z)
+            else:
+                # A presentation-only controller may use plain dictionaries.
+                # Production Simulation always supplies indexed dictionaries.
+                rows=(obj for obj in mapping.values()
+                      if obj.z==z and x0<=obj.x<=x1 and y0<=obj.y<=y1)
+            if name=='containers':
+                rows=(obj for obj in rows
+                      if not getattr(obj,'interior_space_id',''))
+            # Historical drawing order: 32-cell row, column, then mapping's
+            # authoritative insertion order (stable Python sort).
+            out[name]=sorted(rows,key=lambda obj:(int(obj.y)//32,int(obj.x)//32))
         query=getattr(getattr(sim,'npcs',None),'indexed_npcs_in_rect',None)
         if callable(query):
             rows=query(x0,y0,x1,y1,z)
         else:
-            # Compatibility for small presentation-only controllers; the real
-            # Simulation always supplies the maintained index.
             rows=(npc for npc in state.npcs.values()
                   if npc.z==z and x0<=npc.x<=x1 and y0<=npc.y<=y1)
-        containers=state.containers
-        container_query=getattr(containers,"near_rect",None)
-        if callable(container_query):
-            out['containers']=[c for c in container_query(x0,y0,x1,y1,z)
-                               if not getattr(c,'interior_space_id','')]
-        else:
-            # Small presentation-only controllers may use plain dictionaries.
-            out['containers']=[c for c in containers.values()
-                               if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1
-                               and not getattr(c,'interior_space_id','')]
-        # These three collections use maintained indexes. Sort by old 32-cell
-        # bucket traversal order, with stable insertion order within a bucket.
-        # Standalone presentation fixtures may still supply plain dictionaries.
-        for name in ('structures','ground_piles','carcasses'):
-            mapping=getattr(state,name)
-            query=getattr(mapping,'near_rect',None)
-            if callable(query):
-                objects=query(x0,y0,x1,y1,z)
-            else:
-                objects=(obj for obj in mapping.values()
-                         if obj.z==z and x0<=obj.x<=x1 and y0<=obj.y<=y1)
-            out[name]=sorted(objects,key=lambda obj:(int(obj.y)//32,int(obj.x)//32))
         out['npcs']=sorted(rows,key=lambda npc:(int(npc.y)//32,int(npc.x)//32))
         creatures=state.creatures
-        creature_query=getattr(creatures,"near_rect",None)
+        creature_query=getattr(creatures,'near_rect',None)
         if callable(creature_query):
-            # Preserve historical presentation order across 32-cell buckets.
             out['creatures']=sorted(creature_query(x0,y0,x1,y1,z),
                 key=lambda c:(int(c.y)//32,int(c.x)//32,creatures.order_of(c.uid)))
         else:
-            # Small presentation-only fixtures may not construct Simulation.
             out['creatures']=[c for c in creatures.values()
                               if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1]
         return out
