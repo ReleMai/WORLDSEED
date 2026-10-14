@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
+from unittest.mock import patch
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
 from tools.verify_windows_bundle import validate_bundle
+from run_worldseed import _enable_bundled_playtest_profiling
 
 
 class WindowsBundleLayoutTests(unittest.TestCase):
@@ -36,6 +40,28 @@ class WindowsBundleLayoutTests(unittest.TestCase):
             (folder / '_internal' / 'base_library.zip').unlink()
             with self.assertRaisesRegex(ValueError, '_internal'):
                 validate_bundle(folder, minimum_exe_bytes=16)
+
+    def test_bundled_playtest_records_timing_even_if_exe_is_launched_directly(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            exe = root / 'WORLDSEED.exe'
+            marker = root / 'PLAYTEST_BUILD.json'
+            marker.write_text(json.dumps({'commit':'a'*40, 'build_kind':'windows-one-dir'}))
+            with (patch.object(sys, 'frozen', True, create=True),
+                  patch.object(sys, 'executable', str(exe)),
+                  patch.dict(os.environ, {'WORLDSEED_PROFILE': '0'})):
+                self.assertTrue(_enable_bundled_playtest_profiling())
+                self.assertEqual(os.environ['WORLDSEED_PROFILE'], '1')
+                marker.write_text(json.dumps({'commit':'bad', 'build_kind':'windows-one-dir'}))
+                os.environ['WORLDSEED_PROFILE'] = '0'
+                self.assertFalse(_enable_bundled_playtest_profiling())
+                self.assertEqual(os.environ['WORLDSEED_PROFILE'], '0')
+            marker.write_text(json.dumps({'commit':'a'*40, 'build_kind':'windows-one-dir'}))
+            with (patch.object(sys, 'frozen', False, create=True),
+                  patch.object(sys, 'executable', str(exe)),
+                  patch.dict(os.environ, {'WORLDSEED_PROFILE': '0'})):
+                self.assertFalse(_enable_bundled_playtest_profiling())
+                self.assertEqual(os.environ['WORLDSEED_PROFILE'], '0')
 
     def test_source_archive_never_passes_windows_build_check(self):
         with TemporaryDirectory() as temporary:

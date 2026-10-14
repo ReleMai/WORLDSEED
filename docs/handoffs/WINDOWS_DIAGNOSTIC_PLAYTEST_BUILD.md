@@ -69,3 +69,27 @@ PyInstaller `_internal` directory, readable launchers and build identity
 writes a small verifiable `BUNDLE_VERIFY.json` manifest with the EXE size
 and SHA256, and uses a clearly named `WORLDSEED-Windows-x64-EXECUTABLE`
 artifact. The game and save format remain unchanged.
+
+## October 14 — Real Windows report triage (follow-up)
+
+A player-supplied sanitized Windows x64 report (dev64, approximately 18.5 minutes
+elapsed) recorded 735 realtime advances, 19 save events, no Python exceptions,
+and a one-time active-region initialization with region planning 1962.84 ms and
+settlement physicalization 3928.13 ms. These are single startup/activation samples,
+**not evidence of continuous movement stuttering**. The recent-event tail included
+saves at 192–217 ms and a final 450.63 ms checkpoint; the pre-fix report omitted
+all-session save percentiles and backend phase attribution. No FPS/input sample
+was present: `runtime_profile` was empty and no `profile_summary` event was logged.
+
+Remediation: enable bounded RuntimeProfiler automatically only for frozen Windows
+playtest executables with a valid `PLAYTEST_BUILD.json` identity, including when
+players open WORLDSEED.exe directly. The default source/release runtime stays
+opt-in. The privacy-safe exporter now explicitly distinguishes absent profiling
+from sampled timing and aggregates all bounded save events into autosave versus
+full-checkpoint percentiles and counts above 100 ms. This is instrumentation
+and triage, **not** a claimed reduction to save or settlement generation time.
+
+Next Windows pass: repeat normal gameplay and inspect `render.frame`,
+`save.capture`, `save.database`, `save.commit` and region-preparation stages.
+Do not change autosave durability or pre-generation contracts until timings
+identify the responsible phase. No game/save/schema/worldgen changes.

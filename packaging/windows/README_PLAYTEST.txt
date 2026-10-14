@@ -12,6 +12,8 @@ Requirements: Windows 10/11 x64. No Python or pip installation required.
 2. Extract the entire Actions artifact ZIP into a NEW EMPTY folder (such as Documents/WORLDSEED_Test).
    IMPORTANT: Keep WORLDSEED.exe and the _internal directory together.
 3. Double-click PLAY_WORLDSEED_TEST.bat to start recording a session.
+   The Windows test executable also enables timing when launched directly,
+   provided its matching PLAYTEST_BUILD.json stays beside it.
 4. Create or load a world, explore, interact, craft, save and try several
    menus. For performance issues, note where you saw delays.
 5. When you exit (or after a crash), the launcher generates a local ZIP.

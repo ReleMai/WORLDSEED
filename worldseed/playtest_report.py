@@ -54,6 +54,8 @@ def summarize_jsonl(lines, *, source_label='latest-session') -> dict:
     recent = deque(maxlen=MAX_TIMELINE)
     last = {}
     profiles = {}
+    profile_recorded = False
+    saves = {'autosave': [], 'checkpoint': [], 'unclassified': []}
     errors = []
     processed = 0
     for raw in lines:
@@ -98,6 +100,12 @@ def summarize_jsonl(lines, *, source_label='latest-session') -> dict:
                     bucket.append(elapsed)
             if event.get('slow') is True:
                 row['slow'] = True
+        if kind == 'save' and elapsed is not None:
+            # Never copy world paths, timestamps, or save-state content.
+            # Count *all* bounded session saves, not just the recent timeline.
+            group = ('checkpoint' if event.get('backup') is True else
+                     'autosave' if event.get('backup') is False else 'unclassified')
+            saves[group].append(elapsed)
         if kind in ('save', 'command_end', 'playtest_session_end', 'simulation_init'):
             for key in ('turn', 'minute', 'clock_minute'):
                 value = event.get(key)
@@ -111,6 +119,7 @@ def summarize_jsonl(lines, *, source_label='latest-session') -> dict:
                 errors.append({'where': safe_label(event.get('where', 'unknown')),
                                'exception_type': safe_label(match.group(1)) if match else 'unknown'})
         if kind == 'profile_summary' and isinstance(event.get('profile'), dict):
+            profile_recorded = True
             profile = event['profile']
             for name, item in list(profile.get('stages', {}).items())[:96]:
                 if not isinstance(item, dict):
@@ -129,12 +138,20 @@ def summarize_jsonl(lines, *, source_label='latest-session') -> dict:
                           'p95_ms': percentile(values, 0.95),
                           'worst_ms': round(max(values), 2)}
                    for name, values in sorted(stages.items()) if values}
+    save_stats = {group: {'samples': len(values),
+                          'p50_ms': percentile(values, 0.5),
+                          'p95_ms': percentile(values, 0.95),
+                          'worst_ms': round(max(values), 2),
+                          'over_100ms': sum(value > 100 for value in values)}
+                  for group, values in saves.items() if values}
     return {
         'source': source_label, 'events_read': processed,
         'event_counts': dict(sorted(counts.items())),
         'command_counts': dict(sorted(commands.items())),
         'input_categories': dict(sorted(ui_groups.items())),
         'stage_timings': stage_stats, 'runtime_profile': profiles,
+        'profile_status': 'captured' if profile_recorded else 'not_recorded',
+        'save_timings': save_stats,
         'last_progress': last, 'exceptions': errors, 'recent_events': list(recent),
     }
 

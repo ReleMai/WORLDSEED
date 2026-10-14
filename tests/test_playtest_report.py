@@ -28,6 +28,7 @@ class PlaytestReportTests(unittest.TestCase):
             self.assertNotIn(secret, text)
         self.assertEqual(report['exceptions'][0]['exception_type'],'RuntimeError')
         self.assertEqual(report['runtime_profile']['render.frame']['p95_ms'],32.1)
+        self.assertEqual(report['profile_status'],'captured')
         self.assertEqual(report['input_categories']['ui_action'],1)
         self.assertEqual(report['last_progress']['turn'],14)
 
@@ -39,6 +40,22 @@ class PlaytestReportTests(unittest.TestCase):
                               json.dumps({'kind':'stage','name':'tick','elapsed_ms':50})])
         self.assertEqual(data['events_read'],2)
         self.assertEqual(data['stage_timings']['tick']['samples'],1)
+
+    def test_save_cost_is_reported_across_full_session_without_private_paths(self):
+        events = [json.dumps({'kind':'save','backup':False,'elapsed_ms':amount,
+                              'world':'C:\\\\Users\\\\Alice\\\\private.db'})
+                  for amount in (192.0, 200.0, 214.0)]
+        events += [json.dumps({'kind':'save','backup':True,'elapsed_ms':450.0})]
+        events += [json.dumps({'kind':'realtime_advance'}) for _ in range(300)]
+        result = summarize_jsonl(events)
+        self.assertEqual(result['profile_status'], 'not_recorded')
+        self.assertEqual(result['save_timings']['autosave']['samples'], 3)
+        self.assertEqual(result['save_timings']['autosave']['p50_ms'], 200.0)
+        self.assertEqual(result['save_timings']['autosave']['over_100ms'], 3)
+        self.assertEqual(result['save_timings']['checkpoint']['worst_ms'], 450.0)
+        self.assertEqual(result['save_timings']['checkpoint']['samples'], 1)
+        self.assertNotIn('Alice', json.dumps(result))
+        self.assertEqual(result['event_counts']['save'], 4)
 
     def test_export_has_only_sanitized_report_and_instructions(self):
         with TemporaryDirectory() as temporary:
