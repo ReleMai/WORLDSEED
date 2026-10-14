@@ -3621,11 +3621,16 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                         transition_dirty=False
                         for _,ndx,ndy in DIRECTIONS_8:
                             npk=pos_key(wx+ndx,wy+ndy,z)
-                            if npk in known and npk not in old_rendered:
+                            # Discovery may also be pruned or replaced in
+                            # standalone recovery/tests. Neighbor blends must
+                            # update for removals as well as additions.
+                            if (npk in known) != (npk in old_rendered):
                                 transition_dirty=True;break
                         if not transition_dirty:rendered_known.add(pk)
                 if pk not in known:
-                    if not copied:
+                    if not copied or pk in old_rendered:
+                        # A cell pruned from known terrain must not keep
+                        # showing the old tile in a reused scroll surface.
                         if unknown:surf.blit(unknown,rect.topleft)
                         else:pg.draw.rect(surf,(8,10,12),rect)
                     continue

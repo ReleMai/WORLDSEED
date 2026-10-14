@@ -156,15 +156,27 @@ class RenderProfilingTests(unittest.TestCase):
 
         # A newly revealed neighbor changes terrain blending. Do not reuse a
         # stale base even if a later removal preserves the discovery count.
-        known.add('1,0,0')
+        unknown_cells=[
+            f'{x},{y},{z}'
+            for y in range(max(0,top),min(32,top+rows))
+            for x in range(max(0,left),min(32,left+cols))
+            if f'{x},{y},{z}' not in known
+        ]
+        self.assertGreaterEqual(len(unknown_cells),2)
+        first,second=unknown_cells[:2]
+        known.add(first)
         with patch.object(self.world,'tile_at',wraps=self.world.tile_at) as read:
             self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
             self.assertGreater(read.call_count,0)
         self.assertNotEqual(old_stamp,self.term._base_scroll_discovery_stamp)
         previous=self.term._base_scroll_discovery_stamp
-        known.discard('1,0,0')
-        known.add('2,0,0')
+        # Same-count replacement is still a new discovery revision.
+        known.discard(first)
+        known.add(second)
         self.assertNotEqual(previous,(id(known.tiles),known.tiles.revision))
+        with patch.object(self.world,'tile_at',wraps=self.world.tile_at) as read:
+            self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
+            self.assertGreater(read.call_count,0)
         self.world.set_terrain(WorldPos(0,0,0),'core:rock')
         with patch.object(self.world,'tile_at',wraps=self.world.tile_at) as read:
             self.term._build_base_layer(self.world,known,z,left,top,cols,rows,tile_px)
