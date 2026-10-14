@@ -183,6 +183,8 @@ class Simulation:
         self.settlement_physicalization=SettlementPhysicalizationSystem(
             world,registry,self.region_planner,self.settlement_planner,self.route_planner
         )
+        # Derived preparation timings only; never held by save or simulation.
+        self.settlement_physicalization.profiler=self.profiler
         self.activities=ActivitySystem(self.state,registry,self.settlement_physicalization,self.world)
         self.physical_goods=SettlementPhysicalGoodsSystem(self.state,registry)
         self.mining_profession=MiningProfessionSystem(

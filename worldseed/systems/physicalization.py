@@ -12,6 +12,7 @@ from typing import Iterable
 
 from worldseed.core.coords import WorldPos
 from worldseed.systems.building_shells import shell_from_plan, frontage_candidates
+from worldseed.profiling import measure_if_enabled
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,6 +233,9 @@ class SettlementPhysicalizationSystem:
                 if landing is not None:landing_cells[tuple(map(int,landing))]=crossing
 
         piece_id=self._road_piece(road.road_class)
+        # Build this once per route segment, not once per border post. Long
+        # prepared corridors previously rebuilt the entire set per post.
+        route_cell_keys={(int(x),int(y)) for x,y in road.polyline}
         for x,y in road.polyline:
             x=int(x);y=int(y);key=(x,y);old=self._cells.get(key)
             crossing=crossing_cells.get(key);landing=landing_cells.get(key)
@@ -274,7 +278,7 @@ class SettlementPhysicalizationSystem:
                 key=(int(post.x),int(post.y))
                 # Only index a post in the region currently represented by this
                 # segment. Posts remain simulation state even when not local.
-                if key not in set((int(x),int(y)) for x,y in road.polyline):
+                if key not in route_cell_keys:
                     continue
                 old=self._cells.get(key);settlement_id=old.settlement_id if old else ""
                 self._cells[key]=self._merge_cell(
@@ -312,30 +316,35 @@ class SettlementPhysicalizationSystem:
         )
         self._shells=new_shells
         active = []
+        profiler=getattr(self,'profiler',None)
         try:
             for settlement in selected:
-                region = self.region_planner.plan(settlement.region_x, settlement.region_y, persist=True)
                 try:
-                    route_links=(
-                        self.route_planner.links_for_settlement(settlement.uid)
-                        if self.route_planner is not None else ()
-                    )
-                    skeleton = self.skeleton_planner.plan(
-                        region, settlement.uid, settlement.population,
-                        culture_id=str(getattr(settlement,"culture_id","")),
-                        faction_id=str(getattr(settlement,"faction_id","")),
-                        route_links=route_links,persist=True
-                    )
-                    from worldseed.systems.settlement_access import prepare_access_repairs
-                    skeleton = prepare_access_repairs(skeleton,self.world,self.registry)
+                    with measure_if_enabled(profiler,'preparation.physicalization.plan'):
+                        region = self.region_planner.plan(settlement.region_x, settlement.region_y, persist=True)
+                        route_links=(
+                            self.route_planner.links_for_settlement(settlement.uid)
+                            if self.route_planner is not None else ()
+                        )
+                        skeleton = self.skeleton_planner.plan(
+                            region, settlement.uid, settlement.population,
+                            culture_id=str(getattr(settlement,"culture_id","")),
+                            faction_id=str(getattr(settlement,"faction_id","")),
+                            route_links=route_links,persist=True
+                        )
+                    with measure_if_enabled(profiler,'preparation.physicalization.access'):
+                        from worldseed.systems.settlement_access import prepare_access_repairs
+                        skeleton = prepare_access_repairs(skeleton,self.world,self.registry)
                 except ValueError:
                     continue
                 active.append(settlement.uid)
                 self._skeletons[settlement.uid] = skeleton
-                self._index_skeleton(settlement.uid, skeleton)
+                with measure_if_enabled(profiler,'preparation.physicalization.index'):
+                    self._index_skeleton(settlement.uid, skeleton)
             if self.route_planner is not None:
-                route_roads,route_crossings=self.route_planner.materialize_region((rx,ry),self._skeletons)
-                for road in route_roads:self._index_regional_route(road,route_crossings)
+                with measure_if_enabled(profiler,'preparation.physicalization.routes'):
+                    route_roads,route_crossings=self.route_planner.materialize_region((rx,ry),self._skeletons)
+                    for road in route_roads:self._index_regional_route(road,route_crossings)
         except Exception:
             self._shells=old_shells
             self._cells,self._rooms,self._structures,self._skeletons,self._route_segments,self._crossings=(

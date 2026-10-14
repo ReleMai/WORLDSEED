@@ -67,6 +67,35 @@ class ProfilingIntegrationTests(unittest.TestCase):
             "messages": [asdict(event) for event in sim.log],
         }
 
+    def test_physicalization_routes_profile_is_observational(self):
+        from worldseed.systems.physicalization import SettlementPhysicalizationSystem
+        index=SettlementPhysicalizationSystem(
+            SimpleNamespace(),SimpleNamespace(),SimpleNamespace(),SimpleNamespace())
+        index.profiler=self.make_profiler()
+        self.assertEqual(index.sync([], (0,0)),0)
+        self.assertEqual(index.active_settlement_ids,())
+        self.assertEqual(index.profiler.snapshot()['stages'],{})
+        # A route planner, even with no roads, records one explicit stage.
+        index.route_planner=SimpleNamespace(materialize_region=lambda *_:((),()))
+        self.assertEqual(index.sync([], (0,0)),0)
+        self.assertEqual(index.profiler.snapshot()['stages']['preparation.physicalization.routes']['count'],1)
+        self.assertEqual(index.cells(),())
+
+    def test_regional_route_border_posts_preserve_exact_membership(self):
+        from worldseed.systems.physicalization import SettlementPhysicalizationSystem
+        route=SimpleNamespace(uid='segment:1',route_id='route:1',road_class='path',
+                              polyline=((1,2),(2,2)))
+        posts=(SimpleNamespace(uid='post:inside',x=1,y=2),
+               SimpleNamespace(uid='post:outside',x=3,y=2))
+        planner=SimpleNamespace(border_posts_for_route=lambda _uid:posts)
+        registry=SimpleNamespace(settlement_pieces={'core:footpath_piece':object()})
+        index=SettlementPhysicalizationSystem(SimpleNamespace(),registry,
+                                             SimpleNamespace(),SimpleNamespace(),planner)
+        index._index_regional_route(route,())
+        self.assertEqual(index._cells[(1,2)].border_post_id,'post:inside')
+        self.assertEqual(index._cells[(2,2)].border_post_id,'')
+        self.assertNotIn((3,2),index._cells)
+
     def test_profiling_preserves_real_command_realtime_and_preparation_results(self):
         disabled, _ = self.prepared_simulation(enabled=False)
         enabled, _ = self.prepared_simulation(enabled=True)

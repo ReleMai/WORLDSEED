@@ -107,6 +107,17 @@ class ConversationPortraitUITests(unittest.TestCase):
         self.assertNotIn('Private fallback name',self.rendered)
         self.assertEqual(expected,self.portrait_pixels())
 
+    def test_maximized_portrait_popup_uses_supported_composer_size(self):
+        """The old 520px popup crashed a 1920px Windows session (limit 512)."""
+        from unittest.mock import patch
+        self.dialogue()
+        pg=self.term.pg
+        self.term.screen=pg.display.set_mode((1920,1080))
+        with patch.object(pg.event,'wait',return_value=pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE)):
+            self.term._show_portrait_popup()
+        self.assertIn((self.portrait,520),self.term._portrait_composer._surfaces)
+        self.assertEqual(self.term._portrait_composer._surfaces[(self.portrait,520)].get_size(),(520,520))
+
     def test_profile_overview_does_not_repeat_identity_cards_or_traits(self):
         overview=[('Age','35'),('Occupation','Healer'),('Settlement','Millford'),
                   ('Current activity','Idle'),('Traits','Patient'),

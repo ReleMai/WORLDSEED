@@ -93,3 +93,32 @@ Next Windows pass: repeat normal gameplay and inspect `render.frame`,
 `save.capture`, `save.database`, `save.commit` and region-preparation stages.
 Do not change autosave durability or pre-generation contracts until timings
 identify the responsible phase. No game/save/schema/worldgen changes.
+
+## October 14 — Windows NPC portrait crash and engine M2 activation follow-up
+
+A player-submitted second sanitized report from Windows build `a264757`
+reported a `ValueError` after an NPC portrait interaction. Source audit
+confirmed the popup requested 520 pixels at desktop resolutions even though
+`PortraitComposer.render` accepts at most 512. Centralize the portrait size
+limit at 520 pixels to match the existing popup; add an actual 1920x1080 pygame popup regression.
+The sanitized report does not include the raw traceback, so retain that
+qualification in incident summaries.
+
+Native observations (one short session, no hardware certification):
+- `render.frame` 848 samples: p50 20.81 ms, p95 40.50 ms, p99 94.94 ms;
+  6 lifetime frames >100ms, worst 396.81 ms.
+- Region activation: `region_plans` 2096.14 ms,
+  `settlement_physicalization` 5077.91 ms; both are single samples.
+- Autosave: 155.24 ms total, of which `save.commit` 141.22 ms;
+  `save.capture` 10.87 ms; preserve SQLite transaction durability.
+
+Next M2 engine slice instruments settlement materialization separately into
+plan, access-repair, cell-index and route stages. Region-road border post
+projection also reuses one exact route-cell membership set rather than
+rebuilding it for every post. This is a bounded complexity improvement, not
+proof of a particular speedup. No saved geography, RNG, persistence contract,
+procedural art identity or world-authority changes.
+
+Next priority after validation is GPU-backed alpha/light/weather composition
+and moving-camera cache misses at 1080p+, with software fallback and approved
+pixel parity, then a Windows repeat using the same seed and world.

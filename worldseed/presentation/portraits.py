@@ -20,6 +20,7 @@ from typing import Any
 from worldseed.core.rng import hash_u64
 
 PORTRAIT_VERSION = 2
+MAX_PORTRAIT_SIZE = 520
 PORTRAIT_NAMESPACE = "presentation:npc-portrait:v2"
 _BASE_PARTS = ("head", "jaw", "ears", "nose", "eyes", "brows", "mouth", "hair", "facial_hair", "neck", "bust")
 _BASE_PALETTES = ("skin", "hair", "eye", "cloth")
@@ -957,7 +958,7 @@ def _draw_portrait(spec: PortraitSpec):
 def render_portrait(spec: PortraitSpec, size: int = 128):
     """Render a transparent pixel-art bust; callers can cache the surface."""
     import pygame as pg
-    if type(size) is not int or not 16 <= size <= 512:
+    if type(size) is not int or not 16 <= size <= MAX_PORTRAIT_SIZE:
         raise ValueError("Portrait size must be an integer between 16 and 512")
     base = _draw_portrait(spec)
     return base if size == 64 else pg.transform.scale(base, (size, size))
@@ -985,7 +986,7 @@ class PortraitComposer:
         return self._cache_bytes
 
     def render(self, spec: PortraitSpec, size: int = 128):
-        if type(size) is not int or not 16 <= size <= 512:
+        if type(size) is not int or not 16 <= size <= MAX_PORTRAIT_SIZE:
             raise ValueError("Portrait size must be an integer between 16 and 512")
         key = (spec, size)
         if key in self._surfaces:
