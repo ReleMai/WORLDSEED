@@ -17,6 +17,11 @@ class WeatherFxRenderer:
     def __init__(self, pygame_module) -> None:
         self.pg = pygame_module
         self._wet_cache = {}
+        # The renderer supplies an immutable tuple for each unchanged
+        # viewport; keep its prepared blit batch without retaining history.
+        self._wet_batch_source = None
+        self._wet_batch_band = None
+        self._wet_batch = ()
         self._clouds = CloudRenderer(pygame_module)
         self._cloud_cache = self._clouds.frames
         self._rain_cache = {}
@@ -104,10 +109,21 @@ class WeatherFxRenderer:
     def draw_wet_ground(self, screen, cells, wetness: int) -> None:
         if wetness <= 2:
             return
-        for rect, terrain_id in cells:
-            overlay = self._wet_tile(terrain_id, rect.width, wetness)
-            if overlay is not None:
-                screen.blit(overlay, rect.topleft)
+        # SDL Surface.blits applies the same individual alpha blits in order,
+        # without repeatedly crossing the Python->SDL boundary. The prepared
+        # source is an immutable viewport tuple, not live simulation data.
+        if isinstance(cells,tuple) and cells is self._wet_batch_source and wetness == self._wet_batch_band:
+            batch=self._wet_batch
+        else:
+            batch=tuple((surface,rect.topleft)
+                        for rect,terrain_id in cells
+                        if (surface:=self._wet_tile(terrain_id,rect.width,wetness)) is not None)
+            if isinstance(cells,tuple):
+                self._wet_batch_source=cells
+                self._wet_batch_band=wetness
+                self._wet_batch=batch
+        if batch:
+            screen.blits(batch,doreturn=False)
 
     def cloud_shadow_surface(
         self, width: int, height: int, seed: bytes, cloud_cover: int,

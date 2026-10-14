@@ -154,6 +154,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         # Retain only the current viewport's static water/wet-ground
         # classification. Never cache animated water frames or game state.
         self._terrain_overlay_projection_cache = None
+        # One viewport-sized readonly fog surface. It is recomputed when the
+        # exact visible area or explored memory changes, not per static frame.
+        self._memory_fog_projection_cache = None
         self._resource_view_cache: dict[tuple[Any, ...], dict[tuple[int,int,int], tuple[Any, Any]]] = {}
         self._resource_cell_cache: dict[tuple[Any, ...], tuple[Any, Any] | None] = {}
         self._entity_spatial_cache_key = None
@@ -4579,16 +4582,37 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         # Previously explored terrain remains as map memory, but anything
         # outside the current condition-driven sight circle is visibly subdued.
         # Entities/resources are never rendered through this memory fog.
-        memory_fog=pg.Surface((cols*tile_px,rows*tile_px),pg.SRCALPHA)
-        memory_dirty=False
-        for sy in range(rows):
-            wy=top+sy
-            for sx in range(cols):
-                wx=left+sx;pk=pos_key(wx,wy,pos.z)
-                if pk in known and pk not in visible:
-                    pg.draw.rect(memory_fog,(4,8,13,138),(sx*tile_px,sy*tile_px,tile_px,tile_px))
-                    memory_dirty=True
-        if memory_dirty:screen.blit(memory_fog,map_rect.topleft)
+        discovery_tiles=getattr(known,'tiles',None)
+        # Compact discovery versions capture even equal-size remove/add swaps.
+        # Legacy set fixtures retain the prior conservative per-frame path.
+        discovery_stamp=(
+            (id(discovery_tiles),discovery_tiles.revision)
+            if discovery_tiles is not None and hasattr(discovery_tiles,'revision')
+            else None
+        )
+        fog_key=(
+            id(world),pos.z,left,top,cols,rows,tile_px,
+            discovery_stamp,frozenset(visible),
+        ) if discovery_stamp is not None else None
+        fog_cache=getattr(self,'_memory_fog_projection_cache',None)
+        if fog_key is not None and fog_cache is not None and fog_cache[0]==fog_key:
+            memory_fog=fog_cache[1]
+        else:
+            memory_fog=pg.Surface((cols*tile_px,rows*tile_px),pg.SRCALPHA)
+            memory_dirty=False
+            for sy in range(rows):
+                wy=top+sy
+                for sx in range(cols):
+                    wx=left+sx;pk=pos_key(wx,wy,pos.z)
+                    if pk in known and pk not in visible:
+                        pg.draw.rect(memory_fog,(4,8,13,138),(sx*tile_px,sy*tile_px,tile_px,tile_px))
+                        memory_dirty=True
+            if not memory_dirty:
+                memory_fog=None
+            if fog_key is not None:
+                self._memory_fog_projection_cache=(fog_key,memory_fog)
+        if memory_fog is not None:
+            screen.blit(memory_fog,map_rect.topleft)
 
         # Roofs are recognizable static objects. Paint their whole silhouettes
         # after cell-exact terrain fog; otherwise LOS stopped by a solid facade

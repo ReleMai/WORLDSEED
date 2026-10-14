@@ -203,6 +203,28 @@ class RenderProfilingTests(unittest.TestCase):
         self._render()
         self.assertIsNot(self.term._terrain_overlay_projection_cache,third)
 
+    def test_memory_fog_projection_cache_keeps_exact_visibility(self):
+        self._render()
+        first=self.term._memory_fog_projection_cache
+        self.assertIsNotNone(first)
+        baseline=self._render()
+        self.assertIs(self.term._memory_fog_projection_cache,first)
+        # The visible set can change without a discovery/clock update.
+        self.sim._visible_tile_set=set()
+        hidden=self._render()
+        second=self.term._memory_fog_projection_cache
+        self.assertIsNot(second,first)
+        self.assertNotEqual(second[0],first[0])
+        self.assertEqual(self._render(),hidden)
+        self.assertIs(self.term._memory_fog_projection_cache,second)
+        # One newly discovered cell invalidates even if the player does not
+        # move; no stale visibility information can be reused.
+        self.sim.discovered_tiles_set.add('31,31,0')
+        self._render()
+        third=self.term._memory_fog_projection_cache
+        self.assertIsNot(third,second)
+        self.assertNotEqual(third[0],second[0])
+
     def test_interior_profile_preserves_state_and_excludes_pacing_wait(self):
         from tests.test_interiors import sample_plan
         from worldseed.profiling import RuntimeProfiler
