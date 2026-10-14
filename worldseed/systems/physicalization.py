@@ -75,6 +75,10 @@ class SettlementPhysicalizationSystem:
 
     def attach_interior_state(self,state) -> None:
         """Rebuild sparse fixture-space projection on load, never on inspection."""
+        # Clearing the last interior fixture changes what is painted even
+        # when there are no replacement plans to trigger register_interior.
+        if self._indoor_fixture_uids:
+            self.revision += 1
         self._indoor_fixture_uids.clear()
         for plan in getattr(state,"interiors",{}).values():
             self.register_interior(plan)

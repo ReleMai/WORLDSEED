@@ -69,3 +69,32 @@ jobs:
           path: dist/m2-fullhd/
           if-no-files-found: warn
           retention-days: 30
+
+  m2-native-higher-res:
+    name: M2 native 1440p and 4K (software headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install runtime
+        run: python -m pip install -e . "Pillow>=10,<12"
+      - name: Native 1440p six-scene benchmark
+        run: python -u tools/run_ci_check.py --name "M2 native 1440p" --timeout 420 -- python -u -m tools.reference_scenes --scene all --headless --frames 30 --warmup 5 --width 2560 --height 1440 --zoom 36 --output-dir dist/m2-native/1440p
+      - name: Native 4K six-scene benchmark
+        run: python -u tools/run_ci_check.py --name "M2 native 4K" --timeout 420 -- python -u -m tools.reference_scenes --scene all --headless --frames 30 --warmup 5 --width 3840 --height 2160 --zoom 48 --output-dir dist/m2-native/4k
+      - name: Preserve native higher-resolution results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldseed-m2-native-1440p-4k
+          path: dist/m2-native/
+          if-no-files-found: warn
+          retention-days: 30

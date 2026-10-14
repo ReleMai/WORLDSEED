@@ -51,6 +51,12 @@ class SettlementViewportCacheTests(unittest.TestCase):
         second=p.cells_in_bounds(-40,-4,5,8)
         self.assertIsNot(first,second)
         self.assertEqual(second[1].fixture_piece_id,'')
+        # Reloading an empty interior list restores the exterior fixture;
+        # caches must invalidate even without another register callback.
+        p.attach_interior_state(SimpleNamespace(interiors={}))
+        cleared=p.cells_in_bounds(-40,-4,5,8)
+        self.assertIsNot(cleared,second)
+        self.assertEqual(cleared[1].fixture_piece_id,'core:bench')
         p._cells[(2,3)]=PhysicalizedSettlementCell(2,3,'new')
         p.revision+=1
         third=p.cells_in_bounds(-40,-4,5,8)
