@@ -519,7 +519,7 @@ def _save_checkpoint(ctx:GameContext, *, backup:bool=True)->None:
         saved_at=time.time()
         # Capture state before touching the database. A failed snapshot must
         # leave the previous checkpoint metadata and live retry data intact.
-        state=deepcopy(ctx.sim.state.to_dict())
+        state=ctx.sim.state.checkpoint_snapshot()
         state['last_offline_wall_time']=saved_at
         metadata={
             'last_saved_at':saved_at,'player_name':ctx.sim.state.player_name,

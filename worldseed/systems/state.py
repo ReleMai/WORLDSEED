@@ -1341,6 +1341,21 @@ class LivingWorldState:
             "ui_color": self.ui_color, "ui_unicode": self.ui_unicode, "ui_density": self.ui_density,
         }
 
+    def checkpoint_snapshot(self) -> dict[str, Any]:
+        """Capture detached checkpoint data without duplicating actor row copies.
+
+        to_dict() already uses dataclasses.asdict for NPCs: it recursively
+        copies every field, including nested inventory, memory and task data.
+        Retaining those fresh rows in the second deepcopy saves redundant
+        copies of distant actors. Every other field keeps the existing general
+        deepcopy semantics. No live state is aliased into the checkpoint.
+        """
+        payload=self.to_dict()
+        actor_rows=payload.get("npcs")
+        if isinstance(actor_rows,dict):
+            return deepcopy(payload,{id(actor_rows):actor_rows})
+        return deepcopy(payload)
+
     @classmethod
     def from_dict(cls, raw: dict[str, Any] | None) -> "LivingWorldState":
         if not raw:
