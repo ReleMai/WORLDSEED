@@ -1,6 +1,6 @@
 from __future__ import annotations
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from typing import Any
 
 from worldseed.systems.names import npc_sex_for_identity
@@ -387,6 +387,42 @@ class NPCState:
     def __post_init__(self) -> None:
         if self.sex not in ('male','female'):
             self.sex=npc_sex_for_identity(self.name,self.uid)
+
+# Python 3.11's dataclasses.asdict recursively visits even immutable ints and
+# strings through Python functions and deepcopy. That becomes expensive with
+# thousands of distant NPCs, each with many primitive attributes. Retain the
+# *same* deep-copy-and-convert behavior for containers and nested dataclasses.
+_NPC_ATOMIC_TYPES=frozenset((str,int,float,bool,type(None)))
+
+
+@dataclass
+class _NpcFallbackValue:
+    value: Any
+
+
+def _npc_json_copy(value):
+    value_type=type(value)
+    if value_type in _NPC_ATOMIC_TYPES:
+        return value
+    if value_type is dict:
+        return {_npc_json_copy(k):_npc_json_copy(v) for k,v in value.items()}
+    if value_type is list:
+        return [_npc_json_copy(entry) for entry in value]
+    if value_type is tuple:
+        return tuple(_npc_json_copy(entry) for entry in value)
+    if is_dataclass(value) and not isinstance(value,type):
+        return asdict(value)
+    # Keep dataclasses.asdict handling for unusual/nonnative containers, custom
+    # value objects, sets, named tuples, and subclasses. No new save formats.
+    return asdict(_NpcFallbackValue(value))['value']
+
+
+_NPC_SERIALIZED_FIELDS=tuple(item.name for item in fields(NPCState))
+
+
+def _npc_snapshot_row(actor: NPCState) -> dict:
+    return {name:_npc_json_copy(getattr(actor,name)) for name in _NPC_SERIALIZED_FIELDS}
+
 
 @dataclass(slots=True)
 class SettlementState:
@@ -1303,6 +1339,10 @@ class LivingWorldState:
 
     def to_dict(self) -> dict[str, Any]:
         def rows(table):
+            # NPCs are the largest realized collection. Keep the exact
+            # asdict payload shape but skip generic per-primitive recursion.
+            if table is self.npcs:
+                return {k:_npc_snapshot_row(v) for k,v in table.items()}
             return {k: asdict(v) for k, v in table.items()}
         discovery = self.discovered_tiles if isinstance(self.discovered_tiles, DiscoveryTiles) else DiscoveryTiles(self.discovered_tiles)
         return {

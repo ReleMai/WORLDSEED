@@ -104,6 +104,7 @@ def main(argv=None):
     report['measured_seconds']=round(time.time()-started,2)
     report['runner']={'python':sys.version.split()[0],'platform':platform.platform(),
                       'logical_cpus':os.cpu_count()}
+    report['save_serializer']='npc-atomic-fastpath-with-generic-asdict-fallback'
     target=out/'m2-summary.json'
     target.write_text(json.dumps(report,indent=2,sort_keys=True)+'\n',encoding='utf-8')
     print('M2_SUMMARY_JSON '+json.dumps(report,sort_keys=True),flush=True)

@@ -1,5 +1,6 @@
 """Snapshot optimization keeps retry-safe detached checkpoint semantics."""
 from copy import deepcopy
+from dataclasses import asdict, dataclass
 import unittest
 
 from tools.save_capture_probe import measure, prepared_state
@@ -10,6 +11,35 @@ class SaveCaptureSnapshotTests(unittest.TestCase):
     def test_memoized_actor_snapshot_equals_full_legacy_snapshot(self):
         state=prepared_state(5)
         self.assertEqual(state.checkpoint_snapshot(),deepcopy(state.to_dict()))
+        self.assertEqual(state.to_dict()['npcs'],
+                         {uid:asdict(npc) for uid,npc in state.npcs.items()})
+
+    def test_nested_mutable_dataclass_and_tuple_payload_fallback(self):
+        @dataclass
+        class Nested:
+            code: str
+            amounts: list[int]
+        state=prepared_state(1)
+        actor=next(iter(state.npcs.values()))
+        actor.tasks=[{'steps':[1,{'nested':Nested('item',[3,5])}]}]
+        actor.memories=[{'path':(2,3),'history':[{'result':'ok'}]}]
+        actual=state.to_dict()['npcs'][actor.uid]
+        expected=asdict(actor)
+        self.assertEqual(actual,expected)
+        actor.tasks[0]['steps'][1]['nested'].amounts[0]=99
+        self.assertEqual(actual['tasks'][0]['steps'][1]['nested']['amounts'],[3,5])
+
+    def test_new_serialization_preserves_key_and_value_types(self):
+        state=prepared_state(2)
+        actor=next(iter(state.npcs.values()))
+        actor.inventory={'core:stone':7}
+        actor.relationships={'friend':{'trust':9}}
+        actor.traits=['curious','patient']
+        actual=state.to_dict()['npcs'][actor.uid]
+        self.assertEqual(actual,asdict(actor))
+        self.assertIsNot(actual['inventory'],actor.inventory)
+        self.assertIsNot(actual['relationships']['friend'],actor.relationships['friend'])
+        self.assertIsNot(actual['traits'],actor.traits)
 
     def test_nested_actor_data_remains_detached_from_live_state(self):
         state=prepared_state(2)
