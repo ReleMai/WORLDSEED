@@ -53,7 +53,7 @@ class HomesteadPanelsTests(unittest.TestCase):
         self.term.present_homestead_styles(self.style(2), 1, 10)
         state = self.term._floating_panels['homestead_styles']
         x, y = state['x'], state['y']
-        self.assertEqual(tuple(self.term.screen.get_at((x+3,y+3))[:3]),
+        self.assertEqual(tuple(self.term.screen.get_at((x+state['w']//2,y+3))[:3]),
                          self.term._theme['edge_hi'])
         actions = {token for rect, token in self.term._pointer_targets}
         self.assertIn('UI_WINDOW_DRAG:homestead_styles', actions)

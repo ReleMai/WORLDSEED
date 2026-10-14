@@ -26,3 +26,7 @@ This is **reference infrastructure**, not production art approval or live Window
 ## Boundaries and next phase
 
 No simulation/seed/worldgen/save schema changes. M2 Windows GPU and soak/performance targets remain open; M3 consistent panels have progressed but character animations, visual-art approvals, audio and accessibility settings remain open. Follow the 25-minute session rule, keep CI bounded, and do not mark M3 complete without a real visual review.
+
+## Regression correction
+
+Initial resource/homestead CI on `58bbec9` ran 66 focused tests and identified one faulty new pixel assertion: sampling the top-left corner of a rounded focus ring reads the underlying titlebar rather than the ring. The corrected test samples the middle of the straight top border instead, preserving the actual rounded design. This was an incorrect test coordinate, not a demonstrated gameplay failure. The replacement must pass the subsequent GitHub checks before this work unit is called validated.
