@@ -89,6 +89,13 @@ class Simulation:
         if not isinstance(self.state.creatures, CreatureSpatialMap):
             self.state.creatures=CreatureSpatialMap(self.state.creatures)
         self.state.containers=SpatialObjectMap(self.state.containers)
+        # These outdoor entities live in the authoritative mapping; indexes
+        # track creations, replacements and removals without renderer scans.
+        # Creature and container locators already use the same contract.
+        for kind in ("structures", "ground_piles", "carcasses"):
+            mapping=getattr(self.state,kind)
+            if not isinstance(mapping,SpatialObjectMap):
+                setattr(self.state,kind,SpatialObjectMap(mapping))
         self.seed=world_seed or world.generator.world_seed
         self.profiler=RuntimeProfiler(enabled=runtime_profile_enabled(),max_stages=64)
         self.debug=SessionDebugLog(engine_version=ENGINE_VERSION,world=str(getattr(getattr(world,"delta_source",None),"path","")))

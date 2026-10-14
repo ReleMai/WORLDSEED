@@ -3655,15 +3655,14 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         Previously every game-frame scanned every realized NPC, creature,
         structure, crop, pile and fire in the whole explored world. The cost
         therefore rose permanently as exploration materialized more regions.
-        NPCs and creatures use authoritative transient locators so movement
-        cannot cause whole-population rescans from the UI. Other collections
+        NPCs, creatures, containers, structures, ground piles and carcasses
+        use authoritative transient locators, so movement and nearby mutations
+        cannot trigger whole-population rescans from the UI. Remaining collections
         retain the existing presentation cache until their mutation hooks land.
         """
         state=sim.state
         collections=(
-            ('structures',state.structures),
             ('crops',state.crops),('fires',state.fires),('fluids',state.fluids),
-            ('ground_piles',state.ground_piles),('carcasses',state.carcasses),
             ('animal_signs',state.animal_signs),('animal_homes',state.animal_homes),
         )
         key=(id(sim),sim.clock.minute//60)+tuple(len(v) for _,v in collections)
@@ -3672,8 +3671,6 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             for name,mapping in collections:
                 buckets=index[name]
                 for obj in mapping.values():
-                    if name=='containers' and getattr(obj,'interior_space_id',''):
-                        continue
                     ox=int(getattr(obj,'x',0));oy=int(getattr(obj,'y',0));oz=int(getattr(obj,'z',0))
                     buckets.setdefault((ox//32,oy//32,oz),[]).append(obj)
             self._entity_spatial_cache_key=key;self._entity_spatial_cache=index
@@ -3707,6 +3704,18 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             out['containers']=[c for c in containers.values()
                                if c.z==z and x0<=c.x<=x1 and y0<=c.y<=y1
                                and not getattr(c,'interior_space_id','')]
+        # These three collections use maintained indexes. Sort by old 32-cell
+        # bucket traversal order, with stable insertion order within a bucket.
+        # Standalone presentation fixtures may still supply plain dictionaries.
+        for name in ('structures','ground_piles','carcasses'):
+            mapping=getattr(state,name)
+            query=getattr(mapping,'near_rect',None)
+            if callable(query):
+                objects=query(x0,y0,x1,y1,z)
+            else:
+                objects=(obj for obj in mapping.values()
+                         if obj.z==z and x0<=obj.x<=x1 and y0<=obj.y<=y1)
+            out[name]=sorted(objects,key=lambda obj:(int(obj.y)//32,int(obj.x)//32))
         out['npcs']=sorted(rows,key=lambda npc:(int(npc.y)//32,int(npc.x)//32))
         creatures=state.creatures
         creature_query=getattr(creatures,"near_rect",None)
