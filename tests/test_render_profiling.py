@@ -141,6 +141,27 @@ class RenderProfilingTests(unittest.TestCase):
         self.assertTrue(all(stage['count'] == 1 for stage in stages.values()))
         self.term.clock.tick.assert_called_with(120)
 
+    def test_terrain_projection_reuses_readonly_cell_classification(self):
+        from worldseed.core.coords import WorldPos
+
+        baseline=self._render()
+        first=getattr(self.term,'_terrain_overlay_projection_cache',None)
+        self.assertIsNotNone(first)
+        self.assertEqual(self._render(),baseline)
+        second=self.term._terrain_overlay_projection_cache
+        self.assertIs(first,second)
+        # A gameplay-authoritative tile edit invalidates the projection.
+        self.world.set_terrain(WorldPos(0,0,0),'core:rock')
+        self._render()
+        third=self.term._terrain_overlay_projection_cache
+        self.assertIsNot(third,second)
+        self.assertNotEqual(third[0],second[0])
+        # Visibility and viewport changes also force recomputation, even if
+        # counts happen to be identical across consecutive frames.
+        self.sim._visible_tile_set=set()
+        self._render()
+        self.assertIsNot(self.term._terrain_overlay_projection_cache,third)
+
     def test_interior_profile_preserves_state_and_excludes_pacing_wait(self):
         from tests.test_interiors import sample_plan
         from worldseed.profiling import RuntimeProfiler

@@ -1,5 +1,7 @@
 name: WORLDSEED M2 Performance Measurements
 
+# Includes read-only terrain projection cache evaluation for 1080p fixtures.
+
 # One-off reproducible profiling after an M2 benchmark-script/workflow update.
 # Not part of every normal Fast Gate run, since reference scenes are expensive.
 on:

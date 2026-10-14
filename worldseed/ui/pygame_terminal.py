@@ -150,6 +150,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         self._water_current_cache = {}
         self._base_layer_cache: dict[tuple[Any, ...], Any] = {}
         self._base_scroll_state: tuple[Any, ...] | None = None
+        # Retain only the current viewport's static water/wet-ground
+        # classification. Never cache animated water frames or game state.
+        self._terrain_overlay_projection_cache = None
         self._resource_view_cache: dict[tuple[Any, ...], dict[tuple[int,int,int], tuple[Any, Any]]] = {}
         self._resource_cell_cache: dict[tuple[Any, ...], tuple[Any, Any] | None] = {}
         self._entity_spatial_cache_key = None
@@ -4334,25 +4337,47 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         timings.sample('render.terrain_cache', cache_started)
         screen.blit(terrain_base, map_rect.topleft)
         water_phase=(pg.time.get_ticks()//160)%8
+        # The base terrain is already cached, but a separate old per-frame
+        # pass still queried every visible tile to classify water/wet ground.
+        # Cache only the read-only projection, keyed by the complete viewport,
+        # exact visibility and authoritative terrain revision. Currents and
+        # animation are intentionally evaluated again on every frame.
+        terrain_projection_key=(
+            id(world),int(world.revision),int(world.generator.version),
+            pos.z,left,top,cols,rows,tile_px,
+            map_rect.x,map_rect.y,map_rect.width,map_rect.height,
+            frozenset(visible),
+        )
+        terrain_projection=getattr(self,'_terrain_overlay_projection_cache',None)
+        if terrain_projection is not None and terrain_projection[0]==terrain_projection_key:
+            water_positions,weather_cells=terrain_projection[1:]
+        else:
+            water_positions=[]
+            weather_cells=[]
+            for sy in range(rows):
+                wy=top+sy
+                for sx in range(cols):
+                    wx=left+sx
+                    if pos_key(wx,wy,pos.z) not in visible:continue
+                    tile=world.tile_at(WorldPos(wx,wy,pos.z))
+                    display_id=display_id_for(wx,wy,tile.terrain_id)
+                    rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
+                    if display_id not in CONTEXTUAL_WATER_DISPLAY_IDS:
+                        weather_cells.append((rect,tile.terrain_id))
+                    else:
+                        water_positions.append((wx,wy,rect,display_id))
+            water_positions=tuple(water_positions)
+            weather_cells=tuple(weather_cells)
+            self._terrain_overlay_projection_cache=(
+                terrain_projection_key,water_positions,weather_cells)
         water_cells=[]
-        weather_cells=[]
-        for sy in range(rows):
-            wy=top+sy
-            for sx in range(cols):
-                wx=left+sx
-                if pos_key(wx,wy,pos.z) not in visible:continue
-                tile=world.tile_at(WorldPos(wx,wy,pos.z))
-                display_id=display_id_for(wx,wy,tile.terrain_id)
-                rect=pg.Rect(map_rect.x+sx*tile_px,map_rect.y+sy*tile_px,tile_px,tile_px)
-                if display_id not in CONTEXTUAL_WATER_DISPLAY_IDS:
-                    weather_cells.append((rect.copy(),tile.terrain_id))
-                    continue
-                current=current_for(wx,wy)
-                flow_dx=int(getattr(current,'dx',0) or 0) if current is not None else 0
-                flow_dy=int(getattr(current,'dy',0) or 0) if current is not None else 0
-                flow_speed=int(getattr(current,'speed',0) or 0) if current is not None else 0
-                water_cells.append((rect.copy(),display_id,flow_dx,flow_dy,flow_speed))
-                screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
+        for wx,wy,rect,display_id in water_positions:
+            current=current_for(wx,wy)
+            flow_dx=int(getattr(current,'dx',0) or 0) if current is not None else 0
+            flow_dy=int(getattr(current,'dy',0) or 0) if current is not None else 0
+            flow_speed=int(getattr(current,'speed',0) or 0) if current is not None else 0
+            water_cells.append((rect.copy(),display_id,flow_dx,flow_dy,flow_speed))
+            screen.blit(self._animated_water_overlay(display_id,tile_px,water_phase,flow_dx,flow_dy,flow_speed), rect.topleft)
         def _blit_static_memory(surf, dest, key):
             """Render discovered static world geometry outside current LOS dimmed."""
             if surf is None:return
