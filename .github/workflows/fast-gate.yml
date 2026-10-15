@@ -84,6 +84,11 @@ jobs:
         run: python -m pip install -e . "Pillow>=10,<12"
       - name: Audit every building facade and door geometry
         run: python -u tools/run_ci_check.py --name "Building asset geometry" --timeout 90 -- python -u tools/audit_building_assets.py --output dist/building-audit
+      # The Windows SDL dummy driver can abort (-1) before Python gets a
+      # traceback when Dev50 draws a production building facade. Keep every
+      # Dev50 presentation assertion on Linux rather than suppressing it.
+      - name: Dev50 presentation and asset/portal regressions
+        run: python -u tools/run_ci_check.py --name "Dev50 presentation" --timeout 120 -- python -u -m unittest -v tests.test_dev50_presentation
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
@@ -350,7 +355,7 @@ jobs:
         id: smoke_11
         continue-on-error: true
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Dev50 settlement polish" --timeout 180 -- python -u -m unittest -v tests.test_dev50_settlement_access tests.test_dev50_interior_storage tests.test_dev50_npc_introductions tests.test_dev50_presentation tests.test_dev50_storage_ui
+        run: python -u tools/run_ci_check.py --name "Dev50 settlement polish" --timeout 180 -- python -u -m unittest -v tests.test_dev50_settlement_access tests.test_dev50_interior_storage tests.test_dev50_npc_introductions tests.test_dev50_storage_ui
 
       - name: Dev51 furnished floors and Stalk theft
         id: smoke_12
