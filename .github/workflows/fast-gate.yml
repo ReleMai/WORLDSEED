@@ -59,6 +59,8 @@ jobs:
         run: python -u tools/run_ci_check.py --name m2-gpu-probe --timeout 35 -- python -u -m unittest -v tests.test_gpu_compositing_probe
       - name: M2 bounded GPU layer compositor contracts
         run: python -u tools/run_ci_check.py --name m2-layer-contracts --timeout 35 -- python -u -m unittest -v tests.test_gpu_layer_compositing.GPULayersContractTests
+      - name: G0/G1a world-space contracts
+        run: python -u tools/run_ci_check.py --name g01-worldspace --timeout 35 -- python -u -m unittest -v tests.test_worldspace_scene
       - name: M2 real-scene GPU bridge source and software fallback
         run: python -u tools/run_ci_check.py --name m2-gpu-reference-bridge --timeout 120 -- python -u -m unittest -v tests.test_gpu_reference_scene_probe
 
