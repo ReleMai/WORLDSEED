@@ -117,13 +117,24 @@ class EffectStack:
     def animated(self, weather):
         return any(row[2](weather) for row in self._passes.values())
 
+    def iter_layers(self, frame):
+        """Yield ordered immutable presentation pass references for either backend.
+
+        This is deliberately lazy: the existing Surface renderer and the GPU
+        diagnostic consume the same exact producer order and frame snapshot.
+        Every yielded surface belongs to the caller for the current frame.
+        """
+        for name, (_, render, _) in sorted(
+                self._passes.items(), key=lambda row: (row[1][0], row[0])):
+            for surface in render(frame):
+                if surface is not None:
+                    yield name, surface
+
     def draw(self, screen, rect, frame):
         clip = screen.get_clip()
         screen.set_clip(clip.clip(rect))
         try:
-            for name, (_,render,_) in sorted(self._passes.items(),key=lambda row:(row[1][0],row[0])):
-                for surface in render(frame):
-                    if surface is not None:
-                        screen.blit(surface,rect.topleft)
+            for _name, surface in self.iter_layers(frame):
+                screen.blit(surface, rect.topleft)
         finally:
             screen.set_clip(clip)

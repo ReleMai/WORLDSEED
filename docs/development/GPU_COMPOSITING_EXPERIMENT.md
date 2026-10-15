@@ -55,3 +55,43 @@ The next gate is separately capturing/compositing explicit
 terrain/weather/light/alpha passes, with readback parity across camera, zoom,
 resize, rain and night transitions. Production migration stays blocked until
 those tests succeed on a native desktop GPU.
+
+## October 14 — layered GPU alpha compositor work unit
+
+This follow-up introduces:
+
+- `worldseed/presentation/gpu_layers.py`: explicit, bounded SDL2 layer
+  compositing with immutable-surface opt-in texture caching, LRU eviction,
+  invalidation on renderer/viewport replacement, and failure reporting.
+  `compose_software` is a pure-on-input Surface alpha-blit fallback/reference.
+- `worldseed/presentation/atmosphere.py:EffectStack.iter_layers`:
+  one shared, ordered lazy producer used by the shipping software draw and
+  experimental GPU layer path. The software render order and clip semantics
+  remain unchanged.
+- `tools/gpu_layer_compositing_probe.py`: real prepared WORLDSEED frames
+  used as the background for production fog, cloud and rain effect producers.
+  It proves matching software pixels, reports explicit SDL2 readback RGB
+  equality/mismatch, and separates software compositing from GPU compositing.
+- `tests/test_gpu_layer_compositing.py`: exact software alpha-layer parity,
+  camera/animation changes, conservative texture reuse, cache lifecycle,
+  input validation and simulated GPU failures. The Fast Gate runs pure
+  contracts on Linux and actual pygame reference layers in the Windows job.
+
+This is **not** a production GPU renderer cutover: the actual game still uses
+pygame-ce software presentation. The diagnostic GPU window does not own UI
+input, navigation, window sizing, sprite batching, player shadows, shadow
+occlusion, or a 3D depth field. The scenes are real renderer output with
+separately layered diagnostic weather; they are not a byte-for-byte replay of
+one captured game screen. A successful SDL2 accelerated Renderer creation
+alone is not certification of physical GPU performance. Hardware driver,
+readback accuracy, pixel parity across full game scenes, and multi-hour
+Windows gameplay remain required acceptance gates.
+
+Feature roadmap, in order: choose a shader-capable presentation API and
+GPU-native sprites/terrain batches with cache and resize lifecycle; retain
+working software fallback until visual/reference/input/save regression gates
+pass. Then implement an explicit sun/moon lighting field, 2D normal/height
+maps for objects/tiles, bounded occluder shadow maps, particles and world-space
+fog; finally optional bloom/blur/water distortion/terrain blending. True
+volumetric raymarching requires a 3D depth/volume approximation beyond plain
+SDL2 2D alpha blending and is not part of this initial compositor.
