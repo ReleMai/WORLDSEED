@@ -75,7 +75,7 @@ jobs:
   building-geometry-linux:
     name: Building asset geometry — Linux headless
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 7
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
@@ -95,6 +95,10 @@ jobs:
       # Dev50 presentation assertion on Linux rather than suppressing it.
       - name: Dev50 presentation and asset/portal regressions
         run: python -u tools/run_ci_check.py --name "Dev50 presentation" --timeout 120 -- python -u -m unittest -v tests.test_dev50_presentation
+      # Windows SDL dummy can exit -1 without traceback inside the multi-scene
+      # renderer suite; run the SAME assertions with stable Linux SDL dummy.
+      - name: Prepared real renderer reference scenes — Linux headless
+        run: python -u tools/run_ci_check.py --name "Prepared reference scenes Linux" --timeout 180 -- python -u -m unittest -v tests.test_reference_scenes
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
@@ -194,10 +198,6 @@ jobs:
       - name: Native SDL renderer profiling regressions
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Native SDL renderer profiling" --timeout 180 -- python -u -m unittest -v tests.test_render_profiling
-      - name: Prepared real renderer reference scenes
-        shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Prepared reference scenes" --timeout 180 -- python -u -m unittest -v tests.test_reference_scenes
-
       - name: G1b real prepared forest visibility and resource projection
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "G1b real prepared forest" --timeout 90 -- python -u -m unittest -v tests.test_worldspace_adapter.PreparedRealForestFixtureTests
