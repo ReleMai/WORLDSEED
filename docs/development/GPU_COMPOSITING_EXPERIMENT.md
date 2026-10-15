@@ -17,3 +17,41 @@ The probe compares cached synthetic terrain, translucent fog and three animated 
 Results do not prove GPU speedups in real WORLDSEED scenes. The probe neither verifies exact output pixels nor handles resizing/device resets; those are explicitly future acceptance gates. Do not migrate live terrain, weather or UI without reference-image parity, moving-camera tests, actual Windows GPU-driver identification and comparisons to the current production Surface fallback.
 
 The parallel M3 work begins at worldseed/ui/presentation_style.py: an immutable theme, independent palette instances, and a reusable menu-frame painter. The component initially preserves the established menu pixels and input semantics. Next: approve forest/camp/village/interior screenshots and gradually share spacing, text hierarchy, focus states and draggable panel primitives across crafting, inventory, health, dialogue and building UI.
+
+## October 14 — M2 real-scene GPU presentation bridge (experimental)
+
+The separate `tools/gpu_reference_scene_probe.py` takes **two complete
+software-rendered frames from actual WORLDSEED prepared reference fixtures**,
+including an optional one-cell camera displacement and a +231 ms animation
+clock phase. It verifies the authoritative fixture fingerprint remains identical
+after frame capture. Those exact frames are then used for:
+- CPU framebuffer copy throughput (no generation or GPU work included);
+- SDL2 **accelerated=1** texture uploads of both images, timed separately;
+- cached GPU texture draws/present over a pacing-free frame sample;
+- optional single-readback exact RGB digest parity for each real image;
+- bounded texture allocation (two complete RGBA frames, <=192 MiB) and explicit
+  driver / parity / initialization errors.
+
+Run with source checkout, pygame-ce, a real Windows desktop GPU driver:
+
+    python -m tools.gpu_reference_scene_probe --scene forest --width 1920 --height 1080 --zoom 36 --frames 120 --output scratch/forest-1080p.json
+    python -m tools.gpu_reference_scene_probe --scene village_street --width 2560 --height 1440 --zoom 36 --frames 120 --camera-dx 1 --output scratch/village-1440p.json
+    python -m tools.gpu_reference_scene_probe --scene camp --width 3840 --height 2160 --zoom 48 --frames 120 --output scratch/camp-4k.json
+
+A source-level diagnostic on CI without GPU can use:
+
+    python -m tools.gpu_reference_scene_probe --software-only --headless --scene forest --width 640 --height 480 --zoom 28 --frames 10
+
+**Scope boundary:** This bridge tests full-frame CPU-to-GPU upload and accelerated
+presentation from **real game scenes**. It **does not** yet composite separate
+weather/lighting/terrain/UI alpha layers on the GPU, integrate the SDL2 renderer
+into the running game, or establish a speedup over gameplay software rendering.
+A fresh complete texture upload every render frame can lose rather than gain
+performance; static vs animated upload cost must be measured before architecture
+changes. Pixel hash mismatches are reported, never quietly accepted. No changes
+to the supported software fallback, simulation or player saves.
+
+The next gate is separately capturing/compositing explicit
+terrain/weather/light/alpha passes, with readback parity across camera, zoom,
+resize, rain and night transitions. Production migration stays blocked until
+those tests succeed on a native desktop GPU.

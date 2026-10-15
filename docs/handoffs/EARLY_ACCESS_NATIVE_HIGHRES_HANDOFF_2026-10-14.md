@@ -41,3 +41,15 @@ Source: [prior M2 run 38508613462](https://github.com/ReleMai/WORLDSEED/actions/
 - Weather-cloud code full seven-job gate: [38509407262](https://github.com/ReleMai/WORLDSEED/actions/runs/38509407262). **Check exact conclusion; still running when this file was first written.** 720p/1080p and native 1440p/4K benchmark [38509407266](https://github.com/ReleMai/WORLDSEED/actions/runs/38509407266) passed all three jobs.
 
 Next technical priority is a **GPU-backed compositing prototype**, not more global simulation indexing. Benchmark fast-sky and fully animated weather phases separately; establish output/pixel parity, camera motion, viewport/zoom/resize, weather phase and light transition tests. Compare SDL software fallback and hardware renderer for 1080p/1440p/4K on actual Windows hardware. Only then migrate costly full-screen layers (lighting, fog, clouds, rain, wet ground and map backgrounds) incrementally with a clean software fallback and bounded texture caches. Preserve deterministic art/seed and transactional saves. Keep each work session resumable, validate before syncing code, and do not silently relax native rendering targets.
+
+## Follow-up — prepared real-scene SDL2 GPU presentation bridge
+
+M2 now includes an opt-in `tools.gpu_reference_scene_probe` using exact rendered
+screens from the existing six prepared WORLDSEED fixtures, not just the synthetic
+base/fog/cloud textures in the earlier probe. It measures software frame copy,
+source-to-GPU upload and cached GPU present independently. A camera-displaced
+second frame and changed visual clock phase are captured without retaining any
+authoritative state change; optional GPU readback reports exact RGB parity.
+Normal production pygame-ce presentation, save durability, and all reference
+pixels remain unchanged. No first-party GPU speedup claim is made without actual
+Windows hardware measurements. See `docs/development/GPU_COMPOSITING_EXPERIMENT.md`.
