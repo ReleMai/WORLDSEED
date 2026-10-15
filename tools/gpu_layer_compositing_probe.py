@@ -51,6 +51,11 @@ def capture_layered_frames(scene, width, height, zoom, camera_dx, camera_dy, *,
             headless=headless, seed=seed)
         import pygame as pg
         pg.init()
+        # The cloud art loader uses convert_alpha(), which requires a display
+        # pixel format even though all layering is performed on offscreen
+        # Surfaces. Keep this diagnostic display hidden and independent of the
+        # production UI window.
+        pg.display.set_mode((1, 1), getattr(pg, "HIDDEN", 0))
         try:
             fx = WeatherFxRenderer(pg)
             # Intentionally assert an active mixed-weather scene; the normal
