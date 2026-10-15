@@ -5,6 +5,7 @@ from worldseed.ui.presentation_style import (palette, draw_standard_menu_frame, 
 
 import importlib.util
 import math
+import os
 import re
 import textwrap
 from pathlib import Path
@@ -4293,6 +4294,45 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             k:v for k,v in resource_by.items()
             if not sim.settlement_physicalization.clears_natural_feature(WorldPos(k[0],k[1],k[2]))
         }
+        # G1c/G2: one *opt-in* prepared oak. No generation, saved fields,
+        # collision, hit region, or default software pixels are changed.
+        canopy_preview=None
+        if pos.z==0 and os.environ.get('WORLDSEED_G2_CANOPY_PREVIEW')=='1':
+            from worldseed.presentation.canopy_preview import (
+                camera_for_live_grid, prepare_one_oak,
+            )
+            excluded=set(shell_by) | set(structure_by)
+            excluded.update(k for k,c in settlement_by.items()
+                            if c.roof_piece_id or c.structure_piece_id)
+            # A preview cannot paint into an authored player home. This
+            # intentionally declines the preview for abnormally large home
+            # collections rather than performing an unbounded scene scan.
+            homes=getattr(sim.state,'homesteads',{}) or {}
+            if len(homes)<=128:
+                from worldseed.systems.homestead_blueprints import footprint as _home_cells
+                for home in homes.values():
+                    if home.get('z',0)==pos.z and abs(home['x']-pos.x)<=12 and abs(home['y']-pos.y)<=12:
+                        excluded.update(_home_cells(home))
+                preview_camera=camera_for_live_grid(
+                    left=left,top=top,grid_x=map_rect.x,grid_y=map_rect.y,
+                    viewport_x=viewport.x,viewport_y=viewport.y,
+                    viewport_w=viewport.width,viewport_h=viewport.height,
+                    tile_px=tile_px,z=pos.z,
+                )
+                try:
+                    canopy_preview=prepare_one_oak(
+                        resource_by=resource_by,resource_defs=registry.resources,
+                        resource_style=self._visuals.resource_style,
+                        current_cells=visible,discovered_cells=known,
+                        player_x=pos.x,player_y=pos.y,player_z=pos.z,
+                        player_fx=fx,player_fy=fy,camera=preview_camera,
+                        excluded_cells=excluded,
+                    )
+                    self._canopy_preview_error=None
+                except ValueError as exc:
+                    # Unsupported viewport budgets fall back to the original
+                    # software sprites rather than taking gameplay down.
+                    self._canopy_preview_error=str(exc)
         if pos.z==0:
             weather,lighting=sim.environment.visual_conditions(sim.clock.minute,pos)
         else:
@@ -4422,6 +4462,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
+        if canopy_preview is not None:
+            from worldseed.presentation.canopy_preview import draw_shadow
+            draw_shadow(pg,screen,canopy_preview,viewport)
         timings.mark('render.terrain')
 
         combat_by={}
@@ -4552,7 +4595,11 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             feature=resource_by.get(k)
             if feature:
                 fv,rp=feature
-                self._draw_resource_feature(fv,rp,rect)
+                if canopy_preview is not None and k==canopy_preview.source:
+                    from worldseed.presentation.canopy_preview import draw_trunk
+                    draw_trunk(pg,screen,canopy_preview,viewport)
+                else:
+                    self._draw_resource_feature(fv,rp,rect)
             if k in crop_by:
                 crop=crop_by[k];ref=self._visuals.ref('crops',crop.crop_id);stage=2 if crop.mature else (1 if crop.growth>=45 else 0)
                 self._draw_sprite_bottom(self._visuals.resolve(ref,stage),rect,1.25,255)
@@ -4692,6 +4739,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     self._draw_sprite_bottom(player_sprite,player_rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
                     pg.draw.ellipse(screen,(165,207,205),player_rect.inflate(-tile_px//4,-tile_px*2//3),1)
                 else:self._draw_sprite_bottom(player_sprite,player_rect,1.45)
+        if canopy_preview is not None:
+            from worldseed.presentation.canopy_preview import draw_crown
+            draw_crown(pg,screen,canopy_preview,viewport)
         if cursor is not None and _onscreen(cursor.x,cursor.y,cursor.z) and pos_key(cursor.x,cursor.y,cursor.z) in known:
             cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
             if cp:screen.blit(cp,(map_rect.x+(cursor.x-left)*tile_px,map_rect.y+(cursor.y-top)*tile_px))

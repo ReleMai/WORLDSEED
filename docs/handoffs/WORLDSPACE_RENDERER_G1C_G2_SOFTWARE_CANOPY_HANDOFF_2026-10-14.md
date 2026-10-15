@@ -1,0 +1,25 @@
+# WORLDSEED G1c / early G2 — opt-in single oak software canopy proof
+
+**Session:** 2026-10-14. **Starting head:** `6ccd817b45e466300fa71a652c79094095d634f6` on `main`; previous G1b Fast Gate `38674956944` **completed successfully (7/7)**. Builds on [G0/G1a ADR](../development/WORLDSPACE_RENDERER_G0_G1A_ADR_2026-10-14.md), [G1b adapter](WORLDSPACE_RENDERER_G1B_PREPARED_PROJECTION_2026-10-14.md), and [approved G0–G9 roadmap](../development/WORLDSPACE_RENDERER_ART_WORLDGEN_ROADMAP_2026-10-14.md).
+
+## Changelog
+
+- Added `worldseed/presentation/canopy_preview.py`: small, isolated **pygame-ce software** drawing helper. It accepts the G1b prepared resource/visibility scene; it does not read or update world generation, physics, persistent state, NPC stealth, room access or hit testing. A single **mature oak** (no new tree content) is represented as an independent ground shadow, solid-ground-anchored trunk visual and overhead crown visual, sharing one saved-world resource ID.
+- Added a strictly **opt-in** call path in `worldseed/ui/pygame_terminal.py`: set `WORLDSEED_G2_CANOPY_PREVIEW=1` **before launching** to replace the nearest visible mature oak in the current software viewport with provisional bark/crown vector shapes. Unset/`0` retains the original source sprites and software rendering behavior. One source cell remains the only harvest/hit-test target; no crown becomes a blocking tile.
+- Draw order in the opt-in scene is grounded shadow after surface layers, trunk inside the existing per-cell resource pass, canopy after already-authorized actors but before UI cursor/weather/tactical overlays. No new windows, renderer backend or input consumers.
+- Per-visible-cell clipping comes from `ProjectedVisual.clip_rects` and always restores the prior map clip. Local crown alpha is reduced around the already-visible player's world foot only, and the independent ground shadow does not fade with it. Existing NPC admission/stealth/sight logic is unchanged; no second actor list is created.
+- Conservatively skips the experimental canopy near building shells, roofs, settlement walls and existing player homesteads, instead of exposing any interior or changing the roof privacy contracts. Unsupported viewport/instance budgets produce an explicitly recorded `term._canopy_preview_error` and retain original sprites.
+- Added `tests/test_canopy_preview.py`: bounded selection, original resource identity/solid trunk footprint, local alpha, harvest-state non-promotion, roof protection, string current-sight membership, sub-tile camera equivalence and no unbounded discovery scans, plus pygame alpha/FOW and real-prepared-forest opt-in/reference tests on Windows CI.
+
+## Limitations — not G2 promotion or art approval
+
+This is a developer-preview, **not approved production oak artwork**. The vector bark/crown and rectangular preview coverage are deliberately provisional, and the scene currently handles only one oak at a time. Wide forests, multiple overlapping crowns, exact pixel-level sprite/crown authored masks, correct tree shading behind full building roofs, large 4K viewport coverage, nighttime weather masking, multiple actor fading, shader lighting and native Windows graphics quality remain unverified or deferred. The all-visible default software and existing M2 GPU alpha diagnostic remain unchanged. This is **not** G3 resource placement, G4 approved art, G5 lighting, or G8 GPU cutover.
+
+## Validation gates and remaining next session
+
+- Source-isolated Python 3.13: G0/G1a + G1b + new G1c contract suites, **33 passed, 4 skipped** (the skipped cases require actual `pygame-ce` and full game repo). `python -m compileall -q worldseed/presentation tests/test_canopy_preview.py` passed.
+- Fast Gate now runs the G1c pure tests in the Linux process-runner and the pygame alpha/FOW and reference frame comparison in Windows smoke. **Post-commit CI must be inspected before claiming green**. The native Windows interactive art/opacity/pointer review still needs a tester.
+- Reproduction: Windows cmd `set WORLDSEED_G2_CANOPY_PREVIEW=1` then start WORLDSEED normally; Linux shell `WORLDSEED_G2_CANOPY_PREVIEW=1 python run_worldseed.py`. Remove the variable to return to exact historical art and behavior. View generated prepared fixture output with `python -m unittest -v tests.test_canopy_preview` on a full pygame-enabled checkout.
+- Next: evaluate forest/camp/village/interior images from the existing M3 capture tool. Get approval for a precise alpha-masked oak trunk/crown/shadow atlas and opacity radius. Once accepted, replace provisional vector assets, test single-tree movement/harvest/reload, and then add multiple bounded overlap support. Do **not** change `resourcegen_version` or transition to the shader GPU backend before the corresponding G3/G8 gates.
+
+**Preservation:** did not remove or supersede `EARLY_ACCESS_PYGAME_PLAN.md`, `GPU_COMPOSITING_EXPERIMENT.md`, M2 closeout or native high-resolution handoff; no generated-world, save version, resource placement, physics or gameplay command changes.

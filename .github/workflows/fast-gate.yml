@@ -60,7 +60,7 @@ jobs:
       - name: M2 bounded GPU layer compositor contracts
         run: python -u tools/run_ci_check.py --name m2-layer-contracts --timeout 35 -- python -u -m unittest -v tests.test_gpu_layer_compositing.GPULayersContractTests
       - name: G0/G1a world-space contracts
-        run: python -u tools/run_ci_check.py --name g01-worldspace --timeout 35 -- python -u -m unittest -v tests.test_worldspace_scene tests.test_worldspace_adapter.PreparedAdapterContracts
+        run: python -u tools/run_ci_check.py --name g01-worldspace --timeout 35 -- python -u -m unittest -v tests.test_worldspace_scene tests.test_worldspace_adapter.PreparedAdapterContracts tests.test_canopy_preview.CanopyPreviewContracts
       - name: M2 real-scene GPU bridge source and software fallback
         run: python -u tools/run_ci_check.py --name m2-gpu-reference-bridge --timeout 120 -- python -u -m unittest -v tests.test_gpu_reference_scene_probe
 
@@ -197,6 +197,10 @@ jobs:
       - name: G1b real prepared forest visibility and resource projection
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "G1b real prepared forest" --timeout 90 -- python -u -m unittest -v tests.test_worldspace_adapter.PreparedRealForestFixtureTests
+
+      - name: G1c/G2 opt-in software oak, FOW clips and prepared forest pixels
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "G2 software canopy preview" --timeout 120 -- python -u -m unittest -v tests.test_canopy_preview.CanopyPygameTests tests.test_canopy_preview.CanopyLiveReferenceTests
 
       - name: M2 real-scene software capture and camera-state regressions
         shell: pwsh

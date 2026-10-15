@@ -1,0 +1,15 @@
+# WORLDSEED G2 software preview contract (experimental)
+
+## Scope
+
+The new stage is an **opt-in one-oak software rendering experiment**, not a default graphics upgrade. `WORLDSEED_G2_CANOPY_PREVIEW=1` permits one currently visible mature `core:oak_tree` in the already-prepared local resource viewport to use the new layers. Zero, missing, unsupported viewport, invisible, stump, sapling or depleted objects fall through to unmodified software output.
+
+**Authority and collision:** `ResourceSystem.feature_at` and existing resource depletion, harvest, resource IDs, passability and targeting remain authoritative. The tree has exactly one source `(x,y,z)` and stable G1b `resource_id`; shadow/crown add **zero physical cells**. This stage does not edit `worldseed/config.py` or persistence files.
+
+**Draw/order and limits:** after terrain and wetness, draw a contact/crown shadow; draw temporary bark instead of the one source oak sprite at its original foot anchor within the existing cell-y pass; draw a broad overhead canopy after actor rendering and before tactical overlays. The canopy is locally reduced to approximately 48% alpha near the visible player foot when the G1a projection says they are beneath it, and is fully opaque outside the cutout. Up to one oak (bounded input 1024 prepared resources), with a max 8-cell search radius. The view transform derives from the live renderer's existing fractional `map_rect`/`viewport` and never changes its pointer transform.
+
+**Privacy:** clip EACH rendered part against the current-visibility rectangles, never remembered-only terrain, and restore pygame's parent map clip. Avoid any tree whose provisional crown is near a known settlement roof, wall, shell, structure or player homestead. Do not draw NPCs/silhouettes from this helper, so no hidden actor acquires visibility. The real roof and room permission logic stays in the existing renderer. Camera panning/zoom preserves one resource anchor, not a screen-attached cloud.
+
+**Fallback and QA:** default feature switch off. A `ValueError` describing an unsupported projection budget is stored on the terminal instance; the source sprite is used instead. Unknown failures are not silently interpreted as successful new renderer output. The lightweight Linux pure tests validate selection/privacy contracts; Windows pygame tests require actual alpha output, per-cell sight clipping, and unchanged simulation fingerprints on a real prepared forest fixture. GPU testing and native hardware/UI approval are separate milestones.
+
+**Not yet resolved:** the provisional G1b crown rectangle is not an art-accurate footprint, the vector canopy is not a production sprite, multi-tree overlap/cross-chunk source discovery and root/roof/bridge depth interleaving are still gated. In particular, a south-of-trunk character may be geographically in crown coverage but outside the drawn north-anchored sprite; fade applies only when the actual projected crown covers their foot. Changing coverage and sprite geometry together requires approved artwork and renewed FOW/hit-mask tests.
