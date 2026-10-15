@@ -60,7 +60,7 @@ jobs:
       - name: M2 bounded GPU layer compositor contracts
         run: python -u tools/run_ci_check.py --name m2-layer-contracts --timeout 35 -- python -u -m unittest -v tests.test_gpu_layer_compositing.GPULayersContractTests
       - name: G0/G1a world-space contracts
-        run: python -u tools/run_ci_check.py --name g01-worldspace --timeout 35 -- python -u -m unittest -v tests.test_worldspace_scene
+        run: python -u tools/run_ci_check.py --name g01-worldspace --timeout 35 -- python -u -m unittest -v tests.test_worldspace_scene tests.test_worldspace_adapter.PreparedAdapterContracts
       - name: M2 real-scene GPU bridge source and software fallback
         run: python -u tools/run_ci_check.py --name m2-gpu-reference-bridge --timeout 120 -- python -u -m unittest -v tests.test_gpu_reference_scene_probe
 
@@ -193,6 +193,10 @@ jobs:
       - name: Prepared real renderer reference scenes
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Prepared reference scenes" --timeout 180 -- python -u -m unittest -v tests.test_reference_scenes
+
+      - name: G1b real prepared forest visibility and resource projection
+        shell: pwsh
+        run: python -u tools/run_ci_check.py --name "G1b real prepared forest" --timeout 90 -- python -u -m unittest -v tests.test_worldspace_adapter.PreparedRealForestFixtureTests
 
       - name: M2 real-scene software capture and camera-state regressions
         shell: pwsh
