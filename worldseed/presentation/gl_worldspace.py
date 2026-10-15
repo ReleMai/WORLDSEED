@@ -51,6 +51,7 @@ class SpriteCommand:
     fade_center: tuple[float, float] = (0.0, 0.0)
     fade_radius: float = 0.0
     local_alpha: float = 1.0
+    sway_px: float = 0.0
 
     def __post_init__(self):
         if not self.visual_id or not self.texture_id:
@@ -75,6 +76,7 @@ class SpriteCommand:
         if (not _finite(self.opacity) or not 0<=self.opacity<=1 or
             not _finite(self.fade_radius) or self.fade_radius<0 or
             not _finite(self.local_alpha) or not 0<=self.local_alpha<=1 or
+            not _finite(self.sway_px) or abs(self.sway_px)>6 or
             len(self.fade_center)!=2 or any(not _finite(x) for x in self.fade_center)):
             raise ValueError('invalid material alpha parameters')
 
@@ -131,6 +133,13 @@ class TextureBank:
         try:
             texture=self.ctx.texture((command.image_w,command.image_h),4,command.rgba)
             texture.repeat_x=False;texture.repeat_y=False
+            # Transparent edges must not bleed from repeat pixels.
+            try:
+                import moderngl
+            except ImportError:
+                moderngl = None  # pure-test fake GL only
+            if moderngl is not None and hasattr(moderngl, "LINEAR"):
+                texture.filter=(moderngl.LINEAR,moderngl.LINEAR)
         except Exception as exc:
             raise GPUBackendUnavailable(f'OpenGL upload failed: {type(exc).__name__}') from exc
         while self.bytes+size>self.limit:
@@ -192,8 +201,10 @@ class GLWorldspaceRenderer:
         # Textures are source art and independent of viewport; no reupload.
 
     def draw(self,commands:Iterable[SpriteCommand],*,clear=(0.03,0.045,0.04,1),
-             ambient=(1.0,1.0,1.0)):
+             ambient=(1.0,1.0,1.0),target=None,frame_time_seconds=0.):
         if self._closed:raise GPUBackendUnavailable('renderer is closed')
+        if not _finite(frame_time_seconds) or not 0 <= frame_time_seconds <= 1e9:
+            raise ValueError('invalid shader clock')
         rows=tuple(commands)
         if len(rows)>MAX_COMMANDS or any(not isinstance(c,SpriteCommand) for c in rows):
             raise ValueError('GPU frame exceeds bounded command contract')
@@ -211,7 +222,7 @@ class GLWorldspaceRenderer:
         if len(clear)!=4 or any(not _finite(x) or not 0<=x<=1 for x in clear):
             raise ValueError('invalid framebuffer clear color')
         try:
-            self.ctx.screen.use()
+            (self.ctx.screen if target is None else target).use()
             self.ctx.viewport=(0,0,self.width,self.height)
             import moderngl
             self.ctx.enable_only(moderngl.BLEND)
@@ -220,13 +231,14 @@ class GLWorldspaceRenderer:
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_texture'].value=0
             self.program['u_ambient'].value=tuple(ambient)
+            self.program['u_time'].value=frame_time_seconds
             rendered=0
             uploads_before=self.bank.uploads
             reuses_before=self.bank.reuses
             def batch_key(row):
                 cmd,clip=row
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
-                        clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha)
+                        clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
@@ -239,6 +251,7 @@ class GLWorldspaceRenderer:
                     self.program['u_fade_center'].value=cmd.fade_center
                     self.program['u_fade_radius'].value=cmd.fade_radius
                     self.program['u_local_alpha'].value=cmd.local_alpha
+                    self.program['u_sway_px'].value=cmd.sway_px
                     data=b''.join(vertex_bytes(sprite.bounds) for sprite,_ in batch)
                     self.vbo.write(data)
                     self.vao.render(vertices=6*len(batch))

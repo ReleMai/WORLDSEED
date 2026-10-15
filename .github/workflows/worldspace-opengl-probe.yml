@@ -38,6 +38,14 @@ jobs:
         run: |
           if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
           python -u tools/run_ci_check.py --name OpenGL-worldspace --timeout 180 -- python -u -m tools.worldspace_opengl_probe --size '${{ inputs.width }}x${{ inputs.height }}' --frames 120 --output scratch/gpu-worldspace-report.json --screenshot scratch/gpu-worldspace-frame.png
+      - name: GPU-first forest weather/lighting native visual arena
+        shell: pwsh
+        env:
+          PYTHONFAULTHANDLER: '1'
+        run: |
+          if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
+          python -u tools/run_ci_check.py --name gpu-windows-visual --timeout 220 -- python -u -m tools.worldseed_gpu_playtest --scene forest --size 1280x720 --frames 90 --screenshot scratch/gpu-first-forest.png --report scratch/gpu-first-forest.json
+
       - name: Upload real context evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,4 +54,6 @@ jobs:
           path: |
             scratch/gpu-worldspace-report.json
             scratch/gpu-worldspace-frame.png
+            scratch/gpu-first-forest.json
+            scratch/gpu-first-forest.png
           if-no-files-found: warn

@@ -9,8 +9,10 @@ in vec2 v_uv;
 in vec2 v_screen;
 out vec4 fragColor;
 void main() {
-    // Uploaded PNG/pygame rows are top-to-bottom; GL texture rows start bottom.
-    vec4 texel = texture(u_texture, vec2(v_uv.x, 1.0 - v_uv.y));
+    // Source RGBA bytes are top-first: glTexImage2D stores their first row at
+    // texture v=0. Our sprite mesh maps its TOP screen vertex to v=0, so
+    // NO extra v-flip is correct. (Flipping here inverts every tree.)
+    vec4 texel = texture(u_texture, v_uv);
     float opacity = u_opacity;
     if (u_fade_radius > 0.0) {
         float distance_px = distance(v_screen, u_fade_center);
