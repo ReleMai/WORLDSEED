@@ -1,0 +1,180 @@
+{
+  "anchor_policy": "bottom-center tree foot; all channels align to same source trunk world cell",
+  "description": "Layered anchored oak/pine RGBA source art; separate trunk/crown/shadow, visual only",
+  "dimensions": [
+    384,
+    384
+  ],
+  "entries": {
+    "oak:crown:autumn": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "oak_crown_autumn.png",
+      "season": "autumn",
+      "sha256": "0850890fe5deaa9d8ac99673e942b7b8c71b993eb4ec3dc44b18bc56006fa4b2",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "oak:crown:spring": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "oak_crown_spring.png",
+      "season": "spring",
+      "sha256": "06185531878b26cb9e1273b0009618d7bfd08fa1e73bfdc9e9059d9ac4ebf8c4",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "oak:crown:summer": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "oak_crown_summer.png",
+      "season": "summer",
+      "sha256": "e6048315e2e1ba483478730a4d6cd9174936ed2736fe5223580ae4d3939e1424",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "oak:crown:winter": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "oak_crown_winter.png",
+      "season": "winter",
+      "sha256": "4e35df81be6071670533e1ffc7ff2856a12a978bebd706e7a5fdc5f54a83be1f",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "oak:shadow": {
+      "anchor": [
+        192,
+        286
+      ],
+      "channel": "shadow",
+      "file": "oak_shadow.png",
+      "sha256": "567438343e4953d473047a381795f035fbdfc753ba538fc1d7f7aab8ed5f4101",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "oak:trunk": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "trunk",
+      "file": "oak_trunk.png",
+      "sha256": "004a4f255b92002689aa3f276a2e1456c5a6d07662aafdb6e395dc0bf0bb8709",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:crown:autumn": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "pine_crown_autumn.png",
+      "season": "autumn",
+      "sha256": "0e41b430fe80fe4947e7d7c9a0e38fd7742cde4b75aa57ab3d3a2af5985cfcde",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:crown:spring": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "pine_crown_spring.png",
+      "season": "spring",
+      "sha256": "232451a3717fa620db0b7eb2802619c4a79bd1349b6ebab5c0ec49f5611198c7",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:crown:summer": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "pine_crown_summer.png",
+      "season": "summer",
+      "sha256": "8ebdda20c37b08a39e459379ab69f66bf46dd11944a9d971ab7c824ff85a95e9",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:crown:winter": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "crown",
+      "file": "pine_crown_winter.png",
+      "season": "winter",
+      "sha256": "92d07aa4c6e4685c16d19e0c56f07d03807c915b1e2af7dc73664c7cf8d9f3e0",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:shadow": {
+      "anchor": [
+        192,
+        286
+      ],
+      "channel": "shadow",
+      "file": "pine_shadow.png",
+      "sha256": "93ba9e00e0131104c72ef2f3becc68b32b0ad517c828d04bb0511b3a1a53c3d1",
+      "size": [
+        384,
+        384
+      ]
+    },
+    "pine:trunk": {
+      "anchor": [
+        192,
+        369
+      ],
+      "channel": "trunk",
+      "file": "pine_trunk.png",
+      "sha256": "e246d045db9a4773b12c0b3326ab473e91ff16775b1e7aa0a7ca940d430880a3",
+      "size": [
+        384,
+        384
+      ]
+    }
+  },
+  "footprint_policy": "all collision and harvesting remain on authoritative source cell, not sprite bounds",
+  "fow_policy": "clip all sprite pixels to current visibility before drawing",
+  "license": "WORLDSEED original code-generated artwork",
+  "premultiplied_alpha": false,
+  "source": "tools/build_worldspace_tree_art.py",
+  "version": 1
+}

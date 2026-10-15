@@ -4294,12 +4294,14 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             k:v for k,v in resource_by.items()
             if not sim.settlement_physicalization.clears_natural_feature(WorldPos(k[0],k[1],k[2]))
         }
-        # G1c/G2: one *opt-in* prepared oak. No generation, saved fields,
+        # G4: opt-in layered oak/pine art, bounded multi-cover, no gameplay mutation.
         # collision, hit region, or default software pixels are changed.
-        canopy_preview=None
+        canopy_previews=()
+        preview_by_cell={}
+        canopy_season='summer'
         if pos.z==0 and os.environ.get('WORLDSEED_G2_CANOPY_PREVIEW')=='1':
             from worldseed.presentation.canopy_preview import (
-                camera_for_live_grid, prepare_one_oak,
+                camera_for_live_grid, prepare_tree_cluster,
             )
             excluded=set(shell_by) | set(structure_by)
             excluded.update(k for k,c in settlement_by.items()
@@ -4320,7 +4322,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     tile_px=tile_px,z=pos.z,
                 )
                 try:
-                    canopy_preview=prepare_one_oak(
+                    canopy_previews=prepare_tree_cluster(
                         resource_by=resource_by,resource_defs=registry.resources,
                         resource_style=self._visuals.resource_style,
                         current_cells=visible,discovered_cells=known,
@@ -4328,6 +4330,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                         player_fx=fx,player_fy=fy,camera=preview_camera,
                         excluded_cells=excluded,
                     )
+                    preview_by_cell={preview.source:preview for preview in canopy_previews}
+                    if canopy_previews:canopy_season=sim.resources._season()
                     self._canopy_preview_error=None
                 except ValueError as exc:
                     # Unsupported viewport budgets fall back to the original
@@ -4462,9 +4466,10 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 _blit_static_memory(surf,rect.topleft,key)
         if pos.z==0:
             self._weather_fx.draw_wet_ground(screen,weather_cells,int(weather.get('wetness',0)))
-        if canopy_preview is not None:
+        if canopy_previews:
             from worldseed.presentation.canopy_preview import draw_shadow
-            draw_shadow(pg,screen,canopy_preview,viewport)
+            for preview in canopy_previews:
+                draw_shadow(pg,screen,preview,viewport,season=canopy_season)
         timings.mark('render.terrain')
 
         combat_by={}
@@ -4595,9 +4600,9 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             feature=resource_by.get(k)
             if feature:
                 fv,rp=feature
-                if canopy_preview is not None and k==canopy_preview.source:
+                if k in preview_by_cell:
                     from worldseed.presentation.canopy_preview import draw_trunk
-                    draw_trunk(pg,screen,canopy_preview,viewport)
+                    draw_trunk(pg,screen,preview_by_cell[k],viewport,season=canopy_season)
                 else:
                     self._draw_resource_feature(fv,rp,rect)
             if k in crop_by:
@@ -4739,9 +4744,10 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     self._draw_sprite_bottom(player_sprite,player_rect.move(0,tile_px//3),1.45);screen.set_clip(saved)
                     pg.draw.ellipse(screen,(165,207,205),player_rect.inflate(-tile_px//4,-tile_px*2//3),1)
                 else:self._draw_sprite_bottom(player_sprite,player_rect,1.45)
-        if canopy_preview is not None:
+        if canopy_previews:
             from worldseed.presentation.canopy_preview import draw_crown
-            draw_crown(pg,screen,canopy_preview,viewport)
+            for preview in canopy_previews:
+                draw_crown(pg,screen,preview,viewport,season=canopy_season)
         if cursor is not None and _onscreen(cursor.x,cursor.y,cursor.z) and pos_key(cursor.x,cursor.y,cursor.z) in known:
             cp=self._load_sprite(cursor_sprite,tile_px,tile_px)
             if cp:screen.blit(cp,(map_rect.x+(cursor.x-left)*tile_px,map_rect.y+(cursor.y-top)*tile_px))

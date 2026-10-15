@@ -1401,5 +1401,11 @@
     "core:grain_bin": "assets/sprites/containers/dev50/grain_bin.png",
     "core:medicine_cabinet": "assets/sprites/containers/dev50/medicine_cabinet.png",
     "core:archive_bookcase": "assets/sprites/containers/dev50/archive_bookcase.png"
+  },
+  "worldspace_tree_layers": {
+    "manifest": "assets/sprites/worldspace/trees/manifest.json",
+    "bundle": "assets/sprites/worldspace/trees/tree_layers.b85",
+    "species": {"core:oak_tree": "oak", "core:pine_tree": "pine"},
+    "software_preview_only": true
   }
 }

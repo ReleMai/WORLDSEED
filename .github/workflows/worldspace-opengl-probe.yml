@@ -1,0 +1,49 @@
+name: WORLDSEED Native OpenGL Candidate Probe
+
+# This is intentionally MANUAL and NOT a regular Fast Gate cost/time burden.
+# Hosted runner GPUs may be software-backed; always inspect the driver string.
+on:
+  workflow_dispatch:
+    inputs:
+      width:
+        description: "Framebuffer width (640-3840)"
+        default: '1280'
+        required: true
+        type: string
+      height:
+        description: "Framebuffer height (480-2160)"
+        default: '720'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+jobs:
+  native-worldspace:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install optional shader backend
+        shell: pwsh
+        run: python -m pip install -e '.[gpu]' 'Pillow>=10,<12'
+      - name: Run actual OpenGL context and framebuffer probe
+        shell: pwsh
+        env:
+          PYTHONFAULTHANDLER: '1'
+        run: |
+          if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
+          python -u tools/run_ci_check.py --name OpenGL-worldspace --timeout 180 -- python -u -m tools.worldspace_opengl_probe --size '${{ inputs.width }}x${{ inputs.height }}' --frames 120 --output scratch/gpu-worldspace-report.json --screenshot scratch/gpu-worldspace-frame.png
+      - name: Upload real context evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldspace-gl-candidate
+          path: |
+            scratch/gpu-worldspace-report.json
+            scratch/gpu-worldspace-frame.png
+          if-no-files-found: warn

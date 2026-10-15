@@ -14,7 +14,9 @@ from .worldspace import WorldCamera, WorldFoot, VisualLayer
 from .worldspace_adapter import PreparedActor, PreparedScene, prepare_worldspace_scene
 
 PREVIEW_SWITCH = 'WORLDSEED_G2_CANOPY_PREVIEW'
-PREVIEW_FEATURE = 'core:oak_tree'   # single mature oak, not a new tree generator
+PREVIEW_FEATURE = 'core:oak_tree'   # legacy one-oak API remains supported
+SUPPORTED_TREES = frozenset({'core:oak_tree','core:pine_tree'})
+MAX_PREVIEW_TREES = 4
 MAX_TREE_SEARCH = 1024
 MAX_PREVIEW_RADIUS = 8
 
@@ -102,6 +104,47 @@ def prepare_one_oak(*, resource_by, resource_defs, resource_style,
     return CanopyPreview(key, scene)
 
 
+def prepare_tree_cluster(*, resource_by, resource_defs, resource_style,
+                         current_cells, discovered_cells, player_x, player_y,
+                         player_z, player_fx, player_fy, camera, excluded_cells=(),
+                         max_trees=MAX_PREVIEW_TREES):
+    """Read-only bounded oak/pine coverage from existing prepared viewport.
+
+    The legacy one-oak API remains available; the opt-in developer path uses
+    up to four tree groups sorted by (distance, world y, world x).  Sources
+    remain original cells. Shadows and crowns do not invent extra resources.
+    """
+    if type(max_trees) is not int or not 0 <= max_trees <= MAX_PREVIEW_TREES:
+        raise ValueError('invalid tree cover budget')
+    if len(resource_by)>MAX_TREE_SEARCH:raise ValueError('tree search budget exceeded')
+    excluded=set(excluded_cells)
+    matches=[]
+    for (x,y,z), (feature, _visual) in resource_by.items():
+        if z!=player_z or feature.feature_id not in SUPPORTED_TREES or feature.stage!='mature':continue
+        if f'{x},{y},{z}' not in current_cells:continue
+        if max(abs(x-player_x),abs(y-player_y))>MAX_PREVIEW_RADIUS:continue
+        if any((px,py,z) in excluded for px in range(x-2,x+3) for py in range(y-2,y+3)):
+            continue
+        matches.append((abs(x-player_x)+abs(y-player_y),y,x,z))
+    viewer=PreparedActor('player','core:player',WorldFoot(player_x+player_fx,
+                         player_y+player_fy,player_z),True,is_viewer=True)
+    out=[]
+    for _,y,x,z in sorted(matches)[:max_trees]:
+        scene=prepare_worldspace_scene(
+            camera=camera,resource_by={(x,y,z):resource_by[(x,y,z)]},
+            resource_defs=resource_defs,resource_style=resource_style,
+            current_cells=current_cells,discovered_cells=discovered_cells,
+            visibility_key=lambda x,y,z: f'{x},{y},{z}',actors=(viewer,),z=z,
+        )
+        if any(v.instance.layer is VisualLayer.OVERHEAD for v in scene.projection.visuals):
+            out.append(CanopyPreview((x,y,z),scene))
+    return tuple(out)
+
+
+def _species(v):
+    return 'pine' if v.instance.content_id=='core:pine_tree' else 'oak'
+
+
 def _blit_visible(pg, screen, source, x, y, visual, viewport):
     """Blit under exact current-sight cell clips, restoring outer map clip."""
     old = screen.get_clip()
@@ -130,7 +173,7 @@ def _parts(preview, layer):
             if v.instance.layer is layer)
 
 
-def draw_shadow(pg, screen, preview: CanopyPreview, viewport) -> None:
+def draw_shadow(pg, screen, preview: CanopyPreview, viewport, *, season='summer') -> None:
     """Independent ground-contact canopy shadow, never faded with leaves."""
     for v in _parts(preview, VisualLayer.GROUND_SHADOW):
         # The G1a shadow visual uses a ground-foot attachment; a projected
@@ -138,45 +181,31 @@ def draw_shadow(pg, screen, preview: CanopyPreview, viewport) -> None:
         foot_x, foot_y = v.screen_foot
         scale = preview.scene.camera.scale
         w, h = max(2, round(v.instance.width*scale)), max(2, round(.57*scale))
-        img = pg.Surface((w, h), pg.SRCALPHA)
-        pg.draw.ellipse(img, (19, 33, 23, 72), (0, 0, w, h))
+        from .tree_art import pygame_tree_cache
+        img=pygame_tree_cache.surface(pg,_species(v),'shadow',season,w,h)
         x = round(foot_x+viewport.x-w/2)
         y = round(foot_y+viewport.y-h*.96)
         _blit_visible(pg, screen, img, x, y, v, viewport)
 
 
-def draw_trunk(pg, screen, preview: CanopyPreview, viewport) -> None:
+def draw_trunk(pg, screen, preview: CanopyPreview, viewport, *, season='summer') -> None:
     """Temporary recognizable bark silhouette; original trunk hitbox unchanged."""
     for v in _parts(preview, VisualLayer.GROUNDED):
         rect = _bounds(pg, v, viewport)
-        img = pg.Surface(rect.size, pg.SRCALPHA)
-        w, h = rect.size
-        cx = w//2
-        bark_w = max(3, round(w*.28))
-        stem = pg.Rect(cx-bark_w//2, max(0,h-round(h*.76)), bark_w, max(1,round(h*.72)))
-        pg.draw.rect(img, (73, 49, 30, 255), stem, border_radius=max(1,bark_w//6))
-        pg.draw.line(img, (130, 93, 54, 240),
-                     (stem.x+max(1,bark_w//3), stem.y+3),
-                     (stem.x+max(1,bark_w//3), stem.bottom-2), max(1,bark_w//7))
-        pg.draw.polygon(img, (67, 43, 28, 255),
-                        [(cx, h-4), (max(0,cx-bark_w), h-1), (min(w-1,cx+bark_w),h-1)])
-        _blit_visible(pg, screen, img, rect.x, rect.y, v, viewport)
+        from .tree_art import pygame_tree_cache
+        img=pygame_tree_cache.surface(pg,_species(v),'trunk',season,*rect.size)
+        _blit_visible(pg,screen,img,rect.x,rect.y,v,viewport)
+        continue
 
-
-def draw_crown(pg, screen, preview: CanopyPreview, viewport) -> None:
+def draw_crown(pg, screen, preview: CanopyPreview, viewport, *, season='summer') -> None:
     """Separate local-alpha crown over actors, exact sight clipped, no hits."""
     fade_by_id = {f.cover_instance_id: f for f in preview.scene.projection.cover_fades}
     for v in _parts(preview, VisualLayer.OVERHEAD):
         rect = _bounds(pg, v, viewport)
         w, h = rect.size
-        img = pg.Surface((w, h), pg.SRCALPHA)
-        # Provisional geometry for game-engine inspection, NOT approved oak art.
-        pg.draw.ellipse(img, (28, 68, 43, 237),
-                        (int(w*.05), int(h*.09), int(w*.90), int(h*.79)))
-        pg.draw.ellipse(img, (48, 103, 52, 233),
-                        (int(w*.09), int(h*.02), int(w*.56), int(h*.67)))
-        pg.draw.ellipse(img, (54, 115, 56, 226),
-                        (int(w*.43), int(h*.17), int(w*.49), int(h*.57)))
+        from .tree_art import pygame_tree_cache
+        base=pygame_tree_cache.surface(pg,_species(v),'crown',season,w,h)
+        img=base.copy()  # local fade never mutates a reusable cached layer
         fade = fade_by_id.get(v.instance.instance_id)
         if fade is not None:
             # Multiply alpha only in the local player-foot circle. Full canopy

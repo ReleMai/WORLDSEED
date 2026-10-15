@@ -9,9 +9,13 @@ description = "Terminal-first deterministic living-world fantasy sandbox"
 requires-python = ">=3.11"
 dependencies = ["pygame-ce>=2.5.3,<3"]
 
+[project.optional-dependencies]
+gpu = ["moderngl>=5.10,<6", "glcontext>=2.5,<3"]
+
 [tool.setuptools.packages.find]
 include = ["worldseed*"]
 exclude = ["artifacts*", "tests*", "tools*"]
 
 [tool.setuptools.package-data]
-worldseed = ["data/*.json", "assets/*.json", "assets/*.png", "assets/sprites/*/*.png", "assets/sprites/*/*/*.png", "assets/sprites/*/*/*/*.png", "assets/atlases/*.png"]
+worldseed = ["data/*.json", "assets/*.json", "assets/*.png", "assets/sprites/*/*.png", "assets/sprites/*/*/*.png", "assets/sprites/*/*/*/*.png", "assets/atlases/*.png",
+  "assets/sprites/worldspace/trees/*.json", "assets/sprites/worldspace/trees/*.b85", "assets/shaders/*.vert", "assets/shaders/*.frag"]
