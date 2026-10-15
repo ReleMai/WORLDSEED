@@ -176,6 +176,13 @@ jobs:
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Runtime profiling and reference scenes" --timeout 120 -- python -u -m unittest -v tests.test_runtime_profiling tests.test_profiling_integration tests.test_render_profiling tests.test_resource_view_fastpath tests.test_settlement_viewport_cache tests.test_wet_ground_batch tests.test_atmosphere_frame_cache tests.test_reference_scenes tests.test_save_capture_snapshot tests.test_m2_validation
 
+      - name: M2 real-scene software capture and camera-state regressions
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+        run: python -u tools/run_ci_check.py --name "M2 pygame reference capture" --timeout 120 -- python -u -m unittest -v tests.test_gpu_reference_scene_probe
+
       - name: Save failure preservation and recovery
         shell: pwsh
         run: python -u tools/run_ci_check.py --name "Save retry and failure UI" --timeout 60 -- python -u -m unittest -v tests.test_save_retry tests.test_save_failure_ui
