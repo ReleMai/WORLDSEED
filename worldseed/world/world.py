@@ -174,6 +174,18 @@ class World:
             if progress:progress(idx,total,f'chunk {key.x}, {key.y}')
     def tile_at(self,pos:WorldPos)->TileView:
         key,lx,ly=split_world(pos); chunk=self.cache.get(key); tid=self.registry.terrain_id(chunk.get(lx,ly)); return TileView(pos,tid,self.registry.terrain(tid))
+    def prepared_tile_at(self,pos:WorldPos)->TileView|None:
+        """Observe materialized terrain without loading or touching cache order.
+
+        Missing resident chunks remain unknown even when a generated copy may
+        exist on disk. Preparation/loading belongs to the simulation owner,
+        never a renderer, hover or other observational consumer.
+        """
+        key,lx,ly=split_world(pos)
+        chunk=self.cache.peek(key)
+        if chunk is None:return None
+        tid=self.registry.terrain_id(chunk.get(lx,ly))
+        return TileView(pos,tid,self.registry.terrain(tid))
     def set_terrain(self,pos:WorldPos,terrain_id:str)->None:
         if terrain_id not in self.registry.terrains:raise KeyError(terrain_id)
         key,lx,ly=split_world(pos)

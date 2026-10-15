@@ -1,9 +1,11 @@
 # WORLDSEED — 2.5D Graphics, Living Canopies & GPU Renderer Roadmap
 
-**Status:** ACTIVE, GPU-first Windows development. G0/G1 contracts, G2 canopy preview, G4 oak/pine layered art, and G5/G6/G7/G8 **visual prototype components** are implemented; their original production exit gates are **not all satisfied**. No live gameplay GPU cutover.  
+**Status:** ACTIVE, GPU-first Windows development. G0/G1 contracts, G2 canopy preview, G4 oak/pine layered art, G5/G6/G7/G8 visual prototype components, and the **W1 read-only live gameplay scene adapter** are implemented. W1 focused local validation passed; W2 authoritative single-window input foundation is implemented and locally tested. Original production exit gates remain open; no default GPU cutover.
+
 **Created:** 2026-10-14; **progress reconciled:** 2026-10-15.  
 **Original design baseline:** `6de5197b14df05f48c4a65cb0981ae4c8f5ce464`.  
-**Last verified implementation baseline:** `44b41d9df06620359094fa68a29afc0a1d3101e9`, `main`, [Fast Gate #38684262876](https://github.com/ReleMai/WORLDSEED/actions/runs/38684262876) **7/7 successful**.  
+**Last GitHub-verified baseline before W1:** `44b41d9df06620359094fa68a29afc0a1d3101e9`, `main`, [Fast Gate #38684262876](https://github.com/ReleMai/WORLDSEED/actions/runs/38684262876) **7/7 successful**; subsequent roadmap/handoff documentation baseline `c26a314`. Final W1/W2 publication commit and CI are pending closeout.
+
 **Development priority:** new Windows OpenGL game renderer. Keep the pygame software renderer as an older, compatible implementation; do not extend it as the graphics roadmap's primary path.
 
 > **Preservation rule:** Do not delete, overwrite, replace, or silently supersede
@@ -16,7 +18,8 @@
 
 > **Progress reconciliation (2026-10-15):** Sections 2–8 preserve the original design
 > baseline and describe both existing systems and proposed objectives. The status
-> ledger in Section 9 and [latest Windows GPU handoff](../handoffs/WORLDSEED_GPU_FIRST_NEXT_CHAT_HANDOFF_2026-10-15.md)
+> ledger in Section 9, [latest Windows GPU handoff](../handoffs/WORLDSEED_GPU_FIRST_NEXT_CHAT_HANDOFF_2026-10-15.md)
+> and [W1 live-scene handoff](../handoffs/WORLDSEED_W1_LIVE_GPU_SCENE_2026-10-15.md)
 > supersede earlier "not implemented" and "first next-chat G0" planning labels
 > where actual tested implementation has advanced. Preservation of engine
 > optimization plans, saves and authoritative world systems remains mandatory.
@@ -373,21 +376,21 @@ half-finished phases in parallel or proliferate branches.
 | Phase | Deliverable / minimal slice | Must pass to exit | Verified status (2026-10-15) |
 | --- | --- | --- | --- |
 | **G0 — reference and ADR** | Inventory current render order, actor/roof/structure hitboxes, sprite anchors and tree placement; approve 4 scenes and GPU API ADR; capture software baseline and save-version contracts. | Forest, camp, village, interior baseline captures; no world mutation; existing optimizations retained. | **Partial.** ADR/automated fixtures exist; artistic approval of reference captures pending. |
-| **G1 — unified 2.5D scene graph** | Introduce test-only `WorldVisualInstance`, world-space projection, foot-anchor sort and independent ground/upright/overhead passes. Start **without replacing** existing gameplay renderer. | Deterministic layering, scrolling, sub-tile motion, viewport culling, zoom/resize and exact old visuals in fallback. | **G1a/b contracts complete; live gameplay integration incomplete.** |
-| **G2 — one interactive canopy** | Implement one oak tree with a trunk and overhanging crown; player walks under crown; crown local fade; shadow independent; accurate targeting. | Walk around tree, under canopy, behind trunk; NPC visibility and fog-of-war correct; old save positions unchanged. | **GPU visual preview/contract tests only.** Actual authoritative movement, harvesting, NPC/roof interactions pending. |
+| **G1 — unified 2.5D scene graph** | Introduce test-only `WorldVisualInstance`, world-space projection, foot-anchor sort and independent ground/upright/overhead passes. Start **without replacing** existing gameplay renderer. | Deterministic layering, scrolling, sub-tile motion, viewport culling, zoom/resize and exact old visuals in fallback. | **G1a/b and W1 live read-only bridge implemented.** Local capture/privacy/material tests passed; full gameplay window and native acceptance remain open. |
+| **G2 — one interactive canopy** | Implement one oak tree with a trunk and overhanging crown; player walks under crown; crown local fade; shadow independent; accurate targeting. | Walk around tree, under canopy, behind trunk; NPC visibility and fog-of-war correct; old save positions unchanged. | **Live prepared resource stages now project through W1.** Mature/stump/sapling identities and privacy clips tested; authoritative GPU movement and harvesting/UI acceptance pending. |
 | **G3 — ecology and resourcegen** | New-tree spacing profiles and cross-chunk exclusion behind a new resourcegen version; trunk/canopy footprints; safe roads/spawns/caves. | 10+ deterministic seeds, chunk seam audit, traversal and village path/door access, legacy saves bit-for-bit resource positions. | **Not started; deliberately deferred** until the GPU game loop is playable and species spacing has approvals. |
 | **G4 — first art pack** | Approval-quality oak/pine trunks/crowns/shadows; player/NPC directional proof-of-concept; grass/fern details; metadata/atlas pipeline. | Anchors, alpha, sizes, provenance, package coverage and four-scene screenshots approved. | **Partial.** Twelve hash-verified seasonal oak/pine RGBA layers and source pipeline committed; NPC animation, environment decoration and four-scene artistic approval outstanding. |
 | **G5 — solar shadow and camera** | Sub-tile follow camera, offset/culling policy; sun/moon direction, actor/tree projected shadows, cloud responsiveness, layered occlusion. | Morning/noon/dusk/night screenshot and frame tests; camera/zoom/occlusion/actor motion regressions. | **Partial GPU effects.** Smooth time grading, camera and authored contact-shadow art in visual arena; directional actor/tree casting and real gameplay camera tests pending. |
-| **G6 — emissive lights + covered spaces** | One working street torch, fireplace and campfire with emissive, distance falloff, subtle seeded flicker, moving NPC shadows; interior wall blockers. | Fuel/on-off persists, shadow correct, no indoor light leak/visibility regression, reduced-flash option. | **Partial GPU effects.** Warm prepared campfire/debug torch lights; production fuel coupling, indoor blockers, shadows and privacy tests pending. |
-| **G7 — weather and ground life** | Fog depth layers, improved rain/splashes, shelter/canopy interception, weather light response, grasses and terrain transitions. | Same-seed/replay/phase checks, no screen-attached fog, performance budget under storm load, legible interaction/UI. | **Partial GPU effects.** World-anchored clouds, fog, rain and snow in shader; real-weather binding, accumulation, shelter/canopy interception and visual benchmarks pending. |
-| **G8 — live GPU cutover candidate** | Integrate chosen shader backend into single game window by passes and quality tiers; fallback and context reset; new art enabled only when safe. | 4 reference scenes, active 30–60-minute Windows playtest, resize/alt-tab/fullscreen/input/dialogue and save/load; no hardware crash. | **GPU visual arena implemented, not live cutover.** Single OpenGL window for prepared forest/camp only; no authoritative gameplay, game UI, native driver approval or old-save tests. |
+| **G6 — emissive lights + covered spaces** | One working street torch, fireplace and campfire with emissive, distance falloff, subtle seeded flicker, moving NPC shadows; interior wall blockers. | Fuel/on-off persists, shadow correct, no indoor light leak/visibility regression, reduced-flash option. | **Partial GPU effects with W1 live fueled-fire admission.** Glow stays within its visible source cell; wider occluded lighting, indoor blockers and dynamic shadows pending. |
+| **G7 — weather and ground life** | Fog depth layers, improved rain/splashes, shelter/canopy interception, weather light response, grasses and terrain transitions. | Same-seed/replay/phase checks, no screen-attached fog, performance budget under storm load, legible interaction/UI. | **Partial GPU effects with W1 authoritative weather/time binding.** Unknown pixels remain black through the atmosphere pass; accumulation, shelter/canopy interception and native visual benchmarks pending. |
+| **G8 — live GPU cutover candidate** | Integrate chosen shader backend into single game window by passes and quality tiers; fallback and context reset; new art enabled only when safe. | 4 reference scenes, active 30–60-minute Windows playtest, resize/alt-tab/fullscreen/input/dialogue and save/load; no hardware crash. | **Prepared arena and W1 live snapshot implemented; W2 window/input foundation implemented and locally tested.** Game UI, complete interaction, native driver approval, saved-world acceptance and default promotion remain open. |
 | **G9 — visual polish and release gate** | Expand validated assets to more trees/actors/objects, optional bloom/blur, settlement lighting, terrain material polish and 4K benchmarking. | Device matrix, high-res p95 target evidence, 10k-NPC/performance tests, no memory creep, long-session stability, approved art. | **Not started.** |
 
 **Current GPU-first critical path (supersedes the original design-order sketch):**
 G1 scene contracts + G4 oak/pine assets + GPU G5/G6/G7 visual effects
 → **W0 native Windows driver/screenshot evidence**
-→ **W1 read-only live gameplay view snapshot + strict FOW/room/privacy tests**
-→ **W2 single-window authoritative input/player/collision integration**
+→ **W1 read-only live gameplay view snapshot + strict FOW/room/privacy tests — implemented, locally validated**
+→ **W2 single-window authoritative input/player/collision integration — foundation implemented; native acceptance open**
 → **W3 roofs/interiors, visible actors, interaction/HUD ownership**
 → **W4 physically grounded shadows, fueled lights, weather shelter**
 → **W5 saved-world, performance and hardware quality gates**
@@ -395,7 +398,7 @@ G1 scene contracts + G4 oak/pine assets + GPU G5/G6/G7 visual effects
 G3 new resource spacing stays **deferred** behind an explicit new-world
 resourcegen version and 10+ seed safety audit; do not let it block W1/W2.
 
-**Verification:** latest implementation baseline `44b41d9` passed all seven Fast
+**Verification:** the pre-W1 implementation baseline `44b41d9` passed all seven Fast
 Gate jobs (run [#38684262876](https://github.com/ReleMai/WORLDSEED/actions/runs/38684262876)).
 G5/G6/G7 shader source, G1–G4 projection/art and read-only Windows
 prepared-forest integration have automated tests. The **manual native Windows
@@ -406,13 +409,22 @@ on an SDL-dummy Windows legacy reference case (`-1` process termination);
 the *complete* unchanged reference suite was moved to Linux and passed. See
 [CI relocation handoff](../handoffs/WORLDSPACE_GPU_FAST_GATE_LINUX_REFERENCE_RELOCATION_2026-10-15.md).
 
+**W1 local validation:** a 50-test focused integration run passed, including
+six resident-only read and six live material tests. Separate nine-test live
+snapshot and real EGL shader validations passed. Final combined totals and
+the publication Fast Gate are pending closeout. The actual GLSL passes compiled
+and preserved unknown pixels under heavy weather on **EGL llvmpipe**; this is
+software shader-correctness evidence, not native Windows GPU/performance proof.
+See the [W1 implementation handoff](../handoffs/WORLDSEED_W1_LIVE_GPU_SCENE_2026-10-15.md)
+for public APIs, strict bounds, conservative omissions and remaining gaps.
+
 ### GPU-first Windows development work packages (W0–W5; next chats)
 
 | Package | Bounded implementation target | Acceptance evidence |
 | --- | --- | --- |
 | **W0 — native graphics evidence (parallel)** | Test forest/camp GPU arena, shader compile/driver, 720p/1080p, noon/night/storm/fog/winter, resize, tree anchor/fade, screenshot/report. | Driver actually hardware-accelerated; screenshots reviewed; p50/p95/p99 frame and draw/upload/texture budget recorded; no unverified speedup claims. |
-| **W1 — next coding unit: live read-only scene** | Bridge a **live** simulation's already-authorized, prepared viewport to immutable GPU frame input: ground, persistent tree stage/depletion, player, visible NPC/creatures, fire sources, current visibility, fractional actor positions. One owner of FOW/stealth/property/room gates; never query unseen tiles or regenerate on render. | Focused unit tests + full-repo prepared and controlled live snapshots; no state DB/turn/clock/visibility mutation; stable old-save resource IDs; memory/command budgets maintained. |
-| **W2 — authoritative movement & input** | Route real movement through existing game command semantics in **one** OpenGL SDL window, map mouse through exact camera, correctly handle blocked trunks/doors and free movement; keep legacy executable unchanged. | Actual Windows WASD and click-through tests, collision, camera parity, input lag, no double event pump, no simulation stepping from draw. |
+| **W1 — implemented; locally validated** | `live_gpu_scene.py` captures prepared current ground, tree stages, fractional player/NPC feet, visible exterior actors, active fires and weather/minute into detached immutable records. Resident-only terrain/resource APIs never load or generate. Shell/roof/private/interior cells fail closed; ground memory is captured but not drawn. | A 50-test focused integration run included six read and six material tests; separate nine-test capture and real EGL shader validations passed. Final combined tests/publication CI pending. No persistence/RNG/worldgen changes; see W1 handoff. |
+| **W2 — authoritative movement & input foundation implemented; native acceptance open** | Opt-in `tools/worldseed_gpu_gameplay.py` + `ui/gpu_gameplay_input.py` candidate: one GPU SDL window, temporary new world/controlled prepared scene, existing free movement/realtime/`MoveCommand` semantics, camera-projected read-only pointer initially. Gameplay UI and full interaction are deferred; legacy executable unchanged. | Seven input tests, including production trunk collision/sight, pass; real Windows WASD, pointer, focus/resize/exit acceptance remains required. No double event pump or simulation stepping from draw; full W2 exit and default promotion pending. |
 | **W3 — roofs, UI and actor gameplay** | Extend render graph for settlements, shells, doors, roofs/interiors, NPCs/animals, inventory/crafting/map/HUD, interaction and combat overlays with strict visibility/privacy ownership. | Village/interior captures, mouse hit tests, hidden NPC and private-room non-disclosure, old-save/load interaction smoke. |
 | **W4 — production-grade environment** | Real directional tree/actor shadows, light occlusion/fuel synchronization, canopy/roof rain interception, wet ground and environment gameplay bindings; accessible reduced effects and quality tiers. | No light/vision leak, stable 4-season/4-weather captures, short/long-run deterministic visual tests, approved authored art. |
 | **W5 — promotion/release gate** | Device matrix, optional GPU fallback/device-loss recovery, Windows packaging, alt-tab/fullscreen/resize, perf soak and input reliability. | 30–60-minute active playtest + longer soak, reported GPU vendor/driver, frame p50/p95/p99, no cache growth, old saves intact, G8 acceptance signed off. |
@@ -469,34 +481,38 @@ the *complete* unchanged reference suite was moved to Linux and passed. See
 - Which light sources are purely decorative versus powered by actual
   fueled/toggled gameplay state. Avoid visual/gameplay desynchronization.
 
-## 12. Next-chat start: GPU-first live gameplay bridge (W1)
+## 12. Next-chat start: continue GPU gameplay ownership (W2)
 
-**Do not repeat G0/G1a or restart the old renderer.** G0/G1a/G1b,
-G2 preview, G4 source art and the GPU-first G5/G6/G7 visual arena already
-exist. Source of truth is `ReleMai/WORLDSEED` `main`; first confirm GitHub
+**Do not repeat G0/G1a or restart W1/the old renderer.** G0/G1a/G1b,
+G2 preview, G4 source art, GPU-first G5/G6/G7 visual arena and W1's live
+read-only snapshot already exist. Source of truth is `ReleMai/WORLDSEED` `main`; first confirm GitHub
 head/CI and read the
 [GPU-first next-chat handoff](../handoffs/WORLDSEED_GPU_FIRST_NEXT_CHAT_HANDOFF_2026-10-15.md).
+Read the [W1 implementation handoff](../handoffs/WORLDSEED_W1_LIVE_GPU_SCENE_2026-10-15.md)
+before extending capture or privacy behavior.
 
 1. Re-check latest `main`, Fast Gate and GPU-first source/ADR; preserve
    game simulation authority, saved worlds, engine optimization docs, legacy
    executable and green CI.
-2. Review the existing real runtime snapshot, movement-command, visibility,
-   NPC privacy, property and room/roof APIs. **Do not invent or duplicate**
-   engine state or use the visual-only WASD camera as player physics.
-3. Implement **W1**, a small immutable adapter of bounded real-game
-   visible/known terrain, already-prepared tree resource stages, player
-   position/foot fractions, authorized visible actors, fires and time/weather
-   to the GPU scene/material/light contracts. No new resourcegen, no world
-   simulation calls during draw, no save-format change.
-4. Add focused tests proving exact FOW/stealth/private-room gating, no
-   rendering of hidden NPCs or unexplored geometry, no mutation in capture,
-   correct chopped/sapling trees, camera mapping and bounded caches.
+2. Inspect `live_gpu_scene.py` and the current W2 candidate before editing.
+   Preserve the existing movement-command, visibility, property and roof gates.
+   **Do not invent or duplicate** gameplay state or use visual camera motion
+   as player physics.
+3. Continue **W2** through the existing free movement, realtime and
+   `MoveCommand` APIs in one OpenGL SDL window. Keep simulation updates outside
+   draw; validate collision, focus/held-key clearing, camera/pointer parity and
+   window exit. Start from the temporary world/controlled prepared candidate;
+   saved-world loading, interaction UI and full W2 native acceptance remain open.
+4. Extend focused input/authority tests while retaining W1 non-mutation,
+   FOW/private-room gating, resource identity, stage and budget regressions.
+   Pointer projection is read-only until commands and UI are explicitly wired.
 5. Capture/review real Windows GPU driver screenshots (forest/camp) when a
    native context is available; otherwise record the evidence gap and offer
    the exact Windows test command rather than claiming GPU performance.
 6. Validate targeted tests and GitHub Fast Gate, update roadmap/changelog/
    handoff, commit/push **only validated changes** to canonical `main`,
-   then proceed to W2 when W1's gates pass. Respect the project's
+   and update the precise W2 status rather than declaring a full cutover.
+   Respect the project's
    approximately 25-minute **per coherent work-session** handoff discipline.
 
 ### Key source locations / launch commands
@@ -506,9 +522,13 @@ head/CI and read the
   `py -3 -m tools.worldseed_gpu_playtest --scene forest`
   (and `--scene camp`). WASD here is only **visual camera motion**.
 - GPU scene: `worldseed/presentation/gpu_scene_bridge.py`;
+  live capture: `worldseed/presentation/live_gpu_scene.py`;
   `worldseed/presentation/gl_worldspace.py`;
   `worldseed/presentation/gl_atmosphere.py`; shaders under
   `worldseed/assets/shaders/`.
+- W2 opt-in movement candidate: `tools/worldseed_gpu_gameplay.py` and
+  `worldseed/ui/gpu_gameplay_input.py`. Record the exact validated launch
+  command and native acceptance result at integration closeout.
 - Tree art: `worldseed/presentation/tree_art.py`, bundled
   `worldseed/assets/sprites/worldspace/trees/`;
   G1 scene contracts: `worldseed/presentation/worldspace.py`,

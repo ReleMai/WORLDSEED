@@ -46,6 +46,14 @@ jobs:
           if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
           python -u tools/run_ci_check.py --name gpu-windows-visual --timeout 220 -- python -u -m tools.worldseed_gpu_playtest --scene forest --size 1280x720 --frames 90 --screenshot scratch/gpu-first-forest.png --report scratch/gpu-first-forest.json
 
+      - name: W1 live snapshot and W2 single-window controlled candidate
+        shell: pwsh
+        env:
+          PYTHONFAULTHANDLER: '1'
+        run: |
+          if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
+          python -u tools/run_ci_check.py --name gpu-live-camp --timeout 120 -- python -u -m tools.worldseed_gpu_gameplay --prepared-scene camp --size 1280x720 --frames 30 --screenshot scratch/gpu-live-camp.png --report scratch/gpu-live-camp.json
+
       - name: Upload real context evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,4 +64,6 @@ jobs:
             scratch/gpu-worldspace-frame.png
             scratch/gpu-first-forest.json
             scratch/gpu-first-forest.png
+            scratch/gpu-live-camp.json
+            scratch/gpu-live-camp.png
           if-no-files-found: warn

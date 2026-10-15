@@ -318,6 +318,37 @@ class ResourceSystem:
     def feature_at(self,pos:WorldPos,minute:int|None=None)->FeatureView|None:
         fid=self._base_feature(pos,minute)
         if not fid:return None
+        return self._feature_view(fid,pos,minute)
+
+    def prepared_feature_at(self,pos:WorldPos,minute:int|None=None)->FeatureView|None:
+        """Observe only an already resident, prepared natural-feature cell.
+
+        This never loads terrain/resource chunks, generates missing placement,
+        changes LRU/miss caches or derives shoreline reeds from empty cells.
+        Such reeds remain omitted until explicitly prepared by the simulation.
+        Existing structures, containers, crops, soils and settlement clearing
+        retain the same suppression authority as normal gameplay queries.
+        """
+        if pos.z!=0:return None
+        if self.settlement_overlay is not None and self.settlement_overlay.clears_natural_feature(pos):
+            return None
+        pk=pos_key(pos.x,pos.y,pos.z)
+        if pk in self.state.structures or pk in self.state.containers or pk in self.state.crops or pk in self.state.soils:
+            return None
+        tile=self.world.prepared_tile_at(pos)
+        if tile is None:return None
+        key,lx,ly=split_world(pos)
+        values=self._feature_chunk_cache.get((key.x,key.y,self._season(minute)))
+        if values is None:return None
+        fid=values[ly*CHUNK_SIZE+lx]
+        if not fid:return None
+        definition=self.registry.resources.get(fid)
+        if definition is None or (definition.terrains and tile.terrain_id not in definition.terrains):
+            return None
+        return self._feature_view(fid,pos,minute)
+
+    def _feature_view(self,fid:str,pos:WorldPos,minute:int|None=None)->FeatureView|None:
+        """Shared authoritative depletion/regrowth projection; no mutation."""
         minute=self.state.clock_minute if minute is None else minute
         harvested=self.state.resource_depletion.get(pos_key(pos.x,pos.y,pos.z))
         if harvested is None:return FeatureView(fid,"mature")
