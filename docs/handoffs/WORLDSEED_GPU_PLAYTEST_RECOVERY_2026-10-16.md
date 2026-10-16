@@ -109,4 +109,24 @@ Remembered tree seasonal palette currently follows display season, while its
 identity and harvest stage remain last seen. This is a tested development
 candidate, not release hardening or production readiness.
 
-GitHub CI and replacement package outcomes are recorded after publication.
+## Published Windows test package
+
+Production code: [`9e138a2`](https://github.com/ReleMai/WORLDSEED/commit/9e138a2c0caa16fb840be956da902955d92782b4).
+The [Windows GPU main-game build](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673556)
+completed successfully. Frozen assets/imports/self-check passed. The hosted
+Microsoft GDI Generic/OpenGL 1.1 driver was safely rejected by main/QA render
+probes; this is not native GPU visual/performance acceptance.
+
+- [Download the repaired full-game candidate](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673556/artifacts/12068887551).
+- Artifact: `WORLDSEED-Windows-GPU-CANDIDATE-9e138a2c0caa16fb840be956da902955d92782b4`; 444,906,089 bytes; expires 2026-11-15.
+- GitHub artifact digest: `sha256:5de172ac8342b7f98683617a79a0aa75778bc753990b46ad4f6659d1b5073526`.
+- Extract and run `PLAY_WORLDSEED_GPU.bat`. Existing saves can be loaded; no new world or geography migration is required for these fixes.
+
+The first [Fast Gate](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673640)
+exposed an old GPU-input regression expecting an entire tree cell to block free
+movement. That contract intentionally changed to a round trunk base. The test
+now drives actual held input into the open edge, then into physical circle
+contact, preserving sight/non-mutation/resource-ID assertions and checking no
+held-key log spam. Its module plus resource-physics checks passed **21 tests**.
+The follow-up changes tests/documentation only; the executable above contains
+all production fixes. Final gate outcomes follow after the replacement run.

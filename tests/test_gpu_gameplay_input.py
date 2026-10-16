@@ -115,6 +115,7 @@ class GpuGameplayInputTests(unittest.TestCase):
         from worldseed.entities.components import Position
         from worldseed.presentation.live_gpu_scene import capture_live_scene, player_foot
         from worldseed.sim.engine import Simulation
+        from worldseed.systems.resources import ACTOR_FOOT_RADIUS, TREE_TRUNK_RADIUS
         registry = ContentRegistry.load(DATA_DIR)
         with tempfile.TemporaryDirectory() as directory:
             fixture = build_fixture('forest', registry, Path(directory), width=640, height=480, zoom=36)
@@ -127,29 +128,43 @@ class GpuGameplayInputTests(unittest.TestCase):
                         feature = sim.resources.prepared_feature_at(target,sim.clock.minute)
                         if feature is None or feature.feature_id not in ('core:oak_tree','core:pine_tree'):
                             continue
-                        for dx,dy,key in ((1,0,'d'),(-1,0,'a'),(0,1,'s'),(0,-1,'w')):
-                            origin = target.moved(-dx,-dy)
-                            if sim.world.is_passable(origin) and not sim.resources.blocks_movement(origin):
-                                selected = target,origin,dx,dy,key,feature
-                                break
+                        origin = target.moved(-1,0)
+                        if sim.world.is_passable(origin) and not sim.resources.blocks_movement(origin):
+                            selected = target,origin,feature
                         if selected: break
                     if selected: break
                 self.assertIsNotNone(selected)
-                target,origin,dx,dy,key,feature = selected
+                target,origin,feature = selected
                 sim.entities.get(sim.player_id, Position).value = origin
-                sim.state.player_fx = .95 if dx > 0 else .05 if dx < 0 else .5
-                sim.state.player_fy = .95 if dy > 0 else .05 if dy < 0 else .5
+                sim.state.player_fx = .95
+                sim.state.player_fy = .5
                 # Controlled prepared terrain, real production discovery/LOS.
                 sim._discover = MethodType(Simulation._discover, sim)
                 sim._discover(origin)
                 control = GpuGameplayInput(sim,now=0.)
                 try:
-                    control.press(key,now=0.)
+                    control.press('d',now=0.)
                     control.update(.1)
-                    self.assertEqual(sim.player_pos,origin)
-                    self.assertTrue(any('blocks your path' in row.message for row in sim.log))
-                    logged = len(sim.log)
+                    # The north side of the resource cell is open ground. Its
+                    # small grounded trunk, rather than its whole tile, is solid.
+                    self.assertEqual(sim.player_pos,target)
                     control.update(.2)
+                    control.update(.3)
+                    self.assertAlmostEqual(sim.state.player_fx,.49,places=6)
+                    control.release('d')
+                    control.press('s',now=.3)
+                    for now in (.4,.5,.6,.7,.8):
+                        control.update(now)
+                    foot=player_foot(sim)
+                    distance=((foot.x-(target.x+.5))**2+
+                              (foot.y-(target.y+.95))**2)**.5
+                    self.assertAlmostEqual(distance,TREE_TRUNK_RADIUS+ACTOR_FOOT_RADIUS,places=4)
+                    self.assertEqual(sim.player_pos,target)
+                    logged = len(sim.log)
+                    for now in (.9,1.,1.1,1.2,1.3,1.4):
+                        control.update(now)
+                    self.assertAlmostEqual(player_foot(sim).x,foot.x,places=6)
+                    self.assertAlmostEqual(player_foot(sim).y,foot.y,places=6)
                     self.assertEqual(len(sim.log),logged)
                     before = fixture.authority_fingerprint()
                     camera = WorldCamera(player_foot(sim),640,480,36)
