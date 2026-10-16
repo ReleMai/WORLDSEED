@@ -89,3 +89,18 @@ only. Replacement Fast Gate results will be recorded after completion.
 
 [Crafting/Discovery regressions 38926236160](https://github.com/ReleMai/WORLDSEED/actions/runs/38926236160)
 passed on the implementation commit.
+
+## Final house-edge parity refinement
+
+Review found a one-pixel conservative mismatch: GPU scissors used fragment
+centers after the terrain seam fix, while house pointer masks still rounded
+both clip edges inward. Pointer admission now uses the same half-open bounds at
+pixel centers as drawing. A coverage-set regression compares pointer results
+with actual `pixel_clip` output across fractional edges, exact half-pixel ties
+and adjacent clips. All **18 house/building tests** passed under a 90-second
+bound; **13 packaging tests** passed separately. Hidden/transparent pixels stay
+unselectable and saved physical collision is unchanged.
+
+The Windows packaging workflow now watches GPU house source/tests so this final
+production refinement receives a replacement full-game executable. Its new
+build/gate links will supersede the earlier candidate above after validation.

@@ -188,10 +188,37 @@ class GPUHouseAlignmentTests(TestCase):
         viewport = pg.Rect(0, 0, 100, 100)
         regions = building_hit_regions((prepared(building),), (command,), pg, viewport)
         context = {'used': viewport, 'shell_hit_regions': regions}
-        self.assertIsNone(shell_at_pointer(context, (20, 31)))
-        self.assertIsNone(shell_at_pointer(context, (27, 31)))
-        self.assertIsNone(shell_at_pointer(context, (21, 37)))
+        self.assertEqual(shell_at_pointer(context, (20, 31)), (building, 'body'))
+        self.assertEqual(shell_at_pointer(context, (27, 31)), (building, 'body'))
+        self.assertEqual(shell_at_pointer(context, (21, 37)), (building, 'body'))
+        self.assertIsNone(shell_at_pointer(context, (28, 31)))
+        self.assertIsNone(shell_at_pointer(context, (21, 38)))
         self.assertEqual(shell_at_pointer(context, (21, 31)), (building, 'body'))
+
+    def test_fractional_pointer_admission_matches_actual_renderer_pixel_clips(self):
+        from worldseed.presentation.gl_worldspace import pixel_clip
+        building, pg = shell(), self.pg
+        viewport = pg.Rect(0, 0, 100, 100)
+        # Includes exact half-pixel ties and adjacent fractional sight cells.
+        # Source pixels are opaque, so the renderer's scissor is the complete
+        # expected coverage; old ceil(start)/floor(end) masks lose edge pixels.
+        for clips in (((20.2, 30.2, 27.8, 37.8),),
+                      ((20.5, 30.5, 27.5, 37.5),),
+                      ((20.8, 30.8, 27.2, 37.2),),
+                      ((20.2, 30.2, 24.7, 37.8), (24.7, 30.2, 27.8, 37.8))):
+            with self.subTest(clips=clips):
+                command = self.command('building:'+building.uid, b'\x90\x70\x50\xff'*4,
+                    bounds=(18., 28., 32., 42.), clips=clips)
+                regions = building_hit_regions((prepared(building),), (command,), pg, viewport)
+                context = {'used': viewport, 'shell_hit_regions': regions}
+                expected = set()
+                for clip in clips:
+                    sx, gl_y, width, height = pixel_clip(clip, viewport.width, viewport.height)
+                    top = viewport.height-gl_y-height
+                    expected.update((x, y) for y in range(top, top+height) for x in range(sx, sx+width))
+                actual = {(x, y) for y in range(28, 42) for x in range(18, 32)
+                          if shell_at_pointer(context, (x, y)) is not None}
+                self.assertEqual(actual, expected)
 
     def test_main_backend_builds_regions_from_the_commands_it_actually_draws(self):
         from worldseed.ui.gpu_terminal import GpuTerminal

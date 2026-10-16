@@ -123,8 +123,9 @@ class _PaintedBuildingMask:
         x0, y0, x1, y1 = command.bounds
         if not x0 <= x < x1 or not y0 <= y < y1:
             return 0
-        # Match the conservative integer scissor used by GLWorldspaceRenderer.
-        if not any(ceil(a) <= px < floor(c) and ceil(b) <= py < floor(d)
+        # Match pixel_clip's fragment-center admission exactly. Rounding both
+        # edges inward would leave painted fractional boundary pixels unclickable.
+        if not any(a <= x < c and b <= y < d
                    for a, b, c, d in command.clip_rects):
             return 0
         # GL uses clamped bilinear filtering. Sample that same source alpha,
