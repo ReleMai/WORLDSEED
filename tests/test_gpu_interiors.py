@@ -126,8 +126,8 @@ class GPUInteriorContracts(TestCase):
         obj=plan.furniture[0]
         plan.observed_objects=[InteriorObservation(obj.uid,'furniture',obj.piece_id,
             obj.x,obj.y,obj.w,obj.h)]
-        live=(2000,3500,2500,4000)
-        remembered=(2500,3500,3000,4000)
+        live=(2000,4500,2500,5000)
+        remembered=(2500,4500,3000,5000)
         with patch('worldseed.presentation.gpu_interiors.visible_floor_rects',
                    return_value=(live,)),patch(
                    'worldseed.presentation.gpu_interiors.remembered_floor_rects',

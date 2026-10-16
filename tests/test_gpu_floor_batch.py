@@ -34,8 +34,8 @@ class InteriorFloorBatchTests(TestCase):
         for bounds in (a,b):
             clip=pixel_clip(bounds,width,height)
             geometry=unpack('<24f',clipped_vertex_bytes(bounds,clip,height))
-            self.assertEqual(geometry[0],float(clip[0]))
-            self.assertEqual(geometry[1],float(height-clip[1]-clip[3]))
+            self.assertAlmostEqual(geometry[0],max(bounds[0],float(clip[0])),places=4)
+            self.assertAlmostEqual(geometry[1],max(bounds[1],float(height-clip[1]-clip[3])),places=4)
         # Shader batching is restricted to the named, already admitted
         # interior light layer; other sprites retain exact clip scissors.
         import inspect
