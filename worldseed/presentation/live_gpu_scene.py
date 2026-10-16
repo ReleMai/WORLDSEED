@@ -91,7 +91,7 @@ class LiveGpuSnapshot:
             objects=self.objects, show_explored_memory=show_explored_memory,
             remembered_resources=self.remembered_resources,
             remembered_buildings=self.remembered_buildings,
-            remembered_objects=self.remembered_objects)
+            remembered_objects=self.remembered_objects,sun_minute=self.minute)
 
     def atmosphere(self, elapsed_seconds=0.):
         if self.interior:

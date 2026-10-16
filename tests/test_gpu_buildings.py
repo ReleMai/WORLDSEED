@@ -184,6 +184,23 @@ class GPUExteriorContracts(TestCase):
         self.assertEqual(commands[0].bounds, (*camera.to_screen(WorldFoot(3, 3)),
                                              *camera.to_screen(WorldFoot(5, 5))))
 
+    def test_daylight_shadows_are_directional_and_only_clip_known_ground(self):
+        from worldseed.presentation.gpu_sun_shadows import sunlight_commands,sun_offset
+        camera=WorldCamera(WorldFoot(4.5,4.5,0),224,224,28)
+        ground=frozenset((x,y,0) for x in range(0,9) for y in range(0,9))
+        shell=BuildingShell('shadow-house','','residence','core:residence',
+            ((3,3),(4,3),(3,4),(4,4)),(3,4),'door',0,'rectangular',(3,3,4,4))
+        row=PreparedBuildingShell(shell,frozenset((x,y,0) for x,y in shell.footprint))
+        at_noon=sunlight_commands(camera,WorldFoot(2.5,5.5,0),
+            (row,),ground,FakeMaterials(),720)
+        self.assertTrue(any(c.visual_id=='sun-shadow:player' for c in at_noon))
+        self.assertTrue(any(c.visual_id.startswith('sun-shadow:building:') for c in at_noon))
+        self.assertTrue(all(c.clip_rects and 0<c.opacity<1 for c in at_noon))
+        self.assertEqual(sunlight_commands(camera,WorldFoot(2.5,5.5,0),
+            (row,),ground,FakeMaterials(),0),())
+        self.assertGreater(sun_offset(8*60,28)[0],0)
+        self.assertLess(sun_offset(16*60,28)[0],0)
+
     def test_topdown_roofs_cover_solid_center_but_leave_courtyards_clear(self):
         try:
             import pygame

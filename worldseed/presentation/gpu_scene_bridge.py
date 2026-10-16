@@ -175,7 +175,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       season='summer',show_player=True,fire_cells=(),
                       actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None,
                       objects=(), show_explored_memory=True,
-                      remembered_resources=(), remembered_buildings=(), remembered_objects=()):
+                      remembered_resources=(), remembered_buildings=(), remembered_objects=(),
+                      sun_minute=None):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -333,6 +334,13 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         scenery[:0]=[replace(command,visual_id='memory:'+command.visual_id,
                      opacity=.62,fade_radius=0.,local_alpha=1.,sway_px=0.,remembered=True)
                      for command in memory.scenery]
+    if sun_minute is not None and show_player and visible_cells:
+        from .gpu_sun_shadows import sunlight_commands
+        # Shadows draw above admitted ground, below people, roofs and props.
+        # Their clips are exact live exterior ground; unknown and roofed
+        # interiors remain unread and unaffected by this sunlight effect.
+        scenery[:0]=list(sunlight_commands(camera,viewer,buildings,
+                    frozenset(visible_cells)&frozenset(terrain_by),materials,sun_minute))
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')
     return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),visible_ground)
