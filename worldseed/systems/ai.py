@@ -200,6 +200,10 @@ class NPCSystem:
             crossing=self.settlement_physicalization.crossing_at(p)
             world_pass=bool(crossing and str(crossing.kind) in {"bridge","ford"} and not bool(crossing.blocked))
         if not world_pass:return False
+        # Center-waypoint paths remain conservative around physical natural
+        # solids. Continuous feet use ResourceSystem's same swept trunk circles.
+        resources=getattr(self,"resources",None)
+        if resources is not None and resources.blocks_movement(p):return False
         if self.building and not self.building.passable(p,world_pass):return False
         if self.property_security and self.property_security.blocks_actor(p,npc.uid,minute):return False
         # Outdoor NPCs are physical actors, not one-per-tile render overlays.

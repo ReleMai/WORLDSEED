@@ -18,6 +18,56 @@ MAX_PREPARED_OBJECTS = 1024
 MAX_OBJECT_VIEW_CELLS = 8192
 
 
+def gpu_resource_style(content_id, definition=None, visuals=None):
+    """Human-relative GPU art sizes, independent of harvest/collision authority.
+
+    The legacy catalog includes illustrative cache icons rather than measured
+    object sizes. Preserve its atlas metadata while fitting loose materials
+    below knee height and vegetation by its existing content tags. A mod may
+    supply explicit ``gpu_width`` / ``gpu_height`` art dimensions.
+    """
+    if visuals is None:
+        from .visuals import VisualRegistry
+        visuals = VisualRegistry.load_default()
+    style = dict(visuals.resource_style(content_id))
+    tags = set(getattr(definition, 'tags', ()))
+    if 'tree' in tags:
+        width, height = (1.05, 2.8) if 'conifer' in tags else (1.15, 2.45)
+    elif 'natural_container' in tags:
+        width, height = (.90, .65) if 'rock_cache' not in tags else (.75, .48)
+    elif 'branch' in tags:
+        width, height = .72, .48
+    elif 'rock' in tags or 'stone' in tags:
+        width, height = ((.95, 1.05) if getattr(definition, 'blocks_movement', False)
+                         else (.46, .38))
+    elif 'bush' in tags:
+        width, height = .85, 1.05
+    elif 'mushroom' in tags or 'bait' in tags:
+        width, height = .55, .38
+    elif 'grain' in tags or 'wetland' in tags:
+        width, height = .78, 1.0
+    elif 'soil' in tags or 'clay' in tags:
+        width, height = .85, .28
+    else:
+        width, height = .70, .66
+    style['width'] = style.get('gpu_width', width)
+    style['height'] = style.get('gpu_height', height)
+    return style
+
+
+def object_geometry(kind, *, ground=False):
+    """Shared live/last-seen art geometry; never a physical collider."""
+    if kind == 'roof': return 1., 1., VisualLayer.OVERHEAD
+    if ground: return 1., 1., VisualLayer.LOW_DETAIL
+    width, height = {
+        'pile': (.45, .30), 'crop': (.70, .80),
+        'container': (.80, .62), 'carcass': (1., .55),
+        'sign': (.65, .24), 'home': (.65, .24),
+        'settlement_piece': (.95, 1.),
+    }.get(kind, (1.1, 1.1))
+    return width, height, VisualLayer.GROUNDED
+
+
 @dataclass(frozen=True, slots=True)
 class PreparedObject:
     uid: str
@@ -98,6 +148,9 @@ def capture_objects(sim, current_cells, camera):
 
     def placed(kind, content, cell, *, uid=None, **kwargs):
         x, y, rz = cell
+        width, height, layer = object_geometry(kind,
+            ground=kwargs.get('layer') is VisualLayer.LOW_DETAIL)
+        kwargs.update(width=width, height=height, layer=layer)
         add(PreparedObject(uid or f'{kind}:{rz}:{x}:{y}', kind, str(content),
                            WorldFoot(x+.5, y+.999, rz), **kwargs))
 

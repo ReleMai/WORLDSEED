@@ -1,0 +1,27 @@
+{
+  "schema": "worldseed-gpu-control-art-v1",
+  "style": "Illustrated medieval survival controls, generated specifically for WORLDSEED, 2026-10-16",
+  "source_sha256": "766f079d846ae10bd6da28dc6c4a303ae07e2e9917b91c0c19beadfe49b1a31d",
+  "size": [
+    128,
+    128
+  ],
+  "icons": {
+    "inventory": "inventory.png",
+    "crafting": "crafting.png",
+    "build": "build.png",
+    "health": "health.png",
+    "map": "map.png",
+    "actions": "actions.png",
+    "world": "world.png",
+    "look": "look.png",
+    "help": "help.png",
+    "pause": "pause.png",
+    "normal": "normal.png",
+    "stalk": "stalk.png",
+    "crouch": "crouch.png",
+    "aggressive": "aggressive.png",
+    "confirm": "confirm.png",
+    "cancel": "cancel.png"
+  }
+}

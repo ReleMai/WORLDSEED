@@ -71,16 +71,11 @@ void main() {
     vec2 topScreen = vec2(v_uv.x, 1.0-v_uv.y) * u_viewport;
     vec2 world=topScreen+u_world_origin;
     vec4 original=texture(u_scene,vec2(v_uv.x,v_uv.y));
-    // Live capture clears its scene target to transparent black. Fog, rain and
-    // snow must not paint the unknown/private cells omitted by that capture.
-    if (original.a <= 0.001) {
-        fragColor=vec4(0.0,0.0,0.0,1.0);
-        return;
-    }
-    // Discovery memory is one .42-opacity ground draw on transparent black:
-    // standard SRC_ALPHA blending stores alpha .42*.42 = .1764. The terrain
-    // material blend keeps that single draw/alpha contract. Freeze that memory
-    // instead of lighting/animating it. Do NOT test alpha<1: antialiased current
+    // Remembered commands blend RGB but preserve transparent classification
+    // alpha. Unknown samples have both RGB and alpha zero, so they stay black.
+    // Stacked remembered props stay memory regardless of their layer count.
+    // Legacy single-ground .1764 also fits this fallback classification.
+    // Freeze memory instead of lighting/animating it. Do NOT test alpha<1: antialiased current
     // canopies also reduce destination alpha under standard sprite blending.
     if (original.a < 0.25) {
         fragColor=vec4(original.rgb,1.0);

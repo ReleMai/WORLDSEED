@@ -132,8 +132,15 @@ class InteriorGeometryTests(unittest.TestCase):
         self.assertEqual(validate_sim_state({"clock_minute": 0}), [])
 
     def test_representative_sqlite_save_roundtrip_and_cli_verification(self):
+        from worldseed.systems.interior_state import InteriorObservation
         plan = sample_plan()
         plan.piles.append(InteriorPile("death:real", 1237, 4793, {"core:stone": 2}))
+        plan.explored_cells=[0]
+        plan.explored_detail={'1':3}
+        plan.observed_walls=[InteriorRect(w.x,w.y,w.w,w.h) for w in plan.walls[:1]]
+        fixture=plan.furniture[0]
+        plan.observed_objects=[InteriorObservation(fixture.uid,'furniture',fixture.piece_id,
+            fixture.x,fixture.y,fixture.w,fixture.h)]
         state = LivingWorldState()
         state.interiors[plan.uid] = plan
         state.interior_actors["player"] = InteriorActor(plan.uid, plan.entry_x + 127, plan.entry_y - 127)
@@ -154,6 +161,20 @@ class InteriorGeometryTests(unittest.TestCase):
             self.assertEqual(proof.returncode, 0, proof.stdout + proof.stderr)
             self.assertIn("Save integrity: OK", proof.stdout)
             print(proof.stdout.strip())
+
+    def test_observation_validator_bounds_masks_and_forbids_actor_memory(self):
+        plan=sample_plan()
+        raw={'interiors':{plan.uid:plan.to_dict()}}
+        raw['interiors'][plan.uid]['explored_detail']={'0':65536}
+        self.assertTrue(any('explored detail' in issue for issue in validate_sim_state(raw)))
+        raw['interiors'][plan.uid]['explored_detail']={'0':1}
+        fixture=plan.furniture[0]
+        raw['interiors'][plan.uid]['observed_objects']=[{
+            'uid':'private-person','kind':'actor','content_id':'core:npc',
+            'x':fixture.x,'y':fixture.y,'w':fixture.w,'h':fixture.h}]
+        self.assertTrue(any('interior observation' in issue for issue in validate_sim_state(raw)))
+        raw['interiors'][plan.uid]['observed_objects'][0]['kind']='furniture'
+        self.assertEqual(validate_sim_state(raw),[])
 
 
 class InteriorPortalTests(unittest.TestCase):

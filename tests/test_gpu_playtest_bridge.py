@@ -47,7 +47,7 @@ class GPUSceneBridgeContracts(TestCase):
         current=self.visible-{(11,12,0)}
         p=self.build(visible_cells=current)
         memory=next(c for c in p.ground if c.visual_id=='ground:0:11:12')
-        self.assertAlmostEqual(memory.opacity,.42)
+        self.assertAlmostEqual(memory.opacity,.62)
         self.assertEqual(p.visible_ground_cells,len(current))
         self.assertFalse(any('oak' in c.texture_id for c in p.scenery))
         self.assertTrue(any('pine' in c.texture_id for c in p.scenery))

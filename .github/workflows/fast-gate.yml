@@ -69,6 +69,8 @@ jobs:
         run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_candidate_package tests.test_gpu_objects tests.test_gpu_interiors tests.test_gl_ui_surface tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
       - name: W4 natural materials, raster seams and versioned land cover
         run: python -u tools/run_ci_check.py --name w4-landscape-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_ground_materials tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_worldgen_v9_surface tests.test_worldgen_v9_compatibility
+      - name: Live playtest memory, physical tree bases and instant pickups
+        run: python -u tools/run_ci_check.py --name gpu-playtest-recovery --timeout 90 -- python -u -m unittest -v tests.test_exterior_memory tests.test_resource_physics tests.test_crash_report_paths
       - name: W0 context bootstrap and W2 Action Hub navigation contracts
         run: python -u tools/run_ci_check.py --name w0w2-actions-ui --timeout 60 -- python -u -m unittest -v tests.test_gl_context tests.test_gl_gameplay_ui tests.test_gpu_gameplay_actions tests.test_gpu_gameplay_session tests.test_ui_rc2.GPUPrimaryNavigationTests
       - name: M2 real-scene GPU bridge source and software fallback
@@ -109,7 +111,7 @@ jobs:
       - name: Main game OpenGL UI, commands and persistent checkpoint integration
         env:
           SDL_VIDEODRIVER: offscreen
-        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality
+        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_gpu_hud tests.test_gpu_control_art tests.test_gpu_readability
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.

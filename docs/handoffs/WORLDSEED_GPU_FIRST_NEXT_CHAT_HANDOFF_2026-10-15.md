@@ -10,6 +10,8 @@
 
 **Latest graphics/worldgen continuation:** [W4 landscape quality](WORLDSEED_W4_LANDSCAPE_QUALITY_2026-10-16.md). WORLDGEN9 applies only to new worlds; preserve the latest exterior/interior explored memory.
 
+**Latest native-playtest follow-up:** [GPU playtest recovery](WORLDSEED_GPU_PLAYTEST_RECOVERY_2026-10-16.md) fixes the confirmed indoor crash and covers static appearance memory, subcell tree collision, instant collection and restored HUD/help controls. Start here before continuing W4; preserve last-seen memory and read-only capture.
+
 ## Paste this into the next WORLDSEED chat
 
 ```text

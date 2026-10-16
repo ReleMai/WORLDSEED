@@ -77,3 +77,25 @@ class SessionDebugLog:
 def debug_log_path(obj) -> str:
     debug=getattr(obj,"debug",None)
     return str(getattr(debug,"path",""))
+
+
+def write_crash_report(text: str, root: Path | None = None) -> Path:
+    """Keep the established crash report and an easy-to-find copy in logs.
+
+    The main game deliberately recovers to its world menu after a session
+    exception. That exception does not reach a launcher's unhandled-error hook,
+    so retain its full traceback here before the error screen is opened.
+    """
+    root = Path(root) if root is not None else Path.cwd()
+    report = root / 'WORLDSEED_CRASH.log'
+    report.write_text(text, encoding='utf-8')
+    try:
+        logs = root / 'logs'
+        logs.mkdir(parents=True, exist_ok=True)
+        (logs / report.name).write_text(text, encoding='utf-8')
+    except OSError as exc:
+        # A failed convenience copy must not replace the original exception or
+        # prevent recovery. The primary report above has already been written.
+        print(f'Crash report saved to {report}; logs copy failed: {exc}',
+              file=sys.stderr, flush=True)
+    return report

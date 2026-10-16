@@ -1,0 +1,59 @@
+{
+  "source": "controlled prepared production interior; reachable room observations; actual main GpuTerminal",
+  "validation": "Linux SDL offscreen llvmpipe software only; not native Windows GPU acceptance",
+  "gpu": {
+    "GL_VENDOR": "Mesa",
+    "GL_RENDERER": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "GL_VERSION": "4.5 (Core Profile) Mesa 25.0.7-2+deb13u1"
+  },
+  "visits": [
+    [
+      "Hearth kitchen",
+      6000,
+      9084
+    ],
+    [
+      "Family bedroom",
+      3000,
+      4000
+    ],
+    [
+      "Reed pantry",
+      8750,
+      4000
+    ]
+  ],
+  "current_position": [
+    10500,
+    8750
+  ],
+  "floor_cells": 384,
+  "detail_cells": 129,
+  "memory_floor_patches": 854,
+  "memory_wall_records": 8,
+  "memory_objects": 8,
+  "current_objects": [
+    [
+      "storage-furniture:property-storage:structure:327ad03f346887f5dd2e8bd9:inside:wardrobe",
+      "furniture"
+    ],
+    [
+      "interior:structure:327ad03f346887f5dd2e8bd9:stairs:up",
+      "stairs"
+    ],
+    [
+      "piece:36f40b821ecee2b9d0b7e70e",
+      "exit"
+    ]
+  ],
+  "authority_unchanged": true,
+  "draw_report": {
+    "sprites": 1218,
+    "draw_calls": 1436,
+    "triangles": 2872,
+    "textures_uploaded": 15,
+    "textures_reused": 1421,
+    "gpu_texture_bytes": 69370340,
+    "scissor_regions": 1436
+  }
+}

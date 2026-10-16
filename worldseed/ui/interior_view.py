@@ -73,6 +73,9 @@ def refresh_hover(term, *, update_display: bool = True) -> None:
     if uid == ctx.get('hover_uid'):
         return
     used = ctx['used']
+    # GPU snapshots contain transparent world pixels. Alpha-blitting that
+    # snapshot alone cannot erase an earlier hover outline or tooltip.
+    term.screen.fill((0, 0, 0, 0), used)
     term.screen.blit(ctx['snapshot'], used.topleft)
     ctx['hover_uid'] = uid
     if furniture:

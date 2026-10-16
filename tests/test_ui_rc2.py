@@ -24,6 +24,42 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_gpu_primary_hud_restores_bars_and_modal_help_preserves_navigation(self):
+        import os
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from worldseed.ui import gpu_hud
+        from worldseed.ui.pygame_terminal import PygameTerminal
+        from worldseed.ui.router import HUD_BUTTONS
+        if not PygameTerminal.available():self.skipTest('pygame optional')
+        with patch.dict(os.environ,{'SDL_VIDEODRIVER':'dummy','SDL_AUDIODRIVER':'dummy'}):
+            term=PygameTerminal(800,520);term.enter()
+            try:
+                term._input_mode='world'
+                sim=SimpleNamespace(state=SimpleNamespace(player_name='Wanderer',player_hunting_stance='stalk'),
+                    clock=SimpleNamespace(label=lambda:'Y1 Spring 1, 08:25'),
+                    player_pos=WorldPos(12,24,0))
+                rect=term.pg.Rect(640,55,146,380)
+                gpu_hud.draw_hud(term,rect,sim,Vitals())
+                self.assertEqual([token for _,token in term._pointer_targets[:10]],
+                                 [token for _,token in HUD_BUTTONS])
+                self.assertEqual([name.split()[0] for _,name,_ in term._hud_tooltips[:4]],
+                                 ['Health','Stamina','Hunger','Thirst'])
+                self.assertTrue(all(rect.contains(target) for target,_ in term._pointer_targets))
+                help_rect=next(area for area,token in term._pointer_targets if token=='?')
+                self.assertTrue(gpu_hud.handle_hud_event(term,term.pg.event.Event(
+                    term.pg.MOUSEBUTTONDOWN,button=1,pos=help_rect.center)))
+                gpu_hud.draw_help_popup(term)
+                self.assertEqual(term._gpu_help_window.navigation.depth,2)
+                self.assertTrue(gpu_hud.handle_hud_event(term,term.pg.event.Event(
+                    term.pg.KEYDOWN,key=term.pg.K_ESCAPE,unicode='')))
+                self.assertFalse(gpu_hud.help_popup_open(term))
+                self.assertEqual(term._input_mode,'world')
+                for key in 'wasd':self.assertEqual(classify_key(key).kind,'move')
+            finally:
+                gpu_hud.close_help_popup(term)
+                term.restore()
+
     def test_shared_indoor_outdoor_toolbar_tokens_and_narrow_geometry(self):
         import os
         from unittest.mock import patch

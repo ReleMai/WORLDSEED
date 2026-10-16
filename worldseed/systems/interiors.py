@@ -202,19 +202,50 @@ class InteriorSystem:
         if not force and stamp == self._last_sight_stamp:
             return
         from worldseed.systems.illumination import indoor_sources, interior_ambient
-        from worldseed.systems.interior_visibility import visible_grid_cells, MAX_MEMORY_CELLS
+        from worldseed.systems.interior_visibility import (
+            visible_floor_rects, remember_floor_rects, MAX_MEMORY_CELLS)
         # Skip unsupported/modded gigantic interiors rather than scanning them.
         cols = (plan.width + 499)//500
         rows = (plan.height + 499)//500
         if not 0 < cols*rows <= MAX_MEMORY_CELLS:
             return
         ambient = interior_ambient(getattr(self.sim, 'environment', None), minute, plan)
-        found = visible_grid_cells(plan, actor.x, actor.y, minute, ambient, indoor_sources(plan))
-        if found:
-            known = set(plan.explored_cells)
-            known.update(found)
-            if len(known) <= MAX_MEMORY_CELLS:
-                plan.explored_cells = sorted(known)
+        found = visible_floor_rects(plan, actor.x, actor.y, minute, ambient, indoor_sources(plan))
+        remember_floor_rects(plan,found)
+        from worldseed.systems.interior_state import InteriorObservation
+        from worldseed.systems.interior_furnishing import furniture_visual
+        def seen(x,y,w,h):
+            return any(x < c and x+w > a and y < d and y+h > b for a,b,c,d in found)
+        # Clear stale records only where the player can observe the old place.
+        # Unseen rearrangement/removal remains last-seen knowledge until a
+        # later gameplay observation. Inventories and actors are never saved.
+        observed={row.uid:row for row in plan.observed_objects
+                  if not seen(row.x,row.y,row.w,row.h)}
+        for fixture in plan.furniture[:512]:
+            if seen(fixture.x,fixture.y,fixture.w,fixture.h):
+                style=furniture_visual(fixture.piece_id)
+                observed[fixture.uid]=InteriorObservation(fixture.uid,'furniture',fixture.piece_id,
+                    fixture.x,fixture.y,fixture.w,fixture.h,
+                    style['height_ratio'],style['flat'],bool(fixture.solid))
+        for stair in plan.stairs[:32]:
+            if seen(stair.x,stair.y,stair.w,stair.h):
+                observed[stair.uid]=InteriorObservation(stair.uid,'stairs',stair.direction,
+                    stair.x,stair.y,stair.w,stair.h,flat=True)
+        if plan.floor_index == 0 and seen(plan.entry_x-500,plan.entry_y-700,1000,900):
+            observed[plan.door_uid]=InteriorObservation(plan.door_uid,'exit','wood_open',
+                plan.entry_x-500,plan.entry_y-700,1000,900)
+        plan.observed_objects=sorted(observed.values(),key=lambda row:row.uid)[:672]
+        def borders_sight(wall):
+            return seen(wall.x-250,wall.y-250,wall.w+500,wall.h+500)
+        # Last-seen wall geometry also survives unseen destruction. Only an
+        # observation beside the old position may clear or replace a record.
+        known_walls={(w.x,w.y,w.w,w.h):w for w in (plan.observed_walls or ())
+                     if not borders_sight(w)}
+        for wall in plan.walls[:256]:
+            if borders_sight(wall):
+                key=(wall.x,wall.y,wall.w,wall.h)
+                known_walls[key]=InteriorRect(*key)
+        plan.observed_walls=[known_walls[key] for key in sorted(known_walls)[:256]]
         self._last_sight_stamp = stamp
 
     def player_presence(self) -> InteriorActor | None:

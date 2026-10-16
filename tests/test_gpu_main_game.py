@@ -169,6 +169,8 @@ class GPUMainGameTests(unittest.TestCase):
     def test_main_pointer_cannot_open_remembered_content_and_resize_preserves_window(self):
         term, sim, pg = self.term, self.ctx.sim, self.term.pg
         player = sim.player_pos
+        from worldseed.systems.exterior_memory import observe_exterior
+        observe_exterior(sim, ((player.x,player.y,player.z),))
         sim._visible_tile_set.discard(pos_key(player.x, player.y, player.z))
         self.present()
         cell = (player.x, player.y, player.z)
@@ -176,7 +178,7 @@ class GPUMainGameTests(unittest.TestCase):
         self.assertNotIn(cell, term._snapshot.current_cells)
         remembered = next(row for row in term._world_commands
                           if row.visual_id == f'ground:{cell[2]}:{cell[0]}:{cell[1]}')
-        self.assertAlmostEqual(remembered.opacity, .42)
+        self.assertAlmostEqual(remembered.opacity, .62)
         before = self.fixture.authority_fingerprint()
         context = term._hover_context
         point = (round(context['grid_x'] + (player.x + .5) * context['tile_px']),
@@ -222,3 +224,84 @@ class GPUMainGameTests(unittest.TestCase):
         self.assertEqual(fixture.authority_fingerprint(), before)
         self.assertEqual(self.set_mode.call_count, 1)
 
+
+    def test_main_hud_help_drag_and_interior_hover_are_observational_in_one_gpu_window(self):
+        from worldseed.ui.gpu_hud import help_popup_open
+        from worldseed.ui.interior_view import refresh_hover
+        term, pg, sim = self.term, self.term.pg, self.ctx.sim
+        before = self.fixture.authority_fingerprint()
+        minute = sim.clock.minute
+        self.present()
+        self.assertEqual([name.split()[0] for _, name, _ in term._hud_tooltips[:4]],
+                         ['Health', 'Stamina', 'Hunger', 'Thirst'])
+        driver = RealtimeSimulationDriver(sim)
+        driver.resume(now=1.)
+        term.set_realtime_callback(driver.pump)
+        self.addCleanup(term.set_realtime_callback, None)
+        help_button = next(rect for rect, token in term._pointer_targets if token == '?')
+        term._held_movement[pg.K_d] = 1
+        term._active_movement_key = pg.K_d
+        result = term._filter_event(pg.event.Event(pg.MOUSEBUTTONDOWN, button=1, pos=help_button.center))
+        self.assertEqual(result.type, pg.NOEVENT)
+        self.assertTrue(help_popup_open(term))
+        self.assertFalse(term._held_movement)
+        self.assertEqual(driver._pause_depth, 1)
+        self.assertFalse(term._pump_realtime())
+        self.assertEqual(driver.pump(now=1000.), 0)
+        self.assertEqual(term._filter_event(pg.event.Event(pg.KEYDOWN, key=pg.K_w, unicode='w')).type, pg.NOEVENT)
+        term._filter_event(pg.event.Event(pg.WINDOWFOCUSLOST))
+        self.assertTrue(driver.paused)
+        term._filter_event(pg.event.Event(pg.WINDOWFOCUSGAINED))
+        self.assertFalse(driver.paused)
+        self.assertTrue(help_popup_open(term))
+        self.assertEqual(driver._pause_depth, 1)
+        self.assertFalse(term._pump_realtime())
+        window = term._gpu_help_window
+        original = window.rect.copy()
+        anchor = (original.x + 15, original.y + 15)
+        for event in (pg.event.Event(pg.MOUSEBUTTONDOWN, button=1, pos=anchor),
+                      pg.event.Event(pg.MOUSEMOTION, pos=(80, 110)),
+                      pg.event.Event(pg.MOUSEBUTTONUP, button=1, pos=(80, 110))):
+            self.assertEqual(term._filter_event(event).type, pg.NOEVENT)
+        self.assertNotEqual(window.rect.topleft, original.topleft)
+        self.assertLess(window.rect.width, term.width)
+        self.assertLess(window.rect.height, term.height)
+        evidence = Path(os.environ.get('WORLDSEED_RECOVERY_EVIDENCE', str(self.directory)))
+        capture = evidence / 'gpu-main-hud-controls.png'
+        with patch.dict(os.environ, {'WORLDSEED_GPU_SCREENSHOT': str(capture)}):
+            self.assertEqual(term._filter_event(pg.event.Event(pg.KEYDOWN, key=pg.K_F12, unicode='')).type, pg.NOEVENT)
+        self.assertTrue(capture.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'))
+        self.assertEqual(term._filter_event(pg.event.Event(pg.KEYDOWN, key=pg.K_ESCAPE, unicode='')).type, pg.NOEVENT)
+        self.assertFalse(help_popup_open(term))
+        self.assertEqual(driver._pause_depth, 0)
+        for expected in (True, False):
+            self.assertEqual(term._filter_event(pg.event.Event(pg.KEYDOWN, key=pg.K_SLASH, unicode='?')).type, pg.NOEVENT)
+            self.assertEqual(help_popup_open(term), expected)
+        self.assertEqual(sim.clock.minute, minute)
+        self.assertEqual(self.fixture.authority_fingerprint(), before)
+        term.set_realtime_callback(None)
+
+        directory = self.directory / 'hover-interior'; directory.mkdir()
+        fixture = build_fixture('interior', self.registry, directory, width=960, height=720, zoom=28)
+        self.addCleanup(fixture.close)
+        interior_before = fixture.authority_fingerprint()
+        term.present_game(self.registry, fixture.world, fixture.sim.entities,
+                          fixture.sim, fixture.sim.player_id, 'GPU interior hover regression')
+        context = term._interior_context
+        region = next(row for row in context['object_regions'] if row['rect'].width >= 5 and row['rect'].height >= 5)
+        point = (region['rect'].centerx, region['rect'].top + 1)
+        self.assertEqual(term.screen.get_at(point).a, 0)
+        term._last_mouse = region['rect'].center
+        refresh_hover(term)
+        self.assertEqual(context['hover_uid'], region['uid'])
+        self.assertGreater(term.screen.get_at(point).a, 0)
+        used = context['used']
+        empty = next((x, y) for y in range(used.top + 1, used.bottom, 10)
+                     for x in range(used.left + 1, used.right, 10)
+                     if all(not row['rect'].inflate(6, 6).collidepoint((x, y)) for row in context['object_regions']))
+        term._last_mouse = empty
+        refresh_hover(term)
+        self.assertIsNone(context['hover_uid'])
+        self.assertEqual(term.screen.get_at(point).a, 0)
+        self.assertEqual(fixture.authority_fingerprint(), interior_before)
+        self.assertEqual(self.set_mode.call_count, 1)

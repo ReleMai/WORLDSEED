@@ -17,6 +17,7 @@ from worldseed.presentation.live_gpu_scene import capture_live_scene, player_foo
 from worldseed.presentation.worldspace import WorldCamera, WorldFoot
 from worldseed.presentation.worldspace_adapter import MAX_PREPARED_ACTORS
 from worldseed.systems.interior_state import InteriorActor
+from worldseed.systems.exterior_memory import observe_exterior
 from worldseed.systems.state import CreatureState, FireCell, NPCState, RoofState, pos_key
 
 
@@ -174,6 +175,10 @@ class LiveGpuSceneContracts(TestCase):
             sim = fixture.sim
             # The prepared fixture suppresses startup discovery; invoke the real
             # simulation path once before capture, as a gameplay update does.
+            # Its initial prepared view represents an earlier observation. New
+            # memory never reconstructs hidden props from today's live state.
+            observe_exterior(sim,{tuple(map(int,token.split(',')))
+                                  for token in sim.visible_tiles_set})
             Simulation._discover(sim, sim.player_pos)
             current = frozenset(tuple(map(int, token.split(',')))
                                 for token in sim.visible_tiles_set)
@@ -198,7 +203,7 @@ class LiveGpuSceneContracts(TestCase):
             for x, y, z in snapshot.remembered_cells:
                 remembered = next(command for command in frame.ground
                                   if command.visual_id == f'ground:{z}:{x}:{y}')
-                self.assertAlmostEqual(remembered.opacity, .42)
+                self.assertAlmostEqual(remembered.opacity, .62)
                 self.assertFalse(any(command.visual_id.startswith(f'feature:{z}:{x}:{y}:')
                                      for command in frame.scenery))
             blinded = snapshot.gpu_frame(
@@ -215,6 +220,7 @@ class LiveGpuSceneContracts(TestCase):
             current, missing, memory = (256, 256, 0), (255, 256, 0), (257, 256, 0)
             self.feature(sim, current, 'core:oak_tree')
             self.feature(sim, memory, 'core:pine_tree')
+            observe_exterior(sim,{memory})
             sim._visible_tile_set = MembershipOnly(pos_key(*cell) for cell in (current, missing))
             sim._discovered_tile_set = MembershipOnly(pos_key(*cell) for cell in (current, missing, memory))
             missing_key, _, _ = split_world(WorldPos(*missing))
@@ -224,7 +230,7 @@ class LiveGpuSceneContracts(TestCase):
 
             def admitted_tile(pos):
                 cell = (pos.x, pos.y, pos.z)
-                self.assertIn(cell, (current, missing, memory))
+                self.assertIn(cell, (current, missing))
                 reads.append(cell)
                 return tile_at(pos)
 
@@ -236,10 +242,12 @@ class LiveGpuSceneContracts(TestCase):
             self.assertEqual(snapshot.remembered_cells, frozenset((memory,)))
             self.assertEqual(set(dict(snapshot.terrain)), {current, memory})
             self.assertEqual({cell for cell, _ in snapshot.resources}, {current})
+            self.assertEqual(dict(snapshot.remembered_resources)[memory].feature_id,'core:pine_tree')
             frame = self.frame(snapshot)
             self.assertEqual(len(frame.ground), 2)
             self.assertEqual(frame.visible_ground_cells, 1)
-            self.assertFalse(any('pine' in command.texture_id for command in frame.scenery))
+            self.assertTrue(any('pine' in command.texture_id and command.visual_id.startswith('memory:')
+                                for command in frame.scenery))
             self.assertGreaterEqual(len(reads), 3)
             # Losing the already prepared resource map preserves known ground;
             # it must not trigger disk reads, raw feature choice or generation.

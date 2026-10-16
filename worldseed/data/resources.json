@@ -185,7 +185,8 @@
       "bush",
       "food",
       "fruit",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -226,7 +227,8 @@
       "bush",
       "food",
       "fruit",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -265,7 +267,8 @@
     "tags": [
       "food",
       "fruit",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -306,7 +309,8 @@
       "food",
       "vegetable",
       "herb",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -348,7 +352,8 @@
       "food",
       "vegetable",
       "fiber",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -395,7 +400,8 @@
       "food",
       "vegetable",
       "root",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -437,7 +443,8 @@
       "food",
       "vegetable",
       "root",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -477,7 +484,8 @@
     "tags": [
       "herb",
       "medical",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -517,7 +525,8 @@
     "tags": [
       "herb",
       "medical",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -558,7 +567,8 @@
       "food",
       "mushroom",
       "vegetable",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -597,7 +607,8 @@
       "food",
       "mushroom",
       "vegetable",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -636,7 +647,8 @@
     "tags": [
       "fiber",
       "wetland",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -676,7 +688,8 @@
     "tags": [
       "food",
       "grain",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -717,7 +730,8 @@
     "tags": [
       "food",
       "wetland",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -797,7 +811,8 @@
     "tags": [
       "wood",
       "branch",
-      "fuel"
+      "fuel",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -838,7 +853,8 @@
     "ansi_color": 37,
     "tags": [
       "rock",
-      "stone"
+      "stone",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1104,7 +1120,8 @@
     "tags": [
       "aquatic_plant",
       "food",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1146,7 +1163,8 @@
     "tags": [
       "aquatic_plant",
       "food",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1187,7 +1205,8 @@
       "aquatic_plant",
       "food",
       "living",
-      "wetland"
+      "wetland",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1230,7 +1249,8 @@
       "aquatic_plant",
       "fiber",
       "living",
-      "salt_tolerant"
+      "salt_tolerant",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1267,7 +1287,8 @@
     "tags": [
       "aquatic_plant",
       "marine",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1305,7 +1326,8 @@
       "aquatic_plant",
       "marine",
       "food",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1341,7 +1363,8 @@
     "ansi_color": 33,
     "tags": [
       "bait",
-      "soil"
+      "soil",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1384,7 +1407,8 @@
     "tags": [
       "coastal_plant",
       "fiber",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1420,7 +1444,8 @@
     "tags": [
       "shellfish",
       "food",
-      "coastal"
+      "coastal",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1459,7 +1484,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1497,7 +1523,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1535,7 +1562,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1573,7 +1601,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1611,7 +1640,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1649,7 +1679,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1688,7 +1719,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1727,7 +1759,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1766,7 +1799,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1805,7 +1839,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1847,7 +1882,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1889,7 +1925,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1930,7 +1967,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -1968,7 +2006,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2006,7 +2045,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2044,7 +2084,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2082,7 +2123,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2120,7 +2162,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2159,7 +2202,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2198,7 +2242,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2237,7 +2282,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2276,7 +2322,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2318,7 +2365,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2360,7 +2408,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2401,7 +2450,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2440,7 +2490,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2479,7 +2530,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2518,7 +2570,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2557,7 +2610,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2596,7 +2650,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2636,7 +2691,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2675,7 +2731,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2715,7 +2772,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2755,7 +2813,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2797,7 +2856,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2840,7 +2900,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2881,7 +2942,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2920,7 +2982,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2958,7 +3021,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -2996,7 +3060,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3035,7 +3100,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3074,7 +3140,8 @@
       "salvage_expansion",
       "forage",
       "plant",
-      "living"
+      "living",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3114,7 +3181,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3154,7 +3222,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3194,7 +3263,8 @@
       "forage",
       "plant",
       "living",
-      "uncommon_flora"
+      "uncommon_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3233,7 +3303,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3273,7 +3344,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,
@@ -3313,7 +3385,8 @@
       "forage",
       "plant",
       "living",
-      "rare_flora"
+      "rare_flora",
+      "instant_pickup"
     ],
     "required_tool_tag": null,
     "required_tool_power": 0,

@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from math import ceil
 
-from worldseed.systems.illumination import detection_scale, indoor_light
+from worldseed.systems.illumination import detection_scale, indoor_light, segment_clear
 
 GRID = 500
 MAX_MEMORY_CELLS = 4096
 MAX_SIGHT_RADIUS = 12000
+DETAIL_GRID = GRID//4
+MAX_SIGHT_RECTS = 1024
 
 
 def _cross(a, b, c):
@@ -114,3 +116,116 @@ def visible_grid_cells(plan, px, py, minute, ambient_light, sources=()):
             if authorized:
                 discovered.append(cy*cols+cx)
     return tuple(discovered)
+
+
+def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, viewport=None):
+    """World-aligned LOS patches, refined only along walls and sight edges.
+
+    A patch is admitted only when its complete convex fan clears every wall.
+    Refining rejected boundary patches removes large stair steps without
+    sampling away thin partitions or granting sight through a private room.
+    The returned geometry is pure and shared by observation and presentation.
+    """
+    cols = grid_columns(plan)
+    rows = (plan.height+GRID-1)//GRID
+    if not 0 < cols*rows <= MAX_MEMORY_CELLS or len(plan.walls) > 256:
+        return ()
+    walls = tuple((w.x,w.y,w.x+w.w,w.y+w.h) for w in plan.walls)
+    left,top,right,bottom = viewport or (0,0,plan.width,plan.height)
+    left,top = max(0,left,px-MAX_SIGHT_RADIUS), max(0,top,py-MAX_SIGHT_RADIUS)
+    right,bottom = min(plan.width,right,px+MAX_SIGHT_RADIUS+1), min(plan.height,bottom,py+MAX_SIGHT_RADIUS+1)
+    lights = {}
+    def in_reach(x,y):
+        distance = (x-px)**2+(y-py)**2
+        if distance > MAX_SIGHT_RADIUS**2:
+            return False
+        key=(x,y)
+        if key not in lights:
+            light=indoor_light(plan,x,y,minute,ambient_light=ambient_light,sources=sources)
+            lights[key]=max(1000,MAX_SIGHT_RADIUS*detection_scale(light)//65535)
+        return distance <= lights[key]**2
+    admitted=[]
+    def visit(rect):
+        a,b,c,d=rect
+        if c <= left or a >= right or d <= top or b >= bottom:
+            return
+        corners=((a,b),(c-1,b),(c-1,d-1),(a,d-1))
+        if all(in_reach(x,y) for x,y in corners) and _rect_visible(px,py,rect,walls):
+            admitted.append(rect)
+            return
+        if max(c-a,d-b) <= DETAIL_GRID:
+            return
+        # Hidden rooms normally fail here, avoiding a recursive scan of their
+        # entire floor. This rejection is conservative: missing a narrow
+        # sliver can hide pixels, but cannot reveal an unobserved one.
+        probes=(*corners,((a+c)//2,(b+d)//2))
+        if not any(in_reach(x,y) and segment_clear(plan,px,py,x,y) for x,y in probes):
+            return
+        mid_x,min_y = min(c,a+(c-a+1)//2), min(d,b+(d-b+1)//2)
+        for x0,x1 in ((a,mid_x),(mid_x,c)):
+            for y0,y1 in ((b,min_y),(min_y,d)):
+                if x0 < x1 and y0 < y1:
+                    visit((x0,y0,x1,y1))
+    for cy in range(max(0,top//GRID), min(rows,(bottom+GRID-1)//GRID)):
+        for cx in range(max(0,left//GRID), min(cols,(right+GRID-1)//GRID)):
+            visit(grid_rect(plan,cy*cols+cx))
+    if len(admitted) > MAX_SIGHT_RECTS:
+        admitted.sort(key=lambda r: (((r[0]+r[2])//2-px)**2+((r[1]+r[3])//2-py)**2,r))
+        admitted=admitted[:MAX_SIGHT_RECTS]
+    return tuple(sorted(admitted,key=lambda r:(r[1],r[0],r[3],r[2])))
+
+
+def remember_floor_rects(plan, rects):
+    """Compact observed geometry at a simulation boundary; never from a view."""
+    cols=grid_columns(plan)
+    known=set(plan.explored_cells)
+    detail=dict(plan.explored_detail)
+    for a,b,c,d in rects:
+        index=(b//GRID)*cols+a//GRID
+        if index in known:
+            continue
+        base=grid_rect(plan,index)
+        if base is None:
+            continue
+        if (a,b,c,d) == base:
+            known.add(index)
+            detail.pop(str(index),None)
+            continue
+        mask=detail.get(str(index),0)
+        for sy in range(4):
+            for sx in range(4):
+                x,y=base[0]+sx*DETAIL_GRID,base[1]+sy*DETAIL_GRID
+                x1,y1=min(base[2],x+DETAIL_GRID),min(base[3],y+DETAIL_GRID)
+                # Odd modded plan dimensions can create smaller edge cells.
+                # Remember only complete subcells, never round discovery out.
+                if a <= x < x1 <= c and b <= y < y1 <= d:
+                    mask |= 1 << (sy*4+sx)
+        if mask == 65535:
+            known.add(index)
+            detail.pop(str(index),None)
+        elif mask and 0 <= index < MAX_MEMORY_CELLS:
+            detail[str(index)]=mask
+    plan.explored_cells=sorted(known)[:MAX_MEMORY_CELLS]
+    plan.explored_detail=detail
+
+
+def remembered_floor_rects(plan):
+    """Read only saved geometry, without consulting live walls or furniture."""
+    known=set(getattr(plan,'explored_cells',()))
+    for index in sorted(known):
+        rect=grid_rect(plan,index)
+        if rect:
+            yield rect
+    for index,mask in sorted(getattr(plan,'explored_detail',{}).items(),key=lambda row:int(row[0])):
+        if int(index) in known:
+            continue
+        rect=grid_rect(plan,int(index))
+        if rect is None:
+            continue
+        a,b,c,d=rect
+        for sy in range(4):
+            for sx in range(4):
+                if mask & (1 << (sy*4+sx)):
+                    sub=(a+sx*DETAIL_GRID,b+sy*DETAIL_GRID,min(c,a+(sx+1)*DETAIL_GRID),min(d,b+(sy+1)*DETAIL_GRID))
+                    if sub[0] < sub[2] and sub[1] < sub[3]:
+                        yield sub

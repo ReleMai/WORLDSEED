@@ -104,6 +104,7 @@ class SpriteCommand:
     local_alpha: float = 1.0
     sway_px: float = 0.0
     ground: GroundBlend | None = None
+    remembered: bool = False
 
     def __post_init__(self):
         if not self.visual_id or not self.texture_id:
@@ -133,6 +134,8 @@ class SpriteCommand:
             raise ValueError('invalid material alpha parameters')
         if self.ground is not None and not isinstance(self.ground, GroundBlend):
             raise ValueError('invalid detached ground metadata')
+        if type(self.remembered) is not bool:
+            raise ValueError('remembered sprite classification must be boolean')
 
 
 def _finite(x):
@@ -300,6 +303,8 @@ class GLWorldspaceRenderer:
             import moderngl
             self.ctx.enable_only(moderngl.BLEND)
             self.ctx.blend_func=(moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA)
+            # Remembered RGB layers preserve transparent classification alpha;
+            # current opaque ground writes 1. Unknown remains transparent black.
             self.ctx.clear(*clear)
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_texture'].value=0
@@ -320,12 +325,15 @@ class GLWorldspaceRenderer:
                           for n in ground.neighbors),ground.widths,ground.color)
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
-                        material_key)
+                        material_key,cmd.remembered)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
                     batch=values[first:first+64]
                     cmd,clip=batch[0]
+                    self.ctx.blend_func = ((moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA,
+                                           moderngl.ZERO,moderngl.ONE) if cmd.remembered else
+                                          (moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA))
                     ground=cmd.ground
                     if ground is not None:
                         # Every simultaneously bound image must fit. Sequential

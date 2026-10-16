@@ -185,7 +185,7 @@ def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
                     lights=lights,**weather)
                 began=time.perf_counter()
                 last_report=renderer.draw(scene_frame.commands,target=post.scene_target,
-                                          frame_time_seconds=fx.elapsed_seconds)
+                                          frame_time_seconds=fx.elapsed_seconds,clear=(0.,0.,0.,0.))
                 post.present(fx)
                 if screenshot and (count==frames-1 or frames==0):
                     _screenshot(pg,ctx,width,height,screenshot)

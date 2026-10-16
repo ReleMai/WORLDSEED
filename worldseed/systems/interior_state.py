@@ -78,6 +78,21 @@ class InteriorStair:
 
 
 @dataclass(slots=True)
+class InteriorObservation:
+    """Last-seen static geometry, never a live inventory or actor reference."""
+    uid: str
+    kind: str
+    content_id: str
+    x: int
+    y: int
+    w: int
+    h: int
+    height_ratio: float = 1.
+    flat: bool = False
+    solid: bool = False
+
+
+@dataclass(slots=True)
 class InteriorPlan:
     uid: str
     building_id: str
@@ -108,6 +123,13 @@ class InteriorPlan:
     # Fixed 500-unit cells observed by the player. Indexed only within this
     # plan/floor: entering a different building can never disclose its rooms.
     explored_cells: list[int] = field(default_factory=list)
+    # Boundary cells use sixteen 125-unit subcells. Keys retain the original
+    # 500-unit cell identity, so old discoveries need no reinterpretation.
+    explored_detail: dict[str, int] = field(default_factory=dict)
+    observed_objects: list[InteriorObservation] = field(default_factory=list)
+    # None identifies a legacy plan whose existing floor memory predates wall
+    # snapshots. The first gameplay observation adopts explicit wall memory.
+    observed_walls: list[InteriorRect] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -122,6 +144,15 @@ class InteriorPlan:
         data["stairs"] = [InteriorStair(**r) for r in data.get("stairs", [])]
         data["explored_cells"] = sorted({int(index) for index in data.get("explored_cells", [])
                                           if type(index) is int and 0 <= index < 4096})
+        data["explored_detail"] = {str(index): mask for index, mask in
+            data.get("explored_detail", {}).items()
+            if str(index).isdigit() and 0 <= int(index) < 4096
+            and type(mask) is int and 0 < mask <= 65535}
+        data["observed_objects"] = [InteriorObservation(**row) for row in
+            data.get("observed_objects", [])[:672]
+            if row.get("kind") in ("furniture", "stairs", "exit")]
+        if data.get('observed_walls') is not None:
+            data['observed_walls']=[InteriorRect(**row) for row in data['observed_walls'][:256]]
         return cls(**data)
 
 

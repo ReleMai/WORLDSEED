@@ -13,7 +13,7 @@ from unittest.mock import patch
 import zipfile
 
 import run_worldseed_gpu as launcher
-from tools.package_gpu_playtest import NAME, LAUNCHERS, build_command, validate_bundle, write_archive
+from tools.package_gpu_playtest import NAME, LAUNCHERS, SUPPORT_FILES, build_command, validate_bundle, write_archive
 from tools.smoke_gpu_bundle import smoke, unsupported_context
 from worldseed.presentation.gl_worldspace import GPUBackendUnavailable
 
@@ -26,10 +26,13 @@ def fake_bundle(root):
         'existing_saves_supported': True}))
     for name in LAUNCHERS:
         (root / name).write_text(NAME + '.exe')
+    for name in SUPPORT_FILES:
+        (root / name).write_text('Local diagnostic helper')
     (root / 'README_GPU_TEST.txt').write_text('OpenGL 3.3 candidate')
     for name in ('data/terrain.json', 'assets/shaders/worldspace_sprite.vert',
                  'assets/shaders/worldspace_sprite.frag', 'assets/shaders/worldspace_post.vert',
                  'assets/shaders/worldspace_post.frag',
+                 'assets/sprites/ui/gpu_controls/manifest.json',
                  'assets/sprites/worldspace/trees/manifest.json',
                  'assets/sprites/worldspace/trees/tree_layers.b85'):
         path = root / '_internal' / 'worldseed' / name
@@ -94,6 +97,7 @@ class GpuCandidatePackageTests(unittest.TestCase):
             with zipfile.ZipFile(destination) as archive:
                 self.assertIsNone(archive.testzip())
                 self.assertIn(NAME + '/WORLDSEED_GPU.exe', archive.namelist())
+                self.assertIn(NAME + '/OPEN_LOGS.bat', archive.namelist())
                 self.assertIn(NAME + '/_internal/worldseed/assets/shaders/worldspace_post.frag',
                               archive.namelist())
             self.assertIn(first, destination.with_suffix('.zip.sha256').read_text())
@@ -235,6 +239,7 @@ class GpuCandidatePackageTests(unittest.TestCase):
                 result = launcher.self_check()
         self.assertEqual(12, result['tree_layers'])
         self.assertEqual(4, result['shaders'])
+        self.assertEqual(16, result['control_icons'])
         self.assertFalse(result['native_hardware_accepted'])
         self.assertFalse(result['player_saves_opened'])
 

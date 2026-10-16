@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass
 from pathlib import Path
 import json,secrets,sys,time,traceback
-from worldseed.debug import debug_log_path
+from worldseed.debug import debug_log_path, write_crash_report
 from worldseed.config import AUTOSAVE_TURNS,DATA_DIR,DEFAULT_SAVE_DIR,ENGINE_VERSION,RESOURCEGEN_VERSION,INITIAL_PREGEN_CHUNK_RADIUS,LOAD_WARM_CHUNK_RADIUS,CHUNK_SIZE
 from worldseed.content.registry import ContentRegistry
 from worldseed.content.item_catalog import ITEM_TYPE_ORDER, item_sort_key, ordered_items
@@ -4280,19 +4280,17 @@ def main()->int:
                     )
                 except Exception:
                     pass
-                report=Path.cwd()/'WORLDSEED_CRASH.log'
-                report.write_text(
+                report=write_crash_report(
                     f'WORLDSEED {ENGINE_VERSION} crash at {time.ctime()}\n'
                     f'world={ctx.db.path}\nturn={ctx.sim.turn}\n'
                     f'position={ctx.sim.player_pos}\nminute={ctx.sim.clock.minute}\n'
                     f'debug_log={debug_log_path(ctx.sim)}\n\n'
                     +traceback.format_exc(),
-                    encoding='utf-8',
                 )
                 try:
                     _view_text(term,box('WORLDSEED ERROR',[
                         'The current session stopped because of an unexpected error.',
-                        f'Crash summary: {report.name}',
+                        f'Crash summary: {report}',
                         f'Session debug log: {debug_log_path(ctx.sim)}',
                         'Send both files with the seed/coordinates when reporting the issue.'
                     ],min(110,term.size()[0]-2)))

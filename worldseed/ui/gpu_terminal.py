@@ -129,12 +129,19 @@ class GpuTerminal(PygameTerminal):
             self._focused=True
             self._free_movement_last_ms=pg.time.get_ticks()
             driver=getattr(self._realtime_callback,'__self__',None)
-            if self._focus_resume and driver is not None and not getattr(self,'_realtime_pause_depth',0):driver.resume()
+            # Restore only the focus hold. An open modal still blocks pumps
+            # through its independent scoped pause until the user closes it.
+            if self._focus_resume and driver is not None:driver.resume()
             self._focus_resume=False
         elif not self._focused and event.type in (pg.KEYDOWN,pg.MOUSEBUTTONDOWN,pg.MOUSEWHEEL):
             return pg.event.Event(pg.NOEVENT)
         elif event.type==pg.KEYDOWN and event.key==pg.K_F12:
             self._capture()
+            return pg.event.Event(pg.NOEVENT)
+        from worldseed.ui.gpu_hud import handle_hud_event
+        if handle_hud_event(self,event):
+            if self._last_world is not None:
+                self.present_game(*self._last_world)
             return pg.event.Event(pg.NOEVENT)
         return event
 
@@ -254,8 +261,9 @@ class GpuTerminal(PygameTerminal):
         scale=max(28,min(56,self._tile_px),ceil(sqrt(viewport.width*viewport.height/1600)))
         camera=WorldCamera(player_foot(sim),viewport.width,viewport.height,scale)
         snapshot=capture_live_scene(sim,camera)
+        from worldseed.presentation.gpu_objects import gpu_resource_style
         frame=snapshot.gpu_frame(materials=self._materials,registry=registry,
-            resource_style=lambda fid:{'width':1.35,'height':1.9},
+            resource_style=lambda fid:gpu_resource_style(fid,registry.resources.get(fid),self._visuals),
             show_explored_memory=True)  # Opt out only for an active blindness effect.
         self._snapshot=snapshot
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
@@ -268,20 +276,13 @@ class GpuTerminal(PygameTerminal):
             side=pg.Rect(viewport.right+8,oy,max(1,width-viewport.right-26),max(1,oh))
             pg.draw.rect(self.screen,self._theme['panel2'],side)
             vit=entities.try_get(player_id,Vitals) or Vitals()
-            lines=[getattr(sim.state,'player_name','Wanderer'),sim.clock.label(),
-                f'Position {sim.player_pos.x}, {sim.player_pos.y}, {sim.player_pos.z}',
-                f'Health {vit.hp}/{vit.max_hp}',f'Stamina {vit.stamina}',
-                f'Hunger {vit.hunger}  Thirst {vit.thirst}',
-                'Enter: Action Hub','Tab: World Console','Esc: pause / save','F12: screenshot',
-                'OpenGL main game']
-            for index,line in enumerate(lines):
-                if side.y+12+index*24+self.small_font.get_height()>side.bottom-210:break
-                text=self.small_font.render(self._fit_ui_text(str(line),self.small_font,side.width-16),True,self._theme['text'])
-                self.screen.blit(text,(side.x+8,side.y+12+index*24))
-            self._draw_hud_actions(side,str(getattr(sim.state,'player_hunting_stance','normal')))
+            from worldseed.ui.gpu_hud import draw_hud
+            draw_hud(self,side,sim,vit)
         foot=pg.Rect(viewport.x,viewport.bottom+6,viewport.width,max(1,min(footer,height-viewport.bottom-8)))
         self._draw_footer(foot,message or (sim.log[-1].message if sim.log else 'The world continues around you.'),sim)
         self._draw_target_overlays(snapshot,viewport,camera,cursor,combat_overlay,stealth_overlay)
+        from worldseed.ui.gpu_hud import draw_help_popup
+        draw_help_popup(self)
         self._composite(upload=True)
         self.clock.tick(120)
 
@@ -340,6 +341,8 @@ class GpuTerminal(PygameTerminal):
 
     def restore(self):
         if self._gpu_closed:return
+        from worldseed.ui.gpu_hud import close_help_popup
+        close_help_popup(self)
         self._gpu_closed=True
         try:
             if self._gl is not None:

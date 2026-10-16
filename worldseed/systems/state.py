@@ -5,6 +5,7 @@ from typing import Any
 
 from worldseed.systems.names import npc_sex_for_identity
 from worldseed.systems.discovery import DiscoveryTiles, DISCOVERY_FORMAT_VERSION
+from worldseed.systems.exterior_memory import ExteriorMemory
 
 @dataclass(slots=True)
 class StructureInstance:
@@ -1296,6 +1297,9 @@ class LivingWorldState:
     player_toll_passes: dict[str, int] = field(default_factory=dict)
     casing_intel: dict[str, CasingIntelState] = field(default_factory=dict)
     discovered_tiles: DiscoveryTiles | list[str] = field(default_factory=DiscoveryTiles)
+    # Optional schema-3 knowledge field: old saves begin empty and learn only
+    # from subsequent gameplay sight, never from hidden current world state.
+    exterior_memory: ExteriorMemory = field(default_factory=ExteriorMemory)
     discovered_settlements: list[str] = field(default_factory=list)
     visited_settlements: list[str] = field(default_factory=list)
     discovered_npcs: list[str] = field(default_factory=list)
@@ -1370,6 +1374,7 @@ class LivingWorldState:
             "discovered_tiles": [],
             "discovered_format_version": DISCOVERY_FORMAT_VERSION,
             "discovered_chunks": discovery.to_chunks(),
+            "exterior_memory": self.exterior_memory.to_dict(),
             "discovered_settlements": sorted(set(self.discovered_settlements)), "visited_settlements": sorted(set(self.visited_settlements)), "discovered_npcs": sorted(set(self.discovered_npcs)),
             "introduced_npcs": sorted(set(self.introduced_npcs)),
             "discovered_factions": sorted(set(self.discovered_factions)), "discovered_sites": sorted(set(self.discovered_sites)),
@@ -1401,6 +1406,7 @@ class LivingWorldState:
         if not raw:
             return cls()
         s = cls()
+        s.exterior_memory = ExteriorMemory.from_dict(raw.get("exterior_memory"))
         # All blueprint inventory is explicit authoritative stock, not a cache.
         s.homesteads = {uid: dict(site, stored=dict(site.get("stored", {}))) for uid,site in raw.get("homesteads", {}).items()}
         from worldseed.systems.interior_state import InteriorPlan, InteriorActor

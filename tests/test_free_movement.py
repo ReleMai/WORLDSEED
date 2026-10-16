@@ -14,7 +14,7 @@ class _PlayerSim:
         self._pos=WorldPos(0,0,0);self.blocked=blocked;self.step_calls=0
     @property
     def player_pos(self):return self._pos
-    def try_free_movement_step(self,dx:int,dy:int)->bool:
+    def try_free_movement_step(self,dx:int,dy:int,*,fx=0.5,fy=0.5)->bool:
         self.step_calls+=1
         if self.blocked:return False
         self._pos=self._pos.moved(dx,dy);return True

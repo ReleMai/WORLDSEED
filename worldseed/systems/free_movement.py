@@ -1,13 +1,14 @@
 """Continuous sub-tile locomotion for outdoor graphical play.
 
-The authoritative world remains tile based for collision, interactions, path
-choice, persistence, and simulation ownership. Fractions only describe where
-an actor is within its current tile while a cached route is being traversed.
+Terrain, structures, interactions, path choice and persistence remain tile
+based. Natural tree trunks additionally have simulation-owned circular solids
+so an actor can traverse the open ground around a trunk inside the same tile.
 """
 
 from __future__ import annotations
 
 from worldseed.core.coords import WorldPos
+from worldseed.systems.resources import ACTOR_FOOT_RADIUS, RESOURCE_FOOT_X, RESOURCE_FOOT_Y
 
 WALK_SPEED = 1.8
 SPRINT_SPEED = 3.6
@@ -21,6 +22,36 @@ def _clamp_fraction(value: float) -> float:
 
 def _blocked_token(tile: WorldPos, dx: int, dy: int) -> tuple[int, int, int, int, int]:
     return (int(tile.x), int(tile.y), int(tile.z), int(dx), int(dy))
+
+
+def _safe_motion(sim,x:float,y:float,dx:float,dy:float,z:int)->float:
+    query=getattr(getattr(sim,"resources",None),"motion_fraction",None)
+    return query(x,y,x+dx,y+dy,z) if callable(query) else 1.0
+
+
+def _legacy_tree_steering(sim,npc,fx:float,fy:float,tx:float,ty:float)->tuple[float,float]:
+    """Exit an old same-cell tree position without inventing a second route.
+
+    Legacy NPC paths could place their centers on a tree tile. A southbound
+    cached waypoint then points through the trunk below that center. Steer to
+    a deterministic side inside the current cell until the original waypoint
+    has a clear swept line. No steering state/history or new A* search is kept;
+    normal tile crossing, locks and shared circle sweeps still decide motion.
+    """
+    resources=getattr(sim,"resources",None)
+    radius_query=getattr(resources,"trunk_radius",None)
+    if not callable(radius_query):return tx,ty
+    radius=radius_query(WorldPos(npc.x,npc.y,npc.z))
+    if radius is None or fy>RESOURCE_FOOT_Y or fy+ty<=RESOURCE_FOOT_Y:
+        return tx,ty
+    wx=npc.x+fx;wy=npc.y+fy
+    if resources.motion_fraction(wx,wy,wx+tx,wy+ty,npc.z)>=1.0:
+        return tx,ty
+    clearance=radius+ACTOR_FOOT_RADIUS+.08
+    side=RESOURCE_FOOT_X+(clearance if fx>=RESOURCE_FOOT_X else -clearance)
+    if abs(side-fx)>ARRIVAL_EPSILON:
+        return side-fx,0.0
+    return side-fx,RESOURCE_FOOT_Y+clearance-fy
 
 
 def update_player_free(sim, dt: float, dx: float, dy: float, sprint: bool) -> bool:
@@ -43,9 +74,11 @@ def update_player_free(sim, dt: float, dx: float, dy: float, sprint: bool) -> bo
     state.player_facing_dx = 0 if abs(dx) <= 1e-6 else (1 if dx > 0.0 else -1)
     state.player_facing_dy = 0 if abs(dy) <= 1e-6 else (1 if dy > 0.0 else -1)
     speed = SPRINT_SPEED if sprint else WALK_SPEED
-    fx += dx * speed * dt
-    fy += dy * speed * dt
     tile = sim.player_pos
+    # Separate axes allow an input with a tangential component to slide around
+    # a round base. Every accepted segment is swept before its tile crossing.
+    move_x=dx*speed*dt;move_y=dy*speed*dt
+    fx += move_x*_safe_motion(sim,tile.x+fx,tile.y+fy,move_x,0.0,tile.z)
     tile_changed = False
     blocked = getattr(sim, "_free_move_blocked", None)
     if blocked is not None:
@@ -56,7 +89,8 @@ def update_player_free(sim, dt: float, dx: float, dy: float, sprint: bool) -> bo
     step_x = 1 if fx >= 1.0 else (-1 if fx < 0.0 else 0)
     if step_x:
         token = _blocked_token(tile, step_x, 0)
-        moved = False if blocked == token else bool(sim.try_free_movement_step(step_x, 0))
+        moved = False if blocked == token else bool(sim.try_free_movement_step(
+            step_x,0,fx=fx-step_x,fy=fy))
         if moved:
             fx -= step_x
             tile = sim.player_pos
@@ -68,10 +102,14 @@ def update_player_free(sim, dt: float, dx: float, dy: float, sprint: bool) -> bo
             if blocked != token:
                 blocked = token
                 setattr(sim, "_free_move_blocked", token)
+    state.player_fx=_clamp_fraction(fx)
+    state.player_fy=_clamp_fraction(fy)
+    fy += move_y*_safe_motion(sim,tile.x+fx,tile.y+fy,0.0,move_y,tile.z)
     step_y = 1 if fy >= 1.0 else (-1 if fy < 0.0 else 0)
     if step_y:
         token = _blocked_token(tile, 0, step_y)
-        moved = False if blocked == token else bool(sim.try_free_movement_step(0, step_y))
+        moved = False if blocked == token else bool(sim.try_free_movement_step(
+            0,step_y,fx=fx,fy=fy-step_y))
         if moved:
             fy -= step_y
             tile_changed = True
@@ -117,9 +155,15 @@ def _advance_npc_one_step(sim, npc, dt: float, speed: float) -> bool:
             else:
                 task.pop("_local_path",None);task.pop("_local_path_goal",None)
         return True
+    tx,ty=_legacy_tree_steering(sim,npc,fx,fy,tx,ty)
+    dist=(tx*tx+ty*ty)**.5
     step=min(float(speed)*dt,dist)
-    fx += (tx/dist)*step
-    fy += (ty/dist)*step
+    move_x=(tx/dist)*step;move_y=(ty/dist)*step
+    safe=_safe_motion(sim,npc.x+fx,npc.y+fy,move_x,move_y,npc.z)
+    fx += move_x*safe
+    fy += move_y*safe
+    if safe<1.0:
+        task.pop("_local_path",None);task.pop("_local_path_goal",None)
     tile=WorldPos(npc.x,npc.y,npc.z)
     step_x=1 if fx>=1.0 else (-1 if fx<0.0 else 0)
     step_y=1 if fy>=1.0 else (-1 if fy<0.0 else 0)

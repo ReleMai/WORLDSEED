@@ -44,6 +44,9 @@ def self_check() -> dict:
     materials = GpuMaterialSource(pg)
     materials.player()
     materials.asset(terrain_source('core:forest', 0, 0))
+    from worldseed.ui.gpu_control_art import ICON_PATHS, load_icon
+    for key in ICON_PATHS:
+        load_icon(pg, key, 32)
     # These imports must survive freezing, including the QA namespace package.
     from tools import reference_scene_fixtures, worldseed_gpu_gameplay, worldseed_gpu_playtest
     from worldseed import app
@@ -52,7 +55,7 @@ def self_check() -> dict:
             'pygame': pg.version.ver, 'moderngl': moderngl.__version__,
             'glcontext': version('glcontext'), 'items': len(registry.items),
             'terrains': len(registry.terrains), 'tree_layers': tree_layers,
-            'shaders': len(shaders), 'player_saves_opened': False,
+            'shaders': len(shaders), 'control_icons': len(ICON_PATHS), 'player_saves_opened': False,
             'native_hardware_accepted': False, 'main_game_imports': True,
             'note': 'Packaging/import check only; no OpenGL context was created.'}
 

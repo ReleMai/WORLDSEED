@@ -23,6 +23,7 @@ from .gpu_buildings import (MAX_BUILDING_CELLS, MAX_BUILDING_EXTENT,
 from .gpu_interiors import PreparedInterior, capture_interior, prepare_interior_frame
 from .gpu_objects import (MAX_PREPARED_OBJECTS, PreparedObject,
                           capture_objects, capture_roofs)
+from .gpu_exterior_memory import remembered_object, legacy_base_terrain
 from .worldspace import WorldCamera, WorldFoot
 from .worldspace_adapter import MAX_PREPARED_ACTORS, MAX_PREPARED_RESOURCES, PreparedActor
 
@@ -69,6 +70,9 @@ class LiveGpuSnapshot:
     ambient_light: float | None = None
     interior_scene: PreparedInterior | None = None
     objects: tuple[PreparedObject, ...] = ()
+    remembered_resources: tuple[tuple[tuple[int,int,int], FeatureView], ...] = ()
+    remembered_buildings: tuple[PreparedBuildingShell, ...] = ()
+    remembered_objects: tuple[PreparedObject, ...] = ()
 
     def gpu_frame(self, *, materials, registry, resource_style,
                   show_explored_memory=True):
@@ -84,7 +88,10 @@ class LiveGpuSnapshot:
             viewer=self.viewer, actors=self.actors, materials=materials,
             season=self.season, fire_cells=tuple(row.cell for row in self.fires),
             buildings=self.buildings, terrain_defs=registry.terrains,
-            objects=self.objects, show_explored_memory=show_explored_memory)
+            objects=self.objects, show_explored_memory=show_explored_memory,
+            remembered_resources=self.remembered_resources,
+            remembered_buildings=self.remembered_buildings,
+            remembered_objects=self.remembered_objects)
 
     def atmosphere(self, elapsed_seconds=0.):
         if self.interior:
@@ -142,6 +149,10 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
     actors = []
     fires = []
     buildings = {}
+    remembered_resources = []
+    remembered_buildings = {}
+    remembered_objects = []
+    legacy_base_chunks = {}
     roof_sight = set()
     physical = sim.settlement_physicalization
 
@@ -152,6 +163,45 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
                 seen = token in sim.visible_tiles_set
                 if not seen and token not in sim.discovered_tiles_set:
                     continue  # no geometry reads for unexplored cells
+                if not seen:
+                    # Read only the last observed static record. Hidden live
+                    # roofs, shells, tiles, harvests and props are not queried.
+                    cell = (x,y,z)
+                    memory = sim.state.exterior_memory.get(cell)
+                    if memory is None:
+                        # Older saves knew terrain before appearance memory
+                        # existed. Preserve that basemap from immutable cached
+                        # geography, never today's hidden props or deltas.
+                        base = legacy_base_terrain(sim.world,cell,legacy_base_chunks)
+                        if base is not None:
+                            terrain.append((cell,base))
+                            remembered.add(cell)
+                        continue  # static appearances warm on actual sight
+                    if not (memory.terrain_id or memory.shell_key or memory.objects):
+                        continue
+                    remembered.add(cell)
+                    if memory.terrain_id:
+                        terrain.append((cell,memory.terrain_id))
+                    if memory.resource:
+                        remembered_resources.append((cell,FeatureView(*memory.resource)))
+                        if len(remembered_resources) > MAX_PREPARED_RESOURCES:
+                            raise ValueError('live GPU remembered resource budget exceeded')
+                    remembered_objects.extend(remembered_object(cell,row) for row in memory.objects)
+                    if len(remembered_objects) > MAX_PREPARED_OBJECTS:
+                        raise ValueError('live GPU remembered object budget exceeded')
+                    if memory.shell_key:
+                        frozen = sim.state.exterior_memory.shell(memory.shell_key)
+                        if frozen is not None:
+                            if memory.shell_key not in remembered_buildings:
+                                if len(remembered_buildings) >= MAX_PREPARED_BUILDINGS:
+                                    raise ValueError('live GPU remembered building budget exceeded')
+                                remembered_buildings[memory.shell_key] = (frozen,set(),None)
+                            appearance,cells,door = remembered_buildings[memory.shell_key]
+                            cells.add(cell)
+                            if memory.door is not None:
+                                door = PreparedBuildingDoor(memory.door[0],cell,memory.door[1])
+                                remembered_buildings[memory.shell_key] = appearance,cells,door
+                    continue
                 if seen:
                     roof_sight.add((x, y, z))
                 pos = WorldPos(x, y, z)
@@ -176,12 +226,7 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
                 if tile is None:
                     continue  # missing prepared terrain remains unknown
                 cell = (x, y, z)
-                # Terrain memory is a static, prepared projection; live props
-                # and actor/resource queries still require current sight.
                 terrain.append((cell, tile.terrain_id))
-                if not seen:
-                    remembered.add(cell)
-                    continue
                 current.add(cell)
                 feature = sim.resources.prepared_feature_at(pos, minute)
                 if feature is not None and feature.stage != 'depleted':
@@ -254,4 +299,7 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
         tuple(sorted(actors, key=lambda actor: actor.uid)), frozenset(current),
         frozenset(remembered), tuple(sorted(fires, key=lambda fire: fire.cell)),
         weather_values, minute, season, interior, tuple(prepared_buildings),
-        ambient_light, None, tuple(objects))
+        ambient_light, None, tuple(objects), tuple(remembered_resources),
+        tuple(PreparedBuildingShell(row.shell,frozenset(cells),row.variant_id,door)
+            for key,(row,cells,door) in sorted(remembered_buildings.items())),
+        tuple(remembered_objects))

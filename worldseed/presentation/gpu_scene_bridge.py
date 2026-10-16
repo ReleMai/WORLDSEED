@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
-from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene, visual_sort_key, SceneVisibility
+from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene, visual_sort_key, SceneVisibility, LocalCoverFade
 from .worldspace_adapter import MAX_PREPARED_ACTORS, PreparedActor, prepare_worldspace_scene
 from .tree_art import layer_png
 
@@ -174,7 +174,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       viewer:WorldFoot,materials:GpuMaterialSource,
                       season='summer',show_player=True,fire_cells=(),
                       actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None,
-                      objects=(), show_explored_memory=True):
+                      objects=(), show_explored_memory=True,
+                      remembered_resources=(), remembered_buildings=(), remembered_objects=()):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -207,7 +208,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         tex,blend=prepared if prepared is not None else (materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None))),None)
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
-                       (viewport,), opacity=1.0 if current else .42, ground=blend))
+                       (viewport,), opacity=1.0 if current else .62, ground=blend,
+                       remembered=not current))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,
@@ -243,6 +245,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         reproject=True
     projection=(project_scene(instances,camera,scene.visibility,viewer_id='actor:gpu-viewer')
                 if reproject else scene.projection)
+    if show_player:
+        projection = _readable_player_cover(projection, camera)
     from .gl_worldspace import commands_from_projected
     def source(projected):
         v=projected.instance
@@ -292,6 +296,66 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         scenery.extend(building_commands(buildings,camera,materials))
     if buildings or roofs:
         scenery.sort(key=lambda command:keys[command.visual_id])
+    if show_explored_memory and (remembered_resources or remembered_buildings or remembered_objects):
+        # This second projection receives detached LAST-SEEN rows only. Making
+        # the memory mask its admitted view cannot query current hidden state,
+        # and never allows actors, weather sources or speculative cells.
+        if len(remembered_resources) > 1024 or len(remembered_objects) > 1024 or len(remembered_buildings) > 64:
+            raise ValueError('GPU static memory exceeds bounded frame budget')
+        frozen_buildings=[]
+        for row in remembered_buildings:
+            admitted=row.visible_cells & memory_cells
+            if not admitted:continue
+            door=row.door if row.door is not None and row.door.cell in admitted else None
+            frozen_buildings.append(replace(row,visible_cells=frozenset(admitted),door=door))
+        # A remembered closed shell/roof admits its exterior art, never the
+        # ground beneath it or a neighboring resource stretched over that roof.
+        public_memory=memory_cells & frozenset(terrain_by)
+        frozen_resources={cell:(feature,None) for cell,feature in remembered_resources
+                          if cell in public_memory}
+        frozen_objects=tuple(row for row in remembered_objects
+            if row.foot.cell in memory_cells and
+            (row.kind=='roof' or row.foot.cell in public_memory))
+        memory=prepare_gpu_frame(camera=camera,terrain_by={},resource_by=frozen_resources,
+            resource_defs=resource_defs,resource_style=resource_style,
+            visible_cells=public_memory,discovered_cells=public_memory,
+            viewer=viewer,materials=materials,season=season,show_player=False,
+            buildings=tuple(frozen_buildings),objects=frozen_objects,
+            terrain_defs=terrain_defs,show_explored_memory=False)
+        scenery[:0]=[replace(command,visual_id='memory:'+command.visual_id,
+                     opacity=.62,fade_radius=0.,local_alpha=1.,sway_px=0.,remembered=True)
+                     for command in memory.scenery]
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')
     return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),visible_ground)
+
+
+def _readable_player_cover(projection, camera):
+    """Clear the viewer's whole body locally, even under several overlapping crowns.
+
+    The old foot-centered 48% fade left the head behind opaque leaves and
+    compounded into near opacity in dense woodland. Only already admitted
+    canopy pixels are altered; trunks, rooms and hidden actors are untouched.
+    """
+    viewer=next((row for row in projection.visuals
+                 if row.instance.instance_id=='actor:gpu-viewer' and not row.remembered_only),None)
+    if viewer is None:return projection
+    vx,vy=viewer.screen_foot
+    center=(vx,vy-camera.scale*.76)
+    player_bounds=viewer.screen_bounds
+    fades=[]
+    for row in projection.visuals:
+        cover=row.instance
+        if (cover.layer is not VisualLayer.OVERHEAD or cover.cover is None
+                or cover.room_id!=viewer.instance.room_id or row.remembered_only):continue
+        a,b,c,d=row.screen_bounds
+        x0,y0,x1,y1=player_bounds
+        if c<=x0 or a>=x1 or d<=y0 or b>=y1:continue
+        # The viewer's body and this cover must overlap currently admitted
+        # pixels, never merely a world-space cover polygon across a wall.
+        if not any(min(c,x1,rx1)>max(a,x0,rx0) and min(d,y1,ry1)>max(b,y0,ry0)
+                   for rx0,ry0,rx1,ry1 in row.clip_rects):continue
+        fades.append(LocalCoverFade(cover.instance_id,viewer.instance.instance_id,
+                                   center,camera.scale*1.12,.08))
+        if len(fades)==8:break
+    return replace(projection,cover_fades=tuple(fades))

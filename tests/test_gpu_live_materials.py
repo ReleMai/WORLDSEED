@@ -61,7 +61,7 @@ class GPULiveMaterialsContracts(TestCase):
         commands={row.visual_id:row for row in frame.ground}
         self.assertEqual(set(commands), {'ground:3:0:0', 'ground:3:1:0'})
         self.assertEqual(commands['ground:3:0:0'].opacity, 1.)
-        self.assertAlmostEqual(commands['ground:3:1:0'].opacity, .42)
+        self.assertAlmostEqual(commands['ground:3:1:0'].opacity, .62)
         self.assertEqual(frame.visible_ground_cells, 1)
         self.assertEqual(frame.scenery, ())
         blinded=self.build(**args, show_explored_memory=False)

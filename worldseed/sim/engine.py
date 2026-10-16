@@ -141,6 +141,7 @@ class Simulation:
         self.hunting=HuntingSystem(self.state,registry,self.seed,self.world,self.environment,self.resources,self.building)
         self.disease=EpidemiologySystem(self.state,registry,self.seed,self.history)
         self.npcs=NPCSystem(self.state,self.seed,self.history,self.world,self.building,self.lod)
+        self.npcs.resources=self.resources
         self.disease.npc_index=self.npcs._index_npc
         self.factions=FactionSystem(self.state,self.seed,self.history)
         self.civics=CivicsSystem(self.state,self.seed,self.history)
@@ -529,7 +530,7 @@ class Simulation:
             ok,msg=self.homestead.cancel(command.uid,self.entities.get(command.actor,Inventory));self._message(msg)
         elif isinstance(command,BuildCommand):minutes=self._build(command)
         elif isinstance(command,DismantleCommand):self._dismantle(command)
-        elif isinstance(command,PickupCommand):self._pickup(command)
+        elif isinstance(command,PickupCommand):self._pickup(command);minutes=0
         elif isinstance(command,DropCommand):self._drop(command)
         elif isinstance(command,EatCommand):self._eat(command)
         elif isinstance(command,EatMealCommand):self._eat_meal(command)
@@ -604,6 +605,13 @@ class Simulation:
         try:self.crafting.sync_discoveries(self.entities.get(self.player_id,Inventory))
         except Exception:pass
         if free_interaction:
+            return result
+        if minutes==0 and isinstance(command,(PickupCommand,GatherCommand)) and not combat_before and not self.combat_active():
+            # Inventory discovery and observed appearance still refresh after
+            # collection. Do not tick wounds, AI, or zero-minute vitals: repeated
+            # clicks must not create unclocked simulation exchanges.
+            self._discover(self.player_pos)
+            self._refresh_combat_candidates()
             return result
         # Every committed action in an encounter buys one physical exchange,
         # including movement (normally wall-clock paced) and inventory actions.
@@ -1136,6 +1144,11 @@ class Simulation:
                     continue
                 positions.append(WorldPos(x,y,z))
             self.building.materialize_natural_containers(positions)
+        # Observe static appearances at the gameplay boundary, never on a
+        # renderer read. Memory remains stale until these exact cells are seen
+        # again; hidden harvests, buildings and objects cannot refresh it.
+        from worldseed.systems.exterior_memory import observe_exterior
+        observe_exterior(self, {tuple(map(int, token.split(','))) for token in visible})
         settlements=set(self.state.discovered_settlements);factions=set(self.state.discovered_factions)
         npcs=set(self.state.discovered_npcs);sites=set(self.state.discovered_sites);species=set(self.state.discovered_species)
         if pos.z==0:
@@ -1412,7 +1425,8 @@ class Simulation:
         self._message(f"You pay {collected}c at the border post.")
         return MINUTES_PER_ACTION
 
-    def _move(self,cmd:MoveCommand,result:TickResult,*,preserve_fraction:bool=False)->None:
+    def _move(self,cmd:MoveCommand,result:TickResult,*,preserve_fraction:bool=False,
+              continuous_target:tuple[float,float]|None=None)->None:
         pc=self.entities.get(cmd.actor,Position);old=pc.value;new=old.moved(cmd.dx,cmd.dy)
         if self.dungeons.is_locked(new):
             ok,msg=self.dungeons.try_unlock(new,self.entities.get(cmd.actor,Inventory),self.clock.minute)
@@ -1432,7 +1446,8 @@ class Simulation:
         if any(c.hp>0 and (c.x,c.y,c.z)==(new.x,new.y,new.z) for c in self.state.creatures.values()):
             self._message("A living creature blocks that space. Use a combat action or disengage around it.");return
         world_pass=self.world.is_passable(new) or 'water' in terrain.tags
-        if self.resources.blocks_movement(new) and not self.settlement_physicalization.clears_natural_feature(new):
+        round_tree=bool(continuous_target is not None and self.resources.trunk_radius(new) is not None)
+        if self.resources.blocks_movement(new) and not round_tree and not self.settlement_physicalization.clears_natural_feature(new):
             self._message(f"{self.resources.description(new)} blocks your path. Harvest it from an adjacent tile.");return
         security=getattr(self,"property_security",None)
         if security is not None and security.blocks_player(new):
@@ -1504,7 +1519,7 @@ class Simulation:
         if not enabled:
             self._free_move_blocked=None
 
-    def try_free_movement_step(self,dx:int,dy:int)->bool:
+    def try_free_movement_step(self,dx:int,dy:int,*,fx:float=0.5,fy:float=0.5)->bool:
         """Cross one outdoor tile through the normal authoritative movement rules."""
         dx=int(dx);dy=int(dy)
         if (dx==0 and dy==0) or abs(dx)>1 or abs(dy)>1:
@@ -1512,10 +1527,17 @@ class Simulation:
         if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
             return False
         old=self.player_pos
+        target=old.moved(dx,dy)
+        if not (0.0<=fx<1.0 and 0.0<=fy<1.0):return False
+        if self.resources.motion_fraction(old.x+self.state.player_fx,old.y+self.state.player_fy,
+                                          target.x+fx,target.y+fy,old.z)<1.0:
+            return False
         result=TickResult()
-        self._move(MoveCommand(self.player_id,dx,dy),result,preserve_fraction=True)
+        self._move(MoveCommand(self.player_id,dx,dy),result,preserve_fraction=True,
+                   continuous_target=(fx,fy))
         moved=self.player_pos!=old
         if moved:
+            self.state.player_fx=fx;self.state.player_fy=fy
             self._discover(self.player_pos)
             self._refresh_combat_candidates()
         return moved
@@ -1592,7 +1614,7 @@ class Simulation:
             tile=self.world.tile_at(pos)
             if "water_source" in tile.terrain.tags:self.environment.add_water(pos,200)
             for iid,amount in outputs.items():result.events.append(GatheredEvent(cmd.actor,pos,iid,amount))
-        return max(MINUTES_PER_ACTION,minutes)
+        return 0 if minutes==0 else max(MINUTES_PER_ACTION,minutes)
     def _excavate_shaft(self,cmd:ExcavateShaftCommand)->int:
         pos=self.entities.get(cmd.actor,Position).value;inv=self.entities.get(cmd.actor,Inventory)
         here=self.world.tile_at(pos)

@@ -86,6 +86,32 @@ class GPURainQuality(unittest.TestCase):
         self.assertEqual(first, self.render(rain=.8))
         self.assertNotEqual(first, self.render(rain=.8, elapsed_seconds=2.25))
 
+    def test_stacked_remembered_props_keep_weather_classification_and_unknown_black(self):
+        from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer, SpriteCommand
+        renderer = GLWorldspaceRenderer(self.context,self.width,self.height)
+        self.addCleanup(renderer.close)
+        clip = ((0.,0.,float(self.width),float(self.height)),)
+        def command(uid,bounds,remembered,color):
+            return SpriteCommand(uid,uid,0,bytes((*color,255)),1,1,bounds,clip,
+                                 opacity=.62 if remembered else 1.,remembered=remembered)
+        rows=[command('memory-floor',(128.,0.,256.,384.),True,(80,90,60))]
+        rows += [command('memory-prop'+str(i),(140.,30.,244.,354.),True,(100,65,40))
+                 for i in range(12)]
+        rows += [command('current',(256.,0.,512.,384.),False,(62,79,71))]
+        renderer.draw(rows,target=self.post.scene_target,clear=(0.,0.,0.,0.))
+        source = self.post.scene_target.read(components=4,alignment=1)
+        self.assertEqual(source[:128*4],bytes(128*4))
+        self.assertEqual(source[(192*self.width+192)*4+3],0)
+        dry=self.render()
+        wet=self.render(rain=1.,fog=1.,cloud=1.,sun=.18,
+                        lights=(WorldLight(192,192,900,2.),))
+        self.assertGreater(sum(dry[128*3:256*3]),0)
+        for y in range(self.height):
+            start=y*self.width*3
+            self.assertEqual(dry[start:start+256*3],wet[start:start+256*3])
+            self.assertEqual(wet[start:start+128*3],bytes(128*3))
+        self.assertNotEqual(dry,wet)
+
     def test_translucent_current_foliage_still_receives_live_weather_and_grade(self):
         # Standard sprite alpha blending can lower alpha even over opaque
         # current ground. It must not be confused with memory's .42 squared.

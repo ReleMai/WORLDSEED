@@ -1,12 +1,21 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from collections import OrderedDict
+from math import floor, sqrt
 from worldseed.config import RESOURCEGEN_VERSION, CHUNK_SIZE, RESOURCE_CHUNK_CACHE_LIMIT
 from worldseed.core.coords import WorldPos, ChunkKey, split_world
 from worldseed.core.rng import hash_u64
 from worldseed.core.clock import SEASONS, DAYS_PER_SEASON
 from worldseed.entities.components import Inventory
 from worldseed.systems.state import LivingWorldState, pos_key
+
+# Physical contact is independent of a canopy's artwork rectangle. These feet
+# match the established resource projection; the persistent tile remains the
+# harvest identity and the conservative center-waypoint blocker.
+RESOURCE_FOOT_X = 0.5
+RESOURCE_FOOT_Y = 0.95
+TREE_TRUNK_RADIUS = 0.16
+ACTOR_FOOT_RADIUS = 0.14
 
 @dataclass(frozen=True, slots=True)
 class FeatureView:
@@ -376,6 +385,46 @@ class ResourceSystem:
         if not fv or fv.stage!="mature":return False
         f=self.registry.resources.get(fv.feature_id);return bool(f and f.blocks_movement)
 
+    def trunk_radius(self,pos:WorldPos)->float|None:
+        """The live circular solid at a mature tree's grounded contact point."""
+        fv=self.feature_at(pos)
+        if fv is None or fv.stage!="mature":return None
+        definition=self.registry.resources.get(fv.feature_id)
+        return (TREE_TRUNK_RADIUS if definition and definition.blocks_movement
+                and "tree" in definition.tags else None)
+
+    def motion_fraction(self,start_x:float,start_y:float,end_x:float,end_y:float,
+                        z:int,*,actor_radius:float=ACTOR_FOOT_RADIUS)->float:
+        """Return the safe fraction of a short actor-foot sweep around trunks.
+
+        Used by simulation locomotion, never rendering. Only nearby resource
+        cells are queried; no world population or lifetime depletion scan is
+        involved. Sweeping (rather than testing the endpoint) prevents sprint
+        tunnelling. A previously embedded actor may move outward after loading
+        a save or regrowth, but cannot move deeper into a trunk.
+        """
+        dx=end_x-start_x;dy=end_y-start_y;a=dx*dx+dy*dy
+        if a<=1e-16:return 1.0
+        reach=TREE_TRUNK_RADIUS+actor_radius;safe=1.0
+        # The anchor lies inside its source cell, so one bounded cell margin
+        # contains every circle touched by a controller step (<= .36 cells).
+        for y in range(floor(min(start_y,end_y)-reach),
+                       floor(max(start_y,end_y)+reach)+1):
+            for x in range(floor(min(start_x,end_x)-reach),
+                           floor(max(start_x,end_x)+reach)+1):
+                radius=self.trunk_radius(WorldPos(x,y,z))
+                if radius is None:continue
+                ox=start_x-(x+RESOURCE_FOOT_X);oy=start_y-(y+RESOURCE_FOOT_Y)
+                b=ox*dx+oy*dy;c=ox*ox+oy*oy-(radius+actor_radius)**2
+                if c<=1e-10:
+                    if b<0:safe=0.0
+                    continue
+                discriminant=b*b-a*c
+                if discriminant<=0:continue
+                contact=(-b-sqrt(discriminant))/a
+                if 0<=contact<=safe:safe=max(0.0,contact-1e-5)
+        return safe
+
     def blocks_sight(self,pos:WorldPos)->bool:
         fv=self.feature_at(pos)
         if not fv or fv.stage!="mature":return False
@@ -435,9 +484,15 @@ class ResourceSystem:
             self.revision+=1
             pretty=", ".join(f"{n} {self.registry.items[i].name.lower()}" for i,n in out.items())
             effort=max(30,100-skill*5-(min(35,reed_cutter*12) if reed_bed else 0))
-            minutes=max(3,f.minutes*effort//100)
+            minutes=0 if "instant_pickup" in tags else max(3,f.minutes*effort//100)
             detail=f" (foraging {skill}, cutter {reed_cutter})" if reed_bed else ""
+            if minutes==0:
+                return True,f"You collect {f.name.lower()}: {pretty}.",0,out
             return True,f"You harvest {f.name.lower()}: {pretty}. Work time: {minutes} game minutes{detail}.",minutes,out
+        if fv and "instant_pickup" in self.registry.resources[fv.feature_id].tags:
+            # A queued second click observes the depleted patch. It must not
+            # turn an instant pickup into a failed five-minute work animation.
+            return False,"There is nothing left here to collect.",0,{}
         t=self.world.tile_at(pos).terrain
         if pos.z<0 and t.gather_item and t.gather_amount>0 and t.depleted_to:
             tool=self._best_tool(inv,self.registry,"pick")

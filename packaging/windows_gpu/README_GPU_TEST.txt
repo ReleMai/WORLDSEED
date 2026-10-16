@@ -48,9 +48,20 @@ Source launches retain the normal current-directory saves folder and save format
 Only prepared QA scenes and visual previews discard their temporary progress.
 
 DIAGNOSTICS
-The main game stores local session diagnostics under %LOCALAPPDATA%\WORLDSEED\logs.
-The QA launchers retain stdout/stderr in the extracted folder's logs. Session JSON and *.context.json
-capture current driver/bootstrap evidence. Startup errors also produce *.error.log.
+Double-click OPEN_LOGS.bat to open the user runtime directory. In File Explorer
+you can also paste %LOCALAPPDATA%\WORLDSEED into the address bar and press Enter.
+This path is independent of the folder containing WORLDSEED_GPU.exe.
+
+Gameplay crashes write WORLDSEED_CRASH.log at the runtime directory's top level;
+newer builds also keep the same full traceback in logs\WORLDSEED_CRASH.log.
+The related continuous session log is logs\WORLDSEED_DEBUG_<date>_<pid>.jsonl.
+The game can recover to its menu after a session crash, so do not rely only on
+the launcher's exit code or on a startup error log to find a gameplay failure.
+Startup/uncaught launcher exceptions write logs\gpu-session.error.log.
+Session JSON and *.context.json contain driver/bootstrap evidence.
+The QA launchers retain stdout/stderr in the extracted folder's logs instead.
+When reporting a gameplay crash, attach WORLDSEED_CRASH.log and the newest
+WORLDSEED_DEBUG_*.jsonl. These logs may contain local paths and world names.
 Logs stay local. Nothing is uploaded automatically. Share only files you choose.
 CPU timing reports are not GPU completion or proof of a speedup. Check GPU_BUILD.json
 for the exact canonical main commit. Run WORLDSEED_GPU.exe --selfcheck to verify

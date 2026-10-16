@@ -1,5 +1,5 @@
 """Entered GPU interiors share engine sight, collision coordinates and light."""
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace as NS
@@ -103,13 +103,13 @@ class GPUInteriorContracts(TestCase):
         remembered = [c for c in frame.ground
                       if c.visual_id.startswith('interior-memory-floor:')]
         self.assertTrue(remembered)
-        self.assertTrue(all(c.opacity == .42 for c in remembered))
+        self.assertTrue(all(c.opacity == .62 and c.remembered for c in remembered))
         self.assertFalse(any('visible-bed' in c.visual_id for c in frame.scenery))
         remembered_walls = [c for c in frame.scenery
                             if c.visual_id.startswith('interior-memory-wall:')]
         # Only remembered wall segments near remembered floor may be painted.
         self.assertTrue(remembered_walls)
-        self.assertTrue(all(c.opacity == .42 and c.clip_rects
+        self.assertTrue(all(c.opacity == .62 and c.remembered and c.clip_rects
                             for c in remembered_walls))
         hidden = snapshot.gpu_frame(materials=Materials(), registry=self.registry,
                                     resource_style=lambda _: {},
@@ -141,7 +141,10 @@ class GPUInteriorContracts(TestCase):
         self.assertTrue(any(c.visual_id.startswith('interior-light:') for c in frame.scenery))
         for command in frame.scenery:
             if not command.visual_id.startswith(('interior-wall:', 'interior-memory-wall:')):
-                self.assertLessEqual(set(command.clip_rects), clips)
+                # Sprite work is now cropped to its actual art rectangle;
+                # each cropped clip must remain inside admitted sight.
+                self.assertTrue(all(any(a <= x and b <= y and c >= x1 and d >= y1
+                    for a,b,c,d in clips) for x,y,x1,y1 in command.clip_rects))
         plan.furniture.clear()
         plan.walls.clear()
         actors.clear()
@@ -189,6 +192,107 @@ class GPUInteriorContracts(TestCase):
         unlit = capture_live_scene(sim, self.camera(sim))
         self.assertEqual(lit.interior_scene.tiles, unlit.interior_scene.tiles)
 
+    def test_remembered_wall_and_visible_flat_stair_sort_without_crashing(self):
+        from worldseed.presentation.gpu_interiors import prepare_interior_frame
+        sim,_,_,_=self.fixture()
+        snapshot=capture_live_scene(sim,self.camera(sim))
+        scene=replace(snapshot.interior_scene,memory_walls=(
+            ((5000,0,5200,8000),((5000,3000,5200,3500),)),))
+        frame=prepare_interior_frame(scene,snapshot.camera,snapshot.viewer,Materials())
+        self.assertTrue(any(c.visual_id.startswith('interior-memory-wall:') for c in frame.scenery))
+        self.assertTrue(any(c.visual_id == 'interior:visible-stair' for c in frame.scenery))
+        self.assertEqual(frame,prepare_interior_frame(scene,snapshot.camera,snapshot.viewer,Materials()))
+
+    def test_observed_furniture_is_saved_as_last_seen_noninteractive_memory(self):
+        from worldseed.systems.interiors import InteriorSystem
+        sim,plan,player,actors=self.fixture()
+        sim.state.interiors={plan.uid:plan}
+        sim.state.interior_actors=dict(actors)
+        sim.interiors=InteriorSystem(sim)
+        sim.interiors.remember_player_sight(force=True)
+        self.assertIn('visible-bed',{row.uid for row in plan.observed_objects})
+        self.assertNotIn('private-cache',{row.uid for row in plan.observed_objects})
+        original=next(row for row in plan.observed_objects if row.uid == 'visible-bed')
+        player.x=7000
+        # An unobserved rearrangement cannot update last-seen geometry.
+        plan.furniture[0].x=3500
+        sim.interiors.remember_player_sight(force=True)
+        remembered=next(row for row in plan.observed_objects if row.uid == 'visible-bed')
+        self.assertEqual(remembered,original)
+        saved=plan.to_dict()
+        self.assertEqual(saved,InteriorPlan.from_dict(saved).to_dict())
+        snapshot=capture_live_scene(sim,self.camera(sim))
+        scene=snapshot.interior_scene
+        self.assertNotIn('visible-bed',{row.uid for row in scene.objects})
+        self.assertIn('visible-bed',{row.uid for row in scene.memory_objects})
+        self.assertIsNone(scene.hit_test(2.2,4.))
+        frame=snapshot.gpu_frame(materials=Materials(),registry=self.registry,resource_style=lambda _: {})
+        memory=[c for c in frame.scenery if c.visual_id == 'interior-memory-object:visible-bed']
+        self.assertEqual(len(memory),1)
+        self.assertTrue(memory[0].remembered)
+        self.assertEqual(memory[0].opacity,.62)
+        self.assertFalse(any('npc:visible' in c.visual_id for c in frame.scenery))
+        self.assertEqual(saved,plan.to_dict())
+
+    def test_fine_sight_edges_remember_wall_adjacent_floor_without_private_leaks(self):
+        from worldseed.systems.interior_visibility import (
+            visible_floor_rects,remember_floor_rects,remembered_floor_rects)
+        sim,plan,player,_=self.fixture()
+        plan.walls=[InteriorRect(5300,0,80,8000)]
+        rects=visible_floor_rects(plan,player.x,player.y,720,65535)
+        self.assertTrue(any(5000 < c <= 5300 for a,b,c,d in rects))
+        self.assertTrue(all(c <= 5300 for a,b,c,d in rects))
+        self.assertTrue(all(_rect_visible(player.x,player.y,rect,((5300,0,5380,8000),)) for rect in rects))
+        remember_floor_rects(plan,rects)
+        self.assertTrue(plan.explored_detail)
+        self.assertTrue(all(c <= 5300 for a,b,c,d in remembered_floor_rects(plan)))
+        self.assertEqual(plan.to_dict(),InteriorPlan.from_dict(plan.to_dict()).to_dict())
+        legacy=plan.to_dict()
+        legacy.pop('explored_detail')
+        legacy.pop('observed_objects')
+        loaded=InteriorPlan.from_dict(legacy)
+        self.assertEqual(loaded.explored_detail,{})
+        self.assertEqual(loaded.observed_objects,[])
+
+    def test_hidden_wall_change_does_not_rewrite_last_observed_memory(self):
+        from worldseed.systems.interiors import InteriorSystem
+        sim,plan,player,actors=self.fixture()
+        sim.state.interiors={plan.uid:plan}
+        sim.state.interior_actors=dict(actors)
+        sim.interiors=InteriorSystem(sim)
+        sim.interiors.remember_player_sight(force=True)
+        self.assertTrue(any(w.x == 5000 for w in plan.observed_walls))
+        # A second opaque partition prevents observing the old wall's place.
+        plan.walls=[InteriorRect(7000,0,200,8000)]
+        player.x=8500
+        sim.interiors.remember_player_sight(force=True)
+        scene=capture_live_scene(sim,self.camera(sim)).interior_scene
+        self.assertTrue(any(wall[0] == 5000 for wall,patches in scene.memory_walls))
+        self.assertTrue(any(w.x == 5000 for w in plan.observed_walls))
+        self.assertEqual(plan.to_dict(),InteriorPlan.from_dict(plan.to_dict()).to_dict())
+
+    def test_wall_fragment_union_never_repaints_overlapping_alpha(self):
+        from worldseed.presentation.gpu_interiors import _union_rects
+        sources=((0,0,2,5),(0,3,2,8),(1,6,4,9))
+        merged=_union_rects(sources)
+        for y in range(10):
+            for x in range(5):
+                expected=any(a <= x < c and b <= y < d for a,b,c,d in sources)
+                coverage=sum(a <= x < c and b <= y < d for a,b,c,d in merged)
+                self.assertEqual(coverage,int(expected))
+
+    def test_subcell_sight_and_floor_material_are_anchored_to_world_not_camera(self):
+        sim,_,_,_=self.fixture()
+        camera=self.camera(sim)
+        first=capture_live_scene(sim,camera)
+        moved_camera=replace(camera,center=WorldFoot(camera.center.x+.01,camera.center.y+.01,camera.center.z))
+        second=capture_live_scene(sim,moved_camera)
+        self.assertEqual(first.interior_scene.tiles,second.interior_scene.tiles)
+        frame=first.gpu_frame(materials=Materials(),registry=self.registry,resource_style=lambda _: {})
+        # Boundary refinements clip the same half-metre source instead of
+        # squeezing the whole plank texture into each smaller fragment.
+        self.assertTrue(all(abs((c.bounds[2]-c.bounds[0])-camera.scale*.5-.02) < 1e-8 for c in frame.ground))
+
     def test_actual_gpu_pixels_leave_hidden_room_black(self):
         try:
             import moderngl
@@ -224,6 +328,48 @@ class GPUInteriorContracts(TestCase):
                 target.release()
             if texture is not None:
                 texture.release()
+            context.release()
+
+    def test_actual_half_pixel_floor_sources_have_no_raster_cracks(self):
+        try:
+            import moderngl
+        except ImportError:
+            self.skipTest('optional ModernGL dependency unavailable')
+        try:
+            context=moderngl.create_standalone_context(require=330,backend='egl')
+        except Exception as exc:
+            self.skipTest('optional EGL unavailable: '+type(exc).__name__)
+        from tests.test_gpu_visibility_shader import _OffscreenWindowContext
+        from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer,pixel_clip
+        from worldseed.presentation.gpu_interiors import PreparedInterior,InteriorTile,prepare_interior_frame
+        texture=target=renderer=None
+        try:
+            camera=WorldCamera(WorldFoot(.25,.5),641,481,48)
+            scene=PreparedInterior('test','test','residence','','',0,1,
+                (InteriorTile((0,0,500,500),32767),InteriorTile((0,500,500,1000),32767)),(),(),())
+            materials=Materials()
+            with patch.object(materials,'player',return_value=None):
+                frame=prepare_interior_frame(scene,camera,camera.center,materials)
+            texture=context.texture((641,481),4)
+            target=context.framebuffer(color_attachments=[texture])
+            renderer=GLWorldspaceRenderer(_OffscreenWindowContext(context,target),641,481,texture_budget=4096)
+            renderer.draw(frame.commands,clear=(0,0,0,0))
+            pixels=target.read(components=3,alignment=1)
+            colors=set()
+            for command in frame.ground:
+                for clip in command.clip_rects:
+                    x,y,w,h=pixel_clip(clip,641,481)
+                    for py in range(y,y+h):
+                        for px in range(x,x+w):
+                            offset=(py*641+px)*3
+                            self.assertNotEqual(pixels[offset:offset+3],b'\0\0\0',
+                                f'floor raster crack at {(px,py)}')
+                            colors.add(pixels[offset:offset+3])
+            self.assertEqual(len(colors),1,'lighting must cover every admitted floor sample too')
+        finally:
+            if renderer is not None:renderer.close()
+            if target is not None:target.release()
+            if texture is not None:texture.release()
             context.release()
 
     def test_actual_entered_plan_never_queries_outdoor_geometry_or_mutates(self):

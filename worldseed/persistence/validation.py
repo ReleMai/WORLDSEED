@@ -62,6 +62,48 @@ def _validate_interiors(raw: dict[str, Any]) -> list[str]:
             return (isinstance(row, dict) and point_valid(row)
                     and all(type(row.get(k)) is int and row[k] > 0 for k in ("w", "h"))
                     and row["x"] + row["w"] <= width and row["y"] + row["h"] <= height)
+        cell_count=min(4096,((width+499)//500)*((height+499)//500))
+        explored=plan.get('explored_cells',[])
+        if (not isinstance(explored,list) or len(explored)>4096
+                or any(type(index) is not int or not 0 <= index < cell_count for index in explored)):
+            issues.append(f'invalid interior explored cells: {space_id}')
+        detail=plan.get('explored_detail',{})
+        if (not isinstance(detail,dict) or len(detail)>4096 or any(
+                not isinstance(index,str) or not index.isascii() or not index.isdigit()
+                or not 0 <= int(index) < cell_count or type(mask) is not int or not 0 < mask <= 65535
+                for index,mask in (detail.items() if isinstance(detail,dict) else ()))):
+            issues.append(f'invalid interior explored detail: {space_id}')
+        observations=plan.get('observed_objects',[])
+        if not isinstance(observations,list) or len(observations)>672:
+            issues.append(f'invalid interior observed objects: {space_id}')
+        else:
+            observed_ids=set()
+            for row in observations:
+                if not isinstance(row,dict):
+                    issues.append(f'invalid interior observation: {space_id}')
+                    continue
+                uid=row.get('uid')
+                kind=row.get('kind')
+                ratio=row.get('height_ratio',1.)
+                valid_rect=rect_valid(row)
+                if kind == 'exit':
+                    # The drawn doorway may cross the shell boundary; clips
+                    # still restrict it to the observed part of this floor.
+                    valid_rect=(all(type(row.get(k)) is int for k in ('x','y','w','h'))
+                        and row['w']>0 and row['h']>0 and -500 <= row['x'] < width
+                        and -700 <= row['y'] < height and row['x']+row['w'] <= width+500
+                        and row['y']+row['h'] <= height+200)
+                if (not isinstance(uid,str) or not uid or uid in observed_ids
+                        or kind not in ('furniture','stairs','exit') or not valid_rect
+                        or not isinstance(row.get('content_id'),str) or not row['content_id']
+                        or type(ratio) not in (int,float) or not 0 < ratio <= 8
+                        or type(row.get('flat',False)) is not bool or type(row.get('solid',False)) is not bool):
+                    issues.append(f'invalid interior observation: {space_id}')
+                observed_ids.add(str(uid))
+        observed_walls=plan.get('observed_walls')
+        if observed_walls is not None and (not isinstance(observed_walls,list)
+                or len(observed_walls)>256 or any(not rect_valid(row) for row in observed_walls)):
+            issues.append(f'invalid interior observed walls: {space_id}')
         if not point_valid(plan, "entry_x", "entry_y"):
             issues.append(f"invalid interior portal position: {space_id}")
         if any(type(plan.get(k)) is not int for k in ("exterior_x", "exterior_y", "exterior_z")):
@@ -440,6 +482,12 @@ def validate_sim_state(raw: dict[str, Any] | None) -> list[str]:
     if 'discovered_chunks' in raw or 'discovered_format_version' in raw:
         from worldseed.systems.discovery import validate_discovery_chunks
         issues.extend(validate_discovery_chunks(raw.get('discovered_chunks'), raw.get('discovered_format_version')))
+    if 'exterior_memory' in raw:
+        from worldseed.systems.exterior_memory import ExteriorMemory
+        try:
+            ExteriorMemory.from_dict(raw['exterior_memory'])
+        except (ValueError,TypeError,KeyError,IndexError,AttributeError) as error:
+            issues.append(f'invalid exterior appearance memory: {error}')
     issues.extend(_validate_interiors(raw))
     issues.extend(_validate_salvaging(raw))
     issues.extend(_validate_crafted_artifacts(raw))

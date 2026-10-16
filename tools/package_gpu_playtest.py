@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NAME = 'WORLDSEED_GPU'
 LAUNCHERS = ('PLAY_WORLDSEED_GPU.bat', 'PLAY_GPU_NEW_WORLD.bat', 'PLAY_GPU_CAMP_RAIN.bat',
              'PLAY_GPU_VILLAGE.bat', 'PREVIEW_GPU_WEATHER.bat')
+SUPPORT_FILES = ('OPEN_LOGS.bat',)
 FIXED_ZIP_TIME = (2026, 1, 1, 0, 0, 0)
 
 
@@ -36,12 +37,13 @@ def build_command(output: Path, work: Path) -> list[str]:
 
 def validate_bundle(directory: Path, *, minimum_exe_bytes=1048576) -> dict:
     directory = Path(directory)
-    required = (NAME + '.exe', 'GPU_BUILD.json', 'README_GPU_TEST.txt', *LAUNCHERS,
+    required = (NAME + '.exe', 'GPU_BUILD.json', 'README_GPU_TEST.txt', *LAUNCHERS, *SUPPORT_FILES,
                 '_internal/worldseed/data/terrain.json',
                 '_internal/worldseed/assets/shaders/worldspace_sprite.vert',
                 '_internal/worldseed/assets/shaders/worldspace_sprite.frag',
                 '_internal/worldseed/assets/shaders/worldspace_post.vert',
                 '_internal/worldseed/assets/shaders/worldspace_post.frag',
+                '_internal/worldseed/assets/sprites/ui/gpu_controls/manifest.json',
                 '_internal/worldseed/assets/sprites/worldspace/trees/manifest.json',
                 '_internal/worldseed/assets/sprites/worldspace/trees/tree_layers.b85')
     missing = [name for name in required if not (directory / name).is_file()]
@@ -112,7 +114,7 @@ def build(output: Path, commit: str) -> Path:
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='worldseed-gpu-build-') as work:
         subprocess.run(build_command(output, Path(work)), cwd=ROOT, check=True, timeout=900)
-    for name in (*LAUNCHERS, 'README_GPU_TEST.txt'):
+    for name in (*LAUNCHERS, *SUPPORT_FILES, 'README_GPU_TEST.txt'):
         shutil.copyfile(ROOT / 'packaging' / 'windows_gpu' / name, directory / name)
     (directory / 'GPU_BUILD.json').write_text(json.dumps({
         'commit': commit, 'build_kind': 'windows-gpu-candidate-one-dir',
