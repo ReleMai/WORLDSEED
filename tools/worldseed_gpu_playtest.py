@@ -25,6 +25,7 @@ import time
 
 from worldseed.presentation.gl_atmosphere import AtmosphereFrame,GLAtmospherePass,WorldLight
 from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer,GPUBackendUnavailable
+from worldseed.presentation.gl_context import create_sdl_context
 from worldseed.presentation.gpu_scene_bridge import GpuMaterialSource,prepare_gpu_frame,cell_bounds
 from worldseed.presentation.worldspace import WorldCamera,WorldFoot
 
@@ -99,7 +100,7 @@ def _screenshot(pg,ctx,width,height,path):
 
 
 def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
-        screenshot=None,report=None):
+        screenshot=None,report=None,context_report=None):
     if os.environ.get('SDL_VIDEODRIVER')=='dummy':
         raise GPUBackendUnavailable('SDL dummy is not native GPU evidence')
     if scene not in ('forest','camp'):
@@ -108,7 +109,6 @@ def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
         raise ValueError('playtest dimensions or duration outside bounded native test scope')
     # Imports are deferred: pure GPU contracts work even without pygame/glcontext.
     import pygame as pg
-    import moderngl
     from tools.reference_scene_fixtures import build_fixture
     from worldseed.config import DATA_DIR
     from worldseed.content.registry import ContentRegistry
@@ -124,7 +124,8 @@ def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
             pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK,pg.GL_CONTEXT_PROFILE_CORE)
             pg.display.gl_set_attribute(pg.GL_DOUBLEBUFFER,1)
             pg.display.set_mode((width,height),pg.DOUBLEBUF|pg.OPENGL|pg.RESIZABLE)
-            ctx=moderngl.create_context(require=330)
+            diagnostics=context_report or (Path(report).with_suffix('.context.json') if report else None)
+            ctx=create_sdl_context(pg,diagnostics=diagnostics)
             renderer=GLWorldspaceRenderer(ctx,width,height)
             post=GLAtmospherePass(ctx,width,height)
             assets=GpuMaterialSource(pg)
@@ -194,20 +195,22 @@ def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
                 count+=1
                 pg.display.set_caption(f'WORLDSEED G8 GPU visual arena | {scene} | '
                     f'{SEASONS[season_index]} | {name} | {minute//60:02d}:{minute%60:02d} | '
-                    f'{round(x,1)},{round(y,1)} | {round(1000/(max(.1,samples[-1])))} GPU FPS estimate | F weather, 1-4 seasons, WASD, [ ] sun, T torch, P capture')
+                    f'{round(x,1)},{round(y,1)} | {round(1000/(max(.1,samples[-1])))} CPU render/present Hz | F weather, 1-4 seasons, WASD, [ ] sun, T torch, P capture')
                 clock.tick(60)
             after=fixture.authority_fingerprint()
             if before!=after:
                 raise AssertionError('GPU visual arena mutated production fixture authority')
             samples.sort()
-            result={'status':'native-visual-evidence-not-gameplay-certification',
+            result={'status':'visual-sample-not-gameplay-certification',
                 'gpu':gpu_info,'scene':scene,'size':[width,height],'frames':count,
+                'sdl_video_driver':pg.display.get_driver(),'native_hardware_accepted':False,
                 'p50_render_ms':statistics.median(samples) if samples else None,
                 'p95_render_ms':samples[min(len(samples)-1,int(len(samples)*.95))] if samples else None,
                 'last_frame':asdict(last_report) if last_report else {},
                 'scene_authority_unchanged':before==after,
                 'controls':'visual camera only: WASD/F/T/1-4/[ ]/+ -/P/Esc',
-                'limitations':'GPU world visual arena only; production gameplay input, UI, weather simulation and saving NOT cut over'}
+                'limitations':'GPU visual arena only; CPU draw/present wall time, no explicit GPU completion sync; '
+                    'driver may be software; production gameplay input/UI/weather/saving NOT cut over'}
             if report:
                 path=Path(report);path.parent.mkdir(parents=True,exist_ok=True)
                 path.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
@@ -227,11 +230,12 @@ def main(argv=None):
     parser.add_argument('--frames',type=int,default=0,help='0 is until Esc; 180 for automated capture')
     parser.add_argument('--screenshot',type=Path)
     parser.add_argument('--report',type=Path)
+    parser.add_argument('--context-report',type=Path,help='flushed current-context bootstrap evidence')
     a=parser.parse_args(argv)
     try:
         w,h=(int(v) for v in a.size.lower().split('x'))
         result=run(scene=a.scene,width=w,height=h,zoom=a.zoom,frames=a.frames,
-                   screenshot=a.screenshot,report=a.report)
+                   screenshot=a.screenshot,report=a.report,context_report=a.context_report)
     except Exception as exc:
         print(json.dumps({'status':'gpu-playtest-unavailable','error':str(exc),
             'note':'Old game renderer remains separate; OpenGL 3.3 hardware and optional gpu extras required'},indent=2))

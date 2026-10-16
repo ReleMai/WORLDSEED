@@ -67,6 +67,8 @@ jobs:
         run: python -u tools/run_ci_check.py --name g5g8-atmosphere-scene --timeout 45 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_gpu_playtest_bridge.GPUSceneBridgeContracts
       - name: W1 resident-only reads, actor materials and W2 input contracts
         run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
+      - name: W0 context bootstrap and W2 Action Hub navigation contracts
+        run: python -u tools/run_ci_check.py --name w0w2-actions-ui --timeout 60 -- python -u -m unittest -v tests.test_gl_context tests.test_gl_gameplay_ui tests.test_gpu_gameplay_actions tests.test_gpu_gameplay_session tests.test_ui_rc2.GPUPrimaryNavigationTests
       - name: M2 real-scene GPU bridge source and software fallback
         run: python -u tools/run_ci_check.py --name m2-gpu-reference-bridge --timeout 120 -- python -u -m unittest -v tests.test_gpu_reference_scene_probe
 

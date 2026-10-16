@@ -438,3 +438,44 @@ class UIRC4RealFlowTests(UIRC3FlowTests):
         joined='\n'.join(term.frames).lower()
         self.assertIn('crafting mode',joined)
         self.assertGreaterEqual(joined.count('actions'),2)
+
+
+class GPUPrimaryNavigationTests(unittest.TestCase):
+    """GPU candidate retains the same global key and hierarchy contracts."""
+
+    def test_gpu_enter_tab_escape_and_modal_wasd_use_shared_routing(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from worldseed.ui.gpu_gameplay_session import GpuGameplaySession
+        from worldseed.ui.session import NavigationStack
+        controller = Mock()
+        session = GpuGameplaySession(SimpleNamespace(),SimpleNamespace(),
+                                     now=0.,input_controller=controller)
+        for key in 'wasd':
+            session.press(key,None,now=0.)
+            controller.press.assert_called_with(key,repeat=False,now=0.)
+        controller.reset_mock()
+        session.press('\r',None,now=1.)
+        self.assertIsInstance(session.nav,NavigationStack)
+        self.assertEqual(session.nav.current.route_id,'actions')
+        controller.set_focus.assert_called_with(False,now=1.)
+        before = session.nav.snapshot()
+        for key in 'wasd': session.press(key,None,now=1.)
+        self.assertEqual(session.nav.snapshot(),before)
+        controller.press.assert_not_called()
+        session.press('ESC',None,now=2.)
+        self.assertFalse(session.modal)
+        controller.set_focus.assert_called_with(True,now=2.)
+        session.press('\t',None,now=3.)
+        self.assertEqual(session.nav.current.route_id,'console')
+        self.assertEqual({row.key for row in session.rows(None)},
+                         {'character','local','system'})
+        session.activate('character',None,now=3.)
+        session.activate('health',None,now=3.)
+        self.assertEqual(session.nav.depth,3)
+        session.press('ESC',None,now=4.)
+        self.assertEqual(session.nav.current.route_id,'character')
+        session.press('ESC',None,now=4.)
+        self.assertEqual(session.nav.current.route_id,'console')
+        session.press('ESC',None,now=4.)
+        self.assertFalse(session.modal)

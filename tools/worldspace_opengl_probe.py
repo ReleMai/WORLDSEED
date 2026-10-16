@@ -19,6 +19,7 @@ import statistics
 import time
 
 from worldseed.presentation.gl_worldspace import GPUBackendUnavailable,GLWorldspaceRenderer,SpriteCommand
+from worldseed.presentation.gl_context import create_sdl_context
 from worldseed.presentation.tree_art import layer_png
 from worldseed.presentation.worldspace import VisualLayer, WorldCamera, WorldFoot
 from worldseed.presentation.worldspace_adapter import PreparedActor,prepare_worldspace_scene
@@ -62,11 +63,10 @@ def scene_commands(scene,pg,season='summer'):
     return commands_from_projected(scene.projection,texture)
 
 
-def run(width=1280,height=720,frames=180,screenshot=None):
+def run(width=1280,height=720,frames=180,screenshot=None,context_report=None):
     if os.environ.get('SDL_VIDEODRIVER')=='dummy':
         raise GPUBackendUnavailable('SDL dummy driver is not real hardware validation')
     import pygame as pg
-    import moderngl
     pg.init()
     renderer=None
     try:
@@ -74,7 +74,7 @@ def run(width=1280,height=720,frames=180,screenshot=None):
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MINOR_VERSION,3)
         pg.display.gl_set_attribute(pg.GL_CONTEXT_PROFILE_MASK,pg.GL_CONTEXT_PROFILE_CORE)
         pg.display.set_mode((width,height),pg.DOUBLEBUF|pg.OPENGL|pg.RESIZABLE)
-        ctx=moderngl.create_context(require=330)
+        ctx=create_sdl_context(pg,diagnostics=context_report)
         renderer=GLWorldspaceRenderer(ctx,width,height)
         samples=[];first_last=None;interrupted=False
         screenshot_pixels=None
@@ -105,14 +105,16 @@ def run(width=1280,height=720,frames=180,screenshot=None):
             pg.image.save(pg.transform.flip(image,False,True),str(path))
         nums=sorted(samples)
         def percentile(p):return nums[min(len(nums)-1,int((len(nums)-1)*p))] if nums else None
-        return {'status':'hardware-sample-not-release-certification','backend':'ModernGL/OpenGL 3.3',
+        return {'status':'opengl-sample-not-release-certification','backend':'ModernGL/OpenGL 3.3',
             'driver':driver,'window_owned':'single pygame SDL OPENGL context',
+            'sdl_video_driver':pg.display.get_driver(),'native_hardware_accepted':False,
             'frames':len(samples),'interrupted':interrupted,'size':[width,height],
             'present_included':True,'p50_ms':percentile(.50),'p95_ms':percentile(.95),
             'p99_ms':percentile(.99),'worst_ms':max(samples) if samples else None,
             'last_frame':asdict(first_last) if first_last else {},
             'software_fallback':'unchanged, no production cutover',
-            'limitations':'standalone prepared synthetic trees; no full gameplay or UI input parity, no native soak'}
+            'limitations':'prepared synthetic trees; CPU draw/present wall time, no explicit GPU completion sync; '
+                'driver may be software; no full gameplay/UI parity, hardware approval or native soak'}
     finally:
         if renderer is not None:renderer.close()
         pg.quit()
@@ -124,12 +126,14 @@ def main(argv=None):
     a.add_argument('--frames',type=int,default=180)
     a.add_argument('--output',type=Path)
     a.add_argument('--screenshot',type=Path)
+    a.add_argument('--context-report',type=Path,help='flushed current-context bootstrap evidence')
     args=a.parse_args(argv)
     try:
         width,height=map(int,args.size.lower().split('x'))
         if not 1<=args.frames<=600 or not 640<=width<=3840 or not 480<=height<=2160:
             raise ValueError('invalid bounded probe size or frame count')
-        report=run(width,height,args.frames,args.screenshot)
+        context_report=args.context_report or (args.output.with_suffix('.context.json') if args.output else None)
+        report=run(width,height,args.frames,args.screenshot,context_report)
     except Exception as exc:
         report={'status':'unavailable','error':type(exc).__name__+': '+str(exc),
                 'software_fallback':'unchanged; native GPU not validated'}

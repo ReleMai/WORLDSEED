@@ -1,8 +1,15 @@
 name: WORLDSEED Native OpenGL Candidate Probe
 
-# This is intentionally MANUAL and NOT a regular Fast Gate cost/time burden.
+# Normally manual; scoped bootstrap changes also run once to validate the
+# previously observed native context crash. Unrelated graphics changes do not
+# trigger this workflow, keeping it outside the regular Fast Gate cost.
 # Hosted runner GPUs may be software-backed; always inspect the driver string.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'worldseed/presentation/gl_context.py'
+      - 'tools/worldseed_gl_diagnostics.py'
   workflow_dispatch:
     inputs:
       width:
@@ -31,13 +38,23 @@ jobs:
       - name: Install optional shader backend
         shell: pwsh
         run: python -m pip install -e '.[gpu]' 'Pillow>=10,<12'
+      - name: Isolate default and explicit context startup diagnostics
+        continue-on-error: true
+        shell: pwsh
+        env:
+          PYTHONFAULTHANDLER: '1'
+        run: |
+          if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
+          python -u tools/run_ci_check.py --name gl-context-diagnosis --timeout 90 -- python -u -m tools.worldseed_gl_diagnostics --mode compare --timeout 30 --report scratch/gl-context-diagnostics.json
+      # The default comparison may reproduce the old native crash. It does not
+      # control acceptance: the explicit real render probes below must pass.
       - name: Run actual OpenGL context and framebuffer probe
         shell: pwsh
         env:
           PYTHONFAULTHANDLER: '1'
         run: |
           if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
-          python -u tools/run_ci_check.py --name OpenGL-worldspace --timeout 180 -- python -u -m tools.worldspace_opengl_probe --size '${{ inputs.width }}x${{ inputs.height }}' --frames 120 --output scratch/gpu-worldspace-report.json --screenshot scratch/gpu-worldspace-frame.png
+          python -u tools/run_ci_check.py --name OpenGL-worldspace --timeout 180 -- python -u -m tools.worldspace_opengl_probe --size '${{ inputs.width || '1280' }}x${{ inputs.height || '720' }}' --frames 120 --output scratch/gpu-worldspace-report.json --screenshot scratch/gpu-worldspace-frame.png
       - name: GPU-first forest weather/lighting native visual arena
         shell: pwsh
         env:
@@ -66,4 +83,6 @@ jobs:
             scratch/gpu-first-forest.png
             scratch/gpu-live-camp.json
             scratch/gpu-live-camp.png
+            scratch/*.context.json
+            scratch/gl-context-diagnostics*.json
           if-no-files-found: warn

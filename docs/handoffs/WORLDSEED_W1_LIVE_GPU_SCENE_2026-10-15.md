@@ -3,6 +3,8 @@
 **Date:** 2026-10-15. **Repository:** [ReleMai/WORLDSEED](https://github.com/ReleMai/WORLDSEED), canonical `main`.
 **Scope:** bounded, read-only capture of prepared live gameplay state for the new OpenGL/ModernGL renderer.
 
+**Follow-on:** the [W2 Action Hub/context handoff](WORLDSEED_W2_ACTION_HUB_CONTEXT_HANDOFF_2026-10-15.md) supersedes the original missing Enter/Tab UI and context-startup implementation notes below. W1's capture/privacy contracts remain intact; original evidence is retained as history.
+
 ## Delivered APIs
 
 - `worldseed/presentation/live_gpu_scene.py` adds `capture_live_scene(sim, camera)` and frozen `LiveGpuSnapshot` / `LiveFire` records.

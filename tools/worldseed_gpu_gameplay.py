@@ -4,8 +4,9 @@ Default: a new temporary world through normal authoritative game startup, with
 empty inventory and real simulation discovery. No player save is opened or saved.
 Optional --prepared-scene uses synthetic QA terrain and production commands;
 its prepared discovery/realization overrides are NOT a natural-world playtest.
-Controls: WASD/arrows move, Shift sprint, . wait, P pickup, mouse hover projects
-the visible cell, F12 screenshot, Esc exit. Full game UI/actions remain W3 work.
+Controls: WASD/arrows move, Shift sprint, . wait, P pickup, Enter Action Hub,
+Tab World Console, mouse selects a visible cell, wheel zooms/pages, F12 captures.
+Esc opens pause or goes back one route. Full interiors/game UI remain W3 work.
 """
 from __future__ import annotations
 
@@ -20,11 +21,14 @@ import tempfile
 import time
 
 from worldseed.presentation.gl_atmosphere import GLAtmospherePass
+from worldseed.presentation.gl_context import create_sdl_context
+from worldseed.presentation.gl_gameplay_ui import GLGameplayUI
 from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer, GPUBackendUnavailable
 from worldseed.presentation.gpu_scene_bridge import GpuMaterialSource
 from worldseed.presentation.live_gpu_scene import capture_live_scene, player_foot
 from worldseed.presentation.worldspace import WorldCamera
 from worldseed.ui.gpu_gameplay_input import GpuGameplayInput, project_pointer
+from worldseed.ui.gpu_gameplay_session import GpuGameplaySession
 
 
 def _percentile(samples, fraction):
@@ -53,10 +57,9 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
     if not isinstance(seed, str) or not 1 <= len(seed.encode('utf-8')) <= 128:
         raise ValueError('seed must contain 1..128 UTF-8 bytes')
     import pygame as pg
-    import moderngl
     from worldseed.app import _load_context
     from worldseed.ui.startup import StartSelection
-    renderer = post = controller = fixture = context = None
+    renderer = post = controller = session = overlay = fixture = context = None
     with tempfile.TemporaryDirectory(prefix='worldseed-gpu-gameplay-') as directory:
         try:
             # Validate the optional graphics backend before expensive normal
@@ -69,10 +72,12 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
             pg.display.set_mode((width, height), pg.DOUBLEBUF | pg.OPENGL | pg.RESIZABLE)
             pg.display.set_caption('WORLDSEED W2 GPU candidate | TEMPORARY session | starting')
             pg.key.set_repeat()
-            ctx = moderngl.create_context(require=330)
+            ctx = create_sdl_context(pg, diagnostics=Path(report).with_suffix('.context.json')
+                                     if report else None)
             renderer = GLWorldspaceRenderer(ctx, width, height)
             post = GLAtmospherePass(ctx, width, height)
             materials = GpuMaterialSource(pg)
+            overlay = GLGameplayUI(ctx, pg, width, height)
             driver = {key: ctx.info.get(key, 'unknown')
                       for key in ('GL_VENDOR', 'GL_RENDERER', 'GL_VERSION')}
             ctx.screen.clear(0.,0.,0.,1.)
@@ -100,9 +105,12 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
             initial_pos = sim.player_pos
             initial_minute = sim.clock.minute
             controller = GpuGameplayInput(sim)
+            session = GpuGameplaySession(sim, registry, input_controller=controller)
             key_map = {pg.K_UP:'UP', pg.K_DOWN:'DOWN', pg.K_LEFT:'LEFT', pg.K_RIGHT:'RIGHT',
                        pg.K_w:'w', pg.K_a:'a', pg.K_s:'s', pg.K_d:'d',
-                       pg.K_PERIOD:'.', pg.K_p:'p', pg.K_RETURN:'\r', pg.K_TAB:'\t'}
+                       pg.K_PERIOD:'.', pg.K_p:'p', pg.K_RETURN:'\r', pg.K_TAB:'\t',
+                       pg.K_ESCAPE:'ESC', pg.K_g:'g', pg.K_i:'i', pg.K_f:'f',
+                       pg.K_PAGEUP:'PAGEUP', pg.K_PAGEDOWN:'PAGEDOWN'}
             frame_times = []
             render_times = []
             clock = pg.time.Clock()
@@ -113,36 +121,62 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
             pending_capture = Path(screenshot) if screenshot else None
             last_report = None
             snapshot = None
+            camera = layout = None
             while running and (not frames or count < frames):
                 frame_start = time.perf_counter()
                 # The sole event pump precedes simulation updates, so release
                 # and focus loss cannot sit behind an expensive redraw.
                 for event in pg.event.get():
+                    if session.quit_requested:
+                        break
                     if event.type == pg.QUIT:
                         running = False
+                        break
                     elif event.type == getattr(pg, 'WINDOWFOCUSLOST', -1):
-                        controller.set_focus(False)
+                        session.set_focus(False)
                     elif event.type == getattr(pg, 'WINDOWFOCUSGAINED', -2):
-                        controller.set_focus(True)
+                        session.set_focus(True)
                     elif event.type == pg.VIDEORESIZE:
-                        if 640 <= event.w <= 1920 and 480 <= event.h <= 1080:
+                        if 1 <= event.w <= 3840 and 1 <= event.h <= 2160:
                             width, height = event.w, event.h
                             renderer.resize(width, height)
                             post.resize(width, height)
+                            overlay.resize(width, height)
                     elif event.type == pg.KEYUP and event.key in key_map:
-                        controller.release(key_map[event.key])
+                        session.release(key_map[event.key])
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_ESCAPE:
-                            running = False
-                        elif event.key == pg.K_F12:
+                        if event.key == pg.K_F12:
                             pending_capture = Path(screenshot or 'scratch/gpu-gameplay.png')
                         elif event.key in key_map:
-                            controller.press(key_map[event.key], repeat=bool(getattr(event, 'repeat', False)))
+                            session.press(key_map[event.key], snapshot,
+                                repeat=bool(getattr(event, 'repeat', False)))
                     elif event.type == pg.MOUSEMOTION:
                         pointer = event.pos
+                    elif event.type == pg.MOUSEWHEEL:
+                        if not event.y:
+                            continue
+                        if session.modal:
+                            session.press('PAGEUP' if event.y > 0 else 'PAGEDOWN', snapshot)
+                        else:
+                            zoom = max(20, min(56, zoom+event.y*4))
+                    elif (event.type == pg.MOUSEBUTTONDOWN and event.button in (1,3)
+                          and session.window_focused):
+                        pointer = event.pos
+                        hit = layout.hit_test(*pointer) if layout else None
+                        if hit and snapshot is not None:
+                            session.activate(hit, snapshot)
+                        elif not session.modal and camera is not None and snapshot is not None:
+                            if layout is None or not layout.blocks_world(*pointer):
+                                target = project_pointer(camera, *pointer)
+                                if target is not None:
+                                    session.select_cell((target.x,target.y,target.z), snapshot)
+                                if event.button == 3:
+                                    session.open('actions')
+                if session.quit_requested:
+                    running = False
                 if not running:
                     break
-                controller.update(time.monotonic(), sprint=bool(pg.key.get_mods() & pg.KMOD_SHIFT))
+                session.update(time.monotonic(), sprint=bool(pg.key.get_mods() & pg.KMOD_SHIFT))
                 # Update -> immutable capture -> GPU draw. None of the latter
                 # phases receive command callbacks or advance simulation time.
                 scale = max(zoom, ceil(sqrt(width*height/2200)))
@@ -155,6 +189,9 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 last_report = renderer.draw(frame.commands, target=post.scene_target,
                     frame_time_seconds=fx.elapsed_seconds, clear=(0.,0.,0.,0.))
                 post.present(fx)
+                model = session.observe(snapshot)
+                layout = overlay.draw(model)
+                session.page_size = max(1, layout.page_size or layout.detail_page_size)
                 render_times.append((time.perf_counter()-draw_start)*1000.)
                 if pending_capture and (not frames or count == frames-1):
                     _screenshot(pg, ctx, (width, height), pending_capture)
@@ -164,7 +201,7 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 cell = (target.x,target.y,target.z) if target else None
                 hover = str(cell) if cell in snapshot.current_cells else 'unknown'
                 pg.display.set_caption(f'WORLDSEED W2 GPU candidate | TEMPORARY session | {sim.player_pos} | '
-                    f'minute {sim.clock.minute} | hover {hover} | WASD / Shift / . / P / F12 / Esc')
+                    f'minute {sim.clock.minute} | hover {hover} | Enter actions / Tab world / Esc pause')
                 frame_times.append((time.perf_counter()-frame_start)*1000.)
                 count += 1
                 clock.tick(60)
@@ -183,7 +220,7 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 'render_submit_p99_ms':_percentile(render_times,.99),
                 'last_frame':asdict(last_report) if last_report else {},
                 'current_cells':len(snapshot.current_cells) if snapshot else 0,
-                'limitations':'W2 movement foundation only; Action Hub, game UI, interiors, save/load, '
+                'limitations':'W2 outdoor movement/actions/HUD candidate; full game UI, interiors, save/load, '
                     'directional shadows and native Windows hardware approval pending. CPU timings '
                     'measure submission, not GPU completion. Prepared scenes override discovery '
                     'and world realization and do not demonstrate natural-world exploration.'}
@@ -193,7 +230,9 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 path.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
             return result
         finally:
-            if controller is not None: controller.close()
+            if session is not None: session.close()
+            elif controller is not None: controller.close()
+            if overlay is not None: overlay.close()
             if post is not None: post.close()
             if renderer is not None: renderer.close()
             pg.quit()
