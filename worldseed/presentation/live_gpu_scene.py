@@ -75,7 +75,8 @@ class LiveGpuSnapshot:
         """Only static content/material services are needed after capture."""
         if self.interior_scene is not None:
             return prepare_interior_frame(self.interior_scene, self.camera,
-                                          self.viewer, materials)
+                                          self.viewer, materials,
+                                          show_explored_memory=show_explored_memory)
         return prepare_gpu_frame(camera=self.camera, terrain_by=dict(self.terrain),
             resource_by={cell: (feature, None) for cell, feature in self.resources},
             resource_defs=registry.resources, resource_style=resource_style,

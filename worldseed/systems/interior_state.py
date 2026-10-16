@@ -105,6 +105,9 @@ class InteriorPlan:
     variant_id: str = ""
     floor_material: str = ""
     wall_material: str = ""
+    # Fixed 500-unit cells observed by the player. Indexed only within this
+    # plan/floor: entering a different building can never disclose its rooms.
+    explored_cells: list[int] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -117,6 +120,8 @@ class InteriorPlan:
         data["furniture"] = [InteriorFurniture(**r) for r in data.get("furniture", [])]
         data["piles"] = [InteriorPile(**r) for r in data.get("piles", [])]
         data["stairs"] = [InteriorStair(**r) for r in data.get("stairs", [])]
+        data["explored_cells"] = sorted({int(index) for index in data.get("explored_cells", [])
+                                          if type(index) is int and 0 <= index < 4096})
         return cls(**data)
 
 

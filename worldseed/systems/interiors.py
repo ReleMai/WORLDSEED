@@ -185,6 +185,37 @@ class InteriorSystem:
                 self._storage_by_space.setdefault(container.interior_space_id,{})[container.interior_furniture_uid]=container
         for uid, actor in self.state.interior_actors.items():
             self._actors_by_space.setdefault(actor.space_id, set()).add(uid)
+        self._last_sight_stamp = None
+
+    def remember_player_sight(self, force: bool = False) -> None:
+        """Persist only conservatively seen floor cells at gameplay boundaries.
+
+        No GPU, rendering, input, or save path can cause new exploration.
+        A 250-unit movement / 10-minute stamp avoids repeating full LOS
+        queries on every small continuous motion substep.
+        """
+        actor, plan = self.player_presence(), self.current_plan()
+        if actor is None or plan is None:
+            return
+        minute = int(self.sim.clock.minute)
+        stamp = (plan.uid, actor.x//250, actor.y//250, minute//10)
+        if not force and stamp == self._last_sight_stamp:
+            return
+        from worldseed.systems.illumination import indoor_sources, interior_ambient
+        from worldseed.systems.interior_visibility import visible_grid_cells, MAX_MEMORY_CELLS
+        # Skip unsupported/modded gigantic interiors rather than scanning them.
+        cols = (plan.width + 499)//500
+        rows = (plan.height + 499)//500
+        if not 0 < cols*rows <= MAX_MEMORY_CELLS:
+            return
+        ambient = interior_ambient(getattr(self.sim, 'environment', None), minute, plan)
+        found = visible_grid_cells(plan, actor.x, actor.y, minute, ambient, indoor_sources(plan))
+        if found:
+            known = set(plan.explored_cells)
+            known.update(found)
+            if len(known) <= MAX_MEMORY_CELLS:
+                plan.explored_cells = sorted(known)
+        self._last_sight_stamp = stamp
 
     def player_presence(self) -> InteriorActor | None:
         return self.state.interior_actors.get("player")
@@ -331,6 +362,8 @@ class InteriorSystem:
         actor.waypoints.clear()
         actor.action = "arriving"
         self._actors_by_space.setdefault(target.uid, set()).add(uid)
+        if uid == "player":
+            self.remember_player_sight(force=True)
         return True
 
     def use_stairs(self, stair_uid: str) -> str:
@@ -435,6 +468,7 @@ class InteriorSystem:
         if not position_clear(plan, plan.entry_x, plan.entry_y):
             return "The inside landing is obstructed."
         self._put_actor("player", InteriorActor(plan.uid, plan.entry_x, plan.entry_y))
+        self.remember_player_sight(force=True)
         notice = getattr(security, "note_interior_entry", None)
         messages = notice(plan, int(self.sim.clock.minute), getattr(self.sim, "stealth", None)) if notice else []
         return f"You enter the {plan.name.lower()}. WASD moves freely; right-click furniture to interact." + (" " + " ".join(messages) if messages else "")
@@ -507,6 +541,8 @@ class InteriorSystem:
         step = 127 if dx and dy else 180
         moved = move_actor(plan, actor, dx * step, dy * step)
         actor.action = "walking" if moved else "idle"
+        if moved:
+            self.remember_player_sight()
         return "" if moved else "Furniture or an interior wall blocks the way."
 
     def rearrange(self, furniture_uid: str, x: int, y: int) -> str:

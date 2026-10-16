@@ -945,6 +945,7 @@ class Simulation:
         if inv and self.state.player_readied_weapon and inv.count(self.state.player_readied_weapon)<=0:
             self.state.player_readied_weapon="";self.combat.clear_aim()
         if getattr(self,'interiors',None) and self.interiors.player_presence() is not None:
+            self.interiors.remember_player_sight()
             # Wounds and illness continue, but outdoor animals/LOS/proximity cannot
             # target an actor whose actual location is in another space.
             v=self.entities.try_get(self.player_id,Vitals)

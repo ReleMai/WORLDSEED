@@ -14,6 +14,7 @@ from math import ceil, floor
 from worldseed.systems.illumination import (detection_scale, indoor_actor_visible, indoor_light,
     indoor_sources, interior_ambient)
 from worldseed.systems.interior_state import UNIT
+from worldseed.systems.interior_visibility import GRID, grid_columns, grid_rect, _rect_visible
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
 from .worldspace import WorldFoot
 
@@ -88,6 +89,7 @@ class PreparedInterior:
     walls: tuple[tuple[int, int, int, int], ...]
     objects: tuple[InteriorObject, ...]
     actors: tuple[InteriorActorView, ...]
+    memory_tiles: tuple[InteriorTile, ...] = ()
 
     def hit_test(self, x: float, y: float):
         """Observational stable IDs; commands still revalidate physical reach."""
@@ -97,54 +99,6 @@ class PreparedInterior:
         return next((row for row in reversed(self.objects)
                      if row.bounds[0] <= x < row.bounds[2]
                      and row.bounds[1] <= y < row.bounds[3]), None)
-
-
-def _cross(a, b, c):
-    return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
-
-
-def _hull(points):
-    points = sorted(set(points))
-    halves = []
-    for values in (points, list(reversed(points))):
-        half = []
-        for point in values:
-            while len(half) > 1 and _cross(half[-2], half[-1], point) <= 0:
-                half.pop()
-            half.append(point)
-        halves.append(half[:-1])
-    return tuple(halves[0]+halves[1])
-
-
-def _intersects_wall(polygon, wall):
-    """Exact convex polygon / closed integer wall SAT intersection."""
-    ax, ay, bx, by = wall
-    box = ((ax, ay), (bx-1, ay), (bx-1, by-1), (ax, by-1))
-    axes = [(1, 0), (0, 1)]
-    axes.extend((b[1]-a[1], a[0]-b[0])
-                for a, b in zip(polygon, (*polygon[1:], polygon[0])))
-    for dx, dy in axes:
-        values = tuple(x*dx+y*dy for x, y in polygon)
-        other = tuple(x*dx+y*dy for x, y in box)
-        if max(values) < min(other) or max(other) < min(values):
-            return False
-    return True
-
-
-def _rect_visible(px, py, bounds, walls):
-    a, b, c, d = bounds
-    polygon = _hull(((px, py), (a, b), (c-1, b), (c-1, d-1), (a, d-1)))
-    if len(polygon) < 3:
-        return False
-    left, right = min(px, a), max(px, c-1)
-    top, bottom = min(py, b), max(py, d-1)
-    for wall in walls:
-        x, y, x1, y1 = wall
-        if x > right or x1-1 < left or y > bottom or y1-1 < top:
-            continue
-        if _intersects_wall(polygon, wall):
-            return False
-    return True
 
 
 def _overlap(a, b):
@@ -199,6 +153,40 @@ def capture_interior(sim, camera):
             tiles.append(InteriorTile(rect, light, room))
     if len(tiles) > MAX_INTERIOR_TILES:
         raise ValueError('interior viewport tile budget exceeded')
+
+    # Remembered floor is independent of current light and LOS. Project only
+    # the saved local cells, excluding cells intersecting live sight. Never
+    # enumerate other buildings or expose their current furniture/actors.
+    columns = grid_columns(plan)
+    live_cells = set()
+    for tile in tiles:
+        a,b,c,d=tile.bounds
+        for cy in range(b//GRID, (d-1)//GRID+1):
+            for cx in range(a//GRID, (c-1)//GRID+1):
+                live_cells.add(cy*columns+cx)
+    memory_tiles = []
+    run_start = run_end = run_y = None
+    run_room = ''
+    def flush_memory_run():
+        if run_start is not None:
+            memory_tiles.append(InteriorTile((run_start,run_y,run_end, min(plan.height,run_y+GRID)),
+                                              0,run_room))
+    for index in sorted(set(getattr(plan,'explored_cells',()))):
+        rect=grid_rect(plan,index)
+        if rect is None or index in live_cells or not _overlap(rect,(left,top,right,bottom)):
+            continue
+        x,y,x1,y1=rect
+        cx,cy=(x+x1)//2,(y+y1)//2
+        room=next((r.name for r in plan.rooms if r.rect.contains(cx,cy)), '')
+        if run_start is not None and y == run_y and x == run_end and room == run_room:
+            run_end = x1
+            continue
+        flush_memory_run()
+        run_start,run_end,run_y,run_room=x,x1,y,room
+    flush_memory_run()
+    if len(memory_tiles) > MAX_INTERIOR_TILES:
+        # Large invalid/modded plans fail closed, never show guessed floors.
+        memory_tiles = []
 
     def admitted(rect):
         return any(_overlap(rect, tile.bounds) for tile in tiles)
@@ -269,7 +257,8 @@ def capture_interior(sim, camera):
     return PreparedInterior(plan.uid, plan.name, plan.function,
         getattr(plan, 'floor_material', ''), getattr(plan, 'wall_material', ''),
         getattr(plan, 'floor_index', 0), getattr(plan, 'floor_count', 1),
-        tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors))
+        tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors),
+        tuple(memory_tiles))
 
 
 def _texture(materials, category, content_id):
@@ -290,7 +279,8 @@ def _texture(materials, category, content_id):
     return materials.asset(path) if path is not None else None
 
 
-def prepare_interior_frame(scene, camera, viewer, materials):
+def prepare_interior_frame(scene, camera, viewer, materials, *,
+                           show_explored_memory=True):
     """Static asset sprites and small light quads, never a software world frame."""
     from .gpu_scene_bridge import GPUPreparedFrame
     from .visuals import VisualRegistry
@@ -306,6 +296,15 @@ def prepare_interior_frame(scene, camera, viewer, materials):
 
     clips = tuple(screen_rect(tile.bounds, UNIT) for tile in scene.tiles)
     ground, scenery = [], []
+    if show_explored_memory:
+        for index, tile in enumerate(scene.memory_tiles):
+            room_floor, _ = visuals.interior_materials(scene.function, tile.room_name,
+                floor_material=scene.floor_material, wall_material=scene.wall_material)
+            source = _texture(materials, 'interior_textures', room_floor)
+            if source:
+                bounds = screen_rect(tile.bounds, UNIT)
+                ground.append(SpriteCommand('interior-memory-floor:'+str(index),
+                    *source, bounds, (bounds,), opacity=.42))
     for index, tile in enumerate(scene.tiles):
         room_floor, _ = visuals.interior_materials(scene.function, tile.room_name,
             floor_material=scene.floor_material, wall_material=scene.wall_material)
