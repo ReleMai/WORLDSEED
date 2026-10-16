@@ -171,6 +171,30 @@ def vertex_bytes(bounds):
     return pack('<24f',*(v for item in vertices for v in item))
 
 
+def clipped_vertex_bytes(bounds, clip, height):
+    """Pixel-exact scissored interior floor quad with unchanged texture UVs.
+
+    The original GPU scissor is computed by pixel_clip before this call.
+    A cropped mesh is restricted to precisely those admitted pixel centers,
+    so many static floor patches may render in one draw call. UVs remain
+    anchored to the original half-metre floor cell, not the cropped fragment.
+    """
+    x0,y0,x1,y1=bounds
+    sx,gl_y,sw,sh=clip
+    a=max(x0,float(sx))
+    b=max(y0,float(height-gl_y-sh))
+    c=min(x1,float(sx+sw))
+    d=min(y1,float(height-gl_y))
+    if c<=a or d<=b:
+        return pack('<24f',*(0. for _ in range(24)))
+    iw,ih=1./(x1-x0),1./(y1-y0)
+    ua,ub=(a-x0)*iw,(c-x0)*iw
+    va,vb=(b-y0)*ih,(d-y0)*ih
+    vertices=((a,b,ua,va),(c,b,ub,va),(a,d,ua,vb),
+              (a,d,ua,vb),(c,b,ub,va),(c,d,ub,vb))
+    return pack('<24f',*(v for item in vertices for v in item))
+
+
 class TextureBank:
     """Explicit bounded LRU. A failed upload never leaves a bogus cached entry."""
     def __init__(self,ctx,byte_limit=DEFAULT_TEXTURE_BUDGET):
@@ -329,8 +353,15 @@ class GLWorldspaceRenderer:
                 material_key = None if ground is None else (
                     tuple((n.texture_id,n.revision,n.image_w,n.image_h,n.color)
                           for n in ground.neighbors),ground.widths,ground.color)
+                # Floor patches are already clipped against authoritative
+                # sight geometry. A clipped UV quad replaces per-tile scissor,
+                # allowing same-material indoor patches to share a draw call.
+                floor=cmd.ground is None and len(cmd.clip_rects)==1 and (
+                    cmd.visual_id.startswith('interior-floor:') or
+                    cmd.visual_id.startswith('interior-memory-floor:'))
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
-                        clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
+                        None if floor else clip,cmd.opacity,cmd.fade_center,
+                        cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
                         material_key,cmd.remembered,cmd.sight_edges)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
@@ -356,14 +387,17 @@ class GLWorldspaceRenderer:
                             self.bank.texture_for(neighbor).use(location=location)
                         self.program['u_ground_colors'].value=(ground.color,*tuple(n.color for n in ground.neighbors))
                         self.program['u_ground_widths'].value=ground.widths
-                    self.ctx.scissor=clip
+                    clipped_floor=_key[4] is None
+                    self.ctx.scissor=(0,0,self.width,self.height) if clipped_floor else clip
                     self.program['u_opacity'].value=cmd.opacity
                     self.program['u_sight_edges'].value=cmd.sight_edges
                     self.program['u_fade_center'].value=cmd.fade_center
                     self.program['u_fade_radius'].value=cmd.fade_radius
                     self.program['u_local_alpha'].value=cmd.local_alpha
                     self.program['u_sway_px'].value=cmd.sway_px
-                    data=b''.join(vertex_bytes(sprite.bounds) for sprite,_ in batch)
+                    data=b''.join(clipped_vertex_bytes(sprite.bounds,region,self.height)
+                        if clipped_floor else vertex_bytes(sprite.bounds)
+                        for sprite,region in batch)
                     self.vbo.write(data)
                     self.vao.render(vertices=6*len(batch))
                     rendered+=1
