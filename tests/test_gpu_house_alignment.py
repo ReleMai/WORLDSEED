@@ -49,11 +49,15 @@ class GPUHouseAlignmentTests(TestCase):
                 art = load_building_art(materials, row)
                 width, height = art.body[3:]
                 dx, dy, dw, dh = art.door_rect
+                # A top-down threshold lies wholly inside its real cell;
+                # tall door projections would cover roof tiles and players.
+                self.assertGreater(dw*width, .45*width/6)
                 self.assertLess(dw*width, width/6)
-                self.assertGreater(dh*height, 1.45*height/5)
-                self.assertLess(dh*height, 1.65*height/5)
+                self.assertGreater(dh*height, .15*height/5)
+                self.assertLess(dh*height, .5*height/5)
                 self.assertAlmostEqual((dx+dw/2)*6, 2.5, delta=.03)
-                self.assertAlmostEqual((dy+dh)*5, 4.92, delta=.03)
+                self.assertGreaterEqual(dy*5, 4.)
+                self.assertLessEqual((dy+dh)*5, 5.)
                 geometries.append(art.door_rect)
                 self.assertLessEqual(max(width, height), 512)
                 self.assertIs(load_building_art(materials, row).body, art.body)
@@ -93,7 +97,9 @@ class GPUHouseAlignmentTests(TestCase):
                 commands = building_commands((row,), camera, materials)
                 regions = building_hit_regions((row,), commands, pg, viewport)
                 context = {'used': viewport, 'shell_hit_regions': regions}
-                self.assertEqual(commands[0].rgba[3], 0)
+                # Connected top-down roofs intentionally fill their footprint;
+                # only physically missing courtyard cells remain transparent.
+                self.assertEqual(commands[0].rgba[3], 255)
                 self.assertIsNone(shell_at_pointer(context, (0, 0)))
                 door = commands[1]
                 center = (round((door.bounds[0]+door.bounds[2])/2),
@@ -125,7 +131,8 @@ class GPUHouseAlignmentTests(TestCase):
         commands = building_commands((row,), camera, materials)
         door = commands[1]
         px, py = camera.to_screen(WorldFoot(*building.entrance))
-        self.assertLess(door.bounds[1], py)
+        self.assertGreaterEqual(door.bounds[1], py)
+        self.assertLessEqual(door.bounds[3],py+48)
         self.assertEqual(door.clip_rects, ((px, py, px+48, py+48),))
         context = {'used': viewport, 'shell_hit_regions': building_hit_regions((row,), commands, pg, viewport)}
         self.assertIsNone(shell_at_pointer(context, (round(px+24), round(py-5))))
