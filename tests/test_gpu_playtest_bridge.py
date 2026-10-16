@@ -28,8 +28,10 @@ class GPUSceneBridgeContracts(TestCase):
         return prepare_gpu_frame(camera=self.camera,terrain_by=kw.get('terrain_by',self.terrain),
             resource_by=kw.get('resource_by',self.resources),resource_defs=self.defs,
             resource_style=lambda x:{'width':1.3,'height':1.9},
-            visible_cells=kw.get('visible_cells',self.visible),discovered_cells=self.visible,
-            viewer=WorldFoot(11.8,12.2,0),materials=FakeAssets(),show_player=False)
+            visible_cells=kw.get('visible_cells',self.visible),
+            discovered_cells=kw.get('discovered_cells',self.visible),
+            viewer=WorldFoot(11.8,12.2,0),materials=FakeAssets(),show_player=False,
+            show_explored_memory=kw.get('show_explored_memory',True))
 
     def test_two_species_all_three_layers_and_no_new_source_targets(self):
         p=self.build()
@@ -41,12 +43,18 @@ class GPUSceneBridgeContracts(TestCase):
         self.assertEqual(len({c.visual_id for c in p.scenery}),6)
         self.assertLess(len(p.commands),MAX_COMMANDS)
 
-    def test_fow_never_uploads_remembered_or_hidden_ground_and_tree(self):
+    def test_fow_keeps_dim_terrain_memory_without_hidden_trees(self):
         current=self.visible-{(11,12,0)}
         p=self.build(visible_cells=current)
-        self.assertFalse(any(c.visual_id=='ground:0:11:12' for c in p.ground))
+        memory=next(c for c in p.ground if c.visual_id=='ground:0:11:12')
+        self.assertAlmostEqual(memory.opacity,.42)
+        self.assertEqual(p.visible_ground_cells,len(current))
         self.assertFalse(any('oak' in c.texture_id for c in p.scenery))
         self.assertTrue(any('pine' in c.texture_id for c in p.scenery))
+        blind=self.build(visible_cells=current,show_explored_memory=False)
+        self.assertFalse(any(c.visual_id=='ground:0:11:12' for c in blind.ground))
+        unknown=self.build(visible_cells=current,discovered_cells=current)
+        self.assertFalse(any(c.visual_id=='ground:0:11:12' for c in unknown.ground))
 
     def test_camera_boundaries_and_zoom_rejections(self):
         camera=bounded_camera(12,12,640,480,28,(0,0,64,64))

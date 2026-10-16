@@ -255,7 +255,8 @@ class GpuTerminal(PygameTerminal):
         camera=WorldCamera(player_foot(sim),viewport.width,viewport.height,scale)
         snapshot=capture_live_scene(sim,camera)
         frame=snapshot.gpu_frame(materials=self._materials,registry=registry,
-            resource_style=lambda fid:{'width':1.35,'height':1.9})
+            resource_style=lambda fid:{'width':1.35,'height':1.9},
+            show_explored_memory=True)  # Opt out only for an active blindness effect.
         self._snapshot=snapshot
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
         self._world_commands=tuple(replace(command,bounds=shift(command.bounds),
