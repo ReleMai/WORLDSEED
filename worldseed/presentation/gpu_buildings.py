@@ -176,7 +176,7 @@ def building_sort_keys(buildings):
     result = {}
     for row in buildings:
         left, _top, right, bottom = row.shell.bounds
-        key = (30, bottom+1., 0., (left+right+1)/2., 30)
+        key = (30, bottom+.25, 0., (left+right+1)/2., 30)
         result['building:'+row.shell.uid] = (*key, 'building:'+row.shell.uid)
         # Keep independent door art immediately above its closed shell.
         result['building-door:'+row.shell.door_uid] = (*key, 'building:'+row.shell.uid+'~door')
