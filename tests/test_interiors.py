@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
+from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
 from worldseed.entities.components import Position, Vitals
 from worldseed.entities.store import EntityStore
@@ -22,6 +23,7 @@ from worldseed.systems.interiors import (
     position_clear,
 )
 from worldseed.world.regional_plan import RoomPlanState, StructurePiecePlan, StructurePlanState
+from worldseed.world.lighting import LightingSystem
 
 
 def sample_plan(uid="house:1"):
@@ -173,18 +175,23 @@ class InteriorPortalTests(unittest.TestCase):
         entities.add(player_id, Vitals(stamina=60, pain=20))
         ground_id = next(t.id for t in self.registry.terrains.values() if t.passable and "water" not in t.tags)
         chunk = SimpleNamespace(get=lambda x, y: self.registry.terrain_index(ground_id))
+        # Entering a room now records light-limited discovery at the gameplay
+        # boundary. Supply the pure clock/lighting interfaces without worldgen.
+        lighting = LightingSystem()
         class FixtureSim(SimpleNamespace):
             @property
             def player_pos(self):
                 return self.entities.get(self.player_id, Position).value
         sim = FixtureSim(state=state, entities=entities, player_id=player_id,
                          registry=self.registry, seed=b"interior-real-fixture",
-                         clock=SimpleNamespace(minute=22 * 60),
+                         clock=GameClock(minute=22 * 60),
                          settlement_physicalization=physical, property_security=security,
                          stealth=stealth,
                          world=SimpleNamespace(cache=SimpleNamespace(peek=lambda key: chunk)),
                          building=building, resources=SimpleNamespace(blocks_movement=lambda p: False),
-                         environment=SimpleNamespace(fluid_passable=lambda p: True))
+                         environment=SimpleNamespace(
+                             fluid_passable=lambda p: True,
+                             visual_conditions=lambda minute, pos: (None, lighting.at(minute))))
         sim.interiors = InteriorSystem(sim)
         attach = getattr(stealth, "attach_interior_system", None)
         if attach:

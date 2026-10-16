@@ -1,0 +1,44 @@
+{
+  "status": "gpu-main-session",
+  "backend": "gpu-main",
+  "source": "main-game",
+  "saved_world_support": true,
+  "render_frames": 2,
+  "world_frames": 2,
+  "native_hardware_accepted": false,
+  "gpu": {
+    "GL_VENDOR": "Mesa",
+    "GL_RENDERER": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "GL_VERSION": "4.5 (Core Profile) Mesa 25.0.7-2+deb13u1"
+  },
+  "last_frame": {
+    "sprites": 141,
+    "draw_calls": 221,
+    "triangles": 544,
+    "textures_uploaded": 0,
+    "textures_reused": 653,
+    "gpu_texture_bytes": 10539024,
+    "scissor_regions": 272
+  },
+  "note": "Shared main-game commands/UI/saves. CPU submission is not hardware performance acceptance.",
+  "implementation_commit": "aae1076f8324878b901788b4c71c8b5dc5db4a40",
+  "capture_date_utc": "2026-10-16",
+  "seed_utf8": "natural-v9-0",
+  "center": [
+    -448,
+    832,
+    0
+  ],
+  "worldgen_version": 9,
+  "camera_fraction": [
+    0.371,
+    0.619
+  ],
+  "preparation": "Real generated terrain/resources prepared before capture; production Simulation._discover admits current sight. No fixture-painted terrain.",
+  "authority_check": "Simulation authority fingerprint unchanged across GPU draw.",
+  "acceptance": "Linux SDL offscreen / Mesa llvmpipe software pixels only; not native Windows GPU or performance acceptance.",
+  "captures": [
+    "natural-v9-clear.png",
+    "natural-v9-rain.png"
+  ]
+}

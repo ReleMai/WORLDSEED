@@ -9,6 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from tests import test_interiors as fixtures
+from worldseed.core.clock import GameClock
 from worldseed.core.coords import WorldPos
 from worldseed.persistence.database import WorldDatabase
 from worldseed.persistence.validation import validate_sim_state
@@ -29,7 +30,8 @@ class InteriorFloorTests(unittest.TestCase):
         ground = fixtures.sample_plan(structure.uid)
         state = LivingWorldState()
         state.interiors[ground.uid] = ground
-        system = InteriorSystem(SimpleNamespace(state=state))
+        # Stair transfers record explored-room memory using the game clock.
+        system = InteriorSystem(SimpleNamespace(state=state, clock=GameClock(minute=state.clock_minute)))
         return structure, state, system, prepare_floors(system, ground, structure, profile_for(structure))
 
     def test_floor_count_is_bounded_and_caused_by_real_building_size(self):
