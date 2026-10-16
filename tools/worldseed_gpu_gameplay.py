@@ -37,7 +37,7 @@ def _percentile(samples, fraction):
 
 
 def _screenshot(pg, ctx, size, path):
-    pixels = ctx.screen.read(components=3, alignment=1)
+    pixels = ctx.screen.read(viewport=(0, 0, *size), components=3, alignment=1)
     surface = pg.image.fromstring(pixels, size, 'RGB')
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

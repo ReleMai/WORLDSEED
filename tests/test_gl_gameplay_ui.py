@@ -158,3 +158,40 @@ class GPUUIRendererContracts(unittest.TestCase):
             if target is not None:target.release()
             if texture is not None:texture.release()
             context.release()
+
+
+    def test_actual_egl_screenshots_read_resized_viewport(self):
+        import tempfile
+        from pathlib import Path
+        from tools.worldseed_gpu_gameplay import _screenshot as gameplay_capture
+        from tools.worldseed_gpu_playtest import _screenshot as preview_capture
+        try:
+            import moderngl
+        except ImportError:
+            self.skipTest('optional ModernGL dependency unavailable')
+        try:
+            context=moderngl.create_standalone_context(require=330,backend='egl')
+        except Exception as exc:
+            self.skipTest(f'optional EGL unavailable: {type(exc).__name__}')
+        target=None
+        try:
+            target=context.simple_framebuffer((640,480))
+            target.use()
+            target.clear(1,0,0,1)
+            target.clear(0,1,0,1,viewport=(0,0,320,120))
+            window=SimpleNamespace(screen=target)
+            with tempfile.TemporaryDirectory() as directory:
+                for name,capture in (
+                    ('gameplay',lambda path:gameplay_capture(self.pg,window,(320,240),path)),
+                    ('preview',lambda path:preview_capture(self.pg,window,320,240,path)),
+                ):
+                    with self.subTest(capture=name):
+                        path=Path(directory)/f'{name}.png'
+                        capture(path)
+                        image=self.pg.image.load(str(path))
+                        self.assertEqual(image.get_size(),(320,240))
+                        self.assertEqual(tuple(image.get_at((160,10)))[:3],(255,0,0))
+                        self.assertEqual(tuple(image.get_at((160,230)))[:3],(0,255,0))
+        finally:
+            if target is not None:target.release()
+            context.release()

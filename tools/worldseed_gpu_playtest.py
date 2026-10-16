@@ -93,7 +93,7 @@ def fire_lights(sim,camera,seen, *,torch=False):
 
 
 def _screenshot(pg,ctx,width,height,path):
-    source=ctx.screen.read(components=3,alignment=1)
+    source=ctx.screen.read(viewport=(0,0,width,height),components=3,alignment=1)
     raw=pg.image.fromstring(source,(width,height),'RGB')
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     pg.image.save(pg.transform.flip(raw,False,True),str(path))
