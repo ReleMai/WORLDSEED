@@ -184,9 +184,15 @@ def capture_interior(sim, camera):
         flush_memory_run()
         run_start,run_end,run_y,run_room=x,x1,y,room
     flush_memory_run()
-    if len(memory_tiles) > MAX_INTERIOR_TILES:
-        # Large invalid/modded plans fail closed, never show guessed floors.
-        memory_tiles = []
+    if len(memory_tiles) + len(tiles) > MAX_INTERIOR_TILES:
+        # Keep the live LOS budget intact; memory is a presentation fallback.
+        # Prioritize the closest remembered fragments when a huge viewport
+        # exceeds the combined GPU command budget.
+        memory_tiles.sort(key=lambda tile: (
+            ((tile.bounds[0]+tile.bounds[2])//2-player.x)**2
+            + ((tile.bounds[1]+tile.bounds[3])//2-player.y)**2,
+            tile.bounds[1],tile.bounds[0]))
+        memory_tiles = memory_tiles[:max(0,MAX_INTERIOR_TILES-len(tiles))]
 
     def admitted(rect):
         return any(_overlap(rect, tile.bounds) for tile in tiles)

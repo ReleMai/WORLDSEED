@@ -85,6 +85,33 @@ class GPUInteriorContracts(TestCase):
         self.assertEqual(snapshot.current_cells, frozenset())
         self.assertEqual(before, (plan.to_dict(), player.to_dict()))
 
+    def test_remembered_interior_floor_is_dim_but_live_contents_do_not_leak(self):
+        from worldseed.systems.interior_visibility import GRID, grid_columns
+        sim, plan, player, _ = self.fixture()
+        cols = grid_columns(plan)
+        # Remember a cell in the common room after standing there.
+        saved_cell = (3000//GRID)*cols + 2500//GRID
+        plan.explored_cells = [saved_cell]
+        player.x, player.y = 7000, 3000  # visit the separate room
+        snapshot = capture_live_scene(sim, self.camera(sim))
+        scene = snapshot.interior_scene
+        self.assertTrue(scene.memory_tiles)
+        self.assertFalse(any(tile.bounds[0] >= 5000 for tile in scene.memory_tiles))
+        self.assertFalse(any(obj.uid == 'visible-bed' for obj in scene.objects))
+        frame = snapshot.gpu_frame(materials=Materials(), registry=self.registry,
+                                   resource_style=lambda _: {})
+        remembered = [c for c in frame.ground
+                      if c.visual_id.startswith('interior-memory-floor:')]
+        self.assertTrue(remembered)
+        self.assertTrue(all(c.opacity == .42 for c in remembered))
+        self.assertFalse(any('visible-bed' in c.visual_id for c in frame.scenery))
+        hidden = snapshot.gpu_frame(materials=Materials(), registry=self.registry,
+                                    resource_style=lambda _: {},
+                                    show_explored_memory=False)
+        self.assertFalse(any(c.visual_id.startswith('interior-memory-floor:')
+                             for c in hidden.ground))
+        self.assertEqual(plan.explored_cells, [saved_cell])
+
     def test_sight_rectangles_do_not_sample_thin_wall_away(self):
         # Every corner ray misses this tiny wall, but it lies in the full fan.
         wall = (1500, 1450, 1501, 1451)

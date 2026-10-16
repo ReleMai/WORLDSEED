@@ -164,6 +164,22 @@ class InteriorEngineTests(unittest.TestCase):
         self.assertIsNone(self.sim.interiors.player_presence())
         self.assertFalse(self.sim.state.ground_piles)
 
+    def test_interior_discovery_survives_save_and_is_per_floor(self):
+        from worldseed.systems.interior_state import InteriorPlan
+        plan = self.sim.interiors.current_plan()
+        self.sim.interiors.remember_player_sight(force=True)
+        self.assertTrue(plan.explored_cells)
+        prior = tuple(plan.explored_cells)
+        state = LivingWorldState.from_dict(self.sim.state.to_dict())
+        self.assertEqual(tuple(state.interiors[plan.uid].explored_cells), prior)
+        self.assertEqual(state.to_dict()['interiors'][plan.uid]['explored_cells'],
+                         list(prior))
+        # No cross-building/floor discoveries from identical local coordinates.
+        other = InteriorPlan('interior:other-floor', 'other', 'other-door', 0, 0, 0,
+                             plan.width, plan.height)
+        self.assertEqual(other.explored_cells, [])
+        self.assertEqual(InteriorPlan.from_dict(other.to_dict()).explored_cells, [])
+
     def test_save_defaults_round_trip_and_terminal_observation(self):
         state=self.sim.state;before=state.to_dict()
         for width,height in ((1,1),(60,18),(100,40)):
