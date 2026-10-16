@@ -13,12 +13,14 @@ from collections import Counter
 from math import ceil, floor
 
 from worldseed.systems.illumination import (indoor_actor_visible, indoor_light,
-    indoor_sources, interior_ambient)
+    indoor_sources, interior_ambient, segment_clear)
 from worldseed.systems.interior_state import UNIT
 from worldseed.systems.interior_visibility import (GRID, _rect_visible,
     visible_floor_rects, remembered_floor_rects)
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
 from .interior_clip_index import InteriorClipIndex
+from .interior_art_lighting import (shadow_bounds, shadow_texture,
+    warm_glow_texture, light_halo_bounds, nearest_light, MAX_VISIBLE_HALO_SOURCES)
 from .worldspace import WorldFoot
 
 MAX_INTERIOR_WALLS = 256
@@ -97,6 +99,7 @@ class PreparedInterior:
     memory_walls: tuple[tuple[tuple[int,int,int,int],
                               tuple[tuple[int,int,int,int], ...]], ...] = ()
     memory_objects: tuple[InteriorObject, ...] = ()
+    visible_lights: tuple = ()  # Only light sources within admitted current LOS
 
     def hit_test(self, x: float, y: float):
         """Observational stable IDs; commands still revalidate physical reach."""
@@ -226,6 +229,14 @@ def capture_interior(sim, camera):
     def admitted(rect):
         return bool(live_index.intersect(rect))
 
+    # A light in a private, unentered room must not leak into the detached
+    # renderer. The physical LOS test also closes a narrow wall-gap case
+    # where the glow footprint could overlap an adjacent authorized tile.
+    visible_lights=tuple(source for source in sources
+        if admitted((source.x-100,source.y-100,source.x+100,source.y+100))
+        and segment_clear(plan,player.x,player.y,source.x,source.y)
+        )[:MAX_VISIBLE_HALO_SOURCES]
+
     visible_walls = []
     # Only the exposed face of each authoritative wall is projected. Other
     # walls still occlude it; a wall never authorizes the floor behind itself.
@@ -300,7 +311,8 @@ def capture_interior(sim, camera):
         getattr(plan, 'floor_material', ''), getattr(plan, 'wall_material', ''),
         getattr(plan, 'floor_index', 0), getattr(plan, 'floor_count', 1),
         tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors),
-        tuple(memory_tiles), tuple(memory_walls), tuple(memory_objects))
+        tuple(memory_tiles), tuple(memory_walls), tuple(memory_objects),
+        visible_lights)
 
 
 def _texture(materials, category, content_id):
@@ -369,6 +381,17 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         if source:
             ground.append(SpriteCommand('interior-floor:'+str(index), *source,
                 floor_source_bounds(tile), (clips[index],)))
+    # Static source-driven glow is never painted into unseen/private space.
+    # Its circle uses the exact admitted live-floor mask, not room bounds.
+    for source in scene.visible_lights[:MAX_VISIBLE_HALO_SOURCES]:
+        sx,sy=camera.to_screen(WorldFoot(source.x/UNIT,source.y/UNIT,z))
+        halo_bounds=light_halo_bounds(sx,sy,source.radius,camera.scale)
+        # Collapse adjacent sight fragments before drawing light halos.
+        glow_clips=_union_rects(admitted_clips(halo_bounds))
+        if glow_clips:
+            scenery.append(((-2.8,'glow:'+source.uid),SpriteCommand(
+                'interior-glow:'+source.uid,*warm_glow_texture(),
+                halo_bounds,glow_clips,opacity=.48)))
     if show_explored_memory:
         source = _texture(materials, 'interior_textures', wall_id) if scene.memory_walls else None
         if source:
@@ -406,12 +429,16 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
             continue
         depth = -2. if row.flat else row.bounds[3]
         if row.solid and not remembered:
-            shadow = ('interior-contact', 1, _CONTACT_RGBA, 32, 12)
-            shadow_bounds=(x0+width*.05, y1-camera.scale*.12,
-                           x1-width*.05, y1+camera.scale*.08)
-            scenery.append(((depth-.001, row.uid), SpriteCommand(
-                'interior-shadow:'+row.uid, *shadow,
-                shadow_bounds, admitted_clips(shadow_bounds))))
+            light=nearest_light((row.bounds[0]+row.bounds[2])*.5,
+                                row.bounds[3],scene.visible_lights)
+            source_xy=(tuple(camera.to_screen(WorldFoot(*light,z))) if light is not None else None)
+            shadow_rect=shadow_bounds((x0,y0,x1,y1),source_xy,camera.scale,
+                                      height_ratio=row.height_ratio)
+            shadow_clips=admitted_clips(shadow_rect)
+            if shadow_clips:
+                scenery.append(((depth-.001, row.uid), SpriteCommand(
+                    'interior-shadow:'+row.uid, *shadow_texture(),
+                    shadow_rect, shadow_clips)))
         prefix='interior-memory-object:' if remembered else 'interior:'
         scenery.append(((depth, row.uid), SpriteCommand(prefix+row.uid,
             *source, bounds, object_clips,opacity=.62 if remembered else 1.,remembered=remembered)))
