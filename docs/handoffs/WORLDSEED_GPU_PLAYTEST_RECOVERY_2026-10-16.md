@@ -128,5 +128,11 @@ movement. That contract intentionally changed to a round trunk base. The test
 now drives actual held input into the open edge, then into physical circle
 contact, preserving sight/non-mutation/resource-ID assertions and checking no
 held-key log spam. Its module plus resource-physics checks passed **21 tests**.
-The follow-up changes tests/documentation only; the executable above contains
-all production fixes. Final gate outcomes follow after the replacement run.
+CI also identified two old reed balance checks requiring a nonzero/reduced
+harvest duration. Both now require instant collection, retaining deterministic
+placement, depletion and cutter yield bonuses. A repository-wide timing-caller
+audit found no other obsolete expectations. The affected eight-module batch
+passed **70 tests in 4.9 seconds**; unrelated full-world startup tests are not
+included in that result. These follow-ups change tests/documentation only; the
+executable above contains all production fixes. Final gate outcomes follow
+after the replacement run.

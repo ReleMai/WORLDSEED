@@ -33,7 +33,7 @@ class BalancingStabilityTests(unittest.TestCase):
                                                 terrain=SimpleNamespace(name="Shallow river")))
         return ResourceSystem(state,self.registry,b"reed-test-v5",world),state
 
-    def test_shallow_river_reeds_have_deterministic_harvestable_patches(self):
+    def test_shallow_river_reeds_are_deterministic_and_collected_instantly(self):
         resource,state=self.resource_fixture()
         cells=[WorldPos(x,y,0) for y in range(12) for x in range(12)]
         occupied=[p for p in cells if (f:=resource.feature_at(p)) and f.feature_id=="core:reed_bed"]
@@ -44,10 +44,10 @@ class BalancingStabilityTests(unittest.TestCase):
         ok,msg,minutes,goods=resource.harvest(occupied[0],Inventory(),0)
         self.assertTrue(ok,msg)
         self.assertGreaterEqual(goods["core:reed_bundle"],2)
-        self.assertGreaterEqual(minutes,3)
+        self.assertEqual(minutes,0)
         self.assertEqual(resource.feature_at(occupied[0]).stage,"depleted")
 
-    def test_cutter_improves_reed_yield_and_reduces_time(self):
+    def test_cutter_improves_instant_reed_collection_yield(self):
         pos=WorldPos(3,5,0)
         bare,_=self.resource_fixture()
         bare.feature_at=lambda p,minute=None:FeatureView("core:reed_bed")
@@ -59,7 +59,8 @@ class BalancingStabilityTests(unittest.TestCase):
         ok,_,tool_time,tool_goods=cutter.harvest(pos,inv,0)
         self.assertTrue(ok)
         self.assertGreater(tool_goods["core:reed_bundle"],base_goods["core:reed_bundle"])
-        self.assertLess(tool_time,base_time)
+        self.assertEqual(base_time,0)
+        self.assertEqual(tool_time,0)
 
     def test_experiment_returns_persisted_low_quality_prototype(self):
         state=LivingWorldState(player_crafting_discovery_enabled=True)
