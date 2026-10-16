@@ -40,7 +40,7 @@ py -3 -m tools.worldseed_gpu_gameplay
 py -3 -m tools.worldseed_gpu_gameplay --prepared-scene camp --frames 30 --screenshot scratch/gpu-live-camp.png --report scratch/gpu-live-camp.json
 ```
 
-**Published implementation:** `76c7e82f33a0ac694ef808ac9a143b14b140396f` on canonical main. [Fast Gate](https://github.com/ReleMai/WORLDSEED/actions/runs/38833104890) is being checked at closeout.
+**Published implementation:** `76c7e82f33a0ac694ef808ac9a143b14b140396f` on canonical main. Screenshot follow-up `33a6a849` is validated by [Fast Gate 38833530616](https://github.com/ReleMai/WORLDSEED/actions/runs/38833530616): **all seven jobs passed**. The superseded implementation-only gate was cancelled by the normal concurrency policy after five jobs passed; it is not counted as a full green run.
 
 **Windows diagnostic outcome:** [native run 38833104840](https://github.com/ReleMai/WORLDSEED/actions/runs/38833104840) failed the required real-render probe cleanly before ModernGL. Raw WGL metadata reports Microsoft Corporation / GDI Generic / OpenGL `1.1.0`, despite SDL reporting requested 3.3 attributes. Both isolated loaders therefore reject this unsupported current context; neither reaches the previous access violation. This establishes the hosted runner capability limit, not successful Windows 3.3 rendering or proof of every prior crash cause. Forest/camp rendering steps were skipped; no native screenshots or performance samples exist. [Uploaded preflight diagnostics](https://github.com/ReleMai/WORLDSEED/actions/runs/38833104840/artifacts/12017693557) preserve the evidence. A real Windows OpenGL 3.3+ hardware driver is still required.
 
