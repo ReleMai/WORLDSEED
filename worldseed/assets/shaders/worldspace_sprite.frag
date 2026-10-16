@@ -107,8 +107,8 @@ void main() {
     // It never draws unknown geometry and does not affect frozen map memory.
     if (u_sight_radius > 0.0) {
         float reach = distance(v_screen,u_sight_center);
-        opacity *= 1.0-smoothstep(u_sight_radius-0.40/max(0.00001,u_ground_world_transform.z),
-                                   u_sight_radius+0.55/max(0.00001,u_ground_world_transform.z),
+        opacity *= 1.0-smoothstep(u_sight_radius*0.925,
+                                   u_sight_radius*1.075,
                                    reach);
     }
     // Entire attenuation lies INSIDE the presently admitted ground cell.
