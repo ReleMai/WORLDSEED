@@ -6,6 +6,8 @@ uniform vec2 u_fade_center;
 uniform float u_fade_radius;
 uniform float u_local_alpha;
 uniform vec4 u_sight_edges;
+uniform vec2 u_sight_center;
+uniform float u_sight_radius;
 uniform bool u_ground;
 uniform sampler2D u_ground_w;
 uniform sampler2D u_ground_e;
@@ -101,13 +103,21 @@ void main() {
         float blend = smoothstep(u_fade_radius * 0.70, u_fade_radius, distance_px);
         opacity *= mix(u_local_alpha, 1.0, blend);
     }
+    // Radial falloff fades ONLY pixels already authorized by circular LOS.
+    // It never draws unknown geometry and does not affect frozen map memory.
+    if (u_sight_radius > 0.0) {
+        float reach = distance(v_screen,u_sight_center);
+        opacity *= 1.0-smoothstep(u_sight_radius-0.40/max(0.00001,u_ground_world_transform.z),
+                                   u_sight_radius+0.55/max(0.00001,u_ground_world_transform.z),
+                                   reach);
+    }
     // Entire attenuation lies INSIDE the presently admitted ground cell.
     // This is never applied to roofs, characters, moving creatures or memory.
     if (u_ground || dot(u_sight_edges,vec4(1.0))>0.0) {
-        float west = 1.0 - smoothstep(0.0, 0.24, v_uv.x);
-        float east = 1.0 - smoothstep(0.0, 0.24, 1.0-v_uv.x);
-        float north = 1.0 - smoothstep(0.0, 0.24, v_uv.y);
-        float south = 1.0 - smoothstep(0.0, 0.24, 1.0-v_uv.y);
+        float west = 1.0 - smoothstep(0.0, 0.44, v_uv.x);
+        float east = 1.0 - smoothstep(0.0, 0.44, 1.0-v_uv.x);
+        float north = 1.0 - smoothstep(0.0, 0.44, v_uv.y);
+        float south = 1.0 - smoothstep(0.0, 0.44, 1.0-v_uv.y);
         opacity *= (1.0-u_sight_edges.x*west)*(1.0-u_sight_edges.y*east)
                  *(1.0-u_sight_edges.z*north)*(1.0-u_sight_edges.w*south);
     }

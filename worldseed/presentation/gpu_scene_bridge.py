@@ -188,7 +188,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None,
                       objects=(), show_explored_memory=True,
                       remembered_resources=(), remembered_buildings=(), remembered_objects=(),
-                      sun_minute=None):
+                      sun_minute=None,sight_radius=0):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -224,13 +224,15 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         # frozen. A soft fade at the outgoing tile edge removes hard stair
         # stepping without leaking any undiscovered coordinates.
         edges=(tuple(0. if (x+dx,y+dy,z) in visible_cells
-                     else (.36 if (x+dx,y+dy,z) in discovered_cells else .62)
+                     else (.52 if (x+dx,y+dy,z) in discovered_cells else .88)
                      for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)))
                if current else (0.,0.,0.,0.))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
                        (viewport,), opacity=1.0 if current else .62, ground=blend,
-                       remembered=not current,sight_edges=edges))
+                       remembered=not current,sight_edges=edges,
+                       sight_center=camera.to_screen(viewer) if current and sight_radius else (0.,0.),
+                       sight_radius=sight_radius*camera.scale if current else 0.))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,

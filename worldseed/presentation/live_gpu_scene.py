@@ -73,6 +73,7 @@ class LiveGpuSnapshot:
     remembered_resources: tuple[tuple[tuple[int,int,int], FeatureView], ...] = ()
     remembered_buildings: tuple[PreparedBuildingShell, ...] = ()
     remembered_objects: tuple[PreparedObject, ...] = ()
+    sight_radius: int = 0
 
     def gpu_frame(self, *, materials, registry, resource_style,
                   show_explored_memory=True):
@@ -91,7 +92,8 @@ class LiveGpuSnapshot:
             objects=self.objects, show_explored_memory=show_explored_memory,
             remembered_resources=self.remembered_resources,
             remembered_buildings=self.remembered_buildings,
-            remembered_objects=self.remembered_objects,sun_minute=self.minute)
+            remembered_objects=self.remembered_objects,sun_minute=self.minute,
+            sight_radius=self.sight_radius)
 
     def atmosphere(self, elapsed_seconds=0.):
         if self.interior:
@@ -302,4 +304,6 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
         ambient_light, None, tuple(objects), tuple(remembered_resources),
         tuple(PreparedBuildingShell(row.shell,frozenset(cells),row.variant_id,door)
             for key,(row,cells,door) in sorted(remembered_buildings.items())),
-        tuple(remembered_objects))
+        tuple(remembered_objects),
+        (sim.visibility_radius(sim.player_pos) if callable(getattr(sim,'visibility_radius',None))
+         else 0))

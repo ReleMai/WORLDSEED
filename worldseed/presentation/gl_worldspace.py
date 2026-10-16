@@ -107,6 +107,8 @@ class SpriteCommand:
     remembered: bool = False
     # W/E/N/S alpha easing, only for the already-admitted ground sprite.
     sight_edges: tuple[float, float, float, float] = (0., 0., 0., 0.)
+    sight_center: tuple[float, float] = (0., 0.)
+    sight_radius: float = 0.
 
     def __post_init__(self):
         if not self.visual_id or not self.texture_id:
@@ -142,6 +144,11 @@ class SpriteCommand:
             raise ValueError('sight easing must be a bounded four-edge vector')
         if self.ground is None and any(self.sight_edges) and not self.visual_id.startswith('ground:'):
             raise ValueError('only ground geometry can soften a sight boundary')
+        if (len(self.sight_center)!=2 or any(not _finite(v) for v in self.sight_center)
+                or not _finite(self.sight_radius) or self.sight_radius<0):
+            raise ValueError('invalid sight circle')
+        if self.sight_radius and not self.visual_id.startswith('ground:'):
+            raise ValueError('only current ground may receive radial sight fade')
 
 
 def _finite(x):
@@ -363,7 +370,8 @@ class GLWorldspaceRenderer:
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         None if floor else clip,cmd.opacity,cmd.fade_center,
                         cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
-                        material_key,cmd.remembered,cmd.sight_edges)
+                        material_key,cmd.remembered,cmd.sight_edges,
+                        cmd.sight_center,cmd.sight_radius)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
@@ -392,6 +400,8 @@ class GLWorldspaceRenderer:
                     self.ctx.scissor=(0,0,self.width,self.height) if clipped_floor else clip
                     self.program['u_opacity'].value=cmd.opacity
                     self.program['u_sight_edges'].value=cmd.sight_edges
+                    self.program['u_sight_center'].value=cmd.sight_center
+                    self.program['u_sight_radius'].value=cmd.sight_radius
                     self.program['u_fade_center'].value=cmd.fade_center
                     self.program['u_fade_radius'].value=cmd.fade_radius
                     self.program['u_local_alpha'].value=cmd.local_alpha
