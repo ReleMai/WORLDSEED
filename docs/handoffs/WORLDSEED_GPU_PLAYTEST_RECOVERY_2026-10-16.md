@@ -134,5 +134,20 @@ placement, depletion and cutter yield bonuses. A repository-wide timing-caller
 audit found no other obsolete expectations. The affected eight-module batch
 passed **70 tests in 4.9 seconds**; unrelated full-world startup tests are not
 included in that result. These follow-ups change tests/documentation only; the
-executable above contains all production fixes. Final gate outcomes follow
-after the replacement run.
+executable above contains all production fixes.
+
+Final validation: [`c65117d`](https://github.com/ReleMai/WORLDSEED/commit/c65117d388f4e6602ee082b9979a0f9a1f00f2b0)
+passed **all seven Fast Gate jobs** in
+[run 38953232713](https://github.com/ReleMai/WORLDSEED/actions/runs/38953232713),
+including the revised movement/instant-forage contracts, current/private sight,
+main-game integration, save recovery, NPC conservation and content audits.
+The production commit also passed the separate
+[Resource/Homestead](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673573),
+[legacy Windows package](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673536),
+[Salvage/Tabletop/Perks](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673511)
+and [Crafting/Discovery](https://github.com/ReleMai/WORLDSEED/actions/runs/38951673561)
+workflows. Together with the successful GPU package above, all five auxiliary
+workflows passed. The replacement executable remains production commit
+`9e138a2`; the two later commits only align tests/documentation with the requested
+new gameplay contracts. Native Windows GPU rendering/performance acceptance and
+the existing bootstrap-audit limitation remain as recorded above.
