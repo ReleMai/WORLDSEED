@@ -57,6 +57,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Compile failed' }
           python -u tools/run_ci_check.py --name gpu-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_candidate_package
           if ($LASTEXITCODE -ne 0) { throw 'GPU package contracts failed' }
+      - name: Load a real existing world before freezing
+        shell: pwsh
+        run: |
+          python -u tools/run_ci_check.py --name existing-world-load --timeout 150 -- python -u -m unittest -v tests.test_gpu_saved_world_load
+          if ($LASTEXITCODE -ne 0) { throw 'Real saved-world load regression failed' }
       - name: Generate four authored interior style sheets for visual feedback
         shell: pwsh
         run: |

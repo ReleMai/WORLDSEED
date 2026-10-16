@@ -4252,7 +4252,9 @@ def main()->int:
             sel=_choose_world(term)
             if sel is None:return 0
             last_loading_bucket=[-1]
+            last_loading_phase=['Starting load']
             def loading_progress(phase,value,detail=''):
+                last_loading_phase[0]=str(phase)
                 bucket=int(float(value)*100)
                 if bucket==last_loading_bucket[0] and bucket not in (0,100):return
                 last_loading_bucket[0]=bucket
@@ -4265,7 +4267,20 @@ def main()->int:
             loading_progress('Loading WORLDSEED',0.0,'Preparing deterministic seed data')
             try:ctx=_load_context(sel,loading_progress)
             except Exception as exc:
-                _view_text(term,box('LOAD FAILED',[str(exc)],min(90,term.size()[0]-2)));continue
+                # Frozen builds previously discarded the traceback here, making
+                # post-startup world-load regressions impossible to diagnose.
+                # Never mutate a failed save or retry implicitly.
+                details=[str(exc),'Failed phase: '+last_loading_phase[0]]
+                try:
+                    report=write_crash_report(
+                        'WORLDSEED LOAD FAILED at '+last_loading_phase[0]+'\n'
+                        +traceback.format_exc())
+                    details.append('Full traceback: '+str(report))
+                except Exception:
+                    # A read-only or full disk must not hide the original error.
+                    pass
+                details.append('The save has not been overwritten.')
+                _view_text(term,box('LOAD FAILED',details,min(90,term.size()[0]-2)));continue
             # Loading can take long enough for key-repeat events from the startup
             # wizard to remain queued. Discard only pending gameplay key presses
             # at the transition so a stale Esc cannot immediately open PAUSED.

@@ -242,7 +242,7 @@ jobs:
 
       - name: Save failure preservation and recovery
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Save retry and failure UI" --timeout 60 -- python -u -m unittest -v tests.test_save_retry tests.test_save_failure_ui
+        run: python -u tools/run_ci_check.py --name "Save retry, actual world load and failure UI" --timeout 150 -- python -u -m unittest -v tests.test_save_retry tests.test_save_failure_ui tests.test_gpu_saved_world_load
 
       - name: Log cabin blueprint and placement ghost
         shell: pwsh
