@@ -184,6 +184,29 @@ class GPUExteriorContracts(TestCase):
         self.assertEqual(commands[0].bounds, (*camera.to_screen(WorldFoot(3, 3)),
                                              *camera.to_screen(WorldFoot(5, 5))))
 
+    def test_topdown_roofs_cover_solid_center_but_leave_courtyards_clear(self):
+        try:
+            import pygame
+        except ImportError:
+            self.skipTest('pygame unavailable')
+        from worldseed.presentation.topdown_roofs import roof_surface, roof_name, ROOF_DIR
+        shell=BuildingShell('roof-test','','residence','core:residence',
+            tuple((x,y) for y in range(3) for x in range(3) if (x,y)!=(0,0)),
+            (1,2),'door',0,'rectangular',(0,0,2,2))
+        sheet=pygame.image.load(str(ROOF_DIR/(roof_name(shell)+'.png')))
+        roof=roof_surface(pygame,shell,96,96,sheet)
+        self.assertGreater(roof.get_at((48,48)).a,240)
+        self.assertEqual(roof.get_at((12,12)).a,0)
+        self.assertGreater(roof.get_at((80,80)).a,240)
+
+    def test_building_depth_releases_character_south_of_roof(self):
+        shell=BuildingShell('house','','residence','core:residence',
+            ((2,2),(3,2),(2,3),(3,3)),(2,3),'door',0,'rectangular',(2,2,3,3))
+        row=PreparedBuildingShell(shell,frozenset({(2,2,0),(2,3,0)}))
+        depth=building_sort_keys((row,))['building:house'][1]
+        self.assertLess(depth,4.5)
+        self.assertGreater(depth,3.)
+
     def test_real_authored_building_sources_are_bounded_cached_and_not_world_frames(self):
         try:
             import pygame

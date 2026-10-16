@@ -18,7 +18,7 @@ MAX_PREPARED_BUILDINGS = 64
 MAX_BUILDING_CELLS = 1024
 MAX_BUILDING_EXTENT = 64
 BUILDING_TEXTURE_EDGE = 512
-BUILDING_FIT_REVISION = 2
+BUILDING_FIT_REVISION = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -233,7 +233,7 @@ def load_building_art(materials, row):
     """
     from .visuals import VisualRegistry
     from worldseed.systems.building_variants import building_variant
-    from worldseed.ui.exterior_view import _door_anchor
+    from worldseed.presentation.topdown_roofs import ROOF_DIR, roof_name, roof_surface
 
     if materials._visuals is None:
         materials._visuals = VisualRegistry.load_default()
@@ -251,35 +251,28 @@ def load_building_art(materials, row):
     columns, rows = right-left+1, bottom-top+1
     scale = min(48., BUILDING_TEXTURE_EDGE/max(columns, rows))
     width, height = max(2, round(columns*scale)), max(3, round(rows*scale))
-    geometry = (BUILDING_FIT_REVISION, str(path), shell.function, shell.bounds, shell.entrance, shell.footprint)
+    roof=roof_name(shell,row.variant_id)
+    geometry = (BUILDING_FIT_REVISION, roof, shell.function, shell.bounds, shell.entrance, shell.footprint)
     digest = blake2b(repr(geometry).encode('utf-8'), digest_size=12).hexdigest()
 
     def body_loader():
-        source = pg.image.load(str(path)) if path is not None else None
-        surface = pg.Surface((width, height), pg.SRCALPHA)
-        axes, door = _fit_building_geometry(shell, width, height, source, _door_anchor(function, path))
-        if source is None:
-            # Missing art still closes the physical shell, with no private label.
-            surface.fill((98, 73, 49, 255))
-            pg.draw.rect(surface, (161, 128, 83, 255), surface.get_rect(), max(1, width//40))
+        sheet=materials._read(('topdown-roof-sheet',roof),
+            lambda:pg.image.load(str(ROOF_DIR/(roof+'.png'))))
+        surface=roof_surface(pg,shell,width,height,sheet)
+        if shell.entrance is None:
+            door=(0.,0.,0.,0.)
         else:
-            sx, sy, tx, ty = axes
-            for yi in range(len(sy)-1):
-                for xi in range(len(sx)-1):
-                    src = pg.Rect(sx[xi], sy[yi], sx[xi+1]-sx[xi], sy[yi+1]-sy[yi])
-                    dst = pg.Rect(tx[xi], ty[yi], tx[xi+1]-tx[xi], ty[yi+1]-ty[yi])
-                    if src.width and src.height and dst.width and dst.height:
-                        surface.blit(pg.transform.smoothscale(source.subsurface(src), dst.size), dst.topleft)
-        # Keep courtyards/walkable cutouts transparent without creating geometry.
-        occupied = set(shell.footprint)
-        for gy in range(rows):
-            for gx in range(columns):
-                if (left+gx, top+gy) not in occupied:
-                    a, b = gx*width//columns, (gx+1)*width//columns
-                    c, d = gy*height//rows, (gy+1)*height//rows
-                    surface.fill((0, 0, 0, 0), (a, c, b-a, d-c))
-        rect = tuple(value/size for value, size in zip(door, (width, height, width, height)))
-        return (('gpu:building:'+digest, 1, pg.image.tobytes(surface, 'RGBA'), width, height), rect)
+            dx,dy=shell.entrance
+            cx,cy=(dx-left+.5)*width/columns,(dy-top+.5)*height/rows
+            cw,ch=width/columns,height/rows
+            if shell.door_side in ('north','south'):
+                dw,dh=.66*cw,.28*ch
+                door=(cx-dw/2,cy+(-.48 if shell.door_side=='north' else .2)*ch,dw,dh)
+            else:
+                dw,dh=.28*cw,.66*ch
+                door=(cx+(-.48 if shell.door_side=='west' else .2)*cw,cy-dh/2,dw,dh)
+        rect=tuple(value/size for value,size in zip(door,(width,height,width,height)))
+        return (('gpu:building:'+digest,1,pg.image.tobytes(surface,'RGBA'),width,height),rect)
 
     body, door_rect = materials._read(('gpu-building', digest), body_loader)
     door_source = None
@@ -294,6 +287,10 @@ def load_building_art(materials, row):
                 surf.fill((176, 131, 73, 255))
             else:
                 surf = pg.image.load(str(door_path))
+                if shell.door_side in ('west','east'):
+                    surf=pg.transform.rotate(surf,90 if shell.door_side=='west' else -90)
+                elif shell.door_side=='north':
+                    surf=pg.transform.rotate(surf,180)
                 bounds = surf.get_bounding_rect(16)
                 if bounds.width and bounds.height:
                     surf = surf.subsurface(bounds)
@@ -302,7 +299,4 @@ def load_building_art(materials, row):
                     surf = pg.transform.smoothscale(surf, (max(1, round(surf.get_width()*factor)), max(1, round(surf.get_height()*factor))))
             return ('gpu:building-door:'+material, 1, pg.image.tobytes(surf, 'RGBA'), *surf.get_size())
         door_source = materials._read(('gpu-building-door', str(door_path), material), door_loader)
-        if shell.door_side != 'south':
-            dx, dy = shell.entrance
-            door_rect = ((dx-left+.26)/columns, (dy-top+.10)/rows, .48/columns, .82/rows)
     return BuildingArt(body, door_source, door_rect)
