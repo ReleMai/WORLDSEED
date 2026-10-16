@@ -2310,9 +2310,14 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     if not building_part and distance<=3 and sim.fishing.is_fishable(target):
         region=sim.fishing.region_at(target)
         rows.append(('fish',f'Fish — {sim.world.tile_at(target).terrain.name} / {region.structure.replace("_"," ")}'))
-    if distance<=1 and pile and pile.items:
+    if pile and pile.items and distance<=14:
         count=sum(max(0,int(n)) for n in pile.items.values())
-        rows.append(('pickup',f'Pick up ground items — {count} item(s)'))
+        rows.append(('pickup' if distance<=1 else 'pickup_walk',
+                     ('Pick up' if distance<=1 else 'Pick Up — Move over')+f' ({count} item(s))'))
+        for iid,n in sorted(pile.items.items())[:6]:
+            if n>0:
+                label=sim.registry.items[iid].name if iid in sim.registry.items else iid
+                rows.append(('pickup_same:'+iid,f'Pick nearby of same type: {label}'))
     if distance<=1 and container and not private_storage:
         rows.append(('open',f'Open {container.name or "container"}'))
     if homestead is not None and distance<=8:
@@ -2471,9 +2476,11 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
         return sim.log[-1].message if sim.log else ''
     if choice=='gather':return _gather_positions(ctx,[target])
     if choice=='fish':return _fishing_action(ctx,term,target)
-    if choice=='pickup':
-        sim.execute(PickupCommand(ctx.player_id,target.x-p.x,target.y-p.y))
-        return sim.log[-1].message if sim.log else ''
+    if choice in ('pickup','pickup_walk') or choice.startswith('pickup_same:'):
+        from worldseed.ui.auto_pickup import execute_visible_pickup
+        item_id=choice.split(':',1)[1] if choice.startswith('pickup_same:') else ''
+        return execute_visible_pickup(sim,ctx.player_id,target,item_id=item_id,
+            nearby=bool(item_id))
     if choice=='open' and container:return _storage_menu(ctx,term,container.uid)
     if choice=='examine':
         _view_text(term,look_screen(sim,screen_width(term.size()[0],118),target));return UI_BACK

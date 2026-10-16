@@ -1751,11 +1751,24 @@ class Simulation:
         pos=origin.moved(cmd.dx,cmd.dy);key=pos_key(pos.x,pos.y,pos.z);pile=self.state.ground_piles.get(key)
         if not pile or not pile.items:
             self._message("There is nothing there to pick up." if (cmd.dx or cmd.dy) else "There is nothing here to pick up.");return
+        if cmd.item_id:
+            count=max(0,int(pile.items.get(cmd.item_id,0)))
+            if not count:
+                self._message("That item is no longer on the ground.");return
+            taken={cmd.item_id:count}
+        else:
+            taken={iid:n for iid,n in pile.items.items() if n>0}
         inv=self.entities.get(cmd.actor,Inventory)
-        for iid,n in pile.items.items():inv.add(iid,n)
+        for iid,n in taken.items():
+            inv.add(iid,n)
         from worldseed.systems.artifacts import transfer_inventory_metadata
-        transfer_inventory_metadata(self.state,self.registry,pile.items,f'ground:{pos.x},{pos.y},{pos.z}','player',self.clock.minute,'Picked up')
-        self.state.ground_piles.pop(key,None);self._message("You pick up everything on the ground.")
+        transfer_inventory_metadata(self.state,self.registry,taken,f'ground:{pos.x},{pos.y},{pos.z}','player',self.clock.minute,'Picked up')
+        for iid,n in taken.items():
+            left=pile.items.get(iid,0)-n
+            if left>0:pile.items[iid]=left
+            else:pile.items.pop(iid,None)
+        if not pile.items:self.state.ground_piles.pop(key,None)
+        self._message("You pick up "+("the selected items." if cmd.item_id else "everything on the ground."))
     def _drop(self,cmd:DropCommand)->None:
         inv=self.entities.get(cmd.actor,Inventory)
         from worldseed.systems.artifacts import available_inventory_quantity
