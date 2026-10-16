@@ -45,17 +45,23 @@ def _screenshot(pg, ctx, size, path):
 
 
 def run(*, width=1280, height=720, zoom=36, frames=0,
-        seed='worldseed-gpu-gameplay-w2', prepared_scene=None, screenshot=None, report=None):
-    if os.environ.get('SDL_VIDEODRIVER') == 'dummy':
-        raise GPUBackendUnavailable('SDL dummy cannot create a native OpenGL gameplay window')
+        seed='worldseed-gpu-gameplay-w2', prepared_scene=None, screenshot=None, report=None,
+        qa_weather=None, qa_season=None, qa_time=None):
     if (type(frames) is not int or not 0 <= frames <= 36000
             or not 640 <= width <= 1920 or not 480 <= height <= 1080
             or type(zoom) is not int or not 20 <= zoom <= 56):
         raise ValueError('candidate dimensions, zoom or duration outside bounded scope')
-    if prepared_scene not in (None, 'forest', 'camp'):
-        raise ValueError('prepared scene must be forest or camp')
+    if prepared_scene not in (None, 'forest', 'camp', 'village_street'):
+        raise ValueError('prepared scene must be forest, camp or village_street')
+    from tools.gpu_qa_scene import PreparedWeather, qa_minute
+    if any(value is not None for value in (qa_weather,qa_season,qa_time)) and not prepared_scene:
+        raise ValueError('QA environment options require an explicit prepared scene')
+    fixture_minute = qa_minute(qa_season,qa_time)
+    fixture_weather = PreparedWeather(qa_weather) if qa_weather is not None else None
     if not isinstance(seed, str) or not 1 <= len(seed.encode('utf-8')) <= 128:
         raise ValueError('seed must contain 1..128 UTF-8 bytes')
+    if os.environ.get('SDL_VIDEODRIVER') == 'dummy':
+        raise GPUBackendUnavailable('SDL dummy cannot create a native OpenGL gameplay window')
     import pygame as pg
     from worldseed.app import _load_context
     from worldseed.ui.startup import StartSelection
@@ -94,8 +100,10 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 from worldseed.content.registry import ContentRegistry
                 registry = ContentRegistry.load(DATA_DIR)
                 fixture = build_fixture(prepared_scene, registry, Path(directory),
-                                        width=width, height=height, zoom=36)
+                                        width=width, height=height, zoom=36, game_minute=fixture_minute)
                 sim = fixture.sim
+                if fixture_weather is not None:
+                    sim.environment.weather = fixture_weather
             else:
                 context = _load_context(StartSelection(
                     Path(directory)/'gpu-w2.db', True, 'GPU gameplay candidate',
@@ -209,7 +217,8 @@ def run(*, width=1280, height=720, zoom=36, frames=0,
                 'status':'gpu-gameplay-candidate-not-production-certification',
                 'gpu':driver, 'platform':os.name, 'size':[width,height], 'frames':count,
                 'source':'prepared-synthetic-'+prepared_scene if prepared_scene else 'temporary-normal-game-startup',
-                'player_saves_opened':False, 'initial_position':asdict(initial_pos),
+                'player_saves_opened':False, 'native_hardware_accepted':False,
+                'qa_environment':{'weather':qa_weather,'season':qa_season,'time':qa_time}, 'initial_position':asdict(initial_pos),
                 'final_position':asdict(sim.player_pos), 'initial_minute':initial_minute,
                 'final_minute':sim.clock.minute,
                 'frame_cpu_p50_ms':statistics.median(frame_times) if frame_times else None,
@@ -246,14 +255,18 @@ def main(argv=None):
     parser.add_argument('--zoom', type=int, default=36)
     parser.add_argument('--frames', type=int, default=0)
     parser.add_argument('--seed', default='worldseed-gpu-gameplay-w2')
-    parser.add_argument('--prepared-scene', choices=('forest','camp'))
+    parser.add_argument('--prepared-scene', choices=('forest','camp','village_street'))
+    parser.add_argument('--qa-weather', choices=('clear','cloudy','rain','storm','snow','fog'))
+    parser.add_argument('--qa-season', choices=('spring','summer','autumn','winter'))
+    parser.add_argument('--qa-time', choices=('noon','night','sunrise','sunset'))
     parser.add_argument('--screenshot', type=Path)
     parser.add_argument('--report', type=Path)
     args = parser.parse_args(argv)
     try:
         width,height = (int(value) for value in args.size.lower().split('x'))
         result = run(width=width,height=height,zoom=args.zoom,frames=args.frames,seed=args.seed,
-                     prepared_scene=args.prepared_scene,screenshot=args.screenshot,report=args.report)
+                     prepared_scene=args.prepared_scene,screenshot=args.screenshot,report=args.report,
+                     qa_weather=args.qa_weather,qa_season=args.qa_season,qa_time=args.qa_time)
     except Exception as exc:
         print(json.dumps({'status':'gpu-gameplay-unavailable','error':str(exc)},indent=2))
         return 1

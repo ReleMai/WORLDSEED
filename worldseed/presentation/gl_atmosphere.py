@@ -69,9 +69,12 @@ class AtmosphereFrame:
     camera_pixel_x: float = 0.0
     camera_pixel_y: float = 0.0
     lights: tuple[WorldLight, ...] = ()
+    sun: float | None = None
 
     def __post_init__(self):
         daylight(self.minute)
+        if self.sun is not None and (not _finite(self.sun) or not 0 <= self.sun <= 1):
+            raise ValueError('authoritative sun factor must be 0..1')
         for v in (self.rain,self.snow,self.fog,self.cloud):
             if not _finite(v) or not 0 <= v <= 1:
                 raise ValueError('precipitation/cloud/fog values must be 0..1')
@@ -164,7 +167,7 @@ class GLAtmospherePass:
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_world_origin'].value=(fx.camera_pixel_x,fx.camera_pixel_y)
             self.program['u_clock'].value=fx.elapsed_seconds
-            self.program['u_sun'].value=daylight(fx.minute)
+            self.program['u_sun'].value=daylight(fx.minute) if fx.sun is None else fx.sun
             self.program['u_rain'].value=fx.rain
             self.program['u_snow'].value=fx.snow
             self.program['u_fog'].value=fx.fog

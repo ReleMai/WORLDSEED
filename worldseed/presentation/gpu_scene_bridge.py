@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
-from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene
+from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene, visual_sort_key
 from .worldspace_adapter import MAX_PREPARED_ACTORS, PreparedActor, prepare_worldspace_scene
 from .tree_art import layer_png
 
@@ -35,22 +35,65 @@ def cell_bounds(camera:WorldCamera):
     return left,top,right,bottom
 
 
+@lru_cache(maxsize=1)
+def _terrain_visuals():
+    from .visuals import VisualRegistry
+    return VisualRegistry.load_default()
+
+
 @lru_cache(maxsize=128)
-def _terrain_path(kind: str, variant: int):
-    candidate=ASSET_BASE/'terrain'/f'{kind}_hd_v{variant:02d}.png'
-    if candidate.is_file():return candidate
-    standard=ASSET_BASE/'terrain'/f'{kind}.png'
-    if standard.is_file():return standard
-    return ASSET_BASE/'terrain'/'forest_hd_v00.png'
+def _terrain_path(content_id: str, variant: int, visuals=None):
+    """Resolve one exact namespaced material from the existing art catalog.
+
+    The visual service is immutable during a render session. The bounded cache
+    avoids filesystem checks per cell while retaining the catalog's current
+    contextual water/cave assets rather than guessing their filenames.
+    """
+    catalog=visuals if visuals is not None else _terrain_visuals()
+    path=catalog.resolve(catalog.ref('terrain',content_id),variant)
+    if path is not None and path.is_file():return path
+    # Compatibility for an unmapped core asset only. A mod namespace may never
+    # accidentally select a similarly named core file.
+    if content_id.startswith('core:'):
+        kind=content_id[5:]
+        if kind and kind.replace('_','').isalnum():
+            candidate=ASSET_BASE/'terrain'/f'{kind}_hd_v{variant%10:02d}.png'
+            if candidate.is_file():return candidate
+            standard=ASSET_BASE/'terrain'/f'{kind}.png'
+            if standard.is_file():return standard
+    return None
 
 
-def terrain_source(terrain_id:str,x:int,y:int):
-    """Use authored terrain variants with one file-stat per unique material."""
-    kind=terrain_id.removeprefix('core:')
-    if not kind.replace('_','').isalnum():kind='forest'
+def terrain_source(terrain_id:str,x:int,y:int,*,terrain_defs=None,visuals=None):
+    """Resolve admitted ground art; missing art never invents forest terrain.
+
+    New ground definitions inherit an existing material from their physical
+    tags. Hard features need explicit artwork and retain an unknown marker if
+    absent. This chooses presentation only and never changes the terrain ID.
+    """
     # Stable coordinates, no Python randomized hash().
     variant=((x*73856093)^(y*19349663))%10
-    return _terrain_path(kind, variant)
+    exact=_terrain_path(terrain_id,variant,visuals)
+    if exact is not None:return exact
+    definition=terrain_defs.get(terrain_id) if terrain_defs is not None else None
+    tags=set(getattr(definition,'tags',()))
+    material=None
+    if tags.intersection(('surface','underground')) and not tags.intersection(('shaft','ore','loot')):
+        if 'water' in tags:
+            depth='shallow' if 'shallow' in tags else 'deep'
+            family='ocean' if 'saltwater' in tags else 'estuary' if 'brackish' in tags else 'lake'
+            material=f'core:{family}_{depth}'
+        elif 'underground' in tags:
+            material='core:cave_wall' if 'rock' in tags and not getattr(definition,'passable',True) else 'core:cave_floor'
+        elif 'wetland' in tags:material='core:wetland'
+        elif 'rock' in tags:material='core:rock'
+        elif 'sand' in tags:material='core:sand'
+        else:material='core:grass'
+    if material is not None:
+        fallback=_terrain_path(material,variant,visuals)
+        if fallback is not None:return fallback
+    catalog=visuals if visuals is not None else _terrain_visuals()
+    return catalog.special('unknown') or ASSET_BASE/'special'/'unknown.png'
 
 
 class GpuMaterialSource:
@@ -130,7 +173,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       resource_style:Callable,visible_cells,discovered_cells,
                       viewer:WorldFoot,materials:GpuMaterialSource,
                       season='summer',show_player=True,fire_cells=(),
-                      actors:Sequence[PreparedActor]=()):
+                      actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -152,7 +195,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         p=camera.to_screen(WorldFoot(x,y,z))
         # Tile geometry itself clips to its own location; shared viewport scissor
         # enables true GPU batching by art material without drawing hidden cells.
-        tex=materials.asset(terrain_source(str(terrain_id),x,y))
+        tex=materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None)))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
                        (viewport,)))
@@ -219,6 +262,12 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             scenery[index]=replace(c,bounds=(cx-w*.5,cy-h*.8,cx+w*.5,cy+h*.2))
         elif v.instance.layer is VisualLayer.OVERHEAD:
             scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085))
+    if buildings:
+        from .gpu_buildings import building_commands, building_sort_keys
+        keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
+        keys.update(building_sort_keys(buildings))
+        scenery.extend(building_commands(buildings,camera,materials))
+        scenery.sort(key=lambda command:keys[command.visual_id])
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')
     return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),len(ground))

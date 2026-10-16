@@ -2,7 +2,9 @@
 
 **Prepared / reconciled:** 2026-10-15. **Source of truth:** [ReleMai/WORLDSEED](https://github.com/ReleMai/WORLDSEED) `main`. **Purpose:** continue GPU gameplay ownership after the implemented W1 live scene adapter, without repeating G0/G1/W1 or reworking the legacy software game.
 
-**Latest implementation:** [W2 Action Hub/context handoff](WORLDSEED_W2_ACTION_HUB_CONTEXT_HANDOFF_2026-10-15.md) supersedes earlier read-only-pointer and absent-UI descriptions. It records 128 affected local tests, real SDL software captures and the publication/native closeout.
+**Latest continuation:** [W3 exteriors and Windows candidate](WORLDSEED_W3_EXTERIORS_WINDOWS_CANDIDATE_2026-10-16.md). Closed exterior shells, current terrain catalog, engine-owned ambient light and separate executable packaging are implemented; full interiors/UI and native hardware acceptance remain open.
+
+**W2 implementation:** [W2 Action Hub/context handoff](WORLDSEED_W2_ACTION_HUB_CONTEXT_HANDOFF_2026-10-15.md) supersedes earlier read-only-pointer and absent-UI descriptions. It records 128 affected local tests, real SDL software captures and the publication/native closeout.
 
 ## Paste this into the next WORLDSEED chat
 

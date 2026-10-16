@@ -1,0 +1,78 @@
+name: WORLDSEED Windows GPU Candidate Executable
+
+# Packaging-only changes build once; ordinary gameplay commits use Fast Gate.
+# This creates the separate candidate, never promotes the legacy default.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-gpu-candidate.yml'
+      - 'run_worldseed_gpu.py'
+      - 'packaging/windows_gpu/**'
+      - 'tools/package_gpu_playtest.py'
+      - 'tools/smoke_gpu_bundle.py'
+      - 'tests/test_gpu_candidate_package.py'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-gpu-candidate:
+    name: Windows x64 GPU candidate package and frozen executable smoke
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      PYTHONFAULTHANDLER: '1'
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install graphics runtime and Windows freezer
+        shell: pwsh
+        run: python -m pip install -e '.[gpu]' 'Pillow>=10,<12' 'pyinstaller>=6.10,<7'
+      - name: Compile and check packaging contracts
+        shell: pwsh
+        run: |
+          python -m compileall -q worldseed tools run_worldseed_gpu.py tests/test_gpu_candidate_package.py
+          if ($LASTEXITCODE -ne 0) { throw 'Compile failed' }
+          python -u tools/run_ci_check.py --name gpu-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_candidate_package
+          if ($LASTEXITCODE -ne 0) { throw 'GPU package contracts failed' }
+      - name: Build distinct one-directory GPU executable with all engine assets
+        shell: pwsh
+        run: |
+          python -u tools/run_ci_check.py --name freeze-gpu-candidate --timeout 1000 -- python -u tools/package_gpu_playtest.py --build-only --commit '${{ github.sha }}' --output-dir dist
+          if ($LASTEXITCODE -ne 0) { throw 'GPU executable build failed' }
+      - name: Launch actual frozen EXE and retain honest native driver outcome
+        shell: pwsh
+        run: |
+          if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }
+          python -u tools/run_ci_check.py --name frozen-gpu-smoke --timeout 400 -- python -u tools/smoke_gpu_bundle.py dist/WORLDSEED_GPU/WORLDSEED_GPU.exe --output-dir scratch/gpu-bundle-smoke
+          if ($LASTEXITCODE -ne 0) { throw 'Actual frozen executable smoke failed' }
+      - name: Record smoke distinction and verify final ZIP
+        shell: pwsh
+        run: |
+          Copy-Item scratch/gpu-bundle-smoke/SMOKE_RESULT.json dist/WORLDSEED_GPU/SMOKE_RESULT.json
+          python -u tools/package_gpu_playtest.py --archive-only --commit '${{ github.sha }}' --output-dir dist
+          if ($LASTEXITCODE -ne 0) { throw 'Final package verification failed' }
+      - name: Upload self-contained executable candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED-Windows-GPU-CANDIDATE-${{ github.sha }}
+          path: dist/WORLDSEED_GPU/
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 30
+      - name: Upload context and executable smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED-GPU-Build-Evidence-${{ github.sha }}
+          path: |
+            scratch/gpu-bundle-smoke/
+            dist/*.zip.sha256
+          if-no-files-found: warn
+          retention-days: 30

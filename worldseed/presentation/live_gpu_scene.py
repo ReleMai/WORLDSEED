@@ -2,20 +2,24 @@
 
 Capture runs after simulation updates, on its owning thread. It never prepares
 terrain/resources, advances time, discovers cells, rebuilds indexes or opens
-interiors. Unsupported interior/roof cells fail closed until W3 supplies their
-own presentation. No names, inventories or private room contents cross here.
+interiors. W3 closed exterior shells use a separate exact-cell sight mask;
+unsupported interior/player-roof cells remain closed. No names, inventories or
+private room contents cross here.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import isfinite
 
 from worldseed.core.coords import WorldPos
 from worldseed.core.clock import SEASONS, DAYS_PER_SEASON
 from worldseed.systems.resources import FeatureView
+from worldseed.systems.building_shells import BuildingShell
 from worldseed.systems.state import pos_key
 from .gl_atmosphere import MAX_LIGHTS, WorldLight, weather_frame
 from .gpu_scene_bridge import cell_bounds, prepare_gpu_frame
+from .gpu_buildings import (MAX_BUILDING_CELLS, MAX_BUILDING_EXTENT,
+    MAX_PREPARED_BUILDINGS, PreparedBuildingDoor, PreparedBuildingShell)
 from .worldspace import WorldCamera, WorldFoot
 from .worldspace_adapter import MAX_PREPARED_ACTORS, MAX_PREPARED_RESOURCES, PreparedActor
 
@@ -54,6 +58,8 @@ class LiveGpuSnapshot:
     minute: int
     season: str
     interior: bool = False
+    buildings: tuple[PreparedBuildingShell, ...] = ()
+    ambient_light: float | None = None
 
     def gpu_frame(self, *, materials, registry, resource_style):
         """Only static content/material services are needed after capture."""
@@ -62,7 +68,8 @@ class LiveGpuSnapshot:
             resource_defs=registry.resources, resource_style=resource_style,
             visible_cells=self.current_cells, discovered_cells=self.remembered_cells,
             viewer=self.viewer, actors=self.actors, materials=materials,
-            season=self.season, fire_cells=tuple(row.cell for row in self.fires))
+            season=self.season, fire_cells=tuple(row.cell for row in self.fires),
+            buildings=self.buildings, terrain_defs=registry.terrains)
 
     def atmosphere(self, elapsed_seconds=0.):
         origin = self.camera.to_world(0, 0, ground_z=self.camera.center.z)
@@ -81,9 +88,9 @@ class LiveGpuSnapshot:
         speed = float(weather.get('wind_speed', 0))/100.
         weather['wind_dx'] = float(weather.get('wind_dx', 0))/1024.*speed
         weather['wind_dy'] = float(weather.get('wind_dy', 0))/1024.*speed
-        return weather_frame(weather, minute=self.minute,
+        return replace(weather_frame(weather, minute=self.minute,
             elapsed_seconds=elapsed_seconds, camera_pixel_x=origin.x*self.camera.scale,
-            camera_pixel_y=origin.y*self.camera.scale, lights=tuple(lights))
+            camera_pixel_y=origin.y*self.camera.scale, lights=tuple(lights)), sun=self.ambient_light)
 
 
 def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
@@ -109,6 +116,7 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
     remembered = set()
     actors = []
     fires = []
+    buildings = {}
     physical = sim.settlement_physicalization
 
     if not interior:
@@ -122,7 +130,16 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
                 roof = sim.building.roof_at(pos)
                 if roof is not None and roof.condition > 0:
                     continue  # player-built covered spaces also fail closed
-                if physical.shell_at(pos) is not None:
+                shell = physical.shell_at(pos)
+                if shell is not None:
+                    if seen and z == 0 and isinstance(shell, BuildingShell):
+                        # O(1) local cell index lookup. Do not use the existing
+                        # shells_in_bounds helper: it scans every active shell.
+                        if shell.uid not in buildings:
+                            if len(buildings) >= MAX_PREPARED_BUILDINGS:
+                                raise ValueError('live GPU building budget exceeded')
+                            buildings[shell.uid] = (shell, set())
+                        buildings[shell.uid][1].add((x, y, z))
                     continue  # no floor/actor/resource leakage through a roof
                 plan_cell = physical.cell_at(pos)
                 if plan_cell is not None and (plan_cell.room_id or plan_cell.roof_piece_id):
@@ -168,12 +185,38 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
                     raise ValueError('live GPU fire budget exceeded')
 
     weather = {}
+    ambient_light = None
     if z == 0 and not interior:
-        weather, _lighting = sim.environment.visual_conditions(minute, sim.player_pos)
+        weather, lighting = sim.environment.visual_conditions(minute, sim.player_pos)
+        if lighting is not None:
+            ambient_light = max(0., min(1., lighting.ambient_light/65535.))
     # Copy only numeric/string shader inputs, never a mutable weather dictionary.
     keys = ('kind', 'rain', 'fog', 'cloud_cover', 'wind_dx', 'wind_dy', 'wind_speed')
     weather_values = tuple((key, weather[key]) for key in keys if key in weather)
+    prepared_buildings = []
+    for uid, (shell, cells) in sorted(buildings.items()):
+        # Unsupported huge/modded plans stay hidden instead of expanding a
+        # bounded presentation query into their complete physical footprint.
+        left, top, right, bottom = shell.bounds
+        if (len(shell.footprint) > MAX_BUILDING_CELLS
+                or right-left+1 > MAX_BUILDING_EXTENT
+                or bottom-top+1 > MAX_BUILDING_EXTENT):
+            continue
+        door = None
+        if shell.entrance is not None and shell.door_uid:
+            threshold = (*shell.entrance, 0)
+            if threshold in cells:
+                state = sim.state.door_security.get(shell.door_uid)
+                opened = bool(state and (state.forced or (state.answering_npc_uid
+                    and state.answered_minute >= state.answer_requested_minute >= 0)))
+                door = PreparedBuildingDoor(shell.door_uid, threshold, opened)
+        # Reuse only a prepared/persisted visual pin. Never open/prepare a room
+        # to choose exterior art, and never copy its occupants or private name.
+        plan = sim.state.interiors.get('interior:'+uid)
+        variant_id = str(getattr(plan, 'variant_id', ''))
+        prepared_buildings.append(PreparedBuildingShell(shell,
+            frozenset(cells), variant_id, door))
     return LiveGpuSnapshot(camera, viewer, tuple(terrain), tuple(resources),
         tuple(sorted(actors, key=lambda actor: actor.uid)), frozenset(current),
         frozenset(remembered), tuple(sorted(fires, key=lambda fire: fire.cell)),
-        weather_values, minute, season, interior)
+        weather_values, minute, season, interior, tuple(prepared_buildings), ambient_light)

@@ -188,7 +188,7 @@ def _prepare_camp(sim, center):
 
 
 def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-v1',
-                  width=1280, height=720, zoom=28, distant_npcs=0):
+                  width=1280, height=720, zoom=28, distant_npcs=0, game_minute=GAME_MINUTE):
     """Prepare a bounded, isolated fixture; never open or copy a player save."""
     if name not in SCENES:
         raise ValueError(f'Unknown reference scene: {name}')
@@ -196,6 +196,8 @@ def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-
         raise ValueError('Reference fixture size or zoom is outside supported bounds')
     if not 0 <= distant_npcs <= 50000:
         raise ValueError('distant_npcs must be between 0 and 50000')
+    if type(game_minute) is not int or not 0 <= game_minute < 1440*120:
+        raise ValueError('Reference fixture minute must fit the first synthetic year')
     seed_bytes = seed.encode('utf-8')
     db = WorldDatabase.create(Path(directory) / f'{name}.db', f'QA {name}', seed_bytes.hex())
     try:
@@ -213,7 +215,7 @@ def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-
         entities.add(player, Position(center))
         entities.add(player, Inventory({'core:wood': 12, 'core:stone': 8, 'core:fiber': 6}))
         entities.add(player, Vitals())
-        state = LivingWorldState(clock_minute=GAME_MINUTE, player_name='Reference Wanderer')
+        state = LivingWorldState(clock_minute=game_minute, player_name='Reference Wanderer')
         sim = PreparedReferenceSimulation(world, entities, registry, state=state, world_seed=seed_bytes)
         skeleton = None
         if name in ('village_street', 'interior', 'open_panel', 'large_save'):
@@ -226,7 +228,7 @@ def build_fixture(name, registry, directory: Path, *, seed='worldseed-reference-
         radius_x = width // zoom // 2 + CHUNK_SIZE
         radius_y = height // zoom // 2 + CHUNK_SIZE
         bounds = (center.x-radius_x, center.y-radius_y, center.x+radius_x, center.y+radius_y)
-        season = sim.resources._season(GAME_MINUTE)
+        season = sim.resources._season(game_minute)
         for cy in range(bounds[1] // CHUNK_SIZE, bounds[3] // CHUNK_SIZE + 1):
             for cx in range(bounds[0] // CHUNK_SIZE, bounds[2] // CHUNK_SIZE + 1):
                 key = ChunkKey(cx, cy, 0)
