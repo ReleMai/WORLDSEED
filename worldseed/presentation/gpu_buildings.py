@@ -176,7 +176,10 @@ def building_sort_keys(buildings):
     result = {}
     for row in buildings:
         left, _top, right, bottom = row.shell.bounds
-        key = (30, bottom+.25, 0., (left+right+1)/2., 30)
+        # Roofs are physically impassable shells, not foreground characters.
+        # Draw them behind living actors regardless of their cell-depth. The
+        # existing footprint/door collision authority remains untouched.
+        key = (29, bottom+.25, 0., (left+right+1)/2., 29)
         result['building:'+row.shell.uid] = (*key, 'building:'+row.shell.uid)
         # Keep independent door art immediately above its closed shell.
         result['building-door:'+row.shell.door_uid] = (*key, 'building:'+row.shell.uid+'~door')

@@ -196,8 +196,9 @@ class GPUExteriorContracts(TestCase):
         self.assertTrue(any(c.visual_id=='sun-shadow:player' for c in at_noon))
         self.assertTrue(any(c.visual_id.startswith('sun-shadow:building:') for c in at_noon))
         self.assertTrue(all(c.clip_rects and 0<c.opacity<1 for c in at_noon))
-        self.assertEqual(sunlight_commands(camera,WorldFoot(2.5,5.5,0),
-            (row,),ground,FakeMaterials(),0),())
+        at_night=sunlight_commands(camera,WorldFoot(2.5,5.5,0),
+            (row,),ground,FakeMaterials(),0)
+        self.assertEqual(tuple(c.visual_id for c in at_night),('sun-shadow:player',))
         self.assertGreater(sun_offset(8*60,28)[0],0)
         self.assertLess(sun_offset(16*60,28)[0],0)
 
@@ -223,6 +224,7 @@ class GPUExteriorContracts(TestCase):
         depth=building_sort_keys((row,))['building:house'][1]
         self.assertLess(depth,4.5)
         self.assertGreater(depth,3.)
+        self.assertEqual(building_sort_keys((row,))['building:house'][0],29)
 
     def test_real_authored_building_sources_are_bounded_cached_and_not_world_frames(self):
         try:

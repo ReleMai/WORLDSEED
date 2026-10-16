@@ -290,7 +290,11 @@ def capture_interior(sim, camera):
     memory_objects=[]
     for row in getattr(plan,'observed_objects',())[:672]:
         rect=(row.x,row.y,row.x+row.w,row.y+row.h)
-        if row.uid not in current_uids and memory_index.intersect(rect):
+        # Keep the last-observed pixels in every remembered fragment, EVEN if
+        # part of the same object is still live. Live and memory scissor masks
+        # are already disjoint; excluding the whole UID caused furniture to
+        # disappear/reappear abruptly while walking past a sight boundary.
+        if memory_index.intersect(rect):
             memory_objects.append(InteriorObject(row.uid,row.kind,row.content_id,
                 tuple(value/UNIT for value in rect),row.height_ratio,row.flat,row.solid))
     actors = []
@@ -447,9 +451,20 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         if source is not None:
             x, y = camera.to_screen(row.foot)
             width, height = camera.scale*.75, camera.scale*1.5
-            scenery.append(((row.foot.y, row.uid), SpriteCommand('interior-actor:'+row.uid,
-                *source, (x-width/2, y-height, x+width/2, y),
-                admitted_clips((x-width/2, y-height, x+width/2, y)))))
+            # Actor contact is anchored to FEET, not the shifted head/body art.
+            # Drawing before the actor gives ground contact even in unlit rooms.
+            foot_shadow=(x-camera.scale*.32,y-camera.scale*.13,
+                         x+camera.scale*.32,y+camera.scale*.08)
+            contact=admitted_clips(foot_shadow)
+            if contact:
+                scenery.append(((row.foot.y-.003, 'contact:'+row.uid),SpriteCommand(
+                    'interior-actor-contact:'+row.uid,*shadow_texture(),
+                    foot_shadow,contact,opacity=.82)))
+            body=(x-width/2, y-height, x+width/2, y)
+            body_clips=admitted_clips(body)
+            if body_clips:
+                scenery.append(((row.foot.y, row.uid), SpriteCommand('interior-actor:'+row.uid,
+                    *source, body,body_clips)))
     scenery.sort(key=lambda row: row[0])
     commands = [command for _, command in scenery]
     # Light is sampled by the shared wall-occluded engine authority. These
