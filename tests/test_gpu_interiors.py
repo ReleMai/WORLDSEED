@@ -105,11 +105,19 @@ class GPUInteriorContracts(TestCase):
         self.assertTrue(remembered)
         self.assertTrue(all(c.opacity == .42 for c in remembered))
         self.assertFalse(any('visible-bed' in c.visual_id for c in frame.scenery))
+        remembered_walls = [c for c in frame.scenery
+                            if c.visual_id.startswith('interior-memory-wall:')]
+        # Only remembered wall segments near remembered floor may be painted.
+        self.assertTrue(remembered_walls)
+        self.assertTrue(all(c.opacity == .42 and c.clip_rects
+                            for c in remembered_walls))
         hidden = snapshot.gpu_frame(materials=Materials(), registry=self.registry,
                                     resource_style=lambda _: {},
                                     show_explored_memory=False)
         self.assertFalse(any(c.visual_id.startswith('interior-memory-floor:')
                              for c in hidden.ground))
+        self.assertFalse(any(c.visual_id.startswith('interior-memory-wall:')
+                             for c in hidden.scenery))
         self.assertEqual(plan.explored_cells, [saved_cell])
 
     def test_sight_rectangles_do_not_sample_thin_wall_away(self):
@@ -132,7 +140,7 @@ class GPUInteriorContracts(TestCase):
         self.assertTrue(any(c.visual_id == 'interior-actor:player' for c in frame.scenery))
         self.assertTrue(any(c.visual_id.startswith('interior-light:') for c in frame.scenery))
         for command in frame.scenery:
-            if not command.visual_id.startswith('interior-wall:'):
+            if not command.visual_id.startswith(('interior-wall:', 'interior-memory-wall:')):
                 self.assertLessEqual(set(command.clip_rects), clips)
         plan.furniture.clear()
         plan.walls.clear()

@@ -90,6 +90,9 @@ class PreparedInterior:
     objects: tuple[InteriorObject, ...]
     actors: tuple[InteriorActorView, ...]
     memory_tiles: tuple[InteriorTile, ...] = ()
+    # Full source wall bounds, clipped to floor patches already explored.
+    memory_walls: tuple[tuple[tuple[int,int,int,int],
+                              tuple[tuple[int,int,int,int], ...]], ...] = ()
 
     def hit_test(self, x: float, y: float):
         """Observational stable IDs; commands still revalidate physical reach."""
@@ -194,6 +197,20 @@ def capture_interior(sim, camera):
             tile.bounds[1],tile.bounds[0]))
         memory_tiles = memory_tiles[:max(0,MAX_INTERIOR_TILES-len(tiles))]
 
+    memory_walls = []
+    for wall in walls:
+        patches = []
+        for tile in memory_tiles:
+            a,b,c,d = tile.bounds
+            # Only paint the part of the wall that borders remembered floor.
+            adjacent = (a-250,b-250,c+250,d+250)
+            clip = (max(wall[0],adjacent[0]),max(wall[1],adjacent[1]),
+                    min(wall[2],adjacent[2]),min(wall[3],adjacent[3]))
+            if clip[0] < clip[2] and clip[1] < clip[3]:
+                patches.append(clip)
+        if patches:
+            memory_walls.append((wall, tuple(patches)))
+
     def admitted(rect):
         return any(_overlap(rect, tile.bounds) for tile in tiles)
 
@@ -264,7 +281,7 @@ def capture_interior(sim, camera):
         getattr(plan, 'floor_material', ''), getattr(plan, 'wall_material', ''),
         getattr(plan, 'floor_index', 0), getattr(plan, 'floor_count', 1),
         tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors),
-        tuple(memory_tiles))
+        tuple(memory_tiles), tuple(memory_walls))
 
 
 def _texture(materials, category, content_id):
@@ -318,6 +335,14 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         if source:
             ground.append(SpriteCommand('interior-floor:'+str(index), *source,
                 clips[index], (clips[index],)))
+    if show_explored_memory:
+        source = _texture(materials, 'interior_textures', wall_id) if scene.memory_walls else None
+        if source:
+            for index, (rect, parts) in enumerate(scene.memory_walls):
+                scenery.append(((-2., index), SpriteCommand(
+                    'interior-memory-wall:'+str(index), *source,
+                    screen_rect(rect, UNIT),
+                    tuple(screen_rect(part, UNIT) for part in parts), opacity=.42)))
     for index, rect in enumerate(scene.walls):
         source = _texture(materials, 'interior_textures', wall_id)
         if source:
