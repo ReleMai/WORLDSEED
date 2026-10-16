@@ -90,7 +90,7 @@ class GPUInteriorContracts(TestCase):
         sim, plan, player, _ = self.fixture()
         cols = grid_columns(plan)
         # Remember a cell in the common room after standing there.
-        saved_cell = (3000//GRID)*cols + 2500//GRID
+        saved_cell = (3000//GRID)*cols + 4500//GRID
         plan.explored_cells = [saved_cell]
         player.x, player.y = 7000, 3000  # visit the separate room
         snapshot = capture_live_scene(sim, self.camera(sim))
