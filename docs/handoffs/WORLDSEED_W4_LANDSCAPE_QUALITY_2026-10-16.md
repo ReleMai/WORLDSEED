@@ -20,7 +20,7 @@ own unloaded-world regression. An additional compatibility suite passed 47 tests
 version checks), covering legacy reference scenes, terrain performance/variants,
 package contracts and saved v8/v7 compatibility. Direct worldgen physical/cache/
 coast checks and twelve actual startup/resource audits passed; exact metrics are
-in the worldgen document. Final CI outcomes are recorded at closeout.
+in the worldgen document. Final CI/build outcomes are recorded below.
 
 Actual main-game GPU camp, village and interior screenshots were reviewed at
 fractional camera coordinates; the natural seed `natural-v9-0` at (-448,832)
@@ -51,12 +51,12 @@ budgets remain open. Existing engine optimizations and legacy renderer survive.
 ## Published implementation and Windows test build
 
 Implementation: [`aae1076`](https://github.com/ReleMai/WORLDSEED/commit/aae1076f8324878b901788b4c71c8b5dc5db4a40).
-The [Windows GPU main-game packaging run](https://github.com/ReleMai/WORLDSEED/actions/runs/38926236221)
+The final [Windows GPU main-game packaging run](https://github.com/ReleMai/WORLDSEED/actions/runs/38942972726)
 passed its frozen executable/import/asset self-check and startup probes.
 
-- [Download the Windows full main-game candidate](https://github.com/ReleMai/WORLDSEED/actions/runs/38926236221/artifacts/12057146352), then extract and run `PLAY_WORLDSEED_GPU.bat`.
-- Artifact name: `WORLDSEED-Windows-GPU-CANDIDATE-aae1076f8324878b901788b4c71c8b5dc5db4a40`; 444,444,929 bytes; retention expires 2026-11-15.
-- GitHub artifact digest: `sha256:a33652092dc9287ed682fb9d14289f3d17b80b30b24dd55f6e2e5ee53da36af5`.
+- [Download the Windows full main-game candidate](https://github.com/ReleMai/WORLDSEED/actions/runs/38942972726/artifacts/12064062433), then extract and run `PLAY_WORLDSEED_GPU.bat`.
+- Artifact name: `WORLDSEED-Windows-GPU-CANDIDATE-e14c04810d57d4a967cefe36236665c1d8a10c9e`; 444,442,618 bytes; retention expires 2026-11-15.
+- GitHub artifact digest: `sha256:7cd709037044d509d2c0716c6f1860e6c10b0e7e5c17a22f28aee28e30891a83`.
 - Normal New/Load/Save and canonical gameplay commands are the entrypoint; saves remain under `%LOCALAPPDATA%\WORLDSEED\saves`. Select New Game to test v9 land cover.
 
 The hosted driver is Microsoft GDI Generic/OpenGL 1.1. Main and QA render probes
@@ -83,9 +83,9 @@ simulations lacked the clock or `environment.visual_conditions` interface.
 The shared portal fixture now supplies `GameClock` and pure `LightingSystem`
 samples; the standalone floor fixture supplies its state clock. No production
 behavior, gameplay assertion or CI gate was weakened. All four affected modules
-passed **46 tests in 13.9 seconds** under a 90-second bound. The executable above
-contains the same production code; this follow-up changes tests/documentation
-only. Replacement Fast Gate results will be recorded after completion.
+passed **46 tests in 13.9 seconds** under a 90-second bound. The fixture follow-up
+changes tests/documentation only; the final executable also includes the house
+edge refinement described below.
 
 [Crafting/Discovery regressions 38926236160](https://github.com/ReleMai/WORLDSEED/actions/runs/38926236160)
 passed on the implementation commit.
@@ -101,6 +101,29 @@ and adjacent clips. All **18 house/building tests** passed under a 90-second
 bound; **13 packaging tests** passed separately. Hidden/transparent pixels stay
 unselectable and saved physical collision is unchanged.
 
-The Windows packaging workflow now watches GPU house source/tests so this final
-production refinement receives a replacement full-game executable. Its new
-build/gate links will supersede the earlier candidate above after validation.
+The Windows packaging workflow now watches GPU house source/tests. The final
+full-game executable linked above includes this production refinement and
+supersedes the earlier `aae1076` package.
+
+Final production revision: [`e14c048`](https://github.com/ReleMai/WORLDSEED/commit/e14c04810d57d4a967cefe36236665c1d8a10c9e),
+including fixture/evidence follow-up [`8b6c44a`](https://github.com/ReleMai/WORLDSEED/commit/8b6c44a08ed4928dc76a48d83c047fe08bc83fba).
+Final runs: [Fast Gate 38942972746](https://github.com/ReleMai/WORLDSEED/actions/runs/38942972746)
+and [Windows main-game build 38942972726](https://github.com/ReleMai/WORLDSEED/actions/runs/38942972726).
+Both completed successfully: **all seven Fast Gate jobs passed**, including
+World UI/interior regressions, settlement/economy, NPC conservation, building
+geometry, W4 contracts and main-game integration contracts. The final frozen
+executable self-check passed; its native render/main/QA probes again reported
+`unsupported-hosted-driver-rejected` on GDI Generic/OpenGL 1.1.
+
+Hosted Linux optional graphics tests skip when EGL is missing (and the pure
+contract job intentionally lacks ModernGL). The fractional house-pointer
+coverage regression passed on CI. Actual shader/window pixels were exercised
+locally through Mesa llvmpipe as recorded above; CI success must not be read as
+native hardware acceptance.
+
+Next coherent W4 work should add an admitted cover/ground mask for physical
+roof/canopy precipitation interception, then directional tree/building shadows
+and broader authoritative light occlusion. Keep existing contact shadows named
+accurately. W5 still needs human native-Windows playtests, device recovery,
+performance budgets and longer saved-world soaks. The existing bootstrap-audit
+ingredient-tag helper failure above remains a separate tool issue.
