@@ -5,6 +5,7 @@ uniform vec3 u_ambient;
 uniform vec2 u_fade_center;
 uniform float u_fade_radius;
 uniform float u_local_alpha;
+uniform vec4 u_sight_edges;
 uniform bool u_ground;
 uniform sampler2D u_ground_w;
 uniform sampler2D u_ground_e;
@@ -99,6 +100,16 @@ void main() {
         float distance_px = distance(v_screen, u_fade_center);
         float blend = smoothstep(u_fade_radius * 0.70, u_fade_radius, distance_px);
         opacity *= mix(u_local_alpha, 1.0, blend);
+    }
+    // Entire attenuation lies INSIDE the presently admitted ground cell.
+    // This is never applied to roofs, characters, moving creatures or memory.
+    if (u_ground) {
+        float west = 1.0 - smoothstep(0.0, 0.24, v_uv.x);
+        float east = 1.0 - smoothstep(0.0, 0.24, 1.0-v_uv.x);
+        float north = 1.0 - smoothstep(0.0, 0.24, v_uv.y);
+        float south = 1.0 - smoothstep(0.0, 0.24, 1.0-v_uv.y);
+        opacity *= (1.0-u_sight_edges.x*west)*(1.0-u_sight_edges.y*east)
+                 *(1.0-u_sight_edges.z*north)*(1.0-u_sight_edges.w*south);
     }
     fragColor = vec4(texel.rgb * u_ambient, texel.a * opacity);
 }

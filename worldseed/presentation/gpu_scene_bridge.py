@@ -206,10 +206,18 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         prepared=ground_material(materials,(x,y,z),str(terrain_id),terrain_by,
             visible_cells if current else memory_cells,terrain_defs)
         tex,blend=prepared if prepared is not None else (materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None))),None)
+        # Only current pixels ease inward at a sight boundary. Never sample
+        # or draw a neighboring unknown tile, and keep remembered geometry
+        # frozen. A soft fade at the outgoing tile edge removes hard stair
+        # stepping without leaking any undiscovered coordinates.
+        edges=(tuple(0. if (x+dx,y+dy,z) in visible_cells
+                     else (.36 if (x+dx,y+dy,z) in discovered_cells else .62)
+                     for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)))
+               if current and blend is not None else (0.,0.,0.,0.))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
                        (viewport,), opacity=1.0 if current else .62, ground=blend,
-                       remembered=not current))
+                       remembered=not current,sight_edges=edges))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,

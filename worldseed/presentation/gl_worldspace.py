@@ -105,6 +105,8 @@ class SpriteCommand:
     sway_px: float = 0.0
     ground: GroundBlend | None = None
     remembered: bool = False
+    # W/E/N/S alpha easing, only for the already-admitted ground sprite.
+    sight_edges: tuple[float, float, float, float] = (0., 0., 0., 0.)
 
     def __post_init__(self):
         if not self.visual_id or not self.texture_id:
@@ -136,6 +138,10 @@ class SpriteCommand:
             raise ValueError('invalid detached ground metadata')
         if type(self.remembered) is not bool:
             raise ValueError('remembered sprite classification must be boolean')
+        if (len(self.sight_edges)!=4 or any(not _finite(v) or v<0. or v>1. for v in self.sight_edges)):
+            raise ValueError('sight easing must be a bounded four-edge vector')
+        if self.ground is None and any(self.sight_edges):
+            raise ValueError('only ground geometry can soften a sight boundary')
 
 
 def _finite(x):
@@ -325,7 +331,7 @@ class GLWorldspaceRenderer:
                           for n in ground.neighbors),ground.widths,ground.color)
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
-                        material_key,cmd.remembered)
+                        material_key,cmd.remembered,cmd.sight_edges)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
@@ -352,6 +358,7 @@ class GLWorldspaceRenderer:
                         self.program['u_ground_widths'].value=ground.widths
                     self.ctx.scissor=clip
                     self.program['u_opacity'].value=cmd.opacity
+                    self.program['u_sight_edges'].value=cmd.sight_edges
                     self.program['u_fade_center'].value=cmd.fade_center
                     self.program['u_fade_radius'].value=cmd.fade_radius
                     self.program['u_local_alpha'].value=cmd.local_alpha

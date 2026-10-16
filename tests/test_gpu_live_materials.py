@@ -69,6 +69,28 @@ class GPULiveMaterialsContracts(TestCase):
                          ['ground:3:0:0'])
         self.assertEqual(blinded.visible_ground_cells, 1)
 
+    def test_sight_edges_soften_only_authorized_ground(self):
+        from worldseed.presentation.gl_worldspace import SpriteCommand
+        visible=frozenset({(0,0,3),(1,0,3)})
+        terrain={(0,0,3):'core:grass',(1,0,3):'core:grass'}
+        frame=self.build(terrain_by=terrain,visible_cells=visible,
+            discovered_cells=visible)
+        rows={c.visual_id:c for c in frame.ground}
+        left=rows['ground:3:0:0']
+        right=rows['ground:3:1:0']
+        self.assertEqual(left.sight_edges[1],0.)
+        self.assertEqual(right.sight_edges[0],0.)
+        self.assertGreater(left.sight_edges[0],0.)
+        self.assertGreater(right.sight_edges[1],0.)
+        hidden=self.build(terrain_by=terrain,visible_cells=frozenset({(0,0,3)}),
+                          discovered_cells=visible)
+        memory=next(c for c in hidden.ground if c.visual_id=='ground:3:1:0')
+        self.assertTrue(memory.remembered)
+        self.assertEqual(memory.sight_edges,(0.,0.,0.,0.))
+        from pathlib import Path
+        shader=(Path(__file__).parents[1]/'worldseed/assets/shaders/worldspace_sprite.frag').read_text()
+        self.assertIn('u_sight_edges',shader)
+
     def test_additional_actors_cannot_replace_viewer_or_exceed_budget(self):
         for actor in (PreparedActor('gpu-viewer','core:npc',WorldFoot(.5,.5,3),True),
                       PreparedActor('other','core:player',WorldFoot(.5,.5,3),True,is_viewer=True)):
