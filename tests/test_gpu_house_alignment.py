@@ -100,7 +100,7 @@ class GPUHouseAlignmentTests(TestCase):
                 # Connected top-down roofs intentionally fill their footprint;
                 # only physically missing courtyard cells remain transparent.
                 self.assertEqual(commands[0].rgba[3], 255)
-                self.assertIsNone(shell_at_pointer(context, (0, 0)))
+                self.assertEqual(shell_at_pointer(context, (0, 0)), (building, 'body'))
                 door = commands[1]
                 center = (round((door.bounds[0]+door.bounds[2])/2),
                           round((door.bounds[1]+door.bounds[3])/2))
@@ -136,7 +136,7 @@ class GPUHouseAlignmentTests(TestCase):
         self.assertEqual(door.clip_rects, ((px, py, px+48, py+48),))
         context = {'used': viewport, 'shell_hit_regions': building_hit_regions((row,), commands, pg, viewport)}
         self.assertIsNone(shell_at_pointer(context, (round(px+24), round(py-5))))
-        self.assertEqual(shell_at_pointer(context, (round(px+24), round(py+24))), (building, 'door'))
+        self.assertEqual(shell_at_pointer(context, (round((door.bounds[0]+door.bounds[2])/2), round((door.bounds[1]+door.bounds[3])/2))), (building, 'door'))
 
     def test_recess_pixels_and_independent_door_share_uniform_fit(self):
         source = self.pg.Surface((100, 100), self.pg.SRCALPHA)
