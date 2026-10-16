@@ -372,7 +372,12 @@ class GpuTerminal(PygameTerminal):
             return
         pg=self.pg
         if not hasattr(pg,'Surface'):return
-        overlay=pg.Surface((viewport.width,viewport.height),pg.SRCALPHA)
+        overlay=getattr(self,'_stalk_overlay_surface',None)
+        if overlay is None or overlay.get_size()!=viewport.size:
+            overlay=pg.Surface(viewport.size,pg.SRCALPHA)
+            self._stalk_overlay_surface=overlay
+        else:
+            overlay.fill((0,0,0,0))
         watched={}
         for row in tuple(stealth.get('cells',()))[:1024]:
             if not isinstance(row,dict):continue
