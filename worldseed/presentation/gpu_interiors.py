@@ -18,6 +18,7 @@ from worldseed.systems.interior_state import UNIT
 from worldseed.systems.interior_visibility import (GRID, _rect_visible,
     visible_floor_rects, remembered_floor_rects)
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
+from .interior_clip_index import InteriorClipIndex
 from .worldspace import WorldFoot
 
 MAX_INTERIOR_WALLS = 256
@@ -169,6 +170,7 @@ def capture_interior(sim, camera):
         tiles.append(InteriorTile(rect,light,room))
     if len(tiles) > MAX_INTERIOR_TILES:
         raise ValueError('interior viewport tile budget exceeded')
+    live_index=InteriorClipIndex((tile.bounds for tile in tiles),GRID)
 
     # Remembered floor is independent of current light and LOS. Project only
     # the saved local cells, excluding cells intersecting live sight. Never
@@ -210,24 +212,19 @@ def capture_interior(sim, camera):
             tile.bounds[1],tile.bounds[0]))
         memory_tiles = memory_tiles[:max(0,MAX_INTERIOR_TILES-len(tiles))]
 
+    memory_index=InteriorClipIndex((tile.bounds for tile in memory_tiles),GRID)
     memory_walls = []
     old_walls=getattr(plan,'observed_walls',None)
     known_walls=walls if old_walls is None else tuple((w.x,w.y,w.x+w.w,w.y+w.h) for w in old_walls)
     for wall in known_walls:
-        patches = []
-        for tile in memory_tiles:
-            a,b,c,d = tile.bounds
-            # Only paint the part of the wall that borders remembered floor.
-            adjacent = (a-250,b-250,c+250,d+250)
-            clip = (max(wall[0],adjacent[0]),max(wall[1],adjacent[1]),
-                    min(wall[2],adjacent[2]),min(wall[3],adjacent[3]))
-            if clip[0] < clip[2] and clip[1] < clip[3]:
-                patches.append(clip)
+        # Query only remembered patches adjacent to this wall, rather than
+        # scanning every explored fragment for every wall.
+        patches=memory_index.intersect(wall,padding=250)
         if patches:
             memory_walls.append((wall, _union_rects(patches)))
 
     def admitted(rect):
-        return any(_overlap(rect, tile.bounds) for tile in tiles)
+        return bool(live_index.intersect(rect))
 
     visible_walls = []
     # Only the exposed face of each authoritative wall is projected. Other
@@ -282,7 +279,7 @@ def capture_interior(sim, camera):
     memory_objects=[]
     for row in getattr(plan,'observed_objects',())[:672]:
         rect=(row.x,row.y,row.x+row.w,row.y+row.h)
-        if row.uid not in current_uids and any(_overlap(rect,tile.bounds) for tile in memory_tiles):
+        if row.uid not in current_uids and memory_index.intersect(rect):
             memory_objects.append(InteriorObject(row.uid,row.kind,row.content_id,
                 tuple(value/UNIT for value in rect),row.height_ratio,row.flat,row.solid))
     actors = []
@@ -341,6 +338,8 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
 
     clips = tuple(screen_rect(tile.bounds, UNIT) for tile in scene.tiles)
     memory_clips=tuple(screen_rect(tile.bounds,UNIT) for tile in scene.memory_tiles)
+    live_clips=InteriorClipIndex(clips,max(8.,camera.scale*.5))
+    saved_clips=InteriorClipIndex(memory_clips,max(8.,camera.scale*.5))
     def floor_source_bounds(tile):
         a,b,_,_=tile.bounds
         x,y=a//GRID*GRID,b//GRID*GRID
@@ -350,12 +349,9 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         # mandatory exact sight scissors remain the sole pixel admission.
         return (a-.01,b-.01,c+.01,d+.01)
     def admitted_clips(bounds, remembered=False):
-        # Restrict work to intersecting sight patches. Passing every floor
-        # patch to every sprite used to multiply draw operations in big rooms.
-        return tuple((max(a,bounds[0]),max(b,bounds[1]),
-                      min(c,bounds[2]),min(d,bounds[3]))
-                     for a,b,c,d in (memory_clips if remembered else clips)
-                     if _overlap((a,b,c,d),bounds))
+        # Indexed candidates preserve exact LOS scissors, without a full
+        # tile scan for every furniture sprite, actor and contact shadow.
+        return (saved_clips if remembered else live_clips).intersect(bounds)
     ground, scenery = [], []
     if show_explored_memory:
         for index, tile in enumerate(scene.memory_tiles):
@@ -385,13 +381,7 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         source = _texture(materials, 'interior_textures', wall_id)
         if source:
             bounds = screen_rect(rect, UNIT)
-            wall_parts=[]
-            for tile in scene.tiles:
-                a,b,c,d=tile.bounds
-                expanded=screen_rect((a-250,b-250,c+250,d+250),UNIT)
-                if _overlap(bounds,expanded):
-                    wall_parts.append((max(bounds[0],expanded[0]),max(bounds[1],expanded[1]),
-                                       min(bounds[2],expanded[2]),min(bounds[3],expanded[3])))
+            wall_parts=live_clips.intersect(bounds,padding=camera.scale*.25)
             if not wall_parts:
                 continue
             scenery.append(((-1., 'wall:'+str(index)), SpriteCommand('interior-wall:'+str(index),

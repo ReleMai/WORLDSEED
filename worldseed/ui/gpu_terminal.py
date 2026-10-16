@@ -69,6 +69,7 @@ class GpuTerminal(PygameTerminal):
         self._gl=self._world_renderer=self._post=self._ui_gpu=None
         self._materials=None
         self._snapshot=None
+        self._interior_fades={}
         self._world_commands=()
         self._last_world=None
         self._gpu_viewport=None
@@ -203,8 +204,14 @@ class GpuTerminal(PygameTerminal):
             fx=replace(fx,camera_pixel_x=fx.camera_pixel_x-rect.x,
                 camera_pixel_y=fx.camera_pixel_y-rect.y,
                 lights=tuple(replace(light,x=light.x+rect.x,y=light.y+rect.y) for light in fx.lights))
-            self._world_report=self._world_renderer.draw(self._world_commands,target=self._post.scene_target,
-                frame_time_seconds=elapsed,clear=(0.,0.,0.,0.))
+            from worldseed.presentation.interior_memory_fade import fade_commands
+            from worldseed.profiling import measure_if_enabled
+            commands=(fade_commands(self._world_commands,self._interior_fades,time.monotonic())
+                if self._snapshot.interior and self._interior_fades else self._world_commands)
+            profiler=getattr(self._last_world[3],'profiler',None) if self._last_world is not None else None
+            with measure_if_enabled(profiler,'gpu.world_draw'):
+                self._world_report=self._world_renderer.draw(commands,target=self._post.scene_target,
+                    frame_time_seconds=elapsed,clear=(0.,0.,0.,0.))
             self._post.present(fx)
             self._gpu_world_frames+=1
         else:self._gl.screen.clear(0.,0.,0.,1.)
@@ -224,6 +231,14 @@ class GpuTerminal(PygameTerminal):
             # Indoor scenes do not animate the outdoors' weather or canopy.
             # Avoid submitting identical interior sprite commands 20x/second.
             if self._snapshot.interior and not self._smoke_frames:
+                from worldseed.presentation.interior_memory_fade import fading
+                if self._interior_fades:
+                    if fading(self._interior_fades,time.monotonic()):
+                        self._composite()
+                        return
+                    # Paint one final fully remembered frame after the fade.
+                    self._interior_fades={}
+                    self._composite()
                 return
             self._composite()
         elif self._snapshot is None:
@@ -264,11 +279,19 @@ class GpuTerminal(PygameTerminal):
         self.screen.fill((0,0,0,0),viewport)
         scale=max(28,min(56,self._tile_px),ceil(sqrt(viewport.width*viewport.height/1600)))
         camera=WorldCamera(player_foot(sim),viewport.width,viewport.height,scale)
-        snapshot=capture_live_scene(sim,camera)
+        from worldseed.profiling import measure_if_enabled
+        profiler=getattr(sim,'profiler',None)
+        old_scene=getattr(self._snapshot,'interior_scene',None) if self._snapshot is not None else None
+        with measure_if_enabled(profiler,'gpu.scene_capture'):
+            snapshot=capture_live_scene(sim,camera)
         from worldseed.presentation.gpu_objects import gpu_resource_style
-        frame=snapshot.gpu_frame(materials=self._materials,registry=registry,
-            resource_style=lambda fid:gpu_resource_style(fid,registry.resources.get(fid),self._visuals),
-            show_explored_memory=True)  # Opt out only for an active blindness effect.
+        with measure_if_enabled(profiler,'gpu.command_preparation'):
+            frame=snapshot.gpu_frame(materials=self._materials,registry=registry,
+                resource_style=lambda fid:gpu_resource_style(fid,registry.resources.get(fid),self._visuals),
+                show_explored_memory=True)  # Opt out only for an active blindness effect.
+        from worldseed.presentation.interior_memory_fade import update_departures
+        self._interior_fades=update_departures(old_scene,snapshot.interior_scene,
+            self._interior_fades,time.monotonic())
         self._snapshot=snapshot
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
         self._world_commands=tuple(replace(command,bounds=shift(command.bounds),
