@@ -21,7 +21,7 @@ class InteriorFloorBatchTests(TestCase):
         self.assertAlmostEqual(vertices[2],(a-bounds[0])/(bounds[2]-bounds[0]))
         self.assertAlmostEqual(vertices[3],(b-bounds[1])/(bounds[3]-bounds[1]))
         self.assertAlmostEqual(vertices[4],c)
-        self.assertAlmostEqual(vertices[9],b)
+        self.assertAlmostEqual(vertices[9],d)
         self.assertAlmostEqual(vertices[20],c)
         self.assertAlmostEqual(vertices[21],d)
 
