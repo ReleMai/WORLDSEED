@@ -296,7 +296,9 @@ class GpuTerminal(PygameTerminal):
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
         self._world_commands=tuple(replace(command,bounds=shift(command.bounds),
             clip_rects=tuple(shift(rect) for rect in command.clip_rects),
-            fade_center=(command.fade_center[0]+viewport.x,command.fade_center[1]+viewport.y))
+            fade_center=(command.fade_center[0]+viewport.x,command.fade_center[1]+viewport.y),
+            sight_center=(command.sight_center[0]+viewport.x,
+                          command.sight_center[1]+viewport.y) if command.sight_radius else command.sight_center)
             for command in frame.commands)
         self._set_pointer_context(snapshot,registry,world,sim,viewport,camera)
         if sidebar:
