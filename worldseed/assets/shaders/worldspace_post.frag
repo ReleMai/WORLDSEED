@@ -30,17 +30,35 @@ float cloudField(vec2 position) {
            + smoothNoise(uv*4.13+31.4)*0.15;
     return smoothstep(0.28,0.76,c);
 }
-float rainStreak(vec2 world) {
-    // Narrow slanted streaks; two independently phased cells at different scales.
-    vec2 drift=vec2(u_wind.x*20.0,230.0+u_wind.y*30.0)*u_clock;
-    vec2 p=(world+drift)/vec2(10.0,38.0);
-    vec2 ip=floor(p);
-    vec2 fp=fract(p);
-    float seed=hash12(ip);
-    float x=fract(fp.x + fp.y*(0.22+0.10*u_wind.x));
-    float streak=(1.0-smoothstep(0.016,0.10,abs(x-seed))) *
-                 smoothstep(0.03,0.17,fp.y) * (1.0-smoothstep(0.70,0.98,fp.y));
-    return streak * step(0.47,hash12(ip+19.9));
+float rainStreak(vec2 world, vec2 spacing, float speed, float depth) {
+    // Analytic particles, not scrolling stripe textures. Back-tracing position
+    // gives each falling drop a stable world-cell identity. In top-origin world
+    // pixels positive Y is DOWN; adding a clock drift made the old rain rise.
+    // Shearing by velocity aligns the tapered tail with the wind trajectory.
+    float fall=max(120.0,speed+u_wind.y*14.0);
+    float lean=(u_wind.x*30.0+5.0)/fall;
+    vec2 p=vec2(world.x-world.y*lean,world.y-fall*u_clock);
+    vec2 cell=floor(p/spacing), local=p-cell*spacing;
+    vec2 key=cell+vec2(71.3,39.7)*depth;
+    float identity=hash12(key);
+    // Keep the entire short tail inside its cell: no clipped segment snapping
+    // when a particle crosses a queried cell boundary, and no neighbor search.
+    vec2 center=spacing*vec2(mix(.12,.88,identity),
+                             mix(.35,.75,hash12(key+17.1)));
+    float lengthPx=mix(8.0,23.0,hash12(key+49.3))*depth;
+    float along=local.y-center.y;
+    float progress=clamp((along+lengthPx)/lengthPx,0.0,1.0);
+    float widthPx=mix(.55,1.05,hash12(key+91.4))*depth;
+    // Derivatives belong to continuous coordinates. Taking fwidth(local.x)
+    // across a wrapped cell edge creates camera-dependent bright grid seams.
+    float aa=max(.45,fwidth(p.x)*.5);
+    float across=1.0-smoothstep(widthPx*.25,widthPx+aa,
+                               abs(local.x-center.x));
+    float tail=smoothstep(-lengthPx,-lengthPx*.40,along) *
+               (1.0-smoothstep(-.7,1.0,along));
+    float taper=mix(.35,1.0,progress);
+    float population=step(hash12(key+113.8),.10+.70*u_rain);
+    return across*tail*taper*population*mix(.45,1.0,hash12(key+159.2));
 }
 float snowFlake(vec2 world) {
     vec2 drift=vec2(-u_wind.x*8.0,26.0+u_wind.y*4.0)*u_clock;
@@ -59,6 +77,15 @@ void main() {
         fragColor=vec4(0.0,0.0,0.0,1.0);
         return;
     }
+    // Discovery memory is one .42-opacity ground draw on transparent black:
+    // standard SRC_ALPHA blending stores alpha .42*.42 = .1764. The terrain
+    // material blend keeps that single draw/alpha contract. Freeze that memory
+    // instead of lighting/animating it. Do NOT test alpha<1: antialiased current
+    // canopies also reduce destination alpha under standard sprite blending.
+    if (original.a < 0.25) {
+        fragColor=vec4(original.rgb,1.0);
+        return;
+    }
     float night=1.0-u_sun;
     // Twilight desaturation and moon blue are light grades, not a world-state query.
     vec3 nightGrade=vec3(0.38,0.48,0.72);
@@ -71,12 +98,14 @@ void main() {
     vec3 scene=original.rgb*grade*(1.0-cloudShadow);
     // Each emissive light is evaluated in PIXELS and can brighten only an
     // existing scene pixel; shadows, NPC admission and roofs stay external.
+    vec3 rainLight=vec3(0.0);
     for (int i=0;i<8;i++) {
         if(i>=u_light_count)break;
         vec4 l=u_light_posrad[i];
         float d=length(topScreen-l.xy)/max(1.0,l.z);
         float attenuation=pow(clamp(1.0-d,0.0,1.0),2.0)*l.w;
         scene += original.rgb * u_light_color[i] * attenuation*(0.65+0.25*night);
+        rainLight += u_light_color[i]*attenuation*.16;
     }
     // Broad overlapping fog scales with cloudy humidity, not sprite FOW.
     float fogWave=smoothNoise(world/160.0+vec2(u_clock*.012,-u_clock*.008));
@@ -84,10 +113,16 @@ void main() {
     float fogOpacity=u_fog*(0.19+0.29*fogWave+0.17*fogFine);
     vec3 mistColor=mix(vec3(.12,.19,.24),vec3(.67,.72,.70),u_sun);
     scene=mix(scene,mistColor,clamp(fogOpacity,0.0,0.68));
-    // Precipitation in two depth bands. Weather sprites never become click/LOS
-    // targets; their world position moves with wind, not with the player.
-    float rain=rainStreak(world)*0.70 + rainStreak(world*1.33+vec2(220.,83.))*0.30;
-    scene+=vec3(0.61,0.75,0.85)*rain*u_rain*(0.16+0.12*u_sun);
+    // Three sparse depth bands vary spacing, fall speed, width and exposure.
+    // Independent non-integral spacing breaks the old 10x38-pixel stripe grid.
+    // No simulation RNG, extra particles/buffers, readback or world queries.
+    if (u_rain>0.0) {
+        float rain=rainStreak(world,vec2(17.,61.),255.,.75)*.45
+                  +rainStreak(world+vec2(137.,61.),vec2(17.,71.),350.,1.0)*.70
+                  +rainStreak(world+vec2(53.,193.),vec2(25.,109.),470.,1.4)*.85;
+        vec3 rainColor=vec3(.60,.70,.76)*(.08+.18*u_sun)+rainLight;
+        scene+=rainColor*rain*u_rain;
+    }
     float snow=snowFlake(world)*0.75+snowFlake(world*1.7+vec2(120.,37.))*0.25;
     scene+=vec3(0.76,0.85,0.91)*snow*u_snow*(0.23+0.12*u_sun);
     // Fully opaque full-window presentation; HUD ownership remains caller-side.

@@ -1,6 +1,6 @@
 """WORLDSEED G8-candidate OpenGL sprite renderer; explicit native opt-in only.
 
-The primary pygame Surface renderer remains supported. This module owns no
+The legacy pygame Surface renderer remains supported. This module owns no
 world, saves, physics, NPC queries, keyboard, mouse or game time. A caller that
 owns ONE pygame OPENGL window supplies already-authorized, projected commands.
 RGBA textures are immutable by (id, revision), budgeted with LRU eviction.
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from dataclasses import dataclass
-from math import isfinite, floor, ceil
+from math import isfinite, ceil
 from itertools import groupby
 from pathlib import Path
 from struct import pack
@@ -29,6 +29,57 @@ SHADER_DIR = Path(__file__).resolve().parents[1] / 'assets' / 'shaders'
 
 class GPUBackendUnavailable(RuntimeError):
     """GPU candidate cannot render safely; caller must retain software path."""
+
+
+@dataclass(frozen=True, slots=True)
+class GroundTexture:
+    """An already-authorized immutable neighboring ground material."""
+    texture_id: str
+    revision: int
+    rgba: bytes
+    image_w: int
+    image_h: int
+    color: tuple[float, float, float]
+
+    def __post_init__(self):
+        if not self.texture_id or type(self.revision) is not int or self.revision < 0:
+            raise ValueError('invalid ground material identity')
+        if any(type(x) is not int or not 1 <= x <= MAX_TEXTURE_EDGE
+               for x in (self.image_w, self.image_h)):
+            raise ValueError('ground dimensions outside bounded limits')
+        if not isinstance(self.rgba, bytes) or len(self.rgba) != self.image_w*self.image_h*4:
+            raise ValueError('expected exact ground RGBA bytes')
+        if (not isinstance(self.color, tuple) or len(self.color) != 3 or
+                any(not _finite(x) or not 0 <= x <= 1 for x in self.color)):
+            raise ValueError('invalid ground palette')
+
+
+@dataclass(frozen=True, slots=True)
+class GroundBlend:
+    """Detached ground metadata; neighbors are ordered W/E/N/S/NW/NE/SW/SE.
+
+    Each command remains clipped to its authorized cell. The renderer may
+    sample these supplied images, but cannot look up another world cell.
+    Zero width preserves hard features and the boundary of player knowledge.
+    """
+    cell: tuple[int, int]
+    neighbors: tuple[GroundTexture, ...]
+    widths: tuple[float, float, float, float]
+    color: tuple[float, float, float]
+
+    def __post_init__(self):
+        if (not isinstance(self.cell, tuple) or len(self.cell) != 2 or
+                any(type(x) is not int for x in self.cell)):
+            raise ValueError('ground requires an integer world cell')
+        if (not isinstance(self.neighbors, tuple) or len(self.neighbors) != 8 or
+                any(not isinstance(x, GroundTexture) for x in self.neighbors)):
+            raise ValueError('ground requires eight detached neighbor materials')
+        if (not isinstance(self.widths, tuple) or len(self.widths) != 4 or
+                any(not _finite(x) or not 0 <= x <= .5 for x in self.widths)):
+            raise ValueError('invalid ground transition widths')
+        if (not isinstance(self.color, tuple) or len(self.color) != 3 or
+                any(not _finite(x) or not 0 <= x <= 1 for x in self.color)):
+            raise ValueError('invalid ground palette')
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +103,7 @@ class SpriteCommand:
     fade_radius: float = 0.0
     local_alpha: float = 1.0
     sway_px: float = 0.0
+    ground: GroundBlend | None = None
 
     def __post_init__(self):
         if not self.visual_id or not self.texture_id:
@@ -79,6 +131,8 @@ class SpriteCommand:
             not _finite(self.sway_px) or abs(self.sway_px)>6 or
             len(self.fade_center)!=2 or any(not _finite(x) for x in self.fade_center)):
             raise ValueError('invalid material alpha parameters')
+        if self.ground is not None and not isinstance(self.ground, GroundBlend):
+            raise ValueError('invalid detached ground metadata')
 
 
 def _finite(x):
@@ -88,12 +142,13 @@ def _finite(x):
 def pixel_clip(rect, width: int, height: int):
     """Top-left-origin integer clip for a GL bottom-left scissor.
 
-    Intersection is conservative: clip cannot grant pixels outside its source
-    rectangle. No memory/remembered-cell fall-through is permitted.
+    Only pixels whose sample centers lie inside the source are admitted.
+    Adjacent fractional rectangles therefore partition samples without gaps.
+    No memory/remembered-cell fall-through is permitted.
     """
     x0,y0,x1,y1=rect
-    x=max(0,ceil(x0)); y=max(0,ceil(y0))
-    right=min(width,floor(x1)); bottom=min(height,floor(y1))
+    x=max(0,ceil(x0-.5)); y=max(0,ceil(y0-.5))
+    right=min(width,ceil(x1-.5)); bottom=min(height,ceil(y1-.5))
     if right<=x or bottom<=y:
         return None
     return (x,height-bottom,right-x,bottom-y)
@@ -210,6 +265,24 @@ class GLWorldspaceRenderer:
             raise ValueError('GPU frame exceeds bounded command contract')
         if len(ambient)!=3 or any(not _finite(x) or not 0<=x<=1 for x in ambient):
             raise ValueError('invalid GPU ambient grade')
+        # All ground commands share one camera transform. World positions are
+        # derived from screen positions, never from a per-cell UV restart. In
+        # particular the cell coordinate is absent from the batching key.
+        ground_transform = None
+        for cmd in rows:
+            if cmd.ground is None:
+                continue
+            x0,y0,x1,y1 = cmd.bounds
+            scale = x1-x0
+            if abs((y1-y0)-scale) > 1e-6*max(1., scale):
+                raise ValueError('ground bounds must represent one square world cell')
+            transform = (cmd.ground.cell[0]-x0/scale,
+                         cmd.ground.cell[1]-y0/scale, 1./scale)
+            if ground_transform is None:
+                ground_transform = transform
+            elif any(abs(a-b) > 1e-5*max(1., abs(a), abs(b))
+                     for a,b in zip(ground_transform, transform)):
+                raise ValueError('ground commands must share one world camera')
         # Fail before partial frame on invalid material and huge clip budgets.
         work=[]
         for cmd in rows:
@@ -230,6 +303,10 @@ class GLWorldspaceRenderer:
             self.ctx.clear(*clear)
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_texture'].value=0
+            for index, name in enumerate(('u_ground_w','u_ground_e','u_ground_n','u_ground_s',
+                                          'u_ground_nw','u_ground_ne','u_ground_sw','u_ground_se'),1):
+                self.program[name].value=index
+            self.program['u_ground_world_transform'].value=ground_transform or (0.,0.,1.)
             self.program['u_ambient'].value=tuple(ambient)
             self.program['u_time'].value=frame_time_seconds
             rendered=0
@@ -237,15 +314,34 @@ class GLWorldspaceRenderer:
             reuses_before=self.bank.reuses
             def batch_key(row):
                 cmd,clip=row
+                ground=cmd.ground
+                material_key = None if ground is None else (
+                    tuple((n.texture_id,n.revision,n.image_w,n.image_h,n.color)
+                          for n in ground.neighbors),ground.widths,ground.color)
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
-                        clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px)
+                        clip,cmd.opacity,cmd.fade_center,cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
+                        material_key)
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
                     batch=values[first:first+64]
                     cmd,clip=batch[0]
+                    ground=cmd.ground
+                    if ground is not None:
+                        # Every simultaneously bound image must fit. Sequential
+                        # LRU touches then retain all nine textures until draw.
+                        unique={(t.texture_id,t.revision,t.image_w,t.image_h):
+                                t.image_w*t.image_h*4 for t in (cmd,*ground.neighbors)}
+                        if sum(unique.values())>self.bank.limit:
+                            raise GPUBackendUnavailable('ground material set exceeds texture limit')
                     tex=self.bank.texture_for(cmd)
                     tex.use(location=0)
+                    self.program['u_ground'].value=ground is not None
+                    if ground is not None:
+                        for location,neighbor in enumerate(ground.neighbors,1):
+                            self.bank.texture_for(neighbor).use(location=location)
+                        self.program['u_ground_colors'].value=(ground.color,*tuple(n.color for n in ground.neighbors))
+                        self.program['u_ground_widths'].value=ground.widths
                     self.ctx.scissor=clip
                     self.program['u_opacity'].value=cmd.opacity
                     self.program['u_fade_center'].value=cmd.fade_center

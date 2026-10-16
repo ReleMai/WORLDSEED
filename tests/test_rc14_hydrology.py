@@ -35,7 +35,7 @@ class RC14HydrologyTests(unittest.TestCase):
         self.assertEqual(HYDROLOGY_MORPHOLOGY_VERSION, 2)
         self.assertEqual(SETTLEMENT_PLAN_VERSION, 8)
         self.assertEqual(ROUTEGEN_VERSION, 4)
-        self.assertEqual(WORLDGEN_VERSION, 8)
+        self.assertEqual(WORLDGEN_VERSION, 9)
         self.assertEqual(HYDROLOGY_ALGORITHM, HYDROLOGY_ALGORITHM_V2)
         self.assertEqual(hydrology_algorithm(1), HYDROLOGY_ALGORITHM_V1)
         self.assertEqual(hydrology_algorithm(2), HYDROLOGY_ALGORITHM_V2)

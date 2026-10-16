@@ -14,9 +14,9 @@ class WorldgenV8Phase2Tests(unittest.TestCase):
         cls.registry = ContentRegistry.load(DATA_DIR)
         cls.seed = b"v8-authority-fixture"
 
-    def test_v8_is_promoted_for_new_worlds(self):
-        self.assertEqual(WORLDGEN_VERSION, 8)
-        self.assertEqual(WORLDGEN_PREVIEW_VERSION, 8)
+    def test_v9_retains_promoted_physical_geography_contract(self):
+        self.assertEqual(WORLDGEN_VERSION, 9)
+        self.assertEqual(WORLDGEN_PREVIEW_VERSION, 9)
 
     def test_v7_field_contract_is_frozen_at_representative_coordinates(self):
         expected = {
@@ -35,9 +35,9 @@ class WorldgenV8Phase2Tests(unittest.TestCase):
                 (x, y),
             )
 
-    def test_default_v8_promotes_geology_and_physical_climate(self):
+    def test_explicit_v8_promotes_geology_and_physical_climate(self):
         gen7 = WorldGenerator(self.seed, self.registry, version=7)
-        gen8 = WorldGenerator(self.seed, self.registry)
+        gen8 = WorldGenerator(self.seed, self.registry, version=8)
         elevation_changed = 0
         climate_changed = 0
         for x, y in ((-4097,-2049),(-1,-1),(0,0),(913,-1441),(4096,2048)):

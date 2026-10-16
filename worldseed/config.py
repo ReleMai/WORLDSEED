@@ -4,11 +4,11 @@ PROJECT_NAME = "WORLDSEED"
 ENGINE_VERSION = "1.0.0-rc14-dev64"
 SAVE_SCHEMA_VERSION = 3
 
-# Dev27: WORLDGEN v8 is now the default for newly created worlds. Existing
-# saves remain pinned to the worldgen_version stored in their metadata, so
-# v1-v7 geography is never silently regenerated under the geological v8 rules.
-WORLDGEN_VERSION = 8
-# Retained as a compatibility alias for v8 audit/development tooling created
+# WORLDGEN v9 adds continuous, terrain-aware land cover over unchanged v8
+# geology/climate/drainage. Only new worlds use it; v1-v8 saves retain their
+# recorded generator, including their exact biome classification.
+WORLDGEN_VERSION = 9
+# Retained as a compatibility alias for audit/development tooling created
 # during the staged promotion period.
 WORLDGEN_PREVIEW_VERSION = WORLDGEN_VERSION
 

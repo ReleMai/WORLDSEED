@@ -52,7 +52,7 @@ class WorldGenerator:
         self.coast_morphology_version=int(COAST_MORPHOLOGY_VERSION if self.version>=8 else 0)
         self._lattice_cache={}
         # WORLDGEN v8 geological/topographic read models. They are authoritative
-        # for v8 worlds (the current new-world default); v1-v7 keep frozen fields.
+        # for v8+ worlds; v9 only refines terrestrial cover. v1-v7 keep frozen fields.
         from worldseed.world.landforms import LandformSampler
         from worldseed.world.topography import TopographySampler
         from worldseed.world.climate_v8 import ClimateV8Sampler
@@ -63,6 +63,10 @@ class WorldGenerator:
         self.climate_v8 = ClimateV8Sampler(
             self.world_seed, self.landforms_v8, self.topography_v8
         )
+        self.surface_v9 = None
+        if self.version >= 9:
+            from worldseed.world.surface_v9 import SurfaceV9Sampler
+            self.surface_v9 = SurfaceV9Sampler(self._value_noise, self.topography_v8)
         from worldseed.world.coast_v8 import CoastV8Sampler
         self.coast_v8 = CoastV8Sampler(self)
         from worldseed.world.coastal_mouths import CoastalMouths
@@ -172,6 +176,16 @@ class WorldGenerator:
             return None
         return self.climate_v8.sample(pos.x,pos.y)
 
+    def landcover_at(self,pos:WorldPos):
+        """Return v9 terrestrial habitat context without materializing a chunk.
+
+        This read model does not override protected mouths, coast or prepared
+        river terrain. Call terrain_at for the final physical terrain identity.
+        """
+        if self.surface_v9 is None or pos.z != 0:
+            return None
+        return self.surface_v9.sample(pos.x,pos.y,self.sample_fields(pos))
+
     def coast_at(self,pos:WorldPos,*,prepared_only:bool=True):
         """Return Phase-5 coastal morphology without changing terrain authority."""
         if self.version < 8 or pos.z != 0:
@@ -279,6 +293,8 @@ class WorldGenerator:
             return 'core:ocean_deep'
         if e<23800:return "core:water"
         if e<26500:return "core:sand"
+        if self.version >= 9:
+            return self.surface_v9.sample(pos.x,pos.y,f).terrain_id
         if e>52500:return "core:rock"
         if t<15000:return "core:tundra"
         if self.version <= 3:

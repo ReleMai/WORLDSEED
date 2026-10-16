@@ -67,7 +67,8 @@ class GPUContracts(unittest.TestCase):
 
     def test_clipping_is_conservative_and_y_flipped(self):
         self.assertEqual(pixel_clip((1,1,8,5),10,10),(1,5,7,4))
-        self.assertEqual(pixel_clip((-10,-10,2.9,2.9),10,10),(0,8,2,2))
+        # Pixel centers .5, 1.5 and 2.5 lie inside this fractional clip.
+        self.assertEqual(pixel_clip((-10,-10,2.9,2.9),10,10),(0,7,3,3))
         self.assertIsNone(pixel_clip((-3,2,0,9),10,10))
         self.assertIsNone(pixel_clip((3,4,3,9),10,10))
         # No FOW clips means no draw operations, even if material exists.

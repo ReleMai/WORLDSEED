@@ -8,6 +8,8 @@
 
 **W2 implementation:** [W2 Action Hub/context handoff](WORLDSEED_W2_ACTION_HUB_CONTEXT_HANDOFF_2026-10-15.md) supersedes earlier read-only-pointer and absent-UI descriptions. It records 128 affected local tests, real SDL software captures and the publication/native closeout.
 
+**Latest graphics/worldgen continuation:** [W4 landscape quality](WORLDSEED_W4_LANDSCAPE_QUALITY_2026-10-16.md). WORLDGEN9 applies only to new worlds; preserve the latest exterior/interior explored memory.
+
 ## Paste this into the next WORLDSEED chat
 
 ```text

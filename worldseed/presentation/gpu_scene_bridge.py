@@ -190,6 +190,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         raise ValueError('too many prepared visual fires')
     ground=[]
     visible_ground=0
+    from .gpu_ground import ground_material
+    memory_cells=frozenset(discovered_cells)-frozenset(visible_cells)
     viewport=(0.,0.,float(camera.width_px),float(camera.height_px))
     for (x,y,z),terrain_id in terrain_by.items():
         if z!=camera.center.z or not(left<=x<right and top<=y<bottom):continue
@@ -200,10 +202,12 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         p=camera.to_screen(WorldFoot(x,y,z))
         # Tile geometry itself clips to its own location; shared viewport scissor
         # enables true GPU batching by art material without drawing hidden cells.
-        tex=materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None)))
+        prepared=ground_material(materials,(x,y,z),str(terrain_id),terrain_by,
+            visible_cells if current else memory_cells,terrain_defs)
+        tex,blend=prepared if prepared is not None else (materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None))),None)
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
-                       (viewport,), opacity=1.0 if current else .42))
+                       (viewport,), opacity=1.0 if current else .42, ground=blend))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,

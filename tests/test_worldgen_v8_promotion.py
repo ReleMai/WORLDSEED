@@ -17,13 +17,13 @@ class WorldgenV8PromotionTests(unittest.TestCase):
         cls.registry = ContentRegistry.load(DATA_DIR)
         cls.seed = b"worldgen-v8-promotion"
 
-    def test_new_database_records_v8(self):
-        self.assertEqual(WORLDGEN_VERSION, 8)
+    def test_new_database_records_current_worldgen_contract(self):
+        self.assertEqual(WORLDGEN_VERSION, 9)
         with tempfile.TemporaryDirectory() as td:
-            path = Path(td) / "new-v8.db"
-            db = WorldDatabase.create(path, "new-v8", self.seed.hex())
+            path = Path(td) / "new-v9.db"
+            db = WorldDatabase.create(path, "new-v9", self.seed.hex())
             try:
-                self.assertEqual(int(db.get_meta("worldgen_version")), 8)
+                self.assertEqual(int(db.get_meta("worldgen_version")), 9)
             finally:
                 db.close()
 
@@ -48,10 +48,10 @@ class WorldgenV8PromotionTests(unittest.TestCase):
             finally:
                 reopened.close()
 
-    def test_default_generator_is_v8_but_explicit_v7_stays_legacy(self):
+    def test_default_generator_is_v9_but_explicit_v7_stays_legacy(self):
         current = WorldGenerator(self.seed, self.registry)
         legacy = WorldGenerator(self.seed, self.registry, version=7)
-        self.assertEqual(current.version, 8)
+        self.assertEqual(current.version, 9)
         self.assertEqual(legacy.version, 7)
         self.assertIsNotNone(current.caves)
         self.assertIsNotNone(legacy.caves)

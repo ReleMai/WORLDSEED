@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import blake2b
+from math import ceil, floor
 
 from worldseed.systems.building_shells import BuildingShell
 from .gl_worldspace import SpriteCommand
@@ -17,6 +18,7 @@ MAX_PREPARED_BUILDINGS = 64
 MAX_BUILDING_CELLS = 1024
 MAX_BUILDING_EXTENT = 64
 BUILDING_TEXTURE_EDGE = 512
+BUILDING_FIT_REVISION = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +68,108 @@ class BuildingArt:
     door_rect: tuple[float, float, float, float]
 
 
+def _fit_building_geometry(shell, width, height, source, anchor):
+    """Fit a facade to physical cells with a consistent human-sized doorway.
+
+    Export padding and the source painter's door size are not world units.
+    Nine source bands keep the recess and leaf together while fixing the
+    facade opening to a human-sized threshold. Roof/body pixels still cover
+    the immutable physical extent; no saved plan or collider is resized.
+    """
+    if source is None:
+        sw = sh = 1000
+        left, top, right, bottom = 0, 0, sw, sh
+    else:
+        sw, sh = source.get_size()
+        box = source.get_bounding_rect(16)
+        left, top, right, bottom = ((box.left, box.top, box.right, box.bottom)
+            if box.width and box.height else (0, 0, sw, sh))
+    ax, ay, aw, ah = anchor
+    # A tiny source/fallback still has a valid full-body mapping.
+    if min(right-left, bottom-top, width, height) < 4:
+        return ((left, right), (top, bottom), (0, width), (0, height)), (0, 0, width, height)
+    sx0 = max(left+1, min(right-2, round(ax*sw/1000)))
+    sx1 = max(sx0+1, min(right-1, round((ax+aw)*sw/1000)))
+    sy0 = max(top+1, min(bottom-2, round(ay*sh/1000)))
+    sy1 = max(sy0+1, min(bottom-1, round((ay+ah)*sh/1000)))
+    columns, rows = shell.bounds[2]-shell.bounds[0]+1, shell.bounds[3]-shell.bounds[1]+1
+    cell_w, cell_h = width/columns, height/rows
+    if shell.entrance is not None and shell.door_side == 'south':
+        center = (shell.entrance[0]-shell.bounds[0]+.5)*cell_w
+        baseline = (shell.entrance[1]-shell.bounds[1]+1-.08)*cell_h
+    else:
+        center, baseline = width/2, height-.08*cell_h
+    # Visible player art is about 1.45 world cells tall. The opening must admit
+    # that visual scale even though its authoritative entrance is one cell.
+    target_h = max(2, min(round(1.55*cell_h), height-2))
+    target_w = max(2, min(round(.72*cell_w), width-2))
+    tx0 = max(1, min(width-target_w-1, round(center-target_w/2)))
+    ty1 = max(target_h+1, min(height-1, round(baseline)))
+    ty0 = ty1-target_h
+    return ((left, sx0, sx1, right), (top, sy0, sy1, bottom),
+            (0, tx0, tx0+target_w, width), (0, ty0, ty1, height)), (tx0, ty0, target_w, target_h)
+
+
+@dataclass(frozen=True, slots=True)
+class _PaintedBuildingMask:
+    """Lazy pointer-only sample of the exact command, without a screen bitmap."""
+    command: SpriteCommand
+    origin: tuple[int, int]
+
+    def get_at(self, point):
+        command = self.command
+        px, py = self.origin[0]+point[0], self.origin[1]+point[1]
+        x, y = px+.5, py+.5
+        x0, y0, x1, y1 = command.bounds
+        if not x0 <= x < x1 or not y0 <= y < y1:
+            return 0
+        # Match the conservative integer scissor used by GLWorldspaceRenderer.
+        if not any(ceil(a) <= px < floor(c) and ceil(b) <= py < floor(d)
+                   for a, b, c, d in command.clip_rects):
+            return 0
+        # GL uses clamped bilinear filtering. Sample that same source alpha,
+        # so transparent roof corners never become rectangular click targets.
+        u = (x-x0)*command.image_w/(x1-x0)-.5
+        v = (y-y0)*command.image_h/(y1-y0)-.5
+        ix, iy = floor(u), floor(v)
+        fx, fy = u-ix, v-iy
+        def alpha(tx, ty):
+            tx = max(0, min(command.image_w-1, tx))
+            ty = max(0, min(command.image_h-1, ty))
+            return command.rgba[(ty*command.image_w+tx)*4+3]
+        above = alpha(ix, iy)*(1-fx)+alpha(ix+1, iy)*fx
+        below = alpha(ix, iy+1)*(1-fx)+alpha(ix+1, iy+1)*fx
+        return int(((1-fy)*above+fy*below)*command.opacity >= 16)
+
+
+def building_hit_regions(buildings, commands, pg, viewport):
+    """Use already drawn, sight-clipped pixels for exterior pointer admission.
+
+    Shared shell_at_pointer gives door regions priority. Rectangles accelerate
+    the query only; their source alpha and exact sight clips decide the hit.
+    This reads no world state and does not create physical collision geometry.
+    """
+    if len(buildings) > MAX_PREPARED_BUILDINGS:
+        raise ValueError('GPU building budget exceeded')
+    shells = {'building:'+row.shell.uid: (row.shell, 'body') for row in buildings}
+    shells.update({'building-door:'+row.door.uid: (row.shell, 'door')
+                   for row in buildings if row.door is not None})
+    regions = []
+    for command in commands:
+        entry = shells.get(command.visual_id)
+        if entry is None:
+            continue
+        shell, kind = entry
+        x0, y0, x1, y1 = command.bounds
+        rect = pg.Rect(floor(x0), floor(y0), ceil(x1)-floor(x0), ceil(y1)-floor(y0)).clip(viewport)
+        if not rect.width or not rect.height:
+            continue
+        regions.append({'kind': kind, 'rect': rect, 'shell': shell,
+            'target': shell.entrance if kind == 'door' else None,
+            'mask': _PaintedBuildingMask(command, rect.topleft)})
+    return regions
+
+
 def building_sort_keys(buildings):
     """Keys compatible with worldspace.visual_sort_key's grounded depth plane."""
     result = {}
@@ -109,24 +213,26 @@ def building_commands(buildings, camera, materials):
         rx, ry, rw, rh = art.door_rect
         bounds = (x0+rx*(x1-x0), y0+ry*(y1-y0),
                   x0+(rx+rw)*(x1-x0), y0+(ry+rh)*(y1-y0))
-        # Door pixels are clipped to the actual threshold even when the source
-        # facade's painted recess is taller or a side entrance is selected.
-        dx, dy, dz = row.door.cell
-        px, py = camera.to_screen(WorldFoot(dx, dy, dz))
+        # A human-sized upright leaf can extend above its physical threshold.
+        # Admit it only through currently seen occupied shell cells, never a
+        # roof bounding box or a remembered/hidden neighboring cell. Door state
+        # itself was copied only when the exact physical threshold was seen.
+        door_clips = tuple(rect for rect in clips if rect[0] < bounds[2]
+            and rect[2] > bounds[0] and rect[1] < bounds[3] and rect[3] > bounds[1])
         result.append(SpriteCommand('building-door:'+row.door.uid, *art.door,
-            bounds, ((px, py, px+camera.scale, py+camera.scale),)))
+            bounds, door_clips))
     return tuple(result)
 
 
 def load_building_art(materials, row):
-    """Fit authored source art once, reusing the legacy pure geometry contract.
+    """Fit authored source art once to the GPU's uniform physical-cell scale.
 
     Surfaces here contain one small static building/door, never a composed world
     frame. Their RGBA bytes share the material service's existing bounded LRU.
     """
     from .visuals import VisualRegistry
     from worldseed.systems.building_variants import building_variant
-    from worldseed.ui.exterior_view import _door_anchor, _fit_geometry
+    from worldseed.ui.exterior_view import _door_anchor
 
     if materials._visuals is None:
         materials._visuals = VisualRegistry.load_default()
@@ -144,13 +250,13 @@ def load_building_art(materials, row):
     columns, rows = right-left+1, bottom-top+1
     scale = min(48., BUILDING_TEXTURE_EDGE/max(columns, rows))
     width, height = max(2, round(columns*scale)), max(3, round(rows*scale))
-    geometry = (str(path), shell.function, shell.bounds, shell.entrance, shell.footprint)
+    geometry = (BUILDING_FIT_REVISION, str(path), shell.function, shell.bounds, shell.entrance, shell.footprint)
     digest = blake2b(repr(geometry).encode('utf-8'), digest_size=12).hexdigest()
 
     def body_loader():
         source = pg.image.load(str(path)) if path is not None else None
         surface = pg.Surface((width, height), pg.SRCALPHA)
-        axes, door = _fit_geometry(shell, width, height, source, _door_anchor(function, path))
+        axes, door = _fit_building_geometry(shell, width, height, source, _door_anchor(function, path))
         if source is None:
             # Missing art still closes the physical shell, with no private label.
             surface.fill((98, 73, 49, 255))
@@ -197,5 +303,5 @@ def load_building_art(materials, row):
         door_source = materials._read(('gpu-building-door', str(door_path), material), door_loader)
         if shell.door_side != 'south':
             dx, dy = shell.entrance
-            door_rect = ((dx-left+.2)/columns, (dy-top+.25)/rows, .6/columns, .7/rows)
+            door_rect = ((dx-left+.26)/columns, (dy-top+.10)/rows, .48/columns, .82/rows)
     return BuildingArt(body, door_source, door_rect)

@@ -293,13 +293,9 @@ class GpuTerminal(PygameTerminal):
             'grid_y':round(origin[1])+viewport.y,'left':0,'top':0,'tile_px':camera.scale,
             'z':sim.player_pos.z,'known':sim.discovered_tiles_set,'visible':sim.visible_tiles_set,
             'registry':registry,'world':world,'sim':sim,'shell_hit_regions':[]}
-        for row in snapshot.buildings:
-            shell=row.shell
-            for cell in row.visible_cells:
-                x,y=camera.to_screen(WorldFoot(*cell))
-                rect=self.pg.Rect(round(x)+viewport.x,round(y)+viewport.y,round(camera.scale),round(camera.scale)).clip(viewport)
-                self._hover_context['shell_hit_regions'].append({'kind':'door' if row.door and row.door.cell==cell else 'body',
-                    'rect':rect,'shell':shell})
+        from worldseed.presentation.gpu_buildings import building_hit_regions
+        self._hover_context['shell_hit_regions']=building_hit_regions(
+            snapshot.buildings,self._world_commands,self.pg,viewport)
         self._interior_context=None
         scene=getattr(snapshot,'interior_scene',None)
         if scene is not None:

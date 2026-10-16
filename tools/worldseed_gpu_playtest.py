@@ -171,7 +171,7 @@ def run(*,scene='forest',width=1280,height=720,zoom=28,frames=0,
                     cached_terrain,cached_resources,cached_seen=visible_prepared_window(fixture,camera)
                     cache_key=new_key
                 scene_frame=prepare_gpu_frame(camera=camera,terrain_by=cached_terrain,
-                    resource_by=cached_resources,resource_defs=registry.resources,
+                    resource_by=cached_resources,resource_defs=registry.resources,terrain_defs=registry.terrains,
                     resource_style=lambda fid: {'width':1.35,'height':1.9},
                     visible_cells=cached_seen,discovered_cells=cached_seen,
                     viewer=WorldFoot(x,y,0),materials=assets,season=SEASONS[season_index],
