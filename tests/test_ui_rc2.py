@@ -443,6 +443,32 @@ class UIRC4RealFlowTests(UIRC3FlowTests):
 class GPUPrimaryNavigationTests(unittest.TestCase):
     """GPU candidate retains the same global key and hierarchy contracts."""
 
+    def test_gpu_main_backend_uses_existing_main_ui_and_explicit_launcher_route(self):
+        import os
+        import sys
+        from unittest.mock import patch
+        from worldseed import app
+        from worldseed.ui.gpu_terminal import GpuTerminal
+        from worldseed.ui.pygame_terminal import PygameTerminal
+        self.assertTrue(issubclass(GpuTerminal, PygameTerminal))
+        for name in ('present_feature_menu', 'present_timed_action', 'pause_realtime',
+                     'set_free_movement_callback', 'set_realtime_callback'):
+            self.assertIs(getattr(GpuTerminal, name), getattr(PygameTerminal, name))
+        for arguments, setting in ((['worldseed', '--gpu'], ''), (['worldseed'], 'gpu')):
+            with self.subTest(arguments=arguments, setting=setting), \
+                 patch.object(sys, 'argv', arguments), \
+                 patch.dict(os.environ, {'WORLDSEED_UI': setting}), \
+                 patch('worldseed.ui.gpu_terminal.GpuTerminal') as factory:
+                factory.available.return_value = True
+                self.assertIs(app._make_display_backend(), factory.return_value)
+                factory.assert_called_once_with()
+        with patch.object(sys, 'argv', ['worldseed', '--window']), \
+             patch.dict(os.environ, {'WORLDSEED_UI': ''}), \
+             patch('worldseed.ui.pygame_terminal.PygameTerminal') as legacy:
+            legacy.available.return_value = True
+            self.assertIs(app._make_display_backend(), legacy.return_value)
+            legacy.assert_called_once_with()
+
     def test_gpu_enter_tab_escape_and_modal_wasd_use_shared_routing(self):
         from types import SimpleNamespace
         from unittest.mock import Mock

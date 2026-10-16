@@ -4206,6 +4206,12 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             install_free(None)
             ctx.sim.set_free_movement_enabled(False)
 def _make_display_backend():
+    import os
+    if '--gpu' in sys.argv or os.environ.get('WORLDSEED_UI', '').lower() == 'gpu':
+        from worldseed.ui.gpu_terminal import GpuTerminal
+        if not GpuTerminal.available():
+            raise RuntimeError('OpenGL requires pygame-ce, moderngl and glcontext; install WORLDSEED[gpu]')
+        return GpuTerminal()
     force_terminal='--terminal' in sys.argv
     force_window='--window' in sys.argv
     if not force_terminal:

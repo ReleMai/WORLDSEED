@@ -1,7 +1,7 @@
-name: WORLDSEED Windows GPU Candidate Executable
+name: WORLDSEED Windows GPU Main Game Test Build
 
 # Packaging-only changes build once; ordinary gameplay commits use Fast Gate.
-# This creates the separate candidate, never promotes the legacy default.
+# Default EXE launches the persistent main game; legacy entrypoint stays separate.
 on:
   workflow_dispatch:
   push:
@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/windows-gpu-candidate.yml'
       - 'run_worldseed_gpu.py'
+      - 'worldseed/ui/gpu_terminal.py'
       - 'packaging/windows_gpu/**'
       - 'tools/package_gpu_playtest.py'
       - 'tools/smoke_gpu_bundle.py'
@@ -19,7 +20,7 @@ permissions:
 
 jobs:
   windows-gpu-candidate:
-    name: Windows x64 GPU candidate package and frozen executable smoke
+    name: Windows x64 GPU main game package and frozen startup smoke
     runs-on: windows-latest
     timeout-minutes: 25
     env:
@@ -46,7 +47,7 @@ jobs:
         run: |
           python -u tools/run_ci_check.py --name freeze-gpu-candidate --timeout 1000 -- python -u tools/package_gpu_playtest.py --build-only --commit '${{ github.sha }}' --output-dir dist
           if ($LASTEXITCODE -ne 0) { throw 'GPU executable build failed' }
-      - name: Launch actual frozen EXE and retain honest native driver outcome
+      - name: Launch frozen main menu and QA probe; retain honest native driver outcome
         shell: pwsh
         run: |
           if ($env:SDL_VIDEODRIVER -eq 'dummy') { Remove-Item Env:SDL_VIDEODRIVER }

@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -20,7 +21,9 @@ from worldseed.presentation.gl_worldspace import GPUBackendUnavailable
 def fake_bundle(root):
     (root / (NAME + '.exe')).write_bytes(b'MZ' + b'\0' * 1048576)
     (root / 'GPU_BUILD.json').write_text(json.dumps({
-        'commit': 'a' * 40, 'build_kind': 'windows-gpu-candidate-one-dir'}))
+        'commit': 'a' * 40, 'build_kind': 'windows-gpu-candidate-one-dir',
+        'default_entrypoint': 'worldseed.app.main', 'default_backend': 'gpu',
+        'existing_saves_supported': True}))
     for name in LAUNCHERS:
         (root / name).write_text(NAME + '.exe')
     (root / 'README_GPU_TEST.txt').write_text('OpenGL 3.3 candidate')
@@ -73,6 +76,8 @@ class GpuCandidatePackageTests(unittest.TestCase):
         self.assertIn('_moderngl', command)
         self.assertIn('moderngl', command)
         self.assertIn('glcontext', command)
+        self.assertIn('worldseed.app', command)
+        self.assertIn('worldseed.ui.gpu_terminal', command)
         self.assertTrue(command[-1].endswith('run_worldseed_gpu.py'))
         additions = [command[i+1] for i, value in enumerate(command) if value == '--add-data']
         self.assertTrue(any(value.endswith(';worldseed/assets') for value in additions))
@@ -93,12 +98,18 @@ class GpuCandidatePackageTests(unittest.TestCase):
                               archive.namelist())
             self.assertIn(first, destination.with_suffix('.zip.sha256').read_text())
 
-    def test_default_launcher_reuses_live_engine_and_qa_is_explicit(self):
+    def test_default_launcher_runs_full_game_and_qa_is_explicit(self):
+        def game():
+            self.assertEqual('gpu', os.environ['WORLDSEED_UI'])
+            self.assertEqual('1280x720', os.environ['WORLDSEED_GPU_SIZE'])
+            self.assertTrue(Path(os.environ['WORLDSEED_GPU_REPORT']).is_absolute())
+            self.assertNotIn('WORLDSEED_GPU_SMOKE_FRAMES', os.environ)
+            return 0
+        with patch.dict(os.environ, {}, clear=True), patch('worldseed.app.main', side_effect=game) as main:
+            with patch('tools.worldseed_gpu_gameplay.run', side_effect=AssertionError('QA default')):
+                self.assertEqual(0, launcher.main([]))
+            main.assert_called_once_with()
         with patch('tools.worldseed_gpu_gameplay.run', return_value={'frames': 2}) as run:
-            with contextlib.redirect_stdout(io.StringIO()):
-                self.assertEqual(0, launcher.main(['--frames', '2']))
-            self.assertIsNone(run.call_args.kwargs['prepared_scene'])
-            self.assertNotIn('qa_weather', run.call_args.kwargs)
             with contextlib.redirect_stdout(io.StringIO()):
                 launcher.main(['--prepared-scene', 'village_street', '--qa-weather', 'snow',
                                '--qa-season', 'winter', '--qa-time', 'noon'])
@@ -107,10 +118,39 @@ class GpuCandidatePackageTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             launcher.main(['--qa-weather', 'snow'])
 
+    def test_main_smoke_is_explicit_and_does_not_call_temporary_scene(self):
+        def game():
+            self.assertEqual('2', os.environ['WORLDSEED_GPU_SMOKE_FRAMES'])
+            self.assertTrue(Path(os.environ['WORLDSEED_GPU_SCREENSHOT']).is_absolute())
+            return 0
+        with patch.dict(os.environ, {}, clear=True), patch('worldseed.app.main', side_effect=game):
+            self.assertEqual(0, launcher.main(['--smoke-main', '--frames', '2',
+                                              '--screenshot', 'startup.png']))
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            launcher.main(['--frames', '2'])
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            launcher.main(['--smoke-main', '--prepared-scene', 'camp'])
+
+    def test_frozen_main_game_uses_persistent_user_directory(self):
+        original = Path.cwd()
+        with tempfile.TemporaryDirectory() as temporary:
+            def game():
+                self.assertEqual(Path(temporary) / 'WORLDSEED', Path.cwd())
+                self.assertEqual(str(Path(temporary) / 'WORLDSEED' / 'logs' / 'gpu-session.json'),
+                                 os.environ['WORLDSEED_GPU_REPORT'])
+                return 0
+            try:
+                with patch.dict(os.environ, {'LOCALAPPDATA': temporary}, clear=True), \
+                     patch.object(launcher.sys, 'frozen', True, create=True), \
+                     patch('worldseed.app.main', side_effect=game):
+                    self.assertEqual(0, launcher.main([]))
+            finally:
+                os.chdir(original)
+
     def test_launch_failure_retains_error_details_and_no_fallback(self):
         with tempfile.TemporaryDirectory() as temporary:
             report = Path(temporary) / 'session.json'
-            with patch('tools.worldseed_gpu_gameplay.run', side_effect=GPUBackendUnavailable('GL 1.1')):
+            with patch('worldseed.app.main', side_effect=GPUBackendUnavailable('GL 1.1')):
                 with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                     self.assertEqual(3, launcher.main(['--report', str(report)]))
             result = json.loads(report.read_text())
@@ -133,16 +173,53 @@ class GpuCandidatePackageTests(unittest.TestCase):
                 if '--selfcheck' in command:
                     return subprocess.CompletedProcess(command, 0,
                         'pg banner\n{"status": "gpu-bundle-selfcheck-ok"}', '')
-                (output / 'render.json').write_text(json.dumps({
+                mode = 'main' if '--smoke-main' in command else 'render'
+                (output / (mode + '.json')).write_text(json.dumps({
                     'status': 'gpu-candidate-unavailable', 'error_type': 'GPUBackendUnavailable'}))
-                (output / 'render.context.json').write_text(json.dumps(rejected_context()))
+                (output / (mode + '.context.json')).write_text(json.dumps(rejected_context()))
                 return subprocess.CompletedProcess(command, 3, 'unsupported GL', '')
             with patch('tools.smoke_gpu_bundle.subprocess.run', side_effect=child) as run:
                 result = smoke(Path(temporary) / 'WORLDSEED_GPU.exe', output)
-            self.assertEqual(2, run.call_count)
+            self.assertEqual(3, run.call_count)
             self.assertEqual('unsupported-hosted-driver-rejected', result['render_status'])
+            self.assertEqual('unsupported-hosted-driver-rejected', result['main_game_startup'])
             self.assertFalse(result['native_hardware_accepted'])
             self.assertTrue((output / 'SMOKE_RESULT.json').exists())
+
+    def test_successful_smoke_requires_production_startup_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / 'evidence'
+            def child(command, **kwargs):
+                if '--selfcheck' in command:
+                    return subprocess.CompletedProcess(command, 0,
+                        '{"status": "gpu-bundle-selfcheck-ok"}', '')
+                mode = 'main' if '--smoke-main' in command else 'render'
+                result = ({'render_frames': 2, 'source': 'main-game', 'saved_world_support': True}
+                          if mode == 'main' else {'frames': 2})
+                (output / (mode + '.json')).write_text(json.dumps(result))
+                (output / (mode + '.context.json')).write_text('{"stage": "ready"}')
+                (output / (mode + '.png')).write_bytes(b'render-evidence-fixture')
+                return subprocess.CompletedProcess(command, 0, '', '')
+            with patch('tools.smoke_gpu_bundle.subprocess.run', side_effect=child):
+                result = smoke(Path(temporary) / 'WORLDSEED_GPU.exe', output)
+            self.assertEqual('rendered-current-driver', result['main_game_startup'])
+            self.assertFalse(result['native_hardware_accepted'])
+
+    def test_qa_scene_cannot_masquerade_as_full_game_smoke(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / 'evidence'
+            def child(command, **kwargs):
+                if '--selfcheck' in command:
+                    return subprocess.CompletedProcess(command, 0,
+                        '{"status": "gpu-bundle-selfcheck-ok"}', '')
+                (output / 'main.json').write_text(json.dumps({
+                    'render_frames': 2, 'source': 'temporary-qa', 'saved_world_support': False}))
+                (output / 'main.context.json').write_text('{"stage": "ready"}')
+                (output / 'main.png').write_bytes(b'render-evidence-fixture')
+                return subprocess.CompletedProcess(command, 0, '', '')
+            with patch('tools.smoke_gpu_bundle.subprocess.run', side_effect=child):
+                with self.assertRaisesRegex(RuntimeError, 'full-game backend'):
+                    smoke(Path(temporary) / 'WORLDSEED_GPU.exe', output)
 
     def test_real_bundle_source_selfcheck_does_not_start_a_window_or_world(self):
         try:

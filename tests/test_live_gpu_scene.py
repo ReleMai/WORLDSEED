@@ -38,6 +38,9 @@ class FakeAssets:
     def actor(self, content_id):
         return ('actor:' + content_id, 1, PIXELS, 4, 4)
 
+    def interior(self, category, content_id):
+        return (category + ':' + content_id, 1, PIXELS, 4, 4)
+
 
 def unexpected(*args, **kwargs):
     raise AssertionError('rendering must not prepare, scan or mutate the simulation')
@@ -266,7 +269,7 @@ class LiveGpuSceneContracts(TestCase):
             sim.state.roofs[pos_key(258, 256, 0)].condition = 0
             self.assertIn((258, 256, 0), capture_live_scene(sim, self.camera(sim)).current_cells)
 
-    def test_real_planned_shells_and_entered_interior_fail_closed(self):
+    def test_real_planned_shells_stay_closed_and_entered_interior_is_local(self):
         with self.fixture('village_street') as fixture:
             sim = fixture.sim
             camera = self.camera(sim)
@@ -288,14 +291,14 @@ class LiveGpuSceneContracts(TestCase):
             sim = fixture.sim
             before = fixture.authority_fingerprint()
             with patch.object(sim.world, 'prepared_tile_at', unexpected), \
-                    patch.object(sim.npcs, 'indexed_npcs_in_rect', unexpected), \
-                    patch.object(sim.environment, 'visual_conditions', unexpected):
+                    patch.object(sim.npcs, 'indexed_npcs_in_rect', unexpected):
                 snapshot = capture_live_scene(sim, self.camera(sim))
                 frame = self.frame(snapshot)
             self.assertTrue(snapshot.interior)
             self.assertEqual((snapshot.terrain, snapshot.resources, snapshot.actors,
                               snapshot.fires, snapshot.weather), ((), (), (), (), ()))
-            self.assertEqual(frame.commands, ())
+            self.assertIsNotNone(snapshot.interior_scene)
+            self.assertTrue(frame.commands)
             self.assertEqual(before, fixture.authority_fingerprint())
 
     def test_fires_require_current_prepared_cell_fuel_and_correct_level(self):

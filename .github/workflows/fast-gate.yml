@@ -66,7 +66,7 @@ jobs:
       - name: Windows GPU-first atmosphere and prepared scene source contracts
         run: python -u tools/run_ci_check.py --name g5g8-atmosphere-scene --timeout 45 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_gpu_playtest_bridge.GPUSceneBridgeContracts
       - name: W1 resident-only reads, actor materials and W2 input contracts
-        run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_candidate_package tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
+        run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_candidate_package tests.test_gpu_objects tests.test_gpu_interiors tests.test_gl_ui_surface tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
       - name: W0 context bootstrap and W2 Action Hub navigation contracts
         run: python -u tools/run_ci_check.py --name w0w2-actions-ui --timeout 60 -- python -u -m unittest -v tests.test_gl_context tests.test_gl_gameplay_ui tests.test_gpu_gameplay_actions tests.test_gpu_gameplay_session tests.test_ui_rc2.GPUPrimaryNavigationTests
       - name: M2 real-scene GPU bridge source and software fallback
@@ -91,7 +91,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install WORLDSEED and image tools
-        run: python -m pip install -e . "Pillow>=10,<12"
+        run: python -m pip install -e ".[gpu]" "Pillow>=10,<12"
       - name: Audit every building facade and door geometry
         run: python -u tools/run_ci_check.py --name "Building asset geometry" --timeout 90 -- python -u tools/audit_building_assets.py --output dist/building-audit
       # The Windows SDL dummy driver can abort (-1) before Python gets a
@@ -103,6 +103,11 @@ jobs:
       # renderer suite; run the SAME assertions with stable Linux SDL dummy.
       - name: Prepared real renderer reference scenes — Linux headless
         run: python -u tools/run_ci_check.py --name "Prepared reference scenes Linux" --timeout 180 -- python -u -m unittest -v tests.test_reference_scenes
+
+      - name: Main game OpenGL UI, commands and persistent checkpoint integration
+        env:
+          SDL_VIDEODRIVER: offscreen
+        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_gl_ui_surface tests.test_gpu_interiors
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.

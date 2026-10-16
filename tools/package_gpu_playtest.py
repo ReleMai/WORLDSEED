@@ -1,4 +1,4 @@
-"""Build and verify the separate self-contained Windows GPU candidate bundle."""
+"""Build the self-contained Windows full-game GPU test distribution."""
 from __future__ import annotations
 
 import argparse
@@ -14,7 +14,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = 'WORLDSEED_GPU'
-LAUNCHERS = ('PLAY_GPU_NEW_WORLD.bat', 'PLAY_GPU_CAMP_RAIN.bat',
+LAUNCHERS = ('PLAY_WORLDSEED_GPU.bat', 'PLAY_GPU_NEW_WORLD.bat', 'PLAY_GPU_CAMP_RAIN.bat',
              'PLAY_GPU_VILLAGE.bat', 'PREVIEW_GPU_WEATHER.bat')
 FIXED_ZIP_TIME = (2026, 1, 1, 0, 0, 0)
 
@@ -30,7 +30,8 @@ def build_command(output: Path, work: Path) -> list[str]:
             '--collect-all', 'moderngl', '--collect-all', 'glcontext',
             '--copy-metadata', 'glcontext', '--copy-metadata', 'moderngl',
             '--copy-metadata', 'pygame-ce', '--hidden-import', 'glcontext.wgl',
-            '--hidden-import', '_moderngl', str(ROOT / 'run_worldseed_gpu.py')]
+            '--hidden-import', '_moderngl', '--hidden-import', 'worldseed.app',
+            '--hidden-import', 'worldseed.ui.gpu_terminal', str(ROOT / 'run_worldseed_gpu.py')]
 
 
 def validate_bundle(directory: Path, *, minimum_exe_bytes=1048576) -> dict:
@@ -53,6 +54,10 @@ def validate_bundle(directory: Path, *, minimum_exe_bytes=1048576) -> dict:
         raise ValueError('GPU build needs exact commit SHA')
     if identity.get('build_kind') != 'windows-gpu-candidate-one-dir':
         raise ValueError('GPU candidate identity mismatch')
+    if (identity.get('default_entrypoint') != 'worldseed.app.main'
+            or identity.get('default_backend') != 'gpu'
+            or identity.get('existing_saves_supported') is not True):
+        raise ValueError('GPU test distribution must launch the persistent main game')
     for launcher in LAUNCHERS:
         if NAME + '.exe' not in (directory / launcher).read_text(encoding='utf-8'):
             raise ValueError('Launcher does not target GPU executable: ' + launcher)
@@ -62,8 +67,10 @@ def validate_bundle(directory: Path, *, minimum_exe_bytes=1048576) -> dict:
               or path.suffix.lower() in ('.db', '.db-wal', '.db-shm')]
     if leaked:
         raise ValueError('GPU bundle contains runtime/development state: ' + str(leaked[0]))
-    return {'schema': 'worldseed-gpu-bundle-v1', 'commit': identity['commit'],
+    return {'schema': 'worldseed-gpu-bundle-v2', 'commit': identity['commit'],
             'build_kind': identity['build_kind'], 'executable': NAME + '.exe',
+            'default_entrypoint': identity['default_entrypoint'],
+            'existing_saves_supported': True,
             'native_hardware_accepted': False}
 
 
@@ -109,7 +116,9 @@ def build(output: Path, commit: str) -> Path:
         shutil.copyfile(ROOT / 'packaging' / 'windows_gpu' / name, directory / name)
     (directory / 'GPU_BUILD.json').write_text(json.dumps({
         'commit': commit, 'build_kind': 'windows-gpu-candidate-one-dir',
-        'native_hardware_accepted': False, 'existing_saves_supported': False,
+        'native_hardware_accepted': False, 'existing_saves_supported': True,
+        'default_entrypoint': 'worldseed.app.main', 'default_backend': 'gpu',
+        'save_location': '%LOCALAPPDATA%/WORLDSEED/saves',
     }, indent=2) + '\n', encoding='utf-8')
     evidence = validate_bundle(directory)
     (directory / 'BUNDLE_VERIFY.json').write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')

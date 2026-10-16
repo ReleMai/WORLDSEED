@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
-from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene, visual_sort_key
+from .worldspace import WorldCamera, WorldFoot, VisualLayer, WorldVisualInstance, project_scene, visual_sort_key, SceneVisibility
 from .worldspace_adapter import MAX_PREPARED_ACTORS, PreparedActor, prepare_worldspace_scene
 from .tree_art import layer_png
 
@@ -173,7 +173,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       resource_style:Callable,visible_cells,discovered_cells,
                       viewer:WorldFoot,materials:GpuMaterialSource,
                       season='summer',show_player=True,fire_cells=(),
-                      actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None):
+                      actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None, objects=()):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -216,6 +216,13 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             instance=replace(instance,width=min(.9,instance.width),height=.55,visual_height=.55)
             reproject=True
         instances.append(instance)
+    from .gpu_objects import object_instances, object_source, resource_source
+    object_by={'object:'+row.uid:row for row in objects}
+    normal_objects=tuple(row for row in objects if row.kind!='roof')
+    roofs=tuple(row for row in objects if row.kind=='roof')
+    if normal_objects:
+        instances.extend(object_instances(normal_objects))
+        reproject=True
     # Project fires with the same per-cell FOW mask as actors and resources.
     # Anchor visibility alone cannot authorize the neighboring sprite pixels.
     for x,y,z in fire_cells:
@@ -237,8 +244,10 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             return materials.actor(v.content_id)
         if v.instance_id.startswith('fire:'):
             return materials.asset(ASSET_BASE/'structures'/'campfire.png')
+        if v.instance_id in object_by:
+            return object_source(materials,object_by[v.instance_id])
         if v.content_id not in ('core:oak_tree','core:pine_tree'):
-            return None
+            return resource_source(materials,v)
         stage=stage_by.get(v.resource_id)
         if stage=='stump':
             return materials.asset(ASSET_BASE/'resources'/'rotten_stump_cache.png')
@@ -262,11 +271,17 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             scenery[index]=replace(c,bounds=(cx-w*.5,cy-h*.8,cx+w*.5,cy+h*.2))
         elif v.instance.layer is VisualLayer.OVERHEAD:
             scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085))
+    keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
+    if roofs:
+        roof_projection=project_scene(object_instances(roofs),camera,
+            SceneVisibility(frozenset(row.foot.cell for row in roofs)))
+        scenery.extend(commands_from_projected(roof_projection,source))
+        keys.update({v.instance.instance_id:visual_sort_key(v.instance) for v in roof_projection.visuals})
     if buildings:
         from .gpu_buildings import building_commands, building_sort_keys
-        keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
         keys.update(building_sort_keys(buildings))
         scenery.extend(building_commands(buildings,camera,materials))
+    if buildings or roofs:
         scenery.sort(key=lambda command:keys[command.visual_id])
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')

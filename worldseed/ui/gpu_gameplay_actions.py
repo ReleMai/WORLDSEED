@@ -111,6 +111,8 @@ def dispatch_action(sim, row: GpuActionRow, snapshot) -> GpuActionResult:
     denied = GpuActionResult(False,'That action is no longer available. Open Actions again.')
     if not isinstance(row,GpuActionRow):
         return denied
+    if sim.interiors.player_presence() is not None:
+        return denied
     position = sim.player_pos
     if (position.x,position.y,position.z) != row.origin:
         return denied
