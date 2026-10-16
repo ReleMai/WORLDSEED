@@ -103,7 +103,7 @@ void main() {
     }
     // Entire attenuation lies INSIDE the presently admitted ground cell.
     // This is never applied to roofs, characters, moving creatures or memory.
-    if (u_ground) {
+    if (u_ground || dot(u_sight_edges,vec4(1.0))>0.0) {
         float west = 1.0 - smoothstep(0.0, 0.24, v_uv.x);
         float east = 1.0 - smoothstep(0.0, 0.24, 1.0-v_uv.x);
         float north = 1.0 - smoothstep(0.0, 0.24, v_uv.y);

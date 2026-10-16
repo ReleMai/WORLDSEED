@@ -140,7 +140,7 @@ class SpriteCommand:
             raise ValueError('remembered sprite classification must be boolean')
         if (len(self.sight_edges)!=4 or any(not _finite(v) or v<0. or v>1. for v in self.sight_edges)):
             raise ValueError('sight easing must be a bounded four-edge vector')
-        if self.ground is None and any(self.sight_edges):
+        if self.ground is None and any(self.sight_edges) and not self.visual_id.startswith('ground:'):
             raise ValueError('only ground geometry can soften a sight boundary')
 
 

@@ -214,7 +214,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         edges=(tuple(0. if (x+dx,y+dy,z) in visible_cells
                      else (.36 if (x+dx,y+dy,z) in discovered_cells else .62)
                      for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)))
-               if current and blend is not None else (0.,0.,0.,0.))
+               if current else (0.,0.,0.,0.))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
                        (viewport,), opacity=1.0 if current else .62, ground=blend,
