@@ -358,7 +358,8 @@ class GLWorldspaceRenderer:
                 # allowing same-material indoor patches to share a draw call.
                 floor=cmd.ground is None and len(cmd.clip_rects)==1 and (
                     cmd.visual_id.startswith('interior-floor:') or
-                    cmd.visual_id.startswith('interior-memory-floor:'))
+                    cmd.visual_id.startswith('interior-memory-floor:') or
+                    cmd.visual_id.startswith('interior-light:'))
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         None if floor else clip,cmd.opacity,cmd.fade_center,
                         cmd.fade_radius,cmd.local_alpha,cmd.sway_px,

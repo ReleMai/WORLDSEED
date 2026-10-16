@@ -532,6 +532,9 @@ class InteriorSystem:
                 continue
             if site is not None and not homestead._prepared(pos):
                 continue
+            if (actor_uid == 'player' and pos not in origins
+                    and self.sim.settlement_physicalization.shell_at(pos) is not None):
+                continue  # never recover through a neighbor's roof/occupied shell
             key, lx, ly = split_world(pos)
             chunk = world.cache.peek(key)
             if chunk is None:

@@ -470,11 +470,18 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
     # Light is sampled by the shared wall-occluded engine authority. These
     # constant-source quads add darkness only within already-authorized floor.
     shade = ('interior-shade', 1, bytes((8, 12, 20, 255)), 1, 1)
+    # Lighting is the primary indoor draw-call hotspot: each rectangle used
+    # to demand its own scissor + draw. Slight alpha quantization and a
+    # 1-pixel-exact clipped mesh permit batching into <=24 material passes.
+    # These rectangles are pairwise disjoint, so reorder only the shade tail.
+    shade_quads=[]
     for index, tile in enumerate(scene.tiles):
-        alpha = (65535-tile.light)*.55/65535
+        alpha=round(((65535-tile.light)*.55/65535)*24)/24
+        if alpha<=0:continue
         a,b,c,d=clips[index]
-        commands.append(SpriteCommand('interior-light:'+str(index), *shade,
-            (a-.01,b-.01,c+.01,d+.01), (clips[index],), opacity=alpha))
+        shade_quads.append((alpha,index,SpriteCommand('interior-light:'+str(index),*shade,
+            (a-.01,b-.01,c+.01,d+.01),(clips[index],),opacity=alpha)))
+    commands.extend(row[2] for row in sorted(shade_quads,key=lambda row:(row[0],row[1])))
     if len(ground)+len(commands) > MAX_COMMANDS:
         raise ValueError('interior draw budget exceeded')
     return GPUPreparedFrame(tuple(ground), tuple(commands), 0, len(ground))
