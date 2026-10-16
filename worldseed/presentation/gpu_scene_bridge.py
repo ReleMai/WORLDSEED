@@ -173,7 +173,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       resource_style:Callable,visible_cells,discovered_cells,
                       viewer:WorldFoot,materials:GpuMaterialSource,
                       season='summer',show_player=True,fire_cells=(),
-                      actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None, objects=()):
+                      actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None,
+                      objects=(), show_explored_memory=True):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -188,17 +189,21 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
     if len(fire_cells)>32:
         raise ValueError('too many prepared visual fires')
     ground=[]
+    visible_ground=0
     viewport=(0.,0.,float(camera.width_px),float(camera.height_px))
     for (x,y,z),terrain_id in terrain_by.items():
         if z!=camera.center.z or not(left<=x<right and top<=y<bottom):continue
-        if (x,y,z) not in visible_cells:continue
+        current=(x,y,z) in visible_cells
+        if not current and (not show_explored_memory or (x,y,z) not in discovered_cells):
+            continue  # Unexplored ground and blindness-mode memory stay black.
+        if current:visible_ground+=1
         p=camera.to_screen(WorldFoot(x,y,z))
         # Tile geometry itself clips to its own location; shared viewport scissor
         # enables true GPU batching by art material without drawing hidden cells.
         tex=materials.asset(terrain_source(str(terrain_id),x,y,terrain_defs=terrain_defs,visuals=getattr(materials,'_visuals',None)))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
-                       (viewport,)))
+                       (viewport,), opacity=1.0 if current else .42))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,
@@ -285,4 +290,4 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         scenery.sort(key=lambda command:keys[command.visual_id])
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')
-    return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),len(ground))
+    return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),visible_ground)

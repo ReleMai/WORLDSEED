@@ -190,12 +190,23 @@ class LiveGpuSceneContracts(TestCase):
             self.assertTrue(snapshot.current_cells)
             self.assertLessEqual(snapshot.current_cells, current)
             self.assertTrue(snapshot.remembered_cells)
-            self.assertEqual(set(dict(snapshot.terrain)), snapshot.current_cells)
-            self.assertEqual(len(frame.ground), len(snapshot.current_cells))
+            self.assertEqual(set(dict(snapshot.terrain)),
+                             snapshot.current_cells | snapshot.remembered_cells)
+            self.assertEqual(len(frame.ground),
+                             len(snapshot.current_cells | snapshot.remembered_cells))
+            self.assertEqual(frame.visible_ground_cells, len(snapshot.current_cells))
             for x, y, z in snapshot.remembered_cells:
-                self.assertFalse(any(command.visual_id == f'ground:{z}:{x}:{y}'
-                                     or command.visual_id.startswith(f'feature:{z}:{x}:{y}:')
-                                     for command in frame.commands))
+                remembered = next(command for command in frame.ground
+                                  if command.visual_id == f'ground:{z}:{x}:{y}')
+                self.assertAlmostEqual(remembered.opacity, .42)
+                self.assertFalse(any(command.visual_id.startswith(f'feature:{z}:{x}:{y}:')
+                                     for command in frame.scenery))
+            blinded = snapshot.gpu_frame(
+                materials=FakeAssets(), registry=self.registry,
+                resource_style=lambda _: {'width': 1.3, 'height': 1.9},
+                show_explored_memory=False)
+            self.assertEqual(len(blinded.ground), len(snapshot.current_cells))
+            self.assertTrue(all(command.opacity == 1 for command in blinded.ground))
             self.assertEqual(before, fixture.authority_fingerprint())
 
     def test_unknown_memory_and_missing_cache_never_reveal_live_geometry(self):
@@ -223,10 +234,11 @@ class LiveGpuSceneContracts(TestCase):
                 snapshot = capture_live_scene(sim, self.camera(sim))
             self.assertEqual(snapshot.current_cells, frozenset((current,)))
             self.assertEqual(snapshot.remembered_cells, frozenset((memory,)))
-            self.assertEqual(set(dict(snapshot.terrain)), {current})
+            self.assertEqual(set(dict(snapshot.terrain)), {current, memory})
             self.assertEqual({cell for cell, _ in snapshot.resources}, {current})
             frame = self.frame(snapshot)
-            self.assertEqual(len(frame.ground), 1)
+            self.assertEqual(len(frame.ground), 2)
+            self.assertEqual(frame.visible_ground_cells, 1)
             self.assertFalse(any('pine' in command.texture_id for command in frame.scenery))
             self.assertGreaterEqual(len(reads), 3)
             # Losing the already prepared resource map preserves known ground;

@@ -70,7 +70,8 @@ class LiveGpuSnapshot:
     interior_scene: PreparedInterior | None = None
     objects: tuple[PreparedObject, ...] = ()
 
-    def gpu_frame(self, *, materials, registry, resource_style):
+    def gpu_frame(self, *, materials, registry, resource_style,
+                  show_explored_memory=True):
         """Only static content/material services are needed after capture."""
         if self.interior_scene is not None:
             return prepare_interior_frame(self.interior_scene, self.camera,
@@ -82,7 +83,7 @@ class LiveGpuSnapshot:
             viewer=self.viewer, actors=self.actors, materials=materials,
             season=self.season, fire_cells=tuple(row.cell for row in self.fires),
             buildings=self.buildings, terrain_defs=registry.terrains,
-            objects=self.objects)
+            objects=self.objects, show_explored_memory=show_explored_memory)
 
     def atmosphere(self, elapsed_seconds=0.):
         if self.interior:
@@ -174,11 +175,13 @@ def capture_live_scene(sim, camera: WorldCamera) -> LiveGpuSnapshot:
                 if tile is None:
                     continue  # missing prepared terrain remains unknown
                 cell = (x, y, z)
+                # Terrain memory is a static, prepared projection; live props
+                # and actor/resource queries still require current sight.
+                terrain.append((cell, tile.terrain_id))
                 if not seen:
                     remembered.add(cell)
-                    continue  # W1 draws only current ground, no live memory props
+                    continue
                 current.add(cell)
-                terrain.append((cell, tile.terrain_id))
                 feature = sim.resources.prepared_feature_at(pos, minute)
                 if feature is not None and feature.stage != 'depleted':
                     resources.append((cell, feature))

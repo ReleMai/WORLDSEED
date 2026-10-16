@@ -174,6 +174,9 @@ class GPUMainGameTests(unittest.TestCase):
         cell = (player.x, player.y, player.z)
         self.assertIn(cell, term._snapshot.remembered_cells)
         self.assertNotIn(cell, term._snapshot.current_cells)
+        remembered = next(row for row in term._world_commands
+                          if row.visual_id == f'ground:{cell[2]}:{cell[0]}:{cell[1]}')
+        self.assertAlmostEqual(remembered.opacity, .42)
         before = self.fixture.authority_fingerprint()
         context = term._hover_context
         point = (round(context['grid_x'] + (player.x + .5) * context['tile_px']),

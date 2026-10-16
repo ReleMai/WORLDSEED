@@ -50,6 +50,25 @@ class GPULiveMaterialsContracts(TestCase):
         self.assertEqual(set(self.materials.actor_reads),{'core:npc','core:deer'})
         self.assertTrue(all(row.clip_rects for row in frame.scenery))
 
+    def test_explored_ground_is_dim_and_unknown_stays_undrawn(self):
+        terrain={(0,0,3):'core:grass', (1,0,3):'core:sand',
+                 (2,0,3):'core:rock'}
+        current=frozenset({(0,0,3)})
+        memory=frozenset({(1,0,3)})
+        args=dict(terrain_by=terrain, visible_cells=current,
+                  discovered_cells=memory)
+        frame=self.build(**args)
+        commands={row.visual_id:row for row in frame.ground}
+        self.assertEqual(set(commands), {'ground:3:0:0', 'ground:3:1:0'})
+        self.assertEqual(commands['ground:3:0:0'].opacity, 1.)
+        self.assertAlmostEqual(commands['ground:3:1:0'].opacity, .42)
+        self.assertEqual(frame.visible_ground_cells, 1)
+        self.assertEqual(frame.scenery, ())
+        blinded=self.build(**args, show_explored_memory=False)
+        self.assertEqual([row.visual_id for row in blinded.ground],
+                         ['ground:3:0:0'])
+        self.assertEqual(blinded.visible_ground_cells, 1)
+
     def test_additional_actors_cannot_replace_viewer_or_exceed_budget(self):
         for actor in (PreparedActor('gpu-viewer','core:npc',WorldFoot(.5,.5,3),True),
                       PreparedActor('other','core:player',WorldFoot(.5,.5,3),True,is_viewer=True)):
