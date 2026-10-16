@@ -135,9 +135,11 @@ class GpuCandidatePackageTests(unittest.TestCase):
         original = Path.cwd()
         with tempfile.TemporaryDirectory() as temporary:
             def game():
-                self.assertEqual(Path(temporary) / 'WORLDSEED', Path.cwd())
-                self.assertEqual(str(Path(temporary) / 'WORLDSEED' / 'logs' / 'gpu-session.json'),
-                                 os.environ['WORLDSEED_GPU_REPORT'])
+                # Windows temporary paths may use an 8.3 username alias while
+                # cwd/diagnostics resolve its long spelling; identity is equal.
+                self.assertEqual((Path(temporary) / 'WORLDSEED').resolve(), Path.cwd().resolve())
+                self.assertEqual((Path(temporary) / 'WORLDSEED' / 'logs' / 'gpu-session.json').resolve(),
+                                 Path(os.environ['WORLDSEED_GPU_REPORT']).resolve())
                 return 0
             try:
                 with patch.dict(os.environ, {'LOCALAPPDATA': temporary}, clear=True), \
