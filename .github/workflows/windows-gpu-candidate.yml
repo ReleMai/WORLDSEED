@@ -12,6 +12,9 @@ on:
       - 'worldseed/ui/gpu_terminal.py'
       - 'worldseed/presentation/gpu_buildings.py'
       - 'worldseed/presentation/gpu_interiors.py'
+      - 'worldseed/presentation/interior_art_lighting.py'
+      - 'worldseed/presentation/gpu_scene_bridge.py'
+      - 'tools/generate_interior_style_sheets.py'
       - 'worldseed/presentation/interior_clip_index.py'
       - 'worldseed/presentation/interior_memory_fade.py'
       - 'worldseed/presentation/gl_worldspace.py'
@@ -54,6 +57,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Compile failed' }
           python -u tools/run_ci_check.py --name gpu-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_candidate_package
           if ($LASTEXITCODE -ne 0) { throw 'GPU package contracts failed' }
+      - name: Generate four authored interior style sheets for visual feedback
+        shell: pwsh
+        run: |
+          python tools/generate_interior_style_sheets.py --output scratch/interior-art-sheets
+          if ($LASTEXITCODE -ne 0) { throw 'Interior art review sheets failed' }
       - name: Build distinct one-directory GPU executable with all engine assets
         shell: pwsh
         run: |
@@ -78,6 +86,13 @@ jobs:
           path: dist/WORLDSEED_GPU/
           if-no-files-found: error
           compression-level: 6
+          retention-days: 30
+      - name: Upload separate interior art style sheets
+        uses: actions/upload-artifact@v4
+        with:
+          name: WORLDSEED-Interior-Art-Sheets-${{ github.sha }}
+          path: scratch/interior-art-sheets/*.png
+          if-no-files-found: error
           retention-days: 30
       - name: Upload context and executable smoke evidence
         if: always()

@@ -117,6 +117,18 @@ class GpuMaterialSource:
         name=str(path)
         def loader():
             surf=self.pg.image.load(name)
+            # Current interior PNGs are high resolution source paintings,
+            # often 1024-2048 px despite presenting at <=~120 screen pixels.
+            # Cap *GPU* copies without modifying authored files, hitboxes or
+            # saved furnishings. This sharply reduces upload/texture pressure
+            # when a new room reveals several distinct pieces at once.
+            if {'interiors','containers'} & set(Path(name).parts):
+                w,h=surf.get_size()
+                longest=max(w,h)
+                if longest>320:
+                    scaled=(max(1,round(w*320/longest)),
+                            max(1,round(h*320/longest)))
+                    surf=self.pg.transform.smoothscale(surf,scaled)
             return (f'asset:{name}',1,self.pg.image.tobytes(surf,'RGBA'),*surf.get_size())
         return self._read(('file',name),loader)
 
