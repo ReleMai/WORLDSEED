@@ -386,7 +386,8 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
     for source in scene.visible_lights[:MAX_VISIBLE_HALO_SOURCES]:
         sx,sy=camera.to_screen(WorldFoot(source.x/UNIT,source.y/UNIT,z))
         halo_bounds=light_halo_bounds(sx,sy,source.radius,camera.scale)
-        glow_clips=admitted_clips(halo_bounds)
+        # Collapse adjacent sight fragments before drawing light halos.
+        glow_clips=_union_rects(admitted_clips(halo_bounds))
         if glow_clips:
             scenery.append(((-2.8,'glow:'+source.uid),SpriteCommand(
                 'interior-glow:'+source.uid,*warm_glow_texture(),
