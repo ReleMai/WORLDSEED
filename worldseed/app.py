@@ -1940,6 +1940,12 @@ def _storage_menu(ctx:GameContext,term:Terminal,container_uid:str|None=None)->st
         choice=_stack_menu(term,nav,rows,subtitle=subtitle,presentation='container_inventory',presentation_data=data)
         if choice is None:return UI_BACK
         if choice=='__BACK__':continue
+        if choice.startswith('UI_STANCE:'):
+            stance=choice.split(':',1)[1]
+            if stance in ('normal','stalk','crouch','aggressive'):
+                sim.execute(SetHuntingStanceCommand(pid,stance))
+                status=sim.log[-1].message if sim.log else 'Movement stance updated.'
+            continue
         moved=_live_panel_world_move(ctx,term,choice)
         if moved is not None:
             if _container_reach_error(sim,container):

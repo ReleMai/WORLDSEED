@@ -221,6 +221,10 @@ class GpuTerminal(PygameTerminal):
         if not self._focused:return
         if self._snapshot is not None and now-self._gpu_last_idle>=50:
             self._gpu_last_idle=now
+            # Indoor scenes do not animate the outdoors' weather or canopy.
+            # Avoid submitting identical interior sprite commands 20x/second.
+            if self._snapshot.interior and not self._smoke_frames:
+                return
             self._composite()
         elif self._snapshot is None:
             self._animate_menu_effects(now)

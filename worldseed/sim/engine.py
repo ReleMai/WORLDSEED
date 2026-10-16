@@ -571,7 +571,7 @@ class Simulation:
         elif isinstance(command,SellCommand):self._sell(command)
         elif isinstance(command,BarterCommand):self._barter(command)
         elif isinstance(command,StealMarketCommand):self._steal_market(command)
-        elif isinstance(command,StealContainerCommand):self._steal_container(command)
+        elif isinstance(command,StealContainerCommand):self._steal_container(command);minutes=0
         elif isinstance(command,LockpickDoorCommand):minutes=self._lockpick_door(command)
         elif isinstance(command,LockpickContainerCommand):minutes=self._lockpick_container(command)
         elif isinstance(command,SetDoorLockCommand):minutes=self._set_door_lock(command)
@@ -586,8 +586,8 @@ class Simulation:
         elif isinstance(command,EquipCommand):self._equip(command)
         elif isinstance(command,UnequipCommand):self._unequip(command)
         elif isinstance(command,TreatWoundCommand):self._message(self.combat.treat_player_wound(command.wound_index,command.item_id,self.entities.get(command.actor,Inventory)))
-        elif isinstance(command,StoreCommand):self._store(command)
-        elif isinstance(command,TakeFromContainerCommand):self._take_container(command)
+        elif isinstance(command,StoreCommand):self._store(command);minutes=0
+        elif isinstance(command,TakeFromContainerCommand):self._take_container(command);minutes=0
         elif isinstance(command,MoveContainerCommand):self._move_container(command)
         elif isinstance(command,DestroyContainerCommand):self._destroy_container(command)
         elif isinstance(command,FertilizeCommand):self._fertilize(command)
@@ -606,10 +606,11 @@ class Simulation:
         except Exception:pass
         if free_interaction:
             return result
-        if minutes==0 and isinstance(command,(PickupCommand,GatherCommand)) and not combat_before and not self.combat_active():
+        if minutes==0 and isinstance(command,(PickupCommand,GatherCommand,StoreCommand,
+                TakeFromContainerCommand,StealContainerCommand)) and not combat_before and not self.combat_active():
             # Inventory discovery and observed appearance still refresh after
             # collection. Do not tick wounds, AI, or zero-minute vitals: repeated
-            # clicks must not create unclocked simulation exchanges.
+            # clicks and container transfers must not create unclocked simulation exchanges.
             self._discover(self.player_pos)
             self._refresh_combat_candidates()
             return result

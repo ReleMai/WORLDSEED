@@ -33,9 +33,9 @@ def vital_bars(vitals) -> tuple[VitalBar, ...]:
                  (185, 75, 66), 'Health; empty means incapacitated'),
         VitalBar('stamina', f'Stamina {stamina}/100', stamina / 100.,
                  (116, 160, 91), 'Stamina available for movement and effort'),
-        VitalBar('hunger', f'Hunger {hunger}/100', 1. - hunger / 100.,
+        VitalBar('hunger', f'Hunger {100-hunger}/100', 1. - hunger / 100.,
                  (192, 151, 67), 'Food reserve; empties as hunger increases'),
-        VitalBar('thirst', f'Thirst {thirst}/100', 1. - thirst / 100.,
+        VitalBar('thirst', f'Thirst {100-thirst}/100', 1. - thirst / 100.,
                  (77, 143, 181), 'Water reserve; empties as thirst increases'),
     )
 

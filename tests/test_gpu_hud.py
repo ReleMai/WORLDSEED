@@ -39,6 +39,8 @@ class GPUHUDTests(unittest.TestCase):
         self.assertEqual(bars['hunger'].fraction, .8)
         self.assertAlmostEqual(bars['thirst'].fraction, .35)
         self.assertEqual(bars['health'].label, 'Health 54/108')
+        self.assertEqual(bars['hunger'].label, 'Hunger 80/100')
+        self.assertEqual(bars['thirst'].label, 'Thirst 35/100')
         self.assertIn('empties as hunger increases', bars['hunger'].detail)
         extreme = gpu_hud.vital_bars(Vitals(hp=999, max_hp=0, hunger=-3, thirst=150, stamina=200))
         self.assertTrue(all(0 <= bar.fraction <= 1 for bar in extreme))

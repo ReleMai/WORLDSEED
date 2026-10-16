@@ -1895,7 +1895,21 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         if total is not None and total>len(rows):
             p=self.small_font.render(f'{page_start+1}-{min(total,page_start+len(rows))} / {total}',True,self._theme['muted']);screen.blit(p,(cont_rect.right-p.get_width()-10,cont_rect.bottom-20))
         self._draw_item_context_popup(rows,data,selected)
-        self._draw_floating_footer(x,y,w,h,'Shift-click transfers full stack • Right-click actions • Drag title • Resize corner • Esc closes')
+        # The storage window keeps outside HUD stance controls interactive.
+        # A painted sidebar cannot be clicked after the floating panel resets
+        # its pointer-target registry, so register live hit regions here.
+        viewport=getattr(self,'_gpu_viewport',None)
+        world=getattr(self,'_last_world',None)
+        if viewport is not None and world is not None and len(world)>3:
+            from worldseed.ui.gpu_hud import _draw_stances
+            sidebar=pg.Rect(viewport.right+8,55,
+                max(0,screen.get_width()-viewport.right-22),max(0,screen.get_height()-70))
+            stance_rect=pg.Rect(sidebar.x+5,sidebar.bottom-60,max(0,sidebar.width-10),48)
+            if (stance_rect.width>=120 and stance_rect.height>0
+                    and not stance_rect.colliderect(pg.Rect(x,y,w,h))):
+                state=world[3].state
+                _draw_stances(self,stance_rect,str(getattr(state,'player_hunting_stance','normal')))
+        self._draw_floating_footer(x,y,w,h,'Shift-click transfers full stack • Right-click actions • Stance controls remain active • Esc closes')
         pg.display.flip();self.clock.tick(120)
 
     def _present_inventory_home(self,title,rows,selected,*,subtitle='',breadcrumb='',footer='',page_start=0,total=None,data=None):
