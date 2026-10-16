@@ -225,7 +225,7 @@ jobs:
 
       - name: W1 controlled live GPU sight, privacy and immutable snapshot
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name gpu-live-scene --timeout 100 -- python -u -m unittest -v tests.test_live_gpu_scene
+        run: python -u tools/run_ci_check.py --name gpu-live-scene --timeout 100 -- python -u -m unittest -v tests.test_live_gpu_scene tests.test_auto_pickup
 
       - name: M2 real-scene software capture and camera-state regressions
         shell: pwsh
