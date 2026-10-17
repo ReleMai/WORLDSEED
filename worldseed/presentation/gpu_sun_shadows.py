@@ -50,19 +50,20 @@ def _silhouette(materials,source):
     return reader(key,prepare) if callable(reader) else prepare()
 
 def sunlight_commands(camera,viewer,buildings,visible_ground,materials,minute):
+    if camera.center.z!=0:return ()
     solar=sun_offset(minute,camera.scale)
-    if solar is None or camera.center.z!=0:
-        return ()
-    dx,dy,strength=solar
     commands=[]
     foot_x,foot_y=camera.to_screen(viewer)
-    player=(foot_x-camera.scale*.40+dx,foot_y-camera.scale*.25+dy,
-            foot_x+camera.scale*.40+dx,foot_y+camera.scale*.12+dy)
+    # Physical contact stays directly under the feet at every hour.
+    # Directional daylight is a separate, weaker cast.
+    player=(foot_x-camera.scale*.32,foot_y-camera.scale*.14,
+            foot_x+camera.scale*.32,foot_y+camera.scale*.06)
     clip=ground_clips(camera,visible_ground,player)
     if clip:
         commands.append(SpriteCommand('sun-shadow:player','sun-shadow-contact',1,
-            CONTACT_BYTES,CONTACT_W,CONTACT_H,player,clip,opacity=strength))
-    if not buildings:return tuple(commands)
+            CONTACT_BYTES,CONTACT_W,CONTACT_H,player,clip,opacity=.86))
+    if solar is None or not buildings:return tuple(commands)
+    dx,dy,strength=solar
     from .gpu_buildings import _art
     for row in buildings:
         left,top,right,bottom=row.shell.bounds

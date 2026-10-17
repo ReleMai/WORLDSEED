@@ -290,6 +290,33 @@ class InteriorPortalTests(unittest.TestCase):
         self.assertIn("outside", sim.interiors.exit())
         self.assertIsNone(sim.interiors.player_presence())
 
+    def test_occupied_front_door_uses_safe_prepared_exit_apron(self):
+        from worldseed.systems.interiors import InteriorSystem
+        blockers={(10,10),(10,11),(9,10),(11,10),(10,9)}
+        npc={f'npc:{i}':SimpleNamespace(uid=f'npc:{i}',alive=True,
+                   x=x,y=y,z=0) for i,(x,y) in enumerate(sorted(blockers))}
+        terrain=SimpleNamespace(passable=True,tags=frozenset())
+        state=SimpleNamespace(containers={},interior_actors={},npcs=npc,creatures={})
+        physical=SimpleNamespace(frontage_for=lambda _:WorldPos(10,10,0),
+                                 shell_at=lambda _:None,
+                                 clears_natural_feature=lambda _:False)
+        sim=SimpleNamespace(state=state,
+            world=SimpleNamespace(cache=SimpleNamespace(peek=lambda _:SimpleNamespace(get=lambda *_:0))),
+            registry=SimpleNamespace(terrain_id=lambda _: 'core:grass',terrain=lambda _:terrain),
+            homestead=SimpleNamespace(completed=lambda _:None),
+            settlement_physicalization=physical,
+            building=SimpleNamespace(passable=lambda *_:True),
+            environment=SimpleNamespace(fluid_passable=lambda _:True),
+            resources=SimpleNamespace(blocks_movement=lambda _:False),
+            property_security=SimpleNamespace(door_at=lambda _:None),
+            player_pos=WorldPos(10,10,0))
+        interior=InteriorSystem(sim)
+        plan=InteriorPlan('interior:test','home','door',10,10,0,6000,6000)
+        landing=interior._exterior_landing(plan)
+        self.assertIsNotNone(landing)
+        self.assertNotIn((landing.x,landing.y),blockers)
+        self.assertLessEqual(abs(landing.x-10)+abs(landing.y-10),3)
+
     def test_npc_enters_same_room_walks_freely_and_keeps_real_cargo(self):
         sim, house, door = self.fixture()
         npc = next(iter(sim.state.npcs.values()))

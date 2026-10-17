@@ -296,7 +296,9 @@ class GpuTerminal(PygameTerminal):
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
         self._world_commands=tuple(replace(command,bounds=shift(command.bounds),
             clip_rects=tuple(shift(rect) for rect in command.clip_rects),
-            fade_center=(command.fade_center[0]+viewport.x,command.fade_center[1]+viewport.y))
+            fade_center=(command.fade_center[0]+viewport.x,command.fade_center[1]+viewport.y),
+            sight_center=(command.sight_center[0]+viewport.x,
+                          command.sight_center[1]+viewport.y) if command.sight_radius else command.sight_center)
             for command in frame.commands)
         self._set_pointer_context(snapshot,registry,world,sim,viewport,camera)
         if sidebar:
@@ -355,16 +357,78 @@ class GpuTerminal(PygameTerminal):
         if cursor is not None and (cursor.x,cursor.y,cursor.z) in snapshot.current_cells:
             x,y=camera.to_screen(WorldFoot(cursor.x,cursor.y,cursor.z))
             self.pg.draw.rect(self.screen,self._theme['accent'],(round(x)+viewport.x,round(y)+viewport.y,round(camera.scale),round(camera.scale)),2)
-        # Existing targeting commands remain authoritative. Only draw admitted
-        # target cells; overlays cannot expand current sight.
-        for overlay,color in ((combat,(215,92,68)),(stealth,(112,150,160))):
-            if not isinstance(overlay,dict):continue
-            for row in tuple(overlay.get('cells',()))[:1024]:
+        # Combat retains exact cell bounds. Stalking uses the engine's
+        # authoritative watched-cell mask, not invented sight cones through
+        # buildings. Render one soft contiguous region instead of grid boxes.
+        if isinstance(combat,dict):
+            for row in tuple(combat.get('cells',()))[:1024]:
                 if not isinstance(row,dict):continue
                 cell=(row.get('x'),row.get('y'),row.get('z',int(camera.center.z)))
                 if cell not in snapshot.current_cells:continue
                 x,y=camera.to_screen(WorldFoot(*cell))
-                self.pg.draw.rect(self.screen,color,(round(x)+viewport.x,round(y)+viewport.y,round(camera.scale),round(camera.scale)),1)
+                self.pg.draw.rect(self.screen,(215,92,68),
+                    (round(x)+viewport.x,round(y)+viewport.y,round(camera.scale),round(camera.scale)),1)
+        if not isinstance(stealth,dict) or not stealth.get('active',False):
+            return
+        pg=self.pg
+        if not hasattr(pg,'Surface'):return
+        overlay=getattr(self,'_stalk_overlay_surface',None)
+        if overlay is None or overlay.get_size()!=viewport.size:
+            overlay=pg.Surface(viewport.size,pg.SRCALPHA)
+            self._stalk_overlay_surface=overlay
+        else:
+            overlay.fill((0,0,0,0))
+        watched={}
+        for row in tuple(stealth.get('cells',()))[:1024]:
+            if not isinstance(row,dict):continue
+            cell=(row.get('x'),row.get('y'),row.get('z',int(camera.center.z)))
+            if cell in snapshot.current_cells:
+                watched[cell]=bool(row.get('alert',False))
+        size=max(1,round(camera.scale))
+        for cell,alert in watched.items():
+            sx,sy=camera.to_screen(WorldFoot(*cell))
+            sx,sy=round(sx),round(sy)
+            color=(212,102,75,43) if alert else (102,180,188,30)
+            pg.draw.rect(overlay,color,(sx,sy,size,size))
+        # Only draw OUTER boundaries, never a grid line around every tile.
+        for (x,y,z),alert in watched.items():
+            sx,sy=camera.to_screen(WorldFoot(x,y,z))
+            sx,sy=round(sx),round(sy)
+            ink=(234,149,106,165) if alert else (126,211,210,125)
+            for dx,dy,edge in ((-1,0,((sx,sy),(sx,sy+size))),
+                               (1,0,((sx+size,sy),(sx+size,sy+size))),
+                               (0,-1,((sx,sy),(sx+size,sy))),
+                               (0,1,((sx,sy+size),(sx+size,sy+size)))):
+                if (x+dx,y+dy,z) not in watched:
+                    pg.draw.line(overlay,ink,*edge,2)
+        # An actual visible observer can show its facing and an ACTUAL
+        # detection line. Unknown NPCs and private indoor rooms stay hidden.
+        inside=snapshot.interior_scene
+        admitted_actors=({row.uid for row in inside.actors} if inside is not None else set())
+        for row in tuple(stealth.get('observers',()))[:32]:
+            if not isinstance(row,dict):continue
+            uid=row.get('uid')
+            if inside is not None:
+                if row.get('space_id')!=inside.space_id or 'npc:'+str(uid) not in admitted_actors:
+                    continue
+                foot=WorldFoot(float(row.get('x',0))/1000.,float(row.get('y',0))/1000.,camera.center.z)
+            else:
+                cell=(row.get('x'),row.get('y'),row.get('z',int(camera.center.z)))
+                if cell not in snapshot.current_cells:continue
+                foot=WorldFoot(cell[0]+.5,cell[1]+.5,cell[2])
+            sx,sy=camera.to_screen(foot)
+            sx,sy=round(sx),round(sy)
+            facing=(int(row.get('facing_dx',0)),int(row.get('facing_dy',0)))
+            active=bool(row.get('sees_player',False))
+            ink=(246,139,101,220) if active else (130,219,214,210)
+            pg.draw.circle(overlay,ink,(sx,sy),max(3,round(camera.scale*.12)),2)
+            if facing!=(0,0):
+                pg.draw.line(overlay,ink,(sx,sy),
+                    (sx+facing[0]*max(7,size//2),sy+facing[1]*max(7,size//2)),2)
+            if active:
+                px,py=camera.to_screen(snapshot.viewer)
+                pg.draw.line(overlay,(248,113,78,130),(sx,sy),(round(px),round(py)),2)
+        self.screen.blit(overlay,viewport.topleft)
 
     def restore(self):
         if self._gpu_closed:return

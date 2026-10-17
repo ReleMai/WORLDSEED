@@ -16,6 +16,14 @@ MAX_MEMORY_CELLS = 4096
 MAX_SIGHT_RADIUS = 12000
 DETAIL_GRID = GRID//4
 MAX_SIGHT_RECTS = 1024
+# Interior geometry is still wall-occluded. Do not reuse NPC detection scale
+# for the player's near-black navigation: that kept even firelit rooms at ~3m.
+MIN_PLAYER_SIGHT_RADIUS = 5500
+
+
+def player_sight_radius(light):
+    return max(MIN_PLAYER_SIGHT_RADIUS,
+        MAX_SIGHT_RADIUS*detection_scale(light)//65535)
 
 
 def _cross(a, b, c):
@@ -109,7 +117,7 @@ def visible_grid_cells(plan, px, py, minute, ambient_light, sources=()):
             authorized=True
             for x,y in corners:
                 light=indoor_light(plan,x,y,minute,ambient_light=ambient_light,sources=sources)
-                radius=max(1000,MAX_SIGHT_RADIUS*detection_scale(light)//65535)
+                radius=player_sight_radius(light)
                 if (x-px)**2+(y-py)**2>radius*radius:
                     authorized=False
                     break
@@ -142,7 +150,7 @@ def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, view
         key=(x,y)
         if key not in lights:
             light=indoor_light(plan,x,y,minute,ambient_light=ambient_light,sources=sources)
-            lights[key]=max(1000,MAX_SIGHT_RADIUS*detection_scale(light)//65535)
+            lights[key]=player_sight_radius(light)
         return distance <= lights[key]**2
     admitted=[]
     def visit(rect):

@@ -515,9 +515,26 @@ class InteriorSystem:
             candidates = [WorldPos(*doorway(site)[1])]
         else:
             candidates = ([frontage] if frontage else []) + [WorldPos(plan.exterior_x + dx, plan.exterior_y + dy, plan.exterior_z) for dx, dy in ((0, 0), (0, 1), (-1, 0), (1, 0), (0, -1))]
+        # A resident standing in the doorway must not imprison a visitor.
+        # Search a SMALL prepared frontage apron after normal exits, never
+        # skipping blocked terrain/locks or generating an unseen world cell.
+        # For player egress only; NPC delivery/entry keeps its exact portal.
+        if actor_uid == "player" and site is None:
+            origins=tuple(dict.fromkeys(p for p in candidates if p is not None))
+            for distance in (2,3):
+                for base in origins[:2]:
+                    for dy in range(-distance,distance+1):
+                        dx=distance-abs(dy)
+                        for sx in ((-dx,dx) if dx else (0,)):
+                            candidates.append(WorldPos(base.x+sx,base.y+dy,base.z))
         for pos in dict.fromkeys(candidates):
+            if pos is None:
+                continue
             if site is not None and not homestead._prepared(pos):
                 continue
+            if (actor_uid == 'player' and site is None and pos not in origins
+                    and self.sim.settlement_physicalization.shell_at(pos) is not None):
+                continue  # never recover through a neighbor's roof/occupied shell
             key, lx, ly = split_world(pos)
             chunk = world.cache.peek(key)
             if chunk is None:

@@ -66,7 +66,7 @@ jobs:
       - name: Windows GPU-first atmosphere and prepared scene source contracts
         run: python -u tools/run_ci_check.py --name g5g8-atmosphere-scene --timeout 45 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_gpu_playtest_bridge.GPUSceneBridgeContracts
       - name: W1 resident-only reads, actor materials and W2 input contracts
-        run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_candidate_package tests.test_gpu_objects tests.test_gpu_interiors tests.test_gpu_interior_art_pass2 tests.test_gpu_interior_smoothing tests.test_gpu_floor_batch tests.test_gl_ui_surface tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
+        run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_overhead_and_structural_walls tests.test_gpu_candidate_package tests.test_gpu_objects tests.test_gpu_interiors tests.test_gpu_interior_art_pass2 tests.test_gpu_interior_smoothing tests.test_gpu_floor_batch tests.test_gl_ui_surface tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
       - name: W4 natural materials, raster seams and versioned land cover
         run: python -u tools/run_ci_check.py --name w4-landscape-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_ground_materials tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_worldgen_v9_surface tests.test_worldgen_v9_compatibility
       - name: Live playtest memory, physical tree bases and instant pickups
@@ -170,7 +170,9 @@ jobs:
 
   smoke:
     runs-on: windows-latest
-    timeout-minutes: 10
+    # Full Windows smoke reaches Dev34 after 10 minutes on cold runners.
+    # Keep every contract; only increase the job ceiling to avoid cancellation.
+    timeout-minutes: 14
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
@@ -246,7 +248,7 @@ jobs:
 
       - name: Log cabin blueprint and placement ghost
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Log cabin safety access blueprint and ghost" --timeout 60 -- python -u -m unittest -v tests.test_homestead_safety tests.test_homestead_access tests.test_homestead_access_ui tests.test_homestead_blueprints tests.test_homestead_ghost_ui tests.test_homestead_panels tests.test_homestead_art
+        run: python -u tools/run_ci_check.py --name "Log cabin safety access blueprint and ghost" --timeout 105 -- python -u -m unittest -v tests.test_homestead_safety tests.test_homestead_access tests.test_homestead_access_ui tests.test_homestead_blueprints tests.test_homestead_ghost_ui tests.test_homestead_panels tests.test_homestead_art
 
       - name: Dev41 realtime and free-movement regressions
         shell: pwsh

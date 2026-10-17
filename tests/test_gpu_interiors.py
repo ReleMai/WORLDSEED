@@ -120,6 +120,42 @@ class GPUInteriorContracts(TestCase):
                              for c in hidden.scenery))
         self.assertEqual(plan.explored_cells, [saved_cell])
 
+    def test_partly_seen_object_keeps_same_observed_art_across_live_memory_boundary(self):
+        from worldseed.systems.interior_state import InteriorObservation
+        sim,plan,player,_=self.fixture()
+        obj=plan.furniture[0]
+        plan.observed_objects=[InteriorObservation(obj.uid,'furniture',obj.piece_id,
+            obj.x,obj.y,obj.w,obj.h)]
+        live=(2000,4500,2500,5000)
+        remembered=(2500,4500,3000,5000)
+        with patch('worldseed.presentation.gpu_interiors.visible_floor_rects',
+                   return_value=(live,)),patch(
+                   'worldseed.presentation.gpu_interiors.remembered_floor_rects',
+                   return_value=(remembered,)):
+            snapshot=capture_live_scene(sim,self.camera(sim))
+        scene=snapshot.interior_scene
+        self.assertIn('visible-bed',{r.uid for r in scene.objects})
+        self.assertIn('visible-bed',{r.uid for r in scene.memory_objects})
+        self.assertEqual(next(r.content_id for r in scene.objects if r.uid=='visible-bed'),
+                         next(r.content_id for r in scene.memory_objects if r.uid=='visible-bed'))
+        frame=snapshot.gpu_frame(materials=Materials(),registry=self.registry,resource_style=lambda _: {})
+        seen=next(c for c in frame.scenery if c.visual_id=='interior:visible-bed')
+        frozen=next(c for c in frame.scenery if c.visual_id=='interior-memory-object:visible-bed')
+        self.assertFalse(seen.remembered)
+        self.assertTrue(frozen.remembered)
+        self.assertFalse(any(a<x1 and c>x and b<y1 and d>y
+            for a,b,c,d in seen.clip_rects for x,y,x1,y1 in frozen.clip_rects))
+
+    def test_indoor_character_has_a_foot_anchored_contact_shadow(self):
+        sim,plan,player,_=self.fixture()
+        frame=capture_live_scene(sim,self.camera(sim)).gpu_frame(
+            materials=Materials(),registry=self.registry,resource_style=lambda _: {})
+        shadow=next(c for c in frame.scenery if c.visual_id=='interior-actor-contact:player')
+        body=next(c for c in frame.scenery if c.visual_id=='interior-actor:player')
+        self.assertLessEqual(shadow.bounds[1],body.bounds[3])
+        self.assertGreaterEqual(shadow.bounds[3],body.bounds[3])
+        self.assertTrue(shadow.clip_rects)
+
     def test_sight_rectangles_do_not_sample_thin_wall_away(self):
         # Every corner ray misses this tiny wall, but it lies in the full fan.
         wall = (1500, 1450, 1501, 1451)

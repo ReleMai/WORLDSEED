@@ -188,7 +188,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                       actors:Sequence[PreparedActor]=(), buildings=(), terrain_defs=None,
                       objects=(), show_explored_memory=True,
                       remembered_resources=(), remembered_buildings=(), remembered_objects=(),
-                      sun_minute=None):
+                      sun_minute=None,sight_radius=0):
     """Build FOW-safe world visuals from one prepared viewport only."""
     if season not in ('spring','summer','autumn','winter'):
         raise ValueError('unsupported render season')
@@ -224,13 +224,15 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         # frozen. A soft fade at the outgoing tile edge removes hard stair
         # stepping without leaking any undiscovered coordinates.
         edges=(tuple(0. if (x+dx,y+dy,z) in visible_cells
-                     else (.36 if (x+dx,y+dy,z) in discovered_cells else .62)
+                     else (.52 if (x+dx,y+dy,z) in discovered_cells else .88)
                      for dx,dy in ((-1,0),(1,0),(0,-1),(0,1)))
                if current else (0.,0.,0.,0.))
         ground.append(SpriteCommand(f'ground:{z}:{x}:{y}',*tex,
                        (p[0],p[1],p[0]+camera.scale,p[1]+camera.scale),
                        (viewport,), opacity=1.0 if current else .62, ground=blend,
-                       remembered=not current,sight_edges=edges))
+                       remembered=not current,sight_edges=edges,
+                       sight_center=camera.to_screen(viewer) if current and sight_radius else (0.,0.),
+                       sight_radius=sight_radius*camera.scale if current else 0.))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,
@@ -268,6 +270,9 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                 if reproject else scene.projection)
     if show_player:
         projection = _readable_player_cover(projection, camera)
+    # A viewer excluded from the current-sight mask must NEVER cause a
+    # transparency cutout (same fail-closed rule already used for trees).
+    cover_viewer=viewer if show_player and viewer.cell in visible_cells else None
     from .gl_worldspace import commands_from_projected
     def source(projected):
         v=projected.instance
@@ -304,17 +309,24 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             h=max(4,camera.scale*.56)
             scenery[index]=replace(c,bounds=(cx-w*.5,cy-h*.8,cx+w*.5,cy+h*.2))
         elif v.instance.layer is VisualLayer.OVERHEAD:
-            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085))
+            from .gpu_cover_fade import cover_fade
+            fade={} if c.fade_radius else cover_fade(
+                camera,cover_viewer,c.bounds,c.clip_rects)
+            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085),**fade)
     keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
     if roofs:
         roof_projection=project_scene(object_instances(roofs),camera,
             SceneVisibility(frozenset(row.foot.cell for row in roofs)))
-        scenery.extend(commands_from_projected(roof_projection,source))
+        from .gpu_cover_fade import cover_fade
+        for command in commands_from_projected(roof_projection,source):
+            fade=cover_fade(camera,cover_viewer,command.bounds,command.clip_rects)
+            scenery.append(replace(command,**fade) if fade else command)
         keys.update({v.instance.instance_id:visual_sort_key(v.instance) for v in roof_projection.visuals})
     if buildings:
         from .gpu_buildings import building_commands, building_sort_keys
         keys.update(building_sort_keys(buildings))
-        scenery.extend(building_commands(buildings,camera,materials))
+        scenery.extend(building_commands(buildings,camera,materials,
+                                        viewer=cover_viewer))
     if buildings or roofs:
         scenery.sort(key=lambda command:keys[command.visual_id])
     if show_explored_memory and (remembered_resources or remembered_buildings or remembered_objects):

@@ -63,7 +63,7 @@ def shadow_bounds(rect, source, scale, *, height_ratio=1.):
     cx=(x0+x1)*.5
     cy=y1-height*.13
     if source is None:
-        dx,dy=.11*scale,.16*scale
+        dx,dy=0.,0.
     else:
         sx,sy=source
         vx,vy=cx-sx,cy-sy
@@ -71,10 +71,14 @@ def shadow_bounds(rect, source, scale, *, height_ratio=1.):
         if length<.01:
             dx,dy=.09*scale,.10*scale
         else:
-            offset=min(scale*.42,scale*(.12+.035*max(1.,height_ratio)))
+            # A short cast reacts to its light source while remaining visibly
+            # attached to the furniture's physical base and hitbox.
+            offset=min(scale*.11,width*.10,height*.15)
             dx,dy=vx/length*offset,vy/length*offset
-    return (cx-width*.47+dx,cy-height*.28+dy,
-            cx+width*.47+dx,cy+height*.22+dy)
+    dx=max(-width*.12,min(width*.12,dx))
+    dy=max(-height*.08,min(height*.08,dy))
+    return (cx-width*.47+dx,cy-height*.23+dy,
+            cx+width*.47+dx,cy+height*.14+dy)
 
 
 def light_halo_bounds(x,y,radius,camera_scale):

@@ -25,6 +25,23 @@ class InteriorFloorBatchTests(TestCase):
         self.assertAlmostEqual(vertices[20],c)
         self.assertAlmostEqual(vertices[21],d)
 
+    def test_indoor_darkness_uses_same_exact_clipped_mesh_batch(self):
+        from worldseed.presentation.gl_worldspace import clipped_vertex_bytes
+        width,height=128,128
+        a=(20.1,24.4,45.7,56.9)
+        b=(51.3,24.4,72.2,56.9)
+        from worldseed.presentation.gl_worldspace import pixel_clip
+        for bounds in (a,b):
+            clip=pixel_clip(bounds,width,height)
+            geometry=unpack('<24f',clipped_vertex_bytes(bounds,clip,height))
+            self.assertAlmostEqual(geometry[0],max(bounds[0],float(clip[0])),places=4)
+            self.assertAlmostEqual(geometry[1],max(bounds[1],float(height-clip[1]-clip[3])),places=4)
+        # Shader batching is restricted to the named, already admitted
+        # interior light layer; other sprites retain exact clip scissors.
+        import inspect
+        from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer
+        self.assertIn("interior-light:",inspect.getsource(GLWorldspaceRenderer.draw))
+
     def test_empty_mesh_is_degenerate_and_never_paints_unrelated_cells(self):
         rect=clipped_vertex_bytes((1.,1.,2.,2.),(30,0,2,2),64)
         self.assertEqual(unpack('<24f',rect),(0.,)*24)

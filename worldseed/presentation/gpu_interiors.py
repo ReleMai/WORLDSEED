@@ -22,6 +22,7 @@ from .interior_clip_index import InteriorClipIndex
 from .interior_art_lighting import (shadow_bounds, shadow_texture,
     warm_glow_texture, light_halo_bounds, nearest_light, MAX_VISIBLE_HALO_SOURCES)
 from .worldspace import WorldFoot
+from .interior_wall_styles import wall_kind, wall_texture
 
 MAX_INTERIOR_WALLS = 256
 MAX_INTERIOR_FIXTURES = 512
@@ -100,6 +101,8 @@ class PreparedInterior:
                               tuple[tuple[int,int,int,int], ...]], ...] = ()
     memory_objects: tuple[InteriorObject, ...] = ()
     visible_lights: tuple = ()  # Only light sources within admitted current LOS
+    wall_kinds: tuple[str, ...] = ()
+    memory_wall_kinds: tuple[str, ...] = ()
 
     def hit_test(self, x: float, y: float):
         """Observational stable IDs; commands still revalidate physical reach."""
@@ -217,6 +220,7 @@ def capture_interior(sim, camera):
 
     memory_index=InteriorClipIndex((tile.bounds for tile in memory_tiles),GRID)
     memory_walls = []
+    memory_wall_kinds = []
     old_walls=getattr(plan,'observed_walls',None)
     known_walls=walls if old_walls is None else tuple((w.x,w.y,w.x+w.w,w.y+w.h) for w in old_walls)
     for wall in known_walls:
@@ -225,6 +229,7 @@ def capture_interior(sim, camera):
         patches=memory_index.intersect(wall,padding=250)
         if patches:
             memory_walls.append((wall, _union_rects(patches)))
+            memory_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
 
     def admitted(rect):
         return bool(live_index.intersect(rect))
@@ -238,27 +243,18 @@ def capture_interior(sim, camera):
         )[:MAX_VISIBLE_HALO_SOURCES]
 
     visible_walls = []
-    # Only the exposed face of each authoritative wall is projected. Other
-    # walls still occlude it; a wall never authorizes the floor behind itself.
-    for index, wall in enumerate(walls):
-        a, b, c, d = wall
-        if not _overlap(wall, (left, top, right, bottom)):
+    visible_wall_kinds = []
+    # A large structural wall must be drawable one visible fragment at a
+    # time. The old full-wall convex fan wrongly discarded an entire perimeter
+    # when the far end crossed a room divider and was O(walls**2). Strict live
+    # floor scissors in prepare_interior_frame still mask hidden portions.
+    for wall in walls:
+        if not _overlap(wall,(left-250,top-250,right+250,bottom+250)):
             continue
-        if a <= player.x < c:
-            near = b-1 if player.y < b else d
-            face = (a, near, c, near+1)
-        elif b <= player.y < d:
-            near = a-1 if player.x < a else c
-            face = (near, b, near+1, d)
-        else:
-            # A corner can be seen on both axes; a conservative adjacent strip
-            # suffices and avoids a diagonal peek into the neighboring room.
-            near = b-1 if player.y < b else d
-            face = (a, near, c, near+1)
-        other = walls[:index]+walls[index+1:]
-        if (max(abs(player.x-a), abs(player.y-b)) <= 12000
-                and _rect_visible(player.x, player.y, face, other)):
-            visible_walls.append(wall)
+        if not live_index.intersect(wall,padding=250):
+            continue
+        visible_walls.append(wall)
+        visible_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
 
     from worldseed.systems.interior_furnishing import furniture_visual
     objects = []
@@ -290,7 +286,11 @@ def capture_interior(sim, camera):
     memory_objects=[]
     for row in getattr(plan,'observed_objects',())[:672]:
         rect=(row.x,row.y,row.x+row.w,row.y+row.h)
-        if row.uid not in current_uids and memory_index.intersect(rect):
+        # Keep the last-observed pixels in every remembered fragment, EVEN if
+        # part of the same object is still live. Live and memory scissor masks
+        # are already disjoint; excluding the whole UID caused furniture to
+        # disappear/reappear abruptly while walking past a sight boundary.
+        if memory_index.intersect(rect):
             memory_objects.append(InteriorObject(row.uid,row.kind,row.content_id,
                 tuple(value/UNIT for value in rect),row.height_ratio,row.flat,row.solid))
     actors = []
@@ -312,7 +312,7 @@ def capture_interior(sim, camera):
         getattr(plan, 'floor_index', 0), getattr(plan, 'floor_count', 1),
         tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors),
         tuple(memory_tiles), tuple(memory_walls), tuple(memory_objects),
-        visible_lights)
+        visible_lights,tuple(visible_wall_kinds),tuple(memory_wall_kinds))
 
 
 def _texture(materials, category, content_id):
@@ -393,15 +393,17 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
                 'interior-glow:'+source.uid,*warm_glow_texture(),
                 halo_bounds,glow_clips,opacity=.48)))
     if show_explored_memory:
-        source = _texture(materials, 'interior_textures', wall_id) if scene.memory_walls else None
-        if source:
-            for index, (rect, parts) in enumerate(scene.memory_walls):
+        for index, (rect, parts) in enumerate(scene.memory_walls):
+            kind=scene.memory_wall_kinds[index] if index<len(scene.memory_wall_kinds) else 'partition'
+            source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
+            if source:
                 scenery.append(((-3., 'memory-wall:'+str(index)), SpriteCommand(
                     'interior-memory-wall:'+str(index), *source,
                     screen_rect(rect, UNIT),
                     tuple(screen_rect(part, UNIT) for part in parts), opacity=.62, remembered=True)))
     for index, rect in enumerate(scene.walls):
-        source = _texture(materials, 'interior_textures', wall_id)
+        kind=scene.wall_kinds[index] if index<len(scene.wall_kinds) else 'partition'
+        source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
         if source:
             bounds = screen_rect(rect, UNIT)
             wall_parts=live_clips.intersect(bounds,padding=camera.scale*.25)
@@ -447,19 +449,37 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         if source is not None:
             x, y = camera.to_screen(row.foot)
             width, height = camera.scale*.75, camera.scale*1.5
-            scenery.append(((row.foot.y, row.uid), SpriteCommand('interior-actor:'+row.uid,
-                *source, (x-width/2, y-height, x+width/2, y),
-                admitted_clips((x-width/2, y-height, x+width/2, y)))))
+            # Actor contact is anchored to FEET, not the shifted head/body art.
+            # Drawing before the actor gives ground contact even in unlit rooms.
+            foot_shadow=(x-camera.scale*.32,y-camera.scale*.13,
+                         x+camera.scale*.32,y+camera.scale*.08)
+            contact=admitted_clips(foot_shadow)
+            if contact:
+                scenery.append(((row.foot.y-.003, 'contact:'+row.uid),SpriteCommand(
+                    'interior-actor-contact:'+row.uid,*shadow_texture(),
+                    foot_shadow,contact,opacity=.82)))
+            body=(x-width/2, y-height, x+width/2, y)
+            body_clips=admitted_clips(body)
+            if body_clips:
+                scenery.append(((row.foot.y, row.uid), SpriteCommand('interior-actor:'+row.uid,
+                    *source, body,body_clips)))
     scenery.sort(key=lambda row: row[0])
     commands = [command for _, command in scenery]
     # Light is sampled by the shared wall-occluded engine authority. These
     # constant-source quads add darkness only within already-authorized floor.
     shade = ('interior-shade', 1, bytes((8, 12, 20, 255)), 1, 1)
+    # Lighting is the primary indoor draw-call hotspot: each rectangle used
+    # to demand its own scissor + draw. Slight alpha quantization and a
+    # 1-pixel-exact clipped mesh permit batching into <=24 material passes.
+    # These rectangles are pairwise disjoint, so reorder only the shade tail.
+    shade_quads=[]
     for index, tile in enumerate(scene.tiles):
-        alpha = (65535-tile.light)*.55/65535
+        alpha=round(((65535-tile.light)*.55/65535)*24)/24
+        if alpha<=0:continue
         a,b,c,d=clips[index]
-        commands.append(SpriteCommand('interior-light:'+str(index), *shade,
-            (a-.01,b-.01,c+.01,d+.01), (clips[index],), opacity=alpha))
+        shade_quads.append((alpha,index,SpriteCommand('interior-light:'+str(index),*shade,
+            (a-.01,b-.01,c+.01,d+.01),(clips[index],),opacity=alpha)))
+    commands.extend(row[2] for row in sorted(shade_quads,key=lambda row:(row[0],row[1])))
     if len(ground)+len(commands) > MAX_COMMANDS:
         raise ValueError('interior draw budget exceeded')
     return GPUPreparedFrame(tuple(ground), tuple(commands), 0, len(ground))

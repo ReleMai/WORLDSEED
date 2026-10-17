@@ -176,7 +176,10 @@ def building_sort_keys(buildings):
     result = {}
     for row in buildings:
         left, _top, right, bottom = row.shell.bounds
-        key = (30, bottom+.25, 0., (left+right+1)/2., 30)
+        # Roofs are physically impassable shells, not foreground characters.
+        # Draw them behind living actors regardless of their cell-depth. The
+        # existing footprint/door collision authority remains untouched.
+        key = (29, bottom+.25, 0., (left+right+1)/2., 29)
         result['building:'+row.shell.uid] = (*key, 'building:'+row.shell.uid)
         # Keep independent door art immediately above its closed shell.
         result['building-door:'+row.shell.door_uid] = (*key, 'building:'+row.shell.uid+'~door')
@@ -188,7 +191,7 @@ def _art(materials, row):
     return supplied(row) if supplied is not None else load_building_art(materials, row)
 
 
-def building_commands(buildings, camera, materials):
+def building_commands(buildings, camera, materials, *, viewer=None):
     """Project only public exteriors; drawing cannot ask the simulation for data."""
     if len(buildings) > MAX_PREPARED_BUILDINGS:
         raise ValueError('GPU building budget exceeded')
@@ -207,8 +210,10 @@ def building_commands(buildings, camera, materials):
                 clips.append((px, py, px+camera.scale, py+camera.scale))
         if not clips:
             continue
+        from .gpu_cover_fade import cover_fade
+        local_fade=cover_fade(camera,viewer,(x0,y0,x1,y1),tuple(clips))
         result.append(SpriteCommand('building:'+row.shell.uid, *art.body,
-                                    (x0, y0, x1, y1), tuple(clips)))
+                                    (x0, y0, x1, y1), tuple(clips),**local_fade))
         if row.door is None or art.door is None:
             continue
         rx, ry, rw, rh = art.door_rect

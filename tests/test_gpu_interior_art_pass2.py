@@ -32,6 +32,8 @@ class InteriorArtPass2Tests(TestCase):
         a=shadow_bounds(rect,(100.,110.),40,height_ratio=1.5)
         b=shadow_bounds(rect,(170.,200.),40,height_ratio=1.5)
         self.assertGreater(a[0],b[0])
+        self.assertLess(abs((a[0]+a[2])/2-120.),6.)
+        self.assertLess(abs((b[0]+b[2])/2-120.),6.)
         self.assertLess(a[2]-a[0],42.)
         self.assertTrue(all(abs(value)<1e5 for value in a+b))
         bounds=light_halo_bounds(40,60,15000,40)
