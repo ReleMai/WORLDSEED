@@ -307,6 +307,13 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         if layer is None:return None
         return materials.tree('oak' if v.content_id=='core:oak_tree' else 'pine',layer,season)
     scenery=list(commands_from_projected(projection,source))
+    if own_roof:
+        # Ground beneath a roof stays hidden. The player's own body is known
+        # independently: clipping it to its foot cell cuts off the head.
+        scenery=[replace(c,clip_rects=((max(0.,c.bounds[0]),max(0.,c.bounds[1]),
+                     min(float(camera.width_px),c.bounds[2]),
+                     min(float(camera.height_px),c.bounds[3])),))
+                 if c.visual_id=='actor:gpu-viewer' else c for c in scenery]
     # Give each ground shadow a physically-grounded contact ellipse rather than
     # a floating full-tile sprite. The G1 solid trunk collision remains intact.
     visual_map={v.instance.instance_id:v for v in projection.visuals}

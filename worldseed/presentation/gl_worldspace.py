@@ -366,7 +366,8 @@ class GLWorldspaceRenderer:
                 floor=cmd.ground is None and len(cmd.clip_rects)==1 and (
                     cmd.visual_id.startswith('interior-floor:') or
                     cmd.visual_id.startswith('interior-memory-floor:') or
-                    cmd.visual_id.startswith('interior-light:'))
+                    cmd.visual_id.startswith('interior-light:') or
+                    cmd.visual_id.startswith('interior-fog:'))
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         None if floor else clip,cmd.opacity,cmd.fade_center,
                         cmd.fade_radius,cmd.local_alpha,cmd.sway_px,

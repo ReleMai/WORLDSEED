@@ -441,7 +441,7 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
             if shadow_clips:
                 scenery.append(((depth-.001, row.uid), SpriteCommand(
                     'interior-shadow:'+row.uid, *shadow_texture(),
-                    shadow_rect, shadow_clips)))
+                    shadow_rect, shadow_clips,opacity=.68)))
         prefix='interior-memory-object:' if remembered else 'interior:'
         scenery.append(((depth, row.uid), SpriteCommand(prefix+row.uid,
             *source, bounds, object_clips,opacity=.62 if remembered else 1.,remembered=remembered)))
@@ -481,6 +481,9 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         shade_quads.append((alpha,index,SpriteCommand('interior-light:'+str(index),*shade,
             (a-.01,b-.01,c+.01,d+.01),(clips[index],),opacity=alpha)))
     commands.extend(row[2] for row in sorted(shade_quads,key=lambda row:(row[0],row[1])))
+    from .interior_darkzone import darkzone_commands
+    commands.extend(darkzone_commands(clips,live_clips,camera.scale,
+        budget=min(512,max(0,MAX_COMMANDS-len(ground)-len(commands)))))
     if len(ground)+len(commands) > MAX_COMMANDS:
         raise ValueError('interior draw budget exceeded')
     return GPUPreparedFrame(tuple(ground), tuple(commands), 0, len(ground))

@@ -8,6 +8,7 @@ square of a *specific* persisted InteriorPlan (and thus a specific floor).
 from __future__ import annotations
 
 from math import ceil
+from functools import lru_cache
 
 from worldseed.systems.illumination import detection_scale, indoor_light, segment_clear
 
@@ -41,6 +42,11 @@ def _scalar_xy(points):
 def _hull(points):
     if not _scalar_xy(points):
         return ()  # fail closed; never reveal hidden floor using bad geometry
+    return _trusted_hull(points)
+
+
+def _trusted_hull(points):
+    """Internal hull after request validation, without repeating type scans."""
     points = sorted(set(points))
     halves = []
     for values in (points, list(reversed(points))):
@@ -55,14 +61,23 @@ def _hull(points):
 
 def _intersects_wall(polygon, wall):
     ax, ay, bx, by = wall
-    box = ((ax, ay), (bx-1, ay), (bx-1, by-1), (ax, by-1))
+    bx -= 1
+    by -= 1
     axes = [(1, 0), (0, 1)]
     axes.extend((b[1]-a[1], a[0]-b[0])
                 for a, b in zip(polygon, (*polygon[1:], polygon[0])))
     for dx, dy in axes:
-        values = tuple(x*dx+y*dy for x, y in polygon)
-        other = tuple(x*dx+y*dy for x, y in box)
-        if max(values) < min(other) or max(other) < min(values):
+        # An axis-aligned wall's extrema are its signed support corners.
+        # Avoid allocating/projecting four wall vertices for every SAT axis.
+        low = (ax if dx >= 0 else bx)*dx + (ay if dy >= 0 else by)*dy
+        high = (bx if dx >= 0 else ax)*dx + (by if dy >= 0 else ay)*dy
+        first = polygon[0][0]*dx + polygon[0][1]*dy
+        pmin = pmax = first
+        for x,y in polygon[1:]:
+            value=x*dx+y*dy
+            if value < pmin:pmin=value
+            if value > pmax:pmax=value
+        if pmax < low or high < pmin:
             return False
     return True
 
@@ -74,7 +89,12 @@ def _rect_visible(px, py, bounds, walls):
     a, b, c, d = bounds
     if not _scalar_xy(((px,py),(a,b),(c,d))):
         return False
-    polygon = _hull(((px, py), (a, b), (c-1, b), (c-1, d-1), (a, d-1)))
+    return _trusted_rect_visible(px,py,bounds,walls)
+
+
+def _trusted_rect_visible(px,py,bounds,walls):
+    a,b,c,d=bounds
+    polygon = _trusted_hull(((px, py), (a, b), (c-1, b), (c-1, d-1), (a, d-1)))
     if len(polygon) < 3:
         return False
     left, right = min(px, a), max(px, c-1)
@@ -155,18 +175,51 @@ def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, view
     if not 0 < cols*rows <= MAX_MEMORY_CELLS or len(plan.walls) > 256:
         return ()
     walls = tuple((w.x,w.y,w.x+w.w,w.y+w.h) for w in plan.walls)
+    # Two recent exact requests cover simulation observation and rendering.
+    # Geometry and lights are value keys: edits invalidate immediately, and
+    # no plan/state object survives in this bounded ephemeral cache.
+    return _visible_floor_rects(plan.width,plan.height,walls,px,py,
+        ambient_light,tuple(sources)[:64],viewport)
+
+
+@lru_cache(maxsize=2)
+def _visible_floor_rects(width,height,walls,px,py,ambient_light,sources,viewport):
+    from types import SimpleNamespace
+    from worldseed.systems.illumination import lighting_catalog, source_strength
+    plan=SimpleNamespace(width=width,height=height,
+        walls=tuple(SimpleNamespace(x=a,y=b,w=c-a,h=d-b) for a,b,c,d in walls))
+    cols=(width+GRID-1)//GRID
+    rows=(height+GRID-1)//GRID
+    ambient=max(0,min(65535,int(ambient_light)))*lighting_catalog()['indoor_ambient_percent']//100
+    ambient_radius=player_sight_radius(ambient)
+    minute=0  # supplied ambient is authoritative; indoor_light does not read time
     left,top,right,bottom = viewport or (0,0,plan.width,plan.height)
     left,top = max(0,left,px-MAX_SIGHT_RADIUS), max(0,top,py-MAX_SIGHT_RADIUS)
     right,bottom = min(plan.width,right,px+MAX_SIGHT_RADIUS+1), min(plan.height,bottom,py+MAX_SIGHT_RADIUS+1)
     lights = {}
+    clear_points = {}
+    def clear_point(x,y):
+        key=(x,y)
+        if key not in clear_points:
+            clear_points[key]=segment_clear(plan,px,py,x,y)
+        return clear_points[key]
     def in_reach(x,y):
         distance = (x-px)**2+(y-py)**2
         if distance > MAX_SIGHT_RADIUS**2:
             return False
+        # Point lights can only increase reach. Near-floor navigation already
+        # fits inside the ambient radius, regardless of lamp occlusion.
+        if distance <= ambient_radius*ambient_radius:
+            return True
         key=(x,y)
         if key not in lights:
-            light=indoor_light(plan,x,y,minute,ambient_light=ambient_light,sources=sources)
-            lights[key]=player_sight_radius(light)
+            # Most floor corners lie beyond every lamp's finite influence.
+            # Their ambient radius is constant; no light/LOS query is needed.
+            if not any(source_strength(s,x,y) for s in sources):
+                lights[key]=ambient_radius
+            else:
+                light=indoor_light(plan,x,y,minute,ambient_light=ambient_light,sources=sources)
+                lights[key]=player_sight_radius(light)
         return distance <= lights[key]**2
     admitted=[]
     def visit(rect):
@@ -174,7 +227,7 @@ def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, view
         if c <= left or a >= right or d <= top or b >= bottom:
             return
         corners=((a,b),(c-1,b),(c-1,d-1),(a,d-1))
-        if all(in_reach(x,y) for x,y in corners) and _rect_visible(px,py,rect,walls):
+        if all(in_reach(x,y) for x,y in corners) and _trusted_rect_visible(px,py,rect,walls):
             admitted.append(rect)
             return
         if max(c-a,d-b) <= DETAIL_GRID:
@@ -183,7 +236,7 @@ def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, view
         # entire floor. This rejection is conservative: missing a narrow
         # sliver can hide pixels, but cannot reveal an unobserved one.
         probes=(*corners,((a+c)//2,(b+d)//2))
-        if not any(in_reach(x,y) and segment_clear(plan,px,py,x,y) for x,y in probes):
+        if not any(in_reach(x,y) and clear_point(x,y) for x,y in probes):
             return
         mid_x,min_y = min(c,a+(c-a+1)//2), min(d,b+(d-b+1)//2)
         for x0,x1 in ((a,mid_x),(mid_x,c)):
