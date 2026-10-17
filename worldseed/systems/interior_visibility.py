@@ -94,15 +94,20 @@ def _rect_visible(px, py, bounds, walls):
 
 def _trusted_rect_visible(px,py,bounds,walls):
     a,b,c,d=bounds
-    polygon = _trusted_hull(((px, py), (a, b), (c-1, b), (c-1, d-1), (a, d-1)))
-    if len(polygon) < 3:
-        return False
     left, right = min(px, a), max(px, c-1)
     top, bottom = min(py, b), max(py, d-1)
+    polygon=None
+    # Modded one-unit edge cells can have a degenerate fan; preserve their
+    # existing fail-closed behavior even when there are no candidate walls.
+    if c-a<=1 or d-b<=1:
+        polygon=_trusted_hull(((px,py),(a,b),(c-1,b),(c-1,d-1),(a,d-1)))
+        if len(polygon)<3:return False
     for wall in walls:
         x, y, x1, y1 = wall
         if x > right or x1-1 < left or y > bottom or y1-1 < top:
             continue
+        if polygon is None:
+            polygon=_trusted_hull(((px,py),(a,b),(c-1,b),(c-1,d-1),(a,d-1)))
         if _intersects_wall(polygon, wall):
             return False
     return True

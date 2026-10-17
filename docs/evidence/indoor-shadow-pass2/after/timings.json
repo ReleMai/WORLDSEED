@@ -1,0 +1,28 @@
+{
+  "renderer": "NVIDIA GeForce RTX 4060 Ti/PCIe/SSE2",
+  "viewport": [
+    960,
+    640
+  ],
+  "frames": 90,
+  "warmup_frames": 5,
+  "capture": {
+    "p50_ms": 13.012,
+    "p95_ms": 13.825
+  },
+  "prepare": {
+    "p50_ms": 7.824,
+    "p95_ms": 8.502
+  },
+  "draw_and_finish": {
+    "p50_ms": 2.984,
+    "p95_ms": 3.937
+  },
+  "total": {
+    "p50_ms": 24.039,
+    "p95_ms": 26.085
+  },
+  "draw_calls_p50": 29.0,
+  "last_frame_commands": 568,
+  "texture_bytes": 21149100
+}

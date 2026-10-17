@@ -9,7 +9,6 @@ presentation; movement, interaction, doors and inventories stay in the engine.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from collections import Counter
 from math import ceil, floor
 
 from worldseed.systems.illumination import (indoor_actor_visible, indoor_light,
@@ -18,7 +17,7 @@ from worldseed.systems.interior_state import UNIT
 from worldseed.systems.interior_visibility import (GRID, _rect_visible,
     visible_floor_rects, remembered_floor_rects)
 from .gl_worldspace import MAX_COMMANDS, SpriteCommand
-from .interior_clip_index import InteriorClipIndex
+from .interior_clip_index import InteriorClipIndex, union_rects as _union_rects
 from .interior_art_lighting import (shadow_bounds, shadow_texture,
     warm_glow_texture, light_halo_bounds, nearest_light, MAX_VISIBLE_HALO_SOURCES)
 from .worldspace import WorldFoot
@@ -118,35 +117,6 @@ class PreparedInterior:
 def _overlap(a, b):
     return a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]
 
-
-def _union_rects(rects):
-    """Disjoint scissor strips prevent repeated alpha along wall fragments."""
-    events={}
-    for a,b,c,d in rects:
-        if a < c and b < d:
-            events.setdefault(b,[]).append((a,c,1))
-            events.setdefault(d,[]).append((a,c,-1))
-    active=Counter()
-    strips=[]
-    previous_y=None
-    for y,changes in sorted(events.items()):
-        if previous_y is not None and y > previous_y:
-            intervals=[]
-            for (a,c),count in sorted(active.items()):
-                if count <= 0:
-                    continue
-                if intervals and a <= intervals[-1][1]:
-                    intervals[-1]=(intervals[-1][0],max(c,intervals[-1][1]))
-                else:
-                    intervals.append((a,c))
-            for a,c in intervals:
-                strips.append((a,previous_y,c,y))
-        for a,c,delta in changes:
-            active[(a,c)]+=delta
-            if active[(a,c)] == 0:
-                del active[(a,c)]
-        previous_y=y
-    return tuple(strips)
 
 
 def capture_interior(sim, camera):

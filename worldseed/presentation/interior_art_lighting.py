@@ -28,11 +28,15 @@ def _rgba(size, sample):
 
 @lru_cache(maxsize=1)
 def shadow_texture():
-    # Feathery dark footprint, without the old hard ellipse boundary.
+    # Tight neutral contact core with a broader, quieter penumbra. The outer
+    # falloff reaches transparent before the quad edge, avoiding a brown halo.
     width,height=SHADOW_SIZE
-    rgba=_rgba((width,height),lambda u,v: (
-        17,13,10,120*exp(-4.2*((u-.5)/.5)**2-4.8*((v-.5)/.5)**2)))
-    return ('indoor-soft-shadow-v2',1,rgba,width,height)
+    def sample(u,v):
+        distance=((u-.5)/.5)**2+((v-.5)/.5)**2
+        alpha=(70*exp(-2.8*distance)+85*exp(-13*distance))*max(0.,1-distance)
+        return (10,13,17,alpha)
+    rgba=_rgba((width,height),sample)
+    return ('indoor-contact-shadow-v3',1,rgba,width,height)
 
 
 @lru_cache(maxsize=1)
@@ -73,7 +77,8 @@ def shadow_bounds(rect, source, scale, *, height_ratio=1.):
         else:
             # A short cast reacts to its light source while remaining visibly
             # attached to the furniture's physical base and hitbox.
-            offset=min(scale*.11,width*.10,height*.15)
+            elevation=max(.5,min(2.,float(height_ratio)))
+            offset=min(scale*.10*elevation,width*.12,height*.18)
             dx,dy=vx/length*offset,vy/length*offset
     dx=max(-width*.12,min(width*.12,dx))
     dy=max(-height*.08,min(height*.08,dy))

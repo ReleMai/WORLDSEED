@@ -54,7 +54,14 @@ def lighting_catalog() -> dict:
 def segment_clear(plan, x0: int, y0: int, x1: int, y1: int) -> bool:
     """Exact bounded wall intersection without sampling thin walls away."""
     precision = 1 << 30
+    segment_left,segment_right=min(x0,x1),max(x0,x1)
+    segment_top,segment_bottom=min(y0,y1),max(y0,y1)
     for wall in plan.walls:
+        # Most prepared walls cannot touch this local segment. Keep the exact
+        # fixed-point intersection for candidates, including tangencies.
+        if (wall.x>segment_right or wall.x+wall.w-1<segment_left or
+                wall.y>segment_bottom or wall.y+wall.h-1<segment_top):
+            continue
         low, high = 0, precision
         for origin, delta, left, size in ((x0, x1-x0, wall.x, wall.w),
                                          (y0, y1-y0, wall.y, wall.h)):

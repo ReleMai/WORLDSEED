@@ -1,62 +1,59 @@
-"""Inward-only penumbra on the boundary of already authorized indoor sight.
+"""A continuous inward penumbra over already authorized indoor sight.
 
-Shared patch edges cancel, including coarse/fine neighbors. No hidden floor,
-room, light or entity is consulted, and no pixel outside sight is admitted.
+Only a small alpha mask is rasterized, never terrain or a software world frame.
+The blurred mask cannot admit pixels: exact live sight clips remain mandatory.
 """
 from functools import lru_cache
+from hashlib import blake2b
+from math import ceil
 
 from .gl_worldspace import SpriteCommand
+from .interior_clip_index import union_rects
+
+MAX_MASK_EDGE=256
 
 
-def sight_boundary(rectangles):
-    lines={}
+@lru_cache(maxsize=2)
+def _mask_source(rectangles,width,height,radius):
+    import pygame as pg
+    mask=pg.Surface((width,height),pg.SRCALPHA)
     for a,b,c,d in rectangles:
-        for axis,fixed,start,end,side in (
-                ('y',b,a,c,1),('y',d,a,c,-1),
-                ('x',a,b,d,1),('x',c,b,d,-1)):
-            events=lines.setdefault((axis,fixed),{})
-            events[start]=events.get(start,0)+side
-            events[end]=events.get(end,0)-side
-    result=[]
-    for (axis,fixed),events in sorted(lines.items()):
-        active=0
-        start=None
-        for point,delta in sorted(events.items()):
-            new=active+delta
-            if new != active:
-                if active and start is not None:
-                    result.append((axis,fixed,start,point,1 if active>0 else -1))
-                start=point
-                active=new
-    return tuple(result)
-
-
-@lru_cache(maxsize=4)
-def _edge_texture(axis,side):
-    width,height=(32,1) if axis=='x' else (1,32)
-    values=[]
-    for index in range(32):
-        t=(index+.5)/32
-        if side<0:t=1-t
-        # A broad smooth penumbra finishes almost black at the unknown edge.
-        alpha=round(248*(1-t*t*(3-2*t)))
-        values.extend((7,10,15,alpha))
-    return ('indoor-darkzone:'+axis+str(side),1,bytes(values),width,height)
+        pg.draw.rect(mask,(0,0,0,255),(a,b,c-a,d-b))
+    # Three native sliding-window box filters approximate a Gaussian without
+    # the radius-dependent convolution cost of pygame's gaussian_blur.
+    blurred=mask
+    for _ in range(3):
+        blurred=pg.transform.box_blur(blurred,radius,repeat_edge_pixels=False)
+    # One smooth field avoids multiplying overlapping corner/edge strips.
+    # Twice the inverse coverage reaches black at the true visibility edge.
+    fog=pg.Surface((width,height),pg.SRCALPHA)
+    fog.fill((3,5,7,255))
+    fog.blit(blurred,(0,0),special_flags=pg.BLEND_RGBA_SUB)
+    fog.blit(fog,(0,0),special_flags=pg.BLEND_RGBA_ADD)
+    rgba=pg.image.tobytes(fog,'RGBA')
+    identity=blake2b(rgba,digest_size=12).hexdigest()
+    return ('indoor-darkzone:'+identity,1,rgba,width,height)
 
 
 def darkzone_commands(clips,index,scale,*,budget=512):
-    if budget <= 0:
+    if budget<=0 or not clips:
         return ()
-    width=max(2.,min(18.,scale*.32))
-    commands=[]
-    for axis,fixed,start,end,side in sight_boundary(clips):
-        lo,hi=(fixed,fixed+width) if side>0 else (fixed-width,fixed)
-        bounds=(lo,start,hi,end) if axis=='x' else (start,lo,end,hi)
-        admitted=index.intersect(bounds)
-        for clip in admitted:
-            if len(commands) >= budget:
-                return tuple(sorted(commands,key=lambda command:command.texture_id))
-            commands.append(SpriteCommand('interior-fog:'+str(len(commands)),
-                *_edge_texture(axis,side),bounds,(clip,)))
-    # Group immutable gradients for exact clipped-mesh batching.
-    return tuple(sorted(commands,key=lambda command:command.texture_id))
+    parts=union_rects(clips)
+    if not parts:
+        return ()
+    # Camera translation disappears from the cache key; no per-edge queries.
+    feather=max(3.,min(20.,scale*.36))
+    padding=feather*2
+    left=min(r[0] for r in parts)-padding
+    top=min(r[1] for r in parts)-padding
+    right=max(r[2] for r in parts)+padding
+    bottom=max(r[3] for r in parts)+padding
+    step=max(1.,(right-left)/MAX_MASK_EDGE,(bottom-top)/MAX_MASK_EDGE)
+    width=max(1,min(MAX_MASK_EDGE,ceil((right-left)/step)))
+    height=max(1,min(MAX_MASK_EDGE,ceil((bottom-top)/step)))
+    rectangles=tuple((ceil((a-left)/step-.5),ceil((b-top)/step-.5),
+                      ceil((c-left)/step-.5),ceil((d-top)/step-.5))
+                     for a,b,c,d in parts)
+    source=_mask_source(rectangles,width,height,max(1,round(feather*.32/step)))
+    return (SpriteCommand('interior-fog:field',*source,
+        (left,top,left+width*step,top+height*step),tuple(clips)),)

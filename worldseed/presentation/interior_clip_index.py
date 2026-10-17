@@ -5,6 +5,7 @@ and recorded memory rectangles. It never reads undiscovered geometry.
 """
 from __future__ import annotations
 from math import ceil, floor
+from collections import Counter
 
 
 class InteriorClipIndex:
@@ -56,3 +57,33 @@ class InteriorClipIndex:
             if rect[0]<rect[2] and rect[1]<rect[3]:
                 result.append(rect)
         return tuple(result)
+
+
+def union_rects(rects):
+    """Disjoint scissor strips prevent repeated alpha along wall fragments."""
+    events={}
+    for a,b,c,d in rects:
+        if a < c and b < d:
+            events.setdefault(b,[]).append((a,c,1))
+            events.setdefault(d,[]).append((a,c,-1))
+    active=Counter()
+    strips=[]
+    previous_y=None
+    for y,changes in sorted(events.items()):
+        if previous_y is not None and y > previous_y:
+            intervals=[]
+            for (a,c),count in sorted(active.items()):
+                if count <= 0:
+                    continue
+                if intervals and a <= intervals[-1][1]:
+                    intervals[-1]=(intervals[-1][0],max(c,intervals[-1][1]))
+                else:
+                    intervals.append((a,c))
+            for a,c in intervals:
+                strips.append((a,previous_y,c,y))
+        for a,c,delta in changes:
+            active[(a,c)]+=delta
+            if active[(a,c)] == 0:
+                del active[(a,c)]
+        previous_y=y
+    return tuple(strips)

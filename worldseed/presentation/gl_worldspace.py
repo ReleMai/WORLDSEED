@@ -360,14 +360,12 @@ class GLWorldspaceRenderer:
                 material_key = None if ground is None else (
                     tuple((n.texture_id,n.revision,n.image_w,n.image_h,n.color)
                           for n in ground.neighbors),ground.widths,ground.color)
-                # Floor patches are already clipped against authoritative
-                # sight geometry. A clipped UV quad replaces per-tile scissor,
-                # allowing same-material indoor patches to share a draw call.
-                floor=cmd.ground is None and len(cmd.clip_rects)==1 and (
-                    cmd.visual_id.startswith('interior-floor:') or
-                    cmd.visual_id.startswith('interior-memory-floor:') or
-                    cmd.visual_id.startswith('interior-light:') or
-                    cmd.visual_id.startswith('interior-fog:'))
+                # Static interior sprites (including interior-light:) can
+                # crop UV geometry to the exact scissor, preserving paint
+                # order while batching all clips of furniture and shadows.
+                # Sway displaces vertices and must retain its GPU scissor.
+                floor=(cmd.ground is None and cmd.sway_px==0 and
+                       cmd.visual_id.startswith(('interior-','interior:')))
                 return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
                         None if floor else clip,cmd.opacity,cmd.fade_center,
                         cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
