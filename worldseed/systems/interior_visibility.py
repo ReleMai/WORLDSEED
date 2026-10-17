@@ -30,7 +30,17 @@ def _cross(a, b, c):
     return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
 
 
+def _scalar_xy(points):
+    # Corrupted/legacy geometry can contain nested tuple coordinates.
+    # A malformed observation must not crash an active Windows game.
+    return all(isinstance(point, tuple) and len(point)==2 and
+               all(type(value) in (int,float) for value in point)
+               for point in points)
+
+
 def _hull(points):
+    if not _scalar_xy(points):
+        return ()  # fail closed; never reveal hidden floor using bad geometry
     points = sorted(set(points))
     halves = []
     for values in (points, list(reversed(points))):
@@ -59,7 +69,11 @@ def _intersects_wall(polygon, wall):
 
 def _rect_visible(px, py, bounds, walls):
     """An entire floor rectangle must have an unobstructed wall fan."""
+    if not isinstance(bounds, tuple) or len(bounds)!=4:
+        return False
     a, b, c, d = bounds
+    if not _scalar_xy(((px,py),(a,b),(c,d))):
+        return False
     polygon = _hull(((px, py), (a, b), (c-1, b), (c-1, d-1), (a, d-1)))
     if len(polygon) < 3:
         return False
@@ -134,6 +148,8 @@ def visible_floor_rects(plan, px, py, minute, ambient_light, sources=(), *, view
     sampling away thin partitions or granting sight through a private room.
     The returned geometry is pure and shared by observation and presentation.
     """
+    if not _scalar_xy(((px,py),)):
+        return ()  # no malformed interior sight request may reach the hull
     cols = grid_columns(plan)
     rows = (plan.height+GRID-1)//GRID
     if not 0 < cols*rows <= MAX_MEMORY_CELLS or len(plan.walls) > 256:

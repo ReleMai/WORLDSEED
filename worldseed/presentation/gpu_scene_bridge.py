@@ -235,9 +235,18 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
                        sight_radius=sight_radius*camera.scale if current else 0.))
     ground.sort(key=lambda c:(c.texture_id,c.visual_id))
     viewer_actor=PreparedActor('gpu-viewer','core:player',viewer,True,is_viewer=True)
+    # A roof-covered player position is omitted from the *terrain* sight mask,
+    # but the player is still physically there. Admit only that player's own
+    # cell into the visual projection, never its terrain, NPCs or private room.
+    own_roof=(show_player and any(
+        viewer.cell in row.visible_cells for row in buildings))
+    own_roof=own_roof or (show_player and any(
+        row.foot.cell==viewer.cell for row in objects if row.kind=='roof'))
+    projected_cells=(frozenset(visible_cells)|{viewer.cell}
+                     if own_roof else frozenset(visible_cells))
     scene=prepare_worldspace_scene(camera=camera,resource_by=resource_by,
         resource_defs=resource_defs,resource_style=resource_style,
-        current_cells=visible_cells,discovered_cells=discovered_cells,
+        current_cells=projected_cells,discovered_cells=discovered_cells,
         actors=(viewer_actor,*actors),z=int(camera.center.z))
     # Harvest stages retain their resource identity and authoritative foot.
     # Stumps must not retain the mature tree's full-height visual rectangle.
@@ -272,7 +281,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         projection = _readable_player_cover(projection, camera)
     # A viewer excluded from the current-sight mask must NEVER cause a
     # transparency cutout (same fail-closed rule already used for trees).
-    cover_viewer=viewer if show_player and viewer.cell in visible_cells else None
+    cover_viewer=viewer if show_player and viewer.cell in projected_cells else None
     from .gl_worldspace import commands_from_projected
     def source(projected):
         v=projected.instance
@@ -321,7 +330,10 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         for command in commands_from_projected(roof_projection,source):
             fade=cover_fade(camera,cover_viewer,command.bounds,command.clip_rects)
             scenery.append(replace(command,**fade) if fade else command)
-        keys.update({v.instance.instance_id:visual_sort_key(v.instance) for v in roof_projection.visuals})
+        # Roof objects remain overhead cover, but render behind the player.
+        # The cutout still helps distinguish the structure around them.
+        keys.update({v.instance.instance_id:(29,*visual_sort_key(v.instance)[1:])
+                     for v in roof_projection.visuals})
     if buildings:
         from .gpu_buildings import building_commands, building_sort_keys
         keys.update(building_sort_keys(buildings))

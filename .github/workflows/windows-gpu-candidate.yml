@@ -13,6 +13,8 @@ on:
       - 'worldseed/presentation/gpu_buildings.py'
       - 'worldseed/presentation/gpu_cover_fade.py'
       - 'worldseed/presentation/interior_wall_styles.py'
+      - 'worldseed/presentation/interior_wall_art.py'
+      - 'tests/test_gpu_view_and_wall_art_regressions.py'
       - 'tests/test_gpu_overhead_and_structural_walls.py'
       - 'worldseed/presentation/gpu_interiors.py'
       - 'worldseed/presentation/interior_art_lighting.py'

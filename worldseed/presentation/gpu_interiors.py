@@ -23,6 +23,7 @@ from .interior_art_lighting import (shadow_bounds, shadow_texture,
     warm_glow_texture, light_halo_bounds, nearest_light, MAX_VISIBLE_HALO_SOURCES)
 from .worldspace import WorldFoot
 from .interior_wall_styles import wall_kind, wall_texture
+from .interior_wall_art import wall_art
 
 MAX_INTERIOR_WALLS = 256
 MAX_INTERIOR_FIXTURES = 512
@@ -395,7 +396,7 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
     if show_explored_memory:
         for index, (rect, parts) in enumerate(scene.memory_walls):
             kind=scene.memory_wall_kinds[index] if index<len(scene.memory_wall_kinds) else 'partition'
-            source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
+            source=wall_art(kind,wall_texture(wall_id,kind),rect)
             if source:
                 scenery.append(((-3., 'memory-wall:'+str(index)), SpriteCommand(
                     'interior-memory-wall:'+str(index), *source,
@@ -403,7 +404,7 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
                     tuple(screen_rect(part, UNIT) for part in parts), opacity=.62, remembered=True)))
     for index, rect in enumerate(scene.walls):
         kind=scene.wall_kinds[index] if index<len(scene.wall_kinds) else 'partition'
-        source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
+        source=wall_art(kind,wall_texture(wall_id,kind),rect)
         if source:
             bounds = screen_rect(rect, UNIT)
             wall_parts=live_clips.intersect(bounds,padding=camera.scale*.25)
