@@ -67,6 +67,22 @@ class OverheadCoverAndWallsTests(TestCase):
         self.assertEqual(wall_texture('core:interior_wall_plaster','partition'),
                          'core:interior_wall_plaster')
 
+    def test_entered_room_projects_structural_and_partition_walls_without_private_floor(self):
+        from worldseed.presentation.live_gpu_scene import capture_live_scene
+        from worldseed.systems.interior_state import InteriorRect
+        from tests.test_gpu_interiors import GPUInteriorContracts
+        suite=GPUInteriorContracts()
+        sim,plan,player,_=suite.fixture()
+        # The common room also has a long outside shell and a private divider.
+        plan.walls.append(InteriorRect(0,0,plan.width,180))
+        snapshot=capture_live_scene(sim,suite.camera(sim))
+        scene=snapshot.interior_scene
+        self.assertIn('structural',scene.wall_kinds)
+        self.assertIn('partition',scene.wall_kinds)
+        self.assertEqual(len(scene.walls),len(scene.wall_kinds))
+        self.assertTrue(all(rect[2]<=5000 for rect in (t.bounds for t in scene.tiles)))
+        self.assertNotIn('Private vault name',repr(scene))
+
     def test_structural_and_partition_finishes_resolve_to_authored_assets(self):
         from worldseed.presentation.visuals import VisualRegistry
         visuals=VisualRegistry.load_default()

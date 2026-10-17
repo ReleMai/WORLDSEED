@@ -244,28 +244,17 @@ def capture_interior(sim, camera):
 
     visible_walls = []
     visible_wall_kinds = []
-    # Only the exposed face of each authoritative wall is projected. Other
-    # walls still occlude it; a wall never authorizes the floor behind itself.
-    for index, wall in enumerate(walls):
-        a, b, c, d = wall
-        if not _overlap(wall, (left, top, right, bottom)):
+    # A large structural wall must be drawable one visible fragment at a
+    # time. The old full-wall convex fan wrongly discarded an entire perimeter
+    # when the far end crossed a room divider and was O(walls**2). Strict live
+    # floor scissors in prepare_interior_frame still mask hidden portions.
+    for wall in walls:
+        if not _overlap(wall,(left-250,top-250,right+250,bottom+250)):
             continue
-        if a <= player.x < c:
-            near = b-1 if player.y < b else d
-            face = (a, near, c, near+1)
-        elif b <= player.y < d:
-            near = a-1 if player.x < a else c
-            face = (near, b, near+1, d)
-        else:
-            # A corner can be seen on both axes; a conservative adjacent strip
-            # suffices and avoids a diagonal peek into the neighboring room.
-            near = b-1 if player.y < b else d
-            face = (a, near, c, near+1)
-        other = walls[:index]+walls[index+1:]
-        if (max(abs(player.x-a), abs(player.y-b)) <= 12000
-                and _rect_visible(player.x, player.y, face, other)):
-            visible_walls.append(wall)
-            visible_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
+        if not live_index.intersect(wall,padding=250):
+            continue
+        visible_walls.append(wall)
+        visible_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
 
     from worldseed.systems.interior_furnishing import furniture_visual
     objects = []
