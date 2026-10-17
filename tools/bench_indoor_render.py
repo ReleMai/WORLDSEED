@@ -77,12 +77,12 @@ def run(output,frames=90):
                         draws.append((finished-prepared)*1000)
                         totals.append((finished-start)*1000)
                         calls.append(report.draw_calls)
-                raw=target.read(components=4,alignment=1)
-                art=pygame.image.frombytes(raw,(width,height),'RGBA')
+                # Memory uses zero classification alpha but already blended
+                # RGB. Preserve that RGB instead of alpha-compositing twice.
+                raw=target.read(components=3,alignment=1)
+                art=pygame.image.frombytes(raw,(width,height),'RGB')
                 art=pygame.transform.flip(art,False,True)
-                background=pygame.Surface((width,height))
-                background.fill((0,0,0));background.blit(art,(0,0))
-                pygame.image.save(background,str(output/'frame.png'))
+                pygame.image.save(art,str(output/'frame.png'))
                 result={'renderer':ctx.info['GL_RENDERER'],'viewport':[width,height],
                     'frames':frames,'warmup_frames':5,'capture':summary(captures),
                     'prepare':summary(prepares),'draw_and_finish':summary(draws),

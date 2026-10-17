@@ -77,6 +77,8 @@ class GpuTerminal(PygameTerminal):
         self._focused=True
         self._focus_resume=False
         self._sight_overlay_keys=set()
+        from worldseed.presentation.sight_overlay import SightOverlayFade
+        self._sight_overlay_fade=SightOverlayFade()
         self._started=time.monotonic()
         self._gpu_presentations=0
         self._gpu_world_frames=0
@@ -217,6 +219,14 @@ class GpuTerminal(PygameTerminal):
             from worldseed.profiling import measure_if_enabled
             commands=(fade_commands(self._world_commands,self._interior_fades,time.monotonic())
                 if self._snapshot.interior and self._interior_fades else self._world_commands)
+            from worldseed.presentation.sight_overlay import radius_command
+            opacity=self._sight_overlay_fade.advance(bool(self._sight_overlay_keys),time.monotonic())
+            if not self._snapshot.interior and self._snapshot.sight_radius:
+                cx,cy=self._snapshot.camera.to_screen(self._snapshot.viewer)
+                overlay=radius_command((cx+rect.x,cy+rect.y),
+                    self._snapshot.sight_radius*self._snapshot.camera.scale,
+                    (rect.left,rect.top,rect.right,rect.bottom),opacity)
+                if overlay is not None:commands=(*commands,overlay)
             profiler=getattr(self._last_world[3],'profiler',None) if self._last_world is not None else None
             with measure_if_enabled(profiler,'gpu.world_draw'):
                 self._world_report=self._world_renderer.draw(commands,target=self._post.scene_target,
@@ -303,13 +313,21 @@ class GpuTerminal(PygameTerminal):
             self._interior_fades,time.monotonic())
         self._snapshot=snapshot
         def shift(rect):return(rect[0]+viewport.x,rect[1]+viewport.y,rect[2]+viewport.x,rect[3]+viewport.y)
-        # The stepped, tile-sized black perimeter was caused by the old
-        # always-on sight edge shader. Keep strict FoW data unchanged, but
-        # never draw that per-tile vignette; Alt shows one smooth radius ring.
+        shifted_masks={}
+        def shift_mask(mask):
+            if mask is None:return None
+            key=(mask.texture_id,mask.bounds)
+            if key not in shifted_masks:
+                shifted_masks[key]=replace(mask,bounds=shift(mask.bounds))
+            return shifted_masks[key]
+        # Shift all screen-space effects with the world viewport, preserving
+        # continuous radius/mask feathering. Never restore per-tile vignettes.
         self._world_commands=tuple(replace(command,bounds=shift(command.bounds),
             clip_rects=tuple(shift(rect) for rect in command.clip_rects),
             fade_center=(command.fade_center[0]+viewport.x,command.fade_center[1]+viewport.y),
-            sight_edges=(0.,0.,0.,0.),sight_radius=0.)
+            sight_edges=(0.,0.,0.,0.),
+            sight_center=(command.sight_center[0]+viewport.x,command.sight_center[1]+viewport.y),
+            sight_mask=shift_mask(command.sight_mask))
             for command in frame.commands)
         self._set_pointer_context(snapshot,registry,world,sim,viewport,camera)
         if sidebar:
@@ -321,16 +339,6 @@ class GpuTerminal(PygameTerminal):
         foot=pg.Rect(viewport.x,viewport.bottom+6,viewport.width,max(1,min(footer,height-viewport.bottom-8)))
         self._draw_footer(foot,message or (sim.log[-1].message if sim.log else 'The world continues around you.'),sim)
         self._draw_target_overlays(snapshot,viewport,camera,cursor,combat_overlay,stealth_overlay)
-        if self._sight_overlay_keys and not snapshot.interior and snapshot.sight_radius:
-            # Dedicated Alt-held overlay; no shader/memory/LOS state changes.
-            cx,cy=camera.to_screen(snapshot.viewer)
-            radius=round(snapshot.sight_radius*camera.scale)
-            if 2<=radius<=max(viewport.size)*8:
-                surface=pg.Surface(viewport.size,pg.SRCALPHA)
-                center=(round(cx),round(cy))
-                pg.draw.circle(surface,(194,205,184,175),center,radius,2)
-                pg.draw.circle(surface,(45,51,42,65),center,radius+3,1)
-                self.screen.blit(surface,viewport.topleft)
         from worldseed.ui.gpu_hud import draw_help_popup
         draw_help_popup(self)
         self._composite(upload=True)

@@ -8,7 +8,7 @@ presentation; movement, interaction, doors and inventories stay in the engine.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import ceil, floor
 
 from worldseed.systems.illumination import (indoor_actor_visible, indoor_light,
@@ -179,7 +179,7 @@ def capture_interior(sim, camera):
             cx,cy=(part[0]+part[2])//2,(part[1]+part[3])//2
             room=next((r.name for r in plan.rooms if r.rect.contains(cx,cy)), '')
             memory_tiles.append(InteriorTile(part,0,room))
-    if len(memory_tiles) + len(tiles) > MAX_INTERIOR_TILES:
+    if len(memory_tiles) > MAX_INTERIOR_TILES:
         # Keep the live LOS budget intact; memory is a presentation fallback.
         # Prioritize the closest remembered fragments when a huge viewport
         # exceeds the combined GPU command budget.
@@ -187,7 +187,7 @@ def capture_interior(sim, camera):
             ((tile.bounds[0]+tile.bounds[2])//2-player.x)**2
             + ((tile.bounds[1]+tile.bounds[3])//2-player.y)**2,
             tile.bounds[1],tile.bounds[0]))
-        memory_tiles = memory_tiles[:max(0,MAX_INTERIOR_TILES-len(tiles))]
+        memory_tiles = memory_tiles[:MAX_INTERIOR_TILES]
 
     memory_index=InteriorClipIndex((tile.bounds for tile in memory_tiles),GRID)
     memory_walls = []
@@ -336,6 +336,7 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
         # tile scan for every furniture sprite, actor and contact shadow.
         return (saved_clips if remembered else live_clips).intersect(bounds)
     ground, scenery = [], []
+    player_commands=[]
     if show_explored_memory:
         for index, tile in enumerate(scene.memory_tiles):
             room_floor, _ = visuals.interior_materials(scene.function, tile.room_name,
@@ -430,10 +431,11 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
                     'interior-actor-contact:'+row.uid,*shadow_texture(),
                     foot_shadow,contact,opacity=.82)))
             body=(x-width/2, y-height, x+width/2, y)
-            body_clips=admitted_clips(body)
+            body_clips=(body,) if row.uid == 'player' else admitted_clips(body)
             if body_clips:
-                scenery.append(((row.foot.y, row.uid), SpriteCommand('interior-actor:'+row.uid,
-                    *source, body,body_clips)))
+                actor_command=SpriteCommand('interior-actor:'+row.uid,*source,body,body_clips)
+                if row.uid == 'player':player_commands.append(actor_command)
+                else:scenery.append(((row.foot.y,row.uid),actor_command))
     scenery.sort(key=lambda row: row[0])
     commands = [command for _, command in scenery]
     # Light is sampled by the shared wall-occluded engine authority. These
@@ -443,17 +445,37 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
     # to demand its own scissor + draw. Slight alpha quantization and a
     # 1-pixel-exact clipped mesh permit batching into <=24 material passes.
     # These rectangles are pairwise disjoint, so reorder only the shade tail.
-    shade_quads=[]
-    for index, tile in enumerate(scene.tiles):
+    shade_clips={}
+    for index,tile in enumerate(scene.tiles):
         alpha=round(((65535-tile.light)*.55/65535)*24)/24
-        if alpha<=0:continue
-        a,b,c,d=clips[index]
-        shade_quads.append((alpha,index,SpriteCommand('interior-light:'+str(index),*shade,
-            (a-.01,b-.01,c+.01,d+.01),(clips[index],),opacity=alpha)))
-    commands.extend(row[2] for row in sorted(shade_quads,key=lambda row:(row[0],row[1])))
-    from .interior_darkzone import darkzone_commands
-    commands.extend(darkzone_commands(clips,live_clips,camera.scale,
-        budget=min(512,max(0,MAX_COMMANDS-len(ground)-len(commands)))))
+        if alpha>0:shade_clips.setdefault(alpha,[]).append(clips[index])
+    # One constant texture per opacity, with all exact disjoint clips. This
+    # avoids constructing/revalidating a shade command for every floor tile.
+    for index,(alpha,parts) in enumerate(sorted(shade_clips.items())):
+        bounds=(min(r[0] for r in parts)-.01,min(r[1] for r in parts)-.01,
+                max(r[2] for r in parts)+.01,max(r[3] for r in parts)+.01)
+        commands.append(SpriteCommand('interior-light:'+str(index),*shade,
+                                      bounds,tuple(parts),opacity=alpha))
+    from .sight_mask import sight_mask
+    live_mask=sight_mask(clips,camera.scale*.45)
+    known_mask=sight_mask((*clips,*memory_clips),camera.scale*.45)
+    # A dim base beneath current floor allows a continuous live-to-memory
+    # transition. Only admitted floor is used; this records no new knowledge.
+    from .sight_mask import mask_for_bounds
+    base=[]
+    masked_ground=[]
+    for c in ground:
+        mask=mask_for_bounds(known_mask if c.remembered else live_mask,c.clip_rects[0])
+        if mask is not None and not c.remembered and show_explored_memory:
+            base.append(replace(c,visual_id='interior-memory-base:'+c.visual_id,
+                opacity=.62,remembered=True,sight_mask=mask_for_bounds(known_mask,c.clip_rects[0])))
+        masked_ground.append(replace(c,sight_mask=mask) if mask is not None else c)
+    ground=base+masked_ground
+    commands=[replace(c,sight_mask=known_mask if c.remembered else live_mask)
+              if not c.visual_id.startswith(('interior-wall:','interior-memory-wall:'))
+              else c for c in commands]
+    # Self visibility is independent of floor LOS, scenery depth and shading.
+    commands.extend(player_commands)
     if len(ground)+len(commands) > MAX_COMMANDS:
         raise ValueError('interior draw budget exceeded')
     return GPUPreparedFrame(tuple(ground), tuple(commands), 0, len(ground))

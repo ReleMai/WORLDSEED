@@ -307,13 +307,6 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         if layer is None:return None
         return materials.tree('oak' if v.content_id=='core:oak_tree' else 'pine',layer,season)
     scenery=list(commands_from_projected(projection,source))
-    if own_roof:
-        # Ground beneath a roof stays hidden. The player's own body is known
-        # independently: clipping it to its foot cell cuts off the head.
-        scenery=[replace(c,clip_rects=((max(0.,c.bounds[0]),max(0.,c.bounds[1]),
-                     min(float(camera.width_px),c.bounds[2]),
-                     min(float(camera.height_px),c.bounds[3])),))
-                 if c.visual_id=='actor:gpu-viewer' else c for c in scenery]
     # Give each ground shadow a physically-grounded contact ellipse rather than
     # a floating full-tile sprite. The G1 solid trunk collision remains intact.
     visual_map={v.instance.instance_id:v for v in projection.visuals}
@@ -384,6 +377,37 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         # interiors remain unread and unaffected by this sunlight effect.
         scenery[:0]=list(sunlight_commands(camera,viewer,buildings,
                     frozenset(visible_cells)&frozenset(terrain_by),materials,sun_minute))
+    if show_player:
+        # Self knowledge never depends on ground/roof admission. This exception
+        # is only the player sprite, never NPCs or the floor behind a roof.
+        player_source=materials.player()
+        scenery=[c for c in scenery if c.visual_id!='actor:gpu-viewer']
+        if player_source is not None:
+            x,y=camera.to_screen(viewer)
+            body=(x-camera.scale*.4,y-camera.scale*1.55,x+camera.scale*.4,y)
+            scenery.append(SpriteCommand('actor:gpu-viewer',*player_source,body,(body,)))
+        # Roof cutouts over withheld floor used to reveal the empty black
+        # framebuffer. Keep that roof art intact beneath the topmost player;
+        # use true transparency wherever an admitted ground backdrop exists.
+        ground_cells=frozenset(terrain_by)&frozenset(visible_cells)
+        head_cell=(viewer.cell[0],floor(viewer.y-1.4),viewer.cell[2])
+        if head_cell not in ground_cells:
+            scenery=[replace(c,fade_radius=0.,local_alpha=1.)
+                     if c.visual_id.startswith(('building:','object:')) and c.fade_radius
+                     and (c.visual_id.startswith('building:') or
+                          object_by.get(c.visual_id) in roofs)
+                     else c for c in scenery]
+    if show_player and ground:
+        from .sight_mask import sight_mask
+        known_mask=sight_mask(tuple(c.bounds for c in ground),camera.scale)
+        # Same admitted pixels beneath the radial fade, with memory grading.
+        base=[replace(c,visual_id='ground:memory-base:'+c.visual_id,
+                      opacity=.62,remembered=True,sight_radius=0.,
+                      sight_edges=(0.,0.,0.,0.),sight_mask=known_mask)
+              for c in ground if not c.remembered] if show_explored_memory else []
+        ground=base+[replace(c,sight_edges=(0.,0.,0.,0.),sight_mask=known_mask,
+                            sight_radius=max(0.,c.sight_radius-camera.scale*.8))
+                     for c in ground]
     if len(ground)+len(scenery)>MAX_COMMANDS:
         raise ValueError('GPU screen has more commands than the bounded renderer')
     return GPUPreparedFrame(tuple(ground),tuple(scenery),len(resource_by),visible_ground)

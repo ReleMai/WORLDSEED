@@ -191,8 +191,9 @@ class DarkzoneTests(TestCase):
         player=next(c for c in frame.scenery if c.visual_id=='actor:gpu-viewer')
         self.assertEqual(player.clip_rects,(player.bounds,))
         roof=next(c for c in frame.scenery if c.visual_id=='building:roof')
-        self.assertGreater(roof.fade_radius,0.)
-        self.assertEqual(roof.local_alpha,.08)
+        self.assertEqual(roof.fade_radius,0.)
+        self.assertEqual(frame.scenery[-1],player)
+        self.assertEqual(roof.local_alpha,1.)
         self.assertFalse(frame.ground)
         self.assertFalse(any('npc:' in c.visual_id for c in frame.scenery))
 
@@ -221,3 +222,82 @@ class DarkzoneTests(TestCase):
             self.assertLessEqual(report.draw_calls,5)
         finally:
             renderer.close();target.release();texture.release();context.release()
+
+
+class SmoothSightRegressions(TestCase):
+    def test_alt_fades_both_directions_and_reverses_without_jump(self):
+        from worldseed.presentation.sight_overlay import SightOverlayFade
+        fade=SightOverlayFade()
+        self.assertEqual(fade.advance(False,0),0)
+        half=fade.advance(True,.09)
+        self.assertAlmostEqual(half,.5)
+        self.assertEqual(fade.advance(False,.09),half)
+        self.assertLess(fade.advance(False,.14),half)
+        self.assertEqual(fade.advance(False,1),0)
+        self.assertEqual(fade.advance(True,2),1)
+        self.assertEqual(fade.advance(False,3),0)
+
+    def test_mask_is_bounded_partition_independent_and_translation_cached(self):
+        from worldseed.presentation.sight_mask import sight_mask
+        first=sight_mask(((0,0,100,100),(100,0,200,100)),32)
+        other=sight_mask(((0,0,200,100),),32)
+        moved=sight_mask(((20,30,220,130),),32)
+        self.assertEqual(first.rgba,other.rgba)
+        self.assertIs(other.rgba,moved.rgba)
+        huge=sight_mask(((0,0,4000,3000),),56)
+        self.assertLessEqual(max(huge.image_w,huge.image_h),256)
+        self.assertGreater(len(set(first.rgba[3::4])),20)
+
+    def test_player_ignores_interior_floor_clip_and_draws_after_darkness(self):
+        from tests.test_gpu_interiors import GPUInteriorContracts,Materials
+        from worldseed.presentation.gpu_interiors import capture_interior,prepare_interior_frame
+        fixture=GPUInteriorContracts()
+        sim,plan,player,_=fixture.fixture()
+        player.y=100
+        camera=fixture.camera(sim)
+        scene=capture_interior(sim,camera)
+        frame=prepare_interior_frame(scene,camera,camera.center,Materials())
+        body=frame.scenery[-1]
+        self.assertEqual(body.visual_id,'interior-actor:player')
+        self.assertEqual(body.clip_rects,(body.bounds,))
+        self.assertIsNone(body.sight_mask)
+        self.assertEqual(body.opacity,1.)
+
+    def test_full_live_tile_budget_does_not_erase_saved_floor(self):
+        from tests.test_gpu_interiors import GPUInteriorContracts
+        from worldseed.presentation.gpu_interiors import capture_interior,MAX_INTERIOR_TILES
+        fixture=GPUInteriorContracts()
+        sim,plan,player,_=fixture.fixture()
+        plan.explored_cells=[0]
+        # Exercise budget handling directly: geometry privacy is tested above.
+        live=((1000,1000,1500,1500),)*MAX_INTERIOR_TILES
+        with patch('worldseed.presentation.gpu_interiors.visible_floor_rects',return_value=live):
+            scene=capture_interior(sim,fixture.camera(sim))
+        self.assertEqual(len(scene.tiles),MAX_INTERIOR_TILES)
+        self.assertTrue(scene.memory_tiles)
+        self.assertIn((0,0,500,500),[tile.bounds for tile in scene.memory_tiles])
+
+    def test_native_mask_hides_stair_edges_without_painting_unknown_pixels(self):
+        from worldseed.presentation.gl_worldspace import GLWorldspaceRenderer,SpriteCommand
+        from worldseed.presentation.sight_mask import sight_mask
+        context=DarkzoneTests().native_context()
+        tex=context.texture((128,128),4)
+        target=context.framebuffer(color_attachments=[tex])
+        renderer=GLWorldspaceRenderer(context,128,128)
+        clips=((20.,20.,100.,60.),(20.,60.,80.,80.),(20.,80.,60.,100.))
+        try:
+            mask=sight_mask(clips,32)
+            command=SpriteCommand('interior-test','white',1,b'\xff'*4,1,1,
+                                  (0.,0.,128.,128.),clips,sight_mask=mask)
+            renderer.draw((command,),target=target,clear=(0,0,0,0))
+            raw=target.read(components=4,alignment=1)
+            def pixel(x,y):return raw[((127-y)*128+x)*4:((127-y)*128+x)*4+4]
+            self.assertGreater(pixel(50,50)[0],230)
+            for y in range(128):
+                for x in range(128):
+                    if not any(a<=x+.5<c and b<=y+.5<d for a,b,c,d in clips):
+                        self.assertEqual(pixel(x,y),bytes(4))
+            for x,y in ((99,40),(79,70),(59,90),(79,79),(59,99)):
+                self.assertLess(pixel(x,y)[0],5)
+        finally:
+            renderer.close();target.release();tex.release();context.release()

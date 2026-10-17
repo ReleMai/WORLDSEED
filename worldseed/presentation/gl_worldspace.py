@@ -83,6 +83,24 @@ class GroundBlend:
 
 
 @dataclass(frozen=True, slots=True)
+class SightMask:
+    texture_id: str
+    revision: int
+    rgba: bytes
+    image_w: int
+    image_h: int
+    bounds: tuple[float,float,float,float]
+
+    def __post_init__(self):
+        if (not self.texture_id or type(self.revision) is not int or self.revision<0
+                or any(type(v) is not int or not 1<=v<=256 for v in (self.image_w,self.image_h))
+                or not isinstance(self.rgba,bytes) or len(self.rgba)!=self.image_w*self.image_h*4
+                or len(self.bounds)!=4 or any(not _finite(v) for v in self.bounds)
+                or self.bounds[0]>=self.bounds[2] or self.bounds[1]>=self.bounds[3]):
+            raise ValueError('invalid bounded sight mask')
+
+
+@dataclass(frozen=True, slots=True)
 class SpriteCommand:
     """An already-authorized screen-space sprite; clip rects are mandatory.
 
@@ -109,8 +127,11 @@ class SpriteCommand:
     sight_edges: tuple[float, float, float, float] = (0., 0., 0., 0.)
     sight_center: tuple[float, float] = (0., 0.)
     sight_radius: float = 0.
+    sight_mask: SightMask | None = None
 
     def __post_init__(self):
+        if self.sight_mask is not None and not isinstance(self.sight_mask,SightMask):
+            raise ValueError('invalid sight mask')
         if not self.visual_id or not self.texture_id:
             raise ValueError('sprite IDs are mandatory')
         if type(self.revision) is not int or self.revision < 0:
@@ -345,6 +366,7 @@ class GLWorldspaceRenderer:
             self.ctx.clear(*clear)
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_texture'].value=0
+            self.program['u_sight_mask'].value=9
             for index, name in enumerate(('u_ground_w','u_ground_e','u_ground_n','u_ground_s',
                                           'u_ground_nw','u_ground_ne','u_ground_sw','u_ground_se'),1):
                 self.program[name].value=index
@@ -370,7 +392,10 @@ class GLWorldspaceRenderer:
                         None if floor else clip,cmd.opacity,cmd.fade_center,
                         cmd.fade_radius,cmd.local_alpha,cmd.sway_px,
                         material_key,cmd.remembered,cmd.sight_edges,
-                        cmd.sight_center,cmd.sight_radius)
+                        cmd.sight_center,cmd.sight_radius,
+                        None if cmd.sight_mask is None else
+                        (cmd.sight_mask.texture_id,cmd.sight_mask.revision,
+                         cmd.sight_mask.image_w,cmd.sight_mask.image_h,cmd.sight_mask.bounds))
             for _key, group in groupby(work,key=batch_key):
                 values=tuple(group)
                 for first in range(0,len(values),64):
@@ -380,11 +405,13 @@ class GLWorldspaceRenderer:
                                            moderngl.ZERO,moderngl.ONE) if cmd.remembered else
                                           (moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA))
                     ground=cmd.ground
-                    if ground is not None:
+                    if ground is not None or cmd.sight_mask is not None:
                         # Every simultaneously bound image must fit. Sequential
-                        # LRU touches then retain all nine textures until draw.
+                        # LRU touches retain all ground images and the mask until draw.
+                        textures=(cmd,*(ground.neighbors if ground is not None else ()),
+                                  *((cmd.sight_mask,) if cmd.sight_mask is not None else ()))
                         unique={(t.texture_id,t.revision,t.image_w,t.image_h):
-                                t.image_w*t.image_h*4 for t in (cmd,*ground.neighbors)}
+                                t.image_w*t.image_h*4 for t in textures}
                         if sum(unique.values())>self.bank.limit:
                             raise GPUBackendUnavailable('ground material set exceeds texture limit')
                     tex=self.bank.texture_for(cmd)
@@ -398,6 +425,12 @@ class GLWorldspaceRenderer:
                     clipped_floor=_key[4] is None
                     self.ctx.scissor=(0,0,self.width,self.height) if clipped_floor else clip
                     self.program['u_opacity'].value=cmd.opacity
+                    mask=cmd.sight_mask
+                    self.program['u_masked'].value=mask is not None
+                    if mask is not None:
+                        self.bank.texture_for(mask).use(location=9)
+                        a,b,c,d=mask.bounds
+                        self.program['u_mask_transform'].value=(a,b,1/(c-a),1/(d-b))
                     self.program['u_sight_edges'].value=cmd.sight_edges
                     self.program['u_sight_center'].value=cmd.sight_center
                     self.program['u_sight_radius'].value=cmd.sight_radius

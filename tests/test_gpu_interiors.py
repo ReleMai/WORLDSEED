@@ -176,7 +176,7 @@ class GPUInteriorContracts(TestCase):
         self.assertTrue(any(c.visual_id == 'interior-actor:player' for c in frame.scenery))
         self.assertTrue(any(c.visual_id.startswith('interior-light:') for c in frame.scenery))
         for command in frame.scenery:
-            if not command.visual_id.startswith(('interior-wall:', 'interior-memory-wall:')):
+            if not command.visual_id.startswith(('interior-wall:', 'interior-memory-wall:', 'interior-actor:player')):
                 # Sprite work is now cropped to its actual art rectangle;
                 # each cropped clip must remain inside admitted sight.
                 self.assertTrue(all(any(a <= x and b <= y and c >= x1 and d >= y1

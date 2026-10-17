@@ -71,6 +71,27 @@ class GPUMainGameTests(unittest.TestCase):
         self.term.present_game(ctx.registry, ctx.world, ctx.entities, ctx.sim,
                                ctx.player_id, 'Full main-game test')
 
+    def test_alt_radius_animates_without_recapturing_or_mutating_world(self):
+        import time
+        ctx,term=self.ctx,self.term
+        term.present_game(ctx.registry,ctx.world,ctx.entities,ctx.sim,ctx.player_id,'Radius fade')
+        before=self.fixture.authority_fingerprint()
+        now=time.monotonic()
+        clock=[now]
+        with patch('worldseed.ui.gpu_terminal.time.monotonic',side_effect=lambda:clock[0]):
+            term._sight_overlay_fade.last_time=now
+            term._filter_event(term.pg.event.Event(term.pg.KEYDOWN,key=term.pg.K_LALT))
+            clock[0]=now+.09
+            with patch('worldseed.ui.gpu_terminal.capture_live_scene',side_effect=AssertionError('idle fade recaptured world')):
+                term._composite()
+            self.assertAlmostEqual(term._sight_overlay_fade.level,.5,places=4)
+            term._filter_event(term.pg.event.Event(term.pg.KEYUP,key=term.pg.K_LALT))
+            self.assertAlmostEqual(term._sight_overlay_fade.level,.5,places=4)
+            clock[0]=now+.4
+            term._composite()
+            self.assertEqual(term._sight_overlay_fade.level,0.)
+        self.assertEqual(before,self.fixture.authority_fingerprint())
+
     def test_main_inventory_crafting_and_action_context_render_observationally_in_one_window(self):
         term, ctx = self.term, self.ctx
         before = self.fixture.authority_fingerprint()

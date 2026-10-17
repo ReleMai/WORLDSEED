@@ -40,8 +40,9 @@ class VisibilityAndArtRegressions(TestCase):
         import inspect
         from worldseed.ui.gpu_terminal import GpuTerminal
         source=inspect.getsource(GpuTerminal.present_game)
-        self.assertIn('self._sight_overlay_keys',source)
-        self.assertIn('sight_edges=(0.,0.,0.,0.),sight_radius=0.',source)
+        self.assertIn('self._sight_overlay_keys',inspect.getsource(GpuTerminal._composite))
+        self.assertIn('sight_mask=',source)
+        self.assertNotIn('sight_radius=0.',source)
         event_source=inspect.getsource(GpuTerminal._filter_event)
         self.assertIn('pg.K_LALT',event_source)
         self.assertIn('pg.K_RALT',event_source)
@@ -68,4 +69,5 @@ class RoofViewerContracts(TestCase):
         self.assertFalse(any('npc:' in row.visual_id for row in frame.scenery))
         self.assertTrue(any(row.visual_id=='building:root-roof' for row in frame.scenery))
         forbidden=prepare_gpu_frame(**{**kwargs,'buildings':()})
-        self.assertFalse(any(row.visual_id=='actor:gpu-viewer' for row in forbidden.scenery))
+        self.assertEqual([row.visual_id for row in forbidden.scenery],['actor:gpu-viewer'])
+        self.assertFalse(forbidden.ground)

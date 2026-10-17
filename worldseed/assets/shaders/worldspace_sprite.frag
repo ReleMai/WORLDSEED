@@ -8,6 +8,9 @@ uniform float u_local_alpha;
 uniform vec4 u_sight_edges;
 uniform vec2 u_sight_center;
 uniform float u_sight_radius;
+uniform bool u_masked;
+uniform sampler2D u_sight_mask;
+uniform vec4 u_mask_transform;
 uniform bool u_ground;
 uniform sampler2D u_ground_w;
 uniform sampler2D u_ground_e;
@@ -98,6 +101,10 @@ void main() {
         texel = texture(u_texture, v_uv);
     }
     float opacity = u_opacity;
+    if (u_masked) {
+        vec2 uv=(v_screen-u_mask_transform.xy)*u_mask_transform.zw;
+        opacity *= texture(u_sight_mask,uv).a;
+    }
     if (u_fade_radius > 0.0) {
         float distance_px = distance(v_screen, u_fade_center);
         float blend = smoothstep(u_fade_radius * 0.70, u_fade_radius, distance_px);
@@ -107,8 +114,8 @@ void main() {
     // It never draws unknown geometry and does not affect frozen map memory.
     if (u_sight_radius > 0.0) {
         float reach = distance(v_screen,u_sight_center);
-        opacity *= 1.0-smoothstep(u_sight_radius*0.925,
-                                   u_sight_radius*1.075,
+        opacity *= 1.0-smoothstep(u_sight_radius*0.86,
+                                   u_sight_radius,
                                    reach);
     }
     // Entire attenuation lies INSIDE the presently admitted ground cell.
