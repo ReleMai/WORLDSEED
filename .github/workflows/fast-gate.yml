@@ -170,7 +170,9 @@ jobs:
 
   smoke:
     runs-on: windows-latest
-    timeout-minutes: 10
+    # Full Windows smoke reaches Dev34 after 10 minutes on cold runners.
+    # Keep every contract; only increase the job ceiling to avoid cancellation.
+    timeout-minutes: 14
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
