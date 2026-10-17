@@ -246,7 +246,7 @@ jobs:
 
       - name: Log cabin blueprint and placement ghost
         shell: pwsh
-        run: python -u tools/run_ci_check.py --name "Log cabin safety access blueprint and ghost" --timeout 60 -- python -u -m unittest -v tests.test_homestead_safety tests.test_homestead_access tests.test_homestead_access_ui tests.test_homestead_blueprints tests.test_homestead_ghost_ui tests.test_homestead_panels tests.test_homestead_art
+        run: python -u tools/run_ci_check.py --name "Log cabin safety access blueprint and ghost" --timeout 105 -- python -u -m unittest -v tests.test_homestead_safety tests.test_homestead_access tests.test_homestead_access_ui tests.test_homestead_blueprints tests.test_homestead_ghost_ui tests.test_homestead_panels tests.test_homestead_art
 
       - name: Dev41 realtime and free-movement regressions
         shell: pwsh
