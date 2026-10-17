@@ -519,7 +519,7 @@ class InteriorSystem:
         # Search a SMALL prepared frontage apron after normal exits, never
         # skipping blocked terrain/locks or generating an unseen world cell.
         # For player egress only; NPC delivery/entry keeps its exact portal.
-        if actor_uid == "player":
+        if actor_uid == "player" and site is None:
             origins=tuple(dict.fromkeys(p for p in candidates if p is not None))
             for distance in (2,3):
                 for base in origins[:2]:
@@ -532,7 +532,7 @@ class InteriorSystem:
                 continue
             if site is not None and not homestead._prepared(pos):
                 continue
-            if (actor_uid == 'player' and pos not in origins
+            if (actor_uid == 'player' and site is None and pos not in origins
                     and self.sim.settlement_physicalization.shell_at(pos) is not None):
                 continue  # never recover through a neighbor's roof/occupied shell
             key, lx, ly = split_world(pos)

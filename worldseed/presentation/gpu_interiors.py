@@ -22,6 +22,7 @@ from .interior_clip_index import InteriorClipIndex
 from .interior_art_lighting import (shadow_bounds, shadow_texture,
     warm_glow_texture, light_halo_bounds, nearest_light, MAX_VISIBLE_HALO_SOURCES)
 from .worldspace import WorldFoot
+from .interior_wall_styles import wall_kind, wall_texture
 
 MAX_INTERIOR_WALLS = 256
 MAX_INTERIOR_FIXTURES = 512
@@ -100,6 +101,8 @@ class PreparedInterior:
                               tuple[tuple[int,int,int,int], ...]], ...] = ()
     memory_objects: tuple[InteriorObject, ...] = ()
     visible_lights: tuple = ()  # Only light sources within admitted current LOS
+    wall_kinds: tuple[str, ...] = ()
+    memory_wall_kinds: tuple[str, ...] = ()
 
     def hit_test(self, x: float, y: float):
         """Observational stable IDs; commands still revalidate physical reach."""
@@ -217,6 +220,7 @@ def capture_interior(sim, camera):
 
     memory_index=InteriorClipIndex((tile.bounds for tile in memory_tiles),GRID)
     memory_walls = []
+    memory_wall_kinds = []
     old_walls=getattr(plan,'observed_walls',None)
     known_walls=walls if old_walls is None else tuple((w.x,w.y,w.x+w.w,w.y+w.h) for w in old_walls)
     for wall in known_walls:
@@ -225,6 +229,7 @@ def capture_interior(sim, camera):
         patches=memory_index.intersect(wall,padding=250)
         if patches:
             memory_walls.append((wall, _union_rects(patches)))
+            memory_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
 
     def admitted(rect):
         return bool(live_index.intersect(rect))
@@ -238,6 +243,7 @@ def capture_interior(sim, camera):
         )[:MAX_VISIBLE_HALO_SOURCES]
 
     visible_walls = []
+    visible_wall_kinds = []
     # Only the exposed face of each authoritative wall is projected. Other
     # walls still occlude it; a wall never authorizes the floor behind itself.
     for index, wall in enumerate(walls):
@@ -259,6 +265,7 @@ def capture_interior(sim, camera):
         if (max(abs(player.x-a), abs(player.y-b)) <= 12000
                 and _rect_visible(player.x, player.y, face, other)):
             visible_walls.append(wall)
+            visible_wall_kinds.append(wall_kind(wall,plan.width,plan.height))
 
     from worldseed.systems.interior_furnishing import furniture_visual
     objects = []
@@ -316,7 +323,7 @@ def capture_interior(sim, camera):
         getattr(plan, 'floor_index', 0), getattr(plan, 'floor_count', 1),
         tuple(tiles), tuple(visible_walls), tuple(objects), tuple(actors),
         tuple(memory_tiles), tuple(memory_walls), tuple(memory_objects),
-        visible_lights)
+        visible_lights,tuple(visible_wall_kinds),tuple(memory_wall_kinds))
 
 
 def _texture(materials, category, content_id):
@@ -397,15 +404,17 @@ def prepare_interior_frame(scene, camera, viewer, materials, *,
                 'interior-glow:'+source.uid,*warm_glow_texture(),
                 halo_bounds,glow_clips,opacity=.48)))
     if show_explored_memory:
-        source = _texture(materials, 'interior_textures', wall_id) if scene.memory_walls else None
-        if source:
-            for index, (rect, parts) in enumerate(scene.memory_walls):
+        for index, (rect, parts) in enumerate(scene.memory_walls):
+            kind=scene.memory_wall_kinds[index] if index<len(scene.memory_wall_kinds) else 'partition'
+            source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
+            if source:
                 scenery.append(((-3., 'memory-wall:'+str(index)), SpriteCommand(
                     'interior-memory-wall:'+str(index), *source,
                     screen_rect(rect, UNIT),
                     tuple(screen_rect(part, UNIT) for part in parts), opacity=.62, remembered=True)))
     for index, rect in enumerate(scene.walls):
-        source = _texture(materials, 'interior_textures', wall_id)
+        kind=scene.wall_kinds[index] if index<len(scene.wall_kinds) else 'partition'
+        source=_texture(materials,'interior_textures',wall_texture(wall_id,kind))
         if source:
             bounds = screen_rect(rect, UNIT)
             wall_parts=live_clips.intersect(bounds,padding=camera.scale*.25)

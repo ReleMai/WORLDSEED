@@ -306,17 +306,24 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             h=max(4,camera.scale*.56)
             scenery[index]=replace(c,bounds=(cx-w*.5,cy-h*.8,cx+w*.5,cy+h*.2))
         elif v.instance.layer is VisualLayer.OVERHEAD:
-            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085))
+            from .gpu_cover_fade import cover_fade
+            fade={} if c.fade_radius or not show_player else cover_fade(
+                camera,viewer,c.bounds,c.clip_rects)
+            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085),**fade)
     keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
     if roofs:
         roof_projection=project_scene(object_instances(roofs),camera,
             SceneVisibility(frozenset(row.foot.cell for row in roofs)))
-        scenery.extend(commands_from_projected(roof_projection,source))
+        from .gpu_cover_fade import cover_fade
+        for command in commands_from_projected(roof_projection,source):
+            fade=cover_fade(camera,viewer,command.bounds,command.clip_rects) if show_player else {}
+            scenery.append(replace(command,**fade) if fade else command)
         keys.update({v.instance.instance_id:visual_sort_key(v.instance) for v in roof_projection.visuals})
     if buildings:
         from .gpu_buildings import building_commands, building_sort_keys
         keys.update(building_sort_keys(buildings))
-        scenery.extend(building_commands(buildings,camera,materials))
+        scenery.extend(building_commands(buildings,camera,materials,
+                                        viewer=viewer if show_player else None))
     if buildings or roofs:
         scenery.sort(key=lambda command:keys[command.visual_id])
     if show_explored_memory and (remembered_resources or remembered_buildings or remembered_objects):
