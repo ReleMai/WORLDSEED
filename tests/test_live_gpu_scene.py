@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager, ExitStack
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 import tempfile
 from unittest import TestCase
@@ -86,6 +86,37 @@ class LiveGpuSceneContracts(TestCase):
     def frame(self, snapshot):
         return snapshot.gpu_frame(materials=FakeAssets(), registry=self.registry,
                                   resource_style=lambda _: {'width': 1.3, 'height': 1.9})
+
+    def assert_ground_admission(self, frame, current, remembered=(), *, show_memory=True):
+        """Separate authorized cells from the extra sight-transition draw."""
+        current, remembered = frozenset(current), frozenset(remembered)
+        ground = {command.visual_id: command for command in frame.ground}
+        self.assertEqual(len(ground), len(frame.ground), 'duplicate ground draw IDs')
+        expected = {f'ground:{z}:{x}:{y}' for x, y, z in
+                    current | (remembered if show_memory else frozenset())}
+        base_prefix = 'ground:memory-base:'
+        originals = {key for key in ground if not key.startswith(base_prefix)}
+        self.assertEqual(originals, expected)
+        bases = {key for key in ground if key.startswith(base_prefix)}
+        self.assertEqual(bases, {base_prefix + f'ground:{z}:{x}:{y}'
+                                 for x, y, z in current} if show_memory else set())
+        for x, y, z in current:
+            key = f'ground:{z}:{x}:{y}'
+            live = ground[key]
+            self.assertFalse(live.remembered)
+            self.assertEqual(live.opacity, 1.)
+            if show_memory:
+                # The dim transition backing must reuse the same authorized
+                # cell, texture, bounds and clips; it cannot add hidden ground.
+                self.assertEqual(ground[base_prefix + key], replace(live,
+                    visual_id=base_prefix + key, opacity=.62, remembered=True,
+                    sight_radius=0.))
+        if show_memory:
+            for x, y, z in remembered:
+                memory = ground[f'ground:{z}:{x}:{y}']
+                self.assertTrue(memory.remembered)
+                self.assertEqual(memory.opacity, .62)
+        self.assertEqual(frame.visible_ground_cells, len(current))
 
     def npc(self, sim, uid, cell=(256, 256, 0), **kwargs):
         npc = NPCState(uid, 'Private name', 30, 'farmer', [], *cell, '', '', **kwargs)
@@ -197,9 +228,8 @@ class LiveGpuSceneContracts(TestCase):
             self.assertTrue(snapshot.remembered_cells)
             self.assertEqual(set(dict(snapshot.terrain)),
                              snapshot.current_cells | snapshot.remembered_cells)
-            self.assertEqual(len(frame.ground),
-                             len(snapshot.current_cells | snapshot.remembered_cells))
-            self.assertEqual(frame.visible_ground_cells, len(snapshot.current_cells))
+            self.assert_ground_admission(frame, snapshot.current_cells,
+                                         snapshot.remembered_cells)
             for x, y, z in snapshot.remembered_cells:
                 remembered = next(command for command in frame.ground
                                   if command.visual_id == f'ground:{z}:{x}:{y}')
@@ -210,8 +240,8 @@ class LiveGpuSceneContracts(TestCase):
                 materials=FakeAssets(), registry=self.registry,
                 resource_style=lambda _: {'width': 1.3, 'height': 1.9},
                 show_explored_memory=False)
-            self.assertEqual(len(blinded.ground), len(snapshot.current_cells))
-            self.assertTrue(all(command.opacity == 1 for command in blinded.ground))
+            self.assert_ground_admission(blinded, snapshot.current_cells,
+                                         snapshot.remembered_cells, show_memory=False)
             self.assertEqual(before, fixture.authority_fingerprint())
 
     def test_unknown_memory_and_missing_cache_never_reveal_live_geometry(self):
@@ -244,8 +274,7 @@ class LiveGpuSceneContracts(TestCase):
             self.assertEqual({cell for cell, _ in snapshot.resources}, {current})
             self.assertEqual(dict(snapshot.remembered_resources)[memory].feature_id,'core:pine_tree')
             frame = self.frame(snapshot)
-            self.assertEqual(len(frame.ground), 2)
-            self.assertEqual(frame.visible_ground_cells, 1)
+            self.assert_ground_admission(frame, {current}, {memory})
             self.assertTrue(any('pine' in command.texture_id and command.visual_id.startswith('memory:')
                                 for command in frame.scenery))
             self.assertGreaterEqual(len(reads), 3)

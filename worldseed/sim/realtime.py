@@ -23,12 +23,42 @@ class RealtimeSimulationDriver:
         self._last = None
         self._accumulator = 0.0
         self.paused = False
+        self.speed = 1
         self._pause_depth = 0
+
+    @property
+    def effective_paused(self) -> bool:
+        """Explicit pause, scoped UI/focus holds and combat are independent."""
+        return bool(self.paused or self._pause_depth or
+                    getattr(self.simulation, 'combat_active', lambda: False)())
+
+    def reset_baseline(self, now: float | None = None) -> None:
+        """Discard elapsed presentation time without changing player controls."""
+        self._last = time.monotonic() if now is None else float(now)
+        self._accumulator = 0.0
 
     def resume(self, now: float | None = None) -> None:
         self.paused = False
-        self._last = time.monotonic() if now is None else float(now)
-        self._accumulator = 0.0
+        self.reset_baseline(now)
+
+    def set_speed(self, speed: int, now: float | None = None) -> None:
+        """Change pace without releasing an explicit pause or a scoped hold."""
+        if type(speed) is not int or speed not in (1, 2, 3):
+            raise ValueError('Game speed must be 1x, 2x or 3x.')
+        if speed != self.speed:
+            self.speed = speed
+            self.reset_baseline(now)
+
+    def toggle_pause(self, now: float | None = None) -> bool:
+        if self.paused:
+            self.resume(now)
+        else:
+            self.pause()
+        return self.paused
+
+    def resume_for_movement(self, now: float | None = None) -> None:
+        """Walking cancels fast-forward while preserving all pause owners."""
+        self.set_speed(1, now)
 
     def pause(self) -> None:
         self.paused = True
@@ -74,7 +104,7 @@ class RealtimeSimulationDriver:
             return 0
         elapsed = max(0.0, current - self._last)
         self._last = current
-        self._accumulator += elapsed
+        self._accumulator += elapsed * self.speed
         minutes = int(self._accumulator / self.seconds_per_game_minute)
         if minutes <= 0:
             return 0

@@ -187,6 +187,12 @@ def select_menu(term, title: str, rows: list[tuple[str, str]] | list[MenuRow], *
             state.selected = selected
         if k in {'UI_REDRAW','RESIZE'}:
             continue
+        if presentation in {
+            'inventory_unified','container_inventory','crafting_unified',
+            'workshop_station','discovery_pot','crafting_index','salvaging','salvaging_unified'
+        } and (k==' ' or k.startswith('UI_TIME:')):
+            clock_input=getattr(term,'handle_time_control',None)
+            if callable(clock_input) and clock_input(k):continue
         if retained_items and k.startswith(('UI_SCROLL:','UI_WHEEL:')):
             try:value=int(k.split(':',1)[1])
             except ValueError:continue

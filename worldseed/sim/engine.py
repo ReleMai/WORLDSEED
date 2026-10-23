@@ -524,7 +524,7 @@ class Simulation:
             ok,msg=self.homestead.advance(command.uid)
             if not ok:
                 self._message(msg);return result
-            minutes=self._construction_duration(35)
+            minutes=self._work_minutes(self._construction_duration(35))
             self._message(msg+(f" Construction time: {minutes} game minutes." if ok else ""))
         elif isinstance(command,CancelBlueprintCommand):
             ok,msg=self.homestead.cancel(command.uid,self.entities.get(command.actor,Inventory));self._message(msg)
@@ -1402,7 +1402,7 @@ class Simulation:
         self._refresh_active_transport()
         new_condition=self.route_planner.crossing_condition(crossing.route_id,crossing.uid)
         self._message(f"You repair the {crossing.kind}; condition rises to {new_condition}%.")
-        return 30
+        return self._work_minutes(30,skill='crafting')
 
     def _pay_road_toll(self,cmd:PayRoadTollCommand)->int:
         post=self.state.border_posts.get(cmd.border_post_uid)
@@ -1601,6 +1601,8 @@ class Simulation:
             fish=self.registry.fish.get(details['fish'])
             if fish:
                 result.events.append(GatheredEvent(cmd.actor,target,fish.item_id,int(details.get('count',1))))
+        if details.get('region'):
+            minutes=self._work_minutes(minutes,skill='fishing')
         return max(MINUTES_PER_ACTION,minutes)
 
     def _gather(self,cmd:GatherCommand,result:TickResult)->int:
@@ -1609,12 +1611,18 @@ class Simulation:
         if abs(cmd.dx)+abs(cmd.dy)>1:
             self._message("You can only harvest your tile or an adjacent tile.");return MINUTES_PER_ACTION
         inv=self.entities.get(cmd.actor,Inventory)
+        feature=self.resources.feature_at(pos,self.clock.minute)
+        definition=self.registry.resources.get(feature.feature_id) if feature is not None else None
         ok,msg,minutes,outputs=self.resources.harvest(pos,inv,self.clock.minute)
-        self._message(msg)
+        base_minutes=minutes
         if ok:
             tile=self.world.tile_at(pos)
             if "water_source" in tile.terrain.tags:self.environment.add_water(pos,200)
             for iid,amount in outputs.items():result.events.append(GatheredEvent(cmd.actor,pos,iid,amount))
+            quality=(definition.required_tool_tag if definition is not None else 'pick' if pos.z<0 else None)
+            minutes=self._work_minutes(minutes,tool_qualities=(quality,) if quality else ())
+            msg=msg.replace(f'Work time: {base_minutes} game minutes',f'Work time: {minutes} game minutes')
+        self._message(msg)
         return 0 if minutes==0 else max(MINUTES_PER_ACTION,minutes)
     def _excavate_shaft(self,cmd:ExcavateShaftCommand)->int:
         pos=self.entities.get(cmd.actor,Position).value;inv=self.entities.get(cmd.actor,Inventory)
@@ -1642,7 +1650,7 @@ class Simulation:
             self._message('You sink a supported shaft and breach water-bearing rock below. Water begins entering the excavation.')
         else:
             self._message('You sink a supported vertical shaft to the level below.')
-        return 180
+        return self._work_minutes(180,skill='mining',tool_qualities=('pick',))
 
     def _player_station_ids(self)->set[str]:
         interiors=getattr(self,'interiors',None)
@@ -1656,11 +1664,15 @@ class Simulation:
         recipe=self.registry.recipes.get(cmd.recipe_id)
         skill=self.player_skill(recipe.skill if recipe is not None else 'crafting')
         ok,msg,minutes=self.crafting.craft(cmd.recipe_id,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player",skill,bonus,preference=cmd.material_preference)
-        self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,tool_qualities=tuple(recipe.tool_qualities) if recipe is not None else ())
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
 
     def _component_craft(self,cmd:ComponentCraftCommand)->int:
         ok,msg,minutes=self.crafting.craft_design(cmd.design_id,cmd.choices,self.entities.get(cmd.actor,Inventory),self._player_station_ids(),self.clock.minute,"player")
-        self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,skill='crafting')
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _start_salvage(self,cmd:StartSalvageCommand)->int:
         ok,msg,minutes=self.salvaging.begin(cmd.item_id,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
         self._message(msg);return minutes if ok else 0
@@ -1671,7 +1683,9 @@ class Simulation:
         ok,msg,minutes=self.salvaging.quick_batch(cmd.item_id,cmd.count,self.entities.get(cmd.actor,Inventory),self.seed,self.clock.minute)
         self._message(msg);return minutes if ok else 0
     def _experiment_recipe(self,cmd:ExperimentRecipeCommand)->int:
-        ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        ok,msg,minutes=self.crafting.experiment(cmd.recipe_id,self.entities.get(cmd.actor,Inventory));self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,skill='crafting')
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
     def _discovery_pot(self,cmd:DiscoveryPotCommand)->int:
         station=str(getattr(cmd,'station_id','') or '')
         if station and station not in self._player_station_ids():
@@ -1679,7 +1693,31 @@ class Simulation:
             return MINUTES_PER_ACTION
         ok,msg,minutes=self.crafting.combine_in_pot(cmd.items,self.entities.get(cmd.actor,Inventory),self.seed,int(getattr(getattr(self,'clock',None),'minute',0)),station_id=station)
         self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,skill='crafting')
         return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+
+    def _work_minutes(self,minutes:int,*,skill:str='',tool_qualities:tuple[str,...]=())->int:
+        """Adjust successful active work; callers retain failed/instant costs.
+
+        Do not pass a skill or tool quality already used by the owning system
+        to scale duration. Waits, rest, combat and transfers never call this.
+        """
+        from worldseed.sim.work_duration import adjusted_work_minutes
+        if minutes<=1 or self.combat_active():return minutes
+        vitals=self.entities.try_get(self.player_id,Vitals)
+        severity=sum(max(0,int(row.get('severity',0))) for row in self.state.player_wounds)
+        quality=0
+        if tool_qualities:
+            inv=self.entities.get(self.player_id,Inventory)
+            quality=min(self.resources.tool_power(inv,key) for key in tool_qualities)
+        indoor=getattr(self,'interiors',None) is not None and self.interiors.player_presence() is not None
+        weather={}
+        pos=self.player_pos
+        if not indoor and pos.z==0:
+            weather=self.environment.weather.at(self.clock.minute,pos.x,pos.y)
+        return adjusted_work_minutes(minutes,skill=self.player_skill(skill) if skill else 0,
+            stamina=vitals.stamina if vitals is not None else 100,wound_severity=severity,
+            tool_quality=quality,rain=weather.get('rain',0),wind_speed=weather.get('wind_speed',0))
     def _construction_duration(self,base_minutes:int)->int:
         skill=self.player_skill('crafting')
         strength=self.player_attribute('strength')
@@ -1693,7 +1731,7 @@ class Simulation:
         ok,msg=self.building.place(cmd.structure_id,pos,self.entities.get(cmd.actor,Inventory))
         if not ok:self._message(msg);return MINUTES_PER_ACTION
         cost=sum(int(n) for n in (spec.cost.values() if spec is not None else ()))
-        duration=self._construction_duration(12+4*cost)
+        duration=self._work_minutes(self._construction_duration(12+4*cost))
         self._message(f'{msg} Construction time: {duration} game minutes (crafting skill {self.player_skill("crafting")}).')
         return duration
     def _dismantle(self,cmd:DismantleCommand)->None:
@@ -1828,7 +1866,7 @@ class Simulation:
             if 'saltwater' not in tags and 'brackish' not in tags and ('water_source' in tags or 'freshwater' in tags):fresh=True
         if well:
             inv.add('core:clean_water',1)
-            self._message('You draw clean water from the well into your vessel.');return 5
+            self._message('You draw clean water from the well into your vessel.');return self._work_minutes(5,skill='survival')
         if not fresh:
             self._message('Stand beside a freshwater source or a village well to collect water.');return 0
         if not any('pot' in item.tags for item in carried):
@@ -1837,17 +1875,23 @@ class Simulation:
         if not any('fire' in self.registry.structures[sid].tags for sid in stations if sid in self.registry.structures):
             self._message('Bring the pot to a nearby campfire or hearth beside the water.');return 0
         inv.add('core:clean_water',1)
-        self._message('You collect and boil freshwater in your pot. Clean water is ready for drinking or crafting.');return 20
+        self._message('You collect and boil freshwater in your pot. Clean water is ready for drinking or crafting.');return self._work_minutes(20,skill='survival')
 
     def _cook(self,cmd:CookMealCommand)->int:
         pos=self.player_pos;inv=self.entities.get(cmd.actor,Inventory);stations=self.building.nearby_station_ids(pos);water=self._water_available(pos) or inv.count('core:clean_water')>0
-        ok,msg,minutes,_uid=self.food.cook(cmd.method_id,list(cmd.ingredients),inv,stations,water,self.clock.minute);self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        ok,msg,minutes,_uid=self.food.cook(cmd.method_id,list(cmd.ingredients),inv,stations,water,self.clock.minute);self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,skill='cooking')
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
 
     def _process_carcass(self,cmd:ProcessCarcassCommand)->int:
-        inv=self.entities.get(cmd.actor,Inventory);ok,msg,minutes=self.processing.process_carcass(cmd.carcass_uid,cmd.action,inv,self.player_skill('hunting'),self.clock.minute);self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        inv=self.entities.get(cmd.actor,Inventory);ok,msg,minutes=self.processing.process_carcass(cmd.carcass_uid,cmd.action,inv,self.player_skill('hunting'),self.clock.minute);self._message(msg)
+        if ok:minutes=self._work_minutes(minutes)
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
 
     def _start_processing(self,cmd:StartProcessingCommand)->int:
-        ok,msg,minutes=self.processing.start_job(cmd.process_id,self.player_pos,self.entities.get(cmd.actor,Inventory),self.clock.minute);self._message(msg);return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
+        ok,msg,minutes=self.processing.start_job(cmd.process_id,self.player_pos,self.entities.get(cmd.actor,Inventory),self.clock.minute);self._message(msg)
+        if ok:minutes=self._work_minutes(minutes,skill='crafting')
+        return max(MINUTES_PER_ACTION,minutes if ok else MINUTES_PER_ACTION)
 
     def _rest(self,cmd:RestCommand)->int:
         from worldseed.systems.swimming import exposure

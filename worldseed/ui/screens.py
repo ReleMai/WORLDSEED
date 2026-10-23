@@ -200,6 +200,8 @@ def help_screen(width:int=100)->str:
     body=[
         'MOVE',
         '  WASD / arrows   walk',
+        '  Space           pause / resume world time',
+        '  1× / 2× / 3×    HUD time controls; walking returns to 1×',
         '',
         'DO THINGS',
         '  Enter           nearby actions',

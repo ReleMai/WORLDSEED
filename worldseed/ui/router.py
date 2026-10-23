@@ -27,6 +27,10 @@ def classify_key(key: str) -> Intent:
     """
     k = key.lower() if len(key) == 1 else key
     if key == 'ESC': return Intent('pause')
+    if key == ' ' or key == 'UI_TIME:pause': return Intent('time_pause')
+    if key.startswith('UI_TIME:'):
+        speed = key.partition(':')[2]
+        return Intent('time_speed', int(speed)) if speed in ('1','2','3') else Intent('none')
     if k in DIRECTIONS: return Intent('move', DIRECTIONS[k])
     if k in ('\r','\n'): return Intent('actions')
     if key == '\t': return Intent('console')

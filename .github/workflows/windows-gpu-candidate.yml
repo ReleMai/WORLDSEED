@@ -10,6 +10,11 @@ on:
       - '.github/workflows/windows-gpu-candidate.yml'
       - 'run_worldseed_gpu.py'
       - 'worldseed/ui/gpu_terminal.py'
+      - 'worldseed/ui/gpu_hud.py'
+      - 'worldseed/presentation/action_resource_fade.py'
+      - 'worldseed/sim/realtime.py'
+      - 'worldseed/sim/work_duration.py'
+      - 'worldseed/systems/environment.py'
       - 'worldseed/presentation/gpu_buildings.py'
       - 'worldseed/presentation/gpu_cover_fade.py'
       - 'worldseed/presentation/interior_wall_styles.py'
@@ -62,6 +67,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Compile failed' }
           python -u tools/run_ci_check.py --name gpu-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_gpu_candidate_package
           if ($LASTEXITCODE -ne 0) { throw 'GPU package contracts failed' }
+      - name: Dev65 session and presentation contracts before freezing
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+        run: |
+          python -u tools/run_ci_check.py --name dev65-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_dev65_clock_work tests.test_dev65_weather tests.test_dev65_integration tests.test_dev65_gpu_feedback
+          if ($LASTEXITCODE -ne 0) { throw 'Dev65 package contracts failed' }
       - name: Load a real existing world before freezing
         shell: pwsh
         run: |

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import OrderedDict
 from worldseed.content.registry import ContentRegistry
 from worldseed.core.coords import WorldPos
 from worldseed.core.rng import PCG32, derive_seed, hash_u64
@@ -11,8 +12,15 @@ Q=65535
 class WeatherSystem:
     """Legacy-compatible weather plus v8 climate-driven moving fronts."""
 
+    MAX_CACHED_SAMPLES = 512
+    FRONT_SLOTS = 6
+
     def __init__(self,seed:bytes,generator=None):
         self.seed=seed;self.generator=generator
+        # Cache values contain only immutable scalars, never caller-owned dicts.
+        # Per-instance storage cannot retain worlds through a global method LRU.
+        self._sample_cache=OrderedDict()
+        self._sample_context=None
 
     def _legacy_at(self,minute:int,x:int,y:int)->dict:
         day=minute//1440;cellx=x//128;celly=y//128;rng=PCG32(derive_seed(self.seed,"weather",day,cellx,celly))
@@ -25,27 +33,34 @@ class WeatherSystem:
                 "wetness":min(100,rain*10),"fog":75 if kind=="fog" else 0,"wind_dx":0,"wind_dy":0,"wind_speed":wind*20}
 
     def _v8_slot(self,slot:int,x:int,y:int,climate)->dict:
-        # Two-hour weather cells advect along the physical prevailing wind.
-        phase=slot%84
-        advx=int(x)-(int(climate.prevailing_wind_dx)*phase)//24
-        advy=int(y)-(int(climate.prevailing_wind_dy)*phase)//24
-        cellx=advx//192;celly=advy//192
-        token=hash_u64(self.seed,"weather-v8",slot,cellx,celly)
-        precip=int(climate.precipitation_potential)*100//Q
-        humidity=int(climate.humidity)*100//Q
-        jitter=int(token%51)-25
-        cloud=max(0,min(100,(humidity*3+precip)//4+jitter))
-        rain_chance=max(0,min(92,precip+cloud//3-40))
-        rain_roll=int((token>>11)%100)
+        # A front lasts twelve game hours. Sample advection at its beginning,
+        # otherwise a weather-cell boundary could reroll rain within the front.
+        front,phase=divmod(max(0,int(slot)),self.FRONT_SLOTS)
+        front_start=front*self.FRONT_SLOTS
+        advx=int(x)-(int(climate.prevailing_wind_dx)*front_start)//24
+        advy=int(y)-(int(climate.prevailing_wind_dy)*front_start)//24
+        token=hash_u64(self.seed,"weather-v8-dev65-front",front,advx//256,advy//256)
+        precip=max(0,min(100,int(climate.precipitation_potential)*100//Q))
+        humidity=max(0,min(100,int(climate.humidity)*100//Q))
+        wind_strength=max(0,min(100,int(climate.wind_strength)*100//Q))
+        # Physical climate drives incidence; most fronts remain dry even in
+        # humid climates, with cloudy dry periods between rain systems.
+        rain_chance=max(2,min(36,(precip*36+humidity*10)//100-14))
+        wet_front=token%100<rain_chance
+        cloud=max(6,min(95,(humidity*2+precip)//4+int((token>>13)%37)-18))
+        if wet_front:cloud=max(cloud,72+int((token>>23)%19))
         rain=0
-        if cloud>=45 and rain_roll<rain_chance:
-            rain=max(1,min(10,2+(cloud-45)//9+precip//24+int((token>>23)%3)))
-        storm_roll=int((token>>31)%100)
-        storm=max(0,min(100,(rain-6)*22+max(0,cloud-80)*2)) if rain>=7 and storm_roll<max(12,rain_chance//2) else 0
-        wind_speed=max(5,min(100,int(climate.wind_strength)*100//Q+int((token>>41)%25)-8))
+        if wet_front:
+            envelope=(1,2,3,3,2,1)[phase]
+            severity=1+precip//23+int((token>>29)%3)
+            rain=min(10,max(1,severity*envelope//3))
+        storm=0
+        if wet_front and rain>=5 and int((token>>35)%100)<10+precip//15:
+            storm=min(95,max(24,(rain-4)*16+int((token>>42)%20)))
+        wind_speed=max(5,min(100,wind_strength+int((token>>48)%21)-10+(12 if storm else 0)))
         fog=0
-        if rain==0 and humidity>=72 and wind_speed<42 and int((token>>52)%100)<humidity-45:
-            fog=max(15,min(90,humidity-5))
+        if not wet_front and humidity>=76 and wind_speed<42 and int((token>>8)%100)<humidity-55:
+            fog=max(15,min(85,humidity-8))
         if storm>0:kind="storm"
         elif rain>0:kind="rain"
         elif fog>0:kind="fog"
@@ -63,15 +78,28 @@ class WeatherSystem:
         climate_getter=getattr(generator,"climate_at",None) if generator is not None else None
         if generator is None or int(getattr(generator,"version",0))<8 or not callable(climate_getter):
             return self._legacy_at(minute,x,y)
-        climate=climate_getter(WorldPos(int(x),int(y),0))
-        if climate is None:return self._legacy_at(minute,x,y)
+        context=(self.seed,id(generator),int(generator.version))
+        if context!=self._sample_context:
+            self._sample_cache.clear()
+            self._sample_context=context
         slot=max(0,int(minute))//120
+        x,y=int(x),int(y)
+        key=(slot,x,y)
+        cached=self._sample_cache.get(key)
+        if cached is not None:
+            self._sample_cache.move_to_end(key)
+            return dict(cached)
+        climate=climate_getter(WorldPos(x,y,0))
+        if climate is None:return self._legacy_at(minute,x,y)
         current=self._v8_slot(slot,x,y,climate)
         recent=[current["rain"]]
         for age in range(1,4):
             recent.append(self._v8_slot(max(0,slot-age),x,y,climate)["rain"])
         wetness=min(100,recent[0]*10+recent[1]*7+recent[2]*4+recent[3]*2+current["humidity"]//10)
         current["wetness"]=wetness
+        self._sample_cache[key]=tuple(current.items())
+        if len(self._sample_cache)>self.MAX_CACHED_SAMPLES:
+            self._sample_cache.popitem(last=False)
         return current
 
 class EnvironmentSystem:

@@ -349,7 +349,8 @@ class GPUInteriorContracts(TestCase):
             texture = context.texture((640, 480), 4)
             target = context.framebuffer(color_attachments=[texture])
             renderer = GLWorldspaceRenderer(_OffscreenWindowContext(context, target),
-                                           640, 480, texture_budget=4096)
+                                           # Include the bounded 256x256 sight mask.
+                                           640, 480, texture_budget=512*1024)
             renderer.draw(frame.commands, clear=(0, 0, 0, 0))
             pixels = target.read(components=3, alignment=1)
             private_x = round(snapshot.camera.to_screen(WorldFoot(5.2, 0))[0])+1
@@ -389,7 +390,11 @@ class GPUInteriorContracts(TestCase):
             texture=context.texture((641,481),4)
             target=context.framebuffer(color_attachments=[texture])
             renderer=GLWorldspaceRenderer(_OffscreenWindowContext(context,target),641,481,texture_budget=4096)
-            renderer.draw(frame.commands,clear=(0,0,0,0))
+            # Isolate half-pixel mesh/scissor coverage from intentional inward
+            # sight-edge erosion. Native mask/privacy tests cover that effect;
+            # every authorized floor pixel must survive this geometry pass.
+            commands=tuple(replace(command,sight_mask=None) for command in frame.commands)
+            renderer.draw(commands,clear=(0,0,0,0))
             pixels=target.read(components=3,alignment=1)
             colors=set()
             for command in frame.ground:

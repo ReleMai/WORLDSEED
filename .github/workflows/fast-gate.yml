@@ -50,7 +50,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install "Pillow>=10,<12"
+      # Prepared sight masks rasterize CPU surfaces; this job still creates no
+      # SDL window or OpenGL context.
+      - run: python -m pip install "Pillow>=10,<12" "pygame-ce>=2.5.3,<3"
       - name: Verify process deadlines on Linux
         run: python -u tools/run_ci_check.py --name linux-runner --timeout 45 -- python -u -m unittest -v tests.test_ci_diagnostics
       - name: M3 presentation and reference-manifest contracts
@@ -111,7 +113,7 @@ jobs:
       - name: Main game OpenGL UI, commands and persistent checkpoint integration
         env:
           SDL_VIDEODRIVER: offscreen
-        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_gpu_hud tests.test_gpu_control_art tests.test_gpu_readability
+        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_dev65_gpu_native tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_gpu_hud tests.test_gpu_control_art tests.test_gpu_readability
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.
@@ -195,6 +197,13 @@ jobs:
       - name: Fast diagnostics and item art/database consistency
         shell: pwsh
         run: python -u tools/run_ci_check.py --name diagnostics-assets --timeout 90 -- python -u -m unittest -v tests.test_ci_diagnostics tests.test_development_workflow tests.test_action_progress tests.test_craftable_sprite_coverage tests.test_item_asset_catalog tests.test_item_database tests.test_generated_item_icons tests.test_dev20_graphical_regressions.GraphicalAssetTests
+
+      - name: Dev65 clock, work, weather and GPU feedback contracts
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+        run: python -u tools/run_ci_check.py --name dev65-contracts --timeout 90 -- python -u -m unittest -v tests.test_dev65_clock_work tests.test_dev65_weather tests.test_dev65_integration tests.test_dev65_gpu_feedback
 
       - name: Compile Python
         shell: pwsh

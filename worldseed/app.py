@@ -2479,6 +2479,8 @@ def _world_context_menu(ctx:GameContext,term:Terminal,target:WorldPos,*,building
     if choice in ('pickup','pickup_walk') or choice.startswith('pickup_same:'):
         from worldseed.ui.auto_pickup import execute_visible_pickup
         item_id=choice.split(':',1)[1] if choice.startswith('pickup_same:') else ''
+        if (item_id or abs(target.x-sim.player_pos.x)+abs(target.y-sim.player_pos.y)>1) and not _prepare_player_walk(term):
+            return 'World paused. Space resumes walking.'
         return execute_visible_pickup(sim,ctx.player_id,target,item_id=item_id,
             nearby=bool(item_id))
     if choice=='open' and container:return _storage_menu(ctx,term,container.uid)
@@ -2901,6 +2903,14 @@ def _inventory_menu_terminal(ctx:GameContext,term:Terminal)->str:
         if not nav.back():return UI_BACK
 
 
+def _prepare_player_walk(term:Terminal)->bool:
+    driver=getattr(term,'_time_driver',None)
+    if driver is not None:
+        if driver.paused:return False
+        driver.resume_for_movement()
+    return True
+
+
 def _live_panel_world_move(ctx:GameContext,term:Terminal,choice:str)->str|None:
     """Apply WASD from a retained gameplay panel without closing it."""
     if not str(choice).startswith('UI_WORLD_MOVE:'):
@@ -2909,6 +2919,7 @@ def _live_panel_world_move(ctx:GameContext,term:Terminal,choice:str)->str|None:
     direction=DIRECTION_KEYS.get(key)
     if not direction:
         return ''
+    if not _prepare_player_walk(term):return 'World paused. Space resumes walking.'
     before=len(ctx.sim.log)
     ctx.sim.execute(MoveCommand(ctx.player_id,*direction))
     message=ctx.sim.log[-1].message if len(ctx.sim.log)>before else ''
@@ -4067,6 +4078,8 @@ def run_game(ctx:GameContext,term:Terminal)->str:
     # every redraw. Pause > Save game remains available for an immediate retry.
     renderer=Renderer(ctx.registry);last='';autosave_attempt=ctx.sim.turn
     realtime=RealtimeSimulationDriver(ctx.sim);realtime.resume()
+    install_time=getattr(term,'set_time_controls',None)
+    if callable(install_time):install_time(realtime)
     action_presenter=getattr(term,'present_timed_action',None)
     if callable(action_presenter):
         def display_timed_action(command,minutes,advance):
@@ -4077,14 +4090,18 @@ def run_game(ctx:GameContext,term:Terminal)->str:
                 # Progress has already advanced the authoritative clock. The
                 # normal realtime driver must not catch up wall seconds spent
                 # animating the action and charge them a second time.
-                if not realtime.paused:realtime.resume()
+                realtime.reset_baseline()
         ctx.sim._action_progress_callback=display_timed_action
     install=getattr(term,'set_realtime_callback',None)
     if callable(install):install(realtime.pump)
     install_free=getattr(term,'set_free_movement_callback',None)
     if callable(install_free):
         ctx.sim.set_free_movement_enabled(True)
-        install_free(ctx.sim.update_free_movement)
+        def update_free_movement(dt,dx,dy,sprint):
+            if realtime.effective_paused:return False
+            if dx or dy:realtime.resume_for_movement()
+            return ctx.sim.update_free_movement(dt,dx,dy,sprint)
+        install_free(update_free_movement)
     install_combat=getattr(term,'set_combat_callback',None)
     if callable(install_combat):install_combat(ctx.sim.combat_active)
     try:
@@ -4129,7 +4146,10 @@ def run_game(ctx:GameContext,term:Terminal)->str:
         if key.startswith('UI_BUILDING_MENU:'):
             _,part,uid=key.split(':',2);result=_building_context_menu(ctx,term,uid,part);last='' if result==UI_BACK else result;continue
         if key.startswith('INTERIOR_MOVE:'):
-            _,dx,dy=key.split(':');ctx.sim.execute(MoveCommand(ctx.player_id,int(dx),int(dy)));continue
+            if not realtime.paused:
+                realtime.resume_for_movement()
+                _,dx,dy=key.split(':');ctx.sim.execute(MoveCommand(ctx.player_id,int(dx),int(dy)))
+            continue
         if key.startswith('INTERIOR_CONTEXT:'):
             term._interior_placing=None
             _,x,y=key.split(':');result=_interior_context_menu(ctx,term,int(x),int(y));last='' if result==UI_BACK else result;continue
@@ -4153,12 +4173,19 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             last='Save failed. Current changes remain in memory. Pause > Save game to retry.'
             continue
         if intent.kind=='pause':
-            realtime.pause()
-            choice=_pause_menu(ctx,term)
+            with realtime.pause_realtime():
+                choice=_pause_menu(ctx,term)
             if choice=='quit':return 'quit'
             if choice=='menu':return 'menu'
             if choice=='saved':last='Game saved.'
-            realtime.resume()
+            continue
+        if intent.kind=='time_pause':
+            paused=realtime.toggle_pause()
+            last='World paused. Space resumes.' if paused else f'World running at {realtime.speed}×.'
+            continue
+        if intent.kind=='time_speed':
+            realtime.set_speed(int(intent.value))
+            last=f'World speed {realtime.speed}×'+(' — paused; Space resumes.' if realtime.paused else '.')
             continue
         if intent.kind=='actions':
             if ctx.sim.interiors.player_presence() is not None:
@@ -4175,12 +4202,18 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             last='That action requires outdoor ground. Right-click furniture for interior actions.';continue
         if intent.kind=='direct_menu':
             result=_handle_menu(ctx,term,str(intent.value));last='' if result==UI_BACK else result;continue
-        if intent.kind=='move':ctx.sim.execute(MoveCommand(ctx.player_id,*intent.value))
+        if intent.kind=='move':
+            if realtime.paused:continue
+            realtime.resume_for_movement()
+            ctx.sim.execute(MoveCommand(ctx.player_id,*intent.value))
         elif intent.kind=='gather':
             result=_gather_action(ctx,term);last='' if result==UI_BACK else result;continue
         elif intent.kind=='pickup':ctx.sim.execute(PickupCommand(ctx.player_id))
         elif intent.kind=='wait':ctx.sim.execute(WaitCommand(ctx.player_id,int(intent.value)))
-        elif intent.kind=='vertical':ctx.sim.execute(VerticalMoveCommand(ctx.player_id,int(intent.value)))
+        elif intent.kind=='vertical':
+            if realtime.paused:continue
+            realtime.resume_for_movement()
+            ctx.sim.execute(VerticalMoveCommand(ctx.player_id,int(intent.value)))
         elif intent.kind=='farm':
             if intent.value=='till':ctx.sim.till();ctx.sim.execute(WaitCommand(ctx.player_id,10))
             elif intent.value=='plant':
@@ -4215,6 +4248,7 @@ def run_game(ctx:GameContext,term:Terminal)->str:
             pass
         if callable(action_presenter):ctx.sim._action_progress_callback=None
         if callable(install):install(None)
+        if callable(install_time):install_time(None)
         if callable(install_free):
             install_free(None)
             ctx.sim.set_free_movement_enabled(False)

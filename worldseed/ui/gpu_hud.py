@@ -74,6 +74,8 @@ def draw_hud(owner, rect, sim, vitals):
     for text in (getattr(sim.state, 'player_name', 'Wanderer'), sim.clock.label(),
                  f'{sim.player_pos.x}, {sim.player_pos.y}, {sim.player_pos.z}'):
         _text(owner, text, (x, y), width=usable); y += line
+    time_rect = pg.Rect(x, y, usable, 39)
+    y += time_rect.height + 3
     # Preserve the controls at short supported sizes by reducing the meters'
     # whitespace, not by replacing their graphical tracks with numbers.
     meter_h = max(25, min(39, (rect.height - (y - rect.y) - 202) // 4))
@@ -94,8 +96,40 @@ def draw_hud(owner, rect, sim, vitals):
     controls = pg.Rect(rect.x, max(y + 7, rect.bottom - 202), rect.width,
                        max(1, rect.bottom - max(y + 7, rect.bottom - 202)))
     toolbar = draw_actions(owner, controls, str(getattr(sim.state, 'player_hunting_stance', 'normal')))
+    # Append targets after the established action/stance regions; the time row
+    # reads the session driver and emits tokens through the shared app router.
+    draw_time_controls(owner, time_rect)
     screen.set_clip(old_clip)
     return toolbar
+
+
+def draw_time_controls(owner, rect):
+    """Show actual session pause/speed without advancing or changing its clock."""
+    pg = owner.pg; colors = owner._theme; screen = owner.screen
+    state = owner.read_time_controls()
+    speed = max(1, min(3, state['speed']))
+    paused = state['paused'] or state.get('held', False)
+    _text(owner, f'TIME  {"Paused" if paused else "Running"} · {speed}×',
+          (rect.x, rect.y), width=rect.width, color=colors['muted'])
+    gap = 3; top = rect.y + owner.small_font.get_height() + 2
+    width = max(1, (rect.width - gap * 3) // 4)
+    for index, (label, token) in enumerate((('Pause', 'pause'), ('1×', '1'),
+                                          ('2×', '2'), ('3×', '3'))):
+        box = pg.Rect(rect.x + index * (width + gap), top, width,
+                      max(1, rect.bottom - top)).clip(rect)
+        chosen = paused if token == 'pause' else not paused and speed == int(token)
+        pg.draw.rect(screen, (79, 70, 45) if chosen else colors['panel'], box, border_radius=3)
+        pg.draw.rect(screen, colors['accent'] if chosen else colors['edge'], box,
+                     2 if chosen else 1, border_radius=3)
+        if token == 'pause' and owner.small_font.size(label)[0] > box.width - 4:
+            label = 'Ⅱ'
+        text = owner.small_font.render(owner._fit_ui_text(label, owner.small_font,
+                                            max(1, box.width - 4)), True, colors['text'])
+        screen.blit(text, text.get_rect(center=box.center))
+        if owner._input_mode == 'world':
+            owner._pointer_targets.append((box, 'UI_TIME:' + token))
+        owner._hud_tooltips.append((box, label, 'Toggle pause [Space]' if token == 'pause'
+                                   else f'Run world time at {token}× speed'))
 
 
 def draw_actions(owner, rect, stance='normal'):
@@ -167,6 +201,7 @@ def _draw_stances(owner, rect, active):
 def keybinding_rows():
     """Read primary controls from the router; do not establish a second map."""
     rows = [('Movement', ' / '.join(key.upper() for key in DIRECTIONS if len(key) == 1) + ' / arrows')]
+    rows.extend((('World pause / resume', 'Space'), ('World speed', 'HUD 1× / 2× / 3×')))
     rows.extend((label, {'\r': 'Enter', '\t': 'Tab', 'ESC': 'Esc'}.get(token, token.upper()))
                 for label, token in HUD_BUTTONS)
     for token, label, intent in (('g', 'Harvest / mine', 'gather'), ('p', 'Pick up', 'pickup'),

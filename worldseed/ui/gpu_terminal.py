@@ -71,6 +71,8 @@ class GpuTerminal(PygameTerminal):
         self._snapshot=None
         self._interior_fades={}
         self._world_commands=()
+        self._action_resource_fade=None
+        self._action_progress_fraction=0.
         self._last_world=None
         self._gpu_viewport=None
         self._world_report=None
@@ -219,6 +221,11 @@ class GpuTerminal(PygameTerminal):
             from worldseed.profiling import measure_if_enabled
             commands=(fade_commands(self._world_commands,self._interior_fades,time.monotonic())
                 if self._snapshot.interior and self._interior_fades else self._world_commands)
+            from worldseed.presentation.action_resource_fade import resource_fade_commands,merge_resource_fade
+            ghosts=resource_fade_commands(self._action_resource_fade,self._snapshot,rect,
+                self._action_progress_fraction,commands)
+            if ghosts:
+                commands=merge_resource_fade(commands,ghosts,self._action_resource_fade)
             from worldseed.presentation.sight_overlay import radius_command
             opacity=self._sight_overlay_fade.advance(bool(self._sight_overlay_keys),time.monotonic())
             if not self._snapshot.interior and self._snapshot.sight_radius:
@@ -267,6 +274,49 @@ class GpuTerminal(PygameTerminal):
                 self._composite()
 
     def _animate_idle_water(self,now):return False
+
+    def _begin_action_progress(self,command,total):
+        from worldseed.presentation.action_resource_fade import capture_resource_fade
+        self._action_resource_fade=capture_resource_fade(command,self._snapshot,
+            self._world_commands,self._gpu_viewport)
+        self._action_progress_fraction=0.
+
+    def _end_action_progress(self):
+        self._action_resource_fade=None
+        self._action_progress_fraction=1.
+
+    def _action_progress_rect(self):
+        snapshot=self._snapshot; viewport=self._gpu_viewport
+        if snapshot is None or viewport is None:
+            return super()._action_progress_rect()
+        pg=self.pg
+        width=min(244,max(1,viewport.width-8))
+        height=min(58,max(1,viewport.height-8))
+        x,y=snapshot.camera.to_screen(snapshot.viewer)
+        box=pg.Rect(round(x+viewport.x-width/2),
+            round(y+viewport.y-snapshot.camera.scale*1.75-height-5),width,height)
+        box.clamp_ip(viewport)
+        return box
+
+    def _draw_action_progress(self,command,label,elapsed,total,fraction):
+        if self._snapshot is None or self._gpu_viewport is None:
+            return super()._draw_action_progress(command,label,elapsed,total,fraction)
+        self._action_progress_fraction=max(0.,min(1.,float(fraction)))
+        pg=self.pg; box=self._action_progress_rect()
+        overlay=pg.Surface(box.size,pg.SRCALPHA)
+        pg.draw.rect(overlay,(18,24,27,232),overlay.get_rect(),border_radius=6)
+        pg.draw.rect(overlay,(*self._theme['accent'],220),overlay.get_rect(),1,border_radius=6)
+        title=self._fit_ui_text(label,self.small_font,max(1,box.width-16))
+        overlay.blit(self.small_font.render(title,True,self._theme['text']),(8,4))
+        text=f'{elapsed:,}/{total:,} game min · {round(self._action_progress_fraction*100)}%'
+        text=self._fit_ui_text(text,self.small_font,max(1,box.width-16))
+        overlay.blit(self.small_font.render(text,True,self._theme['muted']),(8,23))
+        bar=pg.Rect(8,box.height-8,max(1,box.width-16),4)
+        pg.draw.rect(overlay,(51,60,63),bar,border_radius=2)
+        fill=round(bar.width*self._action_progress_fraction)
+        if fill:pg.draw.rect(overlay,self._theme['accent'],(bar.x,bar.y,fill,bar.height),border_radius=2)
+        self.screen.blit(overlay,box.topleft)
+        return box
 
     def _capture(self):
         if self._gl is None:return

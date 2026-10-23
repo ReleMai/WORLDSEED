@@ -280,6 +280,59 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
     def set_realtime_callback(self, callback) -> None:
         self._realtime_callback = callback
 
+    def set_time_controls(self, driver) -> None:
+        """Install an ephemeral, read-only HUD clock source for this session."""
+        self._time_driver = driver
+
+    def read_time_controls(self) -> dict:
+        driver = getattr(self, '_time_driver', None)
+        return {'paused': bool(getattr(driver, 'paused', False)),
+                'held': bool(getattr(driver, 'effective_paused', False)),
+                'speed': int(getattr(driver, 'speed', 1))}
+
+    def handle_time_control(self, key) -> bool:
+        """Route deliberate retained-panel inputs through the session driver."""
+        from worldseed.ui.router import classify_key
+        driver=getattr(self,'_time_driver',None)
+        intent=classify_key(key)
+        if driver is None or intent.kind not in ('time_pause','time_speed'):return False
+        if intent.kind=='time_pause':driver.toggle_pause()
+        else:driver.set_speed(int(intent.value))
+        self._floating_backdrop=None
+        self._menu_backdrop_cache.clear()
+        return True
+
+    def _begin_action_progress(self, command, total) -> None:
+        """Backend hook for bounded detached visual snapshots."""
+
+    def _end_action_progress(self) -> None:
+        """Release transient presentation state after a committed action."""
+
+    def _action_progress_rect(self):
+        pg = self.pg
+        sw, sh = self.screen.get_size()
+        width = min(540, max(1, sw-36))
+        height = min(92, sh)
+        return pg.Rect((sw-width)//2, max(0, sh-136), width, height).clip(self.screen.get_rect())
+
+    def _draw_action_progress(self, command, label, elapsed, total, fraction):
+        pg = self.pg
+        box = self._action_progress_rect()
+        overlay = pg.Surface(box.size, pg.SRCALPHA)
+        pg.draw.rect(overlay, (18,24,27,240), overlay.get_rect(), border_radius=10)
+        pg.draw.rect(overlay, (*self._theme['accent'],220), overlay.get_rect(), width=1, border_radius=10)
+        overlay.blit(self.font.render(label, True, self._theme['text']), (18,11))
+        text = self.small_font.render(f'{elapsed:,}/{total:,} game min   •   {round(fraction*100):d}%',
+                                      True, self._theme['muted'])
+        overlay.blit(text, (18,39))
+        bar = pg.Rect(18,68,max(1,box.width-36),10)
+        pg.draw.rect(overlay,(51,60,63),bar,border_radius=4)
+        fill = max(0,min(bar.width,round(bar.width*fraction)))
+        if fill:
+            pg.draw.rect(overlay,self._theme['accent'],pg.Rect(bar.x,bar.y,fill,bar.height),border_radius=4)
+        self.screen.blit(overlay,box.topleft)
+        return box
+
     def present_timed_action(self, command, game_minutes: int, advance, redraw) -> None:
         """Show live world ticks and an action bar before returning to the menu.
 
@@ -326,6 +379,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         backdrop_rect=None
         redraw_required=True
         try:
+            self._begin_action_progress(command,total)
             while True:
                 now=time.monotonic()
                 fraction=min(1.0,max(0.0,(now-started)/duration))
@@ -342,28 +396,12 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     last_world_paint=time.monotonic()
                     redraw_required=False
                     background=None
-                sw,sh=self.screen.get_size()
-                width=min(540,max(260,sw-36))
-                box=pg.Rect((sw-width)//2,max(20,sh-136),width,92)
+                box=self._action_progress_rect()
                 if backdrop_rect!=box or background is None:
                     backdrop_rect=box
                     background=self.screen.subsurface(box).copy()
                 self.screen.blit(background,box.topleft)
-                overlay=pg.Surface(box.size,pg.SRCALPHA)
-                pg.draw.rect(overlay,(18,24,27,240),overlay.get_rect(),border_radius=10)
-                pg.draw.rect(overlay,(*self._theme['accent'],220),overlay.get_rect(),width=1,border_radius=10)
-                title=self.font.render(label,True,self._theme['text'])
-                overlay.blit(title,(18,11))
-                elapsed_label=f'{advanced:,}/{total:,} game min   •   {round(fraction*100):d}%'
-                text=self.small_font.render(elapsed_label,True,self._theme['muted'])
-                overlay.blit(text,(18,39))
-                bar=pg.Rect(18,68,width-36,10)
-                pg.draw.rect(overlay,(51,60,63),bar,border_radius=4)
-                fill=max(0,min(bar.width,round(bar.width*fraction)))
-                if fill:
-                    pg.draw.rect(overlay,self._theme['accent'],
-                                 pg.Rect(bar.x,bar.y,fill,bar.height),border_radius=4)
-                self.screen.blit(overlay,box.topleft)
+                self._draw_action_progress(command,label,advanced,total,fraction)
                 pg.display.update(box)
                 # Ignore fresh commands while one transaction is in progress;
                 # keep window/quit events and key releases from getting stuck.
@@ -387,6 +425,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                 self.screen.blit(background,backdrop_rect.topleft)
                 pg.display.update(backdrop_rect)
         finally:
+            self._end_action_progress()
             # The retained floating window will rebuild its world snapshot
             # when its next menu frame is presented.
             self._input_mode=previous_mode
@@ -520,6 +559,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             pg.K_UP: "UP", pg.K_DOWN: "DOWN", pg.K_LEFT: "LEFT", pg.K_RIGHT: "RIGHT",
             pg.K_PAGEUP: "PGUP", pg.K_PAGEDOWN: "PGDN", pg.K_HOME: "HOME", pg.K_END: "END",
             pg.K_ESCAPE: "ESC", pg.K_RETURN: "\r", pg.K_KP_ENTER: "\r", pg.K_BACKSPACE: "\b",
+            getattr(pg,'K_SPACE',32): " ",
             pg.K_TAB: "\t", pg.K_F1: "F1", pg.K_F2: "F2", pg.K_F3: "F3",
         }
         # Canonical WASD contract retained: pg.K_w,pg.K_a,pg.K_s,pg.K_d
@@ -873,6 +913,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
                     return 'UI_REDRAW'
                 continue
             if event.type == pg.KEYDOWN:
+                if self._input_mode=='world' and event.key==getattr(pg,'K_SPACE',32) and getattr(event,'repeat',False):
+                    continue
                 if self._input_mode=='world' and getattr(self,'_homestead_placement',None):
                     if event.key==pg.K_ESCAPE:
                         self._homestead_placement=None
@@ -4103,7 +4145,7 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         from worldseed.ui.router import HUD_BUTTONS
         pg=self.pg;screen=self.screen;th=self._theme
         inset=min(9,max(0,rect.width//12));margin=min(11,max(1,rect.width//16))
-        height=max(1,min(168,rect.height-2*inset))
+        height=max(1,min(198,rect.height-2*inset))
         bar=pg.Rect(rect.x+inset,rect.bottom-inset-height,max(1,rect.width-2*inset),height)
         self._hud_tooltip_bounds=pg.Rect(rect.x+inset,rect.y+3,max(1,rect.width-2*inset),max(1,rect.height-6))
         old_clip=screen.get_clip();screen.set_clip(bar.clip(old_clip))
@@ -4114,7 +4156,8 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
         cols=5;gap=min(6,max(0,bar.width//35));bw=max(1,(bar.width-2*margin-gap*4)//cols)
         buttons=HUD_BUTTONS if self._input_mode=='world' else (('Confirm','\r'),('Cancel','ESC'))
         header=min(28,max(1,bar.height//5));stance_height=min(29,max(1,bar.height//5))
-        button_h=max(1,min(40,(bar.height-header-stance_height-18)//2))
+        time_height=26 if self._input_mode=='world' else 0
+        button_h=max(1,min(40,(bar.height-header-stance_height-time_height-18)//2))
         descriptions={
             'Inventory':'Manage carried items and equipment', 'Crafting':'Recipes and discovery',
             'Build':'Construction and placement', 'Health':'Health and condition',
@@ -4138,9 +4181,28 @@ class PygameTerminal(ItemPanelMixin, CraftingBrowserMixin, WorkbenchPanelsMixin,
             sy=bar.bottom-stance_height-9
             pg.draw.line(screen,th['edge'],(bar.x+margin,sy-7),(bar.right-margin,sy-7))
             self._draw_stance_buttons(pg.Rect(bar.x,sy,bar.width,stance_height),stance)
+            self._draw_time_buttons(pg.Rect(bar.x,sy-time_height-5,bar.width,time_height))
         screen.set_clip(old_clip)
         self._hud_tooltip_hover=None;self._hud_tooltip_since=self.pg.time.get_ticks()
         return bar
+
+    def _draw_time_buttons(self,rect):
+        pg=self.pg;screen=self.screen;th=self._theme
+        state=self.read_time_controls()
+        labels=(('Resume' if state['paused'] else 'Pause','pause'),('1×','1'),('2×','2'),('3×','3'))
+        margin=min(11,max(0,rect.width//12));gap=3
+        width=max(1,(rect.width-2*margin-3*gap)//4)
+        for index,(label,value) in enumerate(labels):
+            slot=pg.Rect(rect.x+margin+index*(width+gap),rect.y,width,max(1,rect.height-2)).clip(rect)
+            active=state['paused'] if value=='pause' else int(value)==state['speed']
+            pg.draw.rect(screen,(85,73,48) if active else th['panel2'],slot,border_radius=3)
+            pg.draw.rect(screen,th['accent'] if active else th['edge'],slot,1,border_radius=3)
+            image=self.small_font.render(self._fit_ui_text(label,self.small_font,max(1,slot.width-4)),True,th['text'])
+            old=screen.get_clip();screen.set_clip(slot.clip(old))
+            screen.blit(image,image.get_rect(center=slot.center));screen.set_clip(old)
+            self._pointer_targets.append((slot,'UI_TIME:'+value))
+            detail='Pause or resume world time [Space]' if value=='pause' else f'World speed {value}×; walking returns to 1×'
+            self._hud_tooltips.append((slot,label,detail))
 
     def _draw_stance_buttons(self,rect,stance='normal'):
         """Shared HUD-only posture selection for exterior and interior spaces."""

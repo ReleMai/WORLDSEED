@@ -20,6 +20,25 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev65 — GPU time controls, work feedback and persistent weather
+
+Space pauses/resumes ambient world time; GPU HUD buttons select 1×, 2× or 3×.
+Walking returns to 1×. Pause survives focus changes and nested menus. Retained
+inventory/storage/crafting panels support Space without activating an item.
+Committed work and waits still spend their normal game minutes while paused.
+
+Timed work displays elapsed game minutes above the player, retains crafting
+panels, and fades departing resource art through the GPU renderer. Successful
+work uses bounded condition, tool and outdoor weather modifiers. Peaceful
+container transfers stay instant. V8+ weather uses twelve-hour fronts and a
+bounded sample cache; legacy geography and save schema remain unchanged.
+
+Use the latest successful [Windows GPU main-game workflow](https://github.com/ReleMai/WORLDSEED/actions/workflows/windows-gpu-candidate.yml)
+for the current GPU candidate, then run `PLAY_WORLDSEED_GPU.bat` from its extracted
+artifact. Check its commit against current main; source ZIPs are not executables.
+See the [Dev65 recovery handoff](docs/handoffs/DEV65_GPU_RECOVERY_2026-10-22.md)
+for validation, compatibility, remaining limits and Fast Gate repairs.
+
 ## RC14 Dev64 — Generated item art and a sorted item database
 
 The full 643-item database now uses one shared category, subcategory, name and ID

@@ -10,6 +10,7 @@ from worldseed.entities.components import Inventory, Position
 from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import CollectWaterCommand
 from worldseed.sim.engine import Simulation
+from worldseed.systems.state import LivingWorldState
 from worldseed.ui.navigation import ACTION_WORK
 
 
@@ -23,6 +24,9 @@ class CraftingWaterTests(unittest.TestCase):
         sim.entities.add(pid,Position(WorldPos(0,0,0)))
         sim.entities.add(pid,Inventory(items if items is not None else {'core:clay_pot':1}))
         sim.world=SimpleNamespace(tile_at=lambda pos:SimpleNamespace(terrain=SimpleNamespace(tags=tags)))
+        sim.state=LivingWorldState()
+        sim.clock=SimpleNamespace(minute=480)
+        sim.environment=SimpleNamespace(weather=SimpleNamespace(at=lambda *_:{'rain':0,'wind_speed':0}))
         sim.settlement_physicalization=SimpleNamespace(piece_def_at=lambda pos:SimpleNamespace(tags=('well',)) if well else None)
         sim._player_station_ids=lambda:{'core:campfire'} if fire else set()
         sim.log=[];sim.turn=0

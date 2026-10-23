@@ -25,7 +25,12 @@ from worldseed.ui.gpu_gameplay_input import GpuGameplayInput
 
 class GPUWindowLoopTests(unittest.TestCase):
     def fake_backends(self, order, *, fail_draw=False, event_frames=None):
+        import pygame as raster
         pg=ModuleType('pygame')
+        # Sight-mask preparation now uses real CPU pixels. Keep the window,
+        # events and GL context fake while exercising those raster operations.
+        for name in ('Surface', 'SRCALPHA', 'draw', 'transform', 'image'):
+            setattr(pg, name, getattr(raster, name))
         names=('GL_CONTEXT_MAJOR_VERSION','GL_CONTEXT_MINOR_VERSION',
             'GL_CONTEXT_PROFILE_MASK','GL_CONTEXT_PROFILE_CORE','GL_DOUBLEBUFFER',
             'DOUBLEBUF','OPENGL','RESIZABLE','QUIT','WINDOWFOCUSLOST',

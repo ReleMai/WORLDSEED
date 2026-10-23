@@ -24,6 +24,25 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 class AggressiveStanceRoutingTests(unittest.TestCase):
+    def test_time_controls_are_bounded_and_read_only_on_narrow_toolbar(self):
+        import os
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from worldseed.ui.pygame_terminal import PygameTerminal
+        if not PygameTerminal.available():self.skipTest('pygame optional')
+        driver=SimpleNamespace(paused=True,effective_paused=True,speed=3)
+        with patch.dict(os.environ,{'SDL_VIDEODRIVER':'dummy','SDL_AUDIODRIVER':'dummy'}):
+            term=PygameTerminal(800,520);term.enter()
+            try:
+                term._input_mode='world';term.set_time_controls(driver)
+                rect=term.pg.Rect(640,55,146,380)
+                term._draw_hud_actions(rect)
+                controls=[(r,t) for r,t in term._pointer_targets if t.startswith('UI_TIME:')]
+                self.assertEqual([t for _,t in controls],['UI_TIME:pause','UI_TIME:1','UI_TIME:2','UI_TIME:3'])
+                self.assertTrue(all(rect.contains(r) for r,_ in controls))
+                self.assertEqual((driver.paused,driver.speed),(True,3))
+            finally:term.restore()
+
     def test_gpu_primary_hud_restores_bars_and_modal_help_preserves_navigation(self):
         import os
         from types import SimpleNamespace

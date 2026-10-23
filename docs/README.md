@@ -12,6 +12,9 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev65 GPU time controls, work feedback, weather and Fast Gate recovery](handoffs/DEV65_GPU_RECOVERY_2026-10-22.md)
+- [October 17 smooth sight, remembered rooms and player readability](handoffs/2026-10-17-smooth-sight-memory-player.md)
+
 - [Discovery, workshops, salvage and ingredient tags](handoffs/WORKBENCH_DISCOVERY_SALVAGE_HANDOFF.md)
 
 - [Dev64 generated item art and a sorted item database](handoffs/DEV64_ITEM_ART_DATABASE_HANDOFF.md)

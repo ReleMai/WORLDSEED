@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev64"
+ENGINE_VERSION = "1.0.0-rc14-dev65"
 SAVE_SCHEMA_VERSION = 3
 
 # WORLDGEN v9 adds continuous, terrain-aware land cover over unchanged v8
@@ -24,7 +24,7 @@ HYDROLOGY_MORPHOLOGY_VERSION = 2
 COAST_MORPHOLOGY_VERSION = 2
 ENVIRONMENT_VERSION = 1
 CLIMATE_VERSION = 1
-WEATHER_VERSION = 2
+WEATHER_VERSION = 3
 LIGHTING_VERSION = 1
 # Regional civilization Phase 1 changes settlement siting/morphology and
 # introduces the first authoritative sparse regional route planner.
