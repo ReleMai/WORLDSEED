@@ -8,6 +8,7 @@ on:
       - "worldseed/systems/state.py"
       - "worldseed/sim/commands.py"
       - "worldseed/sim/engine.py"
+      - "worldseed/sim/work_duration.py"
       - "worldseed/ui/crafting_browser.py"
       - "worldseed/ui/workbench_panels.py"
       - "worldseed/ui/salvage_panel.py"
@@ -15,6 +16,8 @@ on:
       - "worldseed/app.py"
       - "worldseed/config.py"
       - "tests/test_workbench_progression.py"
+      - "tests/test_crafting*.py"
+      - "tests/test_interior_workstation_ui.py"
       - ".github/workflows/crafting-discovery-check.yml"
   workflow_dispatch:
 permissions:
@@ -48,6 +51,7 @@ jobs:
           python -m unittest discover -s tests -p "test_crafting_pot_ui.py" -v
           python -m unittest discover -s tests -p "test_crafting_browser.py" -v
           python -m unittest discover -s tests -p "test_crafting_journal.py" -v
+          python -m unittest discover -s tests -p "test_interior_workstation_ui.py" -v
           python -m unittest discover -s tests -p "test_conversation_portrait_ui.py" -v
       - name: Save and persistence
         run: python -m unittest discover -s tests -p "test_persistence.py" -v

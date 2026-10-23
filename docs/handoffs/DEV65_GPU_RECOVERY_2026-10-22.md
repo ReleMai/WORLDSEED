@@ -93,3 +93,20 @@ world-render throttling from PR #72 was not copied over the GPU compositor.
 Roof/canopy rain interception, fuller physical shadows, device recovery, the
 known bootstrap-audit helper fault and full release/long-soak gates remain
 separate follow-up work.
+
+## CI fixture closeout and Windows package
+
+Production commit `aa998ab339fb2d36a0905ea69008d2bda533effe` passed the new
+Windows Dev65 checks, real saved-world load and frozen GPU packaging. The
+[GPU candidate](https://github.com/ReleMai/WORLDSEED/actions/runs/39897283219/artifacts/12476908165)
+contains this final gameplay code; run `PLAY_WORLDSEED_GPU.bat` after extraction.
+Hosted driver rejection is still not native hardware/performance acceptance.
+
+CI exposed two older partial test simulations in pot discovery and interior
+workstations that lacked the actor/duration context now required for successful
+work. Their fixtures now supply rested actors, real duration/tool resolution
+and neutral exposure while retaining all original input/output/time assertions.
+The complete crafting/discovery workflow selection plus workstation module
+passed 72 tests in 97.9 seconds. Workflow paths now cover those tests and the
+shared work-duration helper. This follow-up changes tests, CI and this handoff
+only; the packaged production code above remains current.

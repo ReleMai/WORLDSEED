@@ -1,18 +1,20 @@
 """Continuous station reach, exclusive use, discovery and real recipe commands."""
-from types import SimpleNamespace
+from types import MethodType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from worldseed.app import _interior_context_menu
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
-from worldseed.entities.components import Inventory
+from worldseed.core.coords import WorldPos
+from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.sim.commands import CraftCommand
 from worldseed.sim.engine import Simulation
 from worldseed.systems.crafting import CraftingSystem
 from worldseed.systems.interior_state import InteriorActor, InteriorFurniture, InteriorPlan, InteriorRect
 from worldseed.systems.interiors import InteriorSystem
+from worldseed.systems.resources import ResourceSystem
 from worldseed.systems.state import ActivityReservationState, LivingWorldState, NPCState
 from worldseed.systems.workshops import STATION_PIECE_ALIASES, WORKSHOP_PROFILES
 from worldseed.ui.interior_workstation import workstation_details
@@ -34,12 +36,20 @@ class InteriorWorkstationUITests(unittest.TestCase):
         player = entities.spawn()
         inventory = Inventory(dict(inputs or {}))
         entities.add(player, inventory)
+        entities.add(player, Position(WorldPos(1, 2, 0)))
+        entities.add(player, Vitals())
         messages = []
         sim = SimpleNamespace(state=state, registry=self.registry, entities=entities, player_id=player,
                               clock=SimpleNamespace(minute=600), player_skill=lambda skill: 5,
+                              player_pos=WorldPos(1, 2, 0),
                               _message=messages.append, known_npc_ids=lambda: set(), introduced_npc_ids=lambda: set(), log=[])
         sim.interiors = InteriorSystem(sim)
         sim.crafting = CraftingSystem(state, self.registry)
+        # Exercise the real duration path with neutral actor condition indoors;
+        # station access and recipe input/output assertions remain authoritative.
+        sim.combat_active = MethodType(Simulation.combat_active, sim)
+        sim._work_minutes = MethodType(Simulation._work_minutes, sim)
+        sim.resources = SimpleNamespace(tool_power=lambda inv, key:ResourceSystem._best_tool(inv, self.registry, key))
         sim._player_station_ids = lambda: Simulation._player_station_ids(sim)
         return sim, plan, furniture, inventory, messages
 

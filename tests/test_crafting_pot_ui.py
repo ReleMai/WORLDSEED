@@ -7,7 +7,8 @@ from types import SimpleNamespace
 
 from worldseed.config import DATA_DIR
 from worldseed.content.registry import ContentRegistry
-from worldseed.entities.components import Inventory
+from worldseed.core.coords import WorldPos
+from worldseed.entities.components import Inventory, Position, Vitals
 from worldseed.entities.store import EntityStore
 from worldseed.sim.engine import Simulation
 from worldseed.sim.commands import DiscoveryPotCommand
@@ -109,8 +110,14 @@ class PotRulesTests(unittest.TestCase):
         system,state,_=self.make()
         entities=EntityStore();pid=entities.spawn(preferred_id=1)
         entities.add(pid,Inventory({'core:stone':2}))
+        # Successful work reads the actor's condition and exposure. This fixture
+        # models a rested, uninjured actor on dry ground, with no duration bonus.
+        entities.add(pid,Position(WorldPos(0,0,0)))
+        entities.add(pid,Vitals())
         sim=Simulation.__new__(Simulation)
         sim.entities=entities;sim.crafting=system;sim.seed=b'pot-seed';sim.turn=0;sim.log=[]
+        sim.state=state;sim.clock=SimpleNamespace(minute=0)
+        sim.environment=SimpleNamespace(weather=SimpleNamespace(at=lambda *_:{'rain':0,'wind_speed':0}))
         minutes=sim._discovery_pot(DiscoveryPotCommand(pid,('core:stone',)))
         self.assertEqual(len(state.player_discovered_recipes),1)
         self.assertEqual(entities.get(pid,Inventory).count('core:stone'),1)
