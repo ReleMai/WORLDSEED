@@ -25,3 +25,19 @@ dist/
 *.code-workspace
 .DS_Store
 Thumbs.db
+
+# External authoring tools: credentials, downloaded output and local vault indexes
+.env
+.env.*
+!.env.external-tools.example
+scratch/
+docs/.obsidian/workspace*.json
+docs/.obsidian/plugins/
+docs/.obsidian/*
+!docs/.obsidian/app.json
+!docs/.obsidian/core-plugins.json
+docs/.smart-env/
+docs/.smart-connections/
+docs/.copilot/
+.codex/
+.mcp.json

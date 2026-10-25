@@ -4,6 +4,10 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Development
 
+- [External development tools: top five and implementation status](development/EXTERNAL_TOOLS.md)
+- [Project memory and coding documentation setup](development/MEMORY_AND_CONTEXT_SETUP.md)
+- [Project memory starting points and templates](development/memory/START_HERE.md)
+- [Meshy model to Blender sprite baking](development/BLENDER_SPRITE_BAKING.md)
 - [Development workflow](development/DEVELOPMENT.md)
 - [Separate NPC/job simulation lab](development/NPC_JOB_LAB.md)
 - [Settlement and interior redesign plan](development/SETTLEMENT_INTERIOR_REDESIGN.md)
@@ -12,6 +16,7 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [External tool rollout: memory, art, models, sound and coding context](handoffs/EXTERNAL_TOOLS_FOUNDATION_2026-10-25.md)
 - [Dev65 GPU time controls, work feedback, weather and Fast Gate recovery](handoffs/DEV65_GPU_RECOVERY_2026-10-22.md)
 - [October 17 smooth sight, remembered rooms and player readability](handoffs/2026-10-17-smooth-sight-memory-player.md)
 

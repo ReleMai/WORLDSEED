@@ -1,0 +1,8 @@
+{
+  "id": "meshy-stone-well-v1",
+  "provider": "meshy",
+  "model": "meshy-7.1",
+  "prompt": "A small weathered stone village well with a simple wooden frame and bucket, isolated static fantasy game prop, readable silhouette, no ground plane, no people, no text.",
+  "settings": {"target_polycount": 10000},
+  "license_note": "PILOT: record Meshy plan and attribution requirements; preview produces geometry only. Review before a separate paid refine operation, then clean and bake in Blender."
+}

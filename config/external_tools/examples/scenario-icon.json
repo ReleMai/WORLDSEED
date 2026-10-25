@@ -1,0 +1,8 @@
+{
+  "id": "scenario-stone-hammer-v1",
+  "provider": "scenario",
+  "model": "model_REPLACE_WITH_YOUR_MODEL_ID",
+  "prompt": "One primitive stone hammer, isolated inventory object, hand-painted fantasy game art, clear readable silhouette, no text, no surrounding scene. Match the approved WORLDSEED reference style.",
+  "settings": {"aspectRatio": "1:1"},
+  "license_note": "PILOT: verify the model, reference/training permissions and commercial plan before production use. Generated output requires review."
+}

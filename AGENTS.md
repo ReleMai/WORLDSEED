@@ -2,6 +2,14 @@
 
 This file is binding guidance for Codex and other coding agents working in this repository.
 
+## External development tools
+
+- See `docs/development/EXTERNAL_TOOLS.md` for the five-tool rollout and actual activation status.
+- Obsidian reads the existing `docs/` tree. Keep accepted decisions in versioned repository documents; mark superseded guidance explicitly and cite its replacement. AI retrieval does not determine authority.
+- External art, model and sound generation is an offline authoring operation. Stage and review output before importing it with the existing asset pipeline; never call external generators from gameplay, rendering or world generation.
+- Keep credentials in environment variables and generated requests/responses in ignored `scratch/`. Never commit API keys or local plugin indexes.
+- Preserve stable content IDs and source provenance. Generated artwork must not introduce authoritative terrain, buildings, inventory or NPC state.
+
 
 ## UI / UX contract (RC6)
 

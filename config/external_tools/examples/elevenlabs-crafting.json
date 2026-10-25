@@ -1,0 +1,8 @@
+{
+  "id": "elevenlabs-stone-strike-v1",
+  "provider": "elevenlabs",
+  "model": "eleven_text_to_sound_v2",
+  "prompt": "One dry stone hammer strike against rough stone, close perspective, crisp natural impact and short decay, no speech, no music, minimal background noise.",
+  "settings": {"duration_seconds": 2, "prompt_influence": 0.5, "loop": false},
+  "license_note": "PILOT: verify commercial-enabled plan, retain creation record and review/mix output before incorporating it into WORLDSEED."
+}
