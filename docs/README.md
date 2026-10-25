@@ -16,6 +16,8 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Windows external-tools setup and remaining account actions](handoffs/EXTERNAL_TOOLS_PC_SETUP_2026-10-25.md)
+
 - [External tool rollout: memory, art, models, sound and coding context](handoffs/EXTERNAL_TOOLS_FOUNDATION_2026-10-25.md)
 - [Dev65 GPU time controls, work feedback, weather and Fast Gate recovery](handoffs/DEV65_GPU_RECOVERY_2026-10-22.md)
 - [October 17 smooth sight, remembered rooms and player readability](handoffs/2026-10-17-smooth-sight-memory-player.md)

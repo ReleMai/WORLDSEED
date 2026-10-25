@@ -38,6 +38,18 @@ Merge the appropriate example with your existing client configuration:
   configuration. It uses Context7's OAuth endpoint; complete authentication in
   the client's MCP settings. Do not replace an existing configuration wholesale.
 
+Codex also supports the OAuth endpoint when an API key is not configured. Merge
+this alternative into the existing user configuration (keep one Context7 entry):
+
+```toml
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp/oauth"
+```
+
+Then run `codex mcp login context7` and finish the browser authorization. Keep
+OAuth credentials in the client's supported credential storage. This path was
+verified on Windows in the [local setup handoff](../handoffs/EXTERNAL_TOOLS_PC_SETUP_2026-10-25.md).
+
 Restart/reload the client, confirm Context7 is connected, and resolve **pygame-ce**
 and **ModernGL** by name using `resolve-library-id`. Check the returned source and
 available versions against `pyproject.toml` and the installed environment; then
