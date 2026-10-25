@@ -31,10 +31,10 @@ python -m venv .venv
 
 | Workflow | Status | Evidence / remaining action |
 | --- | --- | --- |
-| Obsidian + Smart Connections | Waiting on a specific user action | Obsidian 1.14.5 installed; the existing clean-checkout docs folder is registered and open as the vault. Desktop control was stopped with Escape before community-plugin setup. Install/enable Smart Connections Core, finish local indexing and test source retrieval. |
-| Scenario | Waiting on account and credentials | Example and editable pilot plans validate offline. Key/secret absent; account/model access unverified. |
-| Meshy + Blender | Waiting on Meshy credentials; Blender operational and verified | Meshy key absent. Blender 5.2.3 LTS installed and background GLB-to-PNG bake verified. |
-| ElevenLabs Sound Effects | Waiting on account and credential | API key absent; example/pilot plans validate offline. |
+| Obsidian + Smart Connections | Operational and verified | Obsidian 1.14.5 and Smart Connections Core 4.7.2 enabled through Community Plugins. Local indexing completed; a ranked result opened the original WORLDSEED source. START_HERE is open in reading mode. |
+| Scenario | Waiting on a paid API plan | User signed in and confirmed that API access requires a plan. Pilot/offline plan ready; account model access remains unverified. |
+| Meshy + Blender | Waiting on Meshy API subscription; Blender operational and verified | User confirmed a separate API subscription is required to expose a Meshy key. Blender 5.2.3 LTS background bake passed. |
+| ElevenLabs Sound Effects | Operational and verified for account access and offline planning | Replacement key encrypted with current-user Windows DPAPI, reload succeeded, authenticated read-only GET passed. No sound generation or quality trial performed. |
 | Context7 | Operational and verified | Codex OAuth login succeeded; authenticated tool discovery succeeded; both target libraries resolved and returned docs. Reload the client/new chat to expose newly added tools. |
 
 ### Project memory
@@ -45,19 +45,25 @@ is `scratch/readiness/Open-WORLDSEED-Memory.ps1`; it opens that note through the
 registered Obsidian URI. A Start Menu shortcut named WORLDSEED Project Memory
 opens the same note. No documents are copied into a second knowledge store.
 
-In Obsidian Settings -> Community plugins, install **Smart Connections** Core
-and enable it. Keep local embeddings; do not configure cloud providers for this
-initial check. Inspect included sources/exclusions and wait for ready/completed
-index status in Smart Environment. Installation and indexing were not verified.
+Smart Connections Core 4.7.2 was installed and enabled through Obsidian's
+Community Plugins browser on the follow-up setup. Smart Environment 3.1.1 uses
+the default local transformers model `TaylorAI/bge-micro-v2` (384 dimensions,
+512-token input limit). Initial import and embedding completed: 130 source
+records plus 751 selected blocks, 881 embedded items. Small/template blocks
+below configured eligibility thresholds are intentionally not all embedded.
 
-For the retrieval test, open the external-tools foundation handoff and inspect its
-related notes. A second useful known decision is in
-[the smooth visibility handoff](2026-10-17-smooth-sight-memory-player.md): the full
-player renders last while hidden NPCs/rooms remain filtered. Follow a retrieved
-match to the original file, confirm the source/date and compare current code.
-Record completion only after the plugin returns a relevant passage and the
-original is inspected. Reading a file directly is not a semantic-retrieval test.
-Accepted decisions remain in versioned docs; similarity does not grant authority.
+The first plugin startup left the renderer windows blank. Restarting the
+Obsidian instance restored the vault; the cause is unconfirmed. No GPU flags,
+plugin binaries, cloud embeddings or separate model service were changed.
+
+Retrieval test passed in the actual Obsidian Connections view: with
+`handoffs/EXTERNAL_TOOLS_FOUNDATION_2026-10-25.md` open, the highest related result
+was `development/EXTERNAL_TOOLS.md`, displayed score 0.87. Opening that result
+showed the original source, its 2026-10-25 decision date, offline-authoring scope
+and five-tool table. The result was inspected rather than treated as authority
+on similarity alone. Evidence remains ignored at
+`scratch/readiness/smart-connections-index-evidence.json`. START_HERE was left in
+reading mode to reduce accidental editing. Accepted decisions remain in Git.
 
 ### Context7 and version coverage
 
@@ -112,15 +118,43 @@ Fixture, bakes and verification live under ignored
 ### Asset accounts and first trial
 
 Doctor and environment checks found no Scenario key/secret, Meshy key or ElevenLabs
-key at process, user or machine scope. No account access can be claimed.
+key at process, user or machine scope. Provider sign-ins were subsequently completed by the user. Scenario requires a
+plan and Meshy a separate API subscription, according to the user; neither paid
+activation was performed. ElevenLabs subsequently passed an authenticated read-only account GET after
+a replacement credential was saved locally. Its source/output generation remains
+untested because no paid generation was authorized.
 All three checked-in example plans and three editable local pilot plans succeeded.
 No paid generation, training, subscription or generation POST occurred.
 
 Ignored `scratch/external-tools-readiness/` contains editable `pilot-*.json`,
 request plans, provider instructions and two local helpers. Its
 `provider-secrets.ps1` prompts for masked local entry and stores SecureStrings
-using current-user Windows DPAPI. No actual keys have been entered/stored.
-Do not put secrets in chat, command arguments or Git.
+using current-user Windows DPAPI. No keys were present at the start of the follow-up; account setup remains
+pending until credentials are supplied and the access checks pass. Do not put
+secrets in chat, command arguments or Git.
+
+For an easier local setup, the ignored
+`scratch/readiness/Connect-WORLDSEED-Asset-Accounts.ps1` opens a masked desktop
+form with official account-page buttons, current-user DPAPI storage and bounded
+read-only verification. It is available from Start Menu as **WORLDSEED Asset
+Connections**. The form was constructed/tested without real credentials, and
+opened for the user to complete provider sign-ins and key entry. It cannot
+create accounts, buy subscriptions or generate assets. Existing saved keys stay
+unchanged when fields are blank. The first real save attempt returned a generic
+helper error before writing a credential. The helper was hardened to retain form
+state explicitly, isolate credential loading, separate storage from verification
+and report sanitized failure phases. The precise real failure was `ConvertTo-SecureString` missing from the WinForms
+callback. The launcher and credential loader now explicitly import the bundled
+PowerShell Security and Utility modules. A cold callback test passed; the running
+window was repaired through its existing Check action without exposing or
+re-pasting the masked entry. Actual replacement-key DPAPI storage, reload and
+ElevenLabs read-only access then passed. The actual destination also passed a
+benign temporary DPAPI fixture test; only that fixture was removed.
+
+The user may close the credential window. In a future session, use the Start Menu
+launcher or load credentials through the shell helper before authoring. Sanitized
+verification results are in `scratch/external-tools-readiness/last-access-check.json`.
+Scenario and Meshy were skipped without requests; ElevenLabs made one GET.
 
 ```powershell
 # After signing into the provider in your own browser and obtaining its key:
@@ -154,15 +188,23 @@ Sound playback/event mapping remains a separate game feature.
 - Bounded external_assets, blender_bake_sprites and development_workflow suite:
   21 tests completed, 19 passed and two Windows symlink-privilege skips.
 - Doctor and all example/pilot offline plans passed without network generation.
-- Real Blender pipeline and authenticated Context7 discovery passed as above.
+- Real Blender pipeline, authenticated Context7 discovery and live Obsidian semantic retrieval/source inspection passed as above.
 - Ignored PowerShell helpers parse; local benign DPAPI round-trip and empty-key
   loading/checks passed. No secrets printed and no requests with missing keys.
+- Fast Gate run `40232967474` passed all seven jobs at `43f84a9`. This follow-up
+  changes only the dated setup documentation; unchanged runtime code was not
+  rerun through the full gate for bookkeeping.
 - Development validation only; full release suite and long soaks were not run.
 
-Tracked scope: this handoff, documentation index and OAuth setup guidance. Local
-settings, executables, virtualenv, fixtures, outputs, credential helpers and MCP
-state remain outside publication. No gameplay APIs, persistent fields, migration,
+Tracked scope across the setup: this handoff, documentation index, OAuth setup
+guidance and Obsidian's normalization of the shared app/core-plugin JSON settings.
+The original six configured core plugins remain enabled. The normalized format
+matches installed Obsidian 1.14.5, avoiding its already-observed startup rewrites.
+Device layouts, community-plugin binaries/settings, indexes, executables,
+virtualenv, fixtures, outputs, credential helpers, credentials and MCP state
+remain outside publication. No gameplay APIs, persistent fields, migration,
 RNG namespaces, world generation, simulation, asset IDs or runtime UI change.
 No tests were added because repository behavior did not change. No runtime
-performance impact. Next dependencies are Smart Connections desktop completion
-and provider credentials, followed by a separately authorized real asset trial.
+performance impact. Next dependencies are Scenario/Meshy paid API plans and account/model access,
+followed by a separately authorized real asset trial. All available local setup
+and ElevenLabs account readiness checks are complete.
