@@ -110,3 +110,9 @@ The complete crafting/discovery workflow selection plus workstation module
 passed 72 tests in 97.9 seconds. Workflow paths now cover those tests and the
 shared work-duration helper. This follow-up changes tests, CI and this handoff
 only; the packaged production code above remains current.
+
+## Subsequent continuation
+
+[Dev66](DEV66_GPU_PRECIPITATION_COVER.md) implements the GPU roof/canopy
+precipitation interception left open above. Its remaining limitations and next
+dependencies are recorded in that handoff.

@@ -68,7 +68,7 @@ jobs:
       - name: G4 authored tree layers and G8 shader backend pure contracts
         run: python -u tools/run_ci_check.py --name g4-g8-contracts --timeout 50 -- python -u -m unittest -v tests.test_worldspace_gpu_art tests.test_worldspace_art_integration.WorldspaceArtPreviewTests
       - name: Windows GPU-first atmosphere and prepared scene source contracts
-        run: python -u tools/run_ci_check.py --name g5g8-atmosphere-scene --timeout 45 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_gpu_playtest_bridge.GPUSceneBridgeContracts
+        run: python -u tools/run_ci_check.py --name g5g8-atmosphere-scene --timeout 45 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_precipitation_cover tests.test_gpu_playtest_bridge.GPUSceneBridgeContracts
       - name: W1 resident-only reads, actor materials and W2 input contracts
         run: python -u tools/run_ci_check.py --name w1w2-contracts --timeout 50 -- python -u -m unittest -v tests.test_gpu_prepared_reads tests.test_gpu_live_materials tests.test_gpu_terrain_materials tests.test_gpu_qa_scene tests.test_gpu_buildings tests.test_gpu_overhead_and_structural_walls tests.test_gpu_view_and_wall_art_regressions tests.test_gpu_candidate_package tests.test_gpu_objects tests.test_gpu_interiors tests.test_gpu_interior_art_pass2 tests.test_gpu_interior_smoothing tests.test_gpu_floor_batch tests.test_indoor_darkzone_performance tests.test_gl_ui_surface tests.test_gpu_gameplay_input tests.test_gpu_gameplay_window
       - name: W4 natural materials, raster seams and versioned land cover
@@ -115,7 +115,7 @@ jobs:
       - name: Main game OpenGL UI, commands and persistent checkpoint integration
         env:
           SDL_VIDEODRIVER: offscreen
-        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_dev65_gpu_native tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_gpu_hud tests.test_gpu_control_art tests.test_gpu_readability
+        run: python -u tools/run_ci_check.py --name gpu-main-game --timeout 90 -- python -u -m unittest -v tests.test_gpu_main_game tests.test_dev65_gpu_native tests.test_gpu_precipitation_cover tests.test_gpu_precipitation_native tests.test_gl_ui_surface tests.test_gpu_interiors tests.test_gpu_house_alignment tests.test_gpu_ground_shader tests.test_gpu_terrain_seams tests.test_gpu_rain_quality tests.test_gpu_hud tests.test_gpu_control_art tests.test_gpu_readability
 
   # Keep the regular Fast Gate bounded. The expensive 8-worker endurance
   # scenario runs in npc-lab-deep-check.yml (weekly or manual), never on every push.

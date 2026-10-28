@@ -113,6 +113,7 @@ def resource_fade_commands(fade, snapshot, viewport, fraction, live_commands):
         if clips:
             result.append(replace(row, visual_id='action-fade:' + row.visual_id,
                 bounds=bounds, clip_rects=tuple(clips), opacity=row.opacity * opacity,
+                precipitation_cover=False,
                 fade_center=point(*row.fade_center), fade_radius=row.fade_radius * ratio,
                 sway_px=min(6., row.sway_px * ratio), sight_center=point(*row.sight_center),
                 sight_radius=row.sight_radius * ratio,

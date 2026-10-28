@@ -213,7 +213,8 @@ def building_commands(buildings, camera, materials, *, viewer=None):
         from .gpu_cover_fade import cover_fade
         local_fade=cover_fade(camera,viewer,(x0,y0,x1,y1),tuple(clips))
         result.append(SpriteCommand('building:'+row.shell.uid, *art.body,
-                                    (x0, y0, x1, y1), tuple(clips),**local_fade))
+                                    (x0, y0, x1, y1), tuple(clips),
+                                    precipitation_cover=True,**local_fade))
         if row.door is None or art.door is None:
             continue
         rx, ry, rw, rh = art.door_rect

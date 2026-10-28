@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_NAME = "WORLDSEED"
-ENGINE_VERSION = "1.0.0-rc14-dev65"
+ENGINE_VERSION = "1.0.0-rc14-dev66"
 SAVE_SCHEMA_VERSION = 3
 
 # WORLDGEN v9 adds continuous, terrain-aware land cover over unchanged v8

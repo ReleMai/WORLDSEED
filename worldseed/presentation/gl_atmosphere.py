@@ -113,13 +113,15 @@ class GLAtmospherePass:
 
     The source GPU scene renders to ``scene_target``. One fullscreen shader
     shades it to the single SDL window. No intermediate pygame Surface, second
-    SDL Renderer, or copy to the CPU per frame. Framebuffer is RGBA8 only.
+    SDL Renderer, or copy to the CPU per frame. RGBA8 scene and R8 cover targets
+    together retain five bytes per viewport pixel under the framebuffer budget.
     """
     def __init__(self, ctx, width, height, *, vertex_shader=None,fragment_shader=None):
         self.ctx = ctx
         self.width = self.height = 0
         self.program = self.vbo = self.vao = None
         self.scene_color = self.scene_target = None
+        self.cover_color = self.cover_target = None
         self.closed = False
         try:
             self.program=ctx.program(
@@ -135,27 +137,49 @@ class GLAtmospherePass:
 
     def resize(self,width,height):
         if self.closed:raise GPUBackendUnavailable('atmosphere renderer is closed')
-        if type(width) is not int or type(height) is not int or not 1<=width<=3840 or not 1<=height<=2160 or width*height*4>MAX_FRAMEBUFFER_BYTES:
+        if type(width) is not int or type(height) is not int or not 1<=width<=3840 or not 1<=height<=2160 or width*height*5>MAX_FRAMEBUFFER_BYTES:
             raise ValueError('unsupported bounded atmosphere target size')
         if (width,height)==(self.width,self.height):return
-        texture=target=None
+        texture=target=cover_texture=cover_target=None
         try:
             texture=self.ctx.texture((width,height),4)
             texture.repeat_x=False;texture.repeat_y=False
             target=self.ctx.framebuffer(color_attachments=[texture])
+            cover_texture=self.ctx.texture((width,height),1)
+            cover_texture.repeat_x=False;cover_texture.repeat_y=False
+            cover_target=self.ctx.framebuffer(color_attachments=[cover_texture])
+            # Storage allocation is unspecified until cleared. Initialize on
+            # the GPU before swapping, so new targets are deterministically empty.
+            self.ctx.scissor=None
+            cover_target.clear(0.,0.,0.,0.)
         except Exception as exc:
+            if cover_target is not None:cover_target.release()
+            if cover_texture is not None:cover_texture.release()
             if target is not None:target.release()
             if texture is not None:texture.release()
             raise GPUBackendUnavailable(f'OpenGL atmosphere resize failed: {type(exc).__name__}') from exc
         old_target,old_texture=self.scene_target,self.scene_color
+        old_cover_target,old_cover_texture=self.cover_target,self.cover_color
         self.scene_color,self.scene_target=texture,target
+        self.cover_color,self.cover_target=cover_texture,cover_target
         self.width,self.height=width,height
         if old_target is not None:old_target.release()
         if old_texture is not None:old_texture.release()
+        if old_cover_target is not None:old_cover_target.release()
+        if old_cover_texture is not None:old_cover_texture.release()
 
-    def present(self, fx:AtmosphereFrame):
+    def clear_cover(self):
+        """Clear stale coverage without CPU readback or a world-state query."""
+        if self.closed:raise GPUBackendUnavailable('atmosphere renderer is closed')
+        self.cover_target.use()
+        self.ctx.viewport=(0,0,self.width,self.height)
+        self.ctx.scissor=None
+        self.ctx.clear(0.,0.,0.,0.)
+
+    def present(self, fx:AtmosphereFrame, *, cover_enabled=False):
         if self.closed:raise GPUBackendUnavailable('atmosphere renderer is closed')
         if not isinstance(fx,AtmosphereFrame):raise TypeError('AtmosphereFrame required')
+        if type(cover_enabled) is not bool:raise ValueError('cover enabled must be boolean')
         try:
             import moderngl
             self.ctx.screen.use()
@@ -163,7 +187,10 @@ class GLAtmospherePass:
             self.ctx.scissor=None
             self.ctx.disable(moderngl.BLEND)
             self.scene_color.use(location=0)
+            self.cover_color.use(location=1)
             self.program['u_scene'].value=0
+            self.program['u_cover'].value=1
+            self.program['u_cover_enabled'].value=cover_enabled
             self.program['u_viewport'].value=(self.width,self.height)
             self.program['u_world_origin'].value=(fx.camera_pixel_x,fx.camera_pixel_y)
             self.program['u_clock'].value=fx.elapsed_seconds
@@ -184,8 +211,9 @@ class GLAtmospherePass:
     def close(self):
         if self.closed:return
         self.closed=True
-        for object_ in (self.scene_target,self.scene_color,self.vao,self.vbo,self.program):
+        for object_ in (self.scene_target,self.scene_color,self.cover_target,self.cover_color,self.vao,self.vbo,self.program):
             if object_ is not None:
                 try:object_.release()
                 except Exception:pass
         self.scene_target=self.scene_color=None
+        self.cover_target=self.cover_color=None

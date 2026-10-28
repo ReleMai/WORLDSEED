@@ -1,0 +1,28 @@
+{
+  "source": "main-game prepared village with controlled detached weather",
+  "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+  "software_reference_options": {
+    "GALLIVM_PERF": "nopt"
+  },
+  "viewport": [
+    960,
+    720
+  ],
+  "cover_commands": 8,
+  "cover_draw_calls": 8,
+  "atmosphere_buffer_bytes": 3456000,
+  "authority_unchanged": true,
+  "measured_frames_per_mode": 12,
+  "timings": {
+    "without_interception": {
+      "p50_ms": 85.8,
+      "p95_ms": 96.372
+    },
+    "with_interception": {
+      "p50_ms": 85.745,
+      "p95_ms": 93.211
+    }
+  },
+  "native_windows_accepted": false,
+  "limitations": "Short warmed SDL offscreen/Mesa trace, no gameplay FPS or native hardware guarantee."
+}

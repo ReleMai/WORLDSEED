@@ -321,7 +321,12 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             from .gpu_cover_fade import cover_fade
             fade={} if c.fade_radius else cover_fade(
                 camera,cover_viewer,c.bounds,c.clip_rects)
-            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085),**fade)
+            definition=resource_defs.get(v.instance.content_id)
+            canopy=(v.instance.resource_id is not None and v.instance.cover is not None
+                    and stage_by.get(v.instance.resource_id)=='mature'
+                    and 'tree' in getattr(definition,'tags',()))
+            scenery[index]=replace(c,sway_px=min(4.,camera.scale*.085),
+                                   precipitation_cover=canopy,**fade)
     keys={uid:visual_sort_key(v.instance) for uid,v in visual_map.items()}
     if roofs:
         roof_projection=project_scene(object_instances(roofs),camera,
@@ -329,7 +334,7 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
         from .gpu_cover_fade import cover_fade
         for command in commands_from_projected(roof_projection,source):
             fade=cover_fade(camera,cover_viewer,command.bounds,command.clip_rects)
-            scenery.append(replace(command,**fade) if fade else command)
+            scenery.append(replace(command,precipitation_cover=True,**fade))
         # Roof objects remain overhead cover, but render behind the player.
         # The cutout still helps distinguish the structure around them.
         keys.update({v.instance.instance_id:(29,*visual_sort_key(v.instance)[1:])
@@ -368,7 +373,8 @@ def prepare_gpu_frame(*,camera:WorldCamera, terrain_by:Mapping,
             buildings=tuple(frozen_buildings),objects=frozen_objects,
             terrain_defs=terrain_defs,show_explored_memory=False)
         scenery[:0]=[replace(command,visual_id='memory:'+command.visual_id,
-                     opacity=.62,fade_radius=0.,local_alpha=1.,sway_px=0.,remembered=True)
+                     opacity=.62,fade_radius=0.,local_alpha=1.,sway_px=0.,remembered=True,
+                     precipitation_cover=False)
                      for command in memory.scenery]
     if sun_minute is not None and show_player and visible_cells:
         from .gpu_sun_shadows import sunlight_commands

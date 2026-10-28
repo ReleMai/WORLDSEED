@@ -71,6 +71,10 @@ class GpuTerminal(PygameTerminal):
         self._snapshot=None
         self._interior_fades={}
         self._world_commands=()
+        self._precipitation_commands=()
+        self._precipitation_dirty=True
+        self._precipitation_report=None
+        self._gpu_cover_frames=0
         self._action_resource_fade=None
         self._action_progress_fraction=0.
         self._last_world=None
@@ -205,6 +209,9 @@ class GpuTerminal(PygameTerminal):
         self._pointer_targets.clear();self._hover_context=None;self._interior_context=None
         self._floating_backdrop=None;self._menu_backdrop_cache.clear()
         self._snapshot=None;self._world_commands=()
+        self._precipitation_commands=()
+        self._precipitation_dirty=True
+        self._precipitation_report=None
         self._held_movement.clear();self._active_movement_key=None
         self._free_movement_last_ms=self.pg.time.get_ticks()
 
@@ -219,6 +226,21 @@ class GpuTerminal(PygameTerminal):
                 lights=tuple(replace(light,x=light.x+rect.x,y=light.y+rect.y) for light in fx.lights))
             from worldseed.presentation.interior_memory_fade import fade_commands
             from worldseed.profiling import measure_if_enabled
+            profiler=getattr(self._last_world[3],'profiler',None) if self._last_world is not None else None
+            wet=bool(fx.rain or fx.snow) and not self._snapshot.interior
+            covers=self._precipitation_commands
+            cover_enabled=bool(wet and covers)
+            if wet and (self._precipitation_dirty or any(row.sway_px for row in covers)):
+                with measure_if_enabled(profiler,'gpu.precipitation_cover'):
+                    if covers:
+                        self._precipitation_report=self._world_renderer.draw(covers,
+                            target=self._post.cover_target,frame_time_seconds=elapsed,
+                            coverage_only=True,clear=(0.,0.,0.,0.))
+                    else:
+                        self._post.clear_cover()
+                        self._precipitation_report=None
+                self._precipitation_dirty=False
+                self._gpu_cover_frames+=1
             commands=(fade_commands(self._world_commands,self._interior_fades,time.monotonic())
                 if self._snapshot.interior and self._interior_fades else self._world_commands)
             from worldseed.presentation.action_resource_fade import resource_fade_commands,merge_resource_fade
@@ -234,11 +256,10 @@ class GpuTerminal(PygameTerminal):
                     self._snapshot.sight_radius*self._snapshot.camera.scale,
                     (rect.left,rect.top,rect.right,rect.bottom),opacity)
                 if overlay is not None:commands=(*commands,overlay)
-            profiler=getattr(self._last_world[3],'profiler',None) if self._last_world is not None else None
             with measure_if_enabled(profiler,'gpu.world_draw'):
                 self._world_report=self._world_renderer.draw(commands,target=self._post.scene_target,
                     frame_time_seconds=elapsed,clear=(0.,0.,0.,0.))
-            self._post.present(fx)
+            self._post.present(fx,cover_enabled=cover_enabled)
             self._gpu_world_frames+=1
         else:self._gl.screen.clear(0.,0.,0.,1.)
         if upload:self._ui_gpu.draw(self.screen,rectangles)
@@ -379,6 +400,9 @@ class GpuTerminal(PygameTerminal):
             sight_center=(command.sight_center[0]+viewport.x,command.sight_center[1]+viewport.y),
             sight_mask=shift_mask(command.sight_mask))
             for command in frame.commands)
+        from worldseed.presentation.precipitation_cover import cover_commands
+        self._precipitation_commands=cover_commands(self._world_commands)
+        self._precipitation_dirty=True
         self._set_pointer_context(snapshot,registry,world,sim,viewport,camera)
         if sidebar:
             side=pg.Rect(viewport.right+8,oy,max(1,width-viewport.right-26),max(1,oh))
@@ -523,6 +547,8 @@ class GpuTerminal(PygameTerminal):
                     'native_hardware_accepted':False,
                     'gpu':{key:self._gl.info.get(key,'unknown') for key in ('GL_VENDOR','GL_RENDERER','GL_VERSION')},
                     'last_frame':asdict(self._world_report) if self._world_report else {},
+                    'precipitation_cover_frames':self._gpu_cover_frames,
+                    'last_precipitation_cover':asdict(self._precipitation_report) if self._precipitation_report else {},
                     'note':'Shared main-game commands/UI/saves. CPU submission is not hardware performance acceptance.'},indent=2)+'\n',encoding='utf-8')
         finally:
             for renderer in (self._ui_gpu,self._post,self._world_renderer):

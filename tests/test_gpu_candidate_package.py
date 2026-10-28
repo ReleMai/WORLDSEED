@@ -32,6 +32,7 @@ def fake_bundle(root):
     for name in ('data/terrain.json', 'assets/shaders/worldspace_sprite.vert',
                  'assets/shaders/worldspace_sprite.frag', 'assets/shaders/worldspace_post.vert',
                  'assets/shaders/worldspace_post.frag',
+                 'assets/shaders/worldspace_cover.frag',
                  'assets/sprites/ui/gpu_controls/manifest.json',
                  'assets/sprites/worldspace/trees/manifest.json',
                  'assets/sprites/worldspace/trees/tree_layers.b85'):
@@ -56,6 +57,11 @@ class GpuCandidatePackageTests(unittest.TestCase):
             result = validate_bundle(folder)
             self.assertEqual(NAME + '.exe', result['executable'])
             self.assertFalse(result['native_hardware_accepted'])
+            cover_shader=folder / '_internal/worldseed/assets/shaders/worldspace_cover.frag'
+            cover_shader.unlink()
+            with self.assertRaisesRegex(ValueError, 'worldspace_cover.frag'):
+                validate_bundle(folder)
+            cover_shader.write_text('fixture')
             (folder / '_internal/worldseed/assets/shaders/worldspace_post.frag').unlink()
             with self.assertRaisesRegex(ValueError, 'worldspace_post.frag'):
                 validate_bundle(folder)
@@ -99,6 +105,8 @@ class GpuCandidatePackageTests(unittest.TestCase):
                 self.assertIn(NAME + '/WORLDSEED_GPU.exe', archive.namelist())
                 self.assertIn(NAME + '/OPEN_LOGS.bat', archive.namelist())
                 self.assertIn(NAME + '/_internal/worldseed/assets/shaders/worldspace_post.frag',
+                              archive.namelist())
+                self.assertIn(NAME + '/_internal/worldseed/assets/shaders/worldspace_cover.frag',
                               archive.namelist())
             self.assertIn(first, destination.with_suffix('.zip.sha256').read_text())
 
@@ -238,7 +246,7 @@ class GpuCandidatePackageTests(unittest.TestCase):
             with patch('worldseed.app._load_context', side_effect=AssertionError('world')):
                 result = launcher.self_check()
         self.assertEqual(12, result['tree_layers'])
-        self.assertEqual(4, result['shaders'])
+        self.assertEqual(5, result['shaders'])
         self.assertEqual(16, result['control_icons'])
         self.assertFalse(result['native_hardware_accepted'])
         self.assertFalse(result['player_saves_opened'])

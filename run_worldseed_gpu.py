@@ -26,7 +26,7 @@ def self_check() -> dict:
     if not registry.items or not registry.terrains:
         raise RuntimeError('Bundled engine content is missing')
     shaders = ('worldspace_sprite.vert', 'worldspace_sprite.frag',
-               'worldspace_post.vert', 'worldspace_post.frag')
+               'worldspace_post.vert', 'worldspace_post.frag', 'worldspace_cover.frag')
     for name in shaders:
         text = (PACKAGE_ROOT / 'assets' / 'shaders' / name).read_text(encoding='utf-8')
         if '#version 330' not in text or 'void main' not in text:

@@ -1,6 +1,6 @@
 """G5/G6 Windows GPU shading contracts; no fake claim of hardware validation."""
 from __future__ import annotations
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from struct import unpack
 from types import SimpleNamespace
@@ -72,20 +72,30 @@ class Texture(Releasable):
     def __init__(self):super().__init__();self.uses=0
     def use(self,location):self.uses+=1
 class Target(Releasable):
-    def __init__(self):super().__init__();self.uses=0
+    def __init__(self):super().__init__();self.uses=0;self.clear_calls=[]
     def use(self):self.uses+=1
+    def clear(self,*values):self.clear_calls.append(values)
 class VAO(Releasable):
     def __init__(self):super().__init__();self.vertices=[]
     def render(self,vertices):self.vertices.append(vertices)
 class FakeGL:
     def __init__(self):
         self.program_obj=Program();self.vbo=Releasable();self.vao=VAO();self.texture_objs=[];self.targets=[]
+        self.programs=[];self.vaos=[]
         self.screen=Target();self.viewport=None;self.scissor=None;self.disabled=[]
-    def program(self,**kwargs):self.shaders=kwargs;return self.program_obj
+    def program(self,**kwargs):
+        self.shaders=kwargs
+        program=self.program_obj if not self.programs else Program()
+        self.programs.append(program)
+        return program
     def buffer(self,*args,**kwargs):return self.vbo
-    def vertex_array(self,*args,**kwargs):return self.vao
+    def vertex_array(self,*args,**kwargs):
+        vao=self.vao if not self.vaos else VAO()
+        self.vaos.append(vao)
+        return vao
     def texture(self,size,components,data=None):
         tex=Texture();tex.repeat_x=True;tex.repeat_y=True
+        tex.components=components
         self.texture_objs.append((size,tex));return tex
     def framebuffer(self,*,color_attachments):
         tar=Target();self.targets.append(tar);return tar
@@ -94,12 +104,14 @@ class FakeGL:
     def clear(self,*args):pass
 
 class GPUTargetContracts(unittest.TestCase):
-    def test_one_window_one_render_fbo_and_no_readback_or_secondary_window(self):
+    def test_one_window_bounded_scene_and_cover_fbos_without_readback(self):
         gl=FakeGL()
         with patch.dict(sys.modules,{'moderngl':SimpleNamespace(BLEND=1,SRC_ALPHA=2,ONE_MINUS_SRC_ALPHA=3)}):
             post=GLAtmospherePass(gl,640,480)
             self.assertEqual(gl.texture_objs[0][0],(640,480))
-            self.assertEqual(len(gl.targets),1)
+            self.assertEqual(len(gl.targets),2)
+            self.assertEqual([tex.components for _,tex in gl.texture_objs],[4,1])
+            self.assertEqual(gl.targets[1].clear_calls,[(0.,0.,0.,0.)])
             self.assertEqual(len(gl.shaders),2)
             self.assertFalse(hasattr(gl,'read'))
             frame=AtmosphereFrame(1080,rain=.7,fog=.8,wind_x=.3,lights=(WorldLight(70,90,55,1.),))
@@ -111,11 +123,21 @@ class GPUTargetContracts(unittest.TestCase):
             self.assertEqual(unpack('<4f',p['u_light_posrad'].data[:16]),(70.,90.,55.,1.))
             self.assertEqual(gl.vao.vertices,[6])
             self.assertEqual(gl.screen.uses,1)
+            self.assertFalse(p['u_cover_enabled'].value)
+            self.assertEqual(p['u_cover'].value,1)
+            post.clear_cover()
+            self.assertEqual(gl.targets[1].uses,1)
+            post.present(frame,cover_enabled=True)
+            self.assertTrue(p['u_cover_enabled'].value)
             post.resize(800,600)
             self.assertEqual(gl.targets[0].count,1)
             self.assertEqual(gl.texture_objs[0][1].count,1)
+            self.assertEqual(gl.targets[1].count,1)
+            self.assertEqual(gl.texture_objs[1][1].count,1)
+            self.assertEqual(gl.targets[-1].clear_calls,[(0.,0.,0.,0.)])
             post.close()
-            self.assertEqual(gl.targets[-1].count,1)
+            self.assertTrue(all(item.count==1 for item in gl.targets))
+            self.assertTrue(all(item.count==1 for _,item in gl.texture_objs))
             with self.assertRaises(GPUBackendUnavailable):post.present(frame)
 
     def test_fbo_rejects_giant_output_without_discarding_valid_state(self):
@@ -137,5 +159,72 @@ class GPUTargetContracts(unittest.TestCase):
             self.assertEqual(gl.program_obj['u_time'].value,2.7)
             with self.assertRaises(ValueError):SpriteCommand('i','t',1,b'\xff'*64,4,4,(0,0,4,4),((0,0,4,4),),sway_px=7.)
             renderer.close()
+
+    def test_cover_pass_filters_memory_and_uses_separate_lazy_program(self):
+        gl=FakeGL()
+        with patch.dict(sys.modules,{'moderngl':SimpleNamespace(BLEND=1,SRC_ALPHA=2,ONE_MINUS_SRC_ALPHA=3)}):
+            renderer=GLWorldspaceRenderer(gl,640,480)
+            self.addCleanup(renderer.close)
+            self.assertIsNone(renderer._cover_program)
+            cover=SpriteCommand('oak:crown','oak',1,b'\xff'*64,4,4,(10,20,30,40),
+                ((0,0,640,480),),opacity=.1,local_alpha=.08,fade_radius=30,
+                precipitation_cover=True)
+            rows=(cover,replace(cover,visual_id='remembered:crown',remembered=True),
+                  replace(cover,visual_id='trunk',precipitation_cover=False))
+            report=renderer.draw(rows,target=Target(),coverage_only=True)
+            self.assertEqual((report.sprites,report.draw_calls),(1,1))
+            self.assertIsNot(renderer._cover_program,renderer.program)
+            self.assertEqual(set(renderer._cover_program),{'u_viewport','u_texture','u_time','u_sway_px'})
+            self.assertNotIn('u_ground',renderer._cover_program)
+            renderer.draw((cover,),target=Target())
+            self.assertNotIn('u_coverage_only',renderer.program)
+            self.assertEqual(len(gl.programs),2)
+            with self.assertRaises(ValueError):replace(cover,precipitation_cover=1)
+            with self.assertRaises(ValueError):renderer.draw(rows,coverage_only=1)
+
+    def test_failed_cover_allocation_keeps_previous_targets_usable(self):
+        gl=FakeGL();post=GLAtmospherePass(gl,640,480)
+        self.addCleanup(post.close)
+        previous=(post.scene_color,post.scene_target,post.cover_color,post.cover_target)
+        allocate=gl.texture
+        def fail_cover(size,components,data=None):
+            if components==1:raise RuntimeError('cover allocation failed')
+            return allocate(size,components,data)
+        with patch.object(gl,'texture',side_effect=fail_cover):
+            with self.assertRaises(GPUBackendUnavailable):post.resize(800,600)
+        self.assertEqual((post.width,post.height),(640,480))
+        self.assertEqual((post.scene_color,post.scene_target,post.cover_color,post.cover_target),previous)
+        self.assertTrue(all(item.count==0 for item in previous))
+        self.assertEqual(gl.texture_objs[-1][1].count,1)
+        self.assertEqual(gl.targets[-1].count,1)
+
+    def test_static_cover_fragments_batch_within_vbo_budget_but_sway_keeps_scissors(self):
+        gl=FakeGL()
+        with patch.dict(sys.modules,{'moderngl':SimpleNamespace(BLEND=1,SRC_ALPHA=2,ONE_MINUS_SRC_ALPHA=3)}):
+            renderer=GLWorldspaceRenderer(gl,640,480)
+            self.addCleanup(renderer.close)
+            clips=tuple((float(x),0.,float(x+1),4.) for x in range(130))
+            roof=SpriteCommand('roof','roof',1,b'\xff'*4,1,1,(0.,0.,130.,4.),clips,
+                               precipitation_cover=True)
+            static=renderer.draw((roof,),target=Target(),coverage_only=True)
+            self.assertEqual((static.scissor_regions,static.draw_calls),(130,3))
+            self.assertTrue(all(vertices<=6*64 for vertices in renderer._cover_vao.vertices))
+            swaying=renderer.draw((replace(roof,sway_px=2.),),target=Target(),coverage_only=True)
+            self.assertEqual((swaying.scissor_regions,swaying.draw_calls),(130,130))
+
+    def test_failed_lazy_cover_vao_releases_partial_program_and_keeps_main_pass(self):
+        gl=FakeGL()
+        with patch.dict(sys.modules,{'moderngl':SimpleNamespace(BLEND=1,SRC_ALPHA=2,ONE_MINUS_SRC_ALPHA=3)}):
+            renderer=GLWorldspaceRenderer(gl,640,480)
+            self.addCleanup(renderer.close)
+            failed=Releasable()
+            with patch.object(gl,'program',return_value=failed), \
+                    patch.object(gl,'vertex_array',side_effect=RuntimeError('cover VAO failed')):
+                with self.assertRaises(GPUBackendUnavailable):renderer._ensure_cover_program()
+            self.assertEqual(failed.count,1)
+            self.assertIsNone(renderer._cover_program)
+            self.assertIsNone(renderer._cover_vao)
+            cmd=SpriteCommand('plain','t',1,b'\xff'*4,1,1,(0,0,4,4),((0,0,4,4),))
+            self.assertEqual(renderer.draw((cmd,),target=Target()).draw_calls,1)
 
 if __name__=='__main__':unittest.main()

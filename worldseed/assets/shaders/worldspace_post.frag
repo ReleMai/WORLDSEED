@@ -2,6 +2,8 @@
 // One-pass, read-only atmospheric composite of an already-authorized FBO.
 // World-aligned field motion makes clouds/rain independent of camera travel.
 uniform sampler2D u_scene;
+uniform sampler2D u_cover;
+uniform bool u_cover_enabled;
 uniform vec2 u_viewport;
 uniform vec2 u_world_origin;
 uniform float u_clock;
@@ -81,6 +83,9 @@ void main() {
         fragColor=vec4(original.rgb,1.0);
         return;
     }
+    // Cover can attenuate precipitation only after the existing current-sight
+    // classification. It cannot light memory or introduce unknown pixels.
+    float exposure = u_cover_enabled ? 1.0-texture(u_cover,v_uv).r : 1.0;
     float night=1.0-u_sun;
     // Twilight desaturation and moon blue are light grades, not a world-state query.
     vec3 nightGrade=vec3(0.38,0.48,0.72);
@@ -116,10 +121,10 @@ void main() {
                   +rainStreak(world+vec2(137.,61.),vec2(17.,71.),350.,1.0)*.70
                   +rainStreak(world+vec2(53.,193.),vec2(25.,109.),470.,1.4)*.85;
         vec3 rainColor=vec3(.60,.70,.76)*(.08+.18*u_sun)+rainLight;
-        scene+=rainColor*rain*u_rain;
+        scene+=rainColor*rain*u_rain*exposure;
     }
     float snow=snowFlake(world)*0.75+snowFlake(world*1.7+vec2(120.,37.))*0.25;
-    scene+=vec3(0.76,0.85,0.91)*snow*u_snow*(0.23+0.12*u_sun);
+    scene+=vec3(0.76,0.85,0.91)*snow*u_snow*(0.23+0.12*u_sun)*exposure;
     // Fully opaque full-window presentation; HUD ownership remains caller-side.
     fragColor=vec4(clamp(scene,0.0,1.0),1.0);
 }

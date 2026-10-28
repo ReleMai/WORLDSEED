@@ -43,6 +43,7 @@ def validate_bundle(directory: Path, *, minimum_exe_bytes=1048576) -> dict:
                 '_internal/worldseed/assets/shaders/worldspace_sprite.frag',
                 '_internal/worldseed/assets/shaders/worldspace_post.vert',
                 '_internal/worldseed/assets/shaders/worldspace_post.frag',
+                '_internal/worldseed/assets/shaders/worldspace_cover.frag',
                 '_internal/worldseed/assets/sprites/ui/gpu_controls/manifest.json',
                 '_internal/worldseed/assets/sprites/worldspace/trees/manifest.json',
                 '_internal/worldseed/assets/sprites/worldspace/trees/tree_layers.b85')

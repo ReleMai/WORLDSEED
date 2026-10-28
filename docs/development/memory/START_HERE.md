@@ -12,6 +12,7 @@ is the coding contract; read its local checkout before changing code.
 | --- | --- |
 | Current handoffs | [Documentation index](../../README.md#current-handoffs) |
 | Generated item art and provenance | [Dev64 handoff](../../handoffs/DEV64_ITEM_ART_DATABASE_HANDOFF.md) |
+| Current GPU roof/canopy weather interception | [Dev66 handoff](../../handoffs/DEV66_GPU_PRECIPITATION_COVER.md) |
 | Current GPU controls and weather | [Dev65 handoff](../../handoffs/DEV65_GPU_RECOVERY_2026-10-22.md) |
 | NPC/job experiments | [Simulation lab](../NPC_JOB_LAB.md) |
 | Physical settlements | [Settlement redesign](../SETTLEMENT_INTERIOR_REDESIGN.md) |

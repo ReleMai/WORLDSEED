@@ -128,8 +128,11 @@ class SpriteCommand:
     sight_center: tuple[float, float] = (0., 0.)
     sight_radius: float = 0.
     sight_mask: SightMask | None = None
+    precipitation_cover: bool = False
 
     def __post_init__(self):
+        if type(self.precipitation_cover) is not bool:
+            raise ValueError('precipitation cover classification must be boolean')
         if self.sight_mask is not None and not isinstance(self.sight_mask,SightMask):
             raise ValueError('invalid sight mask')
         if not self.visual_id or not self.texture_id:
@@ -299,9 +302,12 @@ class GLWorldspaceRenderer:
         self.bank=TextureBank(ctx,texture_budget)
         self._closed=False
         self.program=None;self.vbo=None;self.vao=None
+        self._cover_program=self._cover_vao=None
+        self._vertex_shader_source=None
         try:
+            self._vertex_shader_source=vertex_shader or (SHADER_DIR/'worldspace_sprite.vert').read_text()
             self.program=ctx.program(
-                vertex_shader=vertex_shader or (SHADER_DIR/'worldspace_sprite.vert').read_text(),
+                vertex_shader=self._vertex_shader_source,
                 fragment_shader=fragment_shader or (SHADER_DIR/'worldspace_sprite.frag').read_text())
             self.vbo=ctx.buffer(reserve=96*max(1,min(64,MAX_COMMANDS)))
             self.vao=ctx.vertex_array(self.program,[(self.vbo,'2f 2f','in_position','in_uv')])
@@ -317,15 +323,19 @@ class GLWorldspaceRenderer:
         # Textures are source art and independent of viewport; no reupload.
 
     def draw(self,commands:Iterable[SpriteCommand],*,clear=(0.03,0.045,0.04,1),
-             ambient=(1.0,1.0,1.0),target=None,frame_time_seconds=0.):
+             ambient=(1.0,1.0,1.0),target=None,frame_time_seconds=0.,coverage_only=False):
         if self._closed:raise GPUBackendUnavailable('renderer is closed')
         if not _finite(frame_time_seconds) or not 0 <= frame_time_seconds <= 1e9:
             raise ValueError('invalid shader clock')
+        if type(coverage_only) is not bool:
+            raise ValueError('coverage mode must be boolean')
         rows=tuple(commands)
         if len(rows)>MAX_COMMANDS or any(not isinstance(c,SpriteCommand) for c in rows):
             raise ValueError('GPU frame exceeds bounded command contract')
         if len(ambient)!=3 or any(not _finite(x) or not 0<=x<=1 for x in ambient):
             raise ValueError('invalid GPU ambient grade')
+        if coverage_only:
+            return self._draw_coverage(rows,target,frame_time_seconds)
         # All ground commands share one camera transform. World positions are
         # derived from screen positions, never from a per-cell UV restart. In
         # particular the cell coordinate is absent from the batching key.
@@ -405,11 +415,12 @@ class GLWorldspaceRenderer:
                                            moderngl.ZERO,moderngl.ONE) if cmd.remembered else
                                           (moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA))
                     ground=cmd.ground
-                    if ground is not None or cmd.sight_mask is not None:
+                    mask=cmd.sight_mask
+                    if ground is not None or mask is not None:
                         # Every simultaneously bound image must fit. Sequential
                         # LRU touches retain all ground images and the mask until draw.
                         textures=(cmd,*(ground.neighbors if ground is not None else ()),
-                                  *((cmd.sight_mask,) if cmd.sight_mask is not None else ()))
+                                  *((mask,) if mask is not None else ()))
                         unique={(t.texture_id,t.revision,t.image_w,t.image_h):
                                 t.image_w*t.image_h*4 for t in textures}
                         if sum(unique.values())>self.bank.limit:
@@ -425,7 +436,6 @@ class GLWorldspaceRenderer:
                     clipped_floor=_key[4] is None
                     self.ctx.scissor=(0,0,self.width,self.height) if clipped_floor else clip
                     self.program['u_opacity'].value=cmd.opacity
-                    mask=cmd.sight_mask
                     self.program['u_masked'].value=mask is not None
                     if mask is not None:
                         self.bank.texture_for(mask).use(location=9)
@@ -456,11 +466,80 @@ class GLWorldspaceRenderer:
             self.ctx.scissor=None
             raise GPUBackendUnavailable(f'OpenGL frame failed: {type(exc).__name__}') from exc
 
+    def _ensure_cover_program(self):
+        """Compile a tiny cover-only pipeline without specializing ground shaders."""
+        if self._cover_program is not None:return
+        program=vao=None
+        try:
+            program=self.ctx.program(vertex_shader=self._vertex_shader_source,
+                fragment_shader=(SHADER_DIR/'worldspace_cover.frag').read_text())
+            vao=self.ctx.vertex_array(program,[(self.vbo,'2f 2f','in_position','in_uv')])
+        except Exception as exc:
+            if vao is not None:vao.release()
+            if program is not None:program.release()
+            raise GPUBackendUnavailable(f'OpenGL cover initialization failed: {type(exc).__name__}') from exc
+        self._cover_program,self._cover_vao=program,vao
+
+    def _draw_coverage(self,rows,target,frame_time_seconds):
+        rows=tuple(cmd for cmd in rows if cmd.precipitation_cover and not cmd.remembered)
+        work=[]
+        for cmd in rows:
+            for rect in cmd.clip_rects:
+                clip=pixel_clip(rect,self.width,self.height)
+                if clip:
+                    work.append((cmd,clip))
+                    if len(work)>MAX_FRAME_DRAW_GROUPS:
+                        raise ValueError('too many GPU coverage clip operations')
+        uploads_before=self.bank.uploads;reuses_before=self.bank.reuses
+        try:
+            if work:self._ensure_cover_program()
+            (self.ctx.screen if target is None else target).use()
+            self.ctx.viewport=(0,0,self.width,self.height)
+            self.ctx.scissor=None
+            import moderngl
+            self.ctx.enable_only(moderngl.BLEND)
+            self.ctx.blend_func=(moderngl.SRC_ALPHA,moderngl.ONE_MINUS_SRC_ALPHA)
+            self.ctx.clear(0.,0.,0.,0.)
+            rendered=0
+            if work:
+                program=self._cover_program
+                program['u_viewport'].value=(self.width,self.height)
+                program['u_texture'].value=0
+                program['u_time'].value=frame_time_seconds
+                def key(row):
+                    cmd,clip=row
+                    # Static roofs can crop exact sight clips into shared UV
+                    # meshes. Swaying crowns keep the original GPU scissors.
+                    return (cmd.texture_id,cmd.revision,cmd.image_w,cmd.image_h,
+                            None if cmd.sway_px==0 else clip,cmd.sway_px)
+                for material,group in groupby(work,key=key):
+                    values=tuple(group)
+                    for first in range(0,len(values),64):
+                        batch=values[first:first+64]
+                        cmd,clip=batch[0]
+                        self.bank.texture_for(cmd).use(location=0)
+                        clipped_static=material[4] is None
+                        self.ctx.scissor=(0,0,self.width,self.height) if clipped_static else clip
+                        program['u_sway_px'].value=cmd.sway_px
+                        self.vbo.write(b''.join(clipped_vertex_bytes(sprite.bounds,region,self.height)
+                            if clipped_static else vertex_bytes(sprite.bounds)
+                            for sprite,region in batch))
+                        self._cover_vao.render(vertices=6*len(batch))
+                        rendered+=1
+            return FrameReport(len(rows),rendered,len(work)*2,
+                self.bank.uploads-uploads_before,self.bank.reuses-reuses_before,self.bank.bytes,len(work))
+        except GPUBackendUnavailable:
+            raise
+        except Exception as exc:
+            raise GPUBackendUnavailable(f'OpenGL cover frame failed: {type(exc).__name__}') from exc
+        finally:
+            self.ctx.scissor=None
+
     def close(self):
         if self._closed:return
         self._closed=True
         self.bank.close()
-        for item in (self.vao,self.vbo,self.program):
+        for item in (self._cover_vao,self._cover_program,self.vao,self.vbo,self.program):
             if item is not None:
                 try:item.release()
                 except Exception:pass

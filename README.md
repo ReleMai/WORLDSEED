@@ -20,6 +20,16 @@ This README collects WORLDSEED product documentation and historical development 
 
 > **Operational exception:** `AGENTS.md` remains separate because coding agents and automation discover repository instructions by that filename. It is operational configuration, not a second project manual.
 
+## RC14 Dev66 — Roof and canopy weather protection
+
+Rain and snow in the GPU game now respect currently visible building roofs,
+placed roofs and mature tree crowns. Courtyard holes and gaps in the artwork
+remain exposed; cosmetic transparency around the player does not let weather
+through the cover. Remembered scenery stays frozen and hidden rooms stay hidden.
+The cover pass follows canopy sway, reuses static roof coverage, and preserves
+existing saves, weather and gameplay shelter rules.
+See the [Dev66 handoff](docs/handoffs/DEV66_GPU_PRECIPITATION_COVER.md).
+
 ## RC14 Dev65 — GPU time controls, work feedback and persistent weather
 
 Space pauses/resumes ambient world time; GPU HUD buttons select 1×, 2× or 3×.

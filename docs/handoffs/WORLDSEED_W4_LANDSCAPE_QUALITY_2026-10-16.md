@@ -127,3 +127,10 @@ and broader authoritative light occlusion. Keep existing contact shadows named
 accurately. W5 still needs human native-Windows playtests, device recovery,
 performance budgets and longer saved-world soaks. The existing bootstrap-audit
 ingredient-tag helper failure above remains a separate tool issue.
+
+## Subsequent precipitation interception
+
+The admitted roof/canopy precipitation step above is implemented by
+[Dev66](DEV66_GPU_PRECIPITATION_COVER.md), which supersedes that pending item.
+Splashes, full directional shadows, wider light occlusion and W5 acceptance
+remain outstanding.

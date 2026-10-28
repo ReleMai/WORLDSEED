@@ -16,6 +16,8 @@ The repository root is reserved for launchers, package metadata, source, tests, 
 
 ## Current handoffs
 
+- [Dev66 GPU roof/canopy precipitation interception](handoffs/DEV66_GPU_PRECIPITATION_COVER.md)
+
 - [Windows external-tools setup and remaining account actions](handoffs/EXTERNAL_TOOLS_PC_SETUP_2026-10-25.md)
 
 - [External tool rollout: memory, art, models, sound and coding context](handoffs/EXTERNAL_TOOLS_FOUNDATION_2026-10-25.md)

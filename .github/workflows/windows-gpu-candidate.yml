@@ -28,7 +28,16 @@ on:
       - 'worldseed/presentation/interior_clip_index.py'
       - 'worldseed/presentation/interior_memory_fade.py'
       - 'worldseed/presentation/gl_worldspace.py'
+      - 'worldseed/presentation/gl_atmosphere.py'
+      - 'worldseed/presentation/precipitation_cover.py'
+      - 'worldseed/assets/shaders/worldspace_post.frag'
+      - 'worldseed/assets/shaders/worldspace_post.vert'
+      - 'worldseed/assets/shaders/worldspace_cover.frag'
+      - 'tests/test_precipitation_cover.py'
+      - 'tests/test_gpu_precipitation_cover.py'
+      - 'tests/test_gpu_precipitation_native.py'
       - 'worldseed/assets/shaders/worldspace_sprite.frag'
+      - 'worldseed/assets/shaders/worldspace_sprite.vert'
       - 'worldseed/presentation/live_gpu_scene.py'
       - 'worldseed/systems/interior_visibility.py'
       - 'worldseed/systems/interior_state.py'
@@ -75,6 +84,11 @@ jobs:
         run: |
           python -u tools/run_ci_check.py --name dev65-package-contracts --timeout 90 -- python -u -m unittest -v tests.test_dev65_clock_work tests.test_dev65_weather tests.test_dev65_integration tests.test_dev65_gpu_feedback
           if ($LASTEXITCODE -ne 0) { throw 'Dev65 package contracts failed' }
+      - name: Precipitation cover contracts before freezing
+        shell: pwsh
+        run: |
+          python -u tools/run_ci_check.py --name precipitation-cover-package --timeout 90 -- python -u -m unittest -v tests.test_gpu_weather_pipeline tests.test_precipitation_cover
+          if ($LASTEXITCODE -ne 0) { throw 'Precipitation cover contracts failed' }
       - name: Load a real existing world before freezing
         shell: pwsh
         run: |
